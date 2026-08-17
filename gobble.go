@@ -9,5 +9,6 @@
 //	Suffixes   → Steps  (JSON steps)
 //	Extension  → Ext    (JSON ext)
 //
+// Authors build a [Pipeline] and call [Compose] to obtain an immutable [Graph].
 // The public surface is unsupported except these locked PathSpec concepts.
 package gobble
