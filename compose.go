@@ -1,26 +1,196 @@
 package gobble
 
-import (
-	"errors"
-	"regexp"
-)
-
-var namePat = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_-]*$`)
+import "github.com/HahyeonJeon/gobble/internal/engine"
 
 // Compose builds an immutable Graph from p.
 //
 // On any compose defect it returns (nil, *Error) with Op "compose".
 func Compose(p *Pipeline) (*Graph, error) {
-	g, defects := composeCheck(p)
-	if len(defects) > 0 {
-		return nil, &Error{Op: "compose", Defects: defects}
+	if p == nil {
+		return nil, &Error{Op: "compose", Defects: []Defect{{
+			Code:    DefectInvalidName,
+			Message: "nil pipeline",
+		}}}
 	}
-	return g, nil
+	if err := publicError("compose", engine.ComposeCheck(snapshotPipeline(p))); err != nil {
+		return nil, err
+	}
+	return buildGraph(p), nil
 }
 
-type composer struct {
+func publicError(op string, defects []engine.Defect) error {
+	if len(defects) == 0 {
+		return nil
+	}
+	out := make([]Defect, len(defects))
+	for i, d := range defects {
+		out[i] = Defect{
+			Code:    DefectCode(d.Code),
+			Unit:    d.Unit,
+			Message: d.Message,
+			Paths:   copyStrings(d.Paths),
+		}
+	}
+	return &Error{Op: op, Defects: out}
+}
+
+func snapshotPipeline(p *Pipeline) engine.Snapshot {
+	s := engine.Snapshot{Name: p.name}
+	for _, in := range p.inputs {
+		s.Inputs = append(s.Inputs, engine.Input{Name: in.name, Spec: snapshotPath(in.spec)})
+	}
+	for _, t := range p.tasks {
+		s.Tasks = append(s.Tasks, snapshotTask(t))
+	}
+	s.Nodes = snapshotNodes(p.children)
+	return s
+}
+
+func snapshotGraph(g *Graph) engine.Snapshot {
+	s := engine.Snapshot{Name: g.name}
+	for _, in := range g.inputs {
+		s.Inputs = append(s.Inputs, engine.Input{Name: in.name, Spec: snapshotPath(in.spec)})
+	}
+	for _, t := range g.tasks {
+		gt := engine.Task{
+			ID:      t.id,
+			Name:    t.name,
+			Command: copyStrings(t.command),
+			Backend: t.backend,
+		}
+		for _, b := range t.inputs {
+			gt.Inputs = append(gt.Inputs, snapshotGraphBind(b))
+		}
+		for _, b := range t.outputs {
+			gt.Outputs = append(gt.Outputs, snapshotGraphBind(b))
+		}
+		s.Tasks = append(s.Tasks, gt)
+	}
+	return s
+}
+
+func snapshotTask(t *Task) engine.Task {
+	gt := engine.Task{
+		ID:       t.id(),
+		Name:     t.spec.Name,
+		Command:  copyStrings(t.spec.Command),
+		Backend:  t.spec.Backend,
+		OutCalls: copyStrings(t.outCalls),
+		InCalls:  copyStrings(t.inCalls),
+	}
+	for _, b := range t.spec.Inputs {
+		gt.Inputs = append(gt.Inputs, snapshotBind(b))
+	}
+	for _, b := range t.spec.Outputs {
+		gt.Outputs = append(gt.Outputs, snapshotBind(b))
+	}
+	return gt
+}
+
+func snapshotBind(b Bind) engine.Bind {
+	eb := engine.Bind{
+		Name: b.Name,
+		Spec: snapshotPath(b.Spec),
+		Rule: engine.DeriveRule(b.Rule),
+	}
+	eb.FromKind, eb.FromName, eb.FromTask = snapshotFrom(b.From)
+	return eb
+}
+
+func snapshotGraphBind(b graphBind) engine.Bind {
+	return engine.Bind{
+		Name:     b.name,
+		Spec:     snapshotPath(b.spec),
+		FromKind: snapshotFromKind(b.fromKind),
+		FromName: b.fromName,
+		FromTask: b.fromTask,
+		Resolved: true,
+	}
+}
+
+func snapshotFrom(h Handle) (engine.FromKind, string, string) {
+	switch h.kind {
+	case handleInput:
+		return engine.FromInput, h.name, ""
+	case handleOut:
+		id := ""
+		if h.task != nil {
+			id = h.task.id()
+		}
+		return engine.FromOut, h.name, id
+	case handleIn:
+		id := ""
+		if h.task != nil {
+			id = h.task.id()
+		}
+		return engine.FromIn, h.name, id
+	default:
+		return engine.FromZero, "", ""
+	}
+}
+
+func snapshotFromKind(k handleKind) engine.FromKind {
+	switch k {
+	case handleInput:
+		return engine.FromInput
+	case handleOut:
+		return engine.FromOut
+	case handleIn:
+		return engine.FromIn
+	default:
+		return engine.FromZero
+	}
+}
+
+func snapshotNodes(nodes []node) []engine.Node {
+	if nodes == nil {
+		return nil
+	}
+	out := make([]engine.Node, 0, len(nodes))
+	for _, n := range nodes {
+		en := engine.Node{Name: n.name}
+		switch n.kind {
+		case nodeModule:
+			en.Kind = engine.NodeModule
+			if n.module != nil {
+				en.Children = snapshotNodes(n.module.children)
+			}
+		case nodeBranch:
+			en.Kind = engine.NodeBranch
+			if n.branch != nil {
+				en.Children = snapshotNodes(n.branch.children)
+			}
+		case nodeMerge:
+			en.Kind = engine.NodeMerge
+			if n.merge != nil {
+				en.Children = snapshotNodes(n.merge.children)
+			}
+		case nodeTask:
+			en.Kind = engine.NodeTask
+			if n.task != nil {
+				en.TaskID = n.task.id()
+			}
+		}
+		out = append(out, en)
+	}
+	return out
+}
+
+func snapshotPath(p PathSpec) engine.Path {
+	return engine.Path{
+		Dir:     p.Dir.String(),
+		Lead:    p.Lead,
+		Name:    p.Name,
+		Steps:   copyStrings(p.Steps),
+		Ext:     p.Ext,
+		Literal: p.literal,
+		Opaque:  p.opaque,
+		BadLit:  p.badLit,
+	}
+}
+
+type resolver struct {
 	p       *Pipeline
-	defects []Defect
 	memo    map[bindKey]PathSpec
 	walking map[bindKey]bool
 }
@@ -31,308 +201,21 @@ type bindKey struct {
 	out  bool
 }
 
-// composeCheck is the unexported compose-defect walk.
-func composeCheck(p *Pipeline) (*Graph, []Defect) {
-	if p == nil {
-		return nil, []Defect{{
-			Code:    DefectInvalidName,
-			Message: "nil pipeline",
-		}}
-	}
-	c := &composer{
+func buildGraph(p *Pipeline) *Graph {
+	r := &resolver{
 		p:       p,
 		memo:    make(map[bindKey]PathSpec),
 		walking: make(map[bindKey]bool),
 	}
-	c.checkName(p.name, p.name, "pipeline")
-	c.checkInputs()
-	c.walkNodes("", p.children)
-	c.checkCycles()
-	c.checkPaths()
-	if len(c.defects) > 0 {
-		return nil, c.defects
-	}
-	return c.buildGraph(), nil
+	return r.buildGraph()
 }
 
-func (c *composer) add(code DefectCode, unit, message string, paths ...string) {
-	c.defects = append(c.defects, Defect{
-		Code:    code,
-		Unit:    unit,
-		Message: message,
-		Paths:   paths,
-	})
-}
-
-func (c *composer) checkName(name, unit, kind string) {
-	switch {
-	case name == "":
-		if unit == "" {
-			unit = kind
-		}
-		c.add(DefectInvalidName, unit, "empty name")
-	case !namePat.MatchString(name):
-		c.add(DefectInvalidName, unit, "invalid name")
-	}
-}
-
-func (c *composer) checkInputs() {
-	seen := make(map[string]bool)
-	for _, in := range c.p.inputs {
-		c.checkName(in.name, in.name, "input")
-		if in.name != "" && seen[in.name] {
-			c.add(DefectInvalidName, in.name, "duplicate name")
-			continue
-		}
-		if in.name != "" && namePat.MatchString(in.name) {
-			seen[in.name] = true
-		}
-	}
-}
-
-func (c *composer) walkNodes(prefix string, nodes []node) {
-	seen := make(map[string]bool)
-	for _, n := range nodes {
-		id := childID(prefix, n.name)
-		c.checkName(n.name, id, "unit")
-		if n.name != "" && seen[n.name] {
-			c.add(DefectInvalidName, id, "duplicate name")
-		} else if n.name != "" && namePat.MatchString(n.name) {
-			seen[n.name] = true
-		}
-		switch n.kind {
-		case nodeModule:
-			c.walkNodes(id, n.module.children)
-		case nodeBranch:
-			c.walkNodes(id, n.branch.children)
-		case nodeMerge:
-			c.walkNodes(id, n.merge.children)
-		case nodeTask:
-			c.checkTask(n.task)
-		}
-	}
-}
-
-func (c *composer) checkTask(t *Task) {
-	id := t.id()
-	if len(t.spec.Command) == 0 {
-		c.add(DefectMissingCommand, id, "missing command")
-	}
-	if len(t.spec.Outputs) == 0 {
-		c.add(DefectMissingOutput, id, "missing output")
-	}
-	seen := make(map[string]bool)
-	checkPort := func(b Bind) {
-		unit := bindUnit(id, b.Name)
-		c.checkName(b.Name, unit, "bind")
-		if b.Name != "" && seen[b.Name] {
-			c.add(DefectInvalidName, unit, "duplicate name")
-			return
-		}
-		if b.Name != "" && namePat.MatchString(b.Name) {
-			seen[b.Name] = true
-		}
-	}
-	for _, b := range t.spec.Inputs {
-		checkPort(b)
-		if b.From.IsZero() {
-			c.add(DefectMissingInput, bindUnit(id, b.Name), "missing input")
-		} else if !c.fromInGraph(b.From) {
-			c.add(DefectMissingInput, bindUnit(id, b.Name), "missing input")
-		}
-	}
-	for _, b := range t.spec.Outputs {
-		checkPort(b)
-	}
-	seenOut := make(map[string]bool)
-	for _, name := range t.outCalls {
-		if seenOut[name] {
-			continue
-		}
-		seenOut[name] = true
-		if _, ok := findBind(t.spec.Outputs, name); !ok {
-			c.add(DefectMissingOutput, bindUnit(id, name), "missing output")
-		}
-	}
-	seenIn := make(map[string]bool)
-	for _, name := range t.inCalls {
-		if seenIn[name] {
-			continue
-		}
-		seenIn[name] = true
-		if _, ok := findBind(t.spec.Inputs, name); !ok {
-			c.add(DefectMissingInput, bindUnit(id, name), "missing input")
-		}
-	}
-}
-
-func (c *composer) fromInGraph(h Handle) bool {
-	switch h.kind {
-	case handleInput:
-		if h.pipe != c.p {
-			return false
-		}
-		for _, in := range c.p.inputs {
-			if in.name == h.name {
-				return true
-			}
-		}
-		return false
-	case handleOut, handleIn:
-		if h.task == nil || h.task.pipe != c.p {
-			return false
-		}
-		return true
-	default:
-		return false
-	}
-}
-
-func (c *composer) checkCycles() {
-	adj := make(map[*Task][]*Task)
-	addEdges := func(t *Task, binds []Bind) {
-		for _, b := range binds {
-			src := b.From.task
-			if src == nil || src.pipe != c.p {
-				continue
-			}
-			adj[src] = append(adj[src], t)
-		}
-	}
-	for _, t := range c.p.tasks {
-		addEdges(t, t.spec.Inputs)
-		addEdges(t, t.spec.Outputs)
-	}
-	for _, t := range c.p.tasks {
-		if reachesSelf(t, adj) {
-			c.add(DefectCycle, t.id(), "cycle")
-		}
-	}
-}
-
-func reachesSelf(start *Task, adj map[*Task][]*Task) bool {
-	seen := make(map[*Task]bool)
-	var walk func(*Task) bool
-	walk = func(cur *Task) bool {
-		for _, n := range adj[cur] {
-			if n == start {
-				return true
-			}
-			if seen[n] {
-				continue
-			}
-			seen[n] = true
-			if walk(n) {
-				return true
-			}
-		}
-		return false
-	}
-	return walk(start)
-}
-
-func (c *composer) checkPaths() {
-	for _, in := range c.p.inputs {
-		c.renderPath(in.spec, in.name)
-	}
-	for _, t := range c.p.tasks {
-		id := t.id()
-		for _, b := range t.spec.Inputs {
-			spec, ok := c.resolveBind(t, b, false)
-			if !ok {
-				continue
-			}
-			c.renderPath(spec, bindUnit(id, b.Name))
-		}
-		for _, b := range t.spec.Outputs {
-			spec, ok := c.resolveBind(t, b, true)
-			if !ok {
-				continue
-			}
-			c.renderPath(spec, bindUnit(id, b.Name))
-		}
-	}
-}
-
-func (c *composer) renderPath(spec PathSpec, unit string) {
-	_, err := spec.Render()
-	if err == nil {
-		return
-	}
-	var ge *Error
-	if errors.As(err, &ge) && len(ge.Defects) > 0 {
-		d := ge.Defects[0]
-		c.add(DefectInvalidPath, unit, d.Message, d.Paths...)
-		return
-	}
-	c.add(DefectInvalidPath, unit, "invalid path")
-}
-
-func (c *composer) resolveBind(t *Task, b Bind, out bool) (PathSpec, bool) {
-	key := bindKey{task: t, name: b.Name, out: out}
-	if spec, ok := c.memo[key]; ok {
-		return spec, true
-	}
-	if c.walking[key] {
-		return PathSpec{}, false
-	}
-	if b.From.IsZero() {
-		spec := b.Spec.clone()
-		c.memo[key] = spec
-		return spec, true
-	}
-	c.walking[key] = true
-	from, ok := c.resolveFrom(b.From)
-	c.walking[key] = false
-	if !ok {
-		return PathSpec{}, false
-	}
-	spec := classifySpec(b.Spec, from, b.Rule)
-	c.memo[key] = spec
-	return spec, true
-}
-
-func (c *composer) resolveFrom(h Handle) (PathSpec, bool) {
-	switch h.kind {
-	case handleInput:
-		if h.pipe != c.p {
-			return PathSpec{}, false
-		}
-		for _, in := range c.p.inputs {
-			if in.name == h.name {
-				return in.spec.clone(), true
-			}
-		}
-		return PathSpec{}, false
-	case handleOut:
-		if h.task == nil {
-			return PathSpec{}, false
-		}
-		b, ok := findBind(h.task.spec.Outputs, h.name)
-		if !ok {
-			return PathSpec{}, false
-		}
-		return c.resolveBind(h.task, b, true)
-	case handleIn:
-		if h.task == nil {
-			return PathSpec{}, false
-		}
-		b, ok := findBind(h.task.spec.Inputs, h.name)
-		if !ok {
-			return PathSpec{}, false
-		}
-		return c.resolveBind(h.task, b, false)
-	default:
-		return PathSpec{}, false
-	}
-}
-
-func (c *composer) buildGraph() *Graph {
-	g := &Graph{name: c.p.name}
-	for _, in := range c.p.inputs {
+func (r *resolver) buildGraph() *Graph {
+	g := &Graph{name: r.p.name}
+	for _, in := range r.p.inputs {
 		g.inputs = append(g.inputs, graphInput{name: in.name, spec: in.spec.clone()})
 	}
-	for _, t := range c.p.tasks {
+	for _, t := range r.p.tasks {
 		gt := graphTask{
 			id:        t.id(),
 			name:      t.spec.Name,
@@ -346,10 +229,10 @@ func (c *composer) buildGraph() *Graph {
 			params:    copyParams(t.spec.Params),
 		}
 		for _, b := range t.spec.Inputs {
-			gt.inputs = append(gt.inputs, c.graphBind(t, b, false))
+			gt.inputs = append(gt.inputs, r.graphBind(t, b, false))
 		}
 		for _, b := range t.spec.Outputs {
-			gt.outputs = append(gt.outputs, c.graphBind(t, b, true))
+			gt.outputs = append(gt.outputs, r.graphBind(t, b, true))
 		}
 		g.tasks = append(g.tasks, gt)
 		g.edges = append(g.edges, fromEdges(t)...)
@@ -357,13 +240,13 @@ func (c *composer) buildGraph() *Graph {
 	return g
 }
 
-func (c *composer) graphBind(t *Task, b Bind, out bool) graphBind {
+func (r *resolver) graphBind(t *Task, b Bind, out bool) graphBind {
 	gb := graphBind{
 		name:     b.Name,
 		fromKind: b.From.kind,
 		fromName: b.From.name,
 	}
-	if spec, ok := c.resolveBind(t, b, out); ok {
+	if spec, ok := r.resolveBind(t, b, out); ok {
 		gb.spec = spec.clone()
 	} else {
 		gb.spec = b.Spec.clone()
@@ -374,14 +257,62 @@ func (c *composer) graphBind(t *Task, b Bind, out bool) graphBind {
 	return gb
 }
 
-func childID(prefix, name string) string {
-	switch {
-	case prefix != "" && name != "":
-		return prefix + "." + name
-	case prefix != "":
-		return prefix
+func (r *resolver) resolveBind(t *Task, b Bind, out bool) (PathSpec, bool) {
+	key := bindKey{task: t, name: b.Name, out: out}
+	if spec, ok := r.memo[key]; ok {
+		return spec, true
+	}
+	if r.walking[key] {
+		return PathSpec{}, false
+	}
+	if b.From.IsZero() {
+		spec := b.Spec.clone()
+		r.memo[key] = spec
+		return spec, true
+	}
+	r.walking[key] = true
+	from, ok := r.resolveFrom(b.From)
+	r.walking[key] = false
+	if !ok {
+		return PathSpec{}, false
+	}
+	spec := classifySpec(b.Spec, from, b.Rule)
+	r.memo[key] = spec
+	return spec, true
+}
+
+func (r *resolver) resolveFrom(h Handle) (PathSpec, bool) {
+	switch h.kind {
+	case handleInput:
+		if h.pipe != r.p {
+			return PathSpec{}, false
+		}
+		for _, in := range r.p.inputs {
+			if in.name == h.name {
+				return in.spec.clone(), true
+			}
+		}
+		return PathSpec{}, false
+	case handleOut:
+		if h.task == nil {
+			return PathSpec{}, false
+		}
+		b, ok := findBind(h.task.spec.Outputs, h.name)
+		if !ok {
+			return PathSpec{}, false
+		}
+		return r.resolveBind(h.task, b, true)
+	case handleIn:
+		if h.task == nil {
+			return PathSpec{}, false
+		}
+		b, ok := findBind(h.task.spec.Inputs, h.name)
+		if !ok {
+			return PathSpec{}, false
+		}
+		return r.resolveBind(h.task, b, false)
 	default:
-		return name
+		return PathSpec{}, false
 	}
 }
 

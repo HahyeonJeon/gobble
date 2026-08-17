@@ -123,5 +123,12 @@ func restageSpec(spec, from PathSpec) PathSpec {
 	if spec.Ext != "" {
 		out.Ext = spec.Ext
 	}
+	// Non-literal restage that sets Lead, Name, Steps, or Ext must not
+	// keep a Literal parent's opacity; Render would ignore the new fields.
+	if spec.Lead != "" || spec.Name != "" || len(spec.Steps) > 0 || spec.Ext != "" {
+		out.literal = false
+		out.opaque = ""
+		out.badLit = false
+	}
 	return out
 }
