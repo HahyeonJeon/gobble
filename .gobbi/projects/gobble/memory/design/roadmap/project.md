@@ -13,7 +13,7 @@ Build a local agent-operable core first: Go library, then engine, then CLI. Firs
 
 ## Current position
 
-- Now: `feat/library-and-engine` implements PathSpec, Compose, Validate, and BuildPlan in module `github.com/HahyeonJeon/gobble` (`go 1.26`) with `internal/engine` and `go test ./...` as first-check. There is no CLI, no `cmd/`, and no run, inspect, or resume. Immutable base is `develop` at `a30ea9e0e69bed113764975916d13dfbeb089128`. Pre-bootstrap baseline remains `a2d561fea2846bc1c55213d66a7025dac980f330`.
+- Now: `feat/run-local` implements PathSpec, Compose, Validate, BuildPlan, and Run in module `github.com/HahyeonJeon/gobble` (`go 1.26`) with `internal/engine` and `go test ./...` as first-check. `Run(graph, workspace, cap)` occupies after checks, isolates under `.gobble/`, stages plan-relative paths, and runs process and Docker tasks. Session proof is the synthetic fixture `testdata/run-local/` (`alpine:3.21` plus process). There is no CLI, no `cmd/`, and no inspect or resume. Immutable base is `develop` at `5e2c295c3b39733c2c279616bc95130226ffc5f7`. Pre-bootstrap baseline remains `a2d561fea2846bc1c55213d66a7025dac980f330`.
 - Local or cloud: local
 - Bootstrap: run; committed as `3389767462780dc0cfc436de864580959dfbb0ce` after user authorization to replace the existing README.
 - Source: `local-or-cloud`, `first-check`, `current-baseline`

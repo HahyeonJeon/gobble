@@ -78,7 +78,7 @@ Do not use a no-op, `echo`, or any command that ignores the local toolchain.
 ### Gobble
 
 - Command: `go test ./...`
-- What it proves: Go 1.26 or newer is installed, the module `github.com/HahyeonJeon/gobble` builds, and package tests for `gobble` and `internal/engine` pass. It is not proof of agent-operable run, inspect, or resume, and it does not require Docker.
+- What it proves: Go 1.26 or newer is installed, the module `github.com/HahyeonJeon/gobble` builds, and package tests for `gobble` and `internal/engine` pass, including public `Run`. Live Docker tests skip if the daemon is down. It is not proof of agent-operable run, inspect, or resume, and it does not require Docker.
 - Source: `first-check`
 
 Project command, after every product subsection. If two local products

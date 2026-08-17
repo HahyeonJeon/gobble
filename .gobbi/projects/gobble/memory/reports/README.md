@@ -4,5 +4,6 @@ Recursive navigation across reports, grouped by category, newest first.
 
 ## Note
 
+- [Local Run session](note/2026-08-17-run-local.md)
 - [Library and engine session](note/2026-08-17-library-and-engine.md)
 - [Gobble Startup wrap-up](note/2026-08-17-gobble-startup-wrap-up.md)
