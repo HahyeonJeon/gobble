@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -313,6 +314,156 @@ func TestScheduleBlocksDependents(t *testing.T) {
 	}
 	if byID["ok"].Status != StatusSucceeded {
 		t.Fatalf("ok status got %q, want succeeded", byID["ok"].Status)
+	}
+}
+
+func TestRunFromInPort(t *testing.T) {
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "sample.fq"), "reads")
+	doc := Document{
+		Name: "from-in",
+		Tasks: []TaskPlan{
+			{
+				ID:      "prep",
+				Name:    "prep",
+				Command: []string{"sh", "-c", "cp sample.fq prep.fq"},
+				Inputs:  []IO{{Name: "src", Path: "sample.fq"}},
+				Outputs: []IO{{Name: "out", Path: "prep.fq"}},
+			},
+			{
+				ID:      "copy",
+				Name:    "copy",
+				Command: []string{"cp", "sample.fq", "copy.fq"},
+				Inputs:  []IO{{Name: "in", Path: "sample.fq"}},
+				Outputs: []IO{{Name: "out", Path: "copy.fq"}},
+			},
+		},
+		Edges: []Edge{
+			{FromPort: "reads", ToTask: "prep", ToPort: "src"},
+			{FromTask: "prep", FromPort: "src", ToTask: "copy", ToPort: "in"},
+		},
+	}
+	defects := Run(Request{Workspace: dir, Document: doc})
+	if len(defects) != 0 {
+		t.Fatalf("FromIn Run() defects %v, want none", defects)
+	}
+	got, err := os.ReadFile(filepath.Join(dir, "copy.fq"))
+	if err != nil {
+		t.Fatalf("published copy.fq: %v", err)
+	}
+	if string(got) != "reads" {
+		t.Fatalf("copy.fq got %q, want reads", got)
+	}
+	if _, err := os.ReadFile(filepath.Join(dir, "prep.fq")); err != nil {
+		t.Fatalf("published prep.fq: %v", err)
+	}
+}
+
+func TestRunNotStartedIsFailed(t *testing.T) {
+	orig := execTask
+	t.Cleanup(func() { execTask = orig })
+	execTask = func(workspace string, task TaskPlan) report {
+		return report{ID: task.ID, Published: true}
+	}
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	doc := Document{
+		Name: "stall",
+		Tasks: []TaskPlan{
+			{
+				ID:      "prep",
+				Name:    "prep",
+				Command: []string{"true"},
+				Inputs:  []IO{{Name: "src", Path: "in/sample.txt"}},
+				Outputs: []IO{{Name: "out", Path: "out/prep.txt"}},
+			},
+			{
+				ID:      "copy",
+				Name:    "copy",
+				Command: []string{"true"},
+				Inputs:  []IO{{Name: "in", Path: "out/prep.txt"}},
+				Outputs: []IO{{Name: "out", Path: "out/copy.txt"}},
+			},
+		},
+		Edges: []Edge{
+			{FromPort: "reads", ToTask: "prep", ToPort: "src"},
+			{FromTask: "prep", FromPort: "out", ToTask: "copy", ToPort: "in"},
+		},
+	}
+	defects := Run(Request{Workspace: dir, Document: doc})
+	if !hasDefect(defects, DefectFailed, "copy") {
+		t.Fatalf("not-started Run() defects %v, want failed copy", defects)
+	}
+}
+
+func TestRunPersistError(t *testing.T) {
+	orig := execTask
+	t.Cleanup(func() { execTask = orig })
+	execTask = func(workspace string, task TaskPlan) report {
+		p := filepath.Join(workspace, ControlDir, TasksFile)
+		if err := os.Remove(p); err != nil {
+			t.Errorf("remove tasks.json: %v", err)
+		}
+		if err := os.Mkdir(p, 0o755); err != nil {
+			t.Errorf("mkdir tasks.json: %v", err)
+		}
+		for _, out := range task.Outputs {
+			writeCheckFile(t, workspaceFile(workspace, out.Path), task.ID)
+		}
+		return report{ID: task.ID, Published: true}
+	}
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	defects := Run(Request{
+		Workspace: dir,
+		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
+	})
+	if !hasDefect(defects, DefectInvalidPath, "") {
+		t.Fatalf("persist Run() defects %v, want persist invalid-path", defects)
+	}
+}
+
+func TestRunProcessEnvIsFixed(t *testing.T) {
+	t.Setenv("SECRET", "should-not-leak")
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
+	doc.Tasks[0].Command = []string{"sh", "-c", "env > out/env.txt && cp in/sample.txt out/sample.txt"}
+	doc.Tasks[0].Outputs = []IO{
+		{Name: "out", Path: "out/sample.txt"},
+		{Name: "env", Path: "out/env.txt"},
+	}
+	defects := Run(Request{Workspace: dir, Document: doc})
+	if len(defects) != 0 {
+		t.Fatalf("env Run() defects %v, want none", defects)
+	}
+	got, err := os.ReadFile(filepath.Join(dir, "out", "env.txt"))
+	if err != nil {
+		t.Fatalf("env output: %v", err)
+	}
+	body := string(got)
+	if strings.Contains(body, "SECRET") {
+		t.Fatalf("process inherited SECRET: %q", body)
+	}
+	if !strings.Contains(body, "PATH=/usr/bin:/bin") {
+		t.Fatalf("process env got %q, want PATH=/usr/bin:/bin", body)
+	}
+}
+
+func TestCopyFileRefusesSymlink(t *testing.T) {
+	dir := t.TempDir()
+	target := filepath.Join(dir, "secret")
+	writeCheckFile(t, target, "secret")
+	src := filepath.Join(dir, "link")
+	if err := os.Symlink(target, src); err != nil {
+		t.Fatal(err)
+	}
+	dst := filepath.Join(dir, "out.txt")
+	if err := copyFile(src, dst); err == nil {
+		t.Fatal("copyFile followed symlink")
+	}
+	if _, err := os.Stat(dst); !os.IsNotExist(err) {
+		t.Fatal("copied through symlink")
 	}
 }
 

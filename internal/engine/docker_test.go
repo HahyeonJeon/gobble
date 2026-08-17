@@ -5,10 +5,19 @@ import (
 	"errors"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 )
+
+func requireDocker(t *testing.T) {
+	t.Helper()
+	if err := exec.Command("docker", "info").Run(); err != nil {
+		t.Skipf("docker info: %v", err)
+	}
+}
 
 const pinnedAlpine = "alpine:3.21"
 
@@ -22,6 +31,8 @@ func TestDockerRunArgs(t *testing.T) {
 	}
 	want := []string{
 		"run", "--rm",
+		"--user", strconv.Itoa(os.Getuid()) + ":" + strconv.Itoa(os.Getgid()),
+		"--network=none",
 		"--entrypoint", "cp",
 		"-v", "/iso:" + containerWorkDir,
 		"-w", containerWorkDir,
@@ -64,6 +75,7 @@ func TestEmptyImageNeverReachesDocker(t *testing.T) {
 }
 
 func TestRunDockerPublishes(t *testing.T) {
+	requireDocker(t)
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	doc := sampleDoc(pinnedAlpine, "local", "in/sample.txt", "out/docker/sample.txt")
@@ -111,6 +123,7 @@ func TestRunDockerPublishes(t *testing.T) {
 }
 
 func TestRunDockerBadImageContained(t *testing.T) {
+	requireDocker(t)
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	doc := sampleDoc("gobble-missing-image:not-a-tag", "local", "in/sample.txt", "out/sample.txt")
@@ -138,6 +151,7 @@ func TestRunDockerBadImageContained(t *testing.T) {
 }
 
 func TestRunDockerUnparseableMemory(t *testing.T) {
+	requireDocker(t)
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	doc := sampleDoc(pinnedAlpine, "local", "in/sample.txt", "out/sample.txt")

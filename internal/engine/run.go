@@ -43,12 +43,9 @@ func Run(req Request) []Defect {
 	if n == 0 {
 		n = DefaultCap
 	}
-	s, err := occupy(req)
-	if err != nil {
-		return []Defect{{
-			Code:    DefectInvalidPath,
-			Message: err.Error(),
-		}}
+	s, defects := occupy(req)
+	if len(defects) > 0 {
+		return defects
 	}
 	return s.loop(n)
 }
@@ -58,6 +55,7 @@ type sched struct {
 	doc       Document
 	run       jsonRun
 	tasks     map[string]*jsonTaskState
+	persist   error
 }
 
 type jsonRun struct {
@@ -90,7 +88,7 @@ type jsonTasksFile struct {
 	Tasks []jsonTaskState `json:"tasks"`
 }
 
-func occupy(req Request) (*sched, error) {
+func occupy(req Request) (*sched, []Defect) {
 	s := &sched{
 		workspace: req.Workspace,
 		doc:       req.Document,
@@ -107,23 +105,44 @@ func occupy(req Request) (*sched, error) {
 	}
 	root := filepath.Join(req.Workspace, ControlDir)
 	if err := os.MkdirAll(root, 0o755); err != nil {
-		return nil, err
+		return nil, pathDefects(err)
+	}
+	ident := filepath.Join(root, RunIdentityFile)
+	f, err := os.OpenFile(ident, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o644)
+	if err != nil {
+		if os.IsExist(err) {
+			return nil, []Defect{{
+				Code:    DefectOccupiedWorkspace,
+				Message: "occupied workspace",
+				Paths:   []string{ControlDir + "/" + RunIdentityFile},
+			}}
+		}
+		return nil, pathDefects(err)
+	}
+	if err := f.Close(); err != nil {
+		return nil, pathDefects(err)
 	}
 	plan, err := marshalPlan(req.Document)
 	if err != nil {
-		return nil, err
+		return nil, pathDefects(err)
 	}
 	if err := writeAtomic(filepath.Join(root, PlanFile), plan); err != nil {
-		return nil, err
+		return nil, pathDefects(err)
 	}
 	if err := s.writeTasks(); err != nil {
-		return nil, err
+		return nil, pathDefects(err)
 	}
-	// run.json last: its presence occupies the workspace.
 	if err := s.writeRun(); err != nil {
-		return nil, err
+		return nil, pathDefects(err)
 	}
 	return s, nil
+}
+
+func pathDefects(err error) []Defect {
+	return []Defect{{
+		Code:    DefectInvalidPath,
+		Message: err.Error(),
+	}}
 }
 
 func runID(doc Document) string {
@@ -156,7 +175,7 @@ func (s *sched) loop(n int) []Defect {
 	reports := make(chan report, n)
 	running := 0
 	for {
-		for running < n {
+		for s.persist == nil && running < n {
 			id := s.nextReady()
 			if id == "" {
 				break
@@ -197,22 +216,22 @@ func (s *sched) upstreamReady(id string) bool {
 		if up == nil || up.Status != StatusSucceeded {
 			return false
 		}
-		path := s.outputPath(e.FromTask, e.FromPort)
-		if path == "" || !fileExists(workspaceFile(s.workspace, path)) {
+		path := s.inputPath(id, e.ToPort)
+		if path == "" || !regularFile(workspaceFile(s.workspace, path)) {
 			return false
 		}
 	}
 	return true
 }
 
-func (s *sched) outputPath(taskID, port string) string {
+func (s *sched) inputPath(taskID, port string) string {
 	for _, t := range s.doc.Tasks {
 		if t.ID != taskID {
 			continue
 		}
-		for _, out := range t.Outputs {
-			if out.Name == port {
-				return out.Path
+		for _, in := range t.Inputs {
+			if in.Name == port {
+				return in.Path
 			}
 		}
 	}
@@ -223,7 +242,7 @@ func (s *sched) launch(id string, reports chan report) {
 	st := s.tasks[id]
 	st.Status = StatusRunning
 	st.Reason = "ready"
-	_ = s.writeTasks()
+	s.notePersist(s.writeTasks())
 	var task TaskPlan
 	for _, t := range s.doc.Tasks {
 		if t.ID == id {
@@ -258,7 +277,7 @@ func (s *sched) apply(r report) {
 		st.Error = &jsonTaskErr{Unit: r.ID, Message: msg}
 		s.blockFrom(r.ID)
 	}
-	_ = s.writeTasks()
+	s.notePersist(s.writeTasks())
 }
 
 func (s *sched) blockFrom(id string) {
@@ -292,24 +311,52 @@ func (s *sched) finish() {
 		s.run.Status = StatusFailed
 		break
 	}
-	_ = s.writeRun()
+	s.notePersist(s.writeRun())
+}
+
+func (s *sched) notePersist(err error) {
+	if err != nil && s.persist == nil {
+		s.persist = err
+	}
 }
 
 func (s *sched) failures() []Defect {
 	var out []Defect
 	for _, t := range s.doc.Tasks {
 		st := s.tasks[t.ID]
-		if st == nil || st.Status != StatusFailed {
+		if st == nil {
+			out = append(out, Defect{
+				Code:    DefectFailed,
+				Unit:    t.ID,
+				Message: "task failed",
+			})
 			continue
 		}
-		msg := "task failed"
-		if st.Error != nil && st.Error.Message != "" {
-			msg = st.Error.Message
+		switch st.Status {
+		case StatusSucceeded, StatusBlocked:
+			continue
+		case StatusNotStarted:
+			out = append(out, Defect{
+				Code:    DefectFailed,
+				Unit:    t.ID,
+				Message: "not started",
+			})
+		default:
+			msg := "task failed"
+			if st.Error != nil && st.Error.Message != "" {
+				msg = st.Error.Message
+			}
+			out = append(out, Defect{
+				Code:    DefectFailed,
+				Unit:    t.ID,
+				Message: msg,
+			})
 		}
+	}
+	if s.persist != nil {
 		out = append(out, Defect{
-			Code:    DefectFailed,
-			Unit:    t.ID,
-			Message: msg,
+			Code:    DefectInvalidPath,
+			Message: "persist: " + s.persist.Error(),
 		})
 	}
 	return out

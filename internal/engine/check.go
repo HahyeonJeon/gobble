@@ -17,6 +17,9 @@ const RunIdentityFile = "run.json"
 // DefaultCap is the concurrency cap when the caller omits Cap.
 const DefaultCap = 1
 
+// MaxCap is the largest accepted concurrency cap.
+const MaxCap = 64
+
 // Check reports pre-execution defects on req. It does not occupy the
 // workspace, create directories, or start a task.
 func Check(req Request) []Defect {
@@ -33,6 +36,9 @@ func Check(req Request) []Defect {
 		return d
 	}
 	if d := checkBackends(req.Document); len(d) > 0 {
+		return d
+	}
+	if d := checkImages(req.Document); len(d) > 0 {
 		return d
 	}
 	if d := checkInputs(req.Workspace, req.Document); len(d) > 0 {
@@ -78,12 +84,20 @@ func checkWorkspace(workspace string) []Defect {
 
 func checkOccupied(workspace string) []Defect {
 	ident := filepath.Join(workspace, ControlDir, RunIdentityFile)
-	if _, err := os.Stat(ident); err != nil {
+	_, err := os.Stat(ident)
+	if err == nil {
+		return []Defect{{
+			Code:    DefectOccupiedWorkspace,
+			Message: "occupied workspace",
+			Paths:   []string{ControlDir + "/" + RunIdentityFile},
+		}}
+	}
+	if os.IsNotExist(err) {
 		return nil
 	}
 	return []Defect{{
-		Code:    DefectOccupiedWorkspace,
-		Message: "occupied workspace",
+		Code:    DefectInvalidPath,
+		Message: "workspace occupancy is not usable",
 		Paths:   []string{ControlDir + "/" + RunIdentityFile},
 	}}
 }
@@ -97,6 +111,12 @@ func checkCap(cap int) []Defect {
 		return []Defect{{
 			Code:    DefectInvalidName,
 			Message: "concurrency cap below 1",
+		}}
+	}
+	if n > MaxCap {
+		return []Defect{{
+			Code:    DefectInvalidName,
+			Message: "concurrency cap above 64",
 		}}
 	}
 	return nil
@@ -153,6 +173,14 @@ func checkPlanPath(unit, path string) *Defect {
 			Paths:   []string{path},
 		}
 	}
+	if cleaned == ".git" || strings.HasPrefix(cleaned, ".git/") {
+		return &Defect{
+			Code:    DefectInvalidPath,
+			Unit:    unit,
+			Message: "path is under .git",
+			Paths:   []string{path},
+		}
+	}
 	return nil
 }
 
@@ -170,6 +198,34 @@ func checkBackends(doc Document) []Defect {
 	return defects
 }
 
+func checkImages(doc Document) []Defect {
+	var defects []Defect
+	for _, t := range doc.Tasks {
+		if msg := invalidImage(t.Image); msg != "" {
+			defects = append(defects, Defect{
+				Code:    DefectInvalidName,
+				Unit:    t.ID,
+				Message: msg,
+			})
+		}
+	}
+	return defects
+}
+
+func invalidImage(image string) string {
+	if image == "" {
+		return ""
+	}
+	trimmed := strings.TrimSpace(image)
+	if trimmed == "" {
+		return "empty image"
+	}
+	if strings.HasPrefix(trimmed, "-") || strings.ContainsAny(image, " \t\n\r") {
+		return "invalid image"
+	}
+	return ""
+}
+
 func checkInputs(workspace string, doc Document) []Defect {
 	var defects []Defect
 	for _, t := range doc.Tasks {
@@ -177,7 +233,7 @@ func checkInputs(workspace string, doc Document) []Defect {
 			if hasUpstreamTask(doc, t.ID, in.Name) {
 				continue
 			}
-			if fileExists(workspaceFile(workspace, in.Path)) {
+			if regularFile(workspaceFile(workspace, in.Path)) {
 				continue
 			}
 			defects = append(defects, Defect{
@@ -195,7 +251,7 @@ func checkOutputs(workspace string, doc Document) []Defect {
 	var defects []Defect
 	for _, t := range doc.Tasks {
 		for _, out := range t.Outputs {
-			if !fileExists(workspaceFile(workspace, out.Path)) {
+			if !pathPresent(workspaceFile(workspace, out.Path)) {
 				continue
 			}
 			defects = append(defects, Defect{
@@ -222,7 +278,12 @@ func workspaceFile(workspace, planPath string) string {
 	return filepath.Join(workspace, filepath.FromSlash(planPath))
 }
 
-func fileExists(path string) bool {
-	_, err := os.Stat(path)
+func regularFile(path string) bool {
+	info, err := os.Lstat(path)
+	return err == nil && info.Mode().IsRegular()
+}
+
+func pathPresent(path string) bool {
+	_, err := os.Lstat(path)
 	return err == nil
 }

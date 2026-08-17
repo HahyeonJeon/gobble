@@ -154,6 +154,32 @@ func TestCheckRefuse(t *testing.T) {
 			},
 		},
 		{
+			name: "cap above 64",
+			code: DefectInvalidName,
+			prep: func(t *testing.T) (Request, string) {
+				dir := t.TempDir()
+				writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+				return Request{
+					Workspace: dir,
+					Cap:       65,
+					Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
+				}, dir
+			},
+		},
+		{
+			name: "unreadable occupancy",
+			code: DefectInvalidPath,
+			prep: func(t *testing.T) (Request, string) {
+				dir := t.TempDir()
+				writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+				writeCheckFile(t, filepath.Join(dir, ControlDir), "not-a-dir")
+				return Request{
+					Workspace: dir,
+					Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
+				}, dir
+			},
+		},
+		{
 			name: "absolute plan path",
 			code: DefectInvalidPath,
 			unit: "copy.out",
@@ -189,6 +215,60 @@ func TestCheckRefuse(t *testing.T) {
 				return Request{
 					Workspace: dir,
 					Document:  sampleDoc("", "", "in/sample.txt", ".gobble/out.txt"),
+				}, dir
+			},
+		},
+		{
+			name: ".git plan path",
+			code: DefectInvalidPath,
+			unit: "copy.out",
+			prep: func(t *testing.T) (Request, string) {
+				dir := t.TempDir()
+				writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+				return Request{
+					Workspace: dir,
+					Document:  sampleDoc("", "", "in/sample.txt", ".git/hooks/pre-commit"),
+				}, dir
+			},
+		},
+		{
+			name: "image starts with dash",
+			code: DefectInvalidName,
+			unit: "copy",
+			prep: func(t *testing.T) (Request, string) {
+				dir := t.TempDir()
+				writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+				return Request{
+					Workspace: dir,
+					Document:  sampleDoc("--privileged", "", "in/sample.txt", "out/sample.txt"),
+				}, dir
+			},
+		},
+		{
+			name: "image contains whitespace",
+			code: DefectInvalidName,
+			unit: "copy",
+			prep: func(t *testing.T) (Request, string) {
+				dir := t.TempDir()
+				writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+				return Request{
+					Workspace: dir,
+					Document:  sampleDoc("alpine:3.21 latest", "", "in/sample.txt", "out/sample.txt"),
+				}, dir
+			},
+		},
+		{
+			name: "directory input",
+			code: DefectMissingInput,
+			unit: "copy.in",
+			prep: func(t *testing.T) (Request, string) {
+				dir := t.TempDir()
+				if err := os.MkdirAll(filepath.Join(dir, "in", "sample.txt"), 0o755); err != nil {
+					t.Fatal(err)
+				}
+				return Request{
+					Workspace: dir,
+					Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 				}, dir
 			},
 		},
@@ -246,6 +326,27 @@ func TestCheckRefuse(t *testing.T) {
 				t.Fatalf("case %s: workspace changed\nbefore:\n%s\nafter:\n%s", tt.name, before, after)
 			}
 		})
+	}
+}
+
+func TestCheckDanglingOutputSymlink(t *testing.T) {
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	if err := os.MkdirAll(filepath.Join(dir, "out"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(filepath.Join(dir, "missing-target"), filepath.Join(dir, "out", "sample.txt")); err != nil {
+		t.Fatal(err)
+	}
+	defects := Check(Request{
+		Workspace: dir,
+		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
+	})
+	if !hasDefect(defects, DefectOutputExists, "copy.out") {
+		t.Fatalf("dangling output symlink: Check() defects %v, want output-exists", defects)
+	}
+	if _, err := os.Stat(filepath.Join(dir, ControlDir)); !os.IsNotExist(err) {
+		t.Fatalf("dangling output symlink: Check created %s", ControlDir)
 	}
 }
 

@@ -73,6 +73,13 @@ func TestPreflightRefuse(t *testing.T) {
 			},
 		},
 		{
+			name: "cap above 64",
+			code: gobble.DefectInvalidName,
+			prep: func(t *testing.T) (*gobble.Graph, string, int) {
+				return mustCompose(runCopyPipeline)(t), readyRunWorkspace(t), 65
+			},
+		},
+		{
 			name: "absolute plan path",
 			code: gobble.DefectInvalidPath,
 			unit: "copy.out",
@@ -86,6 +93,22 @@ func TestPreflightRefuse(t *testing.T) {
 			unit: "copy.out",
 			prep: func(t *testing.T) (*gobble.Graph, string, int) {
 				return mustCompose(gobbleOutputPipeline)(t), readyRunWorkspace(t), 0
+			},
+		},
+		{
+			name: ".git plan path",
+			code: gobble.DefectInvalidPath,
+			unit: "copy.out",
+			prep: func(t *testing.T) (*gobble.Graph, string, int) {
+				return mustCompose(gitOutputPipeline)(t), readyRunWorkspace(t), 0
+			},
+		},
+		{
+			name: "image starts with dash",
+			code: gobble.DefectInvalidName,
+			unit: "copy",
+			prep: func(t *testing.T) (*gobble.Graph, string, int) {
+				return mustCompose(dashImagePipeline)(t), readyRunWorkspace(t), 0
 			},
 		},
 		{
@@ -227,6 +250,24 @@ func TestPlanDocumentExecutionView(t *testing.T) {
 	}
 	if len(doc.Edges) != 1 || doc.Edges[0].FromTask != "" || doc.Edges[0].ToPort != "in" {
 		t.Fatalf("Document.Edges got %#v", doc.Edges)
+	}
+}
+
+func TestRunFromInPort(t *testing.T) {
+	dir := t.TempDir()
+	writeRunFile(t, filepath.Join(dir, "sample.fq"), "reads")
+	if err := gobble.Run(mustCompose(fromInPortPipeline)(t), dir, 0); err != nil {
+		t.Fatalf("FromIn Run() error = %v, want nil", err)
+	}
+	got, err := os.ReadFile(filepath.Join(dir, "copy.fq"))
+	if err != nil {
+		t.Fatalf("published copy.fq: %v", err)
+	}
+	if string(got) != "reads" {
+		t.Fatalf("copy.fq got %q, want reads", got)
+	}
+	if _, err := os.ReadFile(filepath.Join(dir, "prep.fq")); err != nil {
+		t.Fatalf("published prep.fq: %v", err)
 	}
 }
 
@@ -413,6 +454,24 @@ func TestRunCapTwoIndependent(t *testing.T) {
 		}
 	}
 	mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile))
+}
+
+func fromInPortPipeline() *gobble.Pipeline {
+	p := gobble.NewPipeline("from-in")
+	in := p.AddInput("reads", gobble.PathSpec{Name: "sample", Ext: ".fq"})
+	prep := p.AddTask(gobble.TaskSpec{
+		Name:    "prep",
+		Command: []string{"sh", "-c", "cp sample.fq prep.fq"},
+		Inputs:  []gobble.Bind{{Name: "src", From: in}},
+		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Name: "prep", Ext: ".fq"}}},
+	})
+	p.AddTask(gobble.TaskSpec{
+		Name:    "copy",
+		Command: []string{"cp", "sample.fq", "copy.fq"},
+		Inputs:  []gobble.Bind{{Name: "in", From: prep.In("src")}},
+		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Name: "copy", Ext: ".fq"}}},
+	})
+	return p
 }
 
 func processCopyPipeline() *gobble.Pipeline {
@@ -602,6 +661,37 @@ func absoluteOutputPipeline() *gobble.Pipeline {
 		Command: []string{"cp"},
 		Inputs:  []gobble.Bind{{Name: "in", From: in}},
 		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.Literal("/tmp/out.txt")}},
+	})
+	return p
+}
+
+func gitOutputPipeline() *gobble.Pipeline {
+	p := gobble.NewPipeline("githook")
+	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "sample", Ext: ".txt"})
+	p.AddTask(gobble.TaskSpec{
+		Name:    "copy",
+		Command: []string{"cp"},
+		Inputs:  []gobble.Bind{{Name: "in", From: in}},
+		Outputs: []gobble.Bind{{
+			Name: "out",
+			Spec: gobble.PathSpec{Dir: gobble.Dir(".git/hooks"), Name: "pre-commit"},
+		}},
+	})
+	return p
+}
+
+func dashImagePipeline() *gobble.Pipeline {
+	p := gobble.NewPipeline("dash-image")
+	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "sample", Ext: ".txt"})
+	p.AddTask(gobble.TaskSpec{
+		Name:    "copy",
+		Command: []string{"cp", "in/sample.txt", "out/sample.txt"},
+		Image:   "--privileged",
+		Inputs:  []gobble.Bind{{Name: "in", From: in}},
+		Outputs: []gobble.Bind{{
+			Name: "out",
+			Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "sample", Ext: ".txt"},
+		}},
 	})
 	return p
 }

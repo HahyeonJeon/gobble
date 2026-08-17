@@ -7,7 +7,10 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"syscall"
 )
+
+var errNotRegular = errors.New("not a regular file")
 
 // report is the executor result. Executors do not write state files.
 type report struct {
@@ -117,6 +120,7 @@ func runProcess(cwd string, argv []string, stdout, stderr io.Writer) (int, error
 	}
 	cmd := exec.Command(argv[0], argv[1:]...)
 	cmd.Dir = cwd
+	cmd.Env = []string{"PATH=/usr/bin:/bin"}
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 	err := cmd.Run()
@@ -132,7 +136,7 @@ func runProcess(cwd string, argv []string, stdout, stderr io.Writer) (int, error
 
 func missingOutputs(isolate string, task TaskPlan) string {
 	for _, out := range task.Outputs {
-		if !fileExists(workspaceFile(isolate, out.Path)) {
+		if !regularFile(workspaceFile(isolate, out.Path)) {
 			return out.Path
 		}
 	}
@@ -156,7 +160,7 @@ func publishAll(workspace, isolate string, task TaskPlan) error {
 }
 
 func copyFile(src, dst string) error {
-	in, err := os.Open(src)
+	in, err := openReadFile(src)
 	if err != nil {
 		return err
 	}
@@ -179,4 +183,15 @@ func copyFile(src, dst string) error {
 		return closeErr
 	}
 	return nil
+}
+
+func openReadFile(path string) (*os.File, error) {
+	info, err := os.Lstat(path)
+	if err != nil {
+		return nil, err
+	}
+	if !info.Mode().IsRegular() {
+		return nil, errNotRegular
+	}
+	return os.OpenFile(path, os.O_RDONLY|syscall.O_NOFOLLOW, 0)
 }

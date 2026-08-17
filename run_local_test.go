@@ -35,7 +35,15 @@ func TestRunLocalPlanGolden(t *testing.T) {
 	}
 }
 
+func requireDocker(t *testing.T) {
+	t.Helper()
+	if err := exec.Command("docker", "info").Run(); err != nil {
+		t.Skipf("docker info: %v", err)
+	}
+}
+
 func TestRunLocalFixture(t *testing.T) {
+	requireDocker(t)
 	dir := t.TempDir()
 	copyRunLocalInput(t, dir)
 	g := mustCompose(runLocalFixturePipeline)(t)
@@ -112,6 +120,7 @@ func TestRunLocalFixture(t *testing.T) {
 }
 
 func TestRunLocalBadImage(t *testing.T) {
+	requireDocker(t)
 	dir := t.TempDir()
 	copyRunLocalInput(t, dir)
 	err := gobble.Run(mustCompose(runLocalBadImagePipeline)(t), dir, 2)

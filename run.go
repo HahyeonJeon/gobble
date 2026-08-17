@@ -14,7 +14,7 @@ import (
 // resume, inspect, or delete.
 //
 // cap is the maximum number of tasks that may run at once. Zero means
-// 1. Values below 1 are refused.
+// 1. Values below 1 or above 64 are refused.
 //
 // Empty Image runs as a host process. A nil error means every task
 // succeeded. Contained task failure returns an [*Error] with Op "run"

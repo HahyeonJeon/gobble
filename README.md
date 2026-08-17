@@ -10,7 +10,7 @@ Import `github.com/HahyeonJeon/gobble`. Authors build a `Pipeline`, call `Compos
 
 ## First check
 
-Requires Go 1.26 or newer.
+Requires Go 1.26 or newer. Docker is not required.
 
 ```sh
 go test ./...

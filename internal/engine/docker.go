@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -24,6 +25,9 @@ func runDocker(cwd, image string, argv []string, stdout, stderr io.Writer) (int,
 	if image == "" {
 		return -1, errors.New("empty image")
 	}
+	if msg := invalidImage(image); msg != "" {
+		return -1, errors.New(msg)
+	}
 	if len(argv) == 0 {
 		return -1, errors.New("empty command")
 	}
@@ -43,6 +47,8 @@ func dockerRunArgs(cwd, image string, argv []string) []string {
 	}
 	args := []string{
 		"run", "--rm",
+		"--user", strconv.Itoa(os.Getuid()) + ":" + strconv.Itoa(os.Getgid()),
+		"--network=none",
 		"--entrypoint", argv[0],
 		"-v", abs + ":" + containerWorkDir,
 		"-w", containerWorkDir,
