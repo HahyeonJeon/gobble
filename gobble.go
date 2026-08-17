@@ -11,7 +11,15 @@
 //
 // Authors build a [Pipeline] and call [Compose] to obtain an immutable [Graph].
 // [Validate] re-checks compose defects and rejects plan-time path conflicts
-// and unsupported backends.
+// and unsupported backends. [BuildPlan] validates and returns a [Plan].
+// [WriteTo] is a [PlanOption] that writes the same JSON [Plan.WriteJSON] emits.
+//
+// Shipped names are PathSpec, Directory, Literal, Dir, WithDir, WithLead,
+// AppendStep, WithExt, Append, ReplaceExtension, Render, Equal, DeriveRule,
+// DeriveAppend, DeriveReplaceExt, Pipeline, NewPipeline, Module, Branch,
+// Merge, Task, Handle, TaskSpec, Bind, Param, Resources, Graph, Compose,
+// Validate, BuildPlan, WriteTo, PlanOption, Plan, Error, Defect, DefectCode,
+// and the Defect* constants.
 // The public surface is unsupported except these locked PathSpec concepts.
 package gobble
 
