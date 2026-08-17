@@ -186,6 +186,9 @@ func (c *checker) checkTask(t *Task) {
 	}
 	for _, b := range t.Outputs {
 		checkPort(b)
+		if b.FromKind != FromZero && !c.fromInGraph(b) {
+			c.add(DefectMissingInput, bindUnit(id, b.Name), "missing input")
+		}
 	}
 	seenOut := make(map[string]bool)
 	for _, name := range t.OutCalls {

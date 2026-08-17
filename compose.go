@@ -110,22 +110,32 @@ func snapshotGraphBind(b graphBind) engine.Bind {
 	}
 }
 
+func foreignFrom(h Handle, p *Pipeline) bool {
+	switch h.kind {
+	case handleZero:
+		return false
+	case handleInput:
+		return h.pipe != p
+	case handleOut, handleIn:
+		return h.task == nil || h.task.pipe != p
+	default:
+		return true
+	}
+}
+
 func snapshotFrom(h Handle, p *Pipeline) (engine.FromKind, string, string) {
+	// A non-zero authored Handle stays a From. Do not report FromZero
+	// for a foreign handle, or an output bind with a complete Spec
+	// looks like "no From".
+	if foreignFrom(h, p) {
+		return snapshotFromKind(h.kind), "", ""
+	}
 	switch h.kind {
 	case handleInput:
-		if h.pipe != p {
-			return engine.FromZero, "", ""
-		}
 		return engine.FromInput, h.name, ""
 	case handleOut:
-		if h.task == nil || h.task.pipe != p {
-			return engine.FromZero, "", ""
-		}
 		return engine.FromOut, h.name, h.task.id()
 	case handleIn:
-		if h.task == nil || h.task.pipe != p {
-			return engine.FromZero, "", ""
-		}
 		return engine.FromIn, h.name, h.task.id()
 	default:
 		return engine.FromZero, "", ""
@@ -254,6 +264,11 @@ func (r *resolver) graphBind(t *Task, b Bind, out bool) graphBind {
 	} else {
 		gb.spec = b.Spec.clone()
 	}
+	if foreignFrom(b.From, r.p) {
+		gb.fromKind = handleZero
+		gb.fromName = ""
+		return gb
+	}
 	if b.From.task != nil {
 		gb.fromTask = b.From.task.id()
 	}
@@ -285,11 +300,11 @@ func (r *resolver) resolveBind(t *Task, b Bind, out bool) (PathSpec, bool) {
 }
 
 func (r *resolver) resolveFrom(h Handle) (PathSpec, bool) {
+	if foreignFrom(h, r.p) {
+		return PathSpec{}, false
+	}
 	switch h.kind {
 	case handleInput:
-		if h.pipe != r.p {
-			return PathSpec{}, false
-		}
 		for _, in := range r.p.inputs {
 			if in.name == h.name {
 				return in.spec.clone(), true
@@ -297,18 +312,12 @@ func (r *resolver) resolveFrom(h Handle) (PathSpec, bool) {
 		}
 		return PathSpec{}, false
 	case handleOut:
-		if h.task == nil || h.task.pipe != r.p {
-			return PathSpec{}, false
-		}
 		b, ok := findBind(h.task.spec.Outputs, h.name)
 		if !ok {
 			return PathSpec{}, false
 		}
 		return r.resolveBind(h.task, b, true)
 	case handleIn:
-		if h.task == nil || h.task.pipe != r.p {
-			return PathSpec{}, false
-		}
 		b, ok := findBind(h.task.spec.Inputs, h.name)
 		if !ok {
 			return PathSpec{}, false
@@ -322,7 +331,7 @@ func (r *resolver) resolveFrom(h Handle) (PathSpec, bool) {
 func fromEdges(t *Task) []graphEdge {
 	var edges []graphEdge
 	add := func(b Bind) {
-		if b.From.IsZero() {
+		if b.From.IsZero() || foreignFrom(b.From, t.pipe) {
 			return
 		}
 		e := graphEdge{fromPort: b.From.name, toTask: t.id(), toPort: b.Name}

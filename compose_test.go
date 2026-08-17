@@ -170,6 +170,18 @@ func TestComposeReject(t *testing.T) {
 			code: gobble.DefectMissingInput,
 			unit: "use.in",
 		},
+		{
+			name: "foreign output From colliding task id",
+			pipe: foreignOutputFromCollidingIDPipeline(),
+			code: gobble.DefectMissingInput,
+			unit: "use.out",
+		},
+		{
+			name: "foreign output From non-colliding task id",
+			pipe: foreignOutputFromNonCollidingIDPipeline(),
+			code: gobble.DefectMissingInput,
+			unit: "use.out",
+		},
 	}
 
 	for _, tt := range tests {
@@ -226,6 +238,53 @@ func TestComposeForeignFromCollidingID(t *testing.T) {
 	}
 	if !found {
 		t.Fatalf("case foreign-from: Compose() defects codes got %v units %v, want code %s unit %q", codes, units, gobble.DefectMissingInput, "use.in")
+	}
+}
+
+func TestComposeForeignOutputFrom(t *testing.T) {
+	tests := []struct {
+		name string
+		pipe *gobble.Pipeline
+		unit string
+	}{
+		{
+			name: "colliding task id",
+			pipe: foreignOutputFromCollidingIDPipeline(),
+			unit: "use.out",
+		},
+		{
+			name: "non-colliding task id",
+			pipe: foreignOutputFromNonCollidingIDPipeline(),
+			unit: "use.out",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g, err := gobble.Compose(tt.pipe)
+			if g != nil {
+				t.Fatalf("case foreign-output-from %s: Compose() graph != nil, want nil (no DAG edge)", tt.name)
+			}
+			var ge *gobble.Error
+			if !errors.As(err, &ge) {
+				t.Fatalf("case foreign-output-from %s: Compose() error = %v, want *Error", tt.name, err)
+			}
+			if ge.Op != "compose" {
+				t.Fatalf("case foreign-output-from %s: Error.Op got %q, want %q", tt.name, ge.Op, "compose")
+			}
+			found := false
+			codes := make([]gobble.DefectCode, len(ge.Defects))
+			units := make([]string, len(ge.Defects))
+			for i, d := range ge.Defects {
+				codes[i] = d.Code
+				units[i] = d.Unit
+				if d.Code == gobble.DefectMissingInput && d.Unit == tt.unit {
+					found = true
+				}
+			}
+			if !found {
+				t.Fatalf("case foreign-output-from %s: Compose() defects codes got %v units %v, want code %s unit %q", tt.name, codes, units, gobble.DefectMissingInput, tt.unit)
+			}
+		})
 	}
 }
 
@@ -641,6 +700,51 @@ func foreignFromCollidingIDPipeline() *gobble.Pipeline {
 		Command: []string{"use"},
 		Inputs:  []gobble.Bind{{Name: "in", From: ta.Out("clean")}},
 		Outputs: []gobble.Bind{fileOut("out")},
+	})
+	return b
+}
+
+func foreignOutputFromCollidingIDPipeline() *gobble.Pipeline {
+	a := gobble.NewPipeline("run-a")
+	ta := a.AddModule("prep").AddTask(gobble.TaskSpec{
+		Name:    "fastp",
+		Command: []string{"fastp"},
+		Outputs: []gobble.Bind{{Name: "clean", Spec: gobble.PathSpec{Name: "foreign", Ext: ".fq"}}},
+	})
+	b := gobble.NewPipeline("run-b")
+	b.AddModule("prep").AddTask(gobble.TaskSpec{
+		Name:    "fastp",
+		Command: []string{"fastp"},
+		Outputs: []gobble.Bind{{Name: "clean", Spec: gobble.PathSpec{Name: "local", Ext: ".fq"}}},
+	})
+	b.AddTask(gobble.TaskSpec{
+		Name:    "use",
+		Command: []string{"use"},
+		Outputs: []gobble.Bind{{
+			Name: "out",
+			From: ta.Out("clean"),
+			Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "use", Ext: ".txt"},
+		}},
+	})
+	return b
+}
+
+func foreignOutputFromNonCollidingIDPipeline() *gobble.Pipeline {
+	a := gobble.NewPipeline("run-a")
+	ta := a.AddTask(gobble.TaskSpec{
+		Name:    "src",
+		Command: []string{"echo"},
+		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Name: "foreign", Ext: ".txt"}}},
+	})
+	b := gobble.NewPipeline("run-b")
+	b.AddTask(gobble.TaskSpec{
+		Name:    "use",
+		Command: []string{"use"},
+		Outputs: []gobble.Bind{{
+			Name: "out",
+			From: ta.Out("out"),
+			Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "use", Ext: ".txt"},
+		}},
 	})
 	return b
 }

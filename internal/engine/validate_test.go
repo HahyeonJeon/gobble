@@ -165,6 +165,25 @@ func TestComposeCheckIllegalSnapshots(t *testing.T) {
 			code: DefectInvalidPath,
 			unit: "copy.out",
 		},
+		{
+			name: "foreign output From complete spec",
+			snap: Snapshot{
+				Name: "run-b",
+				Tasks: []Task{{
+					ID:      "use",
+					Name:    "use",
+					Command: []string{"use"},
+					Outputs: []Bind{{
+						Name:     "out",
+						FromKind: FromOut,
+						FromName: "clean",
+						Spec:     Path{Dir: "out", Name: "use", Ext: ".txt"},
+					}},
+				}},
+			},
+			code: DefectMissingInput,
+			unit: "use.out",
+		},
 	}
 
 	for _, tt := range tests {
