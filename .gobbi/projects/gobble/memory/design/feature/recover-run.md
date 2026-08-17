@@ -30,7 +30,7 @@ is blocking. Ask before leaving those Open.
 
 ### Normal
 
-- After a contained failure, resume only remaining work using reusable outputs.
+- After a contained failure, resume remaining work using reusable outputs. Remaining work is tasks not yet successful in this run. Reusable outputs follow the temporary first-horizon rule on run-local until `cache-inputs` is accepted. Affected work is the unmatched task plus its downstream dependents.
 - Source: `task-behavior`
 
 ### Alternate
@@ -69,7 +69,7 @@ is blocking. Ask before leaving those Open.
 
 ### Interfaces
 
-- Statement: Library retry, resume, cancel, and clean operations, then matching CLI verbs.
+- Statement: Library retry, resume, cancel, and clean operations. CLI for the same operations is required at first-horizon exit. CLI command names stay Open (`invocation-contract`).
 - Source: `interfaces`
 
 ## Constraints and qualities
@@ -81,7 +81,7 @@ is blocking. Ask before leaving those Open.
 
 | Id | Question | Blocking | What would resolve it |
 |---|---|---|---|
-| cache-inputs | Which inputs decide reusable versus affected work? | no | An accepted cache fingerprint rule |
+| cache-inputs | Which long-term inputs decide reusable versus affected work? Temporary first-horizon rule is recorded on run-local. | no | An accepted long-term cache fingerprint rule |
 | retention-deletion | How long is run state kept beyond explicit clean? | no | An accepted retention policy |
 
 - Source: open ids used above

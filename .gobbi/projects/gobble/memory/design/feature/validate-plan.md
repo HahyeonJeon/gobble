@@ -9,7 +9,7 @@ is blocking. Ask before leaving those Open.
 
 ## Purpose
 
-- Statement: Detect configuration errors, missing inputs, cycles, conflicting outputs, and unsupported backend requirements before execution, and expose a dry run, DAG, and plan.
+- Statement: Re-check missing inputs, cycles, conflicting outputs, and unsupported backend requirements before execution, and expose a dry run, DAG, and plan. Compose-time rejection of a cycle or missing I/O does not replace this check.
 - Source: `core-tasks`
 
 ## Actors
@@ -22,7 +22,7 @@ is blocking. Ask before leaving those Open.
 
 ## Scope
 
-- In scope: Detect missing inputs, cycles, conflicting outputs, and unsupported backend requirements; expose dry run, DAG, and plan through the library and later the CLI.
+- In scope: Re-check missing inputs, cycles, conflicting outputs, and unsupported backend requirements; expose dry run, DAG, and plan through the library, and through the CLI at first-horizon exit.
 - Out of scope: Executing tasks; submitting to HPC or cloud; treating a drawn DAG as agent-operable success.
 - Source: `task-scope`, `refused-use`
 
@@ -30,7 +30,7 @@ is blocking. Ask before leaving those Open.
 
 ### Normal
 
-- Validate a composed pipeline and emit a structured plan and DAG.
+- Validate a composed pipeline, including a dry run that does not execute tasks, and emit a structured plan and DAG.
 - Source: `task-behavior`
 
 ### Alternate
@@ -59,7 +59,7 @@ is blocking. Ask before leaving those Open.
 
 ### Parts
 
-- Statement: Implemented by the validator and planner in the engine, called from the library and later the CLI.
+- Statement: Implemented by the validator and planner in the engine, called from the library, and from the CLI at first-horizon exit.
 - Source: `shape`
 
 ### Data
@@ -69,7 +69,7 @@ is blocking. Ask before leaving those Open.
 
 ### Interfaces
 
-- Statement: Library validate and plan operations, then CLI verbs. Default output is JSON or JSONL.
+- Statement: Library validate and plan operations. CLI for the same operations is required at first-horizon exit. CLI command names stay Open (`invocation-contract`). Default response encoding is JSON or JSONL, not a pipeline language.
 - Source: `interfaces`
 
 ## Constraints and qualities
@@ -81,7 +81,7 @@ is blocking. Ask before leaving those Open.
 
 | Id | Question | Blocking | What would resolve it |
 |---|---|---|---|
-| invocation-contract | Which validate and plan CLI names must stay compatible? | no | An accepted CLI contract |
+| invocation-contract | Which validate and plan CLI names must stay compatible? Names are not locked. | no | An accepted CLI contract |
 
 - Source: open ids used above
 

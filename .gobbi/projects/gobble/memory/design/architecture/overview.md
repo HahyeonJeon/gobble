@@ -16,7 +16,7 @@ answer. Fill each heading, write `Not applicable — {reason}`, or write
 
 ## Outcome
 
-- Statement: Even if every product surface is rebuilt, Gobble must keep one backend-independent pipeline model, a reusable Go core library, no proprietary DSL as a prerequisite, agent-readable structured control, and recoverability after failure or interruption as a normal lifecycle path. First observable success is an agent completing a local loop: write or edit a Go pipeline with modules, branch, and merge; inspect the plan; run it locally in containers; and resume only affected work. First-horizon exit also requires the same loop through structured CLI verbs. An early falsifying test may use the Go API only before the CLI exists. Engine-class Nextflow and Snakemake features must be considered in design and implemented later. A compiling module, passing unit tests, a drawn DAG, or feature count without that agent loop is not success. Evidence to end the project is that after the local core exists, agents still cannot validate, run, diagnose, and resume without a human translating logs. The current starting point is commit `a2d561fea2846bc1c55213d66a7025dac980f330` with a design draft, no Go module, and no Design Memory.
+- Statement: Even if every product surface is rebuilt, Gobble must keep one backend-independent pipeline model, a reusable Go core library, no proprietary DSL as a prerequisite, agent-readable structured control, and recoverability after failure or interruption as a normal lifecycle path. First observable success is an agent completing a local loop: write or edit a Go pipeline with modules, branch, and merge; inspect the plan; run it locally in containers; and resume only affected work. First-horizon exit also requires the same loop through structured CLI verbs. An early falsifying test may use the Go API only before the CLI exists. Engine-class Nextflow and Snakemake features must be considered in design and implemented later. A compiling module, passing unit tests, a drawn DAG, or feature count without that agent loop is not success. Evidence to end the project is that after the local core exists, agents still cannot validate, run, diagnose, and resume without a human translating logs. The current tree is `feat/startup` including bootstrap `3389767462780dc0cfc436de864580959dfbb0ce` with Design Memory, the Go module, and a first-check README. The pre-bootstrap baseline is `a2d561fea2846bc1c55213d66a7025dac980f330`.
 - Source: `durable-outcome`, `success-and-stop`, `current-baseline`, `first-use`
 
 ## Scope and non-goals
@@ -46,9 +46,9 @@ answer. Fill each heading, write `Not applicable — {reason}`, or write
 | Term | Meaning | Source |
 |---|---|---|
 | Gobble | The one independently useful product: Go library, then engine, then CLI. | `products` |
-| Agent-operable | An agent can discover, compose, validate, run, inspect, and resume from structured state without a human translating logs. | `purpose`, `success-and-stop` |
+| Agent-operable | An agent can compose, validate, run, inspect, and resume from structured state without a human translating logs. Capability discovery is an ecosystem-horizon outcome. | `purpose`, `success-and-stop` |
 | Pipeline model | Shared backend-independent concepts for task, pipeline, input, output, resource, and environment. | `durable-outcome`, `shape` |
-| Task | An independently runnable unit that declares its own environment, including its Docker image. | `shape` |
+| Task | An independently runnable unit. A container task must declare its Docker image. A local-process task must not require an image. | `shape` |
 | Run workspace | Local-files directory that is authoritative for one run’s state, artifacts, and logs. | `data`, `state-authority` |
 | Engine-class features | Nextflow- and Snakemake-class capabilities such as scatter/gather, conditionals, and dynamic expansion. Designed for now, implemented later. | `success-and-stop` |
 

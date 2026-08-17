@@ -22,8 +22,8 @@ is blocking. Ask before leaving those Open.
 
 ## Scope
 
-- In scope: First-horizon implementation of reusable tasks and modules, explicit inputs, outputs, parameters, resources, environments, and branch and merge (fan-out and fan-in) in Go. Each task may declare its own Docker image. Design must leave room for later scatter/gather, conditionals, and data-dependent dynamic expansion.
-- Out of scope: A Gobble DSL, GUI authoring, built-in assay-specific tools, implementing engine-class features in the first horizon, and executing or scheduling a run. Composition-time structured validation of the authored graph stays in this feature.
+- In scope: First-horizon implementation of reusable tasks and modules, explicit inputs, outputs, parameters, resources, environments, and branch and merge (fan-out and fan-in) in Go. A container task must declare its Docker image. A local-process task must not require an image. Design must leave room for later scatter/gather, conditionals, and data-dependent dynamic expansion. Compose-time rejection of a cycle, missing input or output, or a DSL-as-source file so the graph cannot become a plan. Validate-plan re-checks those defects and owns conflicting outputs, unsupported backends, dry run, DAG, and plan emission.
+- Out of scope: A Gobble DSL, GUI authoring, built-in assay-specific tools, implementing engine-class features in the first horizon, executing or scheduling a run, and emitting a successful plan.
 - Source: `task-scope`, `refused-use`
 
 ## Behavior
@@ -69,7 +69,7 @@ is blocking. Ask before leaving those Open.
 
 ### Interfaces
 
-- Statement: The public Go compose API. CLI compose, if any, is a later surface of the same model.
+- Statement: The public Go compose API. The Go API may prove compose before the CLI exists. First-horizon exit still requires the same loop on the CLI. CLI command names stay Open (`invocation-contract`).
 - Source: `interfaces`
 
 ## Constraints and qualities

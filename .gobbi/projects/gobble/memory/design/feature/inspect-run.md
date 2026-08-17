@@ -22,7 +22,7 @@ is blocking. Ask before leaving those Open.
 
 ## Scope
 
-- In scope: Structured run and task state, events, errors, stdout/stderr, timing, DAG, and artifact lineage through the library and CLI.
+- In scope: Structured run and task state, events, errors, stdout/stderr, timing, DAG, and artifact lineage through the library, and through the CLI at first-horizon exit.
 - Out of scope: A GUI dashboard; human-only log archaeology as the primary interface.
 - Source: `task-scope`, `refused-use`
 
@@ -69,7 +69,7 @@ is blocking. Ask before leaving those Open.
 
 ### Interfaces
 
-- Statement: Library inspect operations and later CLI status and logs verbs. Default output is JSON or JSONL.
+- Statement: Library inspect operations. CLI for the same operations is required at first-horizon exit. CLI command names stay Open (`invocation-contract`). Default response encoding is JSON or JSONL, not a pipeline language.
 - Source: `interfaces`
 
 ## Constraints and qualities
@@ -82,7 +82,7 @@ is blocking. Ask before leaving those Open.
 | Id | Question | Blocking | What would resolve it |
 |---|---|---|---|
 | visual-principles | Which few visual principles must stay recognizable if human text is shown? | no | A recorded CLI visual rule |
-| invocation-contract | Which status and logs CLI names must stay compatible? | no | An accepted CLI contract |
+| invocation-contract | Which inspect CLI names must stay compatible? Names are not locked. | no | An accepted CLI contract |
 
 - Source: open ids used above
 

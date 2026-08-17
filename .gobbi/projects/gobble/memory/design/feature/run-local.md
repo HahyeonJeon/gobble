@@ -39,7 +39,7 @@ is blocking. Ask before leaving those Open.
 
 ### Alternate
 
-- Reuse valid cached outputs and run only changed work, or run one named task by itself.
+- Reuse valid cached outputs and run only changed work, or run one named task by itself. Until `cache-inputs` is accepted, reuse only when task identity, declared command or image, declared parameters, and recorded input path plus content fingerprints all match and published outputs still exist; otherwise treat that task and its downstream dependents as affected. Changed work is tasks whose reuse check failed.
 - Source: `task-behavior`
 
 ### Invalid
@@ -73,7 +73,7 @@ is blocking. Ask before leaving those Open.
 
 ### Interfaces
 
-- Statement: Library run operation and later CLI run verb. Scheduler-to-executor seam exists; exact operation names are not settled.
+- Statement: Library run operation. CLI for the same operation is required at first-horizon exit. CLI command names stay Open (`invocation-contract`). Scheduler-to-executor seam exists; exact operation names are not settled.
 - Source: `interfaces`
 
 ## Constraints and qualities
@@ -85,7 +85,7 @@ is blocking. Ask before leaving those Open.
 
 | Id | Question | Blocking | What would resolve it |
 |---|---|---|---|
-| cache-inputs | Which inputs participate in reuse and “affected work”? | no | An accepted cache fingerprint rule |
+| cache-inputs | Which long-term inputs participate in reuse? Temporary first-horizon rule is recorded under Alternate. | no | An accepted long-term cache fingerprint rule |
 | dependency-unavailable | What structured status is shown while Docker is down? | no | A recorded Docker-down status shape |
 
 - Source: open ids used above

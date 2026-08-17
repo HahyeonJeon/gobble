@@ -16,7 +16,7 @@ product under the remaining product headings.
 
 ### Gobble
 
-- Statement: A consumer installs the Go module, writes a small pipeline in Go that uses modules, branch, and merge, validates and inspects the plan, runs it locally in containers, and can resume after a contained failure. First-horizon exit also requires the same loop through structured CLI verbs. Construction order is library, then engine, then CLI. An early falsifying test may use the Go API only before the CLI exists. First useful outcome is that agent loop, not Nextflow- or Snakemake-class feature parity. Today consumers write Nextflow, Snakemake, Cromwell/WDL, or ad-hoc scripts and operate them as humans; the hypothesized switch is agent-native compose and recover without a Gobble DSL. No named external consumer is recorded.
+- Statement: A consumer installs the Go module, writes a small pipeline in Go that uses modules, branch, and merge, validates and inspects the plan, runs it locally in containers, and can resume after a contained failure. Construction order is library, then engine, then CLI. The Go API may prove the loop before the CLI exists. First-horizon exit still requires the same loop on the CLI. CLI command names stay Open (`invocation-contract`). First useful outcome is that agent loop, not Nextflow- or Snakemake-class feature parity. Today consumers write Nextflow, Snakemake, Cromwell/WDL, or ad-hoc scripts and operate them as humans; the hypothesized switch is agent-native compose and recover without a Gobble DSL. No named external consumer is recorded.
 - Source: `first-use`, `current-alternative`
 
 ## Refused uses
@@ -52,14 +52,14 @@ product under the remaining product headings.
 
 ### Gobble
 
-- Statement: Help and updates come from the GitHub repository. There is no support SLA. Versioning will follow Go modules once the library is published.
+- Statement: Assumption — help and updates come from the GitHub repository. There is no support SLA. Versioning will follow Go modules once the library is published.
 - Source: `support-update`
 
 ## End of life
 
 ### Gobble
 
-- Statement: No export, deprecation, or retirement promise is made yet. Local run workspaces and artifacts remain the consumer’s files. A later promise can add export of run state and provenance.
+- Statement: Assumption — no export, deprecation, or retirement promise is made yet. Local run workspaces and artifacts remain the consumer’s files. A later promise can add export of run state and provenance.
 - Source: `end-of-life`
 
 ## Feature index

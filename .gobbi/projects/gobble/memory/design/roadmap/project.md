@@ -13,9 +13,9 @@ Build a local agent-operable core first: Go library, then engine, then CLI. Firs
 
 ## Current position
 
-- Now: The worktree is at `a2d561fea2846bc1c55213d66a7025dac980f330` with `docs/gobble-draft.md` and Gobbi runtime files. There is no Go module, no package source, no test, no CLI, and no durable Design Memory. README is `# gona`.
+- Now: `feat/startup` includes bootstrap `3389767462780dc0cfc436de864580959dfbb0ce` and Design Memory under `.gobbi/projects/gobble/memory/design/`. The Go module is `github.com/HahyeonJeon/gobble` (`go 1.26`). README names first-check `go test ./...`. There is no CLI and no `*_test.go`. Pre-bootstrap baseline remains `a2d561fea2846bc1c55213d66a7025dac980f330` (`# gona`, no module).
 - Local or cloud: local
-- Bootstrap: not run
+- Bootstrap: run; committed as `3389767462780dc0cfc436de864580959dfbb0ce` after user authorization to replace the existing README.
 - Source: `local-or-cloud`, `first-check`, `current-baseline`
 
 ## Horizons
@@ -30,7 +30,7 @@ Behavior in the first included horizon.
 - Included feature ids: compose-pipeline, validate-plan, run-local, inspect-run, recover-run
 - Entry condition: Accepted Startup design drafts and a first-check of `go test ./...` on module `github.com/HahyeonJeon/gobble`.
 - Exit evidence: An agent completes the local loop on the synthetic fixture and on a small WGS pipeline, using the Go API and the CLI, with at least one real Docker task. Compile or `go test ./...` alone is not exit evidence.
-- Deliberately deferred: Scatter/gather, conditionals, dynamic expansion, Slurm, cloud batch, Kubernetes, GUI, a Gobble DSL, fairness, quotas, job arrays, and a component registry.
+- Deliberately deferred: Scatter/gather, conditionals, dynamic expansion, Podman executor, Slurm, cloud batch, Kubernetes, GUI, a Gobble DSL, fairness, quotas, job arrays, and a component registry.
 - Costly decision: One backend-independent pipeline model, scheduler/executor split, per-task Docker images, local-files run workspace, and no proprietary DSL.
 - Source: `horizon-direction`
 
@@ -96,7 +96,7 @@ Every feature file appears in exactly one horizon or in Not scheduled.
 
 | Id | Question | What would resolve it |
 |---|---|---|
-| cache-inputs | Which inputs participate in reuse inside Local agent-operable core? | An accepted cache fingerprint rule |
+| cache-inputs | Which long-term inputs participate in reuse? A temporary first-horizon rule is in force: reuse only when task identity, declared command or image, declared parameters, and recorded input path plus content fingerprints match and published outputs still exist; otherwise treat the task and its downstream dependents as affected. Remaining work is tasks not yet successful in this run. Changed work is tasks whose reuse check failed. | An accepted long-term cache fingerprint rule |
 | later-features | Which engine-class features enter HPC, cloud, or ecosystem horizons? | A named later-horizon feature list |
 
 - Source: open placement or rule items
