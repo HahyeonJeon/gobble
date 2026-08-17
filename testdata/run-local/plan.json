@@ -1,0 +1,123 @@
+{
+  "pipeline": "run-local",
+  "tasks": [
+    {
+      "id": "image",
+      "name": "image",
+      "module": "",
+      "branch": "",
+      "merge": "",
+      "command": [
+        "sh",
+        "-c",
+        "pwd \u003e out/docker/pwd.txt \u0026\u0026 cp in/sample.txt out/docker/sample.txt"
+      ],
+      "image": "alpine:3.21",
+      "backend": "local",
+      "resources": {
+        "cpu": 1,
+        "memory": "256m"
+      },
+      "params": [
+        {
+          "name": "mode",
+          "value": "fast"
+        }
+      ],
+      "inputs": [
+        {
+          "name": "in",
+          "path": "in/sample.txt",
+          "spec": {
+            "dir": "in",
+            "lead": "",
+            "name": "sample",
+            "steps": [],
+            "ext": ".txt",
+            "literal": false
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "out",
+          "path": "out/docker/sample.txt",
+          "spec": {
+            "dir": "out/docker",
+            "lead": "",
+            "name": "sample",
+            "steps": [],
+            "ext": ".txt",
+            "literal": false
+          }
+        },
+        {
+          "name": "pwd",
+          "path": "out/docker/pwd.txt",
+          "spec": {
+            "dir": "out/docker",
+            "lead": "",
+            "name": "pwd",
+            "steps": [],
+            "ext": ".txt",
+            "literal": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "host",
+      "name": "host",
+      "module": "",
+      "branch": "",
+      "merge": "",
+      "command": [
+        "cp",
+        "in/sample.txt",
+        "out/process/sample.txt"
+      ],
+      "image": "",
+      "backend": "local",
+      "resources": {
+        "cpu": 0,
+        "memory": ""
+      },
+      "params": [],
+      "inputs": [
+        {
+          "name": "in",
+          "path": "in/sample.txt",
+          "spec": {
+            "dir": "in",
+            "lead": "",
+            "name": "sample",
+            "steps": [],
+            "ext": ".txt",
+            "literal": false
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "out",
+          "path": "out/process/sample.txt",
+          "spec": {
+            "dir": "out/process",
+            "lead": "",
+            "name": "sample",
+            "steps": [],
+            "ext": ".txt",
+            "literal": false
+          }
+        }
+      ]
+    }
+  ],
+  "dag": {
+    "nodes": [
+      "image",
+      "host"
+    ],
+    "edges": []
+  }
+}

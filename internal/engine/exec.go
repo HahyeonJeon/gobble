@@ -19,18 +19,16 @@ type report struct {
 	Published bool
 }
 
+type runner func(cwd string, argv []string, stdout, stderr io.Writer) (int, error)
+
 func executeTask(workspace string, task TaskPlan) report {
 	if task.Image != "" {
-		return report{
-			ID:      task.ID,
-			Exit:    -1,
-			Message: "non-empty image",
-		}
+		return isolatedExecute(workspace, task, dockerRunner(task.Image))
 	}
-	return processExecute(workspace, task)
+	return isolatedExecute(workspace, task, runProcess)
 }
 
-func processExecute(workspace string, task TaskPlan) report {
+func isolatedExecute(workspace string, task TaskPlan, run runner) report {
 	r := report{ID: task.ID}
 	taskDir := filepath.Join(workspace, ControlDir, "tasks", task.ID)
 	isolate := filepath.Join(taskDir, "work")
@@ -57,7 +55,7 @@ func processExecute(workspace string, task TaskPlan) report {
 		r.Message = err.Error()
 		return r
 	}
-	exit, runErr := runProcess(isolate, task.Command, outf, errf)
+	exit, runErr := run(isolate, task.Command, outf, errf)
 	outf.Close()
 	errf.Close()
 	r.Exit = exit
@@ -113,7 +111,7 @@ func mkdirPlanParent(root, planPath string) error {
 	return os.MkdirAll(filepath.Join(root, dir), 0o755)
 }
 
-func runProcess(cwd string, argv []string, stdout, stderr *os.File) (int, error) {
+func runProcess(cwd string, argv []string, stdout, stderr io.Writer) (int, error) {
 	if len(argv) == 0 {
 		return -1, errors.New("empty command")
 	}
