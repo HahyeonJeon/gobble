@@ -64,7 +64,8 @@ type PathSpec struct {
 }
 
 // DeriveRule selects how a related-file bind derives a PathSpec.
-// The zero value is DeriveAppend.
+// A related-file bind has From set and Spec with only Ext, and optionally
+// Dir, populated. The zero value is DeriveAppend.
 type DeriveRule int
 
 const (
@@ -127,7 +128,8 @@ func (p PathSpec) Render() (string, error) {
 }
 
 // Equal reports whether p and q have the same Dir string, Lead, Name, Steps
-// elements, Ext, and literal opacity. It does not compare rendered strings.
+// elements, Ext, and literal opacity. It does not compare rendered strings
+// or the invalid-method marker set when a Literal method is refused.
 func (p PathSpec) Equal(q PathSpec) bool {
 	if p.Dir.String() != q.Dir.String() {
 		return false

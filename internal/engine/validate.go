@@ -38,8 +38,8 @@ func ComposeCheck(s Snapshot) []Defect {
 	return check(s, false)
 }
 
-// Validate reports compose defects, rendered-path conflicts, and
-// unsupported backends on s.
+// Validate reports compose defects, rendered-path conflicts,
+// unsupported backends, and non-finite CPU on s.
 func Validate(s Snapshot) []Defect {
 	return check(s, true)
 }

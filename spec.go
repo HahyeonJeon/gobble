@@ -19,7 +19,11 @@ type TaskSpec struct {
 // Bind is one named input or output port on a task.
 //
 // Name is the local port name only. It never implicitly matches a pipeline
-// input. Rule is used when this Bind is a related file of From. The zero
+// input. When From is set, Spec is classified as follows: a zero Spec
+// inherits From; a Spec that has only Ext set, and optionally Dir, is a
+// related file of From using Rule; any other Spec restages field by field,
+// taking each set field from Spec and inheriting the rest from From.
+// Rule is used when this Bind is a related file of From. The zero
 // Rule is DeriveAppend.
 type Bind struct {
 	Name string

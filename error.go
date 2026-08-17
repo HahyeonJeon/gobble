@@ -14,7 +14,9 @@ const (
 	DefectMissingOutput DefectCode = "missing-output"
 	// DefectMissingCommand means a task has an empty command.
 	DefectMissingCommand DefectCode = "missing-command"
-	// DefectInvalidName means a name is empty, duplicate, or illegally spelled.
+	// DefectInvalidName means a name is empty, duplicate, or illegally
+	// spelled, a required value is nil, a CPU request is not finite, or
+	// a plan could not be encoded. Message distinguishes those cases.
 	DefectInvalidName DefectCode = "invalid-name"
 	// DefectInvalidPath means a PathSpec cannot be rendered or used.
 	DefectInvalidPath DefectCode = "invalid-path"

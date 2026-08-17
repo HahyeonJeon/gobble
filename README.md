@@ -6,7 +6,7 @@ PathSpec is the public parameterized path model. DirName, Prefix, BaseName, Suff
 
 This module does not yet run, inspect, or resume a pipeline. `docs/gobble-draft.md` is a non-binding vision draft, not the shipped API.
 
-Authors build a `Pipeline`, call `Compose` for an immutable `Graph`, then `Validate` or `BuildPlan`. Dry run is `BuildPlan`. Failures are `*Error` values inspected with `errors.As`.
+Import `github.com/HahyeonJeon/gobble`. Authors build a `Pipeline`, call `Compose` for an immutable `Graph`, then `Validate` or `BuildPlan`. Dry run is `BuildPlan`. Compose, Validate, and BuildPlan report defects as `*Error` values inspected with `errors.As`. A `WriteTo` failure is the writer's own error.
 
 ## First check
 

@@ -30,7 +30,8 @@ func WriteTo(w io.Writer) PlanOption {
 // BuildPlan validates g first, then returns an inspectable plan.
 //
 // On any defect it returns (nil, [*Error]) with Op "plan". After a valid
-// plan is built, a [WriteTo] error still returns the [*Plan].
+// plan is built, a [WriteTo] error still returns the [*Plan] and is the
+// writer's own error, not an [*Error].
 func BuildPlan(g *Graph, opts ...PlanOption) (*Plan, error) {
 	var cfg planConfig
 	for _, opt := range opts {
@@ -65,6 +66,7 @@ func BuildPlan(g *Graph, opts ...PlanOption) (*Plan, error) {
 }
 
 // WriteJSON writes the plan as one JSON object to w, including a trailing newline.
+// A nil [*Plan] returns a non-[*Error].
 func (p *Plan) WriteJSON(w io.Writer) error {
 	if p == nil || p.inner == nil {
 		return errors.New("nil plan")
@@ -73,7 +75,7 @@ func (p *Plan) WriteJSON(w io.Writer) error {
 }
 
 // MarshalJSON returns the same plan JSON [WriteJSON] writes, without a
-// trailing newline.
+// trailing newline. A nil [*Plan] returns the JSON null value.
 func (p *Plan) MarshalJSON() ([]byte, error) {
 	if p == nil || p.inner == nil {
 		return []byte("null"), nil
