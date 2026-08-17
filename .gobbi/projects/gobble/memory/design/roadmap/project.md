@@ -13,7 +13,7 @@ Build a local agent-operable core first: Go library, then engine, then CLI. Firs
 
 ## Current position
 
-- Now: `feat/startup` includes bootstrap `3389767462780dc0cfc436de864580959dfbb0ce` and Design Memory under `.gobbi/projects/gobble/memory/design/`. The Go module is `github.com/HahyeonJeon/gobble` (`go 1.26`). README names first-check `go test ./...`. There is no CLI and no `*_test.go`. Pre-bootstrap baseline remains `a2d561fea2846bc1c55213d66a7025dac980f330` (`# gona`, no module).
+- Now: `feat/library-and-engine` implements PathSpec, Compose, Validate, and BuildPlan in module `github.com/HahyeonJeon/gobble` (`go 1.26`) with `internal/engine` and `go test ./...` as first-check. There is no CLI, no `cmd/`, and no run, inspect, or resume. Immutable base is `develop` at `a30ea9e0e69bed113764975916d13dfbeb089128`. Pre-bootstrap baseline remains `a2d561fea2846bc1c55213d66a7025dac980f330`.
 - Local or cloud: local
 - Bootstrap: run; committed as `3389767462780dc0cfc436de864580959dfbb0ce` after user authorization to replace the existing README.
 - Source: `local-or-cloud`, `first-check`, `current-baseline`

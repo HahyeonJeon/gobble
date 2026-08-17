@@ -78,7 +78,7 @@ Do not use a no-op, `echo`, or any command that ignores the local toolchain.
 ### Gobble
 
 - Command: `go test ./...`
-- What it proves: Go 1.26 or newer is installed and the module `github.com/HahyeonJeon/gobble` builds. With no `*_test.go` files, `go test ./...` exits 0 without running tests. It is not proof of agent-operability or Docker.
+- What it proves: Go 1.26 or newer is installed, the module `github.com/HahyeonJeon/gobble` builds, and package tests for `gobble` and `internal/engine` pass. It is not proof of agent-operable run, inspect, or resume, and it does not require Docker.
 - Source: `first-check`
 
 Project command, after every product subsection. If two local products
@@ -105,7 +105,7 @@ disagree, mark Open and ask.
 
 ### Gobble
 
-- Verification: Assumption — a change is safe to keep when `go test ./...` passes and, once tests exist, package tests for touched packages pass. Agent-operability is not proved by compile alone.
+- Verification: Assumption — a change is safe to keep when `go test ./...` passes, including package tests for touched packages. Agent-operability of run, inspect, and resume is not proved by those tests.
 - Build risk: Assumption — the part most likely to be wrong is the pipeline model: whether it can express modules, branch, and merge so an agent can plan, run, and resume without a DSL. Early evidence is the synthetic workflow-case pipeline, then WGS end-to-end on a small dataset.
 - Source: `verification`, `build-risk`
 

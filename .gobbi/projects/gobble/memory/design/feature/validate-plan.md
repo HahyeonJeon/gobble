@@ -70,6 +70,7 @@ is blocking. Ask before leaving those Open.
 ### Interfaces
 
 - Statement: Library validate and plan operations. CLI for the same operations is required at first-horizon exit. CLI command names stay Open (`invocation-contract`). Default response encoding is JSON or JSONL, not a pipeline language.
+- Current: `Validate` re-checks compose defects and rejects path conflicts, unsupported backends, and non-finite CPU. `BuildPlan` validates first and returns a `Plan`. Dry run is `BuildPlan`. `WriteTo` is optional and keeps the plan if the writer fails. Plan JSON keys are `pipeline`, `tasks`, and `dag`. The workflow-case golden is `testdata/workflow-case/plan.json`.
 - Source: `interfaces`
 
 ## Constraints and qualities
