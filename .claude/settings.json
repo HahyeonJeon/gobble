@@ -1,0 +1,20 @@
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "teammateMode": "in-process",
+  "permissions": {
+    "allow": [
+      "Skill(gobbi:gobbi)",
+      "Skill(gobbi:principles)",
+      "Skill(gobbi:discussion)",
+      "Skill(gobbi:delegation)",
+      "Skill(gobbi:agent-teams)",
+      "Agent(gobbi:manager)",
+      "Agent(gobbi:leader)",
+      "Agent(gobbi:executor)",
+      "Agent(gobbi:evaluator)",
+      "Agent(gobbi:assistant)"
+    ]
+  }
+}

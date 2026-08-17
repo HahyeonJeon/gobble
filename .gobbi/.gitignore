@@ -1,0 +1,3 @@
+# Gobbi runtime state. Session evidence and linked worktrees are never tracked.
+projects/*/sessions/
+projects/*/worktrees/
