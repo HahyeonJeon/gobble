@@ -1,5 +1,5 @@
-// Package engine owns validation walks, plan construction, and
-// pre-execution run checks.
+// Package engine owns validation walks, plan construction,
+// pre-execution run checks, and process execution.
 //
 // Package gobble translates Pipeline and Graph values into the snapshot
 // and Document types defined here. Snapshot is the validate view.
@@ -25,6 +25,7 @@ const (
 	DefectUnsupportedBackend = "unsupported-backend"
 	DefectOccupiedWorkspace  = "occupied-workspace"
 	DefectOutputExists       = "output-exists"
+	DefectFailed             = "failed"
 )
 
 // Defect is one named failure found by a validation walk.

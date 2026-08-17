@@ -6,6 +6,34 @@ import (
 	"github.com/HahyeonJeon/gobble/internal/engine"
 )
 
+// Run executes g in workspace.
+//
+// The workspace must already exist. After pre-execution checks pass,
+// Run occupies it by writing run identity under .gobble/. A second
+// Run on that workspace is an occupied-workspace error. It does not
+// resume, inspect, or delete.
+//
+// cap is the maximum number of tasks that may run at once. Zero means
+// 1. Values below 1 are refused.
+//
+// Empty Image runs as a host process. A nil error means every task
+// succeeded. Contained task failure returns an [*Error] with Op "run"
+// that names the failed units.
+func Run(g *Graph, workspace string, cap int) error {
+	if err := preflight(g, workspace, cap); err != nil {
+		return err
+	}
+	doc, err := planDocument(g)
+	if err != nil {
+		return runOp(err)
+	}
+	return publicError("run", engine.Run(engine.Request{
+		Workspace: workspace,
+		Cap:       cap,
+		Document:  doc,
+	}))
+}
+
 // preflight refuses an invalid start before occupy or execute.
 // A nil error means the start is allowed, not that work ran.
 func preflight(g *Graph, workspace string, cap int) error {

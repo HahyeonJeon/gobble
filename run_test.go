@@ -1,6 +1,7 @@
 package gobble_test
 
 import (
+	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
@@ -227,6 +228,332 @@ func TestPlanDocumentExecutionView(t *testing.T) {
 	if len(doc.Edges) != 1 || doc.Edges[0].FromTask != "" || doc.Edges[0].ToPort != "in" {
 		t.Fatalf("Document.Edges got %#v", doc.Edges)
 	}
+}
+
+func TestRunProcessGraph(t *testing.T) {
+	dir := readyRunWorkspace(t)
+	g := mustCompose(processCopyPipeline)(t)
+	if err := gobble.Run(g, dir, 0); err != nil {
+		t.Fatalf("Run() error = %v, want nil", err)
+	}
+	got, err := os.ReadFile(filepath.Join(dir, "out", "sample.txt"))
+	if err != nil {
+		t.Fatalf("published output: %v", err)
+	}
+	if string(got) != "reads" {
+		t.Fatalf("published output got %q, want reads", got)
+	}
+	isolate := filepath.Join(dir, engine.ControlDir, "tasks", "copy", "work")
+	if _, err := os.Stat(filepath.Join(isolate, "in", "sample.txt")); err != nil {
+		t.Fatalf("staged input: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(isolate, "out", "sample.txt")); err != nil {
+		t.Fatalf("isolated output: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "work")); !os.IsNotExist(err) {
+		t.Fatalf("created workspace work/, want isolation under %s", engine.ControlDir)
+	}
+	pwd, err := os.ReadFile(filepath.Join(dir, "out", "pwd.txt"))
+	if err != nil {
+		t.Fatalf("cwd marker: %v", err)
+	}
+	wantCwd, err := filepath.EvalSymlinks(isolate)
+	if err != nil {
+		wantCwd = isolate
+	}
+	gotCwd, err := filepath.EvalSymlinks(string(trimNL(pwd)))
+	if err != nil {
+		gotCwd = string(trimNL(pwd))
+	}
+	if gotCwd != wantCwd {
+		t.Fatalf("process cwd got %q, want isolated root %q", gotCwd, wantCwd)
+	}
+	mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.RunIdentityFile))
+	mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.PlanFile))
+	mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile))
+	if _, err := os.Stat(filepath.Join(dir, engine.ControlDir, "tasks", "copy", "stdout")); err != nil {
+		t.Fatalf("stdout: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(dir, engine.ControlDir, "tasks", "copy", "stderr")); err != nil {
+		t.Fatalf("stderr: %v", err)
+	}
+
+	err = gobble.Run(g, dir, 0)
+	requireRunError(t, "second Run", err, gobble.DefectOccupiedWorkspace, "")
+	after, err := os.ReadFile(filepath.Join(dir, "out", "sample.txt"))
+	if err != nil {
+		t.Fatalf("published output after second Run: %v", err)
+	}
+	if string(after) != "reads" {
+		t.Fatalf("second Run changed published output got %q", after)
+	}
+}
+
+func TestRunRefuseDoesNotOccupy(t *testing.T) {
+	dir := t.TempDir()
+	err := gobble.Run(mustCompose(processCopyPipeline)(t), dir, 0)
+	requireRunError(t, "missing input", err, gobble.DefectMissingInput, "copy.in")
+	if _, statErr := os.Stat(filepath.Join(dir, engine.ControlDir)); !os.IsNotExist(statErr) {
+		t.Fatalf("refused Run created %s", engine.ControlDir)
+	}
+}
+
+func TestRunContainedFailure(t *testing.T) {
+	dir := readyRunWorkspace(t)
+	err := gobble.Run(mustCompose(processContainPipeline)(t), dir, 2)
+	requireRunError(t, "contained failure", err, gobble.DefectFailed, "fail")
+	if _, statErr := os.Stat(filepath.Join(dir, "out", "fail.txt")); !os.IsNotExist(statErr) {
+		t.Fatalf("failed output was published")
+	}
+	if _, statErr := os.Stat(filepath.Join(dir, "out", "dep.txt")); !os.IsNotExist(statErr) {
+		t.Fatalf("blocked dependent output was published")
+	}
+	got, readErr := os.ReadFile(filepath.Join(dir, "out", "ok.txt"))
+	if readErr != nil {
+		t.Fatalf("independent output: %v", readErr)
+	}
+	if string(got) != "ok\n" && string(got) != "ok" {
+		t.Fatalf("independent output got %q, want ok", got)
+	}
+	if _, statErr := os.Stat(filepath.Join(dir, engine.ControlDir, "tasks", "fail", "work")); statErr != nil {
+		t.Fatalf("failed work directory: %v", statErr)
+	}
+	raw := mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile))
+	var file struct {
+		Tasks []struct {
+			ID     string `json:"id"`
+			Status string `json:"status"`
+		} `json:"tasks"`
+	}
+	if err := json.Unmarshal(raw, &file); err != nil {
+		t.Fatalf("tasks.json: %v", err)
+	}
+	byID := map[string]string{}
+	for _, st := range file.Tasks {
+		byID[st.ID] = st.Status
+	}
+	if byID["fail"] != engine.StatusFailed {
+		t.Fatalf("fail status got %q, want failed", byID["fail"])
+	}
+	if byID["dep"] != engine.StatusBlocked {
+		t.Fatalf("dep status got %q, want blocked", byID["dep"])
+	}
+	if byID["ok"] != engine.StatusSucceeded {
+		t.Fatalf("ok status got %q, want succeeded", byID["ok"])
+	}
+}
+
+func TestRunMissingDeclaredOutput(t *testing.T) {
+	dir := readyRunWorkspace(t)
+	err := gobble.Run(mustCompose(processMissingOutPipeline)(t), dir, 0)
+	requireRunError(t, "missing output", err, gobble.DefectFailed, "copy")
+	if _, statErr := os.Stat(filepath.Join(dir, "out", "sample.txt")); !os.IsNotExist(statErr) {
+		t.Fatalf("missing declared output was published")
+	}
+}
+
+func TestRunPublishRollback(t *testing.T) {
+	dir := readyRunWorkspace(t)
+	writeRunFile(t, filepath.Join(dir, "out", "blocked"), "not-a-dir")
+	err := gobble.Run(mustCompose(processRollbackPipeline)(t), dir, 0)
+	requireRunError(t, "publish rollback", err, gobble.DefectFailed, "copy")
+	if _, statErr := os.Stat(filepath.Join(dir, "out", "first.txt")); !os.IsNotExist(statErr) {
+		t.Fatalf("partial publish left out/first.txt")
+	}
+}
+
+func TestRunNoReuseAcrossWorkspaces(t *testing.T) {
+	g := mustCompose(processCopyPipeline)(t)
+	dir1 := readyRunWorkspace(t)
+	dir2 := readyRunWorkspace(t)
+	if err := gobble.Run(g, dir1, 0); err != nil {
+		t.Fatalf("first workspace Run() error = %v", err)
+	}
+	if err := gobble.Run(g, dir2, 0); err != nil {
+		t.Fatalf("second workspace Run() error = %v", err)
+	}
+	for _, dir := range []string{dir1, dir2} {
+		if _, err := os.Stat(filepath.Join(dir, engine.ControlDir, "tasks", "copy", "work", "out", "sample.txt")); err != nil {
+			t.Fatalf("workspace %s did not re-execute: %v", dir, err)
+		}
+	}
+}
+
+func TestRunRecordsUnparseableMemory(t *testing.T) {
+	dir := readyRunWorkspace(t)
+	if err := gobble.Run(mustCompose(processMemoryPipeline)(t), dir, 0); err != nil {
+		t.Fatalf("unparseable memory Run() error = %v, want nil", err)
+	}
+	raw := mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile))
+	var file struct {
+		Tasks []struct {
+			Resources struct {
+				Memory string `json:"memory"`
+			} `json:"resources"`
+		} `json:"tasks"`
+	}
+	if err := json.Unmarshal(raw, &file); err != nil {
+		t.Fatalf("tasks.json: %v", err)
+	}
+	if len(file.Tasks) != 1 || file.Tasks[0].Resources.Memory != "not-a-size" {
+		t.Fatalf("recorded memory got %#v, want not-a-size", file.Tasks)
+	}
+}
+
+func TestRunCapTwoIndependent(t *testing.T) {
+	dir := t.TempDir()
+	writeRunFile(t, filepath.Join(dir, "in", "a.txt"), "a")
+	writeRunFile(t, filepath.Join(dir, "in", "b.txt"), "b")
+	if err := gobble.Run(mustCompose(processFanoutPipeline)(t), dir, 2); err != nil {
+		t.Fatalf("cap 2 Run() error = %v, want nil", err)
+	}
+	for _, name := range []string{"out/a.txt", "out/b.txt"} {
+		if _, err := os.Stat(filepath.Join(dir, name)); err != nil {
+			t.Fatalf("published %s: %v", name, err)
+		}
+	}
+	mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile))
+}
+
+func processCopyPipeline() *gobble.Pipeline {
+	p := gobble.NewPipeline("copy")
+	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "sample", Ext: ".txt"})
+	p.AddTask(gobble.TaskSpec{
+		Name:    "copy",
+		Command: []string{"sh", "-c", "pwd > out/pwd.txt && cp in/sample.txt out/sample.txt"},
+		Inputs:  []gobble.Bind{{Name: "in", From: in}},
+		Outputs: []gobble.Bind{
+			{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "sample", Ext: ".txt"}},
+			{Name: "pwd", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "pwd", Ext: ".txt"}},
+		},
+		Params:    []gobble.Param{{Name: "mode", Value: "fast"}},
+		Resources: gobble.Resources{CPU: 1, Memory: "512m"},
+	})
+	return p
+}
+
+func processContainPipeline() *gobble.Pipeline {
+	p := gobble.NewPipeline("contain")
+	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "sample", Ext: ".txt"})
+	fail := p.AddTask(gobble.TaskSpec{
+		Name:    "fail",
+		Command: []string{"sh", "-c", "exit 1"},
+		Inputs:  []gobble.Bind{{Name: "in", From: in}},
+		Outputs: []gobble.Bind{{
+			Name: "out",
+			Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "fail", Ext: ".txt"},
+		}},
+	})
+	p.AddTask(gobble.TaskSpec{
+		Name:    "dep",
+		Command: []string{"cp", "out/fail.txt", "out/dep.txt"},
+		Inputs:  []gobble.Bind{{Name: "in", From: fail.Out("out")}},
+		Outputs: []gobble.Bind{{
+			Name: "out",
+			Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "dep", Ext: ".txt"},
+		}},
+	})
+	p.AddTask(gobble.TaskSpec{
+		Name:    "ok",
+		Command: []string{"sh", "-c", "echo ok > out/ok.txt"},
+		Inputs:  []gobble.Bind{{Name: "in", From: in}},
+		Outputs: []gobble.Bind{{
+			Name: "out",
+			Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "ok", Ext: ".txt"},
+		}},
+	})
+	return p
+}
+
+func processMissingOutPipeline() *gobble.Pipeline {
+	p := gobble.NewPipeline("missing-out")
+	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "sample", Ext: ".txt"})
+	p.AddTask(gobble.TaskSpec{
+		Name:    "copy",
+		Command: []string{"true"},
+		Inputs:  []gobble.Bind{{Name: "in", From: in}},
+		Outputs: []gobble.Bind{{
+			Name: "out",
+			Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "sample", Ext: ".txt"},
+		}},
+	})
+	return p
+}
+
+func processRollbackPipeline() *gobble.Pipeline {
+	p := gobble.NewPipeline("rollback")
+	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "sample", Ext: ".txt"})
+	p.AddTask(gobble.TaskSpec{
+		Name:    "copy",
+		Command: []string{"sh", "-c", "cp in/sample.txt out/first.txt && mkdir -p out/blocked && cp in/sample.txt out/blocked/second.txt"},
+		Inputs:  []gobble.Bind{{Name: "in", From: in}},
+		Outputs: []gobble.Bind{
+			{Name: "first", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "first", Ext: ".txt"}},
+			{Name: "second", Spec: gobble.PathSpec{Dir: gobble.Dir("out/blocked"), Name: "second", Ext: ".txt"}},
+		},
+	})
+	return p
+}
+
+func processFanoutPipeline() *gobble.Pipeline {
+	p := gobble.NewPipeline("fanout")
+	a := p.AddInput("a", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "a", Ext: ".txt"})
+	b := p.AddInput("b", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "b", Ext: ".txt"})
+	p.AddTask(gobble.TaskSpec{
+		Name:    "left",
+		Command: []string{"cp", "in/a.txt", "out/a.txt"},
+		Inputs:  []gobble.Bind{{Name: "in", From: a}},
+		Outputs: []gobble.Bind{{
+			Name: "out",
+			Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "a", Ext: ".txt"},
+		}},
+	})
+	p.AddTask(gobble.TaskSpec{
+		Name:    "right",
+		Command: []string{"cp", "in/b.txt", "out/b.txt"},
+		Inputs:  []gobble.Bind{{Name: "in", From: b}},
+		Outputs: []gobble.Bind{{
+			Name: "out",
+			Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "b", Ext: ".txt"},
+		}},
+	})
+	return p
+}
+
+func processMemoryPipeline() *gobble.Pipeline {
+	p := gobble.NewPipeline("memory")
+	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "sample", Ext: ".txt"})
+	p.AddTask(gobble.TaskSpec{
+		Name:    "copy",
+		Command: []string{"cp", "in/sample.txt", "out/sample.txt"},
+		Inputs:  []gobble.Bind{{Name: "in", From: in}},
+		Outputs: []gobble.Bind{{
+			Name: "out",
+			Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "sample", Ext: ".txt"},
+		}},
+		Resources: gobble.Resources{Memory: "not-a-size"},
+	})
+	return p
+}
+
+func trimNL(b []byte) []byte {
+	for len(b) > 0 && (b[len(b)-1] == '\n' || b[len(b)-1] == '\r') {
+		b = b[:len(b)-1]
+	}
+	return b
+}
+
+func mustJSONFile(t *testing.T, path string) []byte {
+	t.Helper()
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("ReadFile(%s) error = %v", path, err)
+	}
+	var v any
+	if err := json.Unmarshal(data, &v); err != nil {
+		t.Fatalf("%s is not complete JSON: %v\n%s", path, err, data)
+	}
+	return data
 }
 
 func runCopyPipeline() *gobble.Pipeline {

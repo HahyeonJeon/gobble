@@ -29,6 +29,8 @@ const (
 	DefectOccupiedWorkspace DefectCode = "occupied-workspace"
 	// DefectOutputExists means a declared output plan path already exists.
 	DefectOutputExists DefectCode = "output-exists"
+	// DefectFailed means a task did not succeed.
+	DefectFailed DefectCode = "failed"
 )
 
 // Defect is one named failure inside an [Error].
