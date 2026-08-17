@@ -20,11 +20,14 @@ type TaskSpec struct {
 //
 // Name is the local port name only. It never implicitly matches a pipeline
 // input. When From is set, Spec is classified as follows: a zero Spec
-// inherits From; a Spec that has only Ext set, and optionally Dir, is a
-// related file of From using Rule; any other Spec restages field by field,
-// taking each set field from Spec and inheriting the rest from From.
-// Rule is used when this Bind is a related file of From. The zero
-// Rule is DeriveAppend.
+// inherits the spec Compose resolves for that port, which may itself be
+// inherited, not Handle.Spec; a Spec that has only Ext set, and optionally
+// Dir, is a related file of From using Rule; any other Spec restages field
+// by field, taking each set field from Spec and inheriting the rest from
+// From. A Literal restage keeps opacity and merges Dir unless Spec.Dir is
+// set. From should name another task or a pipeline input. A From that
+// points at the same task is a cycle. Rule is used when this Bind is a
+// related file of From. The zero Rule is DeriveAppend.
 type Bind struct {
 	Name string
 	Spec PathSpec

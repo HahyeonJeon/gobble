@@ -181,6 +181,9 @@ func (p Path) fieldError() *Defect {
 		if p.Opaque == "" {
 			return invalidPath("empty literal path")
 		}
+		if strings.HasSuffix(p.Opaque, ".") {
+			return invalidPath("empty extension token", p.Opaque)
+		}
 		return nil
 	}
 	if p.Lead == "" && p.Name == "" {
@@ -191,6 +194,9 @@ func (p Path) fieldError() *Defect {
 	}
 	if d := fieldChars("name", p.Name); d != nil {
 		return d
+	}
+	if hasDotComponent(p.Name) {
+		return invalidPath("name is a dot path component", p.Name)
 	}
 	for _, step := range p.Steps {
 		if stripOneLeadingDot(step) == "" {
@@ -206,7 +212,7 @@ func (p Path) fieldError() *Defect {
 	if d := fieldChars("ext", p.Ext); d != nil {
 		return d
 	}
-	if p.Ext != "" && (stripOneLeadingDot(p.Ext) == "" || hasDotComponent(p.Ext)) {
+	if p.Ext != "" && (stripOneLeadingDot(p.Ext) == "" || hasDotComponent(p.Ext) || strings.HasSuffix(p.Ext, ".")) {
 		return invalidPath("ext is a dot path component", p.Ext)
 	}
 	return nil
@@ -238,6 +244,11 @@ func isZeroPath(p Path) bool {
 
 func isRelatedFile(p Path) bool {
 	return !p.Literal && p.Lead == "" && p.Name == "" && len(p.Steps) == 0 && p.Ext != ""
+}
+
+// Classify applies inherit, related-file, and restage rules on snapshot Paths.
+func Classify(spec, from Path, rule DeriveRule) Path {
+	return classifyPath(spec, from, rule)
 }
 
 func classifyPath(spec, from Path, rule DeriveRule) Path {

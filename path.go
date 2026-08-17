@@ -51,7 +51,7 @@ type PathSpec struct {
 	Dir Directory
 	// Lead is the leading author tokens (Prefix).
 	Lead string
-	// Name is the stable name (BaseName).
+	// Name is the stable name (BaseName). "." and ".." are invalid.
 	Name string
 	// Steps is the ordered processing stack (Suffixes).
 	Steps []string
@@ -194,7 +194,7 @@ func (p PathSpec) WithExt(ext string) PathSpec {
 
 // Append returns a related PathSpec by appending extra to Ext, or to a Literal
 // opaque filename. One leading "." is stripped from extra, then "." is prepended.
-// An extra that is empty after strip therefore stores a trailing ".".
+// An extra that is empty after strip makes Render return DefectInvalidPath.
 func (p PathSpec) Append(extra string) PathSpec {
 	out := p.clone()
 	token := "." + stripOneLeadingDot(extra)
@@ -234,6 +234,9 @@ func (p PathSpec) fieldError() *Error {
 		if p.opaque == "" {
 			return renderInvalid("empty literal path")
 		}
+		if strings.HasSuffix(p.opaque, ".") {
+			return renderInvalid("empty extension token", p.opaque)
+		}
 		return nil
 	}
 	if p.Lead == "" && p.Name == "" {
@@ -244,6 +247,9 @@ func (p PathSpec) fieldError() *Error {
 	}
 	if err := fieldChars("name", p.Name); err != nil {
 		return err
+	}
+	if hasDotComponent(p.Name) {
+		return renderInvalid("name is a dot path component", p.Name)
 	}
 	for _, step := range p.Steps {
 		if stripOneLeadingDot(step) == "" {
@@ -259,7 +265,7 @@ func (p PathSpec) fieldError() *Error {
 	if err := fieldChars("ext", p.Ext); err != nil {
 		return err
 	}
-	if p.Ext != "" && (stripOneLeadingDot(p.Ext) == "" || hasDotComponent(p.Ext)) {
+	if p.Ext != "" && (stripOneLeadingDot(p.Ext) == "" || hasDotComponent(p.Ext) || strings.HasSuffix(p.Ext, ".")) {
 		return renderInvalid("ext is a dot path component", p.Ext)
 	}
 	return nil

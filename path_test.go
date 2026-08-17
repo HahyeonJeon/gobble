@@ -246,6 +246,12 @@ func TestPathSpecInvalidPath(t *testing.T) {
 		{name: "dir escape parent", spec: gobble.PathSpec{Dir: gobble.Dir("work/../out"), Name: "x"}},
 		{name: "dir escape above first", spec: gobble.PathSpec{Dir: gobble.Dir("../out"), Name: "x"}},
 		{name: "dir escape two up", spec: gobble.PathSpec{Dir: gobble.Dir("work/align/../.."), Name: "x"}},
+		{name: "name is dot", spec: gobble.PathSpec{Name: "."}},
+		{name: "name is dotdot", spec: gobble.PathSpec{Name: ".."}},
+		{name: "Append empty extra", spec: gobble.PathSpec{Name: "sample", Ext: ".bam"}.Append("")},
+		{name: "Append dot extra", spec: gobble.PathSpec{Name: "sample", Ext: ".bam"}.Append(".")},
+		{name: "ext trailing dot", spec: gobble.PathSpec{Name: "sample", Ext: ".bam."}},
+		{name: "literal Append empty extra", spec: gobble.Literal("aln.bam").Append("")},
 	}
 
 	for _, tt := range tests {

@@ -3,6 +3,8 @@ package gobble
 import (
 	"errors"
 	"testing"
+
+	"github.com/HahyeonJeon/gobble/internal/engine"
 )
 
 func testDefectCodes(e *Error) []DefectCode {
@@ -144,6 +146,12 @@ func TestRenderAgreesWithSnapshot(t *testing.T) {
 		{name: "dir escape parent", spec: PathSpec{Dir: Dir("work/../out"), Name: "x"}},
 		{name: "literal AppendStep", spec: lit.AppendStep("sorted")},
 		{name: "name slash", spec: PathSpec{Name: "a/b"}},
+		{name: "name is dot", spec: PathSpec{Name: "."}},
+		{name: "name is dotdot", spec: PathSpec{Name: ".."}},
+		{name: "Append empty extra", spec: PathSpec{Name: "sample", Ext: ".bam"}.Append("")},
+		{name: "Append dot extra", spec: PathSpec{Name: "sample", Ext: ".bam"}.Append(".")},
+		{name: "ext trailing dot", spec: PathSpec{Name: "sample", Ext: ".bam."}},
+		{name: "literal Append empty extra", spec: Literal("aln.bam").Append("")},
 	}
 	for _, tt := range invalid {
 		t.Run("invalid/"+tt.name, func(t *testing.T) {
@@ -174,6 +182,46 @@ func TestRenderAgreesWithSnapshot(t *testing.T) {
 			}
 			if got != "" || eng != "" {
 				t.Fatalf("case %s: Render paths got PathSpec %q snapshot %q, want empty", tt.name, got, eng)
+			}
+		})
+	}
+}
+
+func TestClassifyAgreesWithSnapshot(t *testing.T) {
+	bam := PathSpec{Name: "aln", Ext: ".bam"}
+	from := PathSpec{Dir: Dir("work"), Name: "sample", Steps: []string{"sorted"}, Ext: ".bam"}
+	fromLit := Literal("aln.bam").WithDir(Dir("work"))
+	tests := []struct {
+		name string
+		spec PathSpec
+		from PathSpec
+		rule DeriveRule
+	}{
+		{name: "zero inherit", spec: PathSpec{}, from: bam, rule: DeriveAppend},
+		{name: "related append", spec: PathSpec{Ext: ".bai"}, from: bam, rule: DeriveAppend},
+		{name: "related replace", spec: PathSpec{Ext: ".bai"}, from: bam, rule: DeriveReplaceExt},
+		{name: "related with dir", spec: PathSpec{Dir: Dir("out"), Ext: ".bai"}, from: bam, rule: DeriveAppend},
+		{name: "dir only restage", spec: PathSpec{Dir: Dir("out")}, from: from, rule: DeriveAppend},
+		{name: "steps only restage", spec: PathSpec{Steps: []string{"markdup"}}, from: from, rule: DeriveAppend},
+		{name: "literal parent restage", spec: PathSpec{Name: "report", Ext: ".txt"}, from: fromLit, rule: DeriveAppend},
+		{name: "literal spec restage", spec: Literal("out.bam"), from: bam, rule: DeriveAppend},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := classifySpec(tt.spec, tt.from, tt.rule)
+			eng := engine.Classify(snapshotPath(tt.spec), snapshotPath(tt.from), engine.DeriveRule(tt.rule))
+			snap := snapshotPath(got)
+			if snap.Dir != eng.Dir || snap.Lead != eng.Lead || snap.Name != eng.Name || snap.Ext != eng.Ext ||
+				snap.Literal != eng.Literal || snap.Opaque != eng.Opaque || snap.BadLit != eng.BadLit {
+				t.Fatalf("case %s: classifySpec snapshot %+v, Classify %+v", tt.name, snap, eng)
+			}
+			if len(snap.Steps) != len(eng.Steps) {
+				t.Fatalf("case %s: steps got %v, want %v", tt.name, snap.Steps, eng.Steps)
+			}
+			for i := range snap.Steps {
+				if snap.Steps[i] != eng.Steps[i] {
+					t.Fatalf("case %s: steps got %v, want %v", tt.name, snap.Steps, eng.Steps)
+				}
 			}
 		})
 	}

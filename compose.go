@@ -337,9 +337,6 @@ func fromEdges(t *Task) []graphEdge {
 			return
 		}
 		e := graphEdge{fromPort: b.From.name, toTask: t.id(), toPort: b.Name}
-		if b.From.kind == handleInput {
-			e.fromInput = b.From.name
-		}
 		if b.From.task != nil {
 			e.fromTask = b.From.task.id()
 		}

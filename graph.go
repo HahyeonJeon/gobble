@@ -37,9 +37,8 @@ type graphBind struct {
 }
 
 type graphEdge struct {
-	fromTask  string
-	fromPort  string
-	fromInput string
-	toTask    string
-	toPort    string
+	fromTask string
+	fromPort string
+	toTask   string
+	toPort   string
 }

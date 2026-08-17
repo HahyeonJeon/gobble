@@ -8,7 +8,8 @@ type DefectCode string
 const (
 	// DefectCycle means the composed graph contains a directed cycle.
 	DefectCycle DefectCode = "cycle"
-	// DefectMissingInput means a required input bind or input port is missing.
+	// DefectMissingInput means a required input bind or input port is missing,
+	// or a bind names a From source that is not in this pipeline.
 	DefectMissingInput DefectCode = "missing-input"
 	// DefectMissingOutput means a required output bind or output port is missing.
 	DefectMissingOutput DefectCode = "missing-output"
