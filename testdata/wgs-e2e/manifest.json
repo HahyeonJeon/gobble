@@ -1,0 +1,26 @@
+[
+  {
+    "name": "test_1.fastq.gz",
+    "url": "https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/homo_sapiens/illumina/fastq/test_1.fastq.gz",
+    "bytes": 16013759,
+    "sha256": "bae22d1ab233d9a746d7f6413dbc99f3c4a24b278eba97286940b3460f4dac97"
+  },
+  {
+    "name": "test_2.fastq.gz",
+    "url": "https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/homo_sapiens/illumina/fastq/test_2.fastq.gz",
+    "bytes": 16698858,
+    "sha256": "d89ff7b7009e29c31f7722646dfec7fe6dd1ac90c2a82e631e59685065c9dddf"
+  },
+  {
+    "name": "genome.fasta",
+    "url": "https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/homo_sapiens/genome/genome.fasta",
+    "bytes": 40675,
+    "sha256": "48d0bbb875d37e529640d43f2751ec2a25e0ba1144f1994773e9c643d3cf9d05"
+  },
+  {
+    "name": "genome.fasta.fai",
+    "url": "https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/homo_sapiens/genome/genome.fasta.fai",
+    "bytes": 20,
+    "sha256": "aa684078e5bc8ec77af619fb6c3e6e9e51e143d997d84ab213b47eff844757d1"
+  }
+]
