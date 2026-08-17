@@ -1,8 +1,10 @@
-// Package engine owns validation walks and plan construction.
+// Package engine owns validation walks, plan construction, and
+// pre-execution run checks.
 //
 // Package gobble translates Pipeline and Graph values into the snapshot
-// types defined here. This package must not import
-// github.com/HahyeonJeon/gobble or any cmd path.
+// and Document types defined here. Snapshot is the validate view.
+// Document and TaskPlan are the execution view. This package must not
+// import github.com/HahyeonJeon/gobble or any cmd path.
 //
 // Path render and restage rules are copied from package gobble so this
 // package stays import-free. Tests in package gobble compare both
@@ -21,6 +23,8 @@ const (
 	DefectInvalidPath        = "invalid-path"
 	DefectConflict           = "conflict"
 	DefectUnsupportedBackend = "unsupported-backend"
+	DefectOccupiedWorkspace  = "occupied-workspace"
+	DefectOutputExists       = "output-exists"
 )
 
 // Defect is one named failure found by a validation walk.

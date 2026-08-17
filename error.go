@@ -25,6 +25,10 @@ const (
 	DefectConflict DefectCode = "conflict"
 	// DefectUnsupportedBackend means a task names a backend other than local.
 	DefectUnsupportedBackend DefectCode = "unsupported-backend"
+	// DefectOccupiedWorkspace means the workspace already holds a run identity.
+	DefectOccupiedWorkspace DefectCode = "occupied-workspace"
+	// DefectOutputExists means a declared output plan path already exists.
+	DefectOutputExists DefectCode = "output-exists"
 )
 
 // Defect is one named failure inside an [Error].
@@ -39,10 +43,10 @@ type Defect struct {
 	Paths []string `json:"paths"`
 }
 
-// Error is a structured failure from compose, validate, plan, or render.
+// Error is a structured failure from compose, validate, plan, render, or run.
 // Callers inspect it with errors.As. JSON keys are op and defects.
 type Error struct {
-	// Op is the failing operation: compose, validate, plan, or render.
+	// Op is the failing operation: compose, validate, plan, render, or run.
 	Op string `json:"op"`
 	// Defects is the list of named failures.
 	Defects []Defect `json:"defects"`

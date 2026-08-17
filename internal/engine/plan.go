@@ -6,11 +6,19 @@ import (
 	"io"
 )
 
-// Document is the plan-time view gobble translates from a Graph.
+// Document is the plan-time and execution view gobble translates from a Graph.
 type Document struct {
 	Name  string
 	Tasks []TaskPlan
 	Edges []Edge
+}
+
+// Request is a run check. Workspace and Cap do not belong on Document.
+type Request struct {
+	Workspace string
+	// Cap is the caller concurrency limit. Zero means DefaultCap.
+	Cap      int
+	Document Document
 }
 
 // TaskPlan is one task in a plan Document.
