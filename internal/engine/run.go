@@ -217,6 +217,11 @@ func (s *sched) upstreamReady(id string) bool {
 			return false
 		}
 		path := s.inputPath(id, e.ToPort)
+		if path == "" {
+			// Output-port edges wait on the published from path, not the
+			// downstream output. That path is this task's product.
+			path = s.fromPath(e.FromTask, e.FromPort)
+		}
 		if path == "" || !regularFile(workspaceFile(s.workspace, path)) {
 			return false
 		}
@@ -228,6 +233,25 @@ func (s *sched) inputPath(taskID, port string) string {
 	for _, t := range s.doc.Tasks {
 		if t.ID != taskID {
 			continue
+		}
+		for _, in := range t.Inputs {
+			if in.Name == port {
+				return in.Path
+			}
+		}
+	}
+	return ""
+}
+
+func (s *sched) fromPath(taskID, port string) string {
+	for _, t := range s.doc.Tasks {
+		if t.ID != taskID {
+			continue
+		}
+		for _, out := range t.Outputs {
+			if out.Name == port {
+				return out.Path
+			}
 		}
 		for _, in := range t.Inputs {
 			if in.Name == port {

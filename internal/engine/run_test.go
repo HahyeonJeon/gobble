@@ -359,6 +359,132 @@ func TestRunFromInPort(t *testing.T) {
 	}
 }
 
+func TestRunRelatedFileOutputFrom(t *testing.T) {
+	t.Run("starts after published bam", func(t *testing.T) {
+		dir := t.TempDir()
+		defects := Run(Request{Workspace: dir, Document: relatedFileOutputFromDoc(
+			[]string{"sh", "-c", "printf bam > aln.bam"},
+			[]string{"cp", "aln.bam", "aln.bam.bai"},
+		)})
+		if len(defects) != 0 {
+			t.Fatalf("related-file From Run() defects %v, want none", defects)
+		}
+		got, err := os.ReadFile(filepath.Join(dir, "aln.bam.bai"))
+		if err != nil {
+			t.Fatalf("published bai: %v", err)
+		}
+		if string(got) != "bam" {
+			t.Fatalf("published bai got %q, want bam", got)
+		}
+		byID := taskStates(t, dir)
+		if byID["align"].Status != StatusSucceeded {
+			t.Fatalf("align status got %q, want succeeded", byID["align"].Status)
+		}
+		if byID["index"].Status != StatusSucceeded {
+			t.Fatalf("index status got %q, want succeeded", byID["index"].Status)
+		}
+	})
+
+	t.Run("missing from-path stays not-started", func(t *testing.T) {
+		orig := execTask
+		t.Cleanup(func() { execTask = orig })
+		var launched []string
+		var mu sync.Mutex
+		execTask = func(workspace string, task TaskPlan) report {
+			mu.Lock()
+			launched = append(launched, task.ID)
+			mu.Unlock()
+			return report{ID: task.ID, Published: true}
+		}
+		dir := t.TempDir()
+		defects := Run(Request{Workspace: dir, Document: relatedFileOutputFromDoc(
+			[]string{"true"},
+			[]string{"true"},
+		)})
+		if !hasDefect(defects, DefectFailed, "index") {
+			t.Fatalf("missing from-path Run() defects %v, want failed index", defects)
+		}
+		mu.Lock()
+		got := append([]string(nil), launched...)
+		mu.Unlock()
+		for _, id := range got {
+			if id == "index" {
+				t.Fatalf("launched index without published bam: %v", got)
+			}
+		}
+		byID := taskStates(t, dir)
+		if byID["align"].Status != StatusSucceeded {
+			t.Fatalf("align status got %q, want succeeded", byID["align"].Status)
+		}
+		if byID["index"].Status != StatusNotStarted {
+			t.Fatalf("index status got %q, want not-started", byID["index"].Status)
+		}
+	})
+
+	t.Run("failed upstream stays blocked", func(t *testing.T) {
+		dir := t.TempDir()
+		defects := Run(Request{Workspace: dir, Document: relatedFileOutputFromDoc(
+			[]string{"false"},
+			[]string{"cp", "aln.bam", "aln.bam.bai"},
+		)})
+		if !hasDefect(defects, DefectFailed, "align") {
+			t.Fatalf("failed upstream Run() defects %v, want failed align", defects)
+		}
+		if hasDefect(defects, DefectFailed, "index") {
+			t.Fatalf("failed upstream Run() defects %v, want index blocked not failed", defects)
+		}
+		byID := taskStates(t, dir)
+		if byID["align"].Status != StatusFailed {
+			t.Fatalf("align status got %q, want failed", byID["align"].Status)
+		}
+		if byID["index"].Status != StatusBlocked {
+			t.Fatalf("index status got %q, want blocked", byID["index"].Status)
+		}
+		if _, err := os.Stat(filepath.Join(dir, ControlDir, "tasks", "index", "work")); !os.IsNotExist(err) {
+			t.Fatalf("launched blocked index")
+		}
+	})
+}
+
+func relatedFileOutputFromDoc(alignCmd, indexCmd []string) Document {
+	return Document{
+		Name: "related-bai",
+		Tasks: []TaskPlan{
+			{
+				ID:      "align",
+				Name:    "align",
+				Command: alignCmd,
+				Outputs: []IO{{Name: "bam", Path: "aln.bam"}},
+			},
+			{
+				ID:      "index",
+				Name:    "index",
+				Command: indexCmd,
+				Inputs:  []IO{{Name: "bam", Path: "aln.bam"}},
+				Outputs: []IO{{Name: "bai", Path: "aln.bam.bai"}},
+			},
+		},
+		Edges: []Edge{
+			{FromTask: "align", FromPort: "bam", ToTask: "index", ToPort: "bam"},
+			{FromTask: "align", FromPort: "bam", ToTask: "index", ToPort: "bai"},
+		},
+	}
+}
+
+func taskStates(t *testing.T, workspace string) map[string]jsonTaskState {
+	t.Helper()
+	raw := mustJSONFile(t, filepath.Join(workspace, ControlDir, TasksFile))
+	var file jsonTasksFile
+	if err := json.Unmarshal(raw, &file); err != nil {
+		t.Fatalf("tasks.json: %v", err)
+	}
+	byID := make(map[string]jsonTaskState, len(file.Tasks))
+	for _, st := range file.Tasks {
+		byID[st.ID] = st
+	}
+	return byID
+}
+
 func TestRunNotStartedIsFailed(t *testing.T) {
 	orig := execTask
 	t.Cleanup(func() { execTask = orig })
