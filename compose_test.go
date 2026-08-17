@@ -1,6 +1,8 @@
 package gobble_test
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"testing"
 
@@ -162,6 +164,12 @@ func TestComposeReject(t *testing.T) {
 			code: gobble.DefectInvalidPath,
 			unit: "copy.out",
 		},
+		{
+			name: "foreign From colliding task id",
+			pipe: foreignFromCollidingIDPipeline(),
+			code: gobble.DefectMissingInput,
+			unit: "use.in",
+		},
 	}
 
 	for _, tt := range tests {
@@ -191,6 +199,173 @@ func TestComposeReject(t *testing.T) {
 				t.Fatalf("case %s: Compose() defects codes got %v units %v, want code %s unit %q", tt.name, codes, units, tt.code, tt.unit)
 			}
 		})
+	}
+}
+
+func TestComposeForeignFromCollidingID(t *testing.T) {
+	g, err := gobble.Compose(foreignFromCollidingIDPipeline())
+	if g != nil {
+		t.Fatalf("case foreign-from: Compose() graph != nil, want nil")
+	}
+	var ge *gobble.Error
+	if !errors.As(err, &ge) {
+		t.Fatalf("case foreign-from: Compose() error = %v, want *Error", err)
+	}
+	if ge.Op != "compose" {
+		t.Fatalf("case foreign-from: Error.Op got %q, want %q", ge.Op, "compose")
+	}
+	found := false
+	codes := make([]gobble.DefectCode, len(ge.Defects))
+	units := make([]string, len(ge.Defects))
+	for i, d := range ge.Defects {
+		codes[i] = d.Code
+		units[i] = d.Unit
+		if d.Code == gobble.DefectMissingInput && d.Unit == "use.in" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("case foreign-from: Compose() defects codes got %v units %v, want code %s unit %q", codes, units, gobble.DefectMissingInput, "use.in")
+	}
+}
+
+func TestComposePipelineBranchMerge(t *testing.T) {
+	p := gobble.NewPipeline("root-branch")
+	align := p.Branch("align")
+	qc := p.Branch("qc")
+	join := p.Merge("join", align, qc)
+	src := align.AddTask(gobble.TaskSpec{
+		Name:    "bwa",
+		Command: []string{"bwa"},
+		Outputs: []gobble.Bind{{Name: "bam", Spec: gobble.PathSpec{Name: "aln", Ext: ".bam"}}},
+	})
+	qc.AddTask(gobble.TaskSpec{
+		Name:    "fastqc",
+		Command: []string{"fastqc"},
+		Outputs: []gobble.Bind{{Name: "html", Spec: gobble.PathSpec{Name: "qc", Ext: ".html"}}},
+	})
+	join.AddTask(gobble.TaskSpec{
+		Name:    "report",
+		Command: []string{"report"},
+		Inputs:  []gobble.Bind{{Name: "bam", From: src.Out("bam")}},
+		Outputs: []gobble.Bind{{Name: "summary", Spec: gobble.PathSpec{Name: "report", Ext: ".json"}}},
+	})
+	g, err := gobble.Compose(p)
+	if err != nil {
+		t.Fatalf("case pipeline-branch-merge: Compose() error = %v, want nil", err)
+	}
+	if g == nil {
+		t.Fatalf("case pipeline-branch-merge: Compose() graph = nil, want non-nil")
+	}
+	if err := gobble.Validate(g); err != nil {
+		t.Fatalf("case pipeline-branch-merge: Validate() error = %v, want nil", err)
+	}
+}
+
+func TestComposeNestedModuleID(t *testing.T) {
+	p := gobble.NewPipeline("nested")
+	p.AddModule("a").AddModule("b").AddTask(gobble.TaskSpec{
+		Name:    "task",
+		Command: []string{"echo"},
+		Outputs: []gobble.Bind{fileOut("out")},
+	})
+	raw := mustBuildPlanJSON(t, p)
+	var decoded struct {
+		Tasks []struct {
+			ID     string `json:"id"`
+			Module string `json:"module"`
+		} `json:"tasks"`
+	}
+	if err := json.Unmarshal(raw, &decoded); err != nil {
+		t.Fatalf("case nested-module: Unmarshal() error = %v", err)
+	}
+	if len(decoded.Tasks) != 1 {
+		t.Fatalf("case nested-module: tasks got %d, want 1", len(decoded.Tasks))
+	}
+	if decoded.Tasks[0].ID != "a.b.task" {
+		t.Fatalf("case nested-module: task id got %q, want %q", decoded.Tasks[0].ID, "a.b.task")
+	}
+	if decoded.Tasks[0].Module != "b" {
+		t.Fatalf("case nested-module: module got %q, want %q", decoded.Tasks[0].Module, "b")
+	}
+}
+
+func TestComposeDeriveReplaceExt(t *testing.T) {
+	p := gobble.NewPipeline("picard-bai")
+	align := p.AddTask(gobble.TaskSpec{
+		Name:    "align",
+		Command: []string{"bwa"},
+		Outputs: []gobble.Bind{{Name: "bam", Spec: gobble.PathSpec{Name: "aln", Ext: ".bam"}}},
+	})
+	p.AddTask(gobble.TaskSpec{
+		Name:    "index",
+		Command: []string{"picard"},
+		Inputs:  []gobble.Bind{{Name: "bam", From: align.Out("bam")}},
+		Outputs: []gobble.Bind{{
+			Name: "bai",
+			Spec: gobble.PathSpec{Ext: ".bai"},
+			From: align.Out("bam"),
+			Rule: gobble.DeriveReplaceExt,
+		}},
+	})
+	raw := mustBuildPlanJSON(t, p)
+	got := planOutputPath(t, raw, "index", "bai")
+	if got != "aln.bai" {
+		t.Fatalf("case derive-replace-ext: index.bai path got %q, want %q", got, "aln.bai")
+	}
+}
+
+func TestComposeDirOnlyRestage(t *testing.T) {
+	p := gobble.NewPipeline("dir-restage")
+	src := p.AddTask(gobble.TaskSpec{
+		Name:    "align",
+		Command: []string{"bwa"},
+		Outputs: []gobble.Bind{{
+			Name: "bam",
+			Spec: gobble.PathSpec{Dir: gobble.Dir("work/align"), Name: "sample", Steps: []string{"sorted"}, Ext: ".bam"},
+		}},
+	})
+	p.AddTask(gobble.TaskSpec{
+		Name:    "copy",
+		Command: []string{"cp"},
+		Inputs:  []gobble.Bind{{Name: "in", From: src.Out("bam")}},
+		Outputs: []gobble.Bind{{
+			Name: "out",
+			From: src.Out("bam"),
+			Spec: gobble.PathSpec{Dir: gobble.Dir("out")},
+		}},
+	})
+	raw := mustBuildPlanJSON(t, p)
+	got := planOutputPath(t, raw, "copy", "out")
+	if got != "out/sample.sorted.bam" {
+		t.Fatalf("case dir-only-restage: copy.out path got %q, want %q", got, "out/sample.sorted.bam")
+	}
+}
+
+func TestComposeStepsOnlyRestage(t *testing.T) {
+	p := gobble.NewPipeline("steps-restage")
+	src := p.AddTask(gobble.TaskSpec{
+		Name:    "align",
+		Command: []string{"bwa"},
+		Outputs: []gobble.Bind{{
+			Name: "bam",
+			Spec: gobble.PathSpec{Dir: gobble.Dir("work"), Name: "sample", Steps: []string{"sorted"}, Ext: ".bam"},
+		}},
+	})
+	p.AddTask(gobble.TaskSpec{
+		Name:    "mark",
+		Command: []string{"picard"},
+		Inputs:  []gobble.Bind{{Name: "in", From: src.Out("bam")}},
+		Outputs: []gobble.Bind{{
+			Name: "out",
+			From: src.Out("bam"),
+			Spec: gobble.PathSpec{Steps: []string{"markdup"}},
+		}},
+	})
+	raw := mustBuildPlanJSON(t, p)
+	got := planOutputPath(t, raw, "mark", "out")
+	if got != "work/sample.markdup.bam" {
+		t.Fatalf("case steps-only-restage: mark.out path got %q, want %q", got, "work/sample.markdup.bam")
 	}
 }
 
@@ -446,4 +621,74 @@ func invalidPathLiteralPipeline() *gobble.Pipeline {
 		Command: []string{"cp"},
 		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.Literal("aln.bam").AppendStep("sorted")}},
 	})
+}
+
+func foreignFromCollidingIDPipeline() *gobble.Pipeline {
+	a := gobble.NewPipeline("run-a")
+	ta := a.AddModule("prep").AddTask(gobble.TaskSpec{
+		Name:    "fastp",
+		Command: []string{"fastp"},
+		Outputs: []gobble.Bind{{Name: "clean", Spec: gobble.PathSpec{Name: "foreign", Ext: ".fq"}}},
+	})
+	b := gobble.NewPipeline("run-b")
+	b.AddModule("prep").AddTask(gobble.TaskSpec{
+		Name:    "fastp",
+		Command: []string{"fastp"},
+		Outputs: []gobble.Bind{{Name: "clean", Spec: gobble.PathSpec{Name: "local", Ext: ".fq"}}},
+	})
+	b.AddTask(gobble.TaskSpec{
+		Name:    "use",
+		Command: []string{"use"},
+		Inputs:  []gobble.Bind{{Name: "in", From: ta.Out("clean")}},
+		Outputs: []gobble.Bind{fileOut("out")},
+	})
+	return b
+}
+
+func mustBuildPlanJSON(t *testing.T, p *gobble.Pipeline) []byte {
+	t.Helper()
+	g, err := gobble.Compose(p)
+	if err != nil {
+		t.Fatalf("Compose() error = %v, want nil", err)
+	}
+	if g == nil {
+		t.Fatalf("Compose() graph = nil, want non-nil")
+	}
+	var buf bytes.Buffer
+	plan, err := gobble.BuildPlan(g, gobble.WriteTo(&buf))
+	if err != nil {
+		t.Fatalf("BuildPlan() error = %v, want nil", err)
+	}
+	if plan == nil {
+		t.Fatalf("BuildPlan() plan = nil, want non-nil")
+	}
+	return buf.Bytes()
+}
+
+func planOutputPath(t *testing.T, raw []byte, taskID, port string) string {
+	t.Helper()
+	var decoded struct {
+		Tasks []struct {
+			ID      string `json:"id"`
+			Outputs []struct {
+				Name string `json:"name"`
+				Path string `json:"path"`
+			} `json:"outputs"`
+		} `json:"tasks"`
+	}
+	if err := json.Unmarshal(raw, &decoded); err != nil {
+		t.Fatalf("Unmarshal() error = %v", err)
+	}
+	for _, task := range decoded.Tasks {
+		if task.ID != taskID {
+			continue
+		}
+		for _, b := range task.Outputs {
+			if b.Name == port {
+				return b.Path
+			}
+		}
+	}
+	t.Fatalf("plan missing %s.%s", taskID, port)
+	return ""
 }

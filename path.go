@@ -241,6 +241,9 @@ func (p PathSpec) fieldError() *Error {
 		return err
 	}
 	for _, step := range p.Steps {
+		if stripOneLeadingDot(step) == "" {
+			return renderInvalid("empty step", step)
+		}
 		if err := fieldChars("step", step); err != nil {
 			return err
 		}
@@ -251,7 +254,7 @@ func (p PathSpec) fieldError() *Error {
 	if err := fieldChars("ext", p.Ext); err != nil {
 		return err
 	}
-	if p.Ext != "" && hasDotComponent(p.Ext) {
+	if p.Ext != "" && (stripOneLeadingDot(p.Ext) == "" || hasDotComponent(p.Ext)) {
 		return renderInvalid("ext is a dot path component", p.Ext)
 	}
 	return nil

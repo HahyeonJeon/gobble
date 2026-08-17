@@ -105,6 +105,7 @@ type Task struct {
 	Name     string
 	Command  []string
 	Backend  string
+	CPU      float64
 	Inputs   []Bind
 	Outputs  []Bind
 	OutCalls []string
@@ -188,6 +189,9 @@ func (p Path) fieldError() *Defect {
 		return d
 	}
 	for _, step := range p.Steps {
+		if stripOneLeadingDot(step) == "" {
+			return invalidPath("empty step", step)
+		}
 		if d := fieldChars("step", step); d != nil {
 			return d
 		}
@@ -198,7 +202,7 @@ func (p Path) fieldError() *Defect {
 	if d := fieldChars("ext", p.Ext); d != nil {
 		return d
 	}
-	if p.Ext != "" && hasDotComponent(p.Ext) {
+	if p.Ext != "" && (stripOneLeadingDot(p.Ext) == "" || hasDotComponent(p.Ext)) {
 		return invalidPath("ext is a dot path component", p.Ext)
 	}
 	return nil

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"testing"
@@ -46,6 +47,12 @@ func TestBuildPlanReject(t *testing.T) {
 			name:  "unsupported-backend",
 			graph: mustCompose(unsupportedBackendPipeline),
 			code:  gobble.DefectUnsupportedBackend,
+			unit:  "copy",
+		},
+		{
+			name:  "NaN CPU",
+			graph: mustCompose(nanCPUPipeline),
+			code:  gobble.DefectInvalidName,
 			unit:  "copy",
 		},
 	}
@@ -222,6 +229,41 @@ func TestBuildPlanLocalBackendAndProcess(t *testing.T) {
 	if task.Resources.CPU != 0 || task.Resources.Memory != "" {
 		t.Fatalf("case process: resources got cpu %v memory %q, want 0 and empty", task.Resources.CPU, task.Resources.Memory)
 	}
+}
+
+func TestBuildPlanWriteToKeepsPlan(t *testing.T) {
+	g, err := gobble.Compose(oneTask("write-fail", gobble.TaskSpec{
+		Name:    "copy",
+		Command: []string{"cp"},
+		Outputs: []gobble.Bind{fileOut("out")},
+	}))
+	if err != nil {
+		t.Fatalf("case write-fail: Compose() error = %v, want nil", err)
+	}
+	plan, err := gobble.BuildPlan(g, gobble.WriteTo(failWriter{}))
+	if plan == nil {
+		t.Fatalf("case write-fail: BuildPlan() plan = nil, want built plan")
+	}
+	if err == nil {
+		t.Fatalf("case write-fail: BuildPlan() error = nil, want write error")
+	}
+	var ge *gobble.Error
+	if errors.As(err, &ge) {
+		t.Fatalf("case write-fail: BuildPlan() error = %v, want raw write error not *Error", err)
+	}
+	var direct bytes.Buffer
+	if werr := plan.WriteJSON(&direct); werr != nil {
+		t.Fatalf("case write-fail: kept plan WriteJSON() error = %v, want nil", werr)
+	}
+	if direct.Len() == 0 {
+		t.Fatalf("case write-fail: kept plan WriteJSON() wrote 0 bytes")
+	}
+}
+
+type failWriter struct{}
+
+func (failWriter) Write([]byte) (int, error) {
+	return 0, io.ErrClosedPipe
 }
 
 func mustCompose(pipe func() *gobble.Pipeline) func(t *testing.T) *gobble.Graph {

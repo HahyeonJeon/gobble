@@ -29,7 +29,8 @@ func WriteTo(w io.Writer) PlanOption {
 
 // BuildPlan validates g and returns an inspectable plan.
 //
-// On any defect it returns (nil, [*Error]) with Op "plan".
+// On any defect it returns (nil, [*Error]) with Op "plan". After a valid
+// plan is built, a [WriteTo] error still returns the [*Plan].
 func BuildPlan(g *Graph, opts ...PlanOption) (*Plan, error) {
 	var cfg planConfig
 	for _, opt := range opts {
@@ -43,14 +44,18 @@ func BuildPlan(g *Graph, opts ...PlanOption) (*Plan, error) {
 			Message: "nil graph",
 		}}}
 	}
-	inner, defects := engine.BuildPlan(snapshotGraph(g), planDocument(g))
-	if err := publicError("plan", defects); err != nil {
+	doc, err := planDocument(g)
+	if err != nil {
 		return nil, err
+	}
+	inner, defects := engine.BuildPlan(snapshotGraph(g), doc)
+	if pub := publicError("plan", defects); pub != nil {
+		return nil, pub
 	}
 	p := &Plan{inner: inner}
 	if cfg.w != nil {
-		if err := p.WriteJSON(cfg.w); err != nil {
-			return nil, err
+		if werr := p.WriteJSON(cfg.w); werr != nil {
+			return p, werr
 		}
 	}
 	return p, nil
@@ -73,7 +78,7 @@ func (p *Plan) MarshalJSON() ([]byte, error) {
 	return p.inner.MarshalJSON()
 }
 
-func planDocument(g *Graph) engine.Document {
+func planDocument(g *Graph) (engine.Document, error) {
 	doc := engine.Document{Name: g.name}
 	for i := range g.tasks {
 		t := &g.tasks[i]
@@ -95,10 +100,18 @@ func planDocument(g *Graph) engine.Document {
 			pt.Params = append(pt.Params, engine.ParamPlan{Name: p.Name, Value: p.Value})
 		}
 		for _, b := range t.inputs {
-			pt.Inputs = append(pt.Inputs, planIO(b))
+			io, err := planIO(b)
+			if err != nil {
+				return engine.Document{}, planPathError(bindUnit(t.id, b.name), err)
+			}
+			pt.Inputs = append(pt.Inputs, io)
 		}
 		for _, b := range t.outputs {
-			pt.Outputs = append(pt.Outputs, planIO(b))
+			io, err := planIO(b)
+			if err != nil {
+				return engine.Document{}, planPathError(bindUnit(t.id, b.name), err)
+			}
+			pt.Outputs = append(pt.Outputs, io)
 		}
 		doc.Tasks = append(doc.Tasks, pt)
 	}
@@ -110,17 +123,34 @@ func planDocument(g *Graph) engine.Document {
 			ToPort:   e.toPort,
 		})
 	}
-	return doc
+	return doc, nil
 }
 
-func planIO(b graphBind) engine.IO {
+func planIO(b graphBind) (engine.IO, error) {
 	path, err := b.spec.Render()
 	if err != nil {
-		path = ""
+		return engine.IO{}, err
 	}
 	return engine.IO{
 		Name: b.name,
 		Path: path,
 		Spec: snapshotPath(b.spec),
+	}, nil
+}
+
+func planPathError(unit string, err error) error {
+	msg := "invalid path"
+	var ge *Error
+	if errors.As(err, &ge) {
+		if len(ge.Defects) > 0 && ge.Defects[0].Message != "" {
+			msg = ge.Defects[0].Message
+		}
+	} else if err != nil {
+		msg = err.Error()
 	}
+	return &Error{Op: "plan", Defects: []Defect{{
+		Code:    DefectInvalidPath,
+		Unit:    unit,
+		Message: msg,
+	}}}
 }

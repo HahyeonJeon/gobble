@@ -128,6 +128,7 @@ func BuildPlan(s Snapshot, doc Document) (*Plan, []Defect) {
 	raw, err := marshalPlan(doc)
 	if err != nil {
 		return nil, []Defect{{
+			Code:    DefectInvalidName,
 			Message: "encode plan: " + err.Error(),
 		}}
 	}

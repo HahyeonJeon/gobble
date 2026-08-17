@@ -170,6 +170,11 @@ func TestPathSpecRender(t *testing.T) {
 			spec: gobble.PathSpec{Name: "sample", Ext: ".fastq.gz"},
 			want: "sample.fastq.gz",
 		},
+		{
+			name: ".fastq stays on name",
+			spec: gobble.PathSpec{Name: "sample", Ext: ".fastq"},
+			want: "sample.fastq",
+		},
 	}
 
 	for _, tt := range tests {
@@ -218,6 +223,11 @@ func TestPathSpecInvalidPath(t *testing.T) {
 		{name: "step is dot", spec: gobble.PathSpec{Name: "x", Steps: []string{"."}}},
 		{name: "step is dotdot", spec: gobble.PathSpec{Name: "x", Steps: []string{".."}}},
 		{name: "step has dotdot component", spec: gobble.PathSpec{Name: "x", Steps: []string{"foo/.."}}},
+		{name: "empty step token", spec: gobble.PathSpec{Name: "sample", Steps: []string{""}}},
+		{name: "AppendStep empty", spec: gobble.PathSpec{Name: "sample"}.AppendStep("")},
+		{name: "AppendStep dot", spec: gobble.PathSpec{Name: "sample", Ext: ".bam"}.AppendStep(".")},
+		{name: "sample. hole", spec: gobble.PathSpec{Name: "sample"}.AppendStep("")},
+		{name: ".fastq hole empty step", spec: gobble.PathSpec{Name: "sample", Steps: []string{""}, Ext: ".fastq"}},
 		{name: "ext is dot", spec: gobble.PathSpec{Name: "x", Ext: "."}},
 		{name: "ext is dotdot", spec: gobble.PathSpec{Name: "x", Ext: ".."}},
 		{name: "ext has dotdot component", spec: gobble.PathSpec{Name: "x", Ext: "foo/.."}},

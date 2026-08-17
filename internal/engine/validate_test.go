@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"math"
 	"testing"
 )
 
@@ -150,6 +151,20 @@ func TestComposeCheckIllegalSnapshots(t *testing.T) {
 			code: DefectInvalidPath,
 			unit: "copy.out",
 		},
+		{
+			name: "empty step token",
+			snap: Snapshot{
+				Name: "empty-step",
+				Tasks: []Task{{
+					ID:      "copy",
+					Name:    "copy",
+					Command: []string{"cp"},
+					Outputs: []Bind{{Name: "out", Spec: Path{Name: "sample", Steps: []string{""}, Ext: ".fastq"}}},
+				}},
+			},
+			code: DefectInvalidPath,
+			unit: "copy.out",
+		},
 	}
 
 	for _, tt := range tests {
@@ -240,6 +255,60 @@ func TestComposeCheckDoesNotReportPlanDefects(t *testing.T) {
 	got = Validate(snap)
 	if !hasDefect(got, DefectUnsupportedBackend, "copy") {
 		t.Fatalf("case plan-only: Validate() defects %v, want unsupported-backend unit copy", formatDefects(got))
+	}
+
+	nan := Snapshot{
+		Name: "nan-cpu",
+		Tasks: []Task{{
+			ID:      "copy",
+			Name:    "copy",
+			Command: []string{"cp"},
+			CPU:     math.NaN(),
+			Outputs: []Bind{{Name: "out", Spec: Path{Name: "out", Ext: ".txt"}}},
+		}},
+	}
+	got = ComposeCheck(nan)
+	if hasDefect(got, DefectInvalidName, "copy") {
+		t.Fatalf("case nan-cpu: ComposeCheck() reported invalid-name, want compose defects only")
+	}
+	got = Validate(nan)
+	if !hasDefect(got, DefectInvalidName, "copy") {
+		t.Fatalf("case nan-cpu: Validate() defects %v, want invalid-name unit copy", formatDefects(got))
+	}
+}
+
+func TestBuildPlanEncodeFailureHasCode(t *testing.T) {
+	snap := Snapshot{
+		Name: "encode",
+		Tasks: []Task{{
+			ID:      "copy",
+			Name:    "copy",
+			Command: []string{"cp"},
+			Outputs: []Bind{{Name: "out", Spec: Path{Name: "out", Ext: ".txt"}}},
+		}},
+	}
+	doc := Document{
+		Name: "encode",
+		Tasks: []TaskPlan{{
+			ID:        "copy",
+			Name:      "copy",
+			Command:   []string{"cp"},
+			Resources: ResourcePlan{CPU: math.NaN()},
+			Outputs:   []IO{{Name: "out", Path: "out.txt", Spec: Path{Name: "out", Ext: ".txt"}}},
+		}},
+	}
+	plan, defects := BuildPlan(snap, doc)
+	if plan != nil {
+		t.Fatalf("case encode-fail: BuildPlan() plan != nil, want nil")
+	}
+	if len(defects) == 0 {
+		t.Fatalf("case encode-fail: BuildPlan() defects empty, want DefectInvalidName")
+	}
+	if defects[0].Code != DefectInvalidName {
+		t.Fatalf("case encode-fail: defect Code got %q, want %s", defects[0].Code, DefectInvalidName)
+	}
+	if defects[0].Message == "" {
+		t.Fatalf("case encode-fail: defect Message empty")
 	}
 }
 

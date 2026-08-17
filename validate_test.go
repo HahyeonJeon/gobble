@@ -2,6 +2,7 @@ package gobble_test
 
 import (
 	"errors"
+	"math"
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
@@ -64,6 +65,12 @@ func TestValidateReject(t *testing.T) {
 			name: "unsupported-backend",
 			pipe: unsupportedBackendPipeline(),
 			code: gobble.DefectUnsupportedBackend,
+			unit: "copy",
+		},
+		{
+			name: "NaN CPU",
+			pipe: nanCPUPipeline(),
+			code: gobble.DefectInvalidName,
 			unit: "copy",
 		},
 	}
@@ -168,6 +175,15 @@ func unsupportedBackendPipeline() *gobble.Pipeline {
 		Command: []string{"cp"},
 		Backend: "slurm",
 		Outputs: []gobble.Bind{fileOut("out")},
+	})
+}
+
+func nanCPUPipeline() *gobble.Pipeline {
+	return oneTask("nan-cpu", gobble.TaskSpec{
+		Name:      "copy",
+		Command:   []string{"cp"},
+		Outputs:   []gobble.Bind{fileOut("out")},
+		Resources: gobble.Resources{CPU: math.NaN()},
 	})
 }
 

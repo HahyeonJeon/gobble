@@ -57,6 +57,7 @@ func snapshotGraph(g *Graph) engine.Snapshot {
 			Name:    t.name,
 			Command: copyStrings(t.command),
 			Backend: t.backend,
+			CPU:     t.resources.CPU,
 		}
 		for _, b := range t.inputs {
 			gt.Inputs = append(gt.Inputs, snapshotGraphBind(b))
@@ -75,25 +76,26 @@ func snapshotTask(t *Task) engine.Task {
 		Name:     t.spec.Name,
 		Command:  copyStrings(t.spec.Command),
 		Backend:  t.spec.Backend,
+		CPU:      t.spec.Resources.CPU,
 		OutCalls: copyStrings(t.outCalls),
 		InCalls:  copyStrings(t.inCalls),
 	}
 	for _, b := range t.spec.Inputs {
-		gt.Inputs = append(gt.Inputs, snapshotBind(b))
+		gt.Inputs = append(gt.Inputs, snapshotBind(b, t.pipe))
 	}
 	for _, b := range t.spec.Outputs {
-		gt.Outputs = append(gt.Outputs, snapshotBind(b))
+		gt.Outputs = append(gt.Outputs, snapshotBind(b, t.pipe))
 	}
 	return gt
 }
 
-func snapshotBind(b Bind) engine.Bind {
+func snapshotBind(b Bind, p *Pipeline) engine.Bind {
 	eb := engine.Bind{
 		Name: b.Name,
 		Spec: snapshotPath(b.Spec),
 		Rule: engine.DeriveRule(b.Rule),
 	}
-	eb.FromKind, eb.FromName, eb.FromTask = snapshotFrom(b.From)
+	eb.FromKind, eb.FromName, eb.FromTask = snapshotFrom(b.From, p)
 	return eb
 }
 
@@ -108,22 +110,23 @@ func snapshotGraphBind(b graphBind) engine.Bind {
 	}
 }
 
-func snapshotFrom(h Handle) (engine.FromKind, string, string) {
+func snapshotFrom(h Handle, p *Pipeline) (engine.FromKind, string, string) {
 	switch h.kind {
 	case handleInput:
+		if h.pipe != p {
+			return engine.FromZero, "", ""
+		}
 		return engine.FromInput, h.name, ""
 	case handleOut:
-		id := ""
-		if h.task != nil {
-			id = h.task.id()
+		if h.task == nil || h.task.pipe != p {
+			return engine.FromZero, "", ""
 		}
-		return engine.FromOut, h.name, id
+		return engine.FromOut, h.name, h.task.id()
 	case handleIn:
-		id := ""
-		if h.task != nil {
-			id = h.task.id()
+		if h.task == nil || h.task.pipe != p {
+			return engine.FromZero, "", ""
 		}
-		return engine.FromIn, h.name, id
+		return engine.FromIn, h.name, h.task.id()
 	default:
 		return engine.FromZero, "", ""
 	}
@@ -294,7 +297,7 @@ func (r *resolver) resolveFrom(h Handle) (PathSpec, bool) {
 		}
 		return PathSpec{}, false
 	case handleOut:
-		if h.task == nil {
+		if h.task == nil || h.task.pipe != r.p {
 			return PathSpec{}, false
 		}
 		b, ok := findBind(h.task.spec.Outputs, h.name)
@@ -303,7 +306,7 @@ func (r *resolver) resolveFrom(h Handle) (PathSpec, bool) {
 		}
 		return r.resolveBind(h.task, b, true)
 	case handleIn:
-		if h.task == nil {
+		if h.task == nil || h.task.pipe != r.p {
 			return PathSpec{}, false
 		}
 		b, ok := findBind(h.task.spec.Inputs, h.name)

@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"math"
 	"regexp"
 	"strings"
 )
@@ -161,6 +162,9 @@ func (c *checker) checkTask(t *Task) {
 	}
 	if c.plan && t.Backend != "" && t.Backend != "local" {
 		c.add(DefectUnsupportedBackend, id, "unsupported backend")
+	}
+	if c.plan && !finiteCPU(t.CPU) {
+		c.add(DefectInvalidName, id, "non-finite cpu")
 	}
 	seen := make(map[string]bool)
 	checkPort := func(b Bind) {
@@ -412,6 +416,10 @@ func comparablePath(p string) string {
 		return p
 	}
 	return cleaned
+}
+
+func finiteCPU(v float64) bool {
+	return !math.IsNaN(v) && !math.IsInf(v, 0)
 }
 
 func childID(prefix, name string) string {
