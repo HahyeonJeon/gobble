@@ -108,6 +108,7 @@ func TestRenderAgreesWithSnapshot(t *testing.T) {
 		{name: "directory", spec: PathSpec{Dir: Dir("work/align"), Name: "sample", Steps: []string{"sorted"}, Ext: ".bam"}, want: "work/align/sample.sorted.bam"},
 		{name: "empty Steps and Ext", spec: PathSpec{Name: "LICENSE"}, want: "LICENSE"},
 		{name: ".fastq stays on name", spec: PathSpec{Name: "sample", Ext: ".fastq"}, want: "sample.fastq"},
+		{name: "internal dotdot", spec: PathSpec{Dir: Dir("work/align/../lane"), Name: "x", Ext: ".txt"}, want: "work/lane/x.txt"},
 	}
 	for _, tt := range accept {
 		t.Run("accept/"+tt.name, func(t *testing.T) {

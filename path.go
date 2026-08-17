@@ -15,7 +15,9 @@ func Dir(path string) Directory {
 }
 
 // Join returns a Directory with elem appended using forward slashes.
-// It does not clean "." or ".."; Render applies that cleaning.
+// It does not collapse "." or "..". Render collapses internal ".." that
+// stay under the first path component and returns DefectInvalidPath when
+// ".." would leave that component.
 func (d Directory) Join(elem ...string) Directory {
 	parts := make([]string, 0, 1+len(elem))
 	if d.path != "" {
@@ -190,6 +192,7 @@ func (p PathSpec) WithExt(ext string) PathSpec {
 
 // Append returns a related PathSpec by appending extra to Ext, or to a Literal
 // opaque filename. One leading "." is stripped from extra, then "." is prepended.
+// An extra that is empty after strip therefore stores a trailing ".".
 func (p PathSpec) Append(extra string) PathSpec {
 	out := p.clone()
 	token := "." + stripOneLeadingDot(extra)
@@ -306,8 +309,9 @@ func joinSlash(parts ...string) string {
 	return b.String()
 }
 
-// cleanPath collapses "." and duplicate slashes and applies "..".
-// escaped is true when ".." would leave the first path component.
+// cleanPath collapses "." and duplicate slashes. It applies ".." only
+// while the first path component remains. escaped is true when ".."
+// would leave that component.
 func cleanPath(p string) (string, bool) {
 	p = strings.ReplaceAll(p, `\`, "/")
 	if p == "" {

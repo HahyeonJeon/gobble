@@ -73,6 +73,18 @@ func TestValidateReject(t *testing.T) {
 			code: gobble.DefectInvalidName,
 			unit: "copy",
 		},
+		{
+			name: "+Inf CPU",
+			pipe: infCPUPipeline(),
+			code: gobble.DefectInvalidName,
+			unit: "copy",
+		},
+		{
+			name: "-Inf CPU",
+			pipe: negInfCPUPipeline(),
+			code: gobble.DefectInvalidName,
+			unit: "copy",
+		},
 	}
 
 	for _, tt := range tests {
@@ -184,6 +196,24 @@ func nanCPUPipeline() *gobble.Pipeline {
 		Command:   []string{"cp"},
 		Outputs:   []gobble.Bind{fileOut("out")},
 		Resources: gobble.Resources{CPU: math.NaN()},
+	})
+}
+
+func infCPUPipeline() *gobble.Pipeline {
+	return oneTask("inf-cpu", gobble.TaskSpec{
+		Name:      "copy",
+		Command:   []string{"cp"},
+		Outputs:   []gobble.Bind{fileOut("out")},
+		Resources: gobble.Resources{CPU: math.Inf(1)},
+	})
+}
+
+func negInfCPUPipeline() *gobble.Pipeline {
+	return oneTask("neginf-cpu", gobble.TaskSpec{
+		Name:      "copy",
+		Command:   []string{"cp"},
+		Outputs:   []gobble.Bind{fileOut("out")},
+		Resources: gobble.Resources{CPU: math.Inf(-1)},
 	})
 }
 

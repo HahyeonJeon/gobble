@@ -55,6 +55,18 @@ func TestBuildPlanReject(t *testing.T) {
 			code:  gobble.DefectInvalidName,
 			unit:  "copy",
 		},
+		{
+			name:  "+Inf CPU",
+			graph: mustCompose(infCPUPipeline),
+			code:  gobble.DefectInvalidName,
+			unit:  "copy",
+		},
+		{
+			name:  "-Inf CPU",
+			graph: mustCompose(negInfCPUPipeline),
+			code:  gobble.DefectInvalidName,
+			unit:  "copy",
+		},
 	}
 
 	for _, tt := range tests {

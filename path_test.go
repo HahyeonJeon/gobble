@@ -175,6 +175,11 @@ func TestPathSpecRender(t *testing.T) {
 			spec: gobble.PathSpec{Name: "sample", Ext: ".fastq"},
 			want: "sample.fastq",
 		},
+		{
+			name: "internal dotdot stays under first component",
+			spec: gobble.PathSpec{Dir: gobble.Dir("work/align/../lane"), Name: "x", Ext: ".txt"},
+			want: "work/lane/x.txt",
+		},
 	}
 
 	for _, tt := range tests {
@@ -321,6 +326,25 @@ func TestDirectory(t *testing.T) {
 	got := d.Join("lane1")
 	if got.String() != "work/align/lane1" {
 		t.Fatalf("Join() got %q, want %q", got.String(), "work/align/lane1")
+	}
+	escaped := gobble.PathSpec{Dir: gobble.Dir("work").Join("..", "out"), Name: "x"}
+	path, err := escaped.Render()
+	var ge *gobble.Error
+	if !errors.As(err, &ge) {
+		t.Fatalf("Join escape: Render() got path %q, error = %v, want *Error", path, err)
+	}
+	found := false
+	for _, d := range ge.Defects {
+		if d.Code == gobble.DefectInvalidPath {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("Join escape: Error.Defects codes got %v, want %s", defectCodes(ge), gobble.DefectInvalidPath)
+	}
+	if path != "" {
+		t.Fatalf("Join escape: Render() got path %q, want empty", path)
 	}
 }
 

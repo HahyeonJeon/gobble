@@ -27,7 +27,7 @@ func WriteTo(w io.Writer) PlanOption {
 	}
 }
 
-// BuildPlan validates g and returns an inspectable plan.
+// BuildPlan validates g first, then returns an inspectable plan.
 //
 // On any defect it returns (nil, [*Error]) with Op "plan". After a valid
 // plan is built, a [WriteTo] error still returns the [*Plan].
@@ -43,6 +43,9 @@ func BuildPlan(g *Graph, opts ...PlanOption) (*Plan, error) {
 			Code:    DefectInvalidName,
 			Message: "nil graph",
 		}}}
+	}
+	if pub := publicError("plan", engine.Validate(snapshotGraph(g))); pub != nil {
+		return nil, pub
 	}
 	doc, err := planDocument(g)
 	if err != nil {

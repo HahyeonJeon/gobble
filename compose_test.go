@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
@@ -428,6 +429,114 @@ func TestComposeStepsOnlyRestage(t *testing.T) {
 	}
 }
 
+func TestComposeBranchAddModule(t *testing.T) {
+	p := gobble.NewPipeline("branch-mod")
+	p.Branch("align").AddModule("bwa").AddTask(gobble.TaskSpec{
+		Name:    "mem",
+		Command: []string{"bwa"},
+		Outputs: []gobble.Bind{fileOut("out")},
+	})
+	raw := mustBuildPlanJSON(t, p)
+	var decoded struct {
+		Tasks []struct {
+			ID     string `json:"id"`
+			Module string `json:"module"`
+			Branch string `json:"branch"`
+		} `json:"tasks"`
+	}
+	if err := json.Unmarshal(raw, &decoded); err != nil {
+		t.Fatalf("case branch-add-module: Unmarshal() error = %v", err)
+	}
+	if len(decoded.Tasks) != 1 {
+		t.Fatalf("case branch-add-module: tasks got %d, want 1", len(decoded.Tasks))
+	}
+	if decoded.Tasks[0].ID != "align.bwa.mem" {
+		t.Fatalf("case branch-add-module: task id got %q, want %q", decoded.Tasks[0].ID, "align.bwa.mem")
+	}
+	if decoded.Tasks[0].Module != "bwa" {
+		t.Fatalf("case branch-add-module: module got %q, want %q", decoded.Tasks[0].Module, "bwa")
+	}
+	if decoded.Tasks[0].Branch != "align" {
+		t.Fatalf("case branch-add-module: branch got %q, want %q", decoded.Tasks[0].Branch, "align")
+	}
+}
+
+func TestComposeFromInPort(t *testing.T) {
+	p := gobble.NewPipeline("from-in")
+	in := p.AddInput("reads", gobble.PathSpec{Name: "sample", Ext: ".fq"})
+	prep := p.AddTask(gobble.TaskSpec{
+		Name:    "prep",
+		Command: []string{"prep"},
+		Inputs:  []gobble.Bind{{Name: "src", From: in}},
+		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Name: "prep", Ext: ".fq"}}},
+	})
+	p.AddTask(gobble.TaskSpec{
+		Name:    "copy",
+		Command: []string{"cp"},
+		Inputs:  []gobble.Bind{{Name: "in", From: prep.In("src")}},
+		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Name: "copy", Ext: ".fq"}}},
+	})
+	raw := mustBuildPlanJSON(t, p)
+	got := planInputPath(t, raw, "copy", "in")
+	if got != "sample.fq" {
+		t.Fatalf("case from-in: copy.in path got %q, want %q", got, "sample.fq")
+	}
+}
+
+func TestHandleSpecIsAuthored(t *testing.T) {
+	p := gobble.NewPipeline("authored-spec")
+	src := p.AddTask(gobble.TaskSpec{
+		Name:    "align",
+		Command: []string{"bwa"},
+		Outputs: []gobble.Bind{{Name: "bam", Spec: gobble.PathSpec{Name: "aln", Ext: ".bam"}}},
+	})
+	h := src.Out("bam")
+	if !h.Spec().Equal(gobble.PathSpec{Name: "aln", Ext: ".bam"}) {
+		t.Fatalf("case authored-spec: Out.Spec() got %+v, want Name=aln Ext=.bam", h.Spec())
+	}
+	p.AddTask(gobble.TaskSpec{
+		Name:    "index",
+		Command: []string{"samtools"},
+		Inputs:  []gobble.Bind{{Name: "bam", From: h}},
+		Outputs: []gobble.Bind{{Name: "bai", Spec: gobble.PathSpec{Ext: ".bai"}, From: h}},
+	})
+	raw := mustBuildPlanJSON(t, p)
+	got := planOutputPath(t, raw, "index", "bai")
+	if got != "aln.bam.bai" {
+		t.Fatalf("case authored-spec: index.bai path got %q, want %q", got, "aln.bam.bai")
+	}
+	if !h.Spec().Equal(gobble.PathSpec{Name: "aln", Ext: ".bam"}) {
+		t.Fatalf("case authored-spec: Out.Spec() after plan got %+v, want authored Name=aln Ext=.bam", h.Spec())
+	}
+}
+
+func ExampleCompose() {
+	p := gobble.NewPipeline("demo")
+	src := p.AddTask(gobble.TaskSpec{
+		Name:    "align",
+		Command: []string{"bwa"},
+		Outputs: []gobble.Bind{{Name: "bam", Spec: gobble.PathSpec{Name: "sample", Ext: ".bam"}}},
+	})
+	p.AddTask(gobble.TaskSpec{
+		Name:    "index",
+		Command: []string{"samtools"},
+		Inputs:  []gobble.Bind{{Name: "bam", From: src.Out("bam")}},
+		Outputs: []gobble.Bind{{Name: "bai", Spec: gobble.PathSpec{Ext: ".bai"}, From: src.Out("bam")}},
+	})
+	g, err := gobble.Compose(p)
+	if err != nil {
+		return
+	}
+	if err := gobble.Validate(g); err != nil {
+		return
+	}
+	if _, err := gobble.BuildPlan(g); err != nil {
+		return
+	}
+	fmt.Println("ok")
+	// Output: ok
+}
+
 func workflowCasePipeline() *gobble.Pipeline {
 	p := gobble.NewPipeline("workflow-case")
 	readsR1 := p.AddInput("reads_r1", gobble.PathSpec{
@@ -771,13 +880,25 @@ func mustBuildPlanJSON(t *testing.T, p *gobble.Pipeline) []byte {
 
 func planOutputPath(t *testing.T, raw []byte, taskID, port string) string {
 	t.Helper()
+	return planBindPath(t, raw, taskID, port, true)
+}
+
+func planInputPath(t *testing.T, raw []byte, taskID, port string) string {
+	t.Helper()
+	return planBindPath(t, raw, taskID, port, false)
+}
+
+func planBindPath(t *testing.T, raw []byte, taskID, port string, output bool) string {
+	t.Helper()
+	type bind struct {
+		Name string `json:"name"`
+		Path string `json:"path"`
+	}
 	var decoded struct {
 		Tasks []struct {
 			ID      string `json:"id"`
-			Outputs []struct {
-				Name string `json:"name"`
-				Path string `json:"path"`
-			} `json:"outputs"`
+			Inputs  []bind `json:"inputs"`
+			Outputs []bind `json:"outputs"`
 		} `json:"tasks"`
 	}
 	if err := json.Unmarshal(raw, &decoded); err != nil {
@@ -787,7 +908,11 @@ func planOutputPath(t *testing.T, raw []byte, taskID, port string) string {
 		if task.ID != taskID {
 			continue
 		}
-		for _, b := range task.Outputs {
+		binds := task.Inputs
+		if output {
+			binds = task.Outputs
+		}
+		for _, b := range binds {
 			if b.Name == port {
 				return b.Path
 			}

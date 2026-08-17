@@ -4,6 +4,8 @@ import "github.com/HahyeonJeon/gobble/internal/engine"
 
 // Compose builds an immutable Graph from p.
 //
+// A From handle must belong to p. A handle from another Pipeline is
+// missing-input on that bind, including output binds.
 // On any compose defect it returns (nil, *Error) with Op "compose".
 func Compose(p *Pipeline) (*Graph, error) {
 	if p == nil {

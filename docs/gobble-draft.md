@@ -1,6 +1,7 @@
 # Gobble — Initial Design Brief
 
 > **Document status:** Discussion Draft v0.2 · Non-binding  
+> **Shipped API:** This draft is product vision. It does not describe the current shipped Go API.  
 > **Purpose:** This working draft defines Gobble’s initial direction and required capability baseline. It is not an approved or finalized architecture, requirements specification, or roadmap.  
 > **Subject to change:** The vision, terminology, layers, components, responsibilities, technology candidates, and development sequence described here are provisional. They may be added, removed, combined, separated, replaced, or redefined as the project is discussed and validated.  
 > **Interpretation:** Terms such as `provides`, `includes`, and `is responsible for` describe capabilities that Gobble may ultimately need. They do not prescribe the current implementation or settle detailed policies.  

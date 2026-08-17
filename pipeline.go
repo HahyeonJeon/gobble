@@ -210,7 +210,9 @@ func (t *Task) In(name string) Handle {
 	return Handle{kind: handleIn, name: name, spec: spec, task: t}
 }
 
-// Spec returns the PathSpec recorded on this handle.
+// Spec returns the PathSpec recorded when the handle was created.
+// For Out and In that is the authored Bind spec, not the path Compose
+// later resolves for the plan.
 func (h Handle) Spec() PathSpec {
 	return h.spec.clone()
 }

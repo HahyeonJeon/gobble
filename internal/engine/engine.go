@@ -3,6 +3,10 @@
 // Package gobble translates Pipeline and Graph values into the snapshot
 // types defined here. This package must not import
 // github.com/HahyeonJeon/gobble or any cmd path.
+//
+// Path render and restage rules are copied from package gobble so this
+// package stays import-free. Tests in package gobble compare both
+// renderers. Do not change one copy without the other.
 package engine
 
 import "strings"
@@ -347,8 +351,9 @@ func joinSlash(parts ...string) string {
 	return b.String()
 }
 
-// cleanPath collapses "." and duplicate slashes and applies "..".
-// escaped is true when ".." would leave the first path component.
+// cleanPath collapses "." and duplicate slashes. It applies ".." only
+// while the first path component remains. escaped is true when ".."
+// would leave that component.
 func cleanPath(p string) (string, bool) {
 	p = strings.ReplaceAll(p, `\`, "/")
 	if p == "" {
