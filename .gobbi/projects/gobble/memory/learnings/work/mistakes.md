@@ -31,3 +31,11 @@
 **Mistake:** Merging them into one feature list.
 
 **Correction:** They answer different questions. Keep isolate. Take from nf-core only declared regular files plus declared literals.
+
+## Cached go test is not a live Docker e2e
+
+**Context:** First-check is `go test ./...`. Live WGS tests skip if Docker is down. Go may cache a prior package result.
+
+**Mistake:** Treating a cached `go test ./...` as proof that a live Docker WGS e2e ran.
+
+**Correction:** Reproduce `go test ./tests/wgs-e2e -count=1`. A skip is not a live pass. Cached ok is not a fresh live run.

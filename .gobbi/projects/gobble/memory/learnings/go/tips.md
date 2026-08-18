@@ -8,13 +8,13 @@
 
 **Application:** Apply one `foreignFrom` predicate at every site that records a spec or a DAG identity, including output binds.
 
-## From readiness: FromIn on the input path, output port on the published from-path
+## From readiness comes from the plan wait path
 
-**Context:** A task becomes ready from a `From` bind, including `FromIn` and related-file output `From`.
+**Context:** A task becomes ready from a `From` bind, including `FromIn`, related-file output `From`, and Group members.
 
-**Tip:** Keep FromIn on the downstream input path. An output-port `From` waits on the published from-path after the upstream task succeeds.
+**Tip:** Resolve the wait-path set at `BuildPlan`. `upstreamReady` reads `Edge.Wait` only. Do not guess from `ToPort`. FromIn waits on the consuming input path. Output-port `From` waits on the published from-path. A Group edge waits on every named member path.
 
-**Application:** In `internal/engine/run.go` `upstreamReady` after `d1319ff`, require the named upstream task to have succeeded, then check the consuming input path for FromIn, or the published from-path when `ToPort` is not an input. Do not resolve `FromIn` only against upstream outputs.
+**Application:** An empty or unproducible wait set is `never-ready` at plan. After the named upstream task succeeds, every wait path must be a regular file.
 
 ## Leftover not-started is not success
 
@@ -24,13 +24,13 @@
 
 **Application:** After the scheduler stops, any task that is not `succeeded` must become a `failed` defect so `Run` cannot return nil.
 
-## Recorded Resources and Params are unused until applied
+## Resources apply; Params stay unused
 
-**Context:** `Resources` and `Params` are on `TaskSpec` and persist in `tasks.json`.
+**Context:** `Resources` and `Params` are on `TaskSpec` and persist in plan JSON and `tasks.json`.
 
-**Tip:** Recorded is not applied. `docker.go` does not emit `--cpus` or `--memory`. `TestRunUnparseableMemory` accepts junk. Live Strelka saw host memory (`memMb: 47345`).
+**Tip:** Validate parses Memory. Non-zero CPU and Memory emit `--cpus` and `--memory` and consume remaining admission. Zero is unspecified. `Params` stay recorded and unused. They are not interpolated into Command or Script.
 
-**Application:** Do not treat recorded CPU or Memory as docker limits until validate parses Memory and the executor emits flags when non-zero.
+**Application:** Treat CPU and Memory as real limits. Do not treat Params as command inputs.
 
 ## Isolate scratch is not a directory port
 

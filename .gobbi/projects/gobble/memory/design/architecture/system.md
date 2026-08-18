@@ -16,7 +16,7 @@ when the project has one product. Start an inherited answer with `Inherited — 
 
 ### Gobble
 
-- Statement: Major parts are the Go core library (pipeline model: task, pipeline, input, output, resource, environment), engine services (validator, planner, scheduler), executors (local process and Docker), and interfaces (Go API, then CLI). The seam between scheduler and executors is required. The first-horizon scheduler is DAG- and resource-aware: per-task CPU and memory, and a run-level concurrency cap. Fairness, quotas, and job arrays wait. Each task declares its environment and must be runnable by itself. A container task must declare its Docker image. A local-process task must not require an image. Construction order is library, then engine, then CLI. The Go API may prove the loop before the CLI exists. First-horizon exit still requires the same loop on the CLI.
+- Statement: Major parts are the Go core library (pipeline model: task, pipeline, input, output, resource, environment), engine services (validator, planner, scheduler), executors (local process and Docker), and interfaces (Go API, then CLI). The seam between scheduler and executors is required. The first-horizon scheduler is DAG- and resource-aware: per-task CPU and memory, and a run-level concurrency cap. Admission uses remaining CPU, memory, and the count cap. Docker receives `--cpus` and `--memory` when non-zero. Zero stays unspecified. Fairness, quotas, and job arrays wait. Each task declares its environment and must be runnable by itself. A container task must declare its Docker image. A local-process task must not require an image. Construction order is library, then engine, then CLI. The Go API may prove the loop before the CLI exists. First-horizon exit still requires the same loop on the CLI.
 - Source: `shape`
 
 ## Parts and responsibilities
@@ -78,7 +78,7 @@ Do not use a no-op, `echo`, or any command that ignores the local toolchain.
 ### Gobble
 
 - Command: `go test ./...`
-- What it proves: Go 1.26 or newer is installed, the module `github.com/HahyeonJeon/gobble` builds, and package tests for `gobble` and `internal/engine` pass, including public `Run`. Live Docker tests skip if the daemon is down. It is not proof of agent-operable run, inspect, or resume, and it does not require Docker.
+- What it proves: Go 1.26 or newer is installed, the module `github.com/HahyeonJeon/gobble` builds, and package tests for `gobble`, `internal/engine`, and `tests/wgs-e2e` pass, including public `Run`. Live Docker tests skip if the daemon is down. Cached package results are not proof a live Docker e2e ran. It is not proof of agent-operable run, inspect, or resume, and it does not require Docker.
 - Source: `first-check`
 
 Project command, after every product subsection. If two local products
@@ -105,7 +105,7 @@ disagree, mark Open and ask.
 
 ### Gobble
 
-- Verification: Assumption — a change is safe to keep when `go test ./...` passes, including package tests for touched packages. Agent-operability of run, inspect, and resume is not proved by those tests.
+- Verification: Assumption — a change is safe to keep when `go test ./...` passes, including package tests for `gobble`, `internal/engine`, and `tests/wgs-e2e` when those packages change. Agent-operability of run, inspect, and resume is not proved by those tests. A live WGS Docker proof needs `go test ./tests/wgs-e2e -count=1`.
 - Build risk: Assumption — the part most likely to be wrong is the pipeline model: whether it can express modules, branch, and merge so an agent can plan, run, and resume without a DSL. Early evidence is the synthetic workflow-case pipeline, then WGS end-to-end on a small dataset.
 - Source: `verification`, `build-risk`
 

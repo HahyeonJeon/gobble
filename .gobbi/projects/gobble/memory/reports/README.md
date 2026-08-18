@@ -4,6 +4,7 @@ Recursive navigation across reports, grouped by category, newest first.
 
 ## Note
 
+- [Static-core slice](note/2026-08-18-static-core-slice.md)
 - [WGS e2e consumer-test session](note/2026-08-18-wgs-e2e.md)
 - [Local Run session](note/2026-08-17-run-local.md)
 - [Library and engine session](note/2026-08-17-library-and-engine.md)

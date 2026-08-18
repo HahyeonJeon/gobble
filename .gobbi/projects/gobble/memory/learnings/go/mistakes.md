@@ -6,4 +6,4 @@
 
 **Mistake:** `upstreamReady` only looked up inputs. Output-port `From` composed cleanly and deadlocked at run (`not-started`).
 
-**Correction:** Wait on the published from-path when `ToPort` is not an input. Add a process-level regression.
+**Correction:** Resolve wait paths at `BuildPlan`. Run reads `Edge.Wait` only. Do not guess from `ToPort`. Add a process-level regression.
