@@ -3,6 +3,7 @@ package engine
 import (
 	"math"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -40,7 +41,8 @@ func ComposeCheck(s Snapshot) []Defect {
 }
 
 // Validate reports compose defects, rendered-path conflicts,
-// unsupported backends, and non-finite CPU on s.
+// unsupported backends, non-finite or negative CPU, and unparseable
+// Memory on s.
 func Validate(s Snapshot) []Defect {
 	return check(s, true)
 }
@@ -173,6 +175,13 @@ func (c *checker) checkTask(t *Task) {
 	}
 	if c.plan && !finiteCPU(t.CPU) {
 		c.add(DefectInvalidName, id, "non-finite cpu")
+	} else if c.plan && t.CPU < 0 {
+		c.add(DefectInvalidName, id, "negative cpu")
+	}
+	if c.plan {
+		if _, ok := parseMemory(t.Memory); !ok {
+			c.add(DefectInvalidMemory, id, "invalid memory "+strconv.Quote(t.Memory))
+		}
 	}
 	seen := make(map[string]bool)
 	checkPort := func(b Bind) {
@@ -603,6 +612,48 @@ func comparablePath(p string) string {
 
 func finiteCPU(v float64) bool {
 	return !math.IsNaN(v) && !math.IsInf(v, 0)
+}
+
+// parseMemory parses Docker --memory syntax. Empty is unspecified (0, true).
+func parseMemory(s string) (int64, bool) {
+	if s == "" {
+		return 0, true
+	}
+	if n, err := strconv.ParseUint(s, 10, 63); err == nil {
+		return int64(n), true
+	}
+	if len(s) < 2 {
+		return 0, false
+	}
+	var mul int64
+	switch s[len(s)-1] {
+	case 'b', 'B':
+		mul = 1
+	case 'k', 'K':
+		mul = 1024
+	case 'm', 'M':
+		mul = 1024 * 1024
+	case 'g', 'G':
+		mul = 1024 * 1024 * 1024
+	default:
+		return 0, false
+	}
+	num := s[:len(s)-1]
+	if n, err := strconv.ParseUint(num, 10, 63); err == nil {
+		if mul != 1 && n > uint64(math.MaxInt64)/uint64(mul) {
+			return 0, false
+		}
+		return int64(n) * mul, true
+	}
+	f, err := strconv.ParseFloat(num, 64)
+	if err != nil || f < 0 || !finiteCPU(f) {
+		return 0, false
+	}
+	bytes := f * float64(mul)
+	if bytes > float64(math.MaxInt64) {
+		return 0, false
+	}
+	return int64(bytes), true
 }
 
 func childID(prefix, name string) string {

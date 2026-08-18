@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -15,32 +16,33 @@ const containerWorkDir = "/work"
 // dockerCLI runs docker argv without the docker token. Tests replace it.
 var dockerCLI = runDockerCLI
 
-func dockerRunner(image string) runner {
+func dockerRunner(task TaskPlan) runner {
 	return func(cwd string, argv []string, stdout, stderr io.Writer) (int, error) {
-		return runDocker(cwd, image, argv, stdout, stderr)
+		return runDocker(cwd, task, argv, stdout, stderr)
 	}
 }
 
-func runDocker(cwd, image string, argv []string, stdout, stderr io.Writer) (int, error) {
-	if image == "" {
+func runDocker(cwd string, task TaskPlan, argv []string, stdout, stderr io.Writer) (int, error) {
+	if task.Image == "" {
 		return -1, errors.New("empty image")
 	}
-	if msg := invalidImage(image); msg != "" {
+	if msg := invalidImage(task.Image); msg != "" {
 		return -1, errors.New(msg)
 	}
 	if len(argv) == 0 {
 		return -1, errors.New("empty command")
 	}
-	if err := ensureImage(image, stdout, stderr); err != nil {
+	if err := ensureImage(task.Image, stdout, stderr); err != nil {
 		return -1, err
 	}
-	return dockerCLI(dockerRunArgs(cwd, image, argv), stdout, stderr)
+	return dockerCLI(dockerRunArgs(cwd, task, argv), stdout, stderr)
 }
 
 // dockerRunArgs is docker run after the docker token. Command is the
 // complete container argv. Image ENTRYPOINT and CMD are unused.
-// --cpus and --memory are not applied.
-func dockerRunArgs(cwd, image string, argv []string) []string {
+// Non-zero CPU and Memory become --cpus and --memory. Declared Env
+// becomes -e KEY=VALUE.
+func dockerRunArgs(cwd string, task TaskPlan, argv []string) []string {
 	abs := cwd
 	if resolved, err := filepath.Abs(cwd); err == nil {
 		abs = resolved
@@ -52,8 +54,25 @@ func dockerRunArgs(cwd, image string, argv []string) []string {
 		"--entrypoint", argv[0],
 		"-v", abs + ":" + containerWorkDir,
 		"-w", containerWorkDir,
-		image,
 	}
+	if task.Resources.CPU != 0 {
+		args = append(args, "--cpus", strconv.FormatFloat(task.Resources.CPU, 'f', -1, 64))
+	}
+	if n, ok := parseMemory(task.Resources.Memory); ok && n > 0 {
+		args = append(args, "--memory", task.Resources.Memory)
+	}
+	keys := make([]string, 0, len(task.Env))
+	for k, v := range task.Env {
+		if k == "" || v == "" {
+			continue
+		}
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		args = append(args, "-e", k+"="+task.Env[k])
+	}
+	args = append(args, task.Image)
 	return append(args, argv[1:]...)
 }
 

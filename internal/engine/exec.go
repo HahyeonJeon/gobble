@@ -26,9 +26,9 @@ type runner func(cwd string, argv []string, stdout, stderr io.Writer) (int, erro
 
 func executeTask(workspace string, task TaskPlan) report {
 	if task.Image != "" {
-		return isolatedExecute(workspace, task, dockerRunner(task.Image))
+		return isolatedExecute(workspace, task, dockerRunner(task))
 	}
-	return isolatedExecute(workspace, task, runProcess)
+	return isolatedExecute(workspace, task, processRunner(task))
 }
 
 func isolatedExecute(workspace string, task TaskPlan, run runner) report {
@@ -58,7 +58,7 @@ func isolatedExecute(workspace string, task TaskPlan, run runner) report {
 		r.Message = err.Error()
 		return r
 	}
-	exit, runErr := run(isolate, task.Command, outf, errf)
+	exit, runErr := run(isolate, executeArgv(task), outf, errf)
 	outf.Close()
 	errf.Close()
 	r.Exit = exit
@@ -82,25 +82,58 @@ func isolatedExecute(workspace string, task TaskPlan, run runner) report {
 	return r
 }
 
+func executeArgv(task TaskPlan) []string {
+	if task.Script != "" {
+		return []string{"sh", "-c", "set -eu\n" + task.Script}
+	}
+	return task.Command
+}
+
+func processRunner(task TaskPlan) runner {
+	return func(cwd string, argv []string, stdout, stderr io.Writer) (int, error) {
+		return runProcessWithEnv(cwd, argv, processEnv(task.Env), stdout, stderr)
+	}
+}
+
+func processEnv(env map[string]string) []string {
+	out := make([]string, 0, 1+len(env))
+	if _, ok := env["PATH"]; !ok {
+		out = append(out, "PATH=/usr/bin:/bin")
+	}
+	for k, v := range env {
+		if k == "" || v == "" {
+			continue
+		}
+		out = append(out, k+"="+v)
+	}
+	return out
+}
+
 func prepareIsolate(workspace, isolate string, task TaskPlan) error {
 	for _, in := range task.Inputs {
-		if err := mkdirPlanParent(isolate, in.Path); err != nil {
-			return err
+		for _, f := range namedIOFiles(in) {
+			if err := mkdirPlanParent(isolate, f.path); err != nil {
+				return err
+			}
 		}
 	}
 	for _, out := range task.Outputs {
-		if err := mkdirPlanParent(isolate, out.Path); err != nil {
-			return err
+		for _, f := range namedIOFiles(out) {
+			if err := mkdirPlanParent(isolate, f.path); err != nil {
+				return err
+			}
 		}
 	}
 	for _, in := range task.Inputs {
-		src := workspaceFile(workspace, in.Path)
-		dst := workspaceFile(isolate, in.Path)
-		if err := copyFile(src, dst); err != nil {
-			return err
-		}
-		if err := os.Chmod(dst, 0o444); err != nil {
-			return err
+		for _, f := range namedIOFiles(in) {
+			src := workspaceFile(workspace, f.path)
+			dst := workspaceFile(isolate, f.path)
+			if err := copyFile(src, dst); err != nil {
+				return err
+			}
+			if err := os.Chmod(dst, 0o444); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -115,12 +148,16 @@ func mkdirPlanParent(root, planPath string) error {
 }
 
 func runProcess(cwd string, argv []string, stdout, stderr io.Writer) (int, error) {
+	return runProcessWithEnv(cwd, argv, []string{"PATH=/usr/bin:/bin"}, stdout, stderr)
+}
+
+func runProcessWithEnv(cwd string, argv []string, env []string, stdout, stderr io.Writer) (int, error) {
 	if len(argv) == 0 {
 		return -1, errors.New("empty command")
 	}
 	cmd := exec.Command(argv[0], argv[1:]...)
 	cmd.Dir = cwd
-	cmd.Env = []string{"PATH=/usr/bin:/bin"}
+	cmd.Env = env
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 	err := cmd.Run()
@@ -136,8 +173,10 @@ func runProcess(cwd string, argv []string, stdout, stderr io.Writer) (int, error
 
 func missingOutputs(isolate string, task TaskPlan) string {
 	for _, out := range task.Outputs {
-		if !regularFile(workspaceFile(isolate, out.Path)) {
-			return out.Path
+		for _, f := range namedIOFiles(out) {
+			if !regularFile(workspaceFile(isolate, f.path)) {
+				return f.path
+			}
 		}
 	}
 	return ""
@@ -146,17 +185,51 @@ func missingOutputs(isolate string, task TaskPlan) string {
 func publishAll(workspace, isolate string, task TaskPlan) error {
 	var wrote []string
 	for _, out := range task.Outputs {
-		src := workspaceFile(isolate, out.Path)
-		dst := workspaceFile(workspace, out.Path)
-		if err := copyFile(src, dst); err != nil {
-			for _, p := range wrote {
-				os.Remove(p)
+		for _, f := range namedIOFiles(out) {
+			src := workspaceFile(isolate, f.path)
+			dst := workspaceFile(workspace, f.path)
+			if err := copyFile(src, dst); err != nil {
+				for _, p := range wrote {
+					os.Remove(p)
+				}
+				return err
 			}
-			return err
+			wrote = append(wrote, dst)
 		}
-		wrote = append(wrote, dst)
 	}
 	return nil
+}
+
+type namedFile struct {
+	name string
+	path string
+}
+
+func namedIOFiles(io IO) []namedFile {
+	if io.Members != nil {
+		out := make([]namedFile, 0, len(io.Members))
+		for _, m := range io.Members {
+			found, ok := findIOMember(io.Members, m.Name)
+			if !ok || found.Path == "" {
+				continue
+			}
+			out = append(out, namedFile{name: found.Name, path: found.Path})
+		}
+		return out
+	}
+	if io.Path == "" {
+		return nil
+	}
+	return []namedFile{{name: io.Name, path: io.Path}}
+}
+
+func findIOMember(members []IOMember, name string) (IOMember, bool) {
+	for _, m := range members {
+		if m.Name == name {
+			return m, true
+		}
+	}
+	return IOMember{}, false
 }
 
 func copyFile(src, dst string) error {

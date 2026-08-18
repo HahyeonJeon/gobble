@@ -175,16 +175,11 @@ func TestRunUnparseableMemory(t *testing.T) {
 	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
 	doc.Tasks[0].Resources.Memory = "not-a-size"
 	defects := Run(Request{Workspace: dir, Document: doc})
-	if len(defects) != 0 {
-		t.Fatalf("unparseable memory Run() defects %v, want none", defects)
+	if !hasDefect(defects, DefectInvalidMemory, "copy") {
+		t.Fatalf("unparseable memory Run() defects %v, want invalid-memory copy", defects)
 	}
-	raw := mustJSONFile(t, filepath.Join(dir, ControlDir, TasksFile))
-	var file jsonTasksFile
-	if err := json.Unmarshal(raw, &file); err != nil {
-		t.Fatalf("tasks.json: %v", err)
-	}
-	if file.Tasks[0].Resources.Memory != "not-a-size" {
-		t.Fatalf("recorded memory got %q, want not-a-size", file.Tasks[0].Resources.Memory)
+	if _, err := os.Stat(filepath.Join(dir, ControlDir)); !os.IsNotExist(err) {
+		t.Fatalf("unparseable memory Run occupied workspace")
 	}
 }
 
@@ -339,8 +334,8 @@ func TestRunFromInPort(t *testing.T) {
 			},
 		},
 		Edges: []Edge{
-			{FromPort: "reads", ToTask: "prep", ToPort: "src"},
-			{FromTask: "prep", FromPort: "src", ToTask: "copy", ToPort: "in"},
+			{FromPort: "reads", ToTask: "prep", ToPort: "src", Wait: []string{"sample.fq"}},
+			{FromTask: "prep", FromPort: "src", ToTask: "copy", ToPort: "in", Wait: []string{"sample.fq"}},
 		},
 	}
 	defects := Run(Request{Workspace: dir, Document: doc})
@@ -465,8 +460,8 @@ func relatedFileOutputFromDoc(alignCmd, indexCmd []string) Document {
 			},
 		},
 		Edges: []Edge{
-			{FromTask: "align", FromPort: "bam", ToTask: "index", ToPort: "bam"},
-			{FromTask: "align", FromPort: "bam", ToTask: "index", ToPort: "bai"},
+			{FromTask: "align", FromPort: "bam", ToTask: "index", ToPort: "bam", Wait: []string{"aln.bam"}},
+			{FromTask: "align", FromPort: "bam", ToTask: "index", ToPort: "bai", Wait: []string{"aln.bam"}},
 		},
 	}
 }
@@ -512,8 +507,8 @@ func TestRunNotStartedIsFailed(t *testing.T) {
 			},
 		},
 		Edges: []Edge{
-			{FromPort: "reads", ToTask: "prep", ToPort: "src"},
-			{FromTask: "prep", FromPort: "out", ToTask: "copy", ToPort: "in"},
+			{FromPort: "reads", ToTask: "prep", ToPort: "src", Wait: []string{"in/sample.txt"}},
+			{FromTask: "prep", FromPort: "out", ToTask: "copy", ToPort: "in", Wait: []string{"out/prep.txt"}},
 		},
 	}
 	defects := Run(Request{Workspace: dir, Document: doc})
@@ -546,6 +541,398 @@ func TestRunPersistError(t *testing.T) {
 	})
 	if !hasDefect(defects, DefectInvalidPath, "") {
 		t.Fatalf("persist Run() defects %v, want persist invalid-path", defects)
+	}
+}
+
+func TestAdmitResources(t *testing.T) {
+	origCap := readHostCapacity
+	origExec := execTask
+	t.Cleanup(func() {
+		readHostCapacity = origCap
+		execTask = origExec
+	})
+
+	t.Run("cpu remaining is serial", func(t *testing.T) {
+		readHostCapacity = func() hostCapacity {
+			return hostCapacity{CPU: 1, CPUKnown: true, Memory: 1 << 30, MemKnown: true}
+		}
+		var mu sync.Mutex
+		current, max := 0, 0
+		execTask = func(workspace string, task TaskPlan) report {
+			mu.Lock()
+			current++
+			if current > max {
+				max = current
+			}
+			mu.Unlock()
+			time.Sleep(20 * time.Millisecond)
+			for _, out := range task.Outputs {
+				writeCheckFile(t, workspaceFile(workspace, out.Path), task.ID)
+			}
+			mu.Lock()
+			current--
+			mu.Unlock()
+			return report{ID: task.ID, Published: true}
+		}
+		dir := t.TempDir()
+		doc := twoIndependentDoc()
+		doc.Tasks[0].Resources.CPU = 1
+		doc.Tasks[1].Resources.CPU = 1
+		defects := Run(Request{Workspace: dir, Cap: 2, Document: doc})
+		if len(defects) != 0 {
+			t.Fatalf("cpu admit Run() defects %v, want none", defects)
+		}
+		if max != 1 {
+			t.Fatalf("cpu admit max in flight got %d, want 1", max)
+		}
+	})
+
+	t.Run("memory remaining is serial", func(t *testing.T) {
+		readHostCapacity = func() hostCapacity {
+			return hostCapacity{CPU: 8, CPUKnown: true, Memory: 512 << 20, MemKnown: true}
+		}
+		var mu sync.Mutex
+		current, max := 0, 0
+		execTask = func(workspace string, task TaskPlan) report {
+			mu.Lock()
+			current++
+			if current > max {
+				max = current
+			}
+			mu.Unlock()
+			time.Sleep(20 * time.Millisecond)
+			for _, out := range task.Outputs {
+				writeCheckFile(t, workspaceFile(workspace, out.Path), task.ID)
+			}
+			mu.Lock()
+			current--
+			mu.Unlock()
+			return report{ID: task.ID, Published: true}
+		}
+		dir := t.TempDir()
+		doc := twoIndependentDoc()
+		doc.Tasks[0].Resources.Memory = "512m"
+		doc.Tasks[1].Resources.Memory = "512m"
+		defects := Run(Request{Workspace: dir, Cap: 2, Document: doc})
+		if len(defects) != 0 {
+			t.Fatalf("memory admit Run() defects %v, want none", defects)
+		}
+		if max != 1 {
+			t.Fatalf("memory admit max in flight got %d, want 1", max)
+		}
+	})
+
+	t.Run("zero request does not consume", func(t *testing.T) {
+		readHostCapacity = func() hostCapacity {
+			return hostCapacity{CPU: 1, CPUKnown: true, Memory: 1024, MemKnown: true}
+		}
+		started := make(chan string, 2)
+		release := make(chan struct{})
+		execTask = func(workspace string, task TaskPlan) report {
+			started <- task.ID
+			<-release
+			for _, out := range task.Outputs {
+				writeCheckFile(t, workspaceFile(workspace, out.Path), task.ID)
+			}
+			return report{ID: task.ID, Published: true}
+		}
+		dir := t.TempDir()
+		done := make(chan []Defect, 1)
+		go func() {
+			done <- Run(Request{Workspace: dir, Cap: 2, Document: twoIndependentDoc()})
+		}()
+		seen := map[string]bool{}
+		for i := 0; i < 2; i++ {
+			select {
+			case id := <-started:
+				seen[id] = true
+			case <-time.After(2 * time.Second):
+				t.Fatalf("zero request timeout waiting for launch %d; seen %v", i+1, seen)
+			}
+		}
+		close(release)
+		select {
+		case defects := <-done:
+			if len(defects) != 0 {
+				t.Fatalf("zero request Run() defects %v, want none", defects)
+			}
+		case <-time.After(2 * time.Second):
+			t.Fatal("zero request timeout waiting for Run")
+		}
+	})
+
+	t.Run("unspecified axis binds count only", func(t *testing.T) {
+		readHostCapacity = func() hostCapacity {
+			return hostCapacity{}
+		}
+		started := make(chan string, 2)
+		release := make(chan struct{})
+		execTask = func(workspace string, task TaskPlan) report {
+			started <- task.ID
+			<-release
+			for _, out := range task.Outputs {
+				writeCheckFile(t, workspaceFile(workspace, out.Path), task.ID)
+			}
+			return report{ID: task.ID, Published: true}
+		}
+		dir := t.TempDir()
+		doc := twoIndependentDoc()
+		doc.Tasks[0].Resources = ResourcePlan{CPU: 8, Memory: "8g"}
+		doc.Tasks[1].Resources = ResourcePlan{CPU: 8, Memory: "8g"}
+		done := make(chan []Defect, 1)
+		go func() {
+			done <- Run(Request{Workspace: dir, Cap: 2, Document: doc})
+		}()
+		for i := 0; i < 2; i++ {
+			select {
+			case <-started:
+			case <-time.After(2 * time.Second):
+				t.Fatalf("unspecified axis timeout waiting for launch %d", i+1)
+			}
+		}
+		close(release)
+		select {
+		case defects := <-done:
+			if len(defects) != 0 {
+				t.Fatalf("unspecified axis Run() defects %v, want none", defects)
+			}
+		case <-time.After(2 * time.Second):
+			t.Fatal("unspecified axis timeout waiting for Run")
+		}
+	})
+}
+
+func TestRunScriptWrapper(t *testing.T) {
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
+	doc.Tasks[0].Command = nil
+	doc.Tasks[0].Script = "cp in/sample.txt out/sample.txt\nprintf '%s\\n' \"$-\" > out/flags.txt"
+	doc.Tasks[0].Outputs = []IO{
+		{Name: "out", Path: "out/sample.txt"},
+		{Name: "flags", Path: "out/flags.txt"},
+	}
+	defects := Run(Request{Workspace: dir, Document: doc})
+	if len(defects) != 0 {
+		t.Fatalf("script Run() defects %v, want none", defects)
+	}
+	got, err := os.ReadFile(filepath.Join(dir, "out", "sample.txt"))
+	if err != nil {
+		t.Fatalf("script output: %v", err)
+	}
+	if string(got) != "reads" {
+		t.Fatalf("script output got %q, want reads", got)
+	}
+	flags, err := os.ReadFile(filepath.Join(dir, "out", "flags.txt"))
+	if err != nil {
+		t.Fatalf("script flags: %v", err)
+	}
+	body := string(flags)
+	if !strings.Contains(body, "e") || !strings.Contains(body, "u") {
+		t.Fatalf("script $- got %q, want e and u from set -eu", body)
+	}
+
+	dir = t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	fail := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
+	fail.Tasks[0].Command = nil
+	fail.Tasks[0].Script = "echo $UNSET_GOBBLE_VAR > out/sample.txt"
+	defects = Run(Request{Workspace: dir, Document: fail})
+	if !hasDefect(defects, DefectFailed, "copy") {
+		t.Fatalf("script nounset Run() defects %v, want failed copy", defects)
+	}
+}
+
+func TestRunProcessEnvDeclared(t *testing.T) {
+	t.Setenv("SECRET", "should-not-leak")
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
+	doc.Tasks[0].Env = map[string]string{"HOME": "/tmp/gobble-home", "FOO": "bar"}
+	doc.Tasks[0].Command = []string{"sh", "-c", "env > out/env.txt && cp in/sample.txt out/sample.txt"}
+	doc.Tasks[0].Outputs = []IO{
+		{Name: "out", Path: "out/sample.txt"},
+		{Name: "env", Path: "out/env.txt"},
+	}
+	defects := Run(Request{Workspace: dir, Document: doc})
+	if len(defects) != 0 {
+		t.Fatalf("declared env Run() defects %v, want none", defects)
+	}
+	got, err := os.ReadFile(filepath.Join(dir, "out", "env.txt"))
+	if err != nil {
+		t.Fatalf("env output: %v", err)
+	}
+	body := string(got)
+	if strings.Contains(body, "SECRET") {
+		t.Fatalf("process inherited SECRET: %q", body)
+	}
+	if !strings.Contains(body, "HOME=/tmp/gobble-home") || !strings.Contains(body, "FOO=bar") {
+		t.Fatalf("process env got %q, want declared HOME and FOO", body)
+	}
+	if !strings.Contains(body, "PATH=/usr/bin:/bin") {
+		t.Fatalf("process env got %q, want default PATH", body)
+	}
+
+	dir = t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	doc = sampleDoc("", "", "in/sample.txt", "out/sample.txt")
+	doc.Tasks[0].Env = map[string]string{"PATH": "/opt/bin"}
+	doc.Tasks[0].Command = []string{"/bin/sh", "-c", "/usr/bin/env > out/env.txt && /bin/cp in/sample.txt out/sample.txt"}
+	doc.Tasks[0].Outputs = []IO{
+		{Name: "out", Path: "out/sample.txt"},
+		{Name: "env", Path: "out/env.txt"},
+	}
+	defects = Run(Request{Workspace: dir, Document: doc})
+	if len(defects) != 0 {
+		t.Fatalf("author PATH Run() defects %v, want none", defects)
+	}
+	got, err = os.ReadFile(filepath.Join(dir, "out", "env.txt"))
+	if err != nil {
+		t.Fatalf("author PATH env output: %v", err)
+	}
+	body = string(got)
+	if !strings.Contains(body, "PATH=/opt/bin") {
+		t.Fatalf("author PATH env got %q, want PATH=/opt/bin", body)
+	}
+	if strings.Contains(body, "PATH=/usr/bin:/bin") {
+		t.Fatalf("author PATH env kept default PATH: %q", body)
+	}
+}
+
+func TestRunGroupStagePublishByName(t *testing.T) {
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "ref.amb"), "amb")
+	writeCheckFile(t, filepath.Join(dir, "ref.ann"), "ann")
+	doc := Document{
+		Name: "group",
+		Tasks: []TaskPlan{{
+			ID:      "copy",
+			Name:    "copy",
+			Command: []string{"sh", "-c", "cp ref.amb out.amb && cp ref.ann out.ann"},
+			Inputs: []IO{{
+				Name: "idx",
+				Members: []IOMember{
+					{Name: "amb", Path: "ref.amb"},
+					{Name: "ann", Path: "ref.ann"},
+				},
+			}},
+			Outputs: []IO{{
+				Name: "idx",
+				Members: []IOMember{
+					{Name: "amb", Path: "out.amb"},
+					{Name: "ann", Path: "out.ann"},
+				},
+			}},
+		}},
+		Edges: []Edge{{FromPort: "ref", ToTask: "copy", ToPort: "idx"}},
+	}
+	defects := Run(Request{Workspace: dir, Document: doc})
+	if len(defects) != 0 {
+		t.Fatalf("group Run() defects %v, want none", defects)
+	}
+	for _, name := range []string{"out.amb", "out.ann"} {
+		if _, err := os.ReadFile(filepath.Join(dir, name)); err != nil {
+			t.Fatalf("published group member %s: %v", name, err)
+		}
+	}
+	isolate := filepath.Join(dir, ControlDir, "tasks", "copy", "work")
+	for _, name := range []string{"ref.amb", "ref.ann"} {
+		info, err := os.Stat(filepath.Join(isolate, name))
+		if err != nil {
+			t.Fatalf("staged group member %s: %v", name, err)
+		}
+		if info.Mode().Perm() != 0o444 {
+			t.Fatalf("staged %s mode %o, want 0444", name, info.Mode().Perm())
+		}
+	}
+
+	dir = t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "ref.amb"), "amb")
+	writeCheckFile(t, filepath.Join(dir, "ref.ann"), "ann")
+	doc.Tasks[0].Command = []string{"sh", "-c", "cp ref.amb out.amb"}
+	defects = Run(Request{Workspace: dir, Document: doc})
+	if !hasDefect(defects, DefectFailed, "copy") {
+		t.Fatalf("missing group member Run() defects %v, want failed copy", defects)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "out.amb")); !os.IsNotExist(err) {
+		t.Fatalf("partial group publish left out.amb")
+	}
+}
+
+func TestRunWaitUsesPlanPathsOnly(t *testing.T) {
+	orig := execTask
+	t.Cleanup(func() { execTask = orig })
+	var launched []string
+	var mu sync.Mutex
+	execTask = func(workspace string, task TaskPlan) report {
+		mu.Lock()
+		launched = append(launched, task.ID)
+		mu.Unlock()
+		if task.ID == "align" {
+			writeCheckFile(t, filepath.Join(workspace, "aln.bam"), "bam")
+		}
+		return report{ID: task.ID, Published: true}
+	}
+	dir := t.TempDir()
+	doc := Document{
+		Name: "wait-only",
+		Tasks: []TaskPlan{
+			{
+				ID:      "align",
+				Name:    "align",
+				Command: []string{"true"},
+				Outputs: []IO{{Name: "bam", Path: "aln.bam"}},
+			},
+			{
+				ID:      "index",
+				Name:    "index",
+				Command: []string{"true"},
+				Inputs:  []IO{{Name: "in", Path: "missing-to-port.txt"}},
+				Outputs: []IO{{Name: "bai", Path: "aln.bam.bai"}},
+			},
+		},
+		Edges: []Edge{{
+			FromTask: "align",
+			FromPort: "bam",
+			ToTask:   "index",
+			ToPort:   "in",
+			Wait:     []string{"aln.bam"},
+		}},
+	}
+	defects := Run(Request{Workspace: dir, Document: doc})
+	if len(defects) != 0 {
+		t.Fatalf("wait-only Run() defects %v, want none", defects)
+	}
+	mu.Lock()
+	got := append([]string(nil), launched...)
+	mu.Unlock()
+	if len(got) != 2 {
+		t.Fatalf("wait-only launched %v, want align and index", got)
+	}
+
+	execTask = func(workspace string, task TaskPlan) report {
+		mu.Lock()
+		launched = append(launched, task.ID)
+		mu.Unlock()
+		return report{ID: task.ID, Published: true}
+	}
+	launched = nil
+	dir = t.TempDir()
+	doc.Edges[0].Wait = []string{"never-written.bam"}
+	defects = Run(Request{Workspace: dir, Document: doc})
+	if !hasDefect(defects, DefectFailed, "index") {
+		t.Fatalf("missing wait Run() defects %v, want failed index", defects)
+	}
+	mu.Lock()
+	got = append([]string(nil), launched...)
+	mu.Unlock()
+	for _, id := range got {
+		if id == "index" {
+			t.Fatalf("launched index without wait path: %v", got)
+		}
+	}
+	if taskStates(t, dir)["index"].Status != StatusNotStarted {
+		t.Fatalf("index status got %q, want not-started", taskStates(t, dir)["index"].Status)
 	}
 }
 

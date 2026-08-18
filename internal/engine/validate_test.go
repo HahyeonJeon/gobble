@@ -387,6 +387,61 @@ func TestComposeCheckDoesNotReportPlanDefects(t *testing.T) {
 	}
 }
 
+func TestValidateMemoryAndNegativeCPU(t *testing.T) {
+	file := Path{Name: "out", Ext: ".txt"}
+	junk := Snapshot{
+		Name: "junk-mem",
+		Tasks: []Task{{
+			ID:      "copy",
+			Name:    "copy",
+			Command: []string{"cp"},
+			Memory:  "not-a-size",
+			Outputs: []Bind{{Name: "out", Spec: file}},
+		}},
+	}
+	got := ComposeCheck(junk)
+	if hasDefect(got, DefectInvalidMemory, "copy") {
+		t.Fatalf("case junk-mem: ComposeCheck() reported invalid-memory, want compose defects only")
+	}
+	got = Validate(junk)
+	if !hasDefect(got, DefectInvalidMemory, "copy") {
+		t.Fatalf("case junk-mem: Validate() defects %v, want invalid-memory unit copy", formatDefects(got))
+	}
+
+	empty := Snapshot{
+		Name: "empty-mem",
+		Tasks: []Task{{
+			ID:      "copy",
+			Name:    "copy",
+			Command: []string{"cp"},
+			Outputs: []Bind{{Name: "out", Spec: file}},
+		}},
+	}
+	got = Validate(empty)
+	if hasDefect(got, DefectInvalidMemory, "copy") {
+		t.Fatalf("case empty-mem: Validate() defects %v, want no invalid-memory", formatDefects(got))
+	}
+
+	neg := Snapshot{
+		Name: "neg-cpu",
+		Tasks: []Task{{
+			ID:      "copy",
+			Name:    "copy",
+			Command: []string{"cp"},
+			CPU:     -1,
+			Outputs: []Bind{{Name: "out", Spec: file}},
+		}},
+	}
+	got = ComposeCheck(neg)
+	if hasDefect(got, DefectInvalidName, "copy") {
+		t.Fatalf("case neg-cpu: ComposeCheck() reported invalid-name, want compose defects only")
+	}
+	got = Validate(neg)
+	if !hasDefect(got, DefectInvalidName, "copy") {
+		t.Fatalf("case neg-cpu: Validate() defects %v, want invalid-name unit copy", formatDefects(got))
+	}
+}
+
 func TestBuildPlanEncodeFailureHasCode(t *testing.T) {
 	snap := Snapshot{
 		Name: "encode",

@@ -56,6 +56,46 @@ type sched struct {
 	run       jsonRun
 	tasks     map[string]*jsonTaskState
 	persist   error
+	budget    resourceBudget
+}
+
+type resourceBudget struct {
+	host hostCapacity
+	cpu  float64
+	mem  int64
+}
+
+func newBudget(host hostCapacity) resourceBudget {
+	return resourceBudget{host: host, cpu: host.CPU, mem: host.Memory}
+}
+
+func (b resourceBudget) fits(t TaskPlan) bool {
+	if b.host.CPUKnown && t.Resources.CPU > 0 && t.Resources.CPU > b.cpu {
+		return false
+	}
+	n, ok := parseMemory(t.Resources.Memory)
+	if ok && b.host.MemKnown && n > 0 && n > b.mem {
+		return false
+	}
+	return true
+}
+
+func (b *resourceBudget) occupy(t TaskPlan) {
+	if t.Resources.CPU > 0 {
+		b.cpu -= t.Resources.CPU
+	}
+	if n, ok := parseMemory(t.Resources.Memory); ok && n > 0 {
+		b.mem -= n
+	}
+}
+
+func (b *resourceBudget) release(t TaskPlan) {
+	if t.Resources.CPU > 0 {
+		b.cpu += t.Resources.CPU
+	}
+	if n, ok := parseMemory(t.Resources.Memory); ok && n > 0 {
+		b.mem += n
+	}
 }
 
 type jsonRun struct {
@@ -97,7 +137,8 @@ func occupy(req Request) (*sched, []Defect) {
 			Status:  StatusRunning,
 			Started: time.Now().UTC().Format(time.RFC3339Nano),
 		},
-		tasks: make(map[string]*jsonTaskState, len(req.Document.Tasks)),
+		tasks:  make(map[string]*jsonTaskState, len(req.Document.Tasks)),
+		budget: newBudget(readHostCapacity()),
 	}
 	for _, t := range req.Document.Tasks {
 		st := initialTask(t)
@@ -200,80 +241,53 @@ func (s *sched) nextReady() string {
 		if st == nil || st.Status != StatusNotStarted {
 			continue
 		}
-		if s.upstreamReady(t.ID) {
-			return t.ID
+		if !s.upstreamReady(t.ID) {
+			continue
 		}
+		if !s.budget.fits(t) {
+			continue
+		}
+		return t.ID
 	}
 	return ""
 }
 
 func (s *sched) upstreamReady(id string) bool {
 	for _, e := range s.doc.Edges {
-		if e.ToTask != id || e.FromTask == "" {
+		if e.ToTask != id {
 			continue
 		}
-		up := s.tasks[e.FromTask]
-		if up == nil || up.Status != StatusSucceeded {
-			return false
+		if e.FromTask != "" {
+			up := s.tasks[e.FromTask]
+			if up == nil || up.Status != StatusSucceeded {
+				return false
+			}
 		}
-		path := s.inputPath(id, e.ToPort)
-		if path == "" {
-			// Output-port edges wait on the published from path, not the
-			// downstream output. That path is this task's product.
-			path = s.fromPath(e.FromTask, e.FromPort)
-		}
-		if path == "" || !regularFile(workspaceFile(s.workspace, path)) {
-			return false
+		for _, path := range e.Wait {
+			if path == "" || !regularFile(workspaceFile(s.workspace, path)) {
+				return false
+			}
 		}
 	}
 	return true
 }
 
-func (s *sched) inputPath(taskID, port string) string {
+func (s *sched) taskByID(id string) (TaskPlan, bool) {
 	for _, t := range s.doc.Tasks {
-		if t.ID != taskID {
-			continue
-		}
-		for _, in := range t.Inputs {
-			if in.Name == port {
-				return in.Path
-			}
+		if t.ID == id {
+			return t, true
 		}
 	}
-	return ""
-}
-
-func (s *sched) fromPath(taskID, port string) string {
-	for _, t := range s.doc.Tasks {
-		if t.ID != taskID {
-			continue
-		}
-		for _, out := range t.Outputs {
-			if out.Name == port {
-				return out.Path
-			}
-		}
-		for _, in := range t.Inputs {
-			if in.Name == port {
-				return in.Path
-			}
-		}
-	}
-	return ""
+	return TaskPlan{}, false
 }
 
 func (s *sched) launch(id string, reports chan report) {
 	st := s.tasks[id]
 	st.Status = StatusRunning
 	st.Reason = "ready"
+	task, _ := s.taskByID(id)
+	s.budget.occupy(task)
 	s.notePersist(s.writeTasks())
-	var task TaskPlan
-	for _, t := range s.doc.Tasks {
-		if t.ID == id {
-			task = t
-			break
-		}
-	}
 	ws := s.workspace
 	go func() {
 		reports <- execTask(ws, task)
@@ -284,6 +298,9 @@ func (s *sched) apply(r report) {
 	st := s.tasks[r.ID]
 	if st == nil {
 		return
+	}
+	if task, ok := s.taskByID(r.ID); ok {
+		s.budget.release(task)
 	}
 	st.Stdout = r.Stdout
 	st.Stderr = r.Stderr

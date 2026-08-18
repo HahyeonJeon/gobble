@@ -22,7 +22,11 @@ func requireDocker(t *testing.T) {
 const pinnedAlpine = "alpine:3.21"
 
 func TestDockerRunArgs(t *testing.T) {
-	args := dockerRunArgs("/iso", pinnedAlpine, []string{"cp", "in/sample.txt", "out/docker/sample.txt"})
+	task := TaskPlan{
+		Image:   pinnedAlpine,
+		Command: []string{"cp", "in/sample.txt", "out/docker/sample.txt"},
+	}
+	args := dockerRunArgs("/iso", task, task.Command)
 	joined := strings.Join(args, " ")
 	for _, banned := range []string{"--cpus", "--memory"} {
 		if strings.Contains(joined, banned) {
@@ -151,26 +155,68 @@ func TestRunDockerBadImageContained(t *testing.T) {
 }
 
 func TestRunDockerUnparseableMemory(t *testing.T) {
-	requireDocker(t)
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	doc := sampleDoc(pinnedAlpine, "local", "in/sample.txt", "out/sample.txt")
 	doc.Tasks[0].Resources.Memory = "not-a-size"
 	defects := Run(Request{Workspace: dir, Document: doc})
-	if len(defects) != 0 {
-		t.Fatalf("unparseable memory docker Run() defects %v, want none", defects)
+	if !hasDefect(defects, DefectInvalidMemory, "copy") {
+		t.Fatalf("unparseable memory docker Run() defects %v, want invalid-memory copy", defects)
 	}
-	raw := mustJSONFile(t, filepath.Join(dir, ControlDir, TasksFile))
-	var file jsonTasksFile
-	if err := json.Unmarshal(raw, &file); err != nil {
-		t.Fatalf("tasks.json: %v", err)
+	if _, err := os.Stat(filepath.Join(dir, ControlDir)); !os.IsNotExist(err) {
+		t.Fatalf("unparseable memory docker Run occupied workspace")
 	}
-	if file.Tasks[0].Resources.Memory != "not-a-size" {
-		t.Fatalf("recorded memory got %q, want not-a-size", file.Tasks[0].Resources.Memory)
+}
+
+func TestDockerRunArgsNonZeroResources(t *testing.T) {
+	task := TaskPlan{
+		Image:     pinnedAlpine,
+		Command:   []string{"true"},
+		Resources: ResourcePlan{CPU: 1.5, Memory: "512m"},
+		Env:       map[string]string{"HOME": "/tmp", "FOO": "bar"},
 	}
-	if file.Tasks[0].Executor != executorDocker {
-		t.Fatalf("executor got %q, want docker", file.Tasks[0].Executor)
+	args := dockerRunArgs("/iso", task, task.Command)
+	if !hasArgPair(args, "--cpus", "1.5") {
+		t.Fatalf("non-zero docker argv %v, want --cpus 1.5", args)
 	}
+	if !hasArgPair(args, "--memory", "512m") {
+		t.Fatalf("non-zero docker argv %v, want --memory 512m", args)
+	}
+	if !hasArgPair(args, "-e", "HOME=/tmp") || !hasArgPair(args, "-e", "FOO=bar") {
+		t.Fatalf("non-zero docker argv %v, want -e HOME=/tmp and -e FOO=bar", args)
+	}
+	for i, arg := range args {
+		if arg == "-e" && i+1 < len(args) && !strings.Contains(args[i+1], "=") {
+			t.Fatalf("value-less -e in %v", args)
+		}
+	}
+}
+
+func TestDockerRunArgsZeroResourcesOmitFlags(t *testing.T) {
+	task := TaskPlan{
+		Image:     pinnedAlpine,
+		Command:   []string{"true"},
+		Resources: ResourcePlan{CPU: 0, Memory: ""},
+	}
+	args := dockerRunArgs("/iso", task, task.Command)
+	joined := strings.Join(args, " ")
+	if strings.Contains(joined, "--cpus") || strings.Contains(joined, "--memory") {
+		t.Fatalf("zero docker argv %v contains resource flags", args)
+	}
+	task.Resources.Memory = "0m"
+	args = dockerRunArgs("/iso", task, task.Command)
+	if strings.Contains(strings.Join(args, " "), "--memory") {
+		t.Fatalf("zero-memory docker argv %v contains --memory", args)
+	}
+}
+
+func hasArgPair(args []string, flag, value string) bool {
+	for i := 0; i < len(args)-1; i++ {
+		if args[i] == flag && args[i+1] == value {
+			return true
+		}
+	}
+	return false
 }
 
 func TestDockerDaemonFailureNamed(t *testing.T) {

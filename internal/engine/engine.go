@@ -27,6 +27,7 @@ const (
 	DefectOutputExists       = "output-exists"
 	DefectFailed             = "failed"
 	DefectNeverReady         = "never-ready"
+	DefectInvalidMemory      = "invalid-memory"
 )
 
 // Defect is one named failure found by a validation walk.
@@ -125,6 +126,7 @@ type Task struct {
 	Script   string
 	Backend  string
 	CPU      float64
+	Memory   string
 	Env      map[string]string
 	Inputs   []Bind
 	Outputs  []Bind

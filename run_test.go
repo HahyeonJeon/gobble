@@ -137,6 +137,14 @@ func TestPreflightRefuse(t *testing.T) {
 				return mustCompose(runCopyPipeline)(t), dir, 0
 			},
 		},
+		{
+			name: "unparseable memory",
+			code: gobble.DefectInvalidMemory,
+			unit: "copy",
+			prep: func(t *testing.T) (*gobble.Graph, string, int) {
+				return mustCompose(processMemoryPipeline)(t), readyRunWorkspace(t), 0
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -422,22 +430,10 @@ func TestRunNoReuseAcrossWorkspaces(t *testing.T) {
 
 func TestRunRecordsUnparseableMemory(t *testing.T) {
 	dir := readyRunWorkspace(t)
-	if err := gobble.Run(mustCompose(processMemoryPipeline)(t), dir, 0); err != nil {
-		t.Fatalf("unparseable memory Run() error = %v, want nil", err)
-	}
-	raw := mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile))
-	var file struct {
-		Tasks []struct {
-			Resources struct {
-				Memory string `json:"memory"`
-			} `json:"resources"`
-		} `json:"tasks"`
-	}
-	if err := json.Unmarshal(raw, &file); err != nil {
-		t.Fatalf("tasks.json: %v", err)
-	}
-	if len(file.Tasks) != 1 || file.Tasks[0].Resources.Memory != "not-a-size" {
-		t.Fatalf("recorded memory got %#v, want not-a-size", file.Tasks)
+	err := gobble.Run(mustCompose(processMemoryPipeline)(t), dir, 0)
+	requireRunError(t, "unparseable memory", err, gobble.DefectInvalidMemory, "copy")
+	if _, statErr := os.Stat(filepath.Join(dir, engine.ControlDir)); !os.IsNotExist(statErr) {
+		t.Fatalf("unparseable memory Run occupied workspace")
 	}
 }
 

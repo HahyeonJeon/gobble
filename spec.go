@@ -59,8 +59,10 @@ type Param struct {
 
 // Resources records requested compute.
 //
-// CPU is cores. Zero means unspecified. Memory is an author string and is
-// not parsed.
+// CPU is cores. Zero means unspecified. Negative and non-finite CPU are
+// invalid. Memory is Docker --memory syntax: integer bytes, or a number
+// plus one suffix b, k, m, or g, case-insensitive. Empty Memory is
+// unspecified.
 type Resources struct {
 	CPU    float64
 	Memory string

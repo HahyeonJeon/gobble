@@ -61,6 +61,7 @@ func snapshotGraph(g *Graph) engine.Snapshot {
 			Script:  t.script,
 			Backend: t.backend,
 			CPU:     t.resources.CPU,
+			Memory:  t.resources.Memory,
 			Env:     copyEnv(t.env),
 		}
 		for _, b := range t.inputs {

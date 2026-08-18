@@ -92,6 +92,18 @@ func TestValidateReject(t *testing.T) {
 			unit: "index.collide",
 			path: "ref.amb",
 		},
+		{
+			name: "negative CPU",
+			pipe: negativeCPUPipeline(),
+			code: gobble.DefectInvalidName,
+			unit: "copy",
+		},
+		{
+			name: "unparseable Memory",
+			pipe: junkMemoryPipeline(),
+			code: gobble.DefectInvalidMemory,
+			unit: "copy",
+		},
 	}
 
 	for _, tt := range tests {
@@ -221,6 +233,24 @@ func negInfCPUPipeline() *gobble.Pipeline {
 		Command:   []string{"cp"},
 		Outputs:   []gobble.Bind{fileOut("out")},
 		Resources: gobble.Resources{CPU: math.Inf(-1)},
+	})
+}
+
+func negativeCPUPipeline() *gobble.Pipeline {
+	return oneTask("neg-cpu", gobble.TaskSpec{
+		Name:      "copy",
+		Command:   []string{"cp"},
+		Outputs:   []gobble.Bind{fileOut("out")},
+		Resources: gobble.Resources{CPU: -1},
+	})
+}
+
+func junkMemoryPipeline() *gobble.Pipeline {
+	return oneTask("junk-mem", gobble.TaskSpec{
+		Name:      "copy",
+		Command:   []string{"cp"},
+		Outputs:   []gobble.Bind{fileOut("out")},
+		Resources: gobble.Resources{Memory: "not-a-size"},
 	})
 }
 

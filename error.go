@@ -16,8 +16,9 @@ const (
 	// DefectMissingCommand means a task has an empty command.
 	DefectMissingCommand DefectCode = "missing-command"
 	// DefectInvalidName means a name is empty, duplicate, or illegally
-	// spelled, a required value is nil, a CPU request is not finite, or
-	// a plan could not be encoded. Message distinguishes those cases.
+	// spelled, a required value is nil, a CPU request is negative or not
+	// finite, a request exceeds known host capacity, or a plan could not
+	// be encoded. Message distinguishes those cases.
 	DefectInvalidName DefectCode = "invalid-name"
 	// DefectInvalidPath means a PathSpec cannot be rendered or used.
 	DefectInvalidPath DefectCode = "invalid-path"
@@ -33,6 +34,9 @@ const (
 	DefectFailed DefectCode = "failed"
 	// DefectNeverReady means a plan wait path cannot be produced.
 	DefectNeverReady DefectCode = "never-ready"
+	// DefectInvalidMemory means a task Memory string is not Docker
+	// --memory syntax.
+	DefectInvalidMemory DefectCode = "invalid-memory"
 )
 
 // Defect is one named failure inside an [Error].

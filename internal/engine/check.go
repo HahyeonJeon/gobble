@@ -3,7 +3,10 @@ package engine
 import (
 	"os"
 	"path/filepath"
+	"runtime"
+	"strconv"
 	"strings"
+	"syscall"
 )
 
 // ControlDir is the reserved workspace subtree for run identity.
@@ -19,6 +22,38 @@ const DefaultCap = 1
 
 // MaxCap is the largest accepted concurrency cap.
 const MaxCap = 64
+
+// hostCapacity is a host CPU and memory snapshot. A false Known flag
+// means that axis is unspecified and only the count cap binds on it.
+type hostCapacity struct {
+	CPU      float64
+	Memory   int64
+	CPUKnown bool
+	MemKnown bool
+}
+
+// readHostCapacity is the injectable host snapshot used by Check and Run.
+var readHostCapacity = defaultHostCapacity
+
+func defaultHostCapacity() hostCapacity {
+	n := runtime.NumCPU()
+	cap := hostCapacity{CPU: float64(n), CPUKnown: n > 0}
+	var info syscall.Sysinfo_t
+	if err := syscall.Sysinfo(&info); err != nil {
+		return cap
+	}
+	unit := uint64(info.Unit)
+	if unit == 0 {
+		unit = 1
+	}
+	total := info.Totalram * unit
+	if total == 0 || total > uint64(int64(^uint64(0)>>1)) {
+		return cap
+	}
+	cap.Memory = int64(total)
+	cap.MemKnown = true
+	return cap
+}
 
 // Check reports pre-execution defects on req. It does not occupy the
 // workspace, create directories, or start a task.
@@ -45,6 +80,9 @@ func Check(req Request) []Defect {
 		return d
 	}
 	if d := checkOutputs(req.Workspace, req.Document); len(d) > 0 {
+		return d
+	}
+	if d := checkCapacity(req.Document, readHostCapacity()); len(d) > 0 {
 		return d
 	}
 	return nil
@@ -126,17 +164,33 @@ func checkPlanPaths(doc Document) []Defect {
 	var defects []Defect
 	for _, t := range doc.Tasks {
 		for _, in := range t.Inputs {
-			if d := checkPlanPath(bindUnit(t.ID, in.Name), in.Path); d != nil {
-				defects = append(defects, *d)
-			}
+			defects = append(defects, checkIOPaths(bindUnit(t.ID, in.Name), in)...)
 		}
 		for _, out := range t.Outputs {
-			if d := checkPlanPath(bindUnit(t.ID, out.Name), out.Path); d != nil {
-				defects = append(defects, *d)
-			}
+			defects = append(defects, checkIOPaths(bindUnit(t.ID, out.Name), out)...)
 		}
 	}
 	return defects
+}
+
+func checkIOPaths(unit string, io IO) []Defect {
+	if io.Members != nil {
+		var defects []Defect
+		for _, m := range io.Members {
+			found, ok := findIOMember(io.Members, m.Name)
+			if !ok {
+				continue
+			}
+			if d := checkPlanPath(bindUnit(unit, found.Name), found.Path); d != nil {
+				defects = append(defects, *d)
+			}
+		}
+		return defects
+	}
+	if d := checkPlanPath(unit, io.Path); d != nil {
+		return []Defect{*d}
+	}
+	return nil
 }
 
 func checkPlanPath(unit, path string) *Defect {
@@ -233,12 +287,27 @@ func checkInputs(workspace string, doc Document) []Defect {
 			if hasUpstreamTask(doc, t.ID, in.Name) {
 				continue
 			}
+			unit := bindUnit(t.ID, in.Name)
+			if in.Members != nil {
+				for _, f := range namedIOFiles(in) {
+					if regularFile(workspaceFile(workspace, f.path)) {
+						continue
+					}
+					defects = append(defects, Defect{
+						Code:    DefectMissingInput,
+						Unit:    bindUnit(unit, f.name),
+						Message: "missing input",
+						Paths:   []string{f.path},
+					})
+				}
+				continue
+			}
 			if regularFile(workspaceFile(workspace, in.Path)) {
 				continue
 			}
 			defects = append(defects, Defect{
 				Code:    DefectMissingInput,
-				Unit:    bindUnit(t.ID, in.Name),
+				Unit:    unit,
 				Message: "missing input",
 				Paths:   []string{in.Path},
 			})
@@ -251,14 +320,59 @@ func checkOutputs(workspace string, doc Document) []Defect {
 	var defects []Defect
 	for _, t := range doc.Tasks {
 		for _, out := range t.Outputs {
+			unit := bindUnit(t.ID, out.Name)
+			if out.Members != nil {
+				for _, f := range namedIOFiles(out) {
+					if !pathPresent(workspaceFile(workspace, f.path)) {
+						continue
+					}
+					defects = append(defects, Defect{
+						Code:    DefectOutputExists,
+						Unit:    bindUnit(unit, f.name),
+						Message: "output exists",
+						Paths:   []string{f.path},
+					})
+				}
+				continue
+			}
 			if !pathPresent(workspaceFile(workspace, out.Path)) {
 				continue
 			}
 			defects = append(defects, Defect{
 				Code:    DefectOutputExists,
-				Unit:    bindUnit(t.ID, out.Name),
+				Unit:    unit,
 				Message: "output exists",
 				Paths:   []string{out.Path},
+			})
+		}
+	}
+	return defects
+}
+
+func checkCapacity(doc Document, host hostCapacity) []Defect {
+	var defects []Defect
+	for _, t := range doc.Tasks {
+		if host.CPUKnown && t.Resources.CPU > 0 && t.Resources.CPU > host.CPU {
+			defects = append(defects, Defect{
+				Code:    DefectInvalidName,
+				Unit:    t.ID,
+				Message: "cpu exceeds host capacity",
+			})
+		}
+		bytes, ok := parseMemory(t.Resources.Memory)
+		if !ok {
+			defects = append(defects, Defect{
+				Code:    DefectInvalidMemory,
+				Unit:    t.ID,
+				Message: "invalid memory " + strconv.Quote(t.Resources.Memory),
+			})
+			continue
+		}
+		if host.MemKnown && bytes > 0 && bytes > host.Memory {
+			defects = append(defects, Defect{
+				Code:    DefectInvalidName,
+				Unit:    t.ID,
+				Message: "memory exceeds host capacity",
 			})
 		}
 	}

@@ -9,10 +9,13 @@ import (
 
 func TestTaskSnapshotHasNoExecuteFields(t *testing.T) {
 	typ := reflect.TypeOf(Task{})
-	for _, name := range []string{"Image", "Memory", "Params"} {
+	for _, name := range []string{"Image", "Params"} {
 		if _, ok := typ.FieldByName(name); ok {
 			t.Fatalf("engine.Task has %s; snapshot is not the execute path", name)
 		}
+	}
+	if _, ok := typ.FieldByName("Memory"); !ok {
+		t.Fatalf("engine.Task missing Memory; validate must parse the snapshot")
 	}
 }
 
@@ -364,6 +367,71 @@ func TestCheckOccupiedNotOutputExists(t *testing.T) {
 	}
 	if hasDefect(defects, DefectOutputExists, "copy.out") {
 		t.Fatalf("occupied+output: Check() also reported output-exists, want occupied first")
+	}
+}
+
+func TestCheckGroupEmptyPathOK(t *testing.T) {
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "ref.amb"), "a")
+	writeCheckFile(t, filepath.Join(dir, "ref.ann"), "n")
+	req := Request{
+		Workspace: dir,
+		Document: Document{
+			Name: "group",
+			Tasks: []TaskPlan{{
+				ID:      "idx",
+				Name:    "idx",
+				Command: []string{"true"},
+				Inputs: []IO{{
+					Name: "idx",
+					Members: []IOMember{
+						{Name: "amb", Path: "ref.amb"},
+						{Name: "ann", Path: "ref.ann"},
+					},
+				}},
+				Outputs: []IO{{
+					Name: "out",
+					Members: []IOMember{
+						{Name: "amb", Path: "out.amb"},
+						{Name: "ann", Path: "out.ann"},
+					},
+				}},
+			}},
+			Edges: []Edge{{FromPort: "ref", ToTask: "idx", ToPort: "idx"}},
+		},
+	}
+	if defects := Check(req); len(defects) != 0 {
+		t.Fatalf("group empty path Check() defects %v, want none", defects)
+	}
+}
+
+func TestCheckTaskExceedsCapacity(t *testing.T) {
+	orig := readHostCapacity
+	t.Cleanup(func() { readHostCapacity = orig })
+	readHostCapacity = func() hostCapacity {
+		return hostCapacity{CPU: 1, CPUKnown: true, Memory: 1024, MemKnown: true}
+	}
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
+	doc.Tasks[0].Resources = ResourcePlan{CPU: 2, Memory: ""}
+	before := snapshotDir(t, dir)
+	defects := Check(Request{Workspace: dir, Document: doc})
+	if !hasDefect(defects, DefectInvalidName, "copy") {
+		t.Fatalf("cpu over capacity Check() defects %v, want invalid-name copy", defects)
+	}
+	after := snapshotDir(t, dir)
+	if before != after {
+		t.Fatalf("cpu over capacity changed workspace")
+	}
+
+	doc.Tasks[0].Resources = ResourcePlan{CPU: 0, Memory: "512m"}
+	defects = Check(Request{Workspace: dir, Document: doc})
+	if !hasDefect(defects, DefectInvalidName, "copy") {
+		t.Fatalf("memory over capacity Check() defects %v, want invalid-name copy", defects)
+	}
+	if _, err := os.Stat(filepath.Join(dir, ControlDir)); !os.IsNotExist(err) {
+		t.Fatalf("over capacity Check occupied workspace")
 	}
 }
 
