@@ -74,7 +74,7 @@ is blocking. Ask before leaving those Open.
 ### Interfaces
 
 - Statement: Library run operation. CLI for the same operation is required at first-horizon exit. CLI command names stay Open (`invocation-contract`). Scheduler-to-executor seam exists; exact operation names are not settled.
-- Current: `Run(*Graph, workspace, cap)` occupies an existing caller workspace after checks, writes run identity under `.gobble/`, isolates tasks, stages plan-relative paths, runs process and Docker tasks, and persists state. A second start is `occupied-workspace`, not resume. Cap `0` means `1`. Cap above `64` is refused. Pre-existing declared outputs are `output-exists`. There is no CLI. Inspect and resume are not shipped. The synthetic fixture is `testdata/run-local/` (`alpine:3.21` plus process). The workflow-case golden `testdata/workflow-case/plan.json` is unchanged.
+- Current: `Run(*Graph, workspace, cap)` occupies an existing caller workspace after checks, writes run identity under `.gobble/`, isolates tasks, stages plan-relative paths, runs process and Docker tasks, and persists state. After occupy/isolate, a related-file output `From` waits on the published from-path (D5 A, `d1319ff`). A second start is `occupied-workspace`, not resume. Cap `0` means `1`. Cap above `64` is refused. Pre-existing declared outputs are `output-exists`. There is no CLI. Inspect and resume are not shipped. The synthetic fixture is `testdata/run-local/` (`alpine:3.21` plus process). Consumer-test proof is `testdata/wgs-e2e/` and `wgs_e2e_*_test.go`; WGS is a consumer test, not a product feature. The workflow-case golden `testdata/workflow-case/plan.json` is unchanged.
 - Source: `interfaces`
 
 ## Constraints and qualities

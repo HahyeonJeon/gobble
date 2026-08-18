@@ -13,7 +13,7 @@ Build a local agent-operable core first: Go library, then engine, then CLI. Firs
 
 ## Current position
 
-- Now: `feat/run-local` implements PathSpec, Compose, Validate, BuildPlan, and Run in module `github.com/HahyeonJeon/gobble` (`go 1.26`) with `internal/engine` and `go test ./...` as first-check. `Run(graph, workspace, cap)` occupies after checks, isolates under `.gobble/`, stages plan-relative paths, and runs process and Docker tasks. Session proof is the synthetic fixture `testdata/run-local/` (`alpine:3.21` plus process). There is no CLI, no `cmd/`, and no inspect or resume. Immutable base is `develop` at `5e2c295c3b39733c2c279616bc95130226ffc5f7`. Pre-bootstrap baseline remains `a2d561fea2846bc1c55213d66a7025dac980f330`.
+- Now: `develop` implements PathSpec, Compose, Validate, BuildPlan, and Run in module `github.com/HahyeonJeon/gobble` (`go 1.26`) with `internal/engine` and `go test ./...` as first-check. `Run(graph, workspace, cap)` occupies after checks, isolates under `.gobble/`, stages plan-relative paths, and runs process and Docker tasks. A related-file output `From` waits on the published from-path (`d1319ff`). Proofs are the synthetic fixture `testdata/run-local/` (`alpine:3.21` plus process) and the WGS consumer test at `testdata/wgs-e2e/` (not a product feature). There is no CLI, no `cmd/`, and no inspect or resume. This session’s immutable base is `develop` at `0d4b97281ad8e4f293fdc808fe00a9494f4d6a75`. Pre-bootstrap baseline remains `a2d561fea2846bc1c55213d66a7025dac980f330`.
 - Local or cloud: local
 - Bootstrap: run; committed as `3389767462780dc0cfc436de864580959dfbb0ce` after user authorization to replace the existing README.
 - Source: `local-or-cloud`, `first-check`, `current-baseline`

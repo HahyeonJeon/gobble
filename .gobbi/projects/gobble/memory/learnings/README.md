@@ -2,10 +2,15 @@
 
 Recursive navigation across learnings, grouped by domain.
 
-## Work
+## Design
 
-- [Mistakes](work/mistakes.md)
+- [Tips](design/tips.md)
 
 ## Go
 
+- [Mistakes](go/mistakes.md)
 - [Tips](go/tips.md)
+
+## Work
+
+- [Mistakes](work/mistakes.md)

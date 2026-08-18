@@ -70,7 +70,7 @@ is blocking. Ask before leaving those Open.
 ### Interfaces
 
 - Statement: The public Go compose API. The Go API may prove compose before the CLI exists. First-horizon exit still requires the same loop on the CLI. CLI command names stay Open (`invocation-contract`).
-- Current: Authors build a `Pipeline` and call `Compose` for an immutable `Graph`. PathSpec fields are `Dir`, `Lead`, `Name`, `Steps`, and `Ext`. A `From` handle must belong to the composed pipeline. The public surface is unsupported except those PathSpec concepts.
+- Current: Authors build a `Pipeline` and call `Compose` for an immutable `Graph`. PathSpec fields are `Dir`, `Lead`, `Name`, `Steps`, and `Ext`. A `From` handle must belong to the composed pipeline. Related-file `Ext` plus second-task `From` is the current related-file form; same-task `From` is a cycle. The public surface is unsupported except those PathSpec concepts.
 - Source: `interfaces`
 
 ## Constraints and qualities
