@@ -72,14 +72,20 @@ func Release(workspace string) []Defect {
 	occ.Incomplete = marked
 	run.Occupancy = occ
 	run.SchemaVersion = SchemaVersion
-	run.Status = runStatusFromTasks(tasks)
+	latest := latestAttempts(tasks)
+	run.Status = runStatusFromTasks(latest)
 	if run.Ended == "" {
 		run.Ended = now
 	}
-	s := &sched{workspace: workspace, run: run, tasks: make(map[string]*jsonTaskState, len(tasks))}
-	for i := range tasks {
-		st := tasks[i]
-		s.tasks[st.ID] = &st
+	s := &sched{
+		workspace: workspace,
+		run:       run,
+		tasks:     make(map[string]*jsonTaskState, len(latest)),
+		history:   priorAttempts(tasks),
+	}
+	for _, st := range latest {
+		cp := st
+		s.tasks[st.ID] = &cp
 		s.doc.Tasks = append(s.doc.Tasks, TaskPlan{ID: st.ID})
 	}
 	if found {

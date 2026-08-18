@@ -2,8 +2,9 @@ package engine
 
 // Pre-execute reuse classification. Resume writes these; Inspect only reads.
 const (
-	reuseReused = "reused"
-	reuseRerun  = "rerun"
+	reuseReused             = "reused"
+	reuseRerun              = "rerun"
+	decisionBlockedUpstream = "blocked-upstream"
 )
 
 // Closed reuse reasons shared by Inspect and Resume.
@@ -208,6 +209,57 @@ func classifyRemaining(workspace string, doc Document, tasks []jsonTaskState) re
 	return out
 }
 
+func classifyResume(workspace string, recorded, supplied Document, tasks []jsonTaskState) remainingClass {
+	latest := latestAttempts(tasks)
+	byIdent := make(map[string]jsonTaskState, len(latest))
+	for _, st := range latest {
+		byIdent[reservedIdentity(taskPlanFromState(st))] = st
+	}
+	out := remainingClass{
+		Remaining: make(map[string]bool, len(supplied.Tasks)),
+		Affected:  make(map[string]bool, len(supplied.Tasks)),
+		Decision:  make(map[string]reuseDecision, len(supplied.Tasks)),
+	}
+	taskIDOf := make(map[string]string, len(supplied.Tasks))
+	identsOfTask := make(map[string][]string)
+	for _, t := range supplied.Tasks {
+		applyReservedDefaults(&t)
+		ident := reservedIdentity(t)
+		st, ok := byIdent[ident]
+		if !ok {
+			st = jsonTaskState{
+				ID:         t.ID,
+				Instance:   t.Instance,
+				ShardIndex: t.ShardIndex,
+				ShardCount: t.ShardCount,
+				Attempt:    t.Attempt,
+				Status:     StatusNotStarted,
+				Command:    jsonStrings(t.Command),
+				Image:      t.Image,
+				Params:     encodeParams(t.Params),
+			}
+		}
+		rec, _ := planTaskByID(recorded, t.ID)
+		dec := classifyReuse(workspace, st, rec, t)
+		out.Decision[ident] = dec
+		taskIDOf[ident] = t.ID
+		identsOfTask[t.ID] = append(identsOfTask[t.ID], ident)
+		if st.Status != StatusSucceeded {
+			out.Remaining[ident] = true
+		}
+		if dec.Decision != reuseReused {
+			out.Affected[ident] = true
+		}
+	}
+	for ident, dec := range out.Decision {
+		if dec.Decision == reuseReused {
+			continue
+		}
+		markDownstreamAffected(out.Affected, out.Decision, supplied, taskIDOf[ident], identsOfTask)
+	}
+	return out
+}
+
 func reusePlans(doc Document, st jsonTaskState) (recorded, current TaskPlan) {
 	current = taskPlanFromState(st)
 	if t, ok := planTaskByID(doc, st.ID); ok {
@@ -248,6 +300,24 @@ func markDownstreamAffected(affected map[string]bool, decisions map[string]reuse
 			}
 		}
 	}
+}
+
+func priorAttempts(tasks []jsonTaskState) []jsonTaskState {
+	latest := latestAttempts(tasks)
+	keep := make(map[string]int, len(latest))
+	for _, st := range latest {
+		applyTaskStateDefaults(&st)
+		keep[reservedIdentity(taskPlanFromState(st))] = st.Attempt
+	}
+	var out []jsonTaskState
+	for _, st := range tasks {
+		applyTaskStateDefaults(&st)
+		ident := reservedIdentity(taskPlanFromState(st))
+		if keep[ident] != st.Attempt {
+			out = append(out, st)
+		}
+	}
+	return out
 }
 
 func latestAttempts(tasks []jsonTaskState) []jsonTaskState {

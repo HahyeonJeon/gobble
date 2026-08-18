@@ -41,6 +41,9 @@ type TaskPlan struct {
 	Env        map[string]string
 	Inputs     []IO
 	Outputs    []IO
+	// Replace selects authorized staged replace after isolate outputs.
+	// Run publish ignores it and stays exclusive-create.
+	Replace bool
 }
 
 // ResourcePlan is the recorded CPU and memory request.

@@ -25,7 +25,7 @@
 // DeriveRule, DeriveAppend, DeriveReplaceExt, Pipeline, NewPipeline,
 // Module, Branch, Merge, Task, Handle, TaskSpec, Bind, Group, Member,
 // Param, Resources, Script, Env, Graph, Compose, Validate, BuildPlan,
-// WriteTo, PlanOption, Plan, Run, Inspect, Error, Defect, DefectCode, and the
+// WriteTo, PlanOption, Plan, Run, Inspect, Resume, Error, Defect, DefectCode, and the
 // Defect* constants. PathSpec methods and builder methods belong to
 // those types.
 // The public surface is unsupported except these locked PathSpec concepts.

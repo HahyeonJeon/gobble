@@ -75,8 +75,14 @@ func isolatedExecute(workspace string, task TaskPlan, run runner) report {
 		r.Message = "missing output"
 		return r
 	}
-	if err := publishAll(workspace, isolate, task); err != nil {
-		r.Message = err.Error()
+	var pubErr error
+	if task.Replace {
+		pubErr = publishReplace(workspace, isolate, task)
+	} else {
+		pubErr = publishAll(workspace, isolate, task)
+	}
+	if pubErr != nil {
+		r.Message = pubErr.Error()
 		return r
 	}
 	r.Published = true
@@ -197,6 +203,57 @@ func publishAll(workspace, isolate string, task TaskPlan) error {
 			}
 			wrote = append(wrote, dst)
 		}
+	}
+	return nil
+}
+
+func publishReplace(workspace, isolate string, task TaskPlan) error {
+	for _, out := range task.Outputs {
+		for _, f := range namedIOFiles(out) {
+			src := workspaceFile(isolate, f.path)
+			dst := workspaceFile(workspace, f.path)
+			if !pathPresent(dst) {
+				if err := copyFile(src, dst); err != nil {
+					return err
+				}
+				continue
+			}
+			if err := stagedReplace(src, dst); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func stagedReplace(src, dst string) error {
+	in, err := openReadFile(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+	dir := filepath.Dir(dst)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return err
+	}
+	f, err := os.CreateTemp(dir, ".gobble-replace-*")
+	if err != nil {
+		return err
+	}
+	tmp := f.Name()
+	_, werr := io.Copy(f, in)
+	cerr := f.Close()
+	if werr != nil {
+		os.Remove(tmp)
+		return werr
+	}
+	if cerr != nil {
+		os.Remove(tmp)
+		return cerr
+	}
+	if err := os.Rename(tmp, dst); err != nil {
+		os.Remove(tmp)
+		return err
 	}
 	return nil
 }

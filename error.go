@@ -49,6 +49,11 @@ const (
 	// DefectUnsupportedSchema means a control document uses a future
 	// schema version this engine cannot read.
 	DefectUnsupportedSchema DefectCode = "unsupported-schema"
+	// DefectNothingToResume means the workspace has no run document.
+	DefectNothingToResume DefectCode = "nothing-to-resume"
+	// DefectPlanDrift means the supplied graph task set or edges differ
+	// from the recorded plan.
+	DefectPlanDrift DefectCode = "plan-drift"
 )
 
 // Defect is one named failure inside an [Error].
@@ -64,11 +69,11 @@ type Defect struct {
 }
 
 // Error is a structured failure from compose, validate, plan, render, run,
-// release, or inspect. Callers inspect it with errors.As. JSON keys are op
-// and defects.
+// resume, release, or inspect. Callers inspect it with errors.As. JSON keys
+// are op and defects.
 type Error struct {
 	// Op is the failing operation: compose, validate, plan, render, run,
-	// release, or inspect.
+	// resume, release, or inspect.
 	Op string `json:"op"`
 	// Defects is the list of named failures.
 	Defects []Defect `json:"defects"`

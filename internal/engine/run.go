@@ -56,6 +56,9 @@ type sched struct {
 	doc       Document
 	run       jsonRun
 	tasks     map[string]*jsonTaskState
+	history   []jsonTaskState
+	resume    map[string]reuseDecision
+	launched  map[string]bool
 	persist   error
 	budget    resourceBudget
 }
@@ -260,6 +263,8 @@ func (s *sched) loop(n int) []Defect {
 		running--
 		s.apply(r)
 	}
+	s.assignBlockedUpstream()
+	s.notePersist(s.writeTasks())
 	s.finish()
 	return s.failures()
 }
@@ -267,7 +272,15 @@ func (s *sched) loop(n int) []Defect {
 func (s *sched) nextReady() string {
 	for _, t := range s.doc.Tasks {
 		st := s.tasks[t.ID]
-		if st == nil || st.Status != StatusNotStarted {
+		if st == nil {
+			continue
+		}
+		if s.resume != nil {
+			ident := reservedIdentity(t)
+			if s.resume[ident].Decision != reuseRerun || s.launched[ident] {
+				continue
+			}
+		} else if st.Status != StatusNotStarted {
 			continue
 		}
 		if !s.upstreamReady(t.ID) {
@@ -311,17 +324,91 @@ func (s *sched) taskByID(id string) (TaskPlan, bool) {
 }
 
 func (s *sched) launch(id string, reports chan report) {
+	if s.resume != nil {
+		s.beginResumeAttempt(id)
+	}
 	st := s.tasks[id]
 	st.Status = StatusRunning
 	st.Reason = "ready"
 	st.Started = time.Now().UTC().Format(time.RFC3339Nano)
 	task, _ := s.taskByID(id)
+	if st != nil {
+		task.Attempt = st.Attempt
+		task.Instance = st.Instance
+		task.ShardIndex = st.ShardIndex
+		task.ShardCount = st.ShardCount
+	}
+	if s.resume != nil {
+		task.Replace = true
+	}
 	s.budget.occupy(task)
 	s.notePersist(s.writeTasks())
 	ws := s.workspace
 	go func() {
 		reports <- execTask(ws, task)
 	}()
+}
+
+func (s *sched) beginResumeAttempt(id string) {
+	old := s.tasks[id]
+	task, _ := s.taskByID(id)
+	st := initialTask(task)
+	if old != nil {
+		applyTaskStateDefaults(old)
+		ident := reservedIdentity(taskPlanFromState(*old))
+		s.history = append(s.history, *old)
+		st.Attempt = old.Attempt + 1
+		if dec, ok := s.resume[ident]; ok {
+			st.Decision = dec.Decision
+			st.ReuseReason = dec.Reason
+			st.Differing = append([]string(nil), dec.Differing...)
+		}
+		if s.launched != nil {
+			s.launched[ident] = true
+		}
+	} else if s.launched != nil {
+		s.launched[reservedIdentity(task)] = true
+	}
+	s.tasks[id] = &st
+}
+
+func (s *sched) assignBlockedUpstream() {
+	if s.resume == nil {
+		return
+	}
+	for _, t := range s.doc.Tasks {
+		ident := reservedIdentity(t)
+		if s.resume[ident].Decision != reuseRerun || s.launched[ident] {
+			continue
+		}
+		st := s.tasks[t.ID]
+		if st == nil {
+			continue
+		}
+		st.Decision = decisionBlockedUpstream
+		st.ReuseReason = s.blockedReason(t.ID)
+		st.Differing = nil
+	}
+}
+
+func (s *sched) blockedReason(id string) string {
+	for _, e := range s.doc.Edges {
+		if e.ToTask != id || e.FromTask == "" {
+			continue
+		}
+		up := s.tasks[e.FromTask]
+		if up == nil {
+			continue
+		}
+		upIdent := reservedIdentity(taskPlanFromState(*up))
+		if s.launched[upIdent] && up.Status != StatusSucceeded {
+			return reasonDownstreamOfRerun
+		}
+		if up.Decision == decisionBlockedUpstream || up.Status != StatusSucceeded {
+			return reasonPreviousUnsuccessful
+		}
+	}
+	return reasonDownstreamOfRerun
 }
 
 func (s *sched) apply(r report) {
@@ -464,8 +551,9 @@ func (s *sched) writeRun() error {
 func (s *sched) writeTasks() error {
 	doc := jsonTasksFile{
 		SchemaVersion: SchemaVersion,
-		Tasks:         make([]jsonTaskState, 0, len(s.doc.Tasks)),
+		Tasks:         make([]jsonTaskState, 0, len(s.history)+len(s.doc.Tasks)),
 	}
+	doc.Tasks = append(doc.Tasks, s.history...)
 	for _, t := range s.doc.Tasks {
 		if st := s.tasks[t.ID]; st != nil {
 			doc.Tasks = append(doc.Tasks, *st)

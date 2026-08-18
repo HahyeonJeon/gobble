@@ -55,6 +55,15 @@ func defaultHostCapacity() hostCapacity {
 	return cap
 }
 
+// CheckResumeStart reports Resume preflight defects for workspace
+// existence and cap. It does not occupy, inspect dests, or start work.
+func CheckResumeStart(workspace string, cap int) []Defect {
+	if d := checkWorkspace(workspace); len(d) > 0 {
+		return d
+	}
+	return checkCap(cap)
+}
+
 // Check reports pre-execution defects on req. It does not occupy the
 // workspace, create directories, or start a task.
 func Check(req Request) []Defect {

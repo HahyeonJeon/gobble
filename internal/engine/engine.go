@@ -33,6 +33,8 @@ const (
 	DefectLiveOccupancy      = "live-occupancy"
 	DefectForeignHost        = "foreign-host"
 	DefectUnsupportedSchema  = "unsupported-schema"
+	DefectNothingToResume    = "nothing-to-resume"
+	DefectPlanDrift          = "plan-drift"
 )
 
 // SchemaVersion is the control-document version this engine writes.
