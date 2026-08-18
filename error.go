@@ -26,7 +26,7 @@ const (
 	DefectConflict DefectCode = "conflict"
 	// DefectUnsupportedBackend means a task names a backend other than local.
 	DefectUnsupportedBackend DefectCode = "unsupported-backend"
-	// DefectOccupiedWorkspace means the workspace already holds a run identity.
+	// DefectOccupiedWorkspace means occupancy is active on the workspace.
 	DefectOccupiedWorkspace DefectCode = "occupied-workspace"
 	// DefectOutputExists means a declared output plan path already exists.
 	DefectOutputExists DefectCode = "output-exists"
@@ -37,6 +37,18 @@ const (
 	// DefectInvalidMemory means a task Memory string is not Docker
 	// --memory syntax.
 	DefectInvalidMemory DefectCode = "invalid-memory"
+	// DefectNotFound means a required workspace, run, view, or instance
+	// is missing.
+	DefectNotFound DefectCode = "not-found"
+	// DefectAlreadyReleased means occupancy is already closed.
+	DefectAlreadyReleased DefectCode = "already-released"
+	// DefectLiveOccupancy means the recorded owner is still live on this host.
+	DefectLiveOccupancy DefectCode = "live-occupancy"
+	// DefectForeignHost means the recorded owner host is not this host.
+	DefectForeignHost DefectCode = "foreign-host"
+	// DefectUnsupportedSchema means a control document uses a future
+	// schema version this engine cannot read.
+	DefectUnsupportedSchema DefectCode = "unsupported-schema"
 )
 
 // Defect is one named failure inside an [Error].
@@ -51,10 +63,11 @@ type Defect struct {
 	Paths []string `json:"paths"`
 }
 
-// Error is a structured failure from compose, validate, plan, render, or run.
-// Callers inspect it with errors.As. JSON keys are op and defects.
+// Error is a structured failure from compose, validate, plan, render, run,
+// or release. Callers inspect it with errors.As. JSON keys are op and defects.
 type Error struct {
-	// Op is the failing operation: compose, validate, plan, render, or run.
+	// Op is the failing operation: compose, validate, plan, render, run,
+	// or release.
 	Op string `json:"op"`
 	// Defects is the list of named failures.
 	Defects []Defect `json:"defects"`

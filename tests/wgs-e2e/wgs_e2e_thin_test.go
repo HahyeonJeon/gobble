@@ -513,7 +513,7 @@ func thinSliceLogs(workspace string) string {
 	var b strings.Builder
 	for _, id := range []string{"index", "mem", "sort", "bai"} {
 		for _, name := range []string{"stderr", "stdout"} {
-			path := filepath.Join(workspace, ".gobble", "tasks", id, name)
+			path := filepath.Join(workspace, ".gobble", "tasks", id, "_", "0", "1", name)
 			data, err := os.ReadFile(path)
 			if err != nil || len(data) == 0 {
 				continue

@@ -9,9 +9,9 @@ import (
 // Run executes g in workspace.
 //
 // The workspace must already exist. After pre-execution checks pass,
-// Run occupies it by writing run identity under .gobble/. A second
-// Run on that workspace is an occupied-workspace error. It does not
-// resume, inspect, or delete.
+// Run occupies it with an owner record under .gobble/. Occupancy stays
+// active when Run returns. A second Run is occupied-workspace while
+// occupancy is active. It does not resume, inspect, delete, or release.
 //
 // cap is the maximum number of tasks that may run at once. Zero means
 // 1. Values below 1 or above 64 are refused.

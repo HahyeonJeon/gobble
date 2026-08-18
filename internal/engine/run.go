@@ -21,6 +21,7 @@ const (
 	StatusSucceeded  = "succeeded"
 	StatusFailed     = "failed"
 	StatusBlocked    = "blocked"
+	StatusIncomplete = "incomplete"
 )
 
 const (
@@ -99,24 +100,35 @@ func (b *resourceBudget) release(t TaskPlan) {
 }
 
 type jsonRun struct {
-	ID      string `json:"id"`
-	Status  string `json:"status"`
-	Started string `json:"started"`
-	Ended   string `json:"ended,omitempty"`
+	SchemaVersion int            `json:"schema_version"`
+	ID            string         `json:"id"`
+	Status        string         `json:"status"`
+	Started       string         `json:"started"`
+	Ended         string         `json:"ended,omitempty"`
+	Occupancy     *jsonOccupancy `json:"occupancy"`
 }
 
 type jsonTaskState struct {
-	ID        string        `json:"id"`
-	Status    string        `json:"status"`
-	Executor  string        `json:"executor"`
-	Image     string        `json:"image"`
-	Command   []string      `json:"command"`
-	Resources jsonResources `json:"resources"`
-	Params    []jsonParam   `json:"params"`
-	Reason    string        `json:"reason"`
-	Error     *jsonTaskErr  `json:"error,omitempty"`
-	Stdout    string        `json:"stdout,omitempty"`
-	Stderr    string        `json:"stderr,omitempty"`
+	ID           string         `json:"id"`
+	Instance     string         `json:"instance"`
+	ShardIndex   int            `json:"shard_index"`
+	ShardCount   int            `json:"shard_count"`
+	Attempt      int            `json:"attempt"`
+	Status       string         `json:"status"`
+	Executor     string         `json:"executor"`
+	Image        string         `json:"image"`
+	Command      []string       `json:"command"`
+	Resources    jsonResources  `json:"resources"`
+	Params       []jsonParam    `json:"params"`
+	Reason       string         `json:"reason"`
+	Error        *jsonTaskErr   `json:"error,omitempty"`
+	Stdout       string         `json:"stdout,omitempty"`
+	Stderr       string         `json:"stderr,omitempty"`
+	Started      string         `json:"started,omitempty"`
+	Ended        string         `json:"ended,omitempty"`
+	Fingerprints []jsonFileHash `json:"fingerprints,omitempty"`
+	Checksums    []jsonFileHash `json:"checksums,omitempty"`
+	Lineage      []jsonLineage  `json:"lineage,omitempty"`
 }
 
 type jsonTaskErr struct {
@@ -125,45 +137,54 @@ type jsonTaskErr struct {
 }
 
 type jsonTasksFile struct {
-	Tasks []jsonTaskState `json:"tasks"`
+	SchemaVersion int             `json:"schema_version"`
+	Tasks         []jsonTaskState `json:"tasks"`
 }
 
 func occupy(req Request) (*sched, []Defect) {
+	now := time.Now().UTC().Format(time.RFC3339Nano)
+	host, err := currentHost()
+	if err != nil {
+		return nil, pathDefects(err)
+	}
+	doc := req.Document
+	for i := range doc.Tasks {
+		applyReservedDefaults(&doc.Tasks[i])
+	}
 	s := &sched{
 		workspace: req.Workspace,
-		doc:       req.Document,
+		doc:       doc,
 		run: jsonRun{
-			ID:      runID(req.Document),
-			Status:  StatusRunning,
-			Started: time.Now().UTC().Format(time.RFC3339Nano),
+			SchemaVersion: SchemaVersion,
+			ID:            runID(doc),
+			Status:        StatusRunning,
+			Started:       now,
+			Occupancy: &jsonOccupancy{
+				Active:  true,
+				Host:    host,
+				PID:     os.Getpid(),
+				Started: now,
+			},
 		},
-		tasks:  make(map[string]*jsonTaskState, len(req.Document.Tasks)),
+		tasks:  make(map[string]*jsonTaskState, len(doc.Tasks)),
 		budget: newBudget(readHostCapacity()),
 	}
-	for _, t := range req.Document.Tasks {
+	for _, t := range doc.Tasks {
 		st := initialTask(t)
 		s.tasks[t.ID] = &st
 	}
 	root := filepath.Join(req.Workspace, ControlDir)
-	if err := os.MkdirAll(root, 0o755); err != nil {
-		return nil, pathDefects(err)
+	lock, defects := claimOccupy(root)
+	if len(defects) > 0 {
+		return nil, defects
 	}
-	ident := filepath.Join(root, RunIdentityFile)
-	f, err := os.OpenFile(ident, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o644)
-	if err != nil {
-		if os.IsExist(err) {
-			return nil, []Defect{{
-				Code:    DefectOccupiedWorkspace,
-				Message: "occupied workspace",
-				Paths:   []string{ControlDir + "/" + RunIdentityFile},
-			}}
-		}
+	defer lock.Close()
+	if existing, exists, err := readRunIdentity(req.Workspace); err != nil {
 		return nil, pathDefects(err)
+	} else if exists && occupancyIsActive(existing) {
+		return nil, occupiedDefect()
 	}
-	if err := f.Close(); err != nil {
-		return nil, pathDefects(err)
-	}
-	plan, err := marshalPlan(req.Document)
+	plan, err := marshalControlPlan(doc)
 	if err != nil {
 		return nil, pathDefects(err)
 	}
@@ -198,12 +219,17 @@ func initialTask(t TaskPlan) jsonTaskState {
 	if t.Image != "" {
 		kind = executorDocker
 	}
+	applyReservedDefaults(&t)
 	return jsonTaskState{
-		ID:       t.ID,
-		Status:   StatusNotStarted,
-		Executor: kind,
-		Image:    t.Image,
-		Command:  jsonStrings(t.Command),
+		ID:         t.ID,
+		Instance:   t.Instance,
+		ShardIndex: t.ShardIndex,
+		ShardCount: t.ShardCount,
+		Attempt:    t.Attempt,
+		Status:     StatusNotStarted,
+		Executor:   kind,
+		Image:      t.Image,
+		Command:    jsonStrings(t.Command),
 		Resources: jsonResources{
 			CPU:    t.Resources.CPU,
 			Memory: t.Resources.Memory,
@@ -285,6 +311,7 @@ func (s *sched) launch(id string, reports chan report) {
 	st := s.tasks[id]
 	st.Status = StatusRunning
 	st.Reason = "ready"
+	st.Started = time.Now().UTC().Format(time.RFC3339Nano)
 	task, _ := s.taskByID(id)
 	s.budget.occupy(task)
 	s.notePersist(s.writeTasks())
@@ -304,10 +331,14 @@ func (s *sched) apply(r report) {
 	}
 	st.Stdout = r.Stdout
 	st.Stderr = r.Stderr
+	st.Ended = time.Now().UTC().Format(time.RFC3339Nano)
 	if r.Published && r.Exit == 0 && r.Message == "" {
 		st.Status = StatusSucceeded
 		st.Reason = "ready"
 		st.Error = nil
+		if task, ok := s.taskByID(r.ID); ok {
+			s.notePersist(s.recordSuccess(st, task))
+		}
 	} else {
 		st.Status = StatusFailed
 		st.Reason = "ready"
@@ -319,6 +350,21 @@ func (s *sched) apply(r report) {
 		s.blockFrom(r.ID)
 	}
 	s.notePersist(s.writeTasks())
+}
+
+func (s *sched) recordSuccess(st *jsonTaskState, task TaskPlan) error {
+	inputs, err := fileHashes(s.workspace, task.Inputs)
+	if err != nil {
+		return err
+	}
+	outputs, err := fileHashes(s.workspace, task.Outputs)
+	if err != nil {
+		return err
+	}
+	st.Fingerprints = inputs
+	st.Checksums = outputs
+	st.Lineage = successLineage(s, task, inputs, outputs)
+	return nil
 }
 
 func (s *sched) blockFrom(id string) {
@@ -337,6 +383,7 @@ func (s *sched) blockFrom(id string) {
 		}
 		dep.Status = StatusBlocked
 		dep.Reason = why
+		dep.Ended = time.Now().UTC().Format(time.RFC3339Nano)
 		s.blockFrom(e.ToTask)
 	}
 }
@@ -412,7 +459,10 @@ func (s *sched) writeRun() error {
 }
 
 func (s *sched) writeTasks() error {
-	doc := jsonTasksFile{Tasks: make([]jsonTaskState, 0, len(s.doc.Tasks))}
+	doc := jsonTasksFile{
+		SchemaVersion: SchemaVersion,
+		Tasks:         make([]jsonTaskState, 0, len(s.doc.Tasks)),
+	}
 	for _, t := range s.doc.Tasks {
 		if st := s.tasks[t.ID]; st != nil {
 			doc.Tasks = append(doc.Tasks, *st)

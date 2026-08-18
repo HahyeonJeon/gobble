@@ -292,7 +292,7 @@ func TestRunProcessGraph(t *testing.T) {
 	if string(got) != "reads" {
 		t.Fatalf("published output got %q, want reads", got)
 	}
-	isolate := filepath.Join(dir, engine.ControlDir, "tasks", "copy", "work")
+	isolate := filepath.Join(dir, engine.ControlDir, "tasks", "copy", "_", "0", "1", "work")
 	if _, err := os.Stat(filepath.Join(isolate, "in", "sample.txt")); err != nil {
 		t.Fatalf("staged input: %v", err)
 	}
@@ -320,10 +320,10 @@ func TestRunProcessGraph(t *testing.T) {
 	mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.RunIdentityFile))
 	mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.PlanFile))
 	mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile))
-	if _, err := os.Stat(filepath.Join(dir, engine.ControlDir, "tasks", "copy", "stdout")); err != nil {
+	if _, err := os.Stat(filepath.Join(dir, engine.ControlDir, "tasks", "copy", "_", "0", "1", "stdout")); err != nil {
 		t.Fatalf("stdout: %v", err)
 	}
-	if _, err := os.Stat(filepath.Join(dir, engine.ControlDir, "tasks", "copy", "stderr")); err != nil {
+	if _, err := os.Stat(filepath.Join(dir, engine.ControlDir, "tasks", "copy", "_", "0", "1", "stderr")); err != nil {
 		t.Fatalf("stderr: %v", err)
 	}
 
@@ -364,7 +364,7 @@ func TestRunContainedFailure(t *testing.T) {
 	if string(got) != "ok\n" && string(got) != "ok" {
 		t.Fatalf("independent output got %q, want ok", got)
 	}
-	if _, statErr := os.Stat(filepath.Join(dir, engine.ControlDir, "tasks", "fail", "work")); statErr != nil {
+	if _, statErr := os.Stat(filepath.Join(dir, engine.ControlDir, "tasks", "fail", "_", "0", "1", "work")); statErr != nil {
 		t.Fatalf("failed work directory: %v", statErr)
 	}
 	raw := mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile))
@@ -422,7 +422,7 @@ func TestRunNoReuseAcrossWorkspaces(t *testing.T) {
 		t.Fatalf("second workspace Run() error = %v", err)
 	}
 	for _, dir := range []string{dir1, dir2} {
-		if _, err := os.Stat(filepath.Join(dir, engine.ControlDir, "tasks", "copy", "work", "out", "sample.txt")); err != nil {
+		if _, err := os.Stat(filepath.Join(dir, engine.ControlDir, "tasks", "copy", "_", "0", "1", "work", "out", "sample.txt")); err != nil {
 			t.Fatalf("workspace %s did not re-execute: %v", dir, err)
 		}
 	}

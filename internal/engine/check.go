@@ -14,7 +14,7 @@ import (
 const ControlDir = ".gobble"
 
 // RunIdentityFile is the run identity document under ControlDir.
-// Its presence occupies the workspace.
+// Occupancy is the owner record inside that file, not mere presence.
 const RunIdentityFile = "run.json"
 
 // DefaultCap is the concurrency cap when the caller omits Cap.
@@ -121,23 +121,18 @@ func checkWorkspace(workspace string) []Defect {
 }
 
 func checkOccupied(workspace string) []Defect {
-	ident := filepath.Join(workspace, ControlDir, RunIdentityFile)
-	_, err := os.Stat(ident)
-	if err == nil {
+	run, exists, err := readRunIdentity(workspace)
+	if err != nil {
 		return []Defect{{
-			Code:    DefectOccupiedWorkspace,
-			Message: "occupied workspace",
+			Code:    DefectInvalidPath,
+			Message: "workspace occupancy is not usable",
 			Paths:   []string{ControlDir + "/" + RunIdentityFile},
 		}}
 	}
-	if os.IsNotExist(err) {
+	if !exists || !occupancyIsActive(run) {
 		return nil
 	}
-	return []Defect{{
-		Code:    DefectInvalidPath,
-		Message: "workspace occupancy is not usable",
-		Paths:   []string{ControlDir + "/" + RunIdentityFile},
-	}}
+	return occupiedDefect()
 }
 
 func checkCap(cap int) []Defect {

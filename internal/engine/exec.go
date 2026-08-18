@@ -32,11 +32,12 @@ func executeTask(workspace string, task TaskPlan) report {
 }
 
 func isolatedExecute(workspace string, task TaskPlan, run runner) report {
+	applyReservedDefaults(&task)
 	r := report{ID: task.ID}
-	taskDir := filepath.Join(workspace, ControlDir, "tasks", task.ID)
-	isolate := filepath.Join(taskDir, "work")
-	r.Stdout = ControlDir + "/tasks/" + task.ID + "/stdout"
-	r.Stderr = ControlDir + "/tasks/" + task.ID + "/stderr"
+	rel := isolateRel(task)
+	isolate := filepath.Join(workspace, filepath.FromSlash(rel), "work")
+	r.Stdout = rel + "/stdout"
+	r.Stderr = rel + "/stderr"
 	if err := os.MkdirAll(isolate, 0o755); err != nil {
 		r.Message = err.Error()
 		return r

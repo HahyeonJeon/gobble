@@ -489,7 +489,7 @@ func classifyStrelkaFailure(err error, workspace string) string {
 	case statErr == nil && !info.Mode().IsRegular():
 		return "declared VCF is not a regular file"
 	}
-	isolateDir := filepath.Join(workspace, ".gobble", "tasks", "strelka", "work", "strelka")
+	isolateDir := filepath.Join(workspace, ".gobble", "tasks", "strelka", "_", "0", "1", "work", "strelka")
 	if di, derr := os.Stat(isolateDir); derr == nil && di.IsDir() && (statErr != nil || info.Size() == 0) {
 		if err != nil {
 			return "directory-only: isolate has strelka/ run dir; " + formatRunError(err)
@@ -513,7 +513,7 @@ func spineLogs(workspace string, ids ...string) string {
 	var b strings.Builder
 	for _, id := range ids {
 		for _, name := range []string{"stderr", "stdout"} {
-			path := filepath.Join(workspace, ".gobble", "tasks", id, name)
+			path := filepath.Join(workspace, ".gobble", "tasks", id, "_", "0", "1", name)
 			data, err := os.ReadFile(path)
 			if err != nil || len(data) == 0 {
 				continue

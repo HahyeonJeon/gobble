@@ -28,7 +28,15 @@ const (
 	DefectFailed             = "failed"
 	DefectNeverReady         = "never-ready"
 	DefectInvalidMemory      = "invalid-memory"
+	DefectNotFound           = "not-found"
+	DefectAlreadyReleased    = "already-released"
+	DefectLiveOccupancy      = "live-occupancy"
+	DefectForeignHost        = "foreign-host"
+	DefectUnsupportedSchema  = "unsupported-schema"
 )
+
+// SchemaVersion is the control-document version this engine writes.
+const SchemaVersion = 1
 
 // Defect is one named failure found by a validation walk.
 type Defect struct {

@@ -23,20 +23,24 @@ type Request struct {
 
 // TaskPlan is one task in a plan Document.
 type TaskPlan struct {
-	ID        string
-	Name      string
-	Module    string
-	Branch    string
-	Merge     string
-	Command   []string
-	Script    string
-	Image     string
-	Backend   string
-	Resources ResourcePlan
-	Params    []ParamPlan
-	Env       map[string]string
-	Inputs    []IO
-	Outputs   []IO
+	ID         string
+	Name       string
+	Instance   string
+	ShardIndex int
+	ShardCount int
+	Attempt    int
+	Module     string
+	Branch     string
+	Merge      string
+	Command    []string
+	Script     string
+	Image      string
+	Backend    string
+	Resources  ResourcePlan
+	Params     []ParamPlan
+	Env        map[string]string
+	Inputs     []IO
+	Outputs    []IO
 }
 
 // ResourcePlan is the recorded CPU and memory request.
@@ -85,9 +89,10 @@ type Plan struct {
 }
 
 type jsonPlan struct {
-	Pipeline string     `json:"pipeline"`
-	Tasks    []jsonTask `json:"tasks"`
-	DAG      jsonDAG    `json:"dag"`
+	SchemaVersion int        `json:"schema_version,omitempty"`
+	Pipeline      string     `json:"pipeline"`
+	Tasks         []jsonTask `json:"tasks"`
+	DAG           jsonDAG    `json:"dag"`
 }
 
 type jsonTask struct {
@@ -192,9 +197,18 @@ func (p *Plan) MarshalJSON() ([]byte, error) {
 }
 
 func marshalPlan(doc Document) ([]byte, error) {
+	return encodePlan(doc, 0)
+}
+
+func marshalControlPlan(doc Document) ([]byte, error) {
+	return encodePlan(doc, SchemaVersion)
+}
+
+func encodePlan(doc Document, schema int) ([]byte, error) {
 	jp := jsonPlan{
-		Pipeline: doc.Name,
-		Tasks:    make([]jsonTask, 0, len(doc.Tasks)),
+		SchemaVersion: schema,
+		Pipeline:      doc.Name,
+		Tasks:         make([]jsonTask, 0, len(doc.Tasks)),
 		DAG: jsonDAG{
 			Nodes: make([]string, 0, len(doc.Tasks)),
 			Edges: make([]jsonEdge, 0),

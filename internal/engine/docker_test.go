@@ -138,7 +138,7 @@ func TestRunDockerBadImageContained(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(dir, "out", "sample.txt")); !os.IsNotExist(err) {
 		t.Fatalf("failed docker output was published")
 	}
-	if _, err := os.Stat(filepath.Join(dir, ControlDir, "tasks", "copy", "work")); err != nil {
+	if _, err := os.Stat(filepath.Join(dir, ControlDir, "tasks", "copy", "_", "0", "1", "work")); err != nil {
 		t.Fatalf("work directory after docker failure: %v", err)
 	}
 	raw := mustJSONFile(t, filepath.Join(dir, ControlDir, TasksFile))

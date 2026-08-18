@@ -138,7 +138,7 @@ func TestRunLocalBadImage(t *testing.T) {
 	if string(got) != "fixture\n" && string(got) != "fixture" {
 		t.Fatalf("independent process output got %q, want fixture", got)
 	}
-	if _, statErr := os.Stat(filepath.Join(dir, engine.ControlDir, "tasks", "image", "work")); statErr != nil {
+	if _, statErr := os.Stat(filepath.Join(dir, engine.ControlDir, "tasks", "image", "_", "0", "1", "work")); statErr != nil {
 		t.Fatalf("failed work directory: %v", statErr)
 	}
 	raw := mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile))

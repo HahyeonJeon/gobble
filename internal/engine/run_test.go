@@ -52,7 +52,7 @@ func TestRunProcessPublishesAndOccupies(t *testing.T) {
 	if string(got) != "reads" {
 		t.Fatalf("published output got %q, want reads", got)
 	}
-	isolate := filepath.Join(dir, ControlDir, "tasks", "copy", "work")
+	isolate := filepath.Join(dir, ControlDir, "tasks", "copy", "_", "0", "1", "work")
 	if _, err := os.Stat(filepath.Join(isolate, "in", "sample.txt")); err != nil {
 		t.Fatalf("staged input: %v", err)
 	}
@@ -62,10 +62,10 @@ func TestRunProcessPublishesAndOccupies(t *testing.T) {
 	mustJSONFile(t, filepath.Join(dir, ControlDir, RunIdentityFile))
 	mustJSONFile(t, filepath.Join(dir, ControlDir, PlanFile))
 	tasks := mustJSONFile(t, filepath.Join(dir, ControlDir, TasksFile))
-	if _, err := os.Stat(filepath.Join(dir, ControlDir, "tasks", "copy", "stdout")); err != nil {
+	if _, err := os.Stat(filepath.Join(dir, ControlDir, "tasks", "copy", "_", "0", "1", "stdout")); err != nil {
 		t.Fatalf("stdout: %v", err)
 	}
-	if _, err := os.Stat(filepath.Join(dir, ControlDir, "tasks", "copy", "stderr")); err != nil {
+	if _, err := os.Stat(filepath.Join(dir, ControlDir, "tasks", "copy", "_", "0", "1", "stderr")); err != nil {
 		t.Fatalf("stderr: %v", err)
 	}
 	var doc jsonTasksFile
@@ -137,7 +137,7 @@ func TestRunMissingOutputUnpublished(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(dir, "out", "sample.txt")); !os.IsNotExist(err) {
 		t.Fatalf("missing output was published")
 	}
-	if _, err := os.Stat(filepath.Join(dir, ControlDir, "tasks", "copy", "work")); err != nil {
+	if _, err := os.Stat(filepath.Join(dir, ControlDir, "tasks", "copy", "_", "0", "1", "work")); err != nil {
 		t.Fatalf("work directory after failure: %v", err)
 	}
 }
@@ -435,7 +435,7 @@ func TestRunRelatedFileOutputFrom(t *testing.T) {
 		if byID["index"].Status != StatusBlocked {
 			t.Fatalf("index status got %q, want blocked", byID["index"].Status)
 		}
-		if _, err := os.Stat(filepath.Join(dir, ControlDir, "tasks", "index", "work")); !os.IsNotExist(err) {
+		if _, err := os.Stat(filepath.Join(dir, ControlDir, "tasks", "index", "_", "0", "1", "work")); !os.IsNotExist(err) {
 			t.Fatalf("launched blocked index")
 		}
 	})
@@ -835,7 +835,7 @@ func TestRunGroupStagePublishByName(t *testing.T) {
 			t.Fatalf("published group member %s: %v", name, err)
 		}
 	}
-	isolate := filepath.Join(dir, ControlDir, "tasks", "copy", "work")
+	isolate := filepath.Join(dir, ControlDir, "tasks", "copy", "_", "0", "1", "work")
 	for _, name := range []string{"ref.amb", "ref.ann"} {
 		info, err := os.Stat(filepath.Join(isolate, name))
 		if err != nil {
