@@ -1,4 +1,4 @@
-package gobble_test
+package wgs_e2e_test
 
 import (
 	"bytes"
@@ -669,27 +669,64 @@ func writeThinSliceRecord(t *testing.T, rec thinSliceRecord) {
 
 func thinSliceRecordPath(t *testing.T) string {
 	t.Helper()
-	root := filepath.Join(".gobbi", "projects", "gobble", "sessions")
-	entries, err := os.ReadDir(root)
-	if err != nil {
-		t.Fatalf("ReadDir(%s) error = %v", root, err)
-	}
-	var leaf string
-	for _, e := range entries {
-		if !e.IsDir() {
-			continue
+	return filepath.Join(wgsE2ERecordDir(t), "thin-slice-record.md")
+}
+
+func wgsE2ERecordDir(t *testing.T) string {
+	t.Helper()
+	if dir := os.Getenv("GOBBLE_WGS_E2E_RECORD_DIR"); dir != "" {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			t.Fatalf("MkdirAll(%s) error = %v", dir, err)
 		}
-		candidate := filepath.Join(root, e.Name())
-		if _, statErr := os.Stat(filepath.Join(candidate, "tmp", "p2-planning")); statErr == nil {
-			leaf = e.Name()
-			break
+		return dir
+	}
+	return t.TempDir()
+}
+
+func mustCompose(pipe func() *gobble.Pipeline) func(t *testing.T) *gobble.Graph {
+	return func(t *testing.T) *gobble.Graph {
+		t.Helper()
+		g, err := gobble.Compose(pipe())
+		if err != nil {
+			t.Fatalf("Compose() error = %v, want nil", err)
 		}
-		leaf = e.Name()
+		if g == nil {
+			t.Fatalf("Compose() graph = nil, want compose-valid graph")
+		}
+		return g
 	}
-	if leaf == "" {
-		t.Fatalf("no session directory under %s", root)
+}
+
+func requireDocker(t *testing.T) {
+	t.Helper()
+	if err := exec.Command("docker", "info").Run(); err != nil {
+		t.Skipf("docker info: %v", err)
 	}
-	return filepath.Join(root, leaf, "tmp", "p2-planning", "thin-slice-record.md")
+}
+
+func requireRunError(t *testing.T, name string, err error, code gobble.DefectCode, unit string) *gobble.Error {
+	t.Helper()
+	var ge *gobble.Error
+	if !errors.As(err, &ge) {
+		t.Fatalf("case %s: error = %v, want *Error", name, err)
+	}
+	if ge.Op != "run" {
+		t.Fatalf("case %s: Error.Op got %q, want run", name, ge.Op)
+	}
+	found := false
+	codes := make([]gobble.DefectCode, len(ge.Defects))
+	units := make([]string, len(ge.Defects))
+	for i, d := range ge.Defects {
+		codes[i] = d.Code
+		units[i] = d.Unit
+		if d.Code == code && (unit == "" || d.Unit == unit) {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("case %s: defects codes got %v units %v, want code %s unit %q", name, codes, units, code, unit)
+	}
+	return ge
 }
 
 func formatThinSliceRecord(rec thinSliceRecord) string {
@@ -729,7 +766,7 @@ func formatThinSliceRecord(rec thinSliceRecord) string {
 	if rec.Stop != "" {
 		b.WriteString("\n## Stop\n\n")
 		b.WriteString(rec.Stop + "\n")
-		b.WriteString("\nDo not PASS. Do not rewrite testdata/wgs-e2e/manifest.json, wgs_e2e_fixture_test.go, testdata/wgs-e2e/README.md, .gitignore, or the cache helper.\n")
+		b.WriteString("\nDo not PASS. Do not rewrite testdata/manifest.json, wgs_e2e_fixture_test.go, testdata/README.md, .gitignore, or the cache helper.\n")
 	}
 	if rec.TaskState != "" {
 		b.WriteString("\n## Task state\n\n```json\n")

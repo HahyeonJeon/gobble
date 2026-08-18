@@ -1,4 +1,4 @@
-package gobble_test
+package wgs_e2e_test
 
 import (
 	"bufio"
@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	wgsE2EManifestPath = "testdata/wgs-e2e/manifest.json"
-	wgsE2ECacheDir     = "testdata/wgs-e2e/cache"
+	wgsE2EManifestPath = "testdata/manifest.json"
+	wgsE2ECacheDir     = "testdata/cache"
 	wgsE2EPairCount    = 266736
 	wgsE2EStagedR1     = "in/test_1.fastq.gz"
 	wgsE2EStagedR2     = "in/test_2.fastq.gz"

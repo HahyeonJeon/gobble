@@ -1,4 +1,4 @@
-package gobble_test
+package wgs_e2e_test
 
 import (
 	"bytes"
@@ -570,7 +570,7 @@ func writeSpineRecord(t *testing.T, rec spineRecord) {
 
 func wgsSpineRecordPath(t *testing.T) string {
 	t.Helper()
-	return filepath.Join(filepath.Dir(thinSliceRecordPath(t)), "wgs-spine-record.md")
+	return filepath.Join(wgsE2ERecordDir(t), "wgs-spine-record.md")
 }
 
 func formatSpineRecord(rec spineRecord) string {

@@ -9,4 +9,4 @@
 vendor/
 
 # Official WGS e2e fixture cache (dataset bytes stay untracked)
-testdata/wgs-e2e/cache/
+tests/wgs-e2e/testdata/cache/
