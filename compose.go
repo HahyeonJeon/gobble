@@ -58,8 +58,10 @@ func snapshotGraph(g *Graph) engine.Snapshot {
 			ID:      t.id,
 			Name:    t.name,
 			Command: copyStrings(t.command),
+			Script:  t.script,
 			Backend: t.backend,
 			CPU:     t.resources.CPU,
+			Env:     copyEnv(t.env),
 		}
 		for _, b := range t.inputs {
 			gt.Inputs = append(gt.Inputs, snapshotGraphBind(b))
@@ -77,8 +79,10 @@ func snapshotTask(t *Task) engine.Task {
 		ID:       t.id(),
 		Name:     t.spec.Name,
 		Command:  copyStrings(t.spec.Command),
+		Script:   t.spec.Script,
 		Backend:  t.spec.Backend,
 		CPU:      t.spec.Resources.CPU,
+		Env:      copyEnv(t.spec.Env),
 		OutCalls: copyStrings(t.outCalls),
 		InCalls:  copyStrings(t.inCalls),
 	}
@@ -98,11 +102,17 @@ func snapshotBind(b Bind, p *Pipeline) engine.Bind {
 		Rule: engine.DeriveRule(b.Rule),
 	}
 	eb.FromKind, eb.FromName, eb.FromTask = snapshotFrom(b.From, p)
+	if b.Group != nil {
+		eb.Members = make([]engine.Member, 0, len(b.Group))
+		for _, m := range b.Group {
+			eb.Members = append(eb.Members, engine.Member{Name: m.Name, Spec: snapshotPath(m.Spec)})
+		}
+	}
 	return eb
 }
 
 func snapshotGraphBind(b graphBind) engine.Bind {
-	return engine.Bind{
+	eb := engine.Bind{
 		Name:     b.name,
 		Spec:     snapshotPath(b.spec),
 		FromKind: snapshotFromKind(b.fromKind),
@@ -110,6 +120,13 @@ func snapshotGraphBind(b graphBind) engine.Bind {
 		FromTask: b.fromTask,
 		Resolved: true,
 	}
+	if b.members != nil {
+		eb.Members = make([]engine.Member, 0, len(b.members))
+		for _, m := range b.members {
+			eb.Members = append(eb.Members, engine.Member{Name: m.name, Spec: snapshotPath(m.spec)})
+		}
+	}
+	return eb
 }
 
 func foreignFrom(h Handle, p *Pipeline) bool {
@@ -205,9 +222,10 @@ func snapshotPath(p PathSpec) engine.Path {
 }
 
 type resolver struct {
-	p       *Pipeline
-	memo    map[bindKey]PathSpec
-	walking map[bindKey]bool
+	p          *Pipeline
+	memo       map[bindKey]PathSpec
+	memberMemo map[bindKey][]graphMember
+	walking    map[bindKey]bool
 }
 
 type bindKey struct {
@@ -218,9 +236,10 @@ type bindKey struct {
 
 func buildGraph(p *Pipeline) *Graph {
 	r := &resolver{
-		p:       p,
-		memo:    make(map[bindKey]PathSpec),
-		walking: make(map[bindKey]bool),
+		p:          p,
+		memo:       make(map[bindKey]PathSpec),
+		memberMemo: make(map[bindKey][]graphMember),
+		walking:    make(map[bindKey]bool),
 	}
 	return r.buildGraph()
 }
@@ -238,10 +257,12 @@ func (r *resolver) buildGraph() *Graph {
 			branch:    t.nearest(nodeBranch),
 			merge:     t.nearest(nodeMerge),
 			command:   copyStrings(t.spec.Command),
+			script:    t.spec.Script,
 			image:     t.spec.Image,
 			backend:   t.spec.Backend,
 			resources: t.spec.Resources,
 			params:    copyParams(t.spec.Params),
+			env:       copyEnv(t.spec.Env),
 		}
 		for _, b := range t.spec.Inputs {
 			gt.inputs = append(gt.inputs, r.graphBind(t, b, false))
@@ -261,7 +282,13 @@ func (r *resolver) graphBind(t *Task, b Bind, out bool) graphBind {
 		fromKind: b.From.kind,
 		fromName: b.From.name,
 	}
-	if spec, ok := r.resolveBind(t, b, out); ok {
+	if b.Group != nil {
+		if members, ok := r.resolveMembers(t, b, out); ok {
+			gb.members = members
+		} else {
+			gb.members = authoredMembers(b.Group)
+		}
+	} else if spec, ok := r.resolveBind(t, b, out); ok {
 		gb.spec = spec.clone()
 	} else {
 		gb.spec = b.Spec.clone()
@@ -299,6 +326,79 @@ func (r *resolver) resolveBind(t *Task, b Bind, out bool) (PathSpec, bool) {
 	spec := classifySpec(b.Spec, from, b.Rule)
 	r.memo[key] = spec
 	return spec, true
+}
+
+func (r *resolver) resolveMembers(t *Task, b Bind, out bool) ([]graphMember, bool) {
+	if b.Group == nil {
+		return nil, true
+	}
+	key := bindKey{task: t, name: b.Name, out: out}
+	if members, ok := r.memberMemo[key]; ok {
+		return members, true
+	}
+	if r.walking[key] {
+		return nil, false
+	}
+	if b.From.IsZero() {
+		members := authoredMembers(b.Group)
+		r.memberMemo[key] = members
+		return members, true
+	}
+	r.walking[key] = true
+	fromMembers, ok := r.resolveFromMembers(b.From)
+	r.walking[key] = false
+	if !ok {
+		return nil, false
+	}
+	outm := make([]graphMember, 0, len(b.Group))
+	for _, m := range b.Group {
+		from, ok := findGraphMember(fromMembers, m.Name)
+		if !ok {
+			return nil, false
+		}
+		outm = append(outm, graphMember{name: m.Name, spec: classifySpec(m.Spec, from.spec, b.Rule)})
+	}
+	r.memberMemo[key] = outm
+	return outm, true
+}
+
+func (r *resolver) resolveFromMembers(h Handle) ([]graphMember, bool) {
+	if foreignFrom(h, r.p) {
+		return nil, false
+	}
+	switch h.kind {
+	case handleOut:
+		b, ok := findBind(h.task.spec.Outputs, h.name)
+		if !ok || b.Group == nil {
+			return nil, false
+		}
+		return r.resolveMembers(h.task, b, true)
+	case handleIn:
+		b, ok := findBind(h.task.spec.Inputs, h.name)
+		if !ok || b.Group == nil {
+			return nil, false
+		}
+		return r.resolveMembers(h.task, b, false)
+	default:
+		return nil, false
+	}
+}
+
+func authoredMembers(in Group) []graphMember {
+	out := make([]graphMember, 0, len(in))
+	for _, m := range in {
+		out = append(out, graphMember{name: m.Name, spec: m.Spec.clone()})
+	}
+	return out
+}
+
+func findGraphMember(members []graphMember, name string) (graphMember, bool) {
+	for _, m := range members {
+		if m.name == name {
+			return m, true
+		}
+	}
+	return graphMember{}, false
 }
 
 func (r *resolver) resolveFrom(h Handle) (PathSpec, bool) {

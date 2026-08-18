@@ -23,10 +23,11 @@
 //
 // Shipped types and functions include PathSpec, Directory, Literal, Dir,
 // DeriveRule, DeriveAppend, DeriveReplaceExt, Pipeline, NewPipeline,
-// Module, Branch, Merge, Task, Handle, TaskSpec, Bind, Param, Resources,
-// Graph, Compose, Validate, BuildPlan, WriteTo, PlanOption, Plan, Run,
-// Error, Defect, DefectCode, and the Defect* constants. PathSpec methods
-// and builder methods belong to those types.
+// Module, Branch, Merge, Task, Handle, TaskSpec, Bind, Group, Member,
+// Param, Resources, Script, Env, Graph, Compose, Validate, BuildPlan,
+// WriteTo, PlanOption, Plan, Run, Error, Defect, DefectCode, and the
+// Defect* constants. PathSpec methods and builder methods belong to
+// those types.
 // The public surface is unsupported except these locked PathSpec concepts.
 // This package does not inspect or resume a pipeline.
 package gobble

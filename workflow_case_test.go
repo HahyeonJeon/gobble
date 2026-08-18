@@ -53,13 +53,13 @@ func assertWorkflowCasePlan(t *testing.T, got workflowCasePlan) {
 		t.Fatalf("case workflow-case: dag.nodes got %v, want %v", got.DAG.Nodes, wantIDs)
 	}
 	wantEdges := []workflowCaseEdge{
-		{From: "prep.fastp.clean_r1", To: "call.align.bwa.r1"},
-		{From: "prep.fastp.clean_r2", To: "call.align.bwa.r2"},
-		{From: "prep.fastp.clean_r1", To: "call.qc.fastqc.r1"},
-		{From: "prep.fastp.clean_r2", To: "call.qc.fastqc.r2"},
-		{From: "call.align.bwa.bam", To: "call.join.report.bam"},
-		{From: "call.align.bwa.bai", To: "call.join.report.bai"},
-		{From: "call.qc.fastqc.html", To: "call.join.report.html"},
+		{From: "prep.fastp.clean_r1", To: "call.align.bwa.r1", Wait: []string{"work/prep/sample_S1_L001_R1_001.clean.fastq.gz"}},
+		{From: "prep.fastp.clean_r2", To: "call.align.bwa.r2", Wait: []string{"work/prep/sample_S1_L001_R2_001.clean.fastq.gz"}},
+		{From: "prep.fastp.clean_r1", To: "call.qc.fastqc.r1", Wait: []string{"work/prep/sample_S1_L001_R1_001.clean.fastq.gz"}},
+		{From: "prep.fastp.clean_r2", To: "call.qc.fastqc.r2", Wait: []string{"work/prep/sample_S1_L001_R2_001.clean.fastq.gz"}},
+		{From: "call.align.bwa.bam", To: "call.join.report.bam", Wait: []string{"work/align/sample.sorted.bam"}},
+		{From: "call.align.bwa.bai", To: "call.join.report.bai", Wait: []string{"work/align/sample.sorted.bam.bai"}},
+		{From: "call.qc.fastqc.html", To: "call.join.report.html", Wait: []string{"work/qc/sample_clean_fastqc.html"}},
 	}
 	if !reflect.DeepEqual(got.DAG.Edges, wantEdges) {
 		t.Fatalf("case workflow-case: dag.edges got %#v, want %#v", got.DAG.Edges, wantEdges)
@@ -204,6 +204,7 @@ type workflowCaseDAG struct {
 }
 
 type workflowCaseEdge struct {
-	From string `json:"from"`
-	To   string `json:"to"`
+	From string   `json:"from"`
+	To   string   `json:"to"`
+	Wait []string `json:"wait"`
 }

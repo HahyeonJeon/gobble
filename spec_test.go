@@ -2,6 +2,8 @@ package gobble
 
 import (
 	"errors"
+	"os/exec"
+	"strings"
 	"testing"
 
 	"github.com/HahyeonJeon/gobble/internal/engine"
@@ -224,6 +226,141 @@ func TestClassifyAgreesWithSnapshot(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestValidateRejectDeclarations(t *testing.T) {
+	tests := []struct {
+		name    string
+		graph   *Graph
+		code    DefectCode
+		unit    string
+		message string
+	}{
+		{
+			name: "group and spec both set",
+			graph: &Graph{
+				name: "xor",
+				tasks: []graphTask{{
+					id:      "index",
+					name:    "index",
+					command: []string{"bwa"},
+					outputs: []graphBind{{
+						name:    "idx",
+						spec:    PathSpec{Name: "ref", Ext: ".amb"},
+						members: []graphMember{{name: "amb", spec: PathSpec{Name: "ref", Ext: ".amb"}}},
+					}},
+				}},
+			},
+			code:    DefectInvalidName,
+			unit:    "index.idx",
+			message: "group and spec both set",
+		},
+		{
+			name: "command and script both set",
+			graph: &Graph{
+				name: "cmd-script",
+				tasks: []graphTask{{
+					id:      "copy",
+					name:    "copy",
+					command: []string{"cp"},
+					script:  "echo hi",
+					outputs: []graphBind{{name: "out", spec: PathSpec{Name: "out", Ext: ".txt"}}},
+				}},
+			},
+			code:    DefectInvalidName,
+			unit:    "copy",
+			message: "command and script both set",
+		},
+		{
+			name: "empty env key",
+			graph: &Graph{
+				name: "env",
+				tasks: []graphTask{{
+					id:      "copy",
+					name:    "copy",
+					command: []string{"cp"},
+					env:     map[string]string{"": "x"},
+					outputs: []graphBind{{name: "out", spec: PathSpec{Name: "out", Ext: ".txt"}}},
+				}},
+			},
+			code:    DefectInvalidName,
+			unit:    "copy",
+			message: "empty env key",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := Validate(tt.graph)
+			var ge *Error
+			if !errors.As(err, &ge) {
+				t.Fatalf("case %s: Validate() error = %v, want *Error", tt.name, err)
+			}
+			if ge.Op != "validate" {
+				t.Fatalf("case %s: Error.Op got %q, want %q", tt.name, ge.Op, "validate")
+			}
+			found := false
+			for _, d := range ge.Defects {
+				if d.Code == tt.code && d.Unit == tt.unit && (tt.message == "" || d.Message == tt.message) {
+					found = true
+				}
+			}
+			if !found {
+				t.Fatalf("case %s: Validate() defects got %v, want code %s unit %q message %q",
+					tt.name, testDefectCodes(ge), tt.code, tt.unit, tt.message)
+			}
+		})
+	}
+}
+
+func TestBuildPlanNeverReady(t *testing.T) {
+	g := &Graph{
+		name: "never-ready",
+		tasks: []graphTask{{
+			id:      "copy",
+			name:    "copy",
+			command: []string{"cp"},
+			outputs: []graphBind{{name: "out", spec: PathSpec{Name: "out", Ext: ".txt"}}},
+		}},
+		edges: []graphEdge{{
+			fromTask: "ghost",
+			fromPort: "out",
+			toTask:   "copy",
+			toPort:   "out",
+		}},
+	}
+	plan, err := BuildPlan(g)
+	if plan != nil {
+		t.Fatalf("case never-ready: BuildPlan() plan != nil, want nil")
+	}
+	var ge *Error
+	if !errors.As(err, &ge) {
+		t.Fatalf("case never-ready: BuildPlan() error = %v, want *Error", err)
+	}
+	if ge.Op != "plan" {
+		t.Fatalf("case never-ready: Error.Op got %q, want %q", ge.Op, "plan")
+	}
+	found := false
+	for _, d := range ge.Defects {
+		if d.Code == DefectNeverReady && d.Unit == "copy.out" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("case never-ready: defects got %v, want code %s unit %q", testDefectCodes(ge), DefectNeverReady, "copy.out")
+	}
+}
+
+func TestEngineImportBan(t *testing.T) {
+	cmd := exec.Command("go", "list", "-f", "{{range .Imports}}{{println .}}{{end}}{{range .TestImports}}{{println .}}{{end}}", "./internal/engine")
+	out, err := cmd.Output()
+	if err != nil {
+		t.Fatalf("go list ./internal/engine: %v", err)
+	}
+	for _, line := range strings.Split(string(out), "\n") {
+		if line == "github.com/HahyeonJeon/gobble" {
+			t.Fatalf("internal/engine imports gobble")
+		}
 	}
 }
 

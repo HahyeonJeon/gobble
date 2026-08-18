@@ -20,10 +20,12 @@ type graphTask struct {
 	branch    string
 	merge     string
 	command   []string
+	script    string
 	image     string
 	backend   string
 	resources Resources
 	params    []Param
+	env       map[string]string
 	inputs    []graphBind
 	outputs   []graphBind
 }
@@ -34,6 +36,12 @@ type graphBind struct {
 	fromKind handleKind
 	fromName string
 	fromTask string
+	members  []graphMember
+}
+
+type graphMember struct {
+	name string
+	spec PathSpec
 }
 
 type graphEdge struct {

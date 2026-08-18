@@ -26,6 +26,7 @@ const (
 	DefectOccupiedWorkspace  = "occupied-workspace"
 	DefectOutputExists       = "output-exists"
 	DefectFailed             = "failed"
+	DefectNeverReady         = "never-ready"
 )
 
 // Defect is one named failure found by a validation walk.
@@ -91,7 +92,8 @@ type Path struct {
 // Bind is an engine-owned bind snapshot.
 //
 // When Resolved is true, Spec is the final path and is not classified
-// against From. Graph translation sets Resolved.
+// against From. Graph translation sets Resolved. A non-nil Members
+// slice is a Group bind, including an empty list.
 type Bind struct {
 	Name     string
 	Spec     Path
@@ -100,6 +102,13 @@ type Bind struct {
 	FromTask string
 	Rule     DeriveRule
 	Resolved bool
+	Members  []Member
+}
+
+// Member is one named regular-file path in a Group bind.
+type Member struct {
+	Name string
+	Spec Path
 }
 
 // Input is a pipeline input snapshot.
@@ -113,8 +122,10 @@ type Task struct {
 	ID       string
 	Name     string
 	Command  []string
+	Script   string
 	Backend  string
 	CPU      float64
+	Env      map[string]string
 	Inputs   []Bind
 	Outputs  []Bind
 	OutCalls []string

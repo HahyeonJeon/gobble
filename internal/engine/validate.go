@@ -22,14 +22,15 @@ type rendered struct {
 }
 
 type checker struct {
-	s        Snapshot
-	plan     bool
-	defects  []Defect
-	tasks    map[string]*Task
-	inputs   map[string]Input
-	memo     map[bindKey]Path
-	walking  map[bindKey]bool
-	rendered []rendered
+	s          Snapshot
+	plan       bool
+	defects    []Defect
+	tasks      map[string]*Task
+	inputs     map[string]Input
+	memo       map[bindKey]Path
+	memberMemo map[bindKey][]Member
+	walking    map[bindKey]bool
+	rendered   []rendered
 }
 
 // ComposeCheck reports compose defects on s. It does not check conflicts
@@ -46,12 +47,13 @@ func Validate(s Snapshot) []Defect {
 
 func check(s Snapshot, plan bool) []Defect {
 	c := &checker{
-		s:       s,
-		plan:    plan,
-		tasks:   make(map[string]*Task, len(s.Tasks)),
-		inputs:  make(map[string]Input, len(s.Inputs)),
-		memo:    make(map[bindKey]Path),
-		walking: make(map[bindKey]bool),
+		s:          s,
+		plan:       plan,
+		tasks:      make(map[string]*Task, len(s.Tasks)),
+		inputs:     make(map[string]Input, len(s.Inputs)),
+		memo:       make(map[bindKey]Path),
+		memberMemo: make(map[bindKey][]Member),
+		walking:    make(map[bindKey]bool),
 	}
 	for i := range s.Tasks {
 		t := &s.Tasks[i]
@@ -154,9 +156,15 @@ func (c *checker) checkTask(t *Task) {
 	if id == "" {
 		id = t.Name
 	}
-	if len(t.Command) == 0 {
+	hasCmd := len(t.Command) > 0
+	hasScript := t.Script != ""
+	switch {
+	case hasCmd && hasScript:
+		c.add(DefectInvalidName, id, "command and script both set")
+	case !hasCmd && !hasScript:
 		c.add(DefectMissingCommand, id, "missing command")
 	}
+	c.checkEnv(id, t.Env)
 	if len(t.Outputs) == 0 {
 		c.add(DefectMissingOutput, id, "missing output")
 	}
@@ -177,16 +185,25 @@ func (c *checker) checkTask(t *Task) {
 		if b.Name != "" && namePat.MatchString(b.Name) {
 			seen[b.Name] = true
 		}
+		c.checkGroup(unit, b)
 	}
 	for _, b := range t.Inputs {
 		checkPort(b)
 		if b.FromKind == FromZero || !c.fromInGraph(b) {
+			c.add(DefectMissingInput, bindUnit(id, b.Name), "missing input")
+			continue
+		}
+		if !c.groupFromOK(b) {
 			c.add(DefectMissingInput, bindUnit(id, b.Name), "missing input")
 		}
 	}
 	for _, b := range t.Outputs {
 		checkPort(b)
 		if b.FromKind != FromZero && !c.fromInGraph(b) {
+			c.add(DefectMissingInput, bindUnit(id, b.Name), "missing input")
+			continue
+		}
+		if b.FromKind != FromZero && c.fromInGraph(b) && !c.groupFromOK(b) {
 			c.add(DefectMissingInput, bindUnit(id, b.Name), "missing input")
 		}
 	}
@@ -210,6 +227,94 @@ func (c *checker) checkTask(t *Task) {
 			c.add(DefectMissingInput, bindUnit(id, name), "missing input")
 		}
 	}
+}
+
+func (c *checker) checkEnv(id string, env map[string]string) {
+	for k, v := range env {
+		if k == "" {
+			c.add(DefectInvalidName, id, "empty env key")
+		} else if strings.Contains(k, "=") {
+			c.add(DefectInvalidName, id, "env key contains =")
+		}
+		if v == "" {
+			c.add(DefectInvalidName, id, "empty env value")
+		}
+	}
+}
+
+func (c *checker) checkGroup(unit string, b Bind) {
+	if b.Members == nil {
+		return
+	}
+	if !isZeroPath(b.Spec) {
+		c.add(DefectInvalidName, unit, "group and spec both set")
+	}
+	if len(b.Members) == 0 {
+		c.add(DefectInvalidName, unit, "empty group")
+		return
+	}
+	seen := make(map[string]bool)
+	for _, m := range b.Members {
+		munit := bindUnit(unit, m.Name)
+		if m.Name == "" {
+			munit = unit
+		}
+		c.checkName(m.Name, munit, "member")
+		if m.Name != "" && seen[m.Name] {
+			c.add(DefectInvalidName, munit, "duplicate name")
+			continue
+		}
+		if m.Name != "" && namePat.MatchString(m.Name) {
+			seen[m.Name] = true
+		}
+	}
+}
+
+func (c *checker) groupFromOK(b Bind) bool {
+	src, ok := c.sourceBind(b)
+	srcGroup := ok && src.Members != nil
+	if b.Members != nil {
+		if b.FromKind == FromInput {
+			return false
+		}
+		return srcGroup && sameMemberNames(b.Members, src.Members)
+	}
+	return !srcGroup
+}
+
+func (c *checker) sourceBind(b Bind) (Bind, bool) {
+	switch b.FromKind {
+	case FromOut:
+		src, ok := c.tasks[b.FromTask]
+		if !ok {
+			return Bind{}, false
+		}
+		return findBind(src.Outputs, b.FromName)
+	case FromIn:
+		src, ok := c.tasks[b.FromTask]
+		if !ok {
+			return Bind{}, false
+		}
+		return findBind(src.Inputs, b.FromName)
+	default:
+		return Bind{}, false
+	}
+}
+
+func sameMemberNames(a, b []Member) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	set := make(map[string]bool, len(a))
+	for _, m := range a {
+		set[m.Name] = true
+	}
+	for _, m := range b {
+		if !set[m.Name] {
+			return false
+		}
+	}
+	return true
 }
 
 func (c *checker) fromInGraph(b Bind) bool {
@@ -280,20 +385,31 @@ func (c *checker) checkPaths() {
 		t := &c.s.Tasks[i]
 		id := t.ID
 		for _, b := range t.Inputs {
-			spec, ok := c.resolveBind(t, b, false)
-			if !ok {
-				continue
-			}
-			c.recordPath(spec, bindUnit(id, b.Name), id, false)
+			c.recordBindPaths(t, b, id, false)
 		}
 		for _, b := range t.Outputs {
-			spec, ok := c.resolveBind(t, b, true)
-			if !ok {
-				continue
-			}
-			c.recordPath(spec, bindUnit(id, b.Name), id, true)
+			c.recordBindPaths(t, b, id, true)
 		}
 	}
+}
+
+func (c *checker) recordBindPaths(t *Task, b Bind, id string, out bool) {
+	unit := bindUnit(id, b.Name)
+	if b.Members != nil {
+		members, ok := c.resolveMembers(t, b, out)
+		if !ok {
+			return
+		}
+		for _, m := range members {
+			c.recordPath(m.Spec, unit, id, out)
+		}
+		return
+	}
+	spec, ok := c.resolveBind(t, b, out)
+	if !ok {
+		return
+	}
+	c.recordPath(spec, unit, id, out)
 }
 
 func (c *checker) recordPath(spec Path, unit, task string, out bool) {
@@ -343,6 +459,70 @@ func (c *checker) resolveBind(t *Task, b Bind, out bool) (Path, bool) {
 	spec := classifyPath(b.Spec, from, b.Rule)
 	c.memo[key] = spec
 	return spec, true
+}
+
+func (c *checker) resolveMembers(t *Task, b Bind, out bool) ([]Member, bool) {
+	if b.Members == nil {
+		return nil, true
+	}
+	if b.Resolved {
+		return copyMembers(b.Members), true
+	}
+	key := bindKey{task: t.ID, name: b.Name, out: out}
+	if members, ok := c.memberMemo[key]; ok {
+		return members, true
+	}
+	if c.walking[key] {
+		return nil, false
+	}
+	if b.FromKind == FromZero {
+		members := copyMembers(b.Members)
+		c.memberMemo[key] = members
+		return members, true
+	}
+	c.walking[key] = true
+	fromMembers, ok := c.resolveFromMembers(b)
+	c.walking[key] = false
+	if !ok {
+		return nil, false
+	}
+	outm := make([]Member, 0, len(b.Members))
+	for _, m := range b.Members {
+		from, ok := findMember(fromMembers, m.Name)
+		if !ok {
+			return nil, false
+		}
+		outm = append(outm, Member{Name: m.Name, Spec: classifyPath(m.Spec, from.Spec, b.Rule)})
+	}
+	c.memberMemo[key] = outm
+	return outm, true
+}
+
+func (c *checker) resolveFromMembers(b Bind) ([]Member, bool) {
+	switch b.FromKind {
+	case FromOut:
+		src, ok := c.tasks[b.FromTask]
+		if !ok {
+			return nil, false
+		}
+		ob, ok := findBind(src.Outputs, b.FromName)
+		if !ok || ob.Members == nil {
+			return nil, false
+		}
+		return c.resolveMembers(src, ob, true)
+	case FromIn:
+		src, ok := c.tasks[b.FromTask]
+		if !ok {
+			return nil, false
+		}
+		ib, ok := findBind(src.Inputs, b.FromName)
+		if !ok || ib.Members == nil {
+			return nil, false
+		}
+		return c.resolveMembers(src, ib, false)
+	default:
+		return nil, false
+	}
 }
 
 func (c *checker) resolveFrom(b Bind) (Path, bool) {
@@ -458,4 +638,24 @@ func findBind(binds []Bind, name string) (Bind, bool) {
 		}
 	}
 	return Bind{}, false
+}
+
+func findMember(members []Member, name string) (Member, bool) {
+	for _, m := range members {
+		if m.Name == name {
+			return m, true
+		}
+	}
+	return Member{}, false
+}
+
+func copyMembers(in []Member) []Member {
+	if in == nil {
+		return nil
+	}
+	out := make([]Member, len(in))
+	for i, m := range in {
+		out[i] = Member{Name: m.Name, Spec: m.Spec.clone()}
+	}
+	return out
 }

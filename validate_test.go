@@ -85,6 +85,13 @@ func TestValidateReject(t *testing.T) {
 			code: gobble.DefectInvalidName,
 			unit: "copy",
 		},
+		{
+			name: "group member path conflict",
+			pipe: groupMemberConflictPipeline(),
+			code: gobble.DefectConflict,
+			unit: "index.collide",
+			path: "ref.amb",
+		},
 	}
 
 	for _, tt := range tests {

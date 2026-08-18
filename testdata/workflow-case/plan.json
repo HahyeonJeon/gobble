@@ -296,31 +296,52 @@
     "edges": [
       {
         "from": "prep.fastp.clean_r1",
-        "to": "call.align.bwa.r1"
+        "to": "call.align.bwa.r1",
+        "wait": [
+          "work/prep/sample_S1_L001_R1_001.clean.fastq.gz"
+        ]
       },
       {
         "from": "prep.fastp.clean_r2",
-        "to": "call.align.bwa.r2"
+        "to": "call.align.bwa.r2",
+        "wait": [
+          "work/prep/sample_S1_L001_R2_001.clean.fastq.gz"
+        ]
       },
       {
         "from": "prep.fastp.clean_r1",
-        "to": "call.qc.fastqc.r1"
+        "to": "call.qc.fastqc.r1",
+        "wait": [
+          "work/prep/sample_S1_L001_R1_001.clean.fastq.gz"
+        ]
       },
       {
         "from": "prep.fastp.clean_r2",
-        "to": "call.qc.fastqc.r2"
+        "to": "call.qc.fastqc.r2",
+        "wait": [
+          "work/prep/sample_S1_L001_R2_001.clean.fastq.gz"
+        ]
       },
       {
         "from": "call.align.bwa.bam",
-        "to": "call.join.report.bam"
+        "to": "call.join.report.bam",
+        "wait": [
+          "work/align/sample.sorted.bam"
+        ]
       },
       {
         "from": "call.align.bwa.bai",
-        "to": "call.join.report.bai"
+        "to": "call.join.report.bai",
+        "wait": [
+          "work/align/sample.sorted.bam.bai"
+        ]
       },
       {
         "from": "call.qc.fastqc.html",
-        "to": "call.join.report.html"
+        "to": "call.join.report.html",
+        "wait": [
+          "work/qc/sample_clean_fastqc.html"
+        ]
       }
     ]
   }

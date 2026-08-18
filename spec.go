@@ -8,31 +8,47 @@ package gobble
 type TaskSpec struct {
 	Name      string
 	Command   []string
+	Script    string
 	Image     string
 	Backend   string
 	Inputs    []Bind
 	Outputs   []Bind
 	Params    []Param
+	Env       map[string]string
 	Resources Resources
 }
 
 // Bind is one named input or output port on a task.
 //
 // Name is the local port name only. It never implicitly matches a pipeline
-// input. When From is set, Spec is classified as follows: a zero Spec
-// inherits the spec Compose resolves for that port, which may itself be
-// inherited, not Handle.Spec; a Spec that has only Ext set, and optionally
-// Dir, is a related file of From using Rule; any other Spec restages field
-// by field, taking each set field from Spec and inheriting the rest from
-// From. A Literal restage keeps opacity and merges Dir unless Spec.Dir is
-// set. From should name another task or a pipeline input. A From that
-// points at the same task is a cycle. Rule is used when this Bind is a
-// related file of From. The zero Rule is DeriveAppend.
+// input. A Bind is either a single Spec or a Group, not both. A non-nil
+// Group, including an empty list, is a Group bind. When From is set, Spec
+// is classified as follows: a zero Spec inherits the spec Compose resolves
+// for that port, which may itself be inherited, not Handle.Spec; a Spec
+// that has only Ext set, and optionally Dir, is a related file of From
+// using Rule; any other Spec restages field by field, taking each set field
+// from Spec and inheriting the rest from From. A Literal restage keeps
+// opacity and merges Dir unless Spec.Dir is set. From should name another
+// task or a pipeline input. A From that points at the same task is a cycle.
+// A Group From must name another Group port with the same member-name set.
+// Rule is used when this Bind is a related file of From. The zero Rule is
+// DeriveAppend.
 type Bind struct {
+	Name  string
+	Spec  PathSpec
+	Group Group
+	From  Handle
+	Rule  DeriveRule
+}
+
+// Group is an ordered list of named regular-file members on one Bind.
+// A nil Group is a single-file bind. A non-nil empty Group is invalid.
+type Group []Member
+
+// Member is one named regular-file path in a Group.
+type Member struct {
 	Name string
 	Spec PathSpec
-	From Handle
-	Rule DeriveRule
 }
 
 // Param is a named string parameter on a task.
@@ -65,6 +81,17 @@ func copyParams(in []Param) []Param {
 	}
 	out := make([]Param, len(in))
 	copy(out, in)
+	return out
+}
+
+func copyEnv(in map[string]string) map[string]string {
+	if in == nil {
+		return nil
+	}
+	out := make(map[string]string, len(in))
+	for k, v := range in {
+		out[k] = v
+	}
 	return out
 }
 

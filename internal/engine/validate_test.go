@@ -184,6 +184,97 @@ func TestComposeCheckIllegalSnapshots(t *testing.T) {
 			code: DefectMissingInput,
 			unit: "use.out",
 		},
+		{
+			name: "group and spec both set",
+			snap: Snapshot{
+				Name: "xor",
+				Tasks: []Task{{
+					ID:      "index",
+					Name:    "index",
+					Command: []string{"bwa"},
+					Outputs: []Bind{{
+						Name:    "idx",
+						Spec:    Path{Name: "ref", Ext: ".amb"},
+						Members: []Member{{Name: "amb", Spec: Path{Name: "ref", Ext: ".amb"}}},
+					}},
+				}},
+			},
+			code: DefectInvalidName,
+			unit: "index.idx",
+		},
+		{
+			name: "empty group",
+			snap: Snapshot{
+				Name: "empty-group",
+				Tasks: []Task{{
+					ID:      "index",
+					Name:    "index",
+					Command: []string{"bwa"},
+					Outputs: []Bind{{Name: "idx", Members: []Member{}}},
+				}},
+			},
+			code: DefectInvalidName,
+			unit: "index.idx",
+		},
+		{
+			name: "command and script both set",
+			snap: Snapshot{
+				Name: "cmd-script",
+				Tasks: []Task{{
+					ID:      "copy",
+					Name:    "copy",
+					Command: []string{"cp"},
+					Script:  "echo hi",
+					Outputs: []Bind{{Name: "out", Spec: file}},
+				}},
+			},
+			code: DefectInvalidName,
+			unit: "copy",
+		},
+		{
+			name: "empty env key",
+			snap: Snapshot{
+				Name: "env",
+				Tasks: []Task{{
+					ID:      "copy",
+					Name:    "copy",
+					Command: []string{"cp"},
+					Env:     map[string]string{"": "x"},
+					Outputs: []Bind{{Name: "out", Spec: file}},
+				}},
+			},
+			code: DefectInvalidName,
+			unit: "copy",
+		},
+		{
+			name: "group from single-file",
+			snap: Snapshot{
+				Name: "group-from-file",
+				Tasks: []Task{
+					{
+						ID:      "index",
+						Name:    "index",
+						Command: []string{"bwa"},
+						Outputs: []Bind{{Name: "idx", Spec: Path{Name: "ref", Ext: ".amb"}}},
+					},
+					{
+						ID:      "mem",
+						Name:    "mem",
+						Command: []string{"bwa"},
+						Inputs: []Bind{{
+							Name:     "idx",
+							FromKind: FromOut,
+							FromTask: "index",
+							FromName: "idx",
+							Members:  []Member{{Name: "amb"}},
+						}},
+						Outputs: []Bind{{Name: "out", Spec: file}},
+					},
+				},
+			},
+			code: DefectMissingInput,
+			unit: "mem.idx",
+		},
 	}
 
 	for _, tt := range tests {

@@ -31,6 +31,8 @@ const (
 	DefectOutputExists DefectCode = "output-exists"
 	// DefectFailed means a task did not succeed.
 	DefectFailed DefectCode = "failed"
+	// DefectNeverReady means a plan wait path cannot be produced.
+	DefectNeverReady DefectCode = "never-ready"
 )
 
 // Defect is one named failure inside an [Error].

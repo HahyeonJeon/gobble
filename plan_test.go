@@ -107,6 +107,97 @@ func TestBuildPlanReject(t *testing.T) {
 	}
 }
 
+func TestBuildPlanWaitPaths(t *testing.T) {
+	tests := []struct {
+		name string
+		pipe *gobble.Pipeline
+		from string
+		to   string
+		wait []string
+	}{
+		{
+			name: "input-port from",
+			pipe: matchingGroupPipeline(),
+			from: "index.idx",
+			to:   "mem.idx",
+			wait: []string{"ref.amb", "ref.ann"},
+		},
+		{
+			name: "output-port from",
+			pipe: outputPortFromPipeline(),
+			from: "align.bam",
+			to:   "index.bai",
+			wait: []string{"aln.bam"},
+		},
+		{
+			name: "group output-port from",
+			pipe: groupOutputFromPipeline(),
+			from: "index.idx",
+			to:   "copy.idx",
+			wait: []string{"ref.amb", "ref.ann"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			raw := mustBuildPlanJSON(t, tt.pipe)
+			var decoded struct {
+				DAG struct {
+					Edges []struct {
+						From string   `json:"from"`
+						To   string   `json:"to"`
+						Wait []string `json:"wait"`
+					} `json:"edges"`
+				} `json:"dag"`
+			}
+			if err := json.Unmarshal(raw, &decoded); err != nil {
+				t.Fatalf("case %s: Unmarshal() error = %v", tt.name, err)
+			}
+			found := false
+			for _, e := range decoded.DAG.Edges {
+				if e.From != tt.from || e.To != tt.to {
+					continue
+				}
+				found = true
+				if !jsonEqual(e.Wait, tt.wait) {
+					t.Fatalf("case %s: wait got %#v, want %#v", tt.name, e.Wait, tt.wait)
+				}
+			}
+			if !found {
+				t.Fatalf("case %s: missing edge %s -> %s in %#v", tt.name, tt.from, tt.to, decoded.DAG.Edges)
+			}
+		})
+	}
+
+	g := mustCompose(func() *gobble.Pipeline {
+		p := gobble.NewPipeline("pipe-in")
+		in := p.AddInput("reads", gobble.PathSpec{Name: "sample", Ext: ".fq"})
+		p.AddTask(gobble.TaskSpec{
+			Name:    "copy",
+			Command: []string{"cp"},
+			Inputs:  []gobble.Bind{{Name: "in", From: in}},
+			Outputs: []gobble.Bind{fileOut("out")},
+		})
+		return p
+	})(t)
+	doc, err := gobble.PlanDocument(g)
+	if err != nil {
+		t.Fatalf("case pipeline-input: PlanDocument() error = %v, want nil", err)
+	}
+	found := false
+	for _, e := range doc.Edges {
+		if e.FromTask != "" || e.ToTask != "copy" || e.ToPort != "in" {
+			continue
+		}
+		found = true
+		if !jsonEqual(e.Wait, []string{"sample.fq"}) {
+			t.Fatalf("case pipeline-input: Wait got %#v, want [sample.fq]", e.Wait)
+		}
+	}
+	if !found {
+		t.Fatalf("case pipeline-input: missing pipeline-input edge in %#v", doc.Edges)
+	}
+}
+
 func TestBuildPlanWriteTo(t *testing.T) {
 	g, err := gobble.Compose(oneTask("local-backend", gobble.TaskSpec{
 		Name:    "copy",

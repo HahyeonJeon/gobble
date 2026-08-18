@@ -29,10 +29,12 @@ type TaskPlan struct {
 	Branch    string
 	Merge     string
 	Command   []string
+	Script    string
 	Image     string
 	Backend   string
 	Resources ResourcePlan
 	Params    []ParamPlan
+	Env       map[string]string
 	Inputs    []IO
 	Outputs   []IO
 }
@@ -50,18 +52,31 @@ type ParamPlan struct {
 }
 
 // IO is one recorded input or output bind.
+//
+// Path may be empty on a Group IO. Members is omitted on single-file IOs.
 type IO struct {
+	Name    string
+	Path    string
+	Spec    Path
+	Members []IOMember
+}
+
+// IOMember is one recorded Group member.
+type IOMember struct {
 	Name string
 	Path string
 	Spec Path
 }
 
 // Edge is one directed bind edge. An empty FromTask is a pipeline input.
+// Wait is the plan-relative paths that must exist before the downstream
+// task may start.
 type Edge struct {
 	FromTask string
 	FromPort string
 	ToTask   string
 	ToPort   string
+	Wait     []string
 }
 
 // Plan is the encoded inspectable plan document.
@@ -76,18 +91,20 @@ type jsonPlan struct {
 }
 
 type jsonTask struct {
-	ID        string        `json:"id"`
-	Name      string        `json:"name"`
-	Module    string        `json:"module"`
-	Branch    string        `json:"branch"`
-	Merge     string        `json:"merge"`
-	Command   []string      `json:"command"`
-	Image     string        `json:"image"`
-	Backend   string        `json:"backend"`
-	Resources jsonResources `json:"resources"`
-	Params    []jsonParam   `json:"params"`
-	Inputs    []jsonIO      `json:"inputs"`
-	Outputs   []jsonIO      `json:"outputs"`
+	ID        string            `json:"id"`
+	Name      string            `json:"name"`
+	Module    string            `json:"module"`
+	Branch    string            `json:"branch"`
+	Merge     string            `json:"merge"`
+	Command   []string          `json:"command"`
+	Script    string            `json:"script,omitempty"`
+	Image     string            `json:"image"`
+	Backend   string            `json:"backend"`
+	Resources jsonResources     `json:"resources"`
+	Params    []jsonParam       `json:"params"`
+	Env       map[string]string `json:"env,omitempty"`
+	Inputs    []jsonIO          `json:"inputs"`
+	Outputs   []jsonIO          `json:"outputs"`
 }
 
 type jsonResources struct {
@@ -101,6 +118,13 @@ type jsonParam struct {
 }
 
 type jsonIO struct {
+	Name    string       `json:"name"`
+	Path    string       `json:"path"`
+	Spec    jsonSpec     `json:"spec"`
+	Members []jsonMember `json:"members,omitempty"`
+}
+
+type jsonMember struct {
 	Name string   `json:"name"`
 	Path string   `json:"path"`
 	Spec jsonSpec `json:"spec"`
@@ -124,8 +148,9 @@ type jsonDAG struct {
 }
 
 type jsonEdge struct {
-	From string `json:"from"`
-	To   string `json:"to"`
+	From string   `json:"from"`
+	To   string   `json:"to"`
+	Wait []string `json:"wait"`
 }
 
 // BuildPlan validates s, then encodes doc. On defects it returns (nil, defects).
@@ -186,6 +211,7 @@ func marshalPlan(doc Document) ([]byte, error) {
 		jp.DAG.Edges = append(jp.DAG.Edges, jsonEdge{
 			From: e.FromTask + "." + e.FromPort,
 			To:   e.ToTask + "." + e.ToPort,
+			Wait: jsonStrings(e.Wait),
 		})
 	}
 	data, err := json.MarshalIndent(jp, "", "  ")
@@ -207,6 +233,7 @@ func encodeTask(t TaskPlan) jsonTask {
 		Branch:  t.Branch,
 		Merge:   t.Merge,
 		Command: jsonStrings(t.Command),
+		Script:  t.Script,
 		Image:   t.Image,
 		Backend: backend,
 		Resources: jsonResources{
@@ -214,6 +241,7 @@ func encodeTask(t TaskPlan) jsonTask {
 			Memory: t.Resources.Memory,
 		},
 		Params:  encodeParams(t.Params),
+		Env:     t.Env,
 		Inputs:  encodeIOs(t.Inputs),
 		Outputs: encodeIOs(t.Outputs),
 	}
@@ -231,19 +259,39 @@ func encodeIOs(in []IO) []jsonIO {
 	out := make([]jsonIO, 0, len(in))
 	for _, b := range in {
 		out = append(out, jsonIO{
-			Name: b.Name,
-			Path: b.Path,
-			Spec: jsonSpec{
-				Dir:     b.Spec.Dir,
-				Lead:    b.Spec.Lead,
-				Name:    b.Spec.Name,
-				Steps:   jsonStrings(b.Spec.Steps),
-				Ext:     b.Spec.Ext,
-				Literal: b.Spec.Literal,
-			},
+			Name:    b.Name,
+			Path:    b.Path,
+			Spec:    encodeSpec(b.Spec),
+			Members: encodeMembers(b.Members),
 		})
 	}
 	return out
+}
+
+func encodeMembers(in []IOMember) []jsonMember {
+	if in == nil {
+		return nil
+	}
+	out := make([]jsonMember, 0, len(in))
+	for _, m := range in {
+		out = append(out, jsonMember{
+			Name: m.Name,
+			Path: m.Path,
+			Spec: encodeSpec(m.Spec),
+		})
+	}
+	return out
+}
+
+func encodeSpec(p Path) jsonSpec {
+	return jsonSpec{
+		Dir:     p.Dir,
+		Lead:    p.Lead,
+		Name:    p.Name,
+		Steps:   jsonStrings(p.Steps),
+		Ext:     p.Ext,
+		Literal: p.Literal,
+	}
 }
 
 func jsonStrings(in []string) []string {

@@ -85,21 +85,28 @@ func (p *Plan) MarshalJSON() ([]byte, error) {
 
 func planDocument(g *Graph) (engine.Document, error) {
 	doc := engine.Document{Name: g.name}
+	byID := make(map[string]*engine.TaskPlan, len(g.tasks))
 	for i := range g.tasks {
 		t := &g.tasks[i]
+		command := copyStrings(t.command)
+		if t.script != "" {
+			command = scriptArgv(t.script)
+		}
 		pt := engine.TaskPlan{
 			ID:      t.id,
 			Name:    t.name,
 			Module:  t.module,
 			Branch:  t.branch,
 			Merge:   t.merge,
-			Command: copyStrings(t.command),
+			Command: command,
+			Script:  t.script,
 			Image:   t.image,
 			Backend: t.backend,
 			Resources: engine.ResourcePlan{
 				CPU:    t.resources.CPU,
 				Memory: t.resources.Memory,
 			},
+			Env: copyEnv(t.env),
 		}
 		for _, p := range t.params {
 			pt.Params = append(pt.Params, engine.ParamPlan{Name: p.Name, Value: p.Value})
@@ -120,18 +127,49 @@ func planDocument(g *Graph) (engine.Document, error) {
 		}
 		doc.Tasks = append(doc.Tasks, pt)
 	}
+	for i := range doc.Tasks {
+		byID[doc.Tasks[i].ID] = &doc.Tasks[i]
+	}
 	for _, e := range g.edges {
+		wait, err := planWait(byID, e)
+		if err != nil {
+			return engine.Document{}, err
+		}
 		doc.Edges = append(doc.Edges, engine.Edge{
 			FromTask: e.fromTask,
 			FromPort: e.fromPort,
 			ToTask:   e.toTask,
 			ToPort:   e.toPort,
+			Wait:     wait,
 		})
 	}
 	return doc, nil
 }
 
+func scriptArgv(script string) []string {
+	return []string{"sh", "-c", "set -eu\n" + script}
+}
+
 func planIO(b graphBind) (engine.IO, error) {
+	if b.members != nil {
+		io := engine.IO{
+			Name:    b.name,
+			Spec:    snapshotPath(b.spec),
+			Members: make([]engine.IOMember, 0, len(b.members)),
+		}
+		for _, m := range b.members {
+			path, err := m.spec.Render()
+			if err != nil {
+				return engine.IO{}, err
+			}
+			io.Members = append(io.Members, engine.IOMember{
+				Name: m.name,
+				Path: path,
+				Spec: snapshotPath(m.spec),
+			})
+		}
+		return io, nil
+	}
 	path, err := b.spec.Render()
 	if err != nil {
 		return engine.IO{}, err
@@ -141,6 +179,85 @@ func planIO(b graphBind) (engine.IO, error) {
 		Path: path,
 		Spec: snapshotPath(b.spec),
 	}, nil
+}
+
+func planWait(byID map[string]*engine.TaskPlan, e graphEdge) ([]string, error) {
+	to, ok := byID[e.toTask]
+	if !ok {
+		return nil, neverReadyError(bindUnit(e.toTask, e.toPort))
+	}
+	toIO, toIsInput, ok := findTaskIO(to, e.toPort)
+	if !ok {
+		return nil, neverReadyError(bindUnit(e.toTask, e.toPort))
+	}
+	if e.fromTask == "" || toIsInput {
+		return waitPaths(toIO, bindUnit(e.toTask, e.toPort))
+	}
+	from, ok := byID[e.fromTask]
+	if !ok {
+		return nil, neverReadyError(bindUnit(e.toTask, e.toPort))
+	}
+	fromIO, _, ok := findPublishedIO(from, e.fromPort)
+	if !ok {
+		return nil, neverReadyError(bindUnit(e.toTask, e.toPort))
+	}
+	return waitPaths(fromIO, bindUnit(e.toTask, e.toPort))
+}
+
+func findTaskIO(t *engine.TaskPlan, port string) (engine.IO, bool, bool) {
+	for _, in := range t.Inputs {
+		if in.Name == port {
+			return in, true, true
+		}
+	}
+	for _, out := range t.Outputs {
+		if out.Name == port {
+			return out, false, true
+		}
+	}
+	return engine.IO{}, false, false
+}
+
+func findPublishedIO(t *engine.TaskPlan, port string) (engine.IO, bool, bool) {
+	for _, out := range t.Outputs {
+		if out.Name == port {
+			return out, false, true
+		}
+	}
+	for _, in := range t.Inputs {
+		if in.Name == port {
+			return in, true, true
+		}
+	}
+	return engine.IO{}, false, false
+}
+
+func waitPaths(io engine.IO, unit string) ([]string, error) {
+	if io.Members != nil {
+		waits := make([]string, 0, len(io.Members))
+		for _, m := range io.Members {
+			if m.Path == "" {
+				return nil, neverReadyError(unit)
+			}
+			waits = append(waits, m.Path)
+		}
+		if len(waits) == 0 {
+			return nil, neverReadyError(unit)
+		}
+		return waits, nil
+	}
+	if io.Path == "" {
+		return nil, neverReadyError(unit)
+	}
+	return []string{io.Path}, nil
+}
+
+func neverReadyError(unit string) error {
+	return &Error{Op: "plan", Defects: []Defect{{
+		Code:    DefectNeverReady,
+		Unit:    unit,
+		Message: "never-ready",
+	}}}
 }
 
 func planPathError(unit string, err error) error {
