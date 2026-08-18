@@ -46,6 +46,7 @@ product under the remaining product headings.
 ### Gobble
 
 - Statement: The consumer sees structured task and run state, an error that names the failed unit, and which outputs remain reusable. Recovery is retry, resume of remaining work, or inspect-then-modify the Go pipeline and resume. Human translation of raw logs is not the recovery path.
+- Current: After a contained `Run` failure, recovery is `Inspect`, then `Release` to close occupancy, then dest-scope `Resume`. `output-exists` applies only to dests this Resume would publish that are not authorized replace dests. Live cancel, named retry, and guarded clean are not shipped.
 - Source: `failure-recovery`
 
 ## Support and updates

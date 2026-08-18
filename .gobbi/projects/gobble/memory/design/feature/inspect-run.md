@@ -70,6 +70,7 @@ is blocking. Ask before leaving those Open.
 ### Interfaces
 
 - Statement: Library inspect operations. CLI for the same operations is required at first-horizon exit. CLI command names stay Open (`invocation-contract`). Default response encoding is JSON or JSONL, not a pipeline language.
+- Current: `Inspect(workspace, view, instance)` is the shipped read-only library verb. Views are `run`, `instances`, `errors`, `logs`, `timing`, `DAG`, `lineage`, `remaining`, and `reuse`. `run`, `errors`, `logs`, `timing`, `DAG`, and `lineage` return one JSON object. `instances`, `remaining`, and `reuse` return JSONL. Empty instance selects every reserved identity. Logs are pointers plus an optional bounded tail. Remaining is classified on all latest attempts, then instance-filtered for emit. Inspect does not occupy, create, or rewrite control files. There is no CLI.
 - Source: `interfaces`
 
 ## Constraints and qualities

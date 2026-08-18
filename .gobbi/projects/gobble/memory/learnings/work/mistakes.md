@@ -12,9 +12,9 @@
 
 **Context:** Partner Claude Code How discussion under `--safe-mode`.
 
-**Mistake:** Pointing the partner at worktree or repository files outside the session directory. `--safe-mode` denies those reads, so the partner returns NEEDS_CONTEXT and writes no result file.
+**Mistake:** Pointing the partner at worktree or repository files outside the session directory, or giving only `git show --stat` plus a few file bodies. `--safe-mode` denies those reads, so the partner returns NEEDS_CONTEXT and writes no result file. A partial `commit.show.txt` leaves tests Unverified even when the partner can still find defects in the files that were present.
 
-**Correction:** Copy or write every required source under the session root and name only those session-local paths in the Partner brief. The brief must include every file the partner must cite. This review missed `compose_test.go`.
+**Correction:** Copy or write every required source under the session root and name only those session-local paths in the Partner brief. The brief must include every file the partner must cite. Put every file the partner must judge in the session, or `git show` the full commit. Do not use a partial `git show`. This review missed `compose_test.go`.
 
 ## Waiting under 300s for a Partner CLI and losing EXIT
 

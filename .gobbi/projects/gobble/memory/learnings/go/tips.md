@@ -39,3 +39,19 @@
 **Tip:** Tools may write undeclared dirs; only declared regular files publish. Strelka wrote `strelka/` then `mv` to a declared VCF.
 
 **Application:** Reject first-class directory artifacts until a required consumer needs an index directory in place.
+
+## Claim occupy with a lock plus owner record
+
+**Context:** After `Release`, `.gobble/run.json` stays.
+
+**Tip:** Do not use `O_EXCL` on `run.json` to claim occupancy. Claim with a lock file plus the owner record.
+
+**Application:** `Run` and `Resume` after Release use `occupy.lock` and write the owner on `run.json`.
+
+## Staged replace never unlinks a published dest
+
+**Context:** Resume may replace an authorized dest after a rerun.
+
+**Tip:** Never unlink, truncate, or overwrite a published dest in place. Exclusive-create a temp, write all bytes, then rename over the dest after complete isolate outputs.
+
+**Application:** A failed new attempt that never renamed leaves the prior dest in place.

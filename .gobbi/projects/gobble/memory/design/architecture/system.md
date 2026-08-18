@@ -48,6 +48,7 @@ when the project has one product. Start an inherited answer with `Inherited — 
 ### Gobble
 
 - Statement: Internal seams are library to engine, scheduler to executor, and engine to state and artifact files. External seams are the public Go API first and the CLI second. The Go API may prove the loop before the CLI exists. First-horizon exit still requires the same loop on the CLI. CLI command names stay Open (`invocation-contract`). Later agent APIs share the same model. JSON or JSONL is the default library and CLI response encoding. JSON or YAML as a pipeline interchange document is later, not a first-horizon pipeline language.
+- Current: Public verbs are `Compose`, `Validate`, `BuildPlan`, `Run`, `Inspect`, `Resume`, and `Release`. Occupancy is an owner record on `.gobble/run.json`. `Release` is the occupancy-break path and is not deletion. There is no CLI.
 - Source: `interfaces`
 
 ## Stack
