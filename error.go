@@ -64,10 +64,11 @@ type Defect struct {
 }
 
 // Error is a structured failure from compose, validate, plan, render, run,
-// or release. Callers inspect it with errors.As. JSON keys are op and defects.
+// release, or inspect. Callers inspect it with errors.As. JSON keys are op
+// and defects.
 type Error struct {
 	// Op is the failing operation: compose, validate, plan, render, run,
-	// or release.
+	// release, or inspect.
 	Op string `json:"op"`
 	// Defects is the list of named failures.
 	Defects []Defect `json:"defects"`

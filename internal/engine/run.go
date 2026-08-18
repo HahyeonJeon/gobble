@@ -129,6 +129,9 @@ type jsonTaskState struct {
 	Fingerprints []jsonFileHash `json:"fingerprints,omitempty"`
 	Checksums    []jsonFileHash `json:"checksums,omitempty"`
 	Lineage      []jsonLineage  `json:"lineage,omitempty"`
+	Decision     string         `json:"decision,omitempty"`
+	ReuseReason  string         `json:"reuse_reason,omitempty"`
+	Differing    []string       `json:"differing,omitempty"`
 }
 
 type jsonTaskErr struct {
