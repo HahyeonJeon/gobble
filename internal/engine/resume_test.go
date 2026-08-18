@@ -42,11 +42,14 @@ func TestPlanDriftTaskSetAndEdges(t *testing.T) {
 
 func TestCheckResumeOutputsUnattributed(t *testing.T) {
 	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "out", "a.txt"), "foreign")
 	writeCheckFile(t, filepath.Join(dir, "out", "b.txt"), "stray")
+	writeCheckFile(t, filepath.Join(dir, "out", "ok.txt"), "ok")
 	doc := Document{
 		Tasks: []TaskPlan{
 			{ID: "a", Outputs: []IO{{Name: "out", Path: "out/a.txt"}}},
 			{ID: "b", Outputs: []IO{{Name: "out", Path: "out/b.txt"}}},
+			{ID: "ok", Outputs: []IO{{Name: "out", Path: "out/ok.txt"}}},
 		},
 	}
 	tasks := []jsonTaskState{{
@@ -57,19 +60,29 @@ func TestCheckResumeOutputsUnattributed(t *testing.T) {
 		ID:      "b",
 		Status:  StatusBlocked,
 		Attempt: 1,
+	}, {
+		ID:        "ok",
+		Status:    StatusSucceeded,
+		Attempt:   1,
+		Checksums: []jsonFileHash{{Path: "out/ok.txt", SHA256: "abc"}},
+		Lineage:   []jsonLineage{{Producer: "ok", Path: "out/ok.txt", Checksum: "abc"}},
 	}}
 	class := remainingClass{
 		Decision: map[string]reuseDecision{
-			"a": {Identity: "a", Decision: reuseRerun},
-			"b": {Identity: "b", Decision: reuseRerun},
+			"a":  {Identity: "a", Decision: reuseRerun},
+			"b":  {Identity: "b", Decision: reuseRerun},
+			"ok": {Identity: "ok", Decision: reuseRerun},
 		},
 	}
 	defects := checkResumeOutputs(dir, doc, tasks, class)
+	if !hasDefect(defects, DefectOutputExists, "a.out") {
+		t.Fatalf("defects %v, want output-exists a.out", defects)
+	}
 	if !hasDefect(defects, DefectOutputExists, "b.out") {
 		t.Fatalf("defects %v, want output-exists b.out", defects)
 	}
-	if hasDefect(defects, DefectOutputExists, "a.out") {
-		t.Fatalf("authorized rerun dest treated as output-exists")
+	if hasDefect(defects, DefectOutputExists, "ok.out") {
+		t.Fatalf("published dest treated as output-exists")
 	}
 }
 
@@ -85,6 +98,27 @@ func TestStagedReplaceLeavesDestOnFailedWrite(t *testing.T) {
 	got, err := os.ReadFile(dst)
 	if err != nil || string(got) != "next" {
 		t.Fatalf("dest got %q, want next", got)
+	}
+	info, err := os.Stat(dst)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.Mode().Perm() != 0o644 {
+		t.Fatalf("dest mode got %o, want 0644", info.Mode().Perm())
+	}
+	if err := os.Chmod(dst, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	writeCheckFile(t, src, "again")
+	if err := stagedReplace(src, dst); err != nil {
+		t.Fatalf("stagedReplace() second error = %v", err)
+	}
+	info, err = os.Stat(dst)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.Mode().Perm() != 0o600 {
+		t.Fatalf("dest mode after match got %o, want 0600", info.Mode().Perm())
 	}
 }
 

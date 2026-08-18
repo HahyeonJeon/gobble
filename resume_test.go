@@ -204,6 +204,21 @@ func TestResumeUnattributedDestOutputExists(t *testing.T) {
 	}
 }
 
+func TestResumeFailedIdentityForeignDestOutputExists(t *testing.T) {
+	dir := readyReleasedRun(t, processContainPipeline)
+	writeRunFile(t, filepath.Join(dir, "out", "fail.txt"), "foreign")
+	beforeOcc := occupancySnapshot(t, dir)
+	err := gobble.Resume(mustCompose(processContainPipeline)(t), dir, 2)
+	requireResumeError(t, "foreign dest", err, gobble.DefectOutputExists, "fail.out")
+	if occupancySnapshot(t, dir) != beforeOcc {
+		t.Fatalf("foreign dest occupied workspace")
+	}
+	got, err := os.ReadFile(filepath.Join(dir, "out", "fail.txt"))
+	if err != nil || string(got) != "foreign" {
+		t.Fatalf("foreign dest mutated: %s err=%v", got, err)
+	}
+}
+
 func TestResumeFailedAttemptKeepsPriorDestThenReplace(t *testing.T) {
 	dir := readyReleasedRun(t, processCopyPipeline)
 	prior, err := os.ReadFile(filepath.Join(dir, "out", "sample.txt"))

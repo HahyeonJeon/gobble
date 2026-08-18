@@ -251,6 +251,14 @@ func stagedReplace(src, dst string) error {
 		os.Remove(tmp)
 		return cerr
 	}
+	mode := os.FileMode(0o644)
+	if info, err := os.Lstat(dst); err == nil && info.Mode().IsRegular() {
+		mode = info.Mode().Perm()
+	}
+	if err := os.Chmod(tmp, mode); err != nil {
+		os.Remove(tmp)
+		return err
+	}
 	if err := os.Rename(tmp, dst); err != nil {
 		os.Remove(tmp)
 		return err

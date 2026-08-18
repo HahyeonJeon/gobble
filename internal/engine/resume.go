@@ -131,7 +131,6 @@ func planDriftDefect() []Defect {
 }
 
 func checkResumeOutputs(workspace string, doc Document, tasks []jsonTaskState, class remainingClass) []Defect {
-	executed := executedIdentities(tasks)
 	var defects []Defect
 	for _, t := range doc.Tasks {
 		applyReservedDefaults(&t)
@@ -145,7 +144,7 @@ func checkResumeOutputs(workspace string, doc Document, tasks []jsonTaskState, c
 				if !pathPresent(workspaceFile(workspace, f.path)) {
 					continue
 				}
-				if executed[ident] {
+				if destPublished(tasks, ident, f.path) {
 					continue
 				}
 				defUnit := unit
@@ -164,16 +163,29 @@ func checkResumeOutputs(workspace string, doc Document, tasks []jsonTaskState, c
 	return defects
 }
 
-func executedIdentities(tasks []jsonTaskState) map[string]bool {
-	out := make(map[string]bool)
+func destPublished(tasks []jsonTaskState, ident, path string) bool {
 	for _, st := range tasks {
 		applyTaskStateDefaults(&st)
+		if reservedIdentity(taskPlanFromState(st)) != ident {
+			continue
+		}
 		switch st.Status {
 		case StatusSucceeded, StatusFailed, StatusIncomplete, StatusRunning:
-			out[reservedIdentity(taskPlanFromState(st))] = true
+		default:
+			continue
+		}
+		for _, h := range st.Checksums {
+			if h.Path == path {
+				return true
+			}
+		}
+		for _, lin := range st.Lineage {
+			if lin.Path == path && lin.Producer == ident {
+				return true
+			}
 		}
 	}
-	return out
+	return false
 }
 
 func occupyResume(req Request) (*sched, []Defect) {
