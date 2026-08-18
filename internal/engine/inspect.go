@@ -55,6 +55,7 @@ func Inspect(workspace, view, instance string) ([]byte, []Defect) {
 	if hasPlan {
 		doc = documentFromPlan(plan)
 	}
+	latest := latestAttempts(tasks)
 	selected, d := selectLatest(tasks, instance)
 	if len(d) > 0 {
 		return nil, d
@@ -73,9 +74,9 @@ func Inspect(workspace, view, instance string) ([]byte, []Defect) {
 	case viewDAG:
 		return marshalInspect(inspectDAGView(plan, hasPlan))
 	case viewLineage:
-		return marshalInspect(inspectLineageView(selected, instance))
+		return marshalInspect(inspectLineageView(latest, instance))
 	case viewRemaining:
-		return marshalJSONL(inspectRemainingRecords(workspace, doc, selected))
+		return marshalJSONL(inspectRemainingRecords(workspace, doc, latest, instance))
 	case viewReuse:
 		return marshalJSONL(inspectReuseRecords(selected))
 	default:
@@ -485,11 +486,14 @@ type inspectRemainingDoc struct {
 	Differing []string `json:"differing,omitempty"`
 }
 
-func inspectRemainingRecords(workspace string, doc Document, selected []jsonTaskState) []inspectRemainingDoc {
-	class := classifyRemaining(workspace, doc, selected)
+func inspectRemainingRecords(workspace string, doc Document, latest []jsonTaskState, instance string) []inspectRemainingDoc {
+	class := classifyRemaining(workspace, doc, latest)
 	out := make([]inspectRemainingDoc, 0)
-	for _, st := range selected {
+	for _, st := range latest {
 		ident := reservedIdentity(taskPlanFromState(st))
+		if instance != "" && ident != instance {
+			continue
+		}
 		if !class.Remaining[ident] && !class.Affected[ident] {
 			continue
 		}

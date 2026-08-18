@@ -109,6 +109,102 @@ func TestInspectNoFingerprintsAffectsDownstream(t *testing.T) {
 	}
 }
 
+func TestInspectRemainingInstanceUsesFullSet(t *testing.T) {
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "a.txt"), "a")
+	writeCheckFile(t, filepath.Join(dir, "out", "b.txt"), "b")
+	inSum, err := sha256File(filepath.Join(dir, "in", "a.txt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	doc := Document{
+		Name: "pipe",
+		Tasks: []TaskPlan{
+			{
+				ID:      "a",
+				Name:    "a",
+				Command: []string{"false"},
+				Inputs:  []IO{{Name: "in", Path: "in/a.txt"}},
+				Outputs: []IO{{Name: "out", Path: "out/a.txt"}},
+			},
+			{
+				ID:      "b",
+				Name:    "b",
+				Command: []string{"true"},
+				Inputs:  []IO{{Name: "in", Path: "in/a.txt"}},
+				Outputs: []IO{{Name: "out", Path: "out/b.txt"}},
+			},
+		},
+		Edges: []Edge{{
+			FromTask: "a",
+			FromPort: "out",
+			ToTask:   "b",
+			ToPort:   "in",
+			Wait:     []string{"out/a.txt"},
+		}},
+	}
+	plan, err := marshalControlPlan(doc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeCheckFile(t, filepath.Join(dir, ControlDir, PlanFile), string(plan))
+	writeOccupancy(t, dir, jsonOccupancy{Active: false, Closed: "2026-01-01T00:00:01Z"})
+	tasks := jsonTasksFile{
+		SchemaVersion: SchemaVersion,
+		Tasks: []jsonTaskState{
+			{
+				ID:       "a",
+				Status:   StatusFailed,
+				Executor: executorProcess,
+				Command:  []string{"false"},
+				Attempt:  1,
+				Params:   []jsonParam{},
+			},
+			{
+				ID:           "b",
+				Status:       StatusSucceeded,
+				Executor:     executorProcess,
+				Command:      []string{"true"},
+				Attempt:      1,
+				Params:       []jsonParam{},
+				Fingerprints: []jsonFileHash{{Path: "in/a.txt", SHA256: inSum}},
+			},
+		},
+	}
+	taskBytes, err := json.MarshalIndent(tasks, "", "  ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), string(append(taskBytes, '\n')))
+
+	allRaw, defects := Inspect(dir, viewRemaining, "")
+	if len(defects) != 0 {
+		t.Fatalf("Inspect(remaining) defects %v", defects)
+	}
+	all := remainingByID(t, allRaw)
+	if all["a"]["remaining"] != true || all["a"]["affected"] != true {
+		t.Fatalf("unfiltered a got %#v", all["a"])
+	}
+	if all["b"]["remaining"] != false || all["b"]["affected"] != true {
+		t.Fatalf("unfiltered b got %#v", all["b"])
+	}
+	if all["b"]["reason"] != reasonDownstreamOfRerun {
+		t.Fatalf("unfiltered b reason got %#v, want downstream-of-rerun", all["b"]["reason"])
+	}
+
+	oneRaw, defects := Inspect(dir, viewRemaining, "b")
+	if len(defects) != 0 {
+		t.Fatalf("Inspect(remaining, b) defects %v", defects)
+	}
+	one := remainingByID(t, oneRaw)
+	if len(one) != 1 || one["b"] == nil {
+		t.Fatalf("filtered remaining got %#v, want only b", one)
+	}
+	if one["b"]["remaining"] != all["b"]["remaining"] || one["b"]["affected"] != all["b"]["affected"] || one["b"]["reason"] != all["b"]["reason"] {
+		t.Fatalf("filtered b got %#v, want %#v", one["b"], all["b"])
+	}
+}
+
 func TestInspectSuccessfulRunNotAffected(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
@@ -357,6 +453,16 @@ func decodeInspectJSONL(t *testing.T, data []byte) []map[string]any {
 			t.Fatalf("JSONL: %v\n%s", err, data)
 		}
 		out = append(out, rec)
+	}
+	return out
+}
+
+func remainingByID(t *testing.T, data []byte) map[string]map[string]any {
+	t.Helper()
+	out := map[string]map[string]any{}
+	for _, rec := range decodeInspectJSONL(t, data) {
+		id, _ := rec["identity"].(string)
+		out[id] = rec
 	}
 	return out
 }
