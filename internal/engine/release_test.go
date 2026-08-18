@@ -144,6 +144,62 @@ func TestReleaseDeadOwnerMarksIncomplete(t *testing.T) {
 	}
 }
 
+func TestReleaseLegacyTasksDefaultSlots(t *testing.T) {
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, ControlDir, RunIdentityFile), `{"id":"run-1"}`)
+	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), `{
+  "tasks": [
+    {
+      "id": "copy",
+      "status": "running",
+      "executor": "process",
+      "image": "",
+      "command": ["true"],
+      "resources": {"cpu": 0, "memory": ""},
+      "params": []
+    },
+    {
+      "id": "ok",
+      "status": "succeeded",
+      "executor": "process",
+      "image": "",
+      "command": ["true"],
+      "resources": {"cpu": 0, "memory": ""},
+      "params": []
+    }
+  ]
+}
+`)
+	if defects := Release(dir); len(defects) != 0 {
+		t.Fatalf("Release() defects %v, want none", defects)
+	}
+	raw := mustJSONFile(t, filepath.Join(dir, ControlDir, TasksFile))
+	var file jsonTasksFile
+	if err := json.Unmarshal(raw, &file); err != nil {
+		t.Fatalf("tasks.json: %v", err)
+	}
+	if file.SchemaVersion != SchemaVersion {
+		t.Fatalf("schema_version got %d, want %d", file.SchemaVersion, SchemaVersion)
+	}
+	if len(file.Tasks) != 2 {
+		t.Fatalf("tasks got %d, want 2", len(file.Tasks))
+	}
+	byID := map[string]jsonTaskState{}
+	for _, st := range file.Tasks {
+		byID[st.ID] = st
+		if st.Instance != "" || st.ShardIndex != DefaultShardIndex || st.ShardCount != DefaultShardCount || st.Attempt != DefaultAttempt {
+			t.Fatalf("%s slots got instance %q shard %d/%d attempt %d, want empty/0/1/1",
+				st.ID, st.Instance, st.ShardIndex, st.ShardCount, st.Attempt)
+		}
+	}
+	if byID["copy"].Status != StatusIncomplete {
+		t.Fatalf("copy status got %q, want incomplete", byID["copy"].Status)
+	}
+	if byID["ok"].Status != StatusSucceeded {
+		t.Fatalf("ok status got %q, want succeeded", byID["ok"].Status)
+	}
+}
+
 func TestReleaseSucceededRunKeepsSucceeded(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")

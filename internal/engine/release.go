@@ -131,6 +131,7 @@ func markIncomplete(workspace, now string) ([]jsonTaskState, []string, bool, err
 	if err := json.Unmarshal(data, &doc); err != nil {
 		return nil, nil, false, err
 	}
+	applyLegacyTaskSlots(&doc)
 	var marked []string
 	for i := range doc.Tasks {
 		st := &doc.Tasks[i]

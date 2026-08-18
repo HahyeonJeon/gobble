@@ -39,6 +39,24 @@ func applyReservedDefaults(t *TaskPlan) {
 	}
 }
 
+func applyTaskStateDefaults(st *jsonTaskState) {
+	if st.ShardCount == 0 {
+		st.ShardCount = DefaultShardCount
+	}
+	if st.Attempt == 0 {
+		st.Attempt = DefaultAttempt
+	}
+}
+
+func applyLegacyTaskSlots(doc *jsonTasksFile) {
+	if doc.SchemaVersion != 0 {
+		return
+	}
+	for i := range doc.Tasks {
+		applyTaskStateDefaults(&doc.Tasks[i])
+	}
+}
+
 func instanceSeg(instance string) string {
 	if instance == "" {
 		return emptyInstanceSeg
