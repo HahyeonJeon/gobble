@@ -112,29 +112,31 @@ type jsonRun struct {
 }
 
 type jsonTaskState struct {
-	ID           string         `json:"id"`
-	Instance     string         `json:"instance"`
-	ShardIndex   int            `json:"shard_index"`
-	ShardCount   int            `json:"shard_count"`
-	Attempt      int            `json:"attempt"`
-	Status       string         `json:"status"`
-	Executor     string         `json:"executor"`
-	Image        string         `json:"image"`
-	Command      []string       `json:"command"`
-	Resources    jsonResources  `json:"resources"`
-	Params       []jsonParam    `json:"params"`
-	Reason       string         `json:"reason"`
-	Error        *jsonTaskErr   `json:"error,omitempty"`
-	Stdout       string         `json:"stdout,omitempty"`
-	Stderr       string         `json:"stderr,omitempty"`
-	Started      string         `json:"started,omitempty"`
-	Ended        string         `json:"ended,omitempty"`
-	Fingerprints []jsonFileHash `json:"fingerprints,omitempty"`
-	Checksums    []jsonFileHash `json:"checksums,omitempty"`
-	Lineage      []jsonLineage  `json:"lineage,omitempty"`
-	Decision     string         `json:"decision,omitempty"`
-	ReuseReason  string         `json:"reuse_reason,omitempty"`
-	Differing    []string       `json:"differing,omitempty"`
+	ID           string            `json:"id"`
+	Instance     string            `json:"instance"`
+	ShardIndex   int               `json:"shard_index"`
+	ShardCount   int               `json:"shard_count"`
+	Attempt      int               `json:"attempt"`
+	Status       string            `json:"status"`
+	Executor     string            `json:"executor"`
+	Image        string            `json:"image"`
+	Command      []string          `json:"command"`
+	Script       string            `json:"script,omitempty"`
+	Resources    jsonResources     `json:"resources"`
+	Params       []jsonParam       `json:"params"`
+	Env          map[string]string `json:"env,omitempty"`
+	Reason       string            `json:"reason"`
+	Error        *jsonTaskErr      `json:"error,omitempty"`
+	Stdout       string            `json:"stdout,omitempty"`
+	Stderr       string            `json:"stderr,omitempty"`
+	Started      string            `json:"started,omitempty"`
+	Ended        string            `json:"ended,omitempty"`
+	Fingerprints []jsonFileHash    `json:"fingerprints,omitempty"`
+	Checksums    []jsonFileHash    `json:"checksums,omitempty"`
+	Lineage      []jsonLineage     `json:"lineage,omitempty"`
+	Decision     string            `json:"decision,omitempty"`
+	ReuseReason  string            `json:"reuse_reason,omitempty"`
+	Differing    []string          `json:"differing,omitempty"`
 }
 
 type jsonTaskErr struct {
@@ -236,11 +238,13 @@ func initialTask(t TaskPlan) jsonTaskState {
 		Executor:   kind,
 		Image:      t.Image,
 		Command:    jsonStrings(t.Command),
+		Script:     t.Script,
 		Resources: jsonResources{
 			CPU:    t.Resources.CPU,
 			Memory: t.Resources.Memory,
 		},
 		Params: encodeParams(t.Params),
+		Env:    copyStringMap(t.Env),
 	}
 }
 
@@ -304,6 +308,22 @@ func (s *sched) upstreamReady(id string) bool {
 			if up == nil || up.Status != StatusSucceeded {
 				return false
 			}
+			if s.resume != nil {
+				upTask, ok := s.taskByID(e.FromTask)
+				if !ok {
+					return false
+				}
+				ident := reservedIdentity(upTask)
+				if s.resume[ident].Decision == reuseRerun && !s.succeededThisResume(ident) {
+					return false
+				}
+			}
+		} else if s.resume != nil {
+			for _, path := range e.Wait {
+				if s.waitPathPendingRerun(path) {
+					return false
+				}
+			}
 		}
 		for _, path := range e.Wait {
 			if path == "" || !regularFile(workspaceFile(s.workspace, path)) {
@@ -312,6 +332,48 @@ func (s *sched) upstreamReady(id string) bool {
 		}
 	}
 	return true
+}
+
+func (s *sched) succeededThisResume(ident string) bool {
+	if s.launched == nil || !s.launched[ident] {
+		return false
+	}
+	for _, t := range s.doc.Tasks {
+		if reservedIdentity(t) != ident {
+			continue
+		}
+		st := s.tasks[t.ID]
+		return st != nil && st.Status == StatusSucceeded
+	}
+	return false
+}
+
+func (s *sched) waitPathPendingRerun(path string) bool {
+	if path == "" {
+		return false
+	}
+	for _, t := range s.doc.Tasks {
+		ident := reservedIdentity(t)
+		if s.resume[ident].Decision != reuseRerun {
+			continue
+		}
+		if !declaresOutputPath(t, path) {
+			continue
+		}
+		if !s.succeededThisResume(ident) {
+			return true
+		}
+	}
+	return false
+}
+
+func declaresOutputPath(t TaskPlan, path string) bool {
+	for _, f := range declaredIOFiles(t.Outputs) {
+		if f.path == path {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *sched) taskByID(id string) (TaskPlan, bool) {
@@ -376,6 +438,7 @@ func (s *sched) assignBlockedUpstream() {
 	if s.resume == nil {
 		return
 	}
+	now := time.Now().UTC().Format(time.RFC3339Nano)
 	for _, t := range s.doc.Tasks {
 		ident := reservedIdentity(t)
 		if s.resume[ident].Decision != reuseRerun || s.launched[ident] {
@@ -385,27 +448,85 @@ func (s *sched) assignBlockedUpstream() {
 		if st == nil {
 			continue
 		}
-		st.Decision = decisionBlockedUpstream
-		st.ReuseReason = s.blockedReason(t.ID)
-		st.Differing = nil
+		if s.waitProducerFailedThisResume(t.ID) {
+			st.Decision = decisionBlockedUpstream
+			st.ReuseReason = s.blockedReason(t.ID)
+			st.Differing = nil
+			st.Status = StatusBlocked
+			if st.Ended == "" {
+				st.Ended = now
+			}
+			continue
+		}
+		st.Status = StatusNotStarted
 	}
+}
+
+func (s *sched) waitProducerFailedThisResume(id string) bool {
+	for _, e := range s.doc.Edges {
+		if e.ToTask != id {
+			continue
+		}
+		if e.FromTask != "" {
+			up := s.tasks[e.FromTask]
+			if up == nil {
+				continue
+			}
+			upIdent := reservedIdentity(taskPlanFromState(*up))
+			if s.launched[upIdent] && up.Status != StatusSucceeded {
+				return true
+			}
+			continue
+		}
+		for _, path := range e.Wait {
+			if s.waitPathProducerFailedThisResume(path) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (s *sched) waitPathProducerFailedThisResume(path string) bool {
+	if path == "" {
+		return false
+	}
+	for _, t := range s.doc.Tasks {
+		if !declaresOutputPath(t, path) {
+			continue
+		}
+		ident := reservedIdentity(t)
+		st := s.tasks[t.ID]
+		if s.launched[ident] && st != nil && st.Status != StatusSucceeded {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *sched) blockedReason(id string) string {
 	for _, e := range s.doc.Edges {
-		if e.ToTask != id || e.FromTask == "" {
+		if e.ToTask != id {
 			continue
 		}
-		up := s.tasks[e.FromTask]
-		if up == nil {
+		if e.FromTask != "" {
+			up := s.tasks[e.FromTask]
+			if up == nil {
+				continue
+			}
+			upIdent := reservedIdentity(taskPlanFromState(*up))
+			if s.launched[upIdent] && up.Status != StatusSucceeded {
+				return reasonDownstreamOfRerun
+			}
+			if up.Decision == decisionBlockedUpstream || up.Status != StatusSucceeded {
+				return reasonPreviousUnsuccessful
+			}
 			continue
 		}
-		upIdent := reservedIdentity(taskPlanFromState(*up))
-		if s.launched[upIdent] && up.Status != StatusSucceeded {
-			return reasonDownstreamOfRerun
-		}
-		if up.Decision == decisionBlockedUpstream || up.Status != StatusSucceeded {
-			return reasonPreviousUnsuccessful
+		for _, path := range e.Wait {
+			if s.waitPathProducerFailedThisResume(path) {
+				return reasonDownstreamOfRerun
+			}
 		}
 	}
 	return reasonDownstreamOfRerun
@@ -418,6 +539,8 @@ func (s *sched) apply(r report) {
 	}
 	if task, ok := s.taskByID(r.ID); ok {
 		s.budget.release(task)
+		st.Script = task.Script
+		st.Env = copyStringMap(task.Env)
 	}
 	st.Stdout = r.Stdout
 	st.Stderr = r.Stderr

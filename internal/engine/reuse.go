@@ -55,13 +55,13 @@ func classifyReuse(workspace string, latest jsonTaskState, recorded, current Tas
 	}
 
 	var differ []string
-	if !sameStrings(latest.Command, current.Command) || recorded.Script != current.Script {
+	if !sameStrings(latest.Command, current.Command) || latest.Script != current.Script || recorded.Script != current.Script {
 		differ = append(differ, "command-or-script")
 	}
 	if !sameParams(decodeParams(latest.Params), current.Params) {
 		differ = append(differ, "params")
 	}
-	if !sameEnv(recorded.Env, current.Env) {
+	if !sameEnv(latest.Env, current.Env) || !sameEnv(recorded.Env, current.Env) {
 		differ = append(differ, "env")
 	}
 	if latest.Image != current.Image {
@@ -85,7 +85,7 @@ func classifyReuse(workspace string, latest jsonTaskState, recorded, current Tas
 		dec.Reason = reuseReasonFor(differ[0])
 		return dec
 	}
-	if publishedMissing(workspace, current.Outputs) {
+	if destReuseMiss(workspace, latest, current) {
 		dec.Reason = reasonOutputMissing
 		return dec
 	}
@@ -167,6 +167,38 @@ func publishedMissing(workspace string, outputs []IO) bool {
 	return false
 }
 
+func destReuseMiss(workspace string, latest jsonTaskState, current TaskPlan) bool {
+	if len(latest.Checksums) == 0 {
+		return publishedMissing(workspace, current.Outputs)
+	}
+	for _, h := range latest.Checksums {
+		if h.Path == "" {
+			continue
+		}
+		if !regularFile(workspaceFile(workspace, h.Path)) {
+			return true
+		}
+	}
+	ident := reservedIdentity(taskPlanFromState(latest))
+	known := make(map[string]bool, len(latest.Checksums)+len(latest.Lineage))
+	for _, h := range latest.Checksums {
+		if h.Path != "" {
+			known[h.Path] = true
+		}
+	}
+	for _, lin := range latest.Lineage {
+		if lin.Producer == ident && lin.Path != "" {
+			known[lin.Path] = true
+		}
+	}
+	for _, f := range declaredIOFiles(current.Outputs) {
+		if !known[f.path] {
+			return true
+		}
+	}
+	return false
+}
+
 func declaredIOFiles(ios []IO) []namedFile {
 	var out []namedFile
 	for _, io := range ios {
@@ -235,8 +267,10 @@ func classifyResume(workspace string, recorded, supplied Document, tasks []jsonT
 				Attempt:    t.Attempt,
 				Status:     StatusNotStarted,
 				Command:    jsonStrings(t.Command),
+				Script:     t.Script,
 				Image:      t.Image,
 				Params:     encodeParams(t.Params),
+				Env:        copyStringMap(t.Env),
 			}
 		}
 		rec, _ := planTaskByID(recorded, t.ID)
@@ -261,7 +295,8 @@ func classifyResume(workspace string, recorded, supplied Document, tasks []jsonT
 }
 
 func reusePlans(doc Document, st jsonTaskState) (recorded, current TaskPlan) {
-	current = taskPlanFromState(st)
+	recorded = taskPlanFromState(st)
+	current = recorded
 	if t, ok := planTaskByID(doc, st.ID); ok {
 		current = t
 		current.Instance = st.Instance
@@ -269,7 +304,7 @@ func reusePlans(doc Document, st jsonTaskState) (recorded, current TaskPlan) {
 		current.ShardCount = st.ShardCount
 		current.Attempt = st.Attempt
 	}
-	return current, current
+	return recorded, current
 }
 
 func markDownstreamAffected(affected map[string]bool, decisions map[string]reuseDecision, doc Document, fromTask string, identsOfTask map[string][]string) {
@@ -357,8 +392,10 @@ func taskPlanFromState(st jsonTaskState) TaskPlan {
 		ShardCount: st.ShardCount,
 		Attempt:    st.Attempt,
 		Command:    st.Command,
+		Script:     st.Script,
 		Image:      st.Image,
 		Params:     decodeParams(st.Params),
+		Env:        copyStringMap(st.Env),
 		Resources: ResourcePlan{
 			CPU:    st.Resources.CPU,
 			Memory: st.Resources.Memory,
@@ -414,6 +451,17 @@ func sameEnv(a, b map[string]string) bool {
 		}
 	}
 	return true
+}
+
+func copyStringMap(in map[string]string) map[string]string {
+	if in == nil {
+		return nil
+	}
+	out := make(map[string]string, len(in))
+	for k, v := range in {
+		out[k] = v
+	}
+	return out
 }
 
 func decodeParams(in []jsonParam) []ParamPlan {

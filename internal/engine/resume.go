@@ -2,6 +2,7 @@ package engine
 
 import (
 	"os"
+	"strings"
 	"time"
 )
 
@@ -114,10 +115,7 @@ func taskIDSet(tasks []TaskPlan) map[string]bool {
 func edgeKeySet(edges []Edge) map[string]bool {
 	out := make(map[string]bool)
 	for _, e := range edges {
-		if e.FromTask == "" {
-			continue
-		}
-		out[e.FromTask+"\x00"+e.FromPort+"\x00"+e.ToTask+"\x00"+e.ToPort] = true
+		out[e.FromTask+"\x00"+e.FromPort+"\x00"+e.ToTask+"\x00"+e.ToPort+"\x00"+strings.Join(e.Wait, "\x01")] = true
 	}
 	return out
 }

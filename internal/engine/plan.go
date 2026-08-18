@@ -222,7 +222,7 @@ func encodePlan(doc Document, schema int) ([]byte, error) {
 		jp.DAG.Nodes = append(jp.DAG.Nodes, t.ID)
 	}
 	for _, e := range doc.Edges {
-		if e.FromTask == "" {
+		if e.FromTask == "" && schema == 0 {
 			continue
 		}
 		jp.DAG.Edges = append(jp.DAG.Edges, jsonEdge{

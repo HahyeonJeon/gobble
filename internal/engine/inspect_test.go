@@ -387,7 +387,10 @@ func TestClassifyReuseReasons(t *testing.T) {
 		Command:      []string{"cp", "in/a.txt", "out/a.txt"},
 		Image:        "alpine:3.19.1",
 		Params:       []jsonParam{{Name: "mode", Value: "fast"}},
+		Env:          map[string]string{"HOME": "/tmp"},
 		Fingerprints: []jsonFileHash{{Path: "in/a.txt", SHA256: sum}},
+		Checksums:    []jsonFileHash{{Path: "out/a.txt", SHA256: sum}},
+		Lineage:      []jsonLineage{{Producer: "copy", Path: "out/a.txt", Checksum: sum}},
 	}
 	plan := TaskPlan{
 		ID:      "copy",
@@ -422,6 +425,36 @@ func TestClassifyReuseReasons(t *testing.T) {
 	got = classifyReuse(dir, base, plan, changed)
 	if got.Reason != reasonCommandOrScriptChanged {
 		t.Fatalf("command got %#v", got)
+	}
+
+	scripted := base
+	scripted.Script = "cp in/a.txt out/a.txt"
+	sameCmd := plan
+	sameCmd.Script = scripted.Script
+	got = classifyReuse(dir, scripted, sameCmd, sameCmd)
+	if got.Decision != reuseReused {
+		t.Fatalf("script match got %#v", got)
+	}
+	changedScript := sameCmd
+	changedScript.Script = "cp in/a.txt out/a.txt\n# v2"
+	got = classifyReuse(dir, scripted, sameCmd, changedScript)
+	if got.Reason != reasonCommandOrScriptChanged {
+		t.Fatalf("script got %#v", got)
+	}
+
+	changedEnv := plan
+	changedEnv.Env = map[string]string{"HOME": "/other"}
+	got = classifyReuse(dir, base, plan, changedEnv)
+	if got.Reason != reasonEnvChanged {
+		t.Fatalf("env got %#v", got)
+	}
+
+	renamed := plan
+	renamed.Outputs = []IO{{Name: "out", Path: "out/renamed.txt"}}
+	writeCheckFile(t, filepath.Join(dir, "out", "renamed.txt"), "reads")
+	got = classifyReuse(dir, base, plan, renamed)
+	if got.Reason != reasonOutputMissing {
+		t.Fatalf("dest rename got %#v", got)
 	}
 
 	absent := base
