@@ -1,5 +1,6 @@
 // Package engine owns validation walks, plan construction,
-// pre-execution run checks, and process and Docker execution.
+// pre-execution run checks, occupancy release, inspect, resume,
+// and process and Docker execution.
 //
 // Package gobble translates Pipeline and Graph values into the snapshot
 // and Document types defined here. Snapshot is the validate view.

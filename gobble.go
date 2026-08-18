@@ -7,10 +7,13 @@
 // non-finite CPU. [BuildPlan] validates first and returns an inspectable
 // [Plan]. [WriteTo] is a [PlanOption] that writes the same JSON
 // [Plan.WriteJSON] emits. [Run] executes a valid graph in a caller workspace
-// after the same checks. The default concurrency cap is 1. Compose,
-// Validate, BuildPlan, and Run report defects as [*Error] values inspected
-// with errors.As. A WriteTo failure returns the writer's own error and
-// the built Plan. WriteJSON on a nil Plan is not an [*Error].
+// after the same checks. The default concurrency cap is 1. [Inspect]
+// returns a read-only workspace view. [Resume] occupies a released run
+// and continues remaining work. [Release] closes occupancy and leaves
+// documents and artifacts. Compose, Validate, BuildPlan, Run, Inspect,
+// Resume, and Release report defects as [*Error] values inspected with
+// errors.As. A WriteTo failure returns the writer's own error and the
+// built Plan. WriteJSON on a nil Plan is not an [*Error].
 //
 // PathSpec is the public parameterized path model. Locked concepts map to
 // exported fields and JSON keys:
@@ -25,9 +28,8 @@
 // DeriveRule, DeriveAppend, DeriveReplaceExt, Pipeline, NewPipeline,
 // Module, Branch, Merge, Task, Handle, TaskSpec, Bind, Group, Member,
 // Param, Resources, Script, Env, Graph, Compose, Validate, BuildPlan,
-// WriteTo, PlanOption, Plan, Run, Inspect, Resume, Error, Defect, DefectCode, and the
-// Defect* constants. PathSpec methods and builder methods belong to
-// those types.
+// WriteTo, PlanOption, Plan, Run, Inspect, Resume, Release, Error, Defect,
+// DefectCode, and the Defect* constants. PathSpec methods and builder
+// methods belong to those types.
 // The public surface is unsupported except these locked PathSpec concepts.
-// This package does not inspect or resume a pipeline.
 package gobble
