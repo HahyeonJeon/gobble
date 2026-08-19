@@ -50,8 +50,8 @@ func TestLinkedQCSharesPinPathSpecs(t *testing.T) {
 	assertIOPath(t, planTask(t, wgs, "sample1.fastp").Inputs, "r2", "in/test_2.fastq.gz")
 	assertIOPath(t, planTask(t, rna, "fastp").Inputs, "r1", "in/SRR6357072_1.fastq.gz")
 	assertIOPath(t, planTask(t, rna, "fastp").Inputs, "r2", "in/SRR6357072_2.fastq.gz")
-	assertIOPath(t, planTask(t, methyl, "fastp").Inputs, "r1", "in/test_1.fastq.gz")
-	assertIOPath(t, planTask(t, methyl, "fastp").Inputs, "r2", "in/test_2.fastq.gz")
+	assertIOPath(t, planTask(t, methyl, "fastp").Inputs, "r1", "in/Ecoli_10K_methylated_R1.fastq.gz")
+	assertIOPath(t, planTask(t, methyl, "fastp").Inputs, "r2", "in/Ecoli_10K_methylated_R2.fastq.gz")
 	assertIOPath(t, planTask(t, qc, "r1.fastqc").Inputs, "reads", "in/test_1.fastq.gz")
 	assertIOPath(t, planTask(t, qc, "r2.fastqc").Inputs, "reads", "in/test_2.fastq.gz")
 }

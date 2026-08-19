@@ -1,8 +1,12 @@
 package assets
 
 import (
+	"bufio"
+	"compress/gzip"
+	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
@@ -20,8 +24,8 @@ func TestBismarkMethylationExtractorStandaloneComposeBuildPlan(t *testing.T) {
 	if task.Name != "bismark_methylation_extractor" {
 		t.Fatalf("task name = %q, want bismark_methylation_extractor", task.Name)
 	}
-	if task.Image != bismarkImage {
-		t.Fatalf("image = %q, want %q", task.Image, bismarkImage)
+	if task.Image != wantBismarkImage {
+		t.Fatalf("image = %q, want %q", task.Image, wantBismarkImage)
 	}
 	if containsAll(task.Command, "--multicore") || containsAll(task.Command, "--parallel") {
 		t.Fatalf("command = %#v, extractor must not copy Resources.CPU", task.Command)
@@ -76,17 +80,12 @@ func TestBismarkMethylationExtractorNestedModule(t *testing.T) {
 
 func TestBismarkMethylationExtractorNestedRun(t *testing.T) {
 	requireDocker(t)
-	srcFASTA := cachePin(t, PinWGSGenomeFASTA)
-	srcR1 := cachePin(t, PinWGSTest1FASTQ)
-	srcR2 := cachePin(t, PinWGSTest2FASTQ)
 	dir := t.TempDir()
-	stageFile(t, dir, "in/genome.fasta", srcFASTA)
-	stageFile(t, dir, "in/test_1.fastq.gz", srcR1)
-	stageFile(t, dir, "in/test_2.fastq.gz", srcR2)
+	stageMethylPins(t, dir)
 	p := gobble.NewPipeline("methyl")
-	hf := p.AddInput("fasta", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genome", Ext: ".fasta"})
-	h1 := p.AddInput("r1", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_1", Ext: ".fastq.gz"})
-	h2 := p.AddInput("r2", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_2", Ext: ".fastq.gz"})
+	hf := p.AddInput("fasta", pinnedMethylFASTA())
+	h1 := p.AddInput("r1", pinnedMethylFASTQ1())
+	h2 := p.AddInput("r2", pinnedMethylFASTQ2())
 	idx := AddBismarkGenome(p, hf, BismarkGenomeOptions{Resources: gobble.Resources{CPU: 1}})
 	aln := AddBismarkAlign(p, hf, idx.Index, h1, h2, BismarkAlignOptions{Resources: gobble.Resources{CPU: 1}})
 	AddBismarkMethylationExtractor(p, aln.BAM, BismarkMethylationExtractorOptions{})
@@ -109,4 +108,58 @@ func TestBismarkMethylationExtractorNestedRun(t *testing.T) {
 			t.Fatalf("published %s: %v", rel, err)
 		}
 	}
+	unique := uniquePEAlignments(t, filepath.Join(dir, filepath.FromSlash("work/bismark-align/aligned_PE_report.txt")))
+	t.Logf("unique paired-end alignments = %d", unique)
+	assertUniqueAlignmentFloor(t, unique)
+	assertMethylationCallRows(t, unique,
+		filepath.Join(dir, filepath.FromSlash("work/bismark-extractor/CpG_context_aligned_pe.txt.gz")),
+		filepath.Join(dir, filepath.FromSlash("work/bismark-extractor/aligned_pe.bismark.cov.gz")),
+	)
+}
+
+func assertMethylationCallRows(t *testing.T, unique int, paths ...string) {
+	t.Helper()
+	rows := 0
+	for _, path := range paths {
+		n := methylationCallRows(t, path)
+		t.Logf("methylation call rows in %s = %d", filepath.Base(path), n)
+		rows += n
+	}
+	if unique > 0 && rows == 0 {
+		t.Fatalf("no methylation call row in %v", paths)
+	}
+}
+
+func methylationCallRows(t *testing.T, path string) int {
+	t.Helper()
+	f, err := os.Open(path)
+	if err != nil {
+		t.Fatalf("Open(%s): %v", path, err)
+	}
+	defer f.Close()
+	var r io.Reader = f
+	if strings.HasSuffix(path, ".gz") {
+		gz, err := gzip.NewReader(f)
+		if err != nil {
+			t.Fatalf("gzip %s: %v", path, err)
+		}
+		defer gz.Close()
+		r = gz
+	}
+	sc := bufio.NewScanner(r)
+	n := 0
+	for sc.Scan() {
+		line := strings.TrimSpace(sc.Text())
+		if line == "" || strings.HasPrefix(line, "Bismark") || strings.HasPrefix(line, "#") {
+			continue
+		}
+		if len(strings.Fields(line)) < 4 {
+			continue
+		}
+		n++
+	}
+	if err := sc.Err(); err != nil {
+		t.Fatalf("scan %s: %v", path, err)
+	}
+	return n
 }

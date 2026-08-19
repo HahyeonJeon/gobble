@@ -6,11 +6,9 @@ import (
 	"github.com/HahyeonJeon/gobble"
 )
 
-// bismarkImage is the biocontainers tag for the nf-core Bismark 3.1.0 pin
-// (modules/nf-core/bismark/genomepreparation environment.yml). Current
-// nf-core modules use a Seqera community image; this pin keeps the same
-// quay.io/biocontainers form as the other first-party assets.
-const bismarkImage = "quay.io/biocontainers/bismark:3.1.0--hfa8f182_0"
+// bismarkImage is the nf-core/methylseq 4.2.0 Bismark 0.25.1 Seqera
+// community image (modules/nf-core/bismark/* environment.yml).
+const bismarkImage = "community.wave.seqera.io/library/bismark:0.25.1--1f50935de5d79c47"
 
 const bismarkGenomeTaskName = "bismark_genome"
 
@@ -38,8 +36,12 @@ var bismarkGenomeMembers = []bismarkGenomeMember{
 	{name: "GA_mfa", sub: []string{"Bisulfite_Genome", "GA_conversion"}, file: "genome_mfa", ext: ".GA_conversion.fa"},
 }
 
-func bismarkGenomeFolder(spec gobble.PathSpec) gobble.Directory {
-	return spec.Dir
+func bismarkGenomeDir() gobble.Directory {
+	return gobble.Dir("work/bismark-genome")
+}
+
+func bismarkRestageFASTA() gobble.PathSpec {
+	return gobble.PathSpec{Dir: bismarkGenomeDir()}
 }
 
 func bismarkGenomeFolderToken(dir gobble.Directory) string {
@@ -55,9 +57,9 @@ func bismarkGenomeFolderToken(dir gobble.Directory) string {
 //
 // --parallel copies Resources.CPU when CPU is at least 2, as an integer.
 // Bismark requires --parallel >= 2, so CPU 1 omits the flag. The genome
-// folder is the FASTA PathSpec.Dir, the parent of Bisulfite_Genome, not
-// a directory port. Isolate restage of an input bind does not copy the
-// FASTA, so the index is written next to it.
+// folder is work/bismark-genome, the restaged FASTA dest and parent of
+// Bisulfite_Genome, not a directory port. Isolate copies the FASTA From
+// path onto that dest.
 type BismarkGenomeOptions struct {
 	ExtraArgs []string
 	Resources gobble.Resources
@@ -70,8 +72,8 @@ type BismarkGenomePorts struct {
 
 // AddBismarkGenome records one bismark_genome_preparation task on parent.
 // Index siblings are a Group of regular files under Bisulfite_Genome.
-// The parent folder is PathSpec.Dir, not a directory port. The shared
-// builder does not call AddInput.
+// The parent folder is the restaged FASTA dest, not a directory port.
+// The shared builder does not call AddInput.
 func AddBismarkGenome(parent Parent, fasta gobble.Handle, opts BismarkGenomeOptions) BismarkGenomePorts {
 	return addBismarkGenome(parent, fasta, opts)
 }
@@ -85,7 +87,7 @@ func BismarkGenomePipeline(fasta gobble.PathSpec, opts BismarkGenomeOptions) *go
 }
 
 func addBismarkGenome(parent Parent, fasta gobble.Handle, opts BismarkGenomeOptions) BismarkGenomePorts {
-	folder := bismarkGenomeFolder(fasta.Spec())
+	folder := bismarkGenomeDir()
 
 	cmd := []string{"bismark_genome_preparation", "--bowtie2"}
 	if n := threadCount(opts.Resources.CPU); n >= 2 {
@@ -98,11 +100,19 @@ func addBismarkGenome(parent Parent, fasta gobble.Handle, opts BismarkGenomeOpti
 		Name:      bismarkGenomeTaskName,
 		Command:   cmd,
 		Image:     bismarkImage,
-		Inputs:    []gobble.Bind{{Name: "fasta", From: fasta}},
+		Inputs:    []gobble.Bind{{Name: "fasta", From: fasta, Spec: bismarkRestageFASTA()}},
 		Outputs:   []gobble.Bind{{Name: "index", Group: bismarkGenomeGroup(folder)}},
 		Resources: opts.Resources,
 	})
 	return BismarkGenomePorts{Index: task.Out("index")}
+}
+
+func mustCommandPath(spec gobble.PathSpec) string {
+	path, err := CommandPath(spec)
+	if err != nil {
+		panic(err)
+	}
+	return path
 }
 
 func bismarkGenomeGroup(dir gobble.Directory) gobble.Group {

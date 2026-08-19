@@ -150,6 +150,7 @@ type planParamRec struct {
 type planIORec struct {
 	Name    string `json:"name"`
 	Path    string `json:"path"`
+	Source  string `json:"source"`
 	Members []struct {
 		Name string `json:"name"`
 		Path string `json:"path"`
@@ -192,6 +193,19 @@ func assertIOPath(t *testing.T, ios []planIORec, name, path string) {
 		if io.Name == name {
 			if io.Path != path {
 				t.Fatalf("%s path = %q, want %q", name, io.Path, path)
+			}
+			return
+		}
+	}
+	t.Fatalf("missing IO %q in %#v", name, ios)
+}
+
+func assertIOSource(t *testing.T, ios []planIORec, name, source string) {
+	t.Helper()
+	for _, io := range ios {
+		if io.Name == name {
+			if io.Source != source {
+				t.Fatalf("%s source = %q, want %q", name, io.Source, source)
 			}
 			return
 		}

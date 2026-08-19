@@ -3,6 +3,8 @@ package assets
 import (
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
@@ -22,15 +24,15 @@ func TestBismarkAlignStandaloneComposeBuildPlan(t *testing.T) {
 	if task.Name != "bismark_align" {
 		t.Fatalf("task name = %q, want bismark_align", task.Name)
 	}
-	if task.Image != bismarkImage {
-		t.Fatalf("image = %q, want %q", task.Image, bismarkImage)
+	if task.Image != wantBismarkImage {
+		t.Fatalf("image = %q, want %q", task.Image, wantBismarkImage)
 	}
 	if commandHasSamtools(task.Command) {
 		t.Fatalf("command = %#v, must not contain samtools", task.Command)
 	}
 	if !containsAll(task.Command,
 		"bismark",
-		"--genome", "in",
+		"--genome", "work/bismark-genome",
 		"--bam",
 		"--output_dir", "work/bismark-align",
 		"--basename", "aligned",
@@ -46,9 +48,17 @@ func TestBismarkAlignStandaloneComposeBuildPlan(t *testing.T) {
 		t.Fatalf("command tail = %#v, want [--quiet]", task.Command)
 	}
 	assertUniqueParamNames(t, task.Params)
-	assertIOPath(t, task.Inputs, "fasta", "in/genome.fasta")
+	assertIOPath(t, task.Inputs, "fasta", "work/bismark-genome/genome.fasta")
+	assertIOSource(t, task.Inputs, "fasta", "in/genome.fasta")
 	assertIOPath(t, task.Outputs, "bam", "work/bismark-align/aligned_pe.bam")
-	assertGroupMembers(t, task.Inputs, "index", wantBismarkGenomeMembers("in"))
+	assertIOPath(t, task.Outputs, "report", "work/bismark-align/aligned_PE_report.txt")
+	assertGroupMembers(t, task.Inputs, "index", wantBismarkGenomeMembers("work/bismark-genome"))
+	assertNoTaskName(t, planAllTasks(t, raw), "index_files")
+	for _, rec := range planAllTasks(t, raw) {
+		if len(rec.Command) == 1 && rec.Command[0] == "true" {
+			t.Fatalf("fixture task %s still present", rec.ID)
+		}
+	}
 }
 
 func TestBismarkAlignNestedModule(t *testing.T) {
@@ -62,8 +72,8 @@ func TestBismarkAlignNestedModule(t *testing.T) {
 	mod := AddModule(p, "align")
 	idx := AddBismarkGenome(mod, hf, BismarkGenomeOptions{ExtraArgs: []string{"--verbose"}})
 	ports := AddBismarkAlign(mod, hf, idx.Index, h1, h2, BismarkAlignOptions{ExtraArgs: []string{"--quiet"}})
-	if ports.BAM.IsZero() {
-		t.Fatalf("ports.BAM IsZero = true, want false")
+	if ports.BAM.IsZero() || ports.Report.IsZero() {
+		t.Fatalf("ports BAM/Report IsZero = %v/%v, want false", ports.BAM.IsZero(), ports.Report.IsZero())
 	}
 	raw := mustPlanJSON(t, p)
 	task := planTask(t, raw, "align.bismark_align")
@@ -77,22 +87,18 @@ func TestBismarkAlignNestedModule(t *testing.T) {
 		t.Fatalf("command = %#v, want extra-args", task.Command)
 	}
 	assertIOPath(t, task.Outputs, "bam", "work/bismark-align/aligned_pe.bam")
-	assertGroupMembers(t, task.Inputs, "index", wantBismarkGenomeMembers("in"))
+	assertIOPath(t, task.Outputs, "report", "work/bismark-align/aligned_PE_report.txt")
+	assertGroupMembers(t, task.Inputs, "index", wantBismarkGenomeMembers("work/bismark-genome"))
 }
 
 func TestBismarkAlignNestedRun(t *testing.T) {
 	requireDocker(t)
-	srcFASTA := cachePin(t, PinWGSGenomeFASTA)
-	srcR1 := cachePin(t, PinWGSTest1FASTQ)
-	srcR2 := cachePin(t, PinWGSTest2FASTQ)
 	dir := t.TempDir()
-	stageFile(t, dir, "in/genome.fasta", srcFASTA)
-	stageFile(t, dir, "in/test_1.fastq.gz", srcR1)
-	stageFile(t, dir, "in/test_2.fastq.gz", srcR2)
+	stageMethylPins(t, dir)
 	p := gobble.NewPipeline("methyl")
-	hf := p.AddInput("fasta", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genome", Ext: ".fasta"})
-	h1 := p.AddInput("r1", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_1", Ext: ".fastq.gz"})
-	h2 := p.AddInput("r2", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_2", Ext: ".fastq.gz"})
+	hf := p.AddInput("fasta", pinnedMethylFASTA())
+	h1 := p.AddInput("r1", pinnedMethylFASTQ1())
+	h2 := p.AddInput("r2", pinnedMethylFASTQ2())
 	idx := AddBismarkGenome(p, hf, BismarkGenomeOptions{Resources: gobble.Resources{CPU: 1}})
 	AddBismarkAlign(p, hf, idx.Index, h1, h2, BismarkAlignOptions{Resources: gobble.Resources{CPU: 1}})
 	g, err := gobble.Compose(p)
@@ -105,5 +111,41 @@ func TestBismarkAlignNestedRun(t *testing.T) {
 	info, err := os.Stat(filepath.Join(dir, filepath.FromSlash("work/bismark-align/aligned_pe.bam")))
 	if err != nil || !info.Mode().IsRegular() {
 		t.Fatalf("published BAM: %v", err)
+	}
+	unique := uniquePEAlignments(t, filepath.Join(dir, filepath.FromSlash("work/bismark-align/aligned_PE_report.txt")))
+	t.Logf("unique paired-end alignments = %d", unique)
+	assertUniqueAlignmentFloor(t, unique)
+}
+
+const uniquePEAlignmentField = "Number of paired-end alignments with a unique best hit:"
+
+func uniquePEAlignments(t *testing.T, path string) int {
+	t.Helper()
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("ReadFile(%s): %v", path, err)
+	}
+	for _, line := range strings.Split(string(data), "\n") {
+		if !strings.Contains(line, uniquePEAlignmentField) {
+			continue
+		}
+		_, value, ok := strings.Cut(line, ":")
+		if !ok {
+			t.Fatalf("unique-alignment line %q missing value", line)
+		}
+		n, err := strconv.Atoi(strings.TrimSpace(value))
+		if err != nil {
+			t.Fatalf("unique-alignment count in %q: %v", line, err)
+		}
+		return n
+	}
+	t.Fatalf("%s missing unique-alignment field %q", path, uniquePEAlignmentField)
+	return 0
+}
+
+func assertUniqueAlignmentFloor(t *testing.T, unique int) {
+	t.Helper()
+	if unique < 1 {
+		t.Fatalf("unique paired-end alignments = %d, want floor > 0", unique)
 	}
 }

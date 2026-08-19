@@ -8,6 +8,8 @@ import (
 	"github.com/HahyeonJeon/gobble"
 )
 
+const wantBismarkImage = "community.wave.seqera.io/library/bismark:0.25.1--1f50935de5d79c47"
+
 func TestBismarkGenomeStandaloneComposeBuildPlan(t *testing.T) {
 	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genome", Ext: ".fasta"}
 	opts := BismarkGenomeOptions{
@@ -20,24 +22,28 @@ func TestBismarkGenomeStandaloneComposeBuildPlan(t *testing.T) {
 	if task.Name != "bismark_genome" {
 		t.Fatalf("task name = %q, want bismark_genome", task.Name)
 	}
-	if task.Image != bismarkImage {
-		t.Fatalf("image = %q, want %q", task.Image, bismarkImage)
+	if bismarkImage != wantBismarkImage {
+		t.Fatalf("bismarkImage = %q, want %q", bismarkImage, wantBismarkImage)
+	}
+	if task.Image != wantBismarkImage {
+		t.Fatalf("image = %q, want %q", task.Image, wantBismarkImage)
 	}
 	if !containsAll(task.Command,
 		"bismark_genome_preparation", "--bowtie2",
 		"--parallel", "2",
 		"--verbose",
-		"in",
+		"work/bismark-genome",
 	) {
 		t.Fatalf("command = %#v, want named flags then extra-args then folder", task.Command)
 	}
 	n := len(task.Command)
-	if n < 2 || task.Command[n-2] != "--verbose" || task.Command[n-1] != "in" {
-		t.Fatalf("command tail = %#v, want [--verbose in]", task.Command)
+	if n < 2 || task.Command[n-2] != "--verbose" || task.Command[n-1] != "work/bismark-genome" {
+		t.Fatalf("command tail = %#v, want [--verbose work/bismark-genome]", task.Command)
 	}
 	assertUniqueParamNames(t, task.Params)
-	assertIOPath(t, task.Inputs, "fasta", "in/genome.fasta")
-	assertGroupMembers(t, task.Outputs, "index", wantBismarkGenomeMembers("in"))
+	assertIOPath(t, task.Inputs, "fasta", "work/bismark-genome/genome.fasta")
+	assertIOSource(t, task.Inputs, "fasta", "in/genome.fasta")
+	assertGroupMembers(t, task.Outputs, "index", wantBismarkGenomeMembers("work/bismark-genome"))
 }
 
 func TestBismarkGenomeNestedModule(t *testing.T) {
@@ -60,15 +66,15 @@ func TestBismarkGenomeNestedModule(t *testing.T) {
 	if !containsAll(task.Command, "--verbose") {
 		t.Fatalf("command = %#v, want extra-args", task.Command)
 	}
-	assertGroupMembers(t, task.Outputs, "index", wantBismarkGenomeMembers("in"))
+	assertGroupMembers(t, task.Outputs, "index", wantBismarkGenomeMembers("work/bismark-genome"))
 }
 
 func TestBismarkGenomeStandaloneRun(t *testing.T) {
 	requireDocker(t)
-	src := cachePin(t, PinWGSGenomeFASTA)
+	src := cachePin(t, PinMethylGenomeFASTA)
 	dir := t.TempDir()
-	stageFile(t, dir, "in/genome.fasta", src)
-	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genome", Ext: ".fasta"}
+	stageFile(t, dir, "in/genome.fa", src)
+	fasta := pinnedMethylFASTA()
 	p := BismarkGenomePipeline(fasta, BismarkGenomeOptions{Resources: gobble.Resources{CPU: 1}})
 	g, err := gobble.Compose(p)
 	if err != nil {
@@ -77,7 +83,10 @@ func TestBismarkGenomeStandaloneRun(t *testing.T) {
 	if err := gobble.Run(g, dir, 1); err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
-	for _, rel := range bismarkGenomePublishedPaths("in") {
+	if _, err := os.Stat(filepath.Join(dir, filepath.FromSlash("in/Bisulfite_Genome"))); !os.IsNotExist(err) {
+		t.Fatalf("Bisulfite_Genome written into in/: %v", err)
+	}
+	for _, rel := range bismarkGenomePublishedPaths("work/bismark-genome") {
 		info, err := os.Stat(filepath.Join(dir, filepath.FromSlash(rel)))
 		if err != nil || !info.Mode().IsRegular() {
 			t.Fatalf("published %s: %v", rel, err)
@@ -113,4 +122,11 @@ func bismarkGenomePublishedPaths(dir string) []string {
 		out[i] = m.Path
 	}
 	return out
+}
+
+func stageMethylPins(t *testing.T, dir string) {
+	t.Helper()
+	stageFile(t, dir, "in/genome.fa", cachePin(t, PinMethylGenomeFASTA))
+	stageFile(t, dir, "in/Ecoli_10K_methylated_R1.fastq.gz", cachePin(t, PinMethylTest1FASTQ))
+	stageFile(t, dir, "in/Ecoli_10K_methylated_R2.fastq.gz", cachePin(t, PinMethylTest2FASTQ))
 }

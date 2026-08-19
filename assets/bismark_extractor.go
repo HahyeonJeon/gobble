@@ -24,7 +24,7 @@ func bismarkExtractorDir(dir gobble.Directory) gobble.Directory {
 // after named flags and before the BAM path.
 //
 // --parallel (alias --multicore) is not copied from Resources.CPU. The
-// 3.1.0 extractor defaults to 1 and floors BAM workers at 2. Callers
+// 0.25.1 extractor defaults to 1 and allows --parallel >= 1. Callers
 // pass --parallel via ExtraArgs. OutDir is --output_dir, the parent
 // folder of the declared reports.
 type BismarkMethylationExtractorOptions struct {
@@ -69,9 +69,7 @@ func addBismarkMethylationExtractor(parent Parent, bam gobble.Handle, opts Bisma
 
 	cmd := []string{"bismark_methylation_extractor", "--bedGraph", "--counts", "--gzip", "--report", "--comprehensive", "-p", "--output_dir", outDir.String()}
 	cmd = AppendExtraArgs(cmd, opts.ExtraArgs)
-	if path, err := CommandPath(bam.Spec()); err == nil {
-		cmd = append(cmd, path)
-	}
+	cmd = append(cmd, mustCommandPath(bam.Spec()))
 
 	task := AddTask(parent, gobble.TaskSpec{
 		Name:    bismarkExtractorTaskName,
