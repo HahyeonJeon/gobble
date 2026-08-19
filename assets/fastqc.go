@@ -57,9 +57,7 @@ func addFastQC(parent Parent, reads gobble.Handle, opts FastQCOptions) FastQCPor
 	if n := threadCount(opts.Resources.CPU); n > 0 {
 		cmd = append(cmd, "--threads", strconv.Itoa(n))
 	}
-	if path, err := CommandPath(reads.Spec()); err == nil {
-		cmd = append(cmd, path)
-	}
+	cmd = append(cmd, mustCommandPath(reads.Spec()))
 	cmd = AppendExtraArgs(cmd, opts.ExtraArgs)
 
 	task := AddTask(parent, gobble.TaskSpec{
@@ -80,14 +78,12 @@ func addFastQC(parent Parent, reads gobble.Handle, opts FastQCOptions) FastQCPor
 // FastQC strips one compression suffix and one sequence suffix from the
 // input basename.
 func fastqcStem(spec gobble.PathSpec) string {
-	path, err := CommandPath(spec)
+	path := mustCommandPath(spec)
 	base := spec.Name
-	if err == nil {
-		if i := strings.LastIndex(path, "/"); i >= 0 {
-			base = path[i+1:]
-		} else {
-			base = path
-		}
+	if i := strings.LastIndex(path, "/"); i >= 0 {
+		base = path[i+1:]
+	} else if path != "" {
+		base = path
 	}
 	if base == "" {
 		base = "reads"

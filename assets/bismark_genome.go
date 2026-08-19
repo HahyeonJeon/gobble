@@ -107,14 +107,6 @@ func addBismarkGenome(parent Parent, fasta gobble.Handle, opts BismarkGenomeOpti
 	return BismarkGenomePorts{Index: task.Out("index")}
 }
 
-func mustCommandPath(spec gobble.PathSpec) string {
-	path, err := CommandPath(spec)
-	if err != nil {
-		panic(err)
-	}
-	return path
-}
-
 func bismarkGenomeGroup(dir gobble.Directory) gobble.Group {
 	g := make(gobble.Group, 0, len(bismarkGenomeMembers))
 	for _, m := range bismarkGenomeMembers {

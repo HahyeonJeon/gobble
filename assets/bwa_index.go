@@ -44,9 +44,7 @@ func BWAIndexPipeline(fasta gobble.PathSpec, opts BWAIndexOptions) *gobble.Pipel
 func addBWAIndex(parent Parent, fasta gobble.Handle, opts BWAIndexOptions) BWAIndexPorts {
 	cmd := []string{"bwa", "index"}
 	cmd = AppendExtraArgs(cmd, opts.ExtraArgs)
-	if path, err := CommandPath(fasta.Spec()); err == nil {
-		cmd = append(cmd, path)
-	}
+	cmd = append(cmd, mustCommandPath(fasta.Spec()))
 
 	task := AddTask(parent, gobble.TaskSpec{
 		Name:      bwaIndexTaskName,

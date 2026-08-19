@@ -47,12 +47,7 @@ func addSamtoolsIndex(parent Parent, bam gobble.Handle, opts SamtoolsIndexOption
 		cmd = append(cmd, "-@", strconv.Itoa(n))
 	}
 	cmd = AppendExtraArgs(cmd, opts.ExtraArgs)
-	if path, err := CommandPath(bam.Spec()); err == nil {
-		cmd = append(cmd, path)
-	}
-	if path, err := CommandPath(baiSpec); err == nil {
-		cmd = append(cmd, path)
-	}
+	cmd = append(cmd, mustCommandPath(bam.Spec()), mustCommandPath(baiSpec))
 
 	task := AddTask(parent, gobble.TaskSpec{
 		Name:    samtoolsIndexTaskName,

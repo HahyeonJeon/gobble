@@ -37,7 +37,16 @@ func AddModule(parent ModuleParent, name string) *gobble.Module {
 }
 
 // CommandPath renders spec as one Command token. Assets must build argv from
-// the same PathSpec the binds declare.
+// the same PathSpec the binds declare. Tests call this helper; builders call
+// mustCommandPath so a render error panics at author time.
 func CommandPath(spec gobble.PathSpec) (string, error) {
 	return spec.Render()
+}
+
+func mustCommandPath(spec gobble.PathSpec) string {
+	path, err := CommandPath(spec)
+	if err != nil {
+		panic(err)
+	}
+	return path
 }

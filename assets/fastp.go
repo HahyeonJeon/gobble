@@ -61,26 +61,16 @@ func addFastp(parent Parent, r1, r2 gobble.Handle, opts FastpOptions) FastpPorts
 	jsonSpec := gobble.PathSpec{Dir: outDir, Name: prefix, Ext: ".fastp.json"}
 	htmlSpec := gobble.PathSpec{Dir: outDir, Name: prefix, Ext: ".fastp.html"}
 
-	cmd := []string{"fastp"}
-	if path, err := CommandPath(r1.Spec()); err == nil {
-		cmd = append(cmd, "--in1", path)
+	cmd := []string{
+		"fastp",
+		"--in1", mustCommandPath(r1.Spec()),
+		"--in2", mustCommandPath(r2.Spec()),
+		"--out1", mustCommandPath(cleanR1),
+		"--out2", mustCommandPath(cleanR2),
+		"--json", mustCommandPath(jsonSpec),
+		"--html", mustCommandPath(htmlSpec),
+		"--detect_adapter_for_pe",
 	}
-	if path, err := CommandPath(r2.Spec()); err == nil {
-		cmd = append(cmd, "--in2", path)
-	}
-	if path, err := CommandPath(cleanR1); err == nil {
-		cmd = append(cmd, "--out1", path)
-	}
-	if path, err := CommandPath(cleanR2); err == nil {
-		cmd = append(cmd, "--out2", path)
-	}
-	if path, err := CommandPath(jsonSpec); err == nil {
-		cmd = append(cmd, "--json", path)
-	}
-	if path, err := CommandPath(htmlSpec); err == nil {
-		cmd = append(cmd, "--html", path)
-	}
-	cmd = append(cmd, "--detect_adapter_for_pe")
 	if n := threadCount(opts.Resources.CPU); n > 0 {
 		cmd = append(cmd, "--thread", strconv.Itoa(n))
 	}

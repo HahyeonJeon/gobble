@@ -56,25 +56,9 @@ func addBWAMem(parent Parent, fasta, index, r1, r2 gobble.Handle, opts BWAMemOpt
 	if n := threadCount(opts.Resources.CPU); n > 0 {
 		cmd = append(cmd, "-t", strconv.Itoa(n))
 	}
-	samPath, err := CommandPath(samSpec)
-	if err != nil {
-		panic(err)
-	}
-	cmd = append(cmd, "-o", samPath)
+	cmd = append(cmd, "-o", mustCommandPath(samSpec))
 	cmd = AppendExtraArgs(cmd, opts.ExtraArgs)
-	fastaPath, err := CommandPath(fasta.Spec())
-	if err != nil {
-		panic(err)
-	}
-	r1Path, err := CommandPath(r1.Spec())
-	if err != nil {
-		panic(err)
-	}
-	r2Path, err := CommandPath(r2.Spec())
-	if err != nil {
-		panic(err)
-	}
-	cmd = append(cmd, fastaPath, r1Path, r2Path)
+	cmd = append(cmd, mustCommandPath(fasta.Spec()), mustCommandPath(r1.Spec()), mustCommandPath(r2.Spec()))
 
 	task := AddTask(parent, gobble.TaskSpec{
 		Name:    bwaMemTaskName,

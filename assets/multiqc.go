@@ -60,9 +60,7 @@ func addMultiQC(parent Parent, reports []gobble.Handle, opts MultiQCOptions) Mul
 	inputs := make([]gobble.Bind, 0, len(reports))
 	for i, report := range reports {
 		inputs = append(inputs, gobble.Bind{Name: multiqcReportBind(i), From: report})
-		if path, err := CommandPath(report.Spec()); err == nil {
-			cmd = append(cmd, path)
-		}
+		cmd = append(cmd, mustCommandPath(report.Spec()))
 	}
 	cmd = AppendExtraArgs(cmd, opts.ExtraArgs)
 

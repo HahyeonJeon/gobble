@@ -117,9 +117,9 @@ func addSTARGenomeGenerate(parent Parent, fasta, gtf gobble.Handle, opts STARGen
 	sjdb := !gtf.IsZero()
 
 	cmd := []string{"STAR", "--runMode", "genomeGenerate", "--genomeDir", outDir.String()}
-	cmd = append(cmd, "--genomeFastaFiles", starCommandPath(fasta.Spec()))
+	cmd = append(cmd, "--genomeFastaFiles", mustCommandPath(fasta.Spec()))
 	if sjdb {
-		cmd = append(cmd, "--sjdbGTFfile", starCommandPath(gtf.Spec()))
+		cmd = append(cmd, "--sjdbGTFfile", mustCommandPath(gtf.Spec()))
 	}
 	if n := threadCount(opts.Resources.CPU); n > 0 {
 		cmd = append(cmd, "--runThreadN", strconv.Itoa(n))
@@ -158,16 +158,6 @@ func starGenomeGroupFrom(sjdb bool) gobble.Group {
 		g = append(g, gobble.Member{Name: f.member})
 	}
 	return g
-}
-
-// starCommandPath renders spec for a STAR argv token. A render error
-// still returns an empty token so the flag is not silently omitted.
-func starCommandPath(spec gobble.PathSpec) string {
-	path, err := CommandPath(spec)
-	if err != nil {
-		return ""
-	}
-	return path
 }
 
 func pathSpecUnset(p gobble.PathSpec) bool {

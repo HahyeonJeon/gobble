@@ -77,8 +77,8 @@ func addSTARAlign(parent Parent, index, r1, r2 gobble.Handle, opts STARAlignOpti
 	bamSpec := gobble.PathSpec{Dir: outDir, Name: "Aligned", Ext: ".out.bam"}
 	logSpec := gobble.PathSpec{Dir: outDir, Name: "Log", Ext: ".final.out"}
 
-	r1path := starCommandPath(r1.Spec())
-	r2path := starCommandPath(r2.Spec())
+	r1path := mustCommandPath(r1.Spec())
+	r2path := mustCommandPath(r2.Spec())
 	cmd := []string{"STAR", "--genomeDir", genomeDir.String(), "--readFilesIn", r1path, r2path}
 	if strings.HasSuffix(strings.ToLower(r1path), ".gz") {
 		cmd = append(cmd, "--readFilesCommand", "zcat")

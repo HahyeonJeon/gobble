@@ -52,13 +52,9 @@ func addSamtoolsSort(parent Parent, sam gobble.Handle, opts SamtoolsSortOptions)
 	if n := threadCount(opts.Resources.CPU); n > 0 {
 		cmd = append(cmd, "-@", strconv.Itoa(n))
 	}
-	if path, err := CommandPath(bamSpec); err == nil {
-		cmd = append(cmd, "-o", path)
-	}
+	cmd = append(cmd, "-o", mustCommandPath(bamSpec))
 	cmd = AppendExtraArgs(cmd, opts.ExtraArgs)
-	if path, err := CommandPath(sam.Spec()); err == nil {
-		cmd = append(cmd, path)
-	}
+	cmd = append(cmd, mustCommandPath(sam.Spec()))
 
 	task := AddTask(parent, gobble.TaskSpec{
 		Name:      samtoolsSortTaskName,
