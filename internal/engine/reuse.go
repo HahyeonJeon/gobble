@@ -1,10 +1,22 @@
 package engine
 
+import "strings"
+
 // Pre-execute reuse classification. Resume writes these; Inspect only reads.
 const (
 	reuseReused             = "reused"
 	reuseRerun              = "rerun"
 	decisionBlockedUpstream = "blocked-upstream"
+)
+
+// Closed graph-diff Change classes. Resume persists these; first Run omits them.
+const (
+	changeAdded           = "Added"
+	changeRemoved         = "Removed"
+	changeRewired         = "Rewired"
+	changeRepathed        = "Repathed"
+	changeIdentityChanged = "IdentityChanged"
+	changeUnchanged       = "Unchanged"
 )
 
 // Closed reuse reasons shared by Inspect and Resume.
@@ -32,6 +44,7 @@ type reuseDecision struct {
 	Decision  string
 	Reason    string
 	Differing []string
+	Change    string
 }
 
 type remainingClass struct {
@@ -288,16 +301,28 @@ func classifyResume(workspace string, recorded, supplied Document, tasks []jsonT
 	for _, st := range latest {
 		byIdent[reservedIdentity(taskPlanFromState(st))] = st
 	}
+	recByIdent := taskPlanByIdentity(recorded)
 	out := remainingClass{
-		Remaining: make(map[string]bool, len(supplied.Tasks)),
-		Affected:  make(map[string]bool, len(supplied.Tasks)),
-		Decision:  make(map[string]reuseDecision, len(supplied.Tasks)),
+		Remaining: make(map[string]bool, len(supplied.Tasks)+len(recByIdent)),
+		Affected:  make(map[string]bool, len(supplied.Tasks)+len(recByIdent)),
+		Decision:  make(map[string]reuseDecision, len(supplied.Tasks)+len(recByIdent)),
 	}
 	taskIDOf := make(map[string]string, len(supplied.Tasks))
 	identsOfTask := make(map[string][]string)
+	suppliedIdent := make(map[string]bool, len(supplied.Tasks))
 	for _, t := range supplied.Tasks {
 		applyReservedDefaults(&t)
 		ident := reservedIdentity(t)
+		suppliedIdent[ident] = true
+		taskIDOf[ident] = t.ID
+		identsOfTask[t.ID] = append(identsOfTask[t.ID], ident)
+		rec, inRecorded := recByIdent[ident]
+		if !inRecorded {
+			out.Decision[ident] = reuseDecision{Identity: ident, Decision: reuseRerun, Change: changeAdded}
+			out.Remaining[ident] = true
+			out.Affected[ident] = true
+			continue
+		}
 		st, ok := byIdent[ident]
 		if !ok {
 			st = jsonTaskState{
@@ -314,11 +339,29 @@ func classifyResume(workspace string, recorded, supplied Document, tasks []jsonT
 				Env:        copyStringMap(t.Env),
 			}
 		}
-		rec, _ := planTaskByID(recorded, t.ID)
 		dec := classifyReuse(workspace, st, rec, t)
+		switch {
+		case incomingEndpointsDiffer(recorded, supplied, t.ID):
+			if dec.Decision == reuseReused {
+				dec.Reason = ""
+				dec.Differing = nil
+			}
+			dec.Decision = reuseRerun
+			dec.Change = changeRewired
+		case waitOrDestDiffer(recorded, supplied, rec, t):
+			if dec.Decision == reuseReused {
+				dec.Reason = ""
+				dec.Differing = nil
+			}
+			dec.Decision = reuseRerun
+			dec.Change = changeRepathed
+		case dec.Decision == reuseReused:
+			dec.Change = changeUnchanged
+		default:
+			dec.Change = changeIdentityChanged
+		}
+		dec.Identity = ident
 		out.Decision[ident] = dec
-		taskIDOf[ident] = t.ID
-		identsOfTask[t.ID] = append(identsOfTask[t.ID], ident)
 		if st.Status != StatusSucceeded {
 			out.Remaining[ident] = true
 		}
@@ -326,13 +369,97 @@ func classifyResume(workspace string, recorded, supplied Document, tasks []jsonT
 			out.Affected[ident] = true
 		}
 	}
+	for ident := range recByIdent {
+		if suppliedIdent[ident] {
+			continue
+		}
+		out.Decision[ident] = reuseDecision{Identity: ident, Change: changeRemoved}
+	}
 	for ident, dec := range out.Decision {
-		if dec.Decision == reuseReused {
+		if dec.Decision != reuseRerun {
 			continue
 		}
 		markDownstreamAffected(out.Affected, out.Decision, supplied, taskIDOf[ident], identsOfTask)
 	}
 	return out
+}
+
+func taskPlanByIdentity(doc Document) map[string]TaskPlan {
+	out := make(map[string]TaskPlan, len(doc.Tasks))
+	for _, t := range doc.Tasks {
+		applyReservedDefaults(&t)
+		out[reservedIdentity(t)] = t
+	}
+	return out
+}
+
+func incomingEndpointsDiffer(recorded, supplied Document, taskID string) bool {
+	return !sameStringSet(incomingEndpointSet(recorded, taskID), incomingEndpointSet(supplied, taskID))
+}
+
+func waitOrDestDiffer(recorded, supplied Document, rec, cur TaskPlan) bool {
+	if !sameStringMap(incomingWaitMap(recorded, rec.ID), incomingWaitMap(supplied, cur.ID)) {
+		return true
+	}
+	return !sameStringSet(destPathSet(rec), destPathSet(cur))
+}
+
+func incomingEndpointSet(doc Document, taskID string) map[string]bool {
+	out := make(map[string]bool)
+	for _, e := range doc.Edges {
+		if e.ToTask != taskID {
+			continue
+		}
+		out[endpointKey(e)] = true
+	}
+	return out
+}
+
+func incomingWaitMap(doc Document, taskID string) map[string]string {
+	out := make(map[string]string)
+	for _, e := range doc.Edges {
+		if e.ToTask != taskID {
+			continue
+		}
+		out[endpointKey(e)] = strings.Join(e.Wait, "\x01")
+	}
+	return out
+}
+
+func endpointKey(e Edge) string {
+	return e.FromTask + "\x00" + e.FromPort + "\x00" + e.ToTask + "\x00" + e.ToPort
+}
+
+func destPathSet(t TaskPlan) map[string]bool {
+	out := make(map[string]bool)
+	for _, f := range declaredIOFiles(t.Outputs) {
+		out[f.path] = true
+	}
+	return out
+}
+
+func sameStringSet(a, b map[string]bool) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for k := range a {
+		if !b[k] {
+			return false
+		}
+	}
+	return true
+}
+
+func sameStringMap(a, b map[string]string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for k, v := range a {
+		if b[k] != v {
+			return false
+		}
+	}
+	return true
 }
 
 func reusePlans(doc Document, st jsonTaskState) (recorded, current TaskPlan) {

@@ -498,6 +498,7 @@ type inspectRemainingDoc struct {
 	Status        string   `json:"status"`
 	Reason        string   `json:"reason,omitempty"`
 	Differing     []string `json:"differing,omitempty"`
+	Change        string   `json:"change,omitempty"`
 }
 
 func inspectRemainingRecords(workspace string, doc Document, latest []jsonTaskState, instance string, schema int) []inspectRemainingDoc {
@@ -517,6 +518,7 @@ func inspectRemainingRecords(workspace string, doc Document, latest []jsonTaskSt
 			Remaining:     class.Remaining[ident],
 			Affected:      class.Affected[ident],
 			Status:        st.Status,
+			Change:        st.Change,
 		}
 		if dec, ok := class.Decision[ident]; ok {
 			rec.Reason = dec.Reason
@@ -533,6 +535,7 @@ type inspectReuseDoc struct {
 	Decision      string   `json:"decision"`
 	Reason        string   `json:"reason"`
 	Differing     []string `json:"differing,omitempty"`
+	Change        string   `json:"change,omitempty"`
 }
 
 func inspectReuseRecords(tasks []jsonTaskState, schema int) []inspectReuseDoc {
@@ -547,6 +550,7 @@ func inspectReuseRecords(tasks []jsonTaskState, schema int) []inspectReuseDoc {
 			Decision:      st.Decision,
 			Reason:        reuseReasonOf(st),
 			Differing:     st.Differing,
+			Change:        st.Change,
 		})
 	}
 	return out

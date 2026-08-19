@@ -39,7 +39,6 @@ const (
 	DefectForeignHost        = "foreign-host"
 	DefectUnsupportedSchema  = "unsupported-schema"
 	DefectNothingToResume    = "nothing-to-resume"
-	DefectPlanDrift          = "plan-drift"
 	DefectCanceled           = "canceled"
 )
 

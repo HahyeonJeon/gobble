@@ -57,9 +57,6 @@ const (
 	DefectUnsupportedSchema DefectCode = "unsupported-schema"
 	// DefectNothingToResume means the workspace has no run document.
 	DefectNothingToResume DefectCode = "nothing-to-resume"
-	// DefectPlanDrift means the supplied graph task set or edges differ
-	// from the recorded plan.
-	DefectPlanDrift DefectCode = "plan-drift"
 	// DefectCanceled means Run or Resume stopped because its context
 	// was done. Occupancy stays active.
 	DefectCanceled DefectCode = "canceled"

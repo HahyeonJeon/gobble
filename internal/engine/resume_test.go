@@ -9,51 +9,136 @@ import (
 	"github.com/HahyeonJeon/gobble/internal/engine/exec"
 )
 
-func TestPlanDriftTaskSetAndEdges(t *testing.T) {
-	base := Document{
-		Tasks: []TaskPlan{{ID: "a"}, {ID: "b"}},
-		Edges: []Edge{{FromTask: "a", FromPort: "out", ToTask: "b", ToPort: "in"}},
+func TestClassifyResumeChangeClasses(t *testing.T) {
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "a.txt"), "reads")
+	writeCheckFile(t, filepath.Join(dir, "in", "other.txt"), "other")
+	writeCheckFile(t, filepath.Join(dir, "out", "a.txt"), "reads")
+	writeCheckFile(t, filepath.Join(dir, "out", "b.txt"), "reads")
+	inRec := mustFileRecord(t, filepath.Join(dir, "in", "a.txt"), "in/a.txt")
+	outA := mustFileRecord(t, filepath.Join(dir, "out", "a.txt"), "out/a.txt")
+	outB := mustFileRecord(t, filepath.Join(dir, "out", "b.txt"), "out/b.txt")
+
+	copyPlan := Document{
+		Tasks: []TaskPlan{{
+			ID:      "copy",
+			Command: []string{"cp", "in/a.txt", "out/a.txt"},
+			Inputs:  []IO{{Name: "in", Path: "in/a.txt"}},
+			Outputs: []IO{{Name: "out", Path: "out/a.txt"}},
+		}},
+		Edges: []Edge{{FromPort: "reads", ToTask: "copy", ToPort: "in", Wait: []string{"in/a.txt"}}},
 	}
-	if d := planDrift(base, base); len(d) != 0 {
-		t.Fatalf("same plan: %v", d)
+	copyState := jsonTaskState{
+		ID:           "copy",
+		Status:       StatusSucceeded,
+		Command:      []string{"cp", "in/a.txt", "out/a.txt"},
+		Attempt:      1,
+		Fingerprints: []jsonFileHash{inRec},
+		Checksums:    []jsonFileHash{outA},
+		Lineage:      []jsonLineage{{Producer: "copy", Path: "out/a.txt", Checksum: outA.SHA256}},
 	}
-	added := Document{
-		Tasks: []TaskPlan{{ID: "a"}, {ID: "b"}, {ID: "c"}},
-		Edges: base.Edges,
+	extraPlan := Document{
+		Tasks: append(append([]TaskPlan(nil), copyPlan.Tasks...), TaskPlan{
+			ID:      "extra",
+			Command: []string{"true"},
+			Outputs: []IO{{Name: "out", Path: "out/extra.txt"}},
+		}),
+		Edges: copyPlan.Edges,
 	}
-	if !hasDefect(planDrift(base, added), DefectPlanDrift, "") {
-		t.Fatalf("added task: want plan-drift")
+	extraState := jsonTaskState{
+		ID:      "extra",
+		Status:  StatusSucceeded,
+		Command: []string{"true"},
+		Attempt: 1,
 	}
-	changed := Document{
-		Tasks: []TaskPlan{{ID: "a"}, {ID: "b"}},
-		Edges: []Edge{{FromTask: "b", FromPort: "out", ToTask: "a", ToPort: "in"}},
-	}
-	if !hasDefect(planDrift(base, changed), DefectPlanDrift, "") {
-		t.Fatalf("changed edges: want plan-drift")
-	}
-	identity := Document{
+	chain := Document{
 		Tasks: []TaskPlan{
-			{ID: "a", Command: []string{"echo"}},
-			{ID: "b", Env: map[string]string{"K": "v"}},
+			{
+				ID:      "a",
+				Command: []string{"cp", "in/a.txt", "out/a.txt"},
+				Inputs:  []IO{{Name: "in", Path: "in/a.txt"}},
+				Outputs: []IO{{Name: "out", Path: "out/a.txt"}},
+			},
+			{
+				ID:      "b",
+				Command: []string{"cp", "out/a.txt", "out/b.txt"},
+				Inputs:  []IO{{Name: "in", Path: "out/a.txt"}},
+				Outputs: []IO{{Name: "out", Path: "out/b.txt"}},
+			},
 		},
-		Edges: base.Edges,
+		Edges: []Edge{
+			{FromPort: "reads", ToTask: "a", ToPort: "in", Wait: []string{"in/a.txt"}},
+			{FromTask: "a", FromPort: "out", ToTask: "b", ToPort: "in", Wait: []string{"out/a.txt"}},
+		},
 	}
-	if d := planDrift(base, identity); len(d) != 0 {
-		t.Fatalf("identity-only change: %v", d)
+	rewired := Document{
+		Tasks: chain.Tasks,
+		Edges: []Edge{
+			{FromPort: "reads", ToTask: "a", ToPort: "in", Wait: []string{"in/a.txt"}},
+			{FromPort: "reads", ToTask: "b", ToPort: "in", Wait: []string{"in/a.txt"}},
+		},
 	}
-	waitOnly := Document{
-		Tasks: []TaskPlan{{ID: "a"}, {ID: "b"}},
-		Edges: []Edge{{FromPort: "reads", ToTask: "a", ToPort: "in", Wait: []string{"in/sample.txt"}}},
+	chainStates := []jsonTaskState{
+		{
+			ID:           "a",
+			Status:       StatusSucceeded,
+			Command:      []string{"cp", "in/a.txt", "out/a.txt"},
+			Attempt:      1,
+			Fingerprints: []jsonFileHash{inRec},
+			Checksums:    []jsonFileHash{outA},
+			Lineage:      []jsonLineage{{Producer: "a", Path: "out/a.txt", Checksum: outA.SHA256}},
+		},
+		{
+			ID:           "b",
+			Status:       StatusSucceeded,
+			Command:      []string{"cp", "out/a.txt", "out/b.txt"},
+			Attempt:      1,
+			Fingerprints: []jsonFileHash{outA},
+			Checksums:    []jsonFileHash{outB},
+			Lineage:      []jsonLineage{{Producer: "b", Path: "out/b.txt", Checksum: outB.SHA256}},
+		},
 	}
-	if d := planDrift(waitOnly, waitOnly); len(d) != 0 {
-		t.Fatalf("same wait-only plan: %v", d)
+	waitChanged := copyPlan
+	waitChanged.Edges = []Edge{{FromPort: "reads", ToTask: "copy", ToPort: "in", Wait: []string{"in/other.txt"}}}
+	destRenamed := copyPlan
+	destRenamed.Tasks = append([]TaskPlan(nil), copyPlan.Tasks...)
+	destRenamed.Tasks[0].Outputs = []IO{{Name: "out", Path: "out/renamed.txt"}}
+	cmdChanged := copyPlan
+	cmdChanged.Tasks = append([]TaskPlan(nil), copyPlan.Tasks...)
+	cmdChanged.Tasks[0].Command = []string{"true"}
+	resourcesOnly := copyPlan
+	resourcesOnly.Tasks = append([]TaskPlan(nil), copyPlan.Tasks...)
+	resourcesOnly.Tasks[0].Resources = ResourcePlan{CPU: 2, Memory: "1g"}
+
+	tests := []struct {
+		name         string
+		recorded     Document
+		supplied     Document
+		tasks        []jsonTaskState
+		ident        string
+		wantChange   string
+		wantDecision string
+	}{
+		{"Added", copyPlan, extraPlan, []jsonTaskState{copyState}, "extra", changeAdded, reuseRerun},
+		{"Removed", extraPlan, copyPlan, []jsonTaskState{copyState, extraState}, "extra", changeRemoved, ""},
+		{"Rewired", chain, rewired, chainStates, "b", changeRewired, reuseRerun},
+		{"Repathed dest", copyPlan, destRenamed, []jsonTaskState{copyState}, "copy", changeRepathed, reuseRerun},
+		{"Repathed wait-only", copyPlan, waitChanged, []jsonTaskState{copyState}, "copy", changeRepathed, reuseRerun},
+		{"IdentityChanged", copyPlan, cmdChanged, []jsonTaskState{copyState}, "copy", changeIdentityChanged, reuseRerun},
+		{"Unchanged", copyPlan, copyPlan, []jsonTaskState{copyState}, "copy", changeUnchanged, reuseReused},
+		{"resources-only Unchanged", copyPlan, resourcesOnly, []jsonTaskState{copyState}, "copy", changeUnchanged, reuseReused},
 	}
-	waitChanged := Document{
-		Tasks: waitOnly.Tasks,
-		Edges: []Edge{{FromPort: "reads", ToTask: "a", ToPort: "in", Wait: []string{"in/other.txt"}}},
-	}
-	if !hasDefect(planDrift(waitOnly, waitChanged), DefectPlanDrift, "") {
-		t.Fatalf("changed wait-only edge: want plan-drift")
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := classifyResume(dir, tc.recorded, tc.supplied, tc.tasks)
+			dec := got.Decision[tc.ident]
+			if dec.Change != tc.wantChange {
+				t.Fatalf("change got %q, want %q (%#v)", dec.Change, tc.wantChange, dec)
+			}
+			if dec.Decision != tc.wantDecision {
+				t.Fatalf("decision got %q, want %q (%#v)", dec.Decision, tc.wantDecision, dec)
+			}
+		})
 	}
 }
 

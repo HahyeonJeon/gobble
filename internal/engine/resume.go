@@ -3,15 +3,15 @@ package engine
 import (
 	"context"
 	"os"
-	"strings"
 	"time"
 )
 
 // Resume occupies a released existing run after checks, classifies
-// every reserved identity, executes reruns as new attempts, and
-// persists decisions. A nil result means every supplied identity
-// succeeded. ctx cancel matches Run: stop admit, cancel in-flight,
-// persist incomplete, occupancy stays active, DefectCanceled.
+// every reserved identity as Change, executes reruns as new
+// attempts, and persists decisions. A nil result means every
+// supplied identity succeeded. ctx cancel matches Run: stop admit,
+// cancel in-flight, persist incomplete, occupancy stays active,
+// DefectCanceled.
 func Resume(ctx context.Context, req Request) []Defect {
 	if ctx == nil {
 		ctx = context.Background()
@@ -74,63 +74,12 @@ func checkResume(req Request) []Defect {
 	if hasPlan {
 		recordedDoc = documentFromPlan(recorded)
 	}
-	if d := planDrift(recordedDoc, req.Document); len(d) > 0 {
-		return d
-	}
 	tasks, d := readInspectTasks(req.Workspace)
 	if len(d) > 0 {
 		return d
 	}
 	class := classifyResume(req.Workspace, recordedDoc, req.Document, tasks)
 	return checkResumeOutputs(req.Workspace, req.Document, tasks, class)
-}
-
-func planDrift(recorded, supplied Document) []Defect {
-	recIDs := taskIDSet(recorded.Tasks)
-	supIDs := taskIDSet(supplied.Tasks)
-	if len(recIDs) != len(supIDs) {
-		return planDriftDefect()
-	}
-	for id := range recIDs {
-		if !supIDs[id] {
-			return planDriftDefect()
-		}
-	}
-	recEdges := edgeKeySet(recorded.Edges)
-	supEdges := edgeKeySet(supplied.Edges)
-	if len(recEdges) != len(supEdges) {
-		return planDriftDefect()
-	}
-	for k := range recEdges {
-		if !supEdges[k] {
-			return planDriftDefect()
-		}
-	}
-	return nil
-}
-
-func taskIDSet(tasks []TaskPlan) map[string]bool {
-	out := make(map[string]bool, len(tasks))
-	for _, t := range tasks {
-		out[t.ID] = true
-	}
-	return out
-}
-
-func edgeKeySet(edges []Edge) map[string]bool {
-	out := make(map[string]bool)
-	for _, e := range edges {
-		out[e.FromTask+"\x00"+e.FromPort+"\x00"+e.ToTask+"\x00"+e.ToPort+"\x00"+strings.Join(e.Wait, "\x01")] = true
-	}
-	return out
-}
-
-func planDriftDefect() []Defect {
-	return []Defect{{
-		Code:    DefectPlanDrift,
-		Message: "plan drift",
-		Paths:   []string{ControlDir + "/" + PlanFile},
-	}}
 }
 
 func checkResumeOutputs(workspace string, doc Document, tasks []jsonTaskState, class remainingClass) []Defect {
@@ -287,9 +236,11 @@ func occupyResume(req Request) (*sched, []Defect) {
 	}
 	for _, t := range doc.Tasks {
 		ident := reservedIdentity(t)
+		dec := class.Decision[ident]
 		if st, ok := byIdent[ident]; ok {
 			cp := st
-			if dec := class.Decision[ident]; dec.Decision == reuseReused {
+			cp.Change = dec.Change
+			if dec.Decision == reuseReused {
 				cp.Decision = dec.Decision
 				cp.ReuseReason = dec.Reason
 				cp.Differing = append([]string(nil), dec.Differing...)
@@ -298,7 +249,21 @@ func occupyResume(req Request) (*sched, []Defect) {
 			continue
 		}
 		st := initialTask(t)
+		st.Decision = dec.Decision
+		st.ReuseReason = dec.Reason
+		st.Differing = append([]string(nil), dec.Differing...)
+		st.Change = dec.Change
 		s.tasks[ident] = &st
+	}
+	for ident, st := range byIdent {
+		if s.tasks[ident] != nil {
+			continue
+		}
+		cp := st
+		if dec := class.Decision[ident]; dec.Change == changeRemoved {
+			cp.Change = changeRemoved
+		}
+		s.history = append(s.history, cp)
 	}
 	root := workspaceFile(req.Workspace, ControlDir)
 	lock, defects := claimOccupy(root)

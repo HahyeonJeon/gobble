@@ -75,30 +75,153 @@ func TestResumeOp(t *testing.T) {
 	}
 }
 
-func TestResumePlanDriftDoesNotOccupy(t *testing.T) {
-	dir := readyReleasedRun(t, processCopyPipeline)
+func TestResumeGraphDiffChangeClasses(t *testing.T) {
+	tests := []struct {
+		name      string
+		setup     func(*testing.T) string
+		resume    func() *gobble.Pipeline
+		ident     string
+		want      string
+		wantDec   string
+		wantExist string
+	}{
+		{
+			name:    "Added",
+			setup:   func(t *testing.T) string { return readyReleasedRun(t, processCopyPipeline) },
+			resume:  processCopyPlusPipeline,
+			ident:   "extra",
+			want:    "Added",
+			wantDec: "rerun",
+		},
+		{
+			name:      "Removed",
+			setup:     func(t *testing.T) string { return readyReleasedRun(t, processCopyPlusPipeline) },
+			resume:    processCopyPipeline,
+			ident:     "extra",
+			want:      "Removed",
+			wantExist: "out/extra.txt",
+		},
+		{
+			name: "Rewired",
+			setup: func(t *testing.T) string {
+				return readyReleasedRun(t, processCopyChainPipeline("cp in/sample.txt out/a.txt", "cp out/a.txt out/b.txt"))
+			},
+			resume:  processCopyChainRewiredPipeline,
+			ident:   "b",
+			want:    "Rewired",
+			wantDec: "rerun",
+		},
+		{
+			name:    "Repathed dest",
+			setup:   func(t *testing.T) string { return readyReleasedRun(t, processCopyDestPipeline("sample")) },
+			resume:  processCopyDestPipeline("renamed"),
+			ident:   "copy",
+			want:    "Repathed",
+			wantDec: "rerun",
+		},
+		{
+			name: "Repathed wait-only",
+			setup: func(t *testing.T) string {
+				dir := readyReleasedRun(t, processCopyPipeline)
+				writeRunFile(t, filepath.Join(dir, "in", "other.txt"), "reads")
+				return dir
+			},
+			resume:  processCopyOtherInputPipeline,
+			ident:   "copy",
+			want:    "Repathed",
+			wantDec: "rerun",
+		},
+		{
+			name: "IdentityChanged",
+			setup: func(t *testing.T) string {
+				return readyReleasedRun(t, processScriptCopyPipeline("cp in/sample.txt out/sample.txt"))
+			},
+			resume:  processScriptCopyPipeline("cp in/sample.txt out/sample.txt\n# v2"),
+			ident:   "copy",
+			want:    "IdentityChanged",
+			wantDec: "rerun",
+		},
+		{
+			name:    "Unchanged",
+			setup:   func(t *testing.T) string { return readyReleasedRun(t, processCopyPipeline) },
+			resume:  processCopyPipeline,
+			ident:   "copy",
+			want:    "Unchanged",
+			wantDec: "reused",
+		},
+		{
+			name:    "resources-only Unchanged",
+			setup:   func(t *testing.T) string { return readyReleasedRun(t, processCopyPipeline) },
+			resume:  processCopyResourcePipelineHeavy,
+			ident:   "copy",
+			want:    "Unchanged",
+			wantDec: "reused",
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			dir := tc.setup(t)
+			if err := gobble.Resume(t.Context(), mustCompose(tc.resume)(t), dir, 2); err != nil {
+				t.Fatalf("Resume() error = %v", err)
+			}
+			got := latestTaskChange(t, dir, tc.ident)
+			if got != tc.want {
+				t.Fatalf("change got %q, want %q", got, tc.want)
+			}
+			if tc.wantDec != "" {
+				reuse := instanceByID(mustInspectJSONL(t, dir, "reuse", ""))
+				if reuse[tc.ident]["change"] != tc.want || reuse[tc.ident]["decision"] != tc.wantDec {
+					t.Fatalf("reuse got %#v, want change %s decision %s", reuse[tc.ident], tc.want, tc.wantDec)
+				}
+			}
+			if tc.wantExist != "" {
+				if _, statErr := os.Stat(filepath.Join(dir, tc.wantExist)); statErr != nil {
+					t.Fatalf("removed dest missing: %v", statErr)
+				}
+			}
+		})
+	}
+}
+
+func TestResumeFirstRunOmitsChange(t *testing.T) {
+	dir := readyRunWorkspace(t)
+	if err := gobble.Run(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0); err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	if got := latestTaskChange(t, dir, "copy"); got != "" {
+		t.Fatalf("first Run change got %q, want omitted", got)
+	}
+	if remaining := mustInspectJSONL(t, dir, "remaining", ""); len(remaining) != 0 {
+		t.Fatalf("remaining got %#v, want empty", remaining)
+	}
+	if reuse := mustInspectJSONL(t, dir, "reuse", ""); len(reuse) != 0 {
+		t.Fatalf("reuse got %#v, want empty", reuse)
+	}
+
+	failDir := readyRunWorkspace(t)
+	err := gobble.Run(t.Context(), mustCompose(processContainPipeline)(t), failDir, 2)
+	requireRunError(t, "contained failure", err, gobble.DefectFailed, "fail")
+	for _, rec := range mustInspectJSONL(t, failDir, "remaining", "") {
+		if _, ok := rec["change"]; ok {
+			t.Fatalf("first-Run remaining emitted change: %#v", rec)
+		}
+	}
+	if got := latestTaskChange(t, failDir, "fail"); got != "" {
+		t.Fatalf("first-Run failed change got %q, want omitted", got)
+	}
+}
+
+func TestResumeAddedDestCollisionOutputExists(t *testing.T) {
+	dir := readyReleasedRun(t, processCopyPlusPipeline)
 	before := occupancySnapshot(t, dir)
-	err := gobble.Resume(t.Context(), mustCompose(processCopyPlusPipeline)(t), dir, 0)
-	requireResumeError(t, "added task", err, gobble.DefectPlanDrift, "")
+	err := gobble.Resume(t.Context(), mustCompose(processCopyOtherWriterPipeline)(t), dir, 0)
+	requireResumeError(t, "added dest collision", err, gobble.DefectOutputExists, "other.out")
 	if occupancySnapshot(t, dir) != before {
-		t.Fatalf("plan drift occupied workspace")
+		t.Fatalf("output-exists occupied workspace")
 	}
-
-	dir = readyReleasedRun(t, processContainPipeline)
-	before = occupancySnapshot(t, dir)
-	err = gobble.Resume(t.Context(), mustCompose(processContainIndependentPipeline)(t), dir, 0)
-	requireResumeError(t, "changed edges", err, gobble.DefectPlanDrift, "")
-	if occupancySnapshot(t, dir) != before {
-		t.Fatalf("changed-edge plan drift occupied workspace")
-	}
-
-	dir = readyReleasedRun(t, processCopyPipeline)
-	writeRunFile(t, filepath.Join(dir, "in", "other.txt"), "reads")
-	before = occupancySnapshot(t, dir)
-	err = gobble.Resume(t.Context(), mustCompose(processCopyOtherInputPipeline)(t), dir, 0)
-	requireResumeError(t, "wait-only edge", err, gobble.DefectPlanDrift, "")
-	if occupancySnapshot(t, dir) != before {
-		t.Fatalf("wait-only plan drift occupied workspace")
+	got, readErr := os.ReadFile(filepath.Join(dir, "out", "extra.txt"))
+	if readErr != nil || string(got) == "" {
+		t.Fatalf("removed dest mutated: %s err=%v", got, readErr)
 	}
 }
 
@@ -162,6 +285,16 @@ func TestResumeFailedRerunAndBlockedUpstream(t *testing.T) {
 	}
 	if byID["ok"]["decision"] != "reused" || byID["ok"]["attempt"] != float64(1) {
 		t.Fatalf("ok instance got %#v", byID["ok"])
+	}
+	if latestTaskChange(t, dir, "fail") != "IdentityChanged" || latestTaskChange(t, dir, "dep") != "IdentityChanged" {
+		t.Fatalf("contained resume change fail=%q dep=%q, want IdentityChanged", latestTaskChange(t, dir, "fail"), latestTaskChange(t, dir, "dep"))
+	}
+	if latestTaskChange(t, dir, "ok") != "Unchanged" {
+		t.Fatalf("ok change got %q, want Unchanged", latestTaskChange(t, dir, "ok"))
+	}
+	remaining := instanceByID(mustInspectJSONL(t, dir, "remaining", ""))
+	if remaining["fail"]["change"] != "IdentityChanged" || remaining["dep"]["change"] != "IdentityChanged" {
+		t.Fatalf("remaining change fail=%#v dep=%#v", remaining["fail"], remaining["dep"])
 	}
 	if mustInspectObject(t, dir, "run", "")["status"] != engine.StatusFailed {
 		t.Fatalf("run status got %#v, want failed", mustInspectObject(t, dir, "run", "")["status"])
@@ -390,37 +523,76 @@ func processCopyPlusPipeline() *gobble.Pipeline {
 	return p
 }
 
-func processContainIndependentPipeline() *gobble.Pipeline {
-	p := gobble.NewPipeline("contain")
-	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "sample", Ext: ".txt"})
+func processCopyOtherWriterPipeline() *gobble.Pipeline {
+	p := processCopyPipeline()
 	p.AddTask(gobble.TaskSpec{
-		Name:    "fail",
-		Command: []string{"sh", "-c", "exit 1"},
-		Inputs:  []gobble.Bind{{Name: "in", From: in}},
+		Name:    "other",
+		Command: []string{"sh", "-c", "echo other > out/extra.txt"},
 		Outputs: []gobble.Bind{{
 			Name: "out",
-			Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "fail", Ext: ".txt"},
-		}},
-	})
-	p.AddTask(gobble.TaskSpec{
-		Name:    "dep",
-		Command: []string{"cp", "out/fail.txt", "out/dep.txt"},
-		Inputs:  []gobble.Bind{{Name: "in", From: in}},
-		Outputs: []gobble.Bind{{
-			Name: "out",
-			Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "dep", Ext: ".txt"},
-		}},
-	})
-	p.AddTask(gobble.TaskSpec{
-		Name:    "ok",
-		Command: []string{"sh", "-c", "echo ok > out/ok.txt"},
-		Inputs:  []gobble.Bind{{Name: "in", From: in}},
-		Outputs: []gobble.Bind{{
-			Name: "out",
-			Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "ok", Ext: ".txt"},
+			Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "extra", Ext: ".txt"},
 		}},
 	})
 	return p
+}
+
+func processCopyChainRewiredPipeline() *gobble.Pipeline {
+	p := gobble.NewPipeline("chain")
+	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "sample", Ext: ".txt"})
+	p.AddTask(gobble.TaskSpec{
+		Name:    "a",
+		Command: []string{"sh", "-c", "cp in/sample.txt out/a.txt"},
+		Inputs:  []gobble.Bind{{Name: "in", From: in}},
+		Outputs: []gobble.Bind{{
+			Name: "out",
+			Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "a", Ext: ".txt"},
+		}},
+	})
+	p.AddTask(gobble.TaskSpec{
+		Name:    "b",
+		Command: []string{"sh", "-c", "cp in/sample.txt out/b.txt"},
+		Inputs:  []gobble.Bind{{Name: "in", From: in}},
+		Outputs: []gobble.Bind{{
+			Name: "out",
+			Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "b", Ext: ".txt"},
+		}},
+	})
+	return p
+}
+
+func latestTaskChange(t *testing.T, dir, ident string) string {
+	t.Helper()
+	data, err := os.ReadFile(filepath.Join(dir, engine.ControlDir, engine.TasksFile))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var file struct {
+		Tasks []map[string]any `json:"tasks"`
+	}
+	if err := json.Unmarshal(data, &file); err != nil {
+		t.Fatal(err)
+	}
+	var best map[string]any
+	bestAttempt := -1
+	for _, st := range file.Tasks {
+		id, _ := st["id"].(string)
+		if id != ident {
+			continue
+		}
+		attempt := 0
+		if v, ok := st["attempt"].(float64); ok {
+			attempt = int(v)
+		}
+		if attempt >= bestAttempt {
+			bestAttempt = attempt
+			best = st
+		}
+	}
+	if best == nil {
+		t.Fatalf("identity %s missing from tasks.json", ident)
+	}
+	ch, _ := best["change"].(string)
+	return ch
 }
 
 func processCopyCmdPipeline(cmd string) func() *gobble.Pipeline {
@@ -514,7 +686,7 @@ func processCopyDestPipeline(name string) func() *gobble.Pipeline {
 		in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "sample", Ext: ".txt"})
 		p.AddTask(gobble.TaskSpec{
 			Name:    "copy",
-			Command: []string{"cp", "in/sample.txt", "out/sample.txt"},
+			Command: []string{"cp", "in/sample.txt", "out/" + name + ".txt"},
 			Inputs:  []gobble.Bind{{Name: "in", From: in}},
 			Outputs: []gobble.Bind{{
 				Name: "out",
@@ -530,7 +702,7 @@ func processCopyOtherInputPipeline() *gobble.Pipeline {
 	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "other", Ext: ".txt"})
 	p.AddTask(gobble.TaskSpec{
 		Name:    "copy",
-		Command: []string{"sh", "-c", "pwd > out/pwd.txt && cp in/sample.txt out/sample.txt"},
+		Command: []string{"sh", "-c", "pwd > out/pwd.txt && cp in/other.txt out/sample.txt"},
 		Inputs:  []gobble.Bind{{Name: "in", From: in}},
 		Outputs: []gobble.Bind{
 			{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "sample", Ext: ".txt"}},

@@ -149,6 +149,7 @@ type jsonTaskState struct {
 	Decision     string            `json:"decision,omitempty"`
 	ReuseReason  string            `json:"reuse_reason,omitempty"`
 	Differing    []string          `json:"differing,omitempty"`
+	Change       string            `json:"change,omitempty"`
 }
 
 type jsonTaskErr struct {
@@ -667,23 +668,38 @@ func (s *sched) runJob(workspace string, task TaskPlan, ex exec.Executor, starts
 func (s *sched) beginResumeAttempt(ident string) {
 	old := s.tasks[ident]
 	task, _ := s.taskByIdent(ident)
+	dec, hasDec := s.resume[ident]
+	if old != nil && dec.Change == changeAdded && old.Status == StatusNotStarted {
+		applyResumeDecision(old, dec, hasDec)
+		if s.launched != nil {
+			s.launched[ident] = true
+		}
+		return
+	}
 	st := initialTask(task)
 	if old != nil {
 		applyTaskStateDefaults(old)
 		s.history = append(s.history, *old)
 		st.Attempt = old.Attempt + 1
-		if dec, ok := s.resume[ident]; ok {
-			st.Decision = dec.Decision
-			st.ReuseReason = dec.Reason
-			st.Differing = append([]string(nil), dec.Differing...)
-		}
+		applyResumeDecision(&st, dec, hasDec)
 		if s.launched != nil {
 			s.launched[ident] = true
 		}
 	} else if s.launched != nil {
 		s.launched[ident] = true
+		applyResumeDecision(&st, dec, hasDec)
 	}
 	s.tasks[ident] = &st
+}
+
+func applyResumeDecision(st *jsonTaskState, dec reuseDecision, ok bool) {
+	if st == nil || !ok {
+		return
+	}
+	st.Decision = dec.Decision
+	st.ReuseReason = dec.Reason
+	st.Differing = append([]string(nil), dec.Differing...)
+	st.Change = dec.Change
 }
 
 func (s *sched) assignBlockedUpstream() {
