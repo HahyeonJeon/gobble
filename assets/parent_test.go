@@ -100,3 +100,28 @@ func TestStandalone(t *testing.T) {
 		t.Fatalf("Compose() error = %v, want nil", err)
 	}
 }
+
+func TestStandaloneGroup(t *testing.T) {
+	idx := gobble.Group{
+		{Name: "amb", Spec: gobble.PathSpec{Dir: gobble.Dir("in"), Name: "ref", Ext: ".amb"}},
+		{Name: "ann", Spec: gobble.PathSpec{Dir: gobble.Dir("in"), Name: "ref", Ext: ".ann"}},
+	}
+	p := Standalone("wrap-group", []Input{{Name: "idx", Group: idx}}, func(parent Parent, hs []gobble.Handle) {
+		if len(hs) != 1 || hs[0].IsZero() || hs[0].Name() != "idx" {
+			t.Fatalf("build handle = %+v, want idx", hs)
+		}
+		AddTask(parent, gobble.TaskSpec{
+			Name:    "use",
+			Command: []string{"true"},
+			Inputs: []gobble.Bind{{
+				Name:  "idx",
+				From:  hs[0],
+				Group: gobble.Group{{Name: "amb"}, {Name: "ann"}},
+			}},
+			Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "ok", Ext: ".txt"}}},
+		})
+	})
+	if _, err := gobble.Compose(p); err != nil {
+		t.Fatalf("Compose() error = %v, want nil", err)
+	}
+}
