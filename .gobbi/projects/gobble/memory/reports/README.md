@@ -4,6 +4,7 @@ Recursive navigation across reports, grouped by category, newest first.
 
 ## Note
 
+- [Multiomics assets](note/2026-08-19-multiomics-assets.md)
 - [Ready inspect and resume](note/2026-08-18-ready-inspect-resume.md)
 - [Static-core slice](note/2026-08-18-static-core-slice.md)
 - [WGS e2e consumer-test session](note/2026-08-18-wgs-e2e.md)

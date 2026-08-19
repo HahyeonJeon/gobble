@@ -79,7 +79,7 @@ Do not use a no-op, `echo`, or any command that ignores the local toolchain.
 ### Gobble
 
 - Command: `go test ./...`
-- What it proves: Go 1.26 or newer is installed, the module `github.com/HahyeonJeon/gobble` builds, and package tests for `gobble`, `internal/engine`, and `tests/wgs-e2e` pass, including public `Run`. Live Docker tests skip if the daemon is down. Cached package results are not proof a live Docker e2e ran. It is not proof of agent-operable run, inspect, or resume, and it does not require Docker.
+- What it proves: Go 1.26 or newer is installed, the module `github.com/HahyeonJeon/gobble` builds, and package tests for `gobble`, `assets`, `internal/engine`, and `tests/wgs-e2e` pass, including public `Run`. Live Docker tests skip if the daemon is down. Cached package results are not proof a live Docker e2e ran. It is not proof of agent-operable run, inspect, or resume, and it does not require Docker.
 - Source: `first-check`
 
 Project command, after every product subsection. If two local products
@@ -106,7 +106,7 @@ disagree, mark Open and ask.
 
 ### Gobble
 
-- Verification: Assumption — a change is safe to keep when `go test ./...` passes, including package tests for `gobble`, `internal/engine`, and `tests/wgs-e2e` when those packages change. Agent-operability of run, inspect, and resume is not proved by those tests. A live WGS Docker proof needs `go test ./tests/wgs-e2e -count=1`.
+- Verification: Assumption — a change is safe to keep when `go test ./...` passes, including package tests for `gobble`, `assets`, `internal/engine`, and `tests/wgs-e2e` when those packages change. Agent-operability of run, inspect, and resume is not proved by those tests. A live WGS Docker proof needs `go test ./tests/wgs-e2e -count=1`. Live RNA/Methyl proofs are in package `assets`.
 - Build risk: Assumption — the part most likely to be wrong is the pipeline model: whether it can express modules, branch, and merge so an agent can plan, run, and resume without a DSL. Early evidence is the synthetic workflow-case pipeline, then WGS end-to-end on a small dataset.
 - Source: `verification`, `build-risk`
 

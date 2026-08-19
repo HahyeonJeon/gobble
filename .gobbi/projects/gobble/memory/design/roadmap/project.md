@@ -13,7 +13,7 @@ Build a local agent-operable core first: Go library, then engine, then CLI. Firs
 
 ## Current position
 
-- Now: Ready inspect/resume is shipped on `13c42a68fed6e01a9ffbe46b6e3a5273c5696ddd` in module `github.com/HahyeonJeon/gobble` (`go 1.26`) with `internal/engine`. First-check is `go test ./...` and includes `tests/wgs-e2e`. Public verbs are Compose, Validate, BuildPlan, Run, Inspect, Resume, and Release. Additive names remain `Group`, `Script`, and `Env`. `Inspect(workspace, view, instance)` is read-only. `Resume(graph, workspace, cap)` occupies a released run after re-validation. `Release` closes occupancy and is not deletion. Occupancy is an owner record on `.gobble/run.json`. There is no CLI and no `cmd/`. CLI and WGS-as-resume-proof remain required for local-core horizon exit. This session started from `develop` `06024e87a0b77452727ba9a484050eaf876009df`. Pre-bootstrap baseline remains `a2d561fea2846bc1c55213d66a7025dac980f330`.
+- Now: Ready inspect/resume is shipped on `13c42a68fed6e01a9ffbe46b6e3a5273c5696ddd` in module `github.com/HahyeonJeon/gobble` (`go 1.26`) with `internal/engine`. Same-module package `assets` holds first-party dual-entry proofs (not product tools). First-check is `go test ./...` and includes `assets` and `tests/wgs-e2e`. Public verbs are Compose, Validate, BuildPlan, Run, Inspect, Resume, and Release. Additive names remain `Group`, `Script`, and `Env`. `Inspect(workspace, view, instance)` is read-only. `Resume(graph, workspace, cap)` occupies a released run after re-validation. `Release` closes occupancy and is not deletion. Occupancy is an owner record on `.gobble/run.json`. There is no CLI and no `cmd/`. CLI and WGS-as-resume-proof remain required for local-core horizon exit. This session started from `develop` `06024e87a0b77452727ba9a484050eaf876009df`. Pre-bootstrap baseline remains `a2d561fea2846bc1c55213d66a7025dac980f330`.
 - Local or cloud: local
 - Bootstrap: run; committed as `3389767462780dc0cfc436de864580959dfbb0ce` after user authorization to replace the existing README.
 - Source: `local-or-cloud`, `first-check`, `current-baseline`
@@ -75,6 +75,7 @@ Every feature file appears in exactly one horizon or in Not scheduled.
 | run-local | Local agent-operable core |
 | inspect-run | Local agent-operable core |
 | recover-run | Local agent-operable core |
+| assets | Not scheduled |
 
 - Source: Feature index and `feature/<feature>.md`
 
@@ -88,9 +89,9 @@ Every feature file appears in exactly one horizon or in Not scheduled.
 
 | Id | Why not scheduled |
 |---|---|
-| none | Every Feature index id is placed in Local agent-operable core. |
+| assets | First-party proofs in package `assets`, not a core-task or product feature. |
 
-- Source: Feature index rows not placed in a horizon
+- Source: Feature files not placed in a horizon
 
 ## Open questions
 

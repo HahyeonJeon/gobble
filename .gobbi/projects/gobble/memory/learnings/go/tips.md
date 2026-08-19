@@ -36,9 +36,9 @@
 
 **Context:** Isolate already lets a tool write undeclared directories.
 
-**Tip:** Tools may write undeclared dirs; only declared regular files publish. Strelka wrote `strelka/` then `mv` to a declared VCF.
+**Tip:** Tools may write undeclared dirs; only declared regular files publish. Strelka wrote `strelka/` then `mv` to a declared VCF. STAR and Bismark declare index and align outputs as regular files (Group members); PathSpec.Dir is the parent folder token, not a directory port.
 
-**Application:** Reject first-class directory artifacts until a required consumer needs an index directory in place.
+**Application:** Reject first-class directory artifacts until a required consumer needs an index directory in place. Do not add directory ports for STAR genomeGenerate or Bismark genome preparation.
 
 ## Claim occupy with a lock plus owner record
 
@@ -47,6 +47,22 @@
 **Tip:** Do not use `O_EXCL` on `run.json` to claim occupancy. Claim with a lock file plus the owner record.
 
 **Application:** `Run` and `Resume` after Release use `occupy.lock` and write the owner on `run.json`.
+
+## Pin cache keys include content
+
+**Context:** Package `assets` caches pinned downloads under `CacheDir`. Distinct pins can share a basename (`test_1.fastq.gz`).
+
+**Tip:** Cache path is `CacheDir/<sha256[:16]>/<Name>`. `Pin.Name` remains the workspace basename. Fetch into that path with tmp+rename.
+
+**Application:** Collision tests must cover two pins with the same Name and different hashes.
+
+## Isolate restage copies Source onto dest
+
+**Context:** A pipeline-input bind may restage so dest Dir differs from the authored From path.
+
+**Tip:** Record `IO.Source` (and `IOMember.Source`) when the From rendered path differs from dest. Empty Source keeps Path as both. Isolate copies `workspace[source]` onto `isolate[dest]`. Plan Wait, `checkInputs`, and identity hash the source file.
+
+**Application:** Bismark and BWA can restage a FASTA out of `in/` into a dest Dir the tool writes beside.
 
 ## Staged replace never unlinks a published dest
 

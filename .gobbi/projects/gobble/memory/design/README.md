@@ -18,6 +18,7 @@ Recursive navigation across design memory, grouped by category.
 - [run-local](feature/run-local.md)
 - [inspect-run](feature/inspect-run.md)
 - [recover-run](feature/recover-run.md)
+- [assets](feature/assets.md)
 
 ## Roadmap
 
