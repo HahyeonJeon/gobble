@@ -32,20 +32,16 @@ func AddBWAMem(parent Parent, fasta, index, r1, r2 gobble.Handle, opts BWAMemOpt
 
 // BWAMemPipeline returns a standalone bwa mem pipeline. Index siblings
 // are PathSpec-authored Group members next to fasta, not a live bwa
-// index run. Pipeline inputs cannot be a Group, so the wrapper records
-// a Group fixture task for AddBWAMem to From.
+// index run. The wrapper records them with AddInputGroup so AddBWAMem
+// can Group From the input handle.
 func BWAMemPipeline(fasta, r1, r2 gobble.PathSpec, opts BWAMemOptions) *gobble.Pipeline {
 	return Standalone("bwa-mem", []Input{
 		{Name: "fasta", Spec: fasta},
+		{Name: "index", Group: bwaIndexGroup(fasta)},
 		{Name: "r1", Spec: r1},
 		{Name: "r2", Spec: r2},
 	}, func(parent Parent, hs []gobble.Handle) {
-		fixture := AddTask(parent, gobble.TaskSpec{
-			Name:    "index_files",
-			Command: []string{"true"},
-			Outputs: []gobble.Bind{{Name: "index", Group: bwaIndexGroup(fasta)}},
-		})
-		addBWAMem(parent, hs[0], fixture.Out("index"), hs[1], hs[2], opts)
+		addBWAMem(parent, hs[0], hs[1], hs[2], hs[3], opts)
 	})
 }
 
@@ -60,19 +56,25 @@ func addBWAMem(parent Parent, fasta, index, r1, r2 gobble.Handle, opts BWAMemOpt
 	if n := threadCount(opts.Resources.CPU); n > 0 {
 		cmd = append(cmd, "-t", strconv.Itoa(n))
 	}
-	if path, err := CommandPath(samSpec); err == nil {
-		cmd = append(cmd, "-o", path)
+	samPath, err := CommandPath(samSpec)
+	if err != nil {
+		panic(err)
 	}
+	cmd = append(cmd, "-o", samPath)
 	cmd = AppendExtraArgs(cmd, opts.ExtraArgs)
-	if path, err := CommandPath(fasta.Spec()); err == nil {
-		cmd = append(cmd, path)
+	fastaPath, err := CommandPath(fasta.Spec())
+	if err != nil {
+		panic(err)
 	}
-	if path, err := CommandPath(r1.Spec()); err == nil {
-		cmd = append(cmd, path)
+	r1Path, err := CommandPath(r1.Spec())
+	if err != nil {
+		panic(err)
 	}
-	if path, err := CommandPath(r2.Spec()); err == nil {
-		cmd = append(cmd, path)
+	r2Path, err := CommandPath(r2.Spec())
+	if err != nil {
+		panic(err)
 	}
+	cmd = append(cmd, fastaPath, r1Path, r2Path)
 
 	task := AddTask(parent, gobble.TaskSpec{
 		Name:    bwaMemTaskName,

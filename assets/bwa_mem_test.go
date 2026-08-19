@@ -17,6 +17,9 @@ func TestBWAMemStandaloneComposeBuildPlan(t *testing.T) {
 	}
 	p := BWAMemPipeline(fasta, r1, r2, opts)
 	raw := mustPlanJSON(t, p)
+	if strings.Contains(string(raw), "index_files") {
+		t.Fatalf("plan still includes index_files fixture: %s", raw)
+	}
 	task := planTask(t, raw, "bwa_mem")
 	if task.Name != "bwa_mem" {
 		t.Fatalf("task name = %q, want bwa_mem", task.Name)
