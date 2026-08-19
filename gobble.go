@@ -7,7 +7,9 @@
 // non-finite CPU. [BuildPlan] validates first and returns an inspectable
 // [Plan]. [WriteTo] is a [PlanOption] that writes the same JSON
 // [Plan.WriteJSON] emits. [Run] executes a valid graph in a caller workspace
-// after the same checks. The default concurrency cap is 1. [Inspect]
+// after the same checks. Run and Resume take a context as the first
+// argument; a done context cancels in-flight work and leaves occupancy
+// active. The default concurrency cap is 1. [Inspect]
 // returns a read-only workspace view selected by [View]. [Resume] occupies
 // a released run and continues remaining work. [Release] closes occupancy
 // and leaves documents and artifacts. Compose, Validate, BuildPlan, Run,

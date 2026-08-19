@@ -242,7 +242,7 @@ func TestReleaseMarksIncompleteWithSlots(t *testing.T) {
 func TestReleaseSucceededRunKeepsSucceeded(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
-	if defects := Run(Request{
+	if defects := Run(t.Context(), Request{
 		Workspace: dir,
 		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 	}); len(defects) != 0 {

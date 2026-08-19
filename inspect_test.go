@@ -45,7 +45,7 @@ func TestInspectMissingRunDoesNotCreate(t *testing.T) {
 func TestInspectUnknownViewAndInstance(t *testing.T) {
 	dir := readyRunWorkspace(t)
 	g := mustCompose(processEnvCopyPipeline)(t)
-	if err := gobble.Run(g, dir, 0); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 0); err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
 	before := snapshotWorkspace(t, dir)
@@ -109,7 +109,7 @@ func TestInspectOp(t *testing.T) {
 func TestInspectViewsAfterSuccessfulRun(t *testing.T) {
 	dir := readyRunWorkspace(t)
 	g := mustCompose(processEnvCopyPipeline)(t)
-	if err := gobble.Run(g, dir, 0); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 0); err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
 	before := snapshotWorkspace(t, dir)
@@ -216,7 +216,7 @@ func TestInspectViewsAfterSuccessfulRun(t *testing.T) {
 
 func TestInspectRemainingAfterFailure(t *testing.T) {
 	dir := readyRunWorkspace(t)
-	err := gobble.Run(mustCompose(processContainPipeline)(t), dir, 2)
+	err := gobble.Run(t.Context(), mustCompose(processContainPipeline)(t), dir, 2)
 	requireRunError(t, "contained failure", err, gobble.DefectFailed, "fail")
 	before := snapshotWorkspace(t, dir)
 	remaining := mustInspectJSONL(t, dir, "remaining", "")
@@ -250,7 +250,7 @@ func TestInspectRemainingAfterFailure(t *testing.T) {
 
 func TestInspectLiveOccupancyDoesNotBlock(t *testing.T) {
 	dir := readyRunWorkspace(t)
-	if err := gobble.Run(mustCompose(processCopyPipeline)(t), dir, 0); err != nil {
+	if err := gobble.Run(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0); err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
 	before := snapshotWorkspace(t, dir)
@@ -263,13 +263,13 @@ func TestInspectLiveOccupancyDoesNotBlock(t *testing.T) {
 	if before != after {
 		t.Fatalf("live Inspect rewrote workspace")
 	}
-	err := gobble.Run(mustCompose(processCopyPipeline)(t), dir, 0)
+	err := gobble.Run(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0)
 	requireRunError(t, "still occupied", err, gobble.DefectOccupiedWorkspace, "")
 }
 
 func TestInspectReleasedWorkspace(t *testing.T) {
 	dir := readyRunWorkspace(t)
-	if err := gobble.Run(mustCompose(processCopyPipeline)(t), dir, 0); err != nil {
+	if err := gobble.Run(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0); err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
 	forcePublicDeadOwner(t, dir)

@@ -276,7 +276,7 @@ func TestPlanDocumentExecutionView(t *testing.T) {
 func TestRunFromInPort(t *testing.T) {
 	dir := t.TempDir()
 	writeRunFile(t, filepath.Join(dir, "sample.fq"), "reads")
-	if err := gobble.Run(mustCompose(fromInPortPipeline)(t), dir, 0); err != nil {
+	if err := gobble.Run(t.Context(), mustCompose(fromInPortPipeline)(t), dir, 0); err != nil {
 		t.Fatalf("FromIn Run() error = %v, want nil", err)
 	}
 	got, err := os.ReadFile(filepath.Join(dir, "copy.fq"))
@@ -294,7 +294,7 @@ func TestRunFromInPort(t *testing.T) {
 func TestRunProcessGraph(t *testing.T) {
 	dir := readyRunWorkspace(t)
 	g := mustCompose(processCopyPipeline)(t)
-	if err := gobble.Run(g, dir, 0); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 0); err != nil {
 		t.Fatalf("Run() error = %v, want nil", err)
 	}
 	got, err := os.ReadFile(filepath.Join(dir, "out", "sample.txt"))
@@ -339,7 +339,7 @@ func TestRunProcessGraph(t *testing.T) {
 		t.Fatalf("stderr: %v", err)
 	}
 
-	err = gobble.Run(g, dir, 0)
+	err = gobble.Run(t.Context(), g, dir, 0)
 	requireRunError(t, "second Run", err, gobble.DefectOccupiedWorkspace, "")
 	after, err := os.ReadFile(filepath.Join(dir, "out", "sample.txt"))
 	if err != nil {
@@ -375,7 +375,7 @@ func TestRunRestagedPipelineInput(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v, want nil", err)
 	}
-	if err := gobble.Run(g, dir, 0); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 0); err != nil {
 		t.Fatalf("Run() error = %v, want nil", err)
 	}
 	isolateDest := filepath.Join(dir, engine.ControlDir, "tasks", "copy", "_", "0", "1", "work", "work", "sample.txt")
@@ -400,7 +400,7 @@ func TestRunRestagedPipelineInput(t *testing.T) {
 
 func TestRunRefuseDoesNotOccupy(t *testing.T) {
 	dir := t.TempDir()
-	err := gobble.Run(mustCompose(processCopyPipeline)(t), dir, 0)
+	err := gobble.Run(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0)
 	requireRunError(t, "missing input", err, gobble.DefectMissingInput, "copy.in")
 	if _, statErr := os.Stat(filepath.Join(dir, engine.ControlDir)); !os.IsNotExist(statErr) {
 		t.Fatalf("refused Run created %s", engine.ControlDir)
@@ -409,7 +409,7 @@ func TestRunRefuseDoesNotOccupy(t *testing.T) {
 
 func TestRunContainedFailure(t *testing.T) {
 	dir := readyRunWorkspace(t)
-	err := gobble.Run(mustCompose(processContainPipeline)(t), dir, 2)
+	err := gobble.Run(t.Context(), mustCompose(processContainPipeline)(t), dir, 2)
 	requireRunError(t, "contained failure", err, gobble.DefectFailed, "fail")
 	if _, statErr := os.Stat(filepath.Join(dir, "out", "fail.txt")); !os.IsNotExist(statErr) {
 		t.Fatalf("failed output was published")
@@ -454,7 +454,7 @@ func TestRunContainedFailure(t *testing.T) {
 
 func TestRunMissingDeclaredOutput(t *testing.T) {
 	dir := readyRunWorkspace(t)
-	err := gobble.Run(mustCompose(processMissingOutPipeline)(t), dir, 0)
+	err := gobble.Run(t.Context(), mustCompose(processMissingOutPipeline)(t), dir, 0)
 	requireRunError(t, "missing output", err, gobble.DefectFailed, "copy")
 	if _, statErr := os.Stat(filepath.Join(dir, "out", "sample.txt")); !os.IsNotExist(statErr) {
 		t.Fatalf("missing declared output was published")
@@ -464,7 +464,7 @@ func TestRunMissingDeclaredOutput(t *testing.T) {
 func TestRunPublishRollback(t *testing.T) {
 	dir := readyRunWorkspace(t)
 	writeRunFile(t, filepath.Join(dir, "out", "blocked"), "not-a-dir")
-	err := gobble.Run(mustCompose(processRollbackPipeline)(t), dir, 0)
+	err := gobble.Run(t.Context(), mustCompose(processRollbackPipeline)(t), dir, 0)
 	requireRunError(t, "publish rollback", err, gobble.DefectFailed, "copy")
 	if _, statErr := os.Stat(filepath.Join(dir, "out", "first.txt")); !os.IsNotExist(statErr) {
 		t.Fatalf("partial publish left out/first.txt")
@@ -475,10 +475,10 @@ func TestRunNoReuseAcrossWorkspaces(t *testing.T) {
 	g := mustCompose(processCopyPipeline)(t)
 	dir1 := readyRunWorkspace(t)
 	dir2 := readyRunWorkspace(t)
-	if err := gobble.Run(g, dir1, 0); err != nil {
+	if err := gobble.Run(t.Context(), g, dir1, 0); err != nil {
 		t.Fatalf("first workspace Run() error = %v", err)
 	}
-	if err := gobble.Run(g, dir2, 0); err != nil {
+	if err := gobble.Run(t.Context(), g, dir2, 0); err != nil {
 		t.Fatalf("second workspace Run() error = %v", err)
 	}
 	for _, dir := range []string{dir1, dir2} {
@@ -490,7 +490,7 @@ func TestRunNoReuseAcrossWorkspaces(t *testing.T) {
 
 func TestRunRecordsUnparseableMemory(t *testing.T) {
 	dir := readyRunWorkspace(t)
-	err := gobble.Run(mustCompose(processMemoryPipeline)(t), dir, 0)
+	err := gobble.Run(t.Context(), mustCompose(processMemoryPipeline)(t), dir, 0)
 	requireRunError(t, "unparseable memory", err, gobble.DefectInvalidMemory, "copy")
 	if _, statErr := os.Stat(filepath.Join(dir, engine.ControlDir)); !os.IsNotExist(statErr) {
 		t.Fatalf("unparseable memory Run occupied workspace")
@@ -501,7 +501,7 @@ func TestRunCapTwoIndependent(t *testing.T) {
 	dir := t.TempDir()
 	writeRunFile(t, filepath.Join(dir, "in", "a.txt"), "a")
 	writeRunFile(t, filepath.Join(dir, "in", "b.txt"), "b")
-	if err := gobble.Run(mustCompose(processFanoutPipeline)(t), dir, 2); err != nil {
+	if err := gobble.Run(t.Context(), mustCompose(processFanoutPipeline)(t), dir, 2); err != nil {
 		t.Fatalf("cap 2 Run() error = %v, want nil", err)
 	}
 	for _, name := range []string{"out/a.txt", "out/b.txt"} {

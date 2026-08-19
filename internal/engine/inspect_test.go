@@ -208,7 +208,7 @@ func TestInspectRemainingInstanceUsesFullSet(t *testing.T) {
 func TestInspectSuccessfulRunNotAffected(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
-	if defects := Run(Request{
+	if defects := Run(t.Context(), Request{
 		Workspace: dir,
 		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 	}); len(defects) != 0 {
@@ -353,7 +353,7 @@ func TestInspectLogTailBounded(t *testing.T) {
 func TestInspectInstanceSelector(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
-	if defects := Run(Request{
+	if defects := Run(t.Context(), Request{
 		Workspace: dir,
 		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 	}); len(defects) != 0 {

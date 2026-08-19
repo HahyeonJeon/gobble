@@ -101,7 +101,7 @@ func TestOccupyClosedWorkspaceOneOwner(t *testing.T) {
 func TestRunPersistsIdentityFacts(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
-	defects := Run(Request{
+	defects := Run(t.Context(), Request{
 		Workspace: dir,
 		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 	})
@@ -181,7 +181,7 @@ func TestReservedIdentityKeysTwoInstances(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "a.txt"), "a")
 	writeCheckFile(t, filepath.Join(dir, "in", "b.txt"), "b")
-	if defects := Run(Request{
+	if defects := Run(t.Context(), Request{
 		Workspace: dir,
 		Document:  Document{Name: "pair", Tasks: []TaskPlan{a, b}},
 		Cap:       2,
@@ -235,7 +235,7 @@ func TestRunAfterReleaseHitsOutputExists(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	req := Request{Workspace: dir, Document: sampleDoc("", "", "in/sample.txt", "out/sample.txt")}
-	if defects := Run(req); len(defects) != 0 {
+	if defects := Run(t.Context(), req); len(defects) != 0 {
 		t.Fatalf("first Run() defects %v, want none", defects)
 	}
 	before, err := os.ReadFile(filepath.Join(dir, "out", "sample.txt"))
@@ -246,7 +246,7 @@ func TestRunAfterReleaseHitsOutputExists(t *testing.T) {
 	if defects := Release(dir); len(defects) != 0 {
 		t.Fatalf("Release() defects %v, want none", defects)
 	}
-	defects := Run(req)
+	defects := Run(t.Context(), req)
 	if !hasDefect(defects, DefectOutputExists, "copy.out") {
 		t.Fatalf("Run after Release defects %v, want output-exists", defects)
 	}

@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"context"
 	"os"
 	"strings"
 	"time"
@@ -9,8 +10,12 @@ import (
 // Resume occupies a released existing run after checks, classifies
 // every reserved identity, executes reruns as new attempts, and
 // persists decisions. A nil result means every supplied identity
-// succeeded.
-func Resume(req Request) []Defect {
+// succeeded. ctx cancel matches Run: stop admit, cancel in-flight,
+// persist incomplete, occupancy stays active, DefectCanceled.
+func Resume(ctx context.Context, req Request) []Defect {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	if d := checkResume(req); len(d) > 0 {
 		return d
 	}
@@ -22,7 +27,7 @@ func Resume(req Request) []Defect {
 	if len(defects) > 0 {
 		return defects
 	}
-	return s.loop(n)
+	return s.loop(ctx, n)
 }
 
 func checkResume(req Request) []Defect {
@@ -245,6 +250,7 @@ func occupyResume(req Request) (*sched, []Defect) {
 		resume:   class.Decision,
 		launched: make(map[string]bool),
 		budget:   newBudget(readHostCapacity()),
+		exec:     runExecutor,
 	}
 	if s.run.ID == "" {
 		s.run.ID = runID(doc)

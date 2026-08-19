@@ -93,7 +93,7 @@ func TestFastpStandaloneRun(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	if err := gobble.Run(g, dir, 1); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
 	for _, rel := range []string{

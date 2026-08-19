@@ -5,6 +5,8 @@ import (
 	"encoding/hex"
 	"io"
 	"strconv"
+
+	"github.com/HahyeonJeon/gobble/internal/engine/exec"
 )
 
 const (
@@ -69,7 +71,7 @@ func isolateRel(t TaskPlan) string {
 }
 
 func sha256File(path string) (string, error) {
-	f, err := openReadFile(path)
+	f, err := exec.OpenReadFile(path)
 	if err != nil {
 		return "", err
 	}

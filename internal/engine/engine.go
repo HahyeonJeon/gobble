@@ -1,6 +1,6 @@
 // Package engine owns validation walks, plan construction,
 // pre-execution run checks, occupancy release, inspect, resume,
-// and process and Docker execution.
+// and scheduling onto package exec process and Docker adapters.
 //
 // Package gobble renders PathSpec through internal/path, runs
 // compose-time checks, and translates Graph values into Document.
@@ -40,6 +40,7 @@ const (
 	DefectUnsupportedSchema  = "unsupported-schema"
 	DefectNothingToResume    = "nothing-to-resume"
 	DefectPlanDrift          = "plan-drift"
+	DefectCanceled           = "canceled"
 )
 
 // SchemaVersion is the control-document version this engine writes.

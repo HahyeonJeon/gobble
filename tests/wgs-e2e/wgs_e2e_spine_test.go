@@ -201,7 +201,7 @@ func TestWGSSpineRun(t *testing.T) {
 	rec.Inputs = thinSliceInputFacts(t, dir)
 
 	g := mustCompose(wgsE2ESpineStrelkaPipeline)(t)
-	err := gobble.Run(g, dir, 1)
+	err := gobble.Run(t.Context(), g, dir, 1)
 	rec.StrelkaAttempted = true
 	rec.StrelkaError = formatRunError(err)
 	rec.TaskLogs = spineLogs(dir, "index", "mem", "sort", "bai", "faidx", "strelka")
@@ -234,7 +234,7 @@ func TestWGSSpineRun(t *testing.T) {
 	rec.BCFToolsTag = wgsE2ESpineBCFTools
 
 	g2 := mustCompose(wgsE2ESpineBCFToolsPipeline)(t)
-	err2 := gobble.Run(g2, fallback, 1)
+	err2 := gobble.Run(t.Context(), g2, fallback, 1)
 	rec.BCFToolsError = formatRunError(err2)
 	rec.TaskLogs += spineLogs(fallback, "index", "mem", "sort", "bai", "faidx", "mpileup", "call")
 	rec.TaskState += "\n" + thinSliceTaskState(fallback)

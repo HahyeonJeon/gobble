@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/HahyeonJeon/gobble/internal/engine/exec"
 )
 
 func TestPlanDriftTaskSetAndEdges(t *testing.T) {
@@ -162,7 +164,7 @@ func TestResumeRerunsWhenScriptChanges(t *testing.T) {
 	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
 	doc.Tasks[0].Command = nil
 	doc.Tasks[0].Script = "cp in/sample.txt out/sample.txt"
-	if defects := Run(Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+	if defects := Run(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
 		t.Fatalf("Run() defects %v", defects)
 	}
 	st := taskStates(t, dir)["copy"]
@@ -176,7 +178,7 @@ func TestResumeRerunsWhenScriptChanges(t *testing.T) {
 	next := doc
 	next.Tasks = append([]TaskPlan(nil), doc.Tasks...)
 	next.Tasks[0].Script = "cp in/sample.txt out/sample.txt\n# v2"
-	if defects := Resume(Request{Workspace: dir, Document: next}); len(defects) != 0 {
+	if defects := Resume(t.Context(), Request{Workspace: dir, Document: next}); len(defects) != 0 {
 		t.Fatalf("Resume() defects %v", defects)
 	}
 	after := taskStates(t, dir)["copy"]
@@ -191,7 +193,7 @@ func TestInspectRerunsWhenPlanScriptChanges(t *testing.T) {
 	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
 	doc.Tasks[0].Command = nil
 	doc.Tasks[0].Script = "cp in/sample.txt out/sample.txt"
-	if defects := Run(Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+	if defects := Run(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
 		t.Fatalf("Run() defects %v", defects)
 	}
 	planPath := filepath.Join(dir, ControlDir, PlanFile)
@@ -227,7 +229,7 @@ func TestResumeRerunsWhenEnvChanges(t *testing.T) {
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
 	doc.Tasks[0].Env = map[string]string{"HOME": "/tmp/gobble-home"}
-	if defects := Run(Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+	if defects := Run(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
 		t.Fatalf("Run() defects %v", defects)
 	}
 	st := taskStates(t, dir)["copy"]
@@ -241,7 +243,7 @@ func TestResumeRerunsWhenEnvChanges(t *testing.T) {
 	next := doc
 	next.Tasks = append([]TaskPlan(nil), doc.Tasks...)
 	next.Tasks[0].Env = map[string]string{"HOME": "/tmp/gobble-home-2"}
-	if defects := Resume(Request{Workspace: dir, Document: next}); len(defects) != 0 {
+	if defects := Resume(t.Context(), Request{Workspace: dir, Document: next}); len(defects) != 0 {
 		t.Fatalf("Resume() defects %v", defects)
 	}
 	after := taskStates(t, dir)["copy"]
@@ -257,7 +259,7 @@ func TestResumeSequentialRerunWaitsForUpstreamDest(t *testing.T) {
 		[]string{"cp", "in/sample.txt", "out/a.txt"},
 		[]string{"cp", "out/a.txt", "out/b.txt"},
 	)
-	if defects := Run(Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+	if defects := Run(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
 		t.Fatalf("Run() defects %v", defects)
 	}
 	forceDeadOwner(t, dir)
@@ -269,20 +271,24 @@ func TestResumeSequentialRerunWaitsForUpstreamDest(t *testing.T) {
 		[]string{"sh", "-c", "cp in/sample.txt out/a.txt"},
 		[]string{"sh", "-c", "cp out/a.txt out/b.txt"},
 	)
-	orig := execTask
-	t.Cleanup(func() { execTask = orig })
-	execTask = func(workspace string, task TaskPlan) report {
-		if task.ID == "b" {
-			got, err := os.ReadFile(filepath.Join(workspace, "out", "a.txt"))
-			if err != nil {
-				t.Errorf("b started before a dest exists: %v", err)
-			} else if string(got) != "new" {
-				t.Errorf("b saw a dest %q, want new", got)
+	inner := runExecutor
+	useExec(t, &fnExec{
+		submit: func(job exec.Job) (exec.Handle, exec.Report, error) {
+			if job.Identity == "b" {
+				got, err := os.ReadFile(filepath.Join(isolateWorkspace(job.Isolate), "out", "a.txt"))
+				if err != nil {
+					t.Errorf("b started before a dest exists: %v", err)
+				} else if string(got) != "new" {
+					t.Errorf("b saw a dest %q, want new", got)
+				}
 			}
-		}
-		return orig(workspace, task)
-	}
-	if defects := Resume(Request{Workspace: dir, Document: next}); len(defects) != 0 {
+			return inner.Submit(job)
+		},
+		poll:      inner.Poll,
+		cancel:    inner.Cancel,
+		reconcile: inner.Reconcile,
+	})
+	if defects := Resume(t.Context(), Request{Workspace: dir, Document: next}); len(defects) != 0 {
 		t.Fatalf("Resume() defects %v", defects)
 	}
 	got, err := os.ReadFile(filepath.Join(dir, "out", "b.txt"))
@@ -295,7 +301,7 @@ func TestResumeDestRenameDoesNotReuse(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
-	if defects := Run(Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+	if defects := Run(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
 		t.Fatalf("Run() defects %v", defects)
 	}
 	forceDeadOwner(t, dir)
@@ -304,7 +310,7 @@ func TestResumeDestRenameDoesNotReuse(t *testing.T) {
 	}
 	next := sampleDoc("", "", "in/sample.txt", "out/renamed.txt")
 	next.Tasks[0].Command = doc.Tasks[0].Command
-	defects := Resume(Request{Workspace: dir, Document: next})
+	defects := Resume(t.Context(), Request{Workspace: dir, Document: next})
 	after := taskStates(t, dir)["copy"]
 	if after.Decision == reuseReused {
 		t.Fatalf("dest rename reused: %#v defects=%v", after, defects)

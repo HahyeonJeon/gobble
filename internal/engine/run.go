@@ -1,11 +1,14 @@
 package engine
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
 	"strconv"
 	"time"
+
+	"github.com/HahyeonJeon/gobble/internal/engine/exec"
 )
 
 // Control-plane document names under ControlDir.
@@ -29,14 +32,20 @@ const (
 	executorDocker  = "docker"
 )
 
-// execTask is the scheduler-to-executor seam. The scheduler never
-// starts a host process; this function does.
-var execTask = executeTask
+const pollInterval = 20 * time.Millisecond
+
+// runExecutor is the scheduler-to-backend seam. Tests replace it.
+var runExecutor exec.Executor = exec.Local()
 
 // Run occupies workspace after Check, schedules doc, and returns when
 // no more independent work can start. A nil result means every task
-// succeeded.
-func Run(req Request) []Defect {
+// succeeded. When ctx is done, in-flight work is canceled, those
+// identities are persisted incomplete, occupancy stays active, and the
+// result is DefectCanceled.
+func Run(ctx context.Context, req Request) []Defect {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	if d := Check(req); len(d) > 0 {
 		return d
 	}
@@ -48,7 +57,7 @@ func Run(req Request) []Defect {
 	if len(defects) > 0 {
 		return defects
 	}
-	return s.loop(n)
+	return s.loop(ctx, n)
 }
 
 type sched struct {
@@ -61,6 +70,7 @@ type sched struct {
 	launched  map[string]bool
 	persist   error
 	budget    resourceBudget
+	exec      exec.Executor
 }
 
 type resourceBudget struct {
@@ -125,6 +135,8 @@ type jsonTaskState struct {
 	Resources    jsonResources     `json:"resources"`
 	Params       []jsonParam       `json:"params"`
 	Env          map[string]string `json:"env,omitempty"`
+	RuntimeID    string            `json:"runtime_id,omitempty"`
+	ImageDigest  string            `json:"image_digest,omitempty"`
 	Reason       string            `json:"reason"`
 	Error        *jsonTaskErr      `json:"error,omitempty"`
 	Stdout       string            `json:"stdout,omitempty"`
@@ -176,6 +188,7 @@ func occupy(req Request) (*sched, []Defect) {
 		},
 		tasks:  make(map[string]*jsonTaskState, len(doc.Tasks)),
 		budget: newBudget(readHostCapacity()),
+		exec:   runExecutor,
 	}
 	for _, t := range doc.Tasks {
 		st := initialTask(t)
@@ -248,29 +261,165 @@ func initialTask(t TaskPlan) jsonTaskState {
 	}
 }
 
-func (s *sched) loop(n int) []Defect {
+type report struct {
+	ID          string
+	Exit        int
+	Message     string
+	Stdout      string
+	Stderr      string
+	Published   bool
+	RuntimeID   string
+	ImageDigest string
+}
+
+type startEvent struct {
+	ident  string
+	handle exec.Handle
+	sub    exec.Report
+}
+
+func (s *sched) executor() exec.Executor {
+	if s.exec != nil {
+		return s.exec
+	}
+	return runExecutor
+}
+
+func (s *sched) loop(ctx context.Context, n int) []Defect {
+	if s.resume != nil {
+		s.reapLive()
+	}
 	reports := make(chan report, n)
+	starts := make(chan startEvent, n)
 	running := 0
+	handles := make(map[string]exec.Handle)
+	canceled := false
+	cancelInFlight := func() {
+		canceled = true
+		for _, h := range handles {
+			_ = s.executor().Cancel(h)
+		}
+	}
 	for {
-		for s.persist == nil && running < n {
+		if ctx.Err() != nil && !canceled {
+			cancelInFlight()
+		}
+		for !canceled && s.persist == nil && running < n {
 			id := s.nextReady()
 			if id == "" {
 				break
 			}
-			s.launch(id, reports)
+			s.launch(id, starts, reports)
 			running++
 		}
 		if running == 0 {
 			break
 		}
-		r := <-reports
-		running--
-		s.apply(r)
+		if canceled {
+			select {
+			case st := <-starts:
+				handles[st.ident] = st.handle
+				s.persistStart(st)
+				_ = s.executor().Cancel(st.handle)
+			case r := <-reports:
+				running--
+				delete(handles, r.ID)
+				s.markIncomplete(r.ID)
+			}
+			continue
+		}
+		select {
+		case st := <-starts:
+			handles[st.ident] = st.handle
+			s.persistStart(st)
+		case r := <-reports:
+			running--
+			delete(handles, r.ID)
+			s.apply(r)
+		case <-ctx.Done():
+			cancelInFlight()
+		}
+	}
+	if canceled {
+		s.notePersist(s.writeTasks())
+		s.notePersist(s.writeRun())
+		return []Defect{{
+			Code:    DefectCanceled,
+			Message: "canceled",
+		}}
 	}
 	s.assignBlockedUpstream()
 	s.notePersist(s.writeTasks())
 	s.finish()
 	return s.failures()
+}
+
+func (s *sched) persistStart(st startEvent) {
+	task := s.tasks[st.ident]
+	if task == nil {
+		return
+	}
+	task.RuntimeID = st.sub.RuntimeID
+	if st.sub.ImageDigest != "" {
+		task.ImageDigest = st.sub.ImageDigest
+	}
+	s.notePersist(s.writeTasks())
+}
+
+func (s *sched) markIncomplete(ident string) {
+	st := s.tasks[ident]
+	if st == nil {
+		return
+	}
+	if task, ok := s.taskByIdent(ident); ok {
+		s.budget.release(task)
+	}
+	st.Status = StatusIncomplete
+	st.Reason = "canceled"
+	if st.Ended == "" {
+		st.Ended = time.Now().UTC().Format(time.RFC3339Nano)
+	}
+	s.notePersist(s.writeTasks())
+}
+
+func (s *sched) reapLive() {
+	ex := s.executor()
+	for ident, st := range s.tasks {
+		if st == nil || st.RuntimeID == "" {
+			continue
+		}
+		if st.Status != StatusRunning && st.Status != StatusIncomplete {
+			continue
+		}
+		backend := st.Executor
+		if backend == "" {
+			if st.Image != "" {
+				backend = executorDocker
+			} else {
+				backend = executorProcess
+			}
+		}
+		h := exec.Handle{Identity: ident, Backend: backend, RuntimeID: st.RuntimeID}
+		r, _ := ex.Reconcile(h)
+		if r.Running {
+			_ = ex.Cancel(h)
+			for {
+				pr, _ := ex.Poll(h)
+				if !pr.Running {
+					break
+				}
+				time.Sleep(pollInterval)
+			}
+		}
+		if st.Status == StatusRunning {
+			st.Status = StatusIncomplete
+			st.Reason = reasonPreviousIncomplete
+			if st.Ended == "" {
+				st.Ended = time.Now().UTC().Format(time.RFC3339Nano)
+			}
+		}
+	}
+	s.notePersist(s.writeTasks())
 }
 
 func (s *sched) nextReady() string {
@@ -401,7 +550,7 @@ func (s *sched) taskByID(id string) (TaskPlan, bool) {
 	return TaskPlan{}, false
 }
 
-func (s *sched) launch(ident string, reports chan report) {
+func (s *sched) launch(ident string, starts chan startEvent, reports chan report) {
 	if s.resume != nil {
 		s.beginResumeAttempt(ident)
 	}
@@ -422,9 +571,86 @@ func (s *sched) launch(ident string, reports chan report) {
 	s.budget.occupy(task)
 	s.notePersist(s.writeTasks())
 	ws := s.workspace
+	ex := s.executor()
 	go func() {
-		reports <- execTask(ws, task)
+		s.runJob(ws, task, ex, starts, reports)
 	}()
+}
+
+func (s *sched) runJob(workspace string, task TaskPlan, ex exec.Executor, starts chan startEvent, reports chan report) {
+	applyReservedDefaults(&task)
+	ident := reservedIdentity(task)
+	rel := isolateRel(task)
+	isolate := filepath.Join(workspace, filepath.FromSlash(rel), "work")
+	r := report{ID: ident, Stdout: rel + "/stdout", Stderr: rel + "/stderr"}
+	if err := os.MkdirAll(isolate, 0o755); err != nil {
+		r.Message = err.Error()
+		reports <- r
+		return
+	}
+	if err := prepareIsolate(workspace, isolate, task); err != nil {
+		r.Message = err.Error()
+		reports <- r
+		return
+	}
+	job := exec.Job{
+		Identity: ident,
+		Isolate:  isolate,
+		Argv:     executeArgv(task),
+		Env:      copyStringMap(task.Env),
+		Image:    task.Image,
+		CPU:      task.Resources.CPU,
+		Memory:   task.Resources.Memory,
+	}
+	h, sub, err := ex.Submit(job)
+	if err != nil {
+		r.Message = err.Error()
+		reports <- r
+		return
+	}
+	r.RuntimeID = sub.RuntimeID
+	r.ImageDigest = sub.ImageDigest
+	starts <- startEvent{ident: ident, handle: h, sub: sub}
+	for {
+		pr, perr := ex.Poll(h)
+		if perr != nil {
+			r.Message = perr.Error()
+			reports <- r
+			return
+		}
+		if pr.Running {
+			time.Sleep(pollInterval)
+			continue
+		}
+		r.Exit = pr.Exit
+		r.Message = pr.Message
+		r.Published = pr.Published
+		if pr.RuntimeID != "" {
+			r.RuntimeID = pr.RuntimeID
+		}
+		if pr.ImageDigest != "" {
+			r.ImageDigest = pr.ImageDigest
+		}
+		if pr.Exit == 0 && pr.Message == "" && !pr.Published {
+			if missing := missingOutputs(isolate, task); missing != "" {
+				r.Message = "missing output"
+			} else {
+				var pubErr error
+				if task.Replace {
+					pubErr = publishReplace(workspace, isolate, task)
+				} else {
+					pubErr = publishAll(workspace, isolate, task)
+				}
+				if pubErr != nil {
+					r.Message = pubErr.Error()
+				} else {
+					r.Published = true
+				}
+			}
+		}
+		reports <- r
+		return
+	}
 }
 
 func (s *sched) beginResumeAttempt(ident string) {
@@ -559,6 +785,12 @@ func (s *sched) apply(r report) {
 	}
 	st.Stdout = r.Stdout
 	st.Stderr = r.Stderr
+	if r.RuntimeID != "" {
+		st.RuntimeID = r.RuntimeID
+	}
+	if r.ImageDigest != "" {
+		st.ImageDigest = r.ImageDigest
+	}
 	st.Ended = time.Now().UTC().Format(time.RFC3339Nano)
 	if r.Published && r.Exit == 0 && r.Message == "" {
 		st.Status = StatusSucceeded

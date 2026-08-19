@@ -85,7 +85,7 @@ func TestFastQCStandaloneRun(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	if err := gobble.Run(g, dir, 1); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
 	for _, rel := range []string{"work/fastqc/test_1_fastqc.html", "work/fastqc/test_1_fastqc.zip"} {
@@ -107,7 +107,7 @@ func TestFastQCExtraArgsResume(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	if err := gobble.Run(g, dir, 1); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
 	forceDeadOwner(t, dir)
@@ -119,7 +119,7 @@ func TestFastQCExtraArgsResume(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose(changed extra-args) error = %v", err)
 	}
-	if err := gobble.Resume(g2, dir, 1); err != nil {
+	if err := gobble.Resume(t.Context(), g2, dir, 1); err != nil {
 		t.Fatalf("Resume() error = %v", err)
 	}
 	instances := inspectJSONL(t, dir, "instances")

@@ -1,6 +1,7 @@
 package gobble
 
 import (
+	"context"
 	"errors"
 
 	"github.com/HahyeonJeon/gobble/internal/engine"
@@ -18,8 +19,9 @@ import (
 //
 // Empty Image runs as a host process. A nil error means every task
 // succeeded. Contained task failure returns an [*Error] with Op "run"
-// that names the failed units.
-func Run(g *Graph, workspace string, cap int) error {
+// that names the failed units. When ctx is done, in-flight work is
+// canceled and the error is [*Error] with Op "run" and DefectCanceled.
+func Run(ctx context.Context, g *Graph, workspace string, cap int) error {
 	if err := preflight(g, workspace, cap); err != nil {
 		return err
 	}
@@ -27,7 +29,7 @@ func Run(g *Graph, workspace string, cap int) error {
 	if err != nil {
 		return runOp(err)
 	}
-	return publicError("run", engine.Run(engine.Request{
+	return publicError("run", engine.Run(ctx, engine.Request{
 		Workspace: workspace,
 		Cap:       cap,
 		Document:  doc,

@@ -157,7 +157,7 @@ func TestWGSThinSliceRun(t *testing.T) {
 		g = mustCompose(func() *gobble.Pipeline {
 			return wgsE2EThinPipelineWithBWA(image)
 		})(t)
-		err := gobble.Run(g, dir, 1)
+		err := gobble.Run(t.Context(), g, dir, 1)
 		if err == nil {
 			usedBWA = image
 			rec.BWATag = image
@@ -201,7 +201,7 @@ func TestWGSThinSliceRun(t *testing.T) {
 		t.Fatalf("mapped-read count = 0 via %s; stop for fixture handoff, not PASS", method)
 	}
 
-	err := gobble.Run(g, dir, 0)
+	err := gobble.Run(t.Context(), g, dir, 0)
 	ge := requireRunError(t, "second Run", err, gobble.DefectOccupiedWorkspace, "")
 	for _, d := range ge.Defects {
 		if d.Code == gobble.DefectOutputExists {
@@ -561,7 +561,7 @@ func finishThinSliceAfterRunError(t *testing.T, g *gobble.Graph, dir string, rec
 		rec.MappedMethod = method
 		t.Logf("mapped reads after failed Run: %d via %s", count, method)
 	}
-	occErr := gobble.Run(g, dir, 0)
+	occErr := gobble.Run(t.Context(), g, dir, 0)
 	var ge *gobble.Error
 	if errors.As(occErr, &ge) {
 		rec.OccupyError = occErr.Error()

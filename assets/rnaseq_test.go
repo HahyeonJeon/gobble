@@ -87,7 +87,7 @@ func TestRNASeqRun(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	if err := gobble.Run(g, dir, 2); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 2); err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
 	logPath := filepath.Join(dir, filepath.FromSlash("work/star-align/Log.final.out"))

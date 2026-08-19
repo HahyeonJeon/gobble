@@ -117,7 +117,7 @@ func TestSTARAlignNestedRun(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	if err := gobble.Run(g, dir, 1); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
 	bam := filepath.Join(dir, filepath.FromSlash("work/star-align/Aligned.out.bam"))

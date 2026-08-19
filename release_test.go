@@ -20,7 +20,7 @@ func TestReleaseMissingRun(t *testing.T) {
 func TestReleaseLiveAndDeadOwner(t *testing.T) {
 	dir := readyRunWorkspace(t)
 	g := mustCompose(processCopyPipeline)(t)
-	if err := gobble.Run(g, dir, 0); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 0); err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
 	err := gobble.Release(dir)
@@ -40,7 +40,7 @@ func TestReleaseLiveAndDeadOwner(t *testing.T) {
 	err = gobble.Release(dir)
 	requireReleaseError(t, "already released", err, gobble.DefectAlreadyReleased, "")
 
-	err = gobble.Run(g, dir, 0)
+	err = gobble.Run(t.Context(), g, dir, 0)
 	requireRunError(t, "Run after Release", err, gobble.DefectOutputExists, "copy.out")
 }
 

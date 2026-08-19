@@ -14,7 +14,7 @@ import (
 func TestResumeMissingRunDoesNotOccupy(t *testing.T) {
 	dir := readyRunWorkspace(t)
 	before := snapshotWorkspace(t, dir)
-	err := gobble.Resume(mustCompose(processCopyPipeline)(t), dir, 0)
+	err := gobble.Resume(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0)
 	requireResumeError(t, "missing run", err, gobble.DefectNothingToResume, "")
 	after := snapshotWorkspace(t, dir)
 	if before != after {
@@ -28,10 +28,10 @@ func TestResumeMissingRunDoesNotOccupy(t *testing.T) {
 func TestResumeActiveOccupy(t *testing.T) {
 	dir := readyRunWorkspace(t)
 	g := mustCompose(processCopyPipeline)(t)
-	if err := gobble.Run(g, dir, 0); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 0); err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
-	err := gobble.Resume(g, dir, 0)
+	err := gobble.Resume(t.Context(), g, dir, 0)
 	requireResumeError(t, "active occupy", err, gobble.DefectOccupiedWorkspace, "")
 }
 
@@ -46,7 +46,7 @@ func TestResumeUnsupportedSchemaNoOccupy(t *testing.T) {
 }
 `)
 	before := snapshotWorkspace(t, dir)
-	err := gobble.Resume(mustCompose(processCopyPipeline)(t), dir, 0)
+	err := gobble.Resume(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0)
 	requireResumeError(t, "unsupported schema", err, gobble.DefectUnsupportedSchema, "")
 	after := snapshotWorkspace(t, dir)
 	if before != after {
@@ -56,16 +56,16 @@ func TestResumeUnsupportedSchemaNoOccupy(t *testing.T) {
 
 func TestResumeNilGraphAndCap(t *testing.T) {
 	dir := readyRunWorkspace(t)
-	err := gobble.Resume(nil, dir, 0)
+	err := gobble.Resume(t.Context(), nil, dir, 0)
 	requireResumeError(t, "nil graph", err, gobble.DefectInvalidRequest, "")
-	err = gobble.Resume(mustCompose(processCopyPipeline)(t), dir, -1)
+	err = gobble.Resume(t.Context(), mustCompose(processCopyPipeline)(t), dir, -1)
 	requireResumeError(t, "cap below 1", err, gobble.DefectInvalidValue, "")
-	err = gobble.Resume(mustCompose(processCopyPipeline)(t), dir, 65)
+	err = gobble.Resume(t.Context(), mustCompose(processCopyPipeline)(t), dir, 65)
 	requireResumeError(t, "cap above 64", err, gobble.DefectInvalidValue, "")
 }
 
 func TestResumeOp(t *testing.T) {
-	err := gobble.Resume(mustCompose(processCopyPipeline)(t), t.TempDir(), 0)
+	err := gobble.Resume(t.Context(), mustCompose(processCopyPipeline)(t), t.TempDir(), 0)
 	var ge *gobble.Error
 	if !errors.As(err, &ge) {
 		t.Fatalf("error = %v, want *Error", err)
@@ -78,7 +78,7 @@ func TestResumeOp(t *testing.T) {
 func TestResumePlanDriftDoesNotOccupy(t *testing.T) {
 	dir := readyReleasedRun(t, processCopyPipeline)
 	before := occupancySnapshot(t, dir)
-	err := gobble.Resume(mustCompose(processCopyPlusPipeline)(t), dir, 0)
+	err := gobble.Resume(t.Context(), mustCompose(processCopyPlusPipeline)(t), dir, 0)
 	requireResumeError(t, "added task", err, gobble.DefectPlanDrift, "")
 	if occupancySnapshot(t, dir) != before {
 		t.Fatalf("plan drift occupied workspace")
@@ -86,7 +86,7 @@ func TestResumePlanDriftDoesNotOccupy(t *testing.T) {
 
 	dir = readyReleasedRun(t, processContainPipeline)
 	before = occupancySnapshot(t, dir)
-	err = gobble.Resume(mustCompose(processContainIndependentPipeline)(t), dir, 0)
+	err = gobble.Resume(t.Context(), mustCompose(processContainIndependentPipeline)(t), dir, 0)
 	requireResumeError(t, "changed edges", err, gobble.DefectPlanDrift, "")
 	if occupancySnapshot(t, dir) != before {
 		t.Fatalf("changed-edge plan drift occupied workspace")
@@ -95,7 +95,7 @@ func TestResumePlanDriftDoesNotOccupy(t *testing.T) {
 	dir = readyReleasedRun(t, processCopyPipeline)
 	writeRunFile(t, filepath.Join(dir, "in", "other.txt"), "reads")
 	before = occupancySnapshot(t, dir)
-	err = gobble.Resume(mustCompose(processCopyOtherInputPipeline)(t), dir, 0)
+	err = gobble.Resume(t.Context(), mustCompose(processCopyOtherInputPipeline)(t), dir, 0)
 	requireResumeError(t, "wait-only edge", err, gobble.DefectPlanDrift, "")
 	if occupancySnapshot(t, dir) != before {
 		t.Fatalf("wait-only plan drift occupied workspace")
@@ -105,7 +105,7 @@ func TestResumePlanDriftDoesNotOccupy(t *testing.T) {
 func TestResumeAllSuccessReuses(t *testing.T) {
 	dir := readyReleasedRun(t, processCopyPipeline)
 	g := mustCompose(processCopyPipeline)(t)
-	if err := gobble.Resume(g, dir, 0); err != nil {
+	if err := gobble.Resume(t.Context(), g, dir, 0); err != nil {
 		t.Fatalf("Resume() error = %v", err)
 	}
 	run := mustInspectObject(t, dir, "run", "")
@@ -133,15 +133,15 @@ func TestResumeAllSuccessReuses(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(dir, engine.ControlDir, "tasks", "copy", "_", "0", "2", "work")); !os.IsNotExist(err) {
 		t.Fatalf("reuse executed a new attempt")
 	}
-	err := gobble.Resume(g, dir, 0)
+	err := gobble.Resume(t.Context(), g, dir, 0)
 	requireResumeError(t, "second resume", err, gobble.DefectOccupiedWorkspace, "")
-	err = gobble.Run(g, dir, 0)
+	err = gobble.Run(t.Context(), g, dir, 0)
 	requireRunError(t, "run during resume occupy", err, gobble.DefectOccupiedWorkspace, "")
 }
 
 func TestResumeFailedRerunAndBlockedUpstream(t *testing.T) {
 	dir := readyReleasedRun(t, processContainPipeline)
-	err := gobble.Resume(mustCompose(processContainPipeline)(t), dir, 2)
+	err := gobble.Resume(t.Context(), mustCompose(processContainPipeline)(t), dir, 2)
 	requireResumeError(t, "contained resume", err, gobble.DefectFailed, "fail")
 	instances := mustInspectJSONL(t, dir, "instances", "")
 	byID := instanceByID(instances)
@@ -171,7 +171,7 @@ func TestResumeFailedRerunAndBlockedUpstream(t *testing.T) {
 func TestResumeIncompleteNewAttempt(t *testing.T) {
 	dir := readyRunWorkspace(t)
 	g := mustCompose(processCopyPipeline)(t)
-	if err := gobble.Run(g, dir, 0); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 0); err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
 	forcePublicDeadOwner(t, dir)
@@ -179,7 +179,7 @@ func TestResumeIncompleteNewAttempt(t *testing.T) {
 	if err := gobble.Release(dir); err != nil {
 		t.Fatalf("Release() error = %v", err)
 	}
-	if err := gobble.Resume(g, dir, 0); err != nil {
+	if err := gobble.Resume(t.Context(), g, dir, 0); err != nil {
 		t.Fatalf("Resume() error = %v", err)
 	}
 	instances := mustInspectJSONL(t, dir, "instances", "")
@@ -196,7 +196,7 @@ func TestResumeReusedDestsNotOutputExists(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(dir, "out", "sample.txt")); err != nil {
 		t.Fatalf("expected reused dest: %v", err)
 	}
-	if err := gobble.Resume(mustCompose(processCopyPipeline)(t), dir, 0); err != nil {
+	if err := gobble.Resume(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0); err != nil {
 		t.Fatalf("Resume() error = %v", err)
 	}
 }
@@ -205,7 +205,7 @@ func TestResumeUnattributedDestOutputExists(t *testing.T) {
 	dir := readyReleasedRun(t, processContainPipeline)
 	writeRunFile(t, filepath.Join(dir, "out", "dep.txt"), "stray")
 	beforeOcc := occupancySnapshot(t, dir)
-	err := gobble.Resume(mustCompose(processContainPipeline)(t), dir, 2)
+	err := gobble.Resume(t.Context(), mustCompose(processContainPipeline)(t), dir, 2)
 	requireResumeError(t, "unattributed dest", err, gobble.DefectOutputExists, "dep.out")
 	if occupancySnapshot(t, dir) != beforeOcc {
 		t.Fatalf("unattributed dest occupied workspace")
@@ -220,7 +220,7 @@ func TestResumeFailedIdentityForeignDestOutputExists(t *testing.T) {
 	dir := readyReleasedRun(t, processContainPipeline)
 	writeRunFile(t, filepath.Join(dir, "out", "fail.txt"), "foreign")
 	beforeOcc := occupancySnapshot(t, dir)
-	err := gobble.Resume(mustCompose(processContainPipeline)(t), dir, 2)
+	err := gobble.Resume(t.Context(), mustCompose(processContainPipeline)(t), dir, 2)
 	requireResumeError(t, "foreign dest", err, gobble.DefectOutputExists, "fail.out")
 	if occupancySnapshot(t, dir) != beforeOcc {
 		t.Fatalf("foreign dest occupied workspace")
@@ -237,7 +237,7 @@ func TestResumeFailedAttemptKeepsPriorDestThenReplace(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = gobble.Resume(mustCompose(processCopyCmdPipeline("exit 1"))(t), dir, 0)
+	err = gobble.Resume(t.Context(), mustCompose(processCopyCmdPipeline("exit 1"))(t), dir, 0)
 	requireResumeError(t, "failed rerun", err, gobble.DefectFailed, "copy")
 	got, err := os.ReadFile(filepath.Join(dir, "out", "sample.txt"))
 	if err != nil || string(got) != string(prior) {
@@ -251,7 +251,7 @@ func TestResumeFailedAttemptKeepsPriorDestThenReplace(t *testing.T) {
 	if err := gobble.Release(dir); err != nil {
 		t.Fatalf("Release() error = %v", err)
 	}
-	if err := gobble.Resume(mustCompose(processCopyCmdPipeline("pwd > out/pwd.txt && echo new > out/sample.txt"))(t), dir, 0); err != nil {
+	if err := gobble.Resume(t.Context(), mustCompose(processCopyCmdPipeline("pwd > out/pwd.txt && echo new > out/sample.txt"))(t), dir, 0); err != nil {
 		t.Fatalf("successful replace Resume() error = %v", err)
 	}
 	got, err = os.ReadFile(filepath.Join(dir, "out", "sample.txt"))
@@ -266,7 +266,7 @@ func TestResumeFailedAttemptKeepsPriorDestThenReplace(t *testing.T) {
 
 func TestResumeResourceOnlyDoesNotRerun(t *testing.T) {
 	dir := readyReleasedRun(t, processCopyPipeline)
-	if err := gobble.Resume(mustCompose(processCopyResourcePipelineHeavy)(t), dir, 0); err != nil {
+	if err := gobble.Resume(t.Context(), mustCompose(processCopyResourcePipelineHeavy)(t), dir, 0); err != nil {
 		t.Fatalf("Resume() error = %v", err)
 	}
 	reuse := mustInspectJSONL(t, dir, "reuse", "")
@@ -280,20 +280,20 @@ func TestResumeResourceOnlyDoesNotRerun(t *testing.T) {
 
 func TestResumeAfterReleaseRunStillOutputExists(t *testing.T) {
 	dir := readyReleasedRun(t, processCopyPipeline)
-	if err := gobble.Resume(mustCompose(processCopyPipeline)(t), dir, 0); err != nil {
+	if err := gobble.Resume(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0); err != nil {
 		t.Fatalf("Resume() error = %v", err)
 	}
 	forcePublicDeadOwner(t, dir)
 	if err := gobble.Release(dir); err != nil {
 		t.Fatalf("Release() error = %v", err)
 	}
-	err := gobble.Run(mustCompose(processCopyPipeline)(t), dir, 0)
+	err := gobble.Run(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0)
 	requireRunError(t, "Run after released Resume", err, gobble.DefectOutputExists, "copy.out")
 }
 
 func TestResumeScriptChangeReruns(t *testing.T) {
 	dir := readyReleasedRun(t, processScriptCopyPipeline("cp in/sample.txt out/sample.txt"))
-	if err := gobble.Resume(mustCompose(processScriptCopyPipeline("cp in/sample.txt out/sample.txt\n# v2"))(t), dir, 0); err != nil {
+	if err := gobble.Resume(t.Context(), mustCompose(processScriptCopyPipeline("cp in/sample.txt out/sample.txt\n# v2"))(t), dir, 0); err != nil {
 		t.Fatalf("Resume() error = %v", err)
 	}
 	instances := mustInspectJSONL(t, dir, "instances", "")
@@ -307,7 +307,7 @@ func TestResumeScriptChangeReruns(t *testing.T) {
 
 func TestResumeEnvChangeReruns(t *testing.T) {
 	dir := readyReleasedRun(t, processEnvCopyPipeline)
-	if err := gobble.Resume(mustCompose(processEnvCopyHomePipeline("/tmp/gobble-home-2"))(t), dir, 0); err != nil {
+	if err := gobble.Resume(t.Context(), mustCompose(processEnvCopyHomePipeline("/tmp/gobble-home-2"))(t), dir, 0); err != nil {
 		t.Fatalf("Resume() error = %v", err)
 	}
 	instances := mustInspectJSONL(t, dir, "instances", "")
@@ -322,7 +322,7 @@ func TestResumeEnvChangeReruns(t *testing.T) {
 func TestResumeSequentialRerunUsesNewUpstreamDest(t *testing.T) {
 	dir := readyReleasedRun(t, processCopyChainPipeline("cp in/sample.txt out/a.txt", "cp out/a.txt out/b.txt"))
 	writeRunFile(t, filepath.Join(dir, "in", "sample.txt"), "new")
-	if err := gobble.Resume(mustCompose(processCopyChainPipeline("sh -c 'cp in/sample.txt out/a.txt'", "sh -c 'cp out/a.txt out/b.txt'"))(t), dir, 0); err != nil {
+	if err := gobble.Resume(t.Context(), mustCompose(processCopyChainPipeline("sh -c 'cp in/sample.txt out/a.txt'", "sh -c 'cp out/a.txt out/b.txt'"))(t), dir, 0); err != nil {
 		t.Fatalf("Resume() error = %v", err)
 	}
 	got, err := os.ReadFile(filepath.Join(dir, "out", "b.txt"))
@@ -337,7 +337,7 @@ func TestResumeSequentialRerunUsesNewUpstreamDest(t *testing.T) {
 
 func TestResumeDestRenameDoesNotReuse(t *testing.T) {
 	dir := readyReleasedRun(t, processCopyDestPipeline("sample"))
-	err := gobble.Resume(mustCompose(processCopyDestPipeline("renamed"))(t), dir, 0)
+	err := gobble.Resume(t.Context(), mustCompose(processCopyDestPipeline("renamed"))(t), dir, 0)
 	reuse := mustInspectJSONL(t, dir, "reuse", "")
 	if len(reuse) != 1 || reuse[0]["decision"] == "reused" {
 		t.Fatalf("dest rename reuse got %#v err=%v", reuse, err)
@@ -352,14 +352,14 @@ func TestResumeFanoutAllSuccessReuses(t *testing.T) {
 	dir := t.TempDir()
 	writeRunFile(t, filepath.Join(dir, "in", "a.txt"), "a")
 	writeRunFile(t, filepath.Join(dir, "in", "b.txt"), "b")
-	if err := gobble.Run(mustCompose(processFanoutPipeline)(t), dir, 2); err != nil {
+	if err := gobble.Run(t.Context(), mustCompose(processFanoutPipeline)(t), dir, 2); err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
 	forcePublicDeadOwner(t, dir)
 	if err := gobble.Release(dir); err != nil {
 		t.Fatalf("Release() error = %v", err)
 	}
-	if err := gobble.Resume(mustCompose(processFanoutPipeline)(t), dir, 2); err != nil {
+	if err := gobble.Resume(t.Context(), mustCompose(processFanoutPipeline)(t), dir, 2); err != nil {
 		t.Fatalf("Resume() error = %v", err)
 	}
 	byID := instanceByID(mustInspectJSONL(t, dir, "reuse", ""))
@@ -562,7 +562,7 @@ func processCopyResourcePipelineHeavy() *gobble.Pipeline {
 func readyReleasedRun(t *testing.T, pipe func() *gobble.Pipeline) string {
 	t.Helper()
 	dir := readyRunWorkspace(t)
-	err := gobble.Run(mustCompose(pipe)(t), dir, 2)
+	err := gobble.Run(t.Context(), mustCompose(pipe)(t), dir, 2)
 	if err != nil {
 		var ge *gobble.Error
 		if !errors.As(err, &ge) {

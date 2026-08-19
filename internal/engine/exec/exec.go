@@ -1,0 +1,109 @@
+// Package exec is the scheduler-to-backend seam.
+//
+// Executor implementations start and observe jobs. They do not write
+// run.json, plan.json, or tasks.json.
+package exec
+
+import "io"
+
+// Backend names recorded on a Handle.
+const (
+	BackendProcess = "process"
+	BackendDocker  = "docker"
+)
+
+// Job is one task invocation. Isolate is an absolute work directory.
+type Job struct {
+	Identity string
+	Isolate  string
+	Argv     []string
+	Env      map[string]string
+	Image    string
+	CPU      float64
+	Memory   string
+}
+
+// Handle identifies a submitted backend job.
+type Handle struct {
+	Identity  string
+	Backend   string
+	RuntimeID string
+}
+
+// Report is an executor observation. Adapters leave Published false.
+// A test executor may set Published when dest files already exist.
+type Report struct {
+	Identity    string
+	RuntimeID   string
+	ImageDigest string
+	Exit        int
+	Message     string
+	Running     bool
+	Published   bool
+}
+
+// Executor submits, observes, cancels, and reconciles backend jobs.
+type Executor interface {
+	Submit(job Job) (Handle, Report, error)
+	Poll(h Handle) (Report, error)
+	Cancel(h Handle) error
+	Reconcile(h Handle) (Report, error)
+}
+
+// Local selects process or docker by Image (R3). Empty Image is process.
+func Local() Executor {
+	return &local{
+		process: NewProcess(),
+		docker:  NewDocker(),
+	}
+}
+
+type local struct {
+	process *Process
+	docker  *Docker
+}
+
+func (l *local) Submit(job Job) (Handle, Report, error) {
+	return l.pickImage(job.Image).Submit(job)
+}
+
+func (l *local) Poll(h Handle) (Report, error) {
+	return l.pickBackend(h.Backend).Poll(h)
+}
+
+func (l *local) Cancel(h Handle) error {
+	return l.pickBackend(h.Backend).Cancel(h)
+}
+
+func (l *local) Reconcile(h Handle) (Report, error) {
+	return l.pickBackend(h.Backend).Reconcile(h)
+}
+
+func (l *local) pickImage(image string) Executor {
+	if image != "" {
+		return l.docker
+	}
+	return l.process
+}
+
+func (l *local) pickBackend(backend string) Executor {
+	if backend == BackendDocker {
+		return l.docker
+	}
+	return l.process
+}
+
+func copyEnv(env map[string]string) map[string]string {
+	if env == nil {
+		return nil
+	}
+	out := make(map[string]string, len(env))
+	for k, v := range env {
+		out[k] = v
+	}
+	return out
+}
+
+func discard() io.Writer {
+	return io.Discard
+}

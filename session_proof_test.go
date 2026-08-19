@@ -12,13 +12,13 @@ import (
 func TestSessionProofCrashedOccupyReleaseResume(t *testing.T) {
 	dir := readyRunWorkspace(t)
 	g := mustCompose(processCopyPipeline)(t)
-	if err := gobble.Run(g, dir, 0); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 0); err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
 	forcePublicDeadOwner(t, dir)
 	markCopyRunning(t, dir)
 
-	err := gobble.Resume(g, dir, 0)
+	err := gobble.Resume(t.Context(), g, dir, 0)
 	requireResumeError(t, "resume without release", err, gobble.DefectOccupiedWorkspace, "")
 	if occupancySnapshot(t, dir) != "active" {
 		t.Fatalf("crashed occupy occupancy got %s, want active", occupancySnapshot(t, dir))
@@ -41,7 +41,7 @@ func TestSessionProofCrashedOccupyReleaseResume(t *testing.T) {
 		t.Fatalf("remaining after crash release got %#v", remaining)
 	}
 
-	if err := gobble.Resume(g, dir, 0); err != nil {
+	if err := gobble.Resume(t.Context(), g, dir, 0); err != nil {
 		t.Fatalf("Resume() after Release error = %v", err)
 	}
 	run = mustInspectObject(t, dir, "run", "")
@@ -64,7 +64,7 @@ func TestSessionProofCrashedOccupyReleaseResume(t *testing.T) {
 func TestSessionProofReuseDecisionsVisible(t *testing.T) {
 	t.Run("reused-identity-matched", func(t *testing.T) {
 		dir := readyReleasedRun(t, processCopyPipeline)
-		if err := gobble.Resume(mustCompose(processCopyPipeline)(t), dir, 0); err != nil {
+		if err := gobble.Resume(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0); err != nil {
 			t.Fatalf("Resume() error = %v", err)
 		}
 		requireReuseRecords(t, dir, map[string]decisionWant{
@@ -78,7 +78,7 @@ func TestSessionProofReuseDecisionsVisible(t *testing.T) {
 	t.Run("rerun-incomplete", func(t *testing.T) {
 		dir := readyRunWorkspace(t)
 		g := mustCompose(processCopyPipeline)(t)
-		if err := gobble.Run(g, dir, 0); err != nil {
+		if err := gobble.Run(t.Context(), g, dir, 0); err != nil {
 			t.Fatalf("Run() error = %v", err)
 		}
 		forcePublicDeadOwner(t, dir)
@@ -86,7 +86,7 @@ func TestSessionProofReuseDecisionsVisible(t *testing.T) {
 		if err := gobble.Release(dir); err != nil {
 			t.Fatalf("Release() error = %v", err)
 		}
-		if err := gobble.Resume(g, dir, 0); err != nil {
+		if err := gobble.Resume(t.Context(), g, dir, 0); err != nil {
 			t.Fatalf("Resume() error = %v", err)
 		}
 		requireReuseRecords(t, dir, map[string]decisionWant{
@@ -96,7 +96,7 @@ func TestSessionProofReuseDecisionsVisible(t *testing.T) {
 
 	t.Run("rerun-unsuccessful-and-blocked-upstream", func(t *testing.T) {
 		dir := readyReleasedRun(t, processContainPipeline)
-		err := gobble.Resume(mustCompose(processContainPipeline)(t), dir, 2)
+		err := gobble.Resume(t.Context(), mustCompose(processContainPipeline)(t), dir, 2)
 		requireResumeError(t, "contained resume", err, gobble.DefectFailed, "fail")
 		requireReuseRecords(t, dir, map[string]decisionWant{
 			"fail": {decision: "rerun", reason: "previous-unsuccessful"},
@@ -120,7 +120,7 @@ func TestSessionProofReuseDecisionsVisible(t *testing.T) {
 		writeRunFile(t, filepath.Join(dir, "out", "dep.txt"), "stray")
 		beforeOcc := occupancySnapshot(t, dir)
 		beforeReuse := mustInspectJSONL(t, dir, "reuse", "")
-		err := gobble.Resume(mustCompose(processContainPipeline)(t), dir, 2)
+		err := gobble.Resume(t.Context(), mustCompose(processContainPipeline)(t), dir, 2)
 		requireResumeError(t, "unattributed dest", err, gobble.DefectOutputExists, "dep.out")
 		if occupancySnapshot(t, dir) != beforeOcc {
 			t.Fatalf("output-exists occupied workspace")

@@ -44,7 +44,7 @@ func TestSessionProofTwoReservedKeysIsolate(t *testing.T) {
 	writeCheckFile(t, filepath.Join(dir, "in", "a.txt"), "left-reads")
 	writeCheckFile(t, filepath.Join(dir, "in", "b.txt"), "right-reads")
 	doc := Document{Name: "pair", Tasks: []TaskPlan{left, right}}
-	if defects := Run(Request{Workspace: dir, Document: doc, Cap: 2}); len(defects) != 0 {
+	if defects := Run(t.Context(), Request{Workspace: dir, Document: doc, Cap: 2}); len(defects) != 0 {
 		t.Fatalf("Run() defects %v", defects)
 	}
 	if _, err := os.Stat(filepath.Join(dir, filepath.FromSlash(leftIso), "work")); err != nil {
@@ -77,7 +77,7 @@ func TestSessionProofTwoReservedKeysIsolate(t *testing.T) {
 	}
 	rerun := doc
 	rerun.Tasks[0].Command = []string{"sh", "-c", "exit 1"}
-	if defects := Resume(Request{Workspace: dir, Document: rerun, Cap: 2}); !hasDefect(defects, DefectFailed, "left") {
+	if defects := Resume(t.Context(), Request{Workspace: dir, Document: rerun, Cap: 2}); !hasDefect(defects, DefectFailed, "left") {
 		t.Fatalf("Resume() defects %v, want failed left", defects)
 	}
 

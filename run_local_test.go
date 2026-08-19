@@ -47,7 +47,7 @@ func TestRunLocalFixture(t *testing.T) {
 	dir := t.TempDir()
 	copyRunLocalInput(t, dir)
 	g := mustCompose(runLocalFixturePipeline)(t)
-	if err := gobble.Run(g, dir, 2); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 2); err != nil {
 		t.Fatalf("Run() error = %v, want nil", err)
 	}
 	gotImage, err := os.ReadFile(filepath.Join(dir, "out", "docker", "sample.txt"))
@@ -115,7 +115,7 @@ func TestRunLocalFixture(t *testing.T) {
 		t.Fatalf("host task got %#v", host)
 	}
 
-	err = gobble.Run(g, dir, 0)
+	err = gobble.Run(t.Context(), g, dir, 0)
 	requireRunError(t, "second Run", err, gobble.DefectOccupiedWorkspace, "")
 }
 
@@ -123,7 +123,7 @@ func TestRunLocalBadImage(t *testing.T) {
 	requireDocker(t)
 	dir := t.TempDir()
 	copyRunLocalInput(t, dir)
-	err := gobble.Run(mustCompose(runLocalBadImagePipeline)(t), dir, 2)
+	err := gobble.Run(t.Context(), mustCompose(runLocalBadImagePipeline)(t), dir, 2)
 	ge := requireRunError(t, "bad image", err, gobble.DefectFailed, "image")
 	if ge == nil || strings.Contains(strings.ToLower(ge.Error()), "skip") {
 		t.Fatalf("bad image error = %v, want named failure not skip", err)

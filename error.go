@@ -60,6 +60,9 @@ const (
 	// DefectPlanDrift means the supplied graph task set or edges differ
 	// from the recorded plan.
 	DefectPlanDrift DefectCode = "plan-drift"
+	// DefectCanceled means Run or Resume stopped because its context
+	// was done. Occupancy stays active.
+	DefectCanceled DefectCode = "canceled"
 )
 
 // Defect is one named failure inside an [Error].

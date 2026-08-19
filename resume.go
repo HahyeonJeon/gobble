@@ -1,6 +1,7 @@
 package gobble
 
 import (
+	"context"
 	"errors"
 
 	"github.com/HahyeonJeon/gobble/internal/engine"
@@ -14,7 +15,9 @@ import (
 //
 // A nil error means every instance in g succeeded. Contained failures
 // return an [*Error] with Op "resume" that names the failed units.
-func Resume(g *Graph, workspace string, cap int) error {
+// When ctx is done, in-flight work is canceled and the error is
+// [*Error] with Op "resume" and DefectCanceled.
+func Resume(ctx context.Context, g *Graph, workspace string, cap int) error {
 	if err := resumePreflight(g, workspace, cap); err != nil {
 		return err
 	}
@@ -22,7 +25,7 @@ func Resume(g *Graph, workspace string, cap int) error {
 	if err != nil {
 		return resumeOp(err)
 	}
-	return publicError("resume", engine.Resume(engine.Request{
+	return publicError("resume", engine.Resume(ctx, engine.Request{
 		Workspace: workspace,
 		Cap:       cap,
 		Document:  doc,
