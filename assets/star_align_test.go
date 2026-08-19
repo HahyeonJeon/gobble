@@ -127,6 +127,7 @@ func TestSTARAlignNestedRun(t *testing.T) {
 	}
 	logPath := filepath.Join(dir, filepath.FromSlash("work/star-align/Log.final.out"))
 	assertUniquelyMappedAbove(t, logPath, 10)
+	assertSplicesRecorded(t, logPath)
 }
 
 func assertUniquelyMappedAbove(t *testing.T, path string, floor int) {
@@ -139,24 +140,40 @@ func assertUniquelyMappedAbove(t *testing.T, path string, floor int) {
 
 func uniquelyMappedReads(t *testing.T, path string) int {
 	t.Helper()
+	return starLogInt(t, path, "Uniquely mapped reads number")
+}
+
+const starSplicesTotalField = "Number of splices: Total"
+
+func assertSplicesRecorded(t *testing.T, path string) {
+	t.Helper()
+	n := starLogInt(t, path, starSplicesTotalField)
+	t.Logf("%s = %d", starSplicesTotalField, n)
+	if n < 1 {
+		t.Fatalf("%s = %d, want >= 1 in %s", starSplicesTotalField, n, path)
+	}
+}
+
+func starLogInt(t *testing.T, path, field string) int {
+	t.Helper()
 	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatalf("read %s: %v", path, err)
 	}
 	for _, line := range strings.Split(string(data), "\n") {
-		if !strings.Contains(line, "Uniquely mapped reads number") {
+		if !strings.Contains(line, field) {
 			continue
 		}
 		i := strings.LastIndex(line, "|")
 		if i < 0 {
-			t.Fatalf("uniquely mapped line %q: missing |", line)
+			t.Fatalf("%s line %q: missing |", field, line)
 		}
 		n, err := strconv.Atoi(strings.TrimSpace(line[i+1:]))
 		if err != nil {
-			t.Fatalf("uniquely mapped line %q: %v", line, err)
+			t.Fatalf("%s line %q: %v", field, line, err)
 		}
 		return n
 	}
-	t.Fatalf("%s: missing Uniquely mapped reads number", path)
+	t.Fatalf("%s: missing %s", path, field)
 	return 0
 }

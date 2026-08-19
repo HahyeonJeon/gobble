@@ -92,6 +92,7 @@ func TestRNASeqRun(t *testing.T) {
 	}
 	logPath := filepath.Join(dir, filepath.FromSlash("work/star-align/Log.final.out"))
 	assertUniquelyMappedAbove(t, logPath, 10)
+	assertSplicesRecorded(t, logPath)
 	for _, rel := range []string{
 		"work/star-align/Aligned.out.bam",
 		"work/multiqc/multiqc_report.html",
