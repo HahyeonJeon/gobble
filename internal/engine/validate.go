@@ -119,6 +119,9 @@ func (c *checker) checkInputs() {
 		if in.Name != "" && namePat.MatchString(in.Name) {
 			seen[in.Name] = true
 		}
+		if in.Members != nil {
+			c.checkGroup(in.Name, Bind{Name: in.Name, Spec: in.Spec, Members: in.Members})
+		}
 	}
 }
 
@@ -283,9 +286,6 @@ func (c *checker) groupFromOK(b Bind) bool {
 	src, ok := c.sourceBind(b)
 	srcGroup := ok && src.Members != nil
 	if b.Members != nil {
-		if b.FromKind == FromInput {
-			return false
-		}
 		return srcGroup && sameMemberNames(b.Members, src.Members)
 	}
 	return !srcGroup
@@ -293,6 +293,12 @@ func (c *checker) groupFromOK(b Bind) bool {
 
 func (c *checker) sourceBind(b Bind) (Bind, bool) {
 	switch b.FromKind {
+	case FromInput:
+		in, ok := c.inputs[b.FromName]
+		if !ok {
+			return Bind{}, false
+		}
+		return Bind{Name: in.Name, Spec: in.Spec.clone(), Members: copyMembers(in.Members)}, true
 	case FromOut:
 		src, ok := c.tasks[b.FromTask]
 		if !ok {
@@ -388,6 +394,12 @@ func reachesSelf(start string, adj map[string][]string) bool {
 
 func (c *checker) checkPaths() {
 	for _, in := range c.s.Inputs {
+		if in.Members != nil {
+			for _, m := range in.Members {
+				c.renderPath(m.Spec, bindUnit(in.Name, m.Name))
+			}
+			continue
+		}
 		c.renderPath(in.Spec, in.Name)
 	}
 	for i := range c.s.Tasks {
@@ -509,6 +521,12 @@ func (c *checker) resolveMembers(t *Task, b Bind, out bool) ([]Member, bool) {
 
 func (c *checker) resolveFromMembers(b Bind) ([]Member, bool) {
 	switch b.FromKind {
+	case FromInput:
+		in, ok := c.inputs[b.FromName]
+		if !ok || in.Members == nil {
+			return nil, false
+		}
+		return copyMembers(in.Members), true
 	case FromOut:
 		src, ok := c.tasks[b.FromTask]
 		if !ok {

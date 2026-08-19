@@ -30,7 +30,8 @@ type TaskSpec struct {
 // from Spec and inheriting the rest from From. A Literal restage keeps
 // opacity and merges Dir unless Spec.Dir is set. From should name another
 // task or a pipeline input. A From that points at the same task is a cycle.
-// A Group From must name another Group port with the same member-name set.
+// A Group From must name another Group port or Group pipeline input
+// with the same member-name set.
 // Rule is used when this Bind is a related file of From. The zero Rule is
 // DeriveAppend.
 type Bind struct {

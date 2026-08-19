@@ -124,9 +124,12 @@ type Member struct {
 }
 
 // Input is a pipeline input snapshot.
+//
+// A non-nil Members slice is a Group input, including an empty list.
 type Input struct {
-	Name string
-	Spec Path
+	Name    string
+	Spec    Path
+	Members []Member
 }
 
 // Task is an engine-owned task snapshot.

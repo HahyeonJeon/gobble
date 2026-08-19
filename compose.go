@@ -39,7 +39,7 @@ func publicError(op string, defects []engine.Defect) error {
 func snapshotPipeline(p *Pipeline) engine.Snapshot {
 	s := engine.Snapshot{Name: p.name}
 	for _, in := range p.inputs {
-		s.Inputs = append(s.Inputs, engine.Input{Name: in.name, Spec: snapshotPath(in.spec)})
+		s.Inputs = append(s.Inputs, snapshotPipeInput(in))
 	}
 	for _, t := range p.tasks {
 		s.Tasks = append(s.Tasks, snapshotTask(t))
@@ -51,7 +51,7 @@ func snapshotPipeline(p *Pipeline) engine.Snapshot {
 func snapshotGraph(g *Graph) engine.Snapshot {
 	s := engine.Snapshot{Name: g.name}
 	for _, in := range g.inputs {
-		s.Inputs = append(s.Inputs, engine.Input{Name: in.name, Spec: snapshotPath(in.spec)})
+		s.Inputs = append(s.Inputs, snapshotGraphInput(in))
 	}
 	for _, t := range g.tasks {
 		gt := engine.Task{
@@ -96,6 +96,44 @@ func snapshotTask(t *Task) engine.Task {
 	return gt
 }
 
+func snapshotPipeInput(in pipeInput) engine.Input {
+	ei := engine.Input{Name: in.name, Spec: snapshotPath(in.spec)}
+	if in.members != nil {
+		ei.Members = snapshotMembers(in.members)
+	}
+	return ei
+}
+
+func snapshotGraphInput(in graphInput) engine.Input {
+	ei := engine.Input{Name: in.name, Spec: snapshotPath(in.spec)}
+	if in.members != nil {
+		ei.Members = snapshotGraphMembers(in.members)
+	}
+	return ei
+}
+
+func snapshotMembers(in Group) []engine.Member {
+	if in == nil {
+		return nil
+	}
+	out := make([]engine.Member, 0, len(in))
+	for _, m := range in {
+		out = append(out, engine.Member{Name: m.Name, Spec: snapshotPath(m.Spec)})
+	}
+	return out
+}
+
+func snapshotGraphMembers(in []graphMember) []engine.Member {
+	if in == nil {
+		return nil
+	}
+	out := make([]engine.Member, 0, len(in))
+	for _, m := range in {
+		out = append(out, engine.Member{Name: m.name, Spec: snapshotPath(m.spec)})
+	}
+	return out
+}
+
 func snapshotBind(b Bind, p *Pipeline) engine.Bind {
 	eb := engine.Bind{
 		Name: b.Name,
@@ -104,10 +142,7 @@ func snapshotBind(b Bind, p *Pipeline) engine.Bind {
 	}
 	eb.FromKind, eb.FromName, eb.FromTask = snapshotFrom(b.From, p)
 	if b.Group != nil {
-		eb.Members = make([]engine.Member, 0, len(b.Group))
-		for _, m := range b.Group {
-			eb.Members = append(eb.Members, engine.Member{Name: m.Name, Spec: snapshotPath(m.Spec)})
-		}
+		eb.Members = snapshotMembers(b.Group)
 	}
 	return eb
 }
@@ -122,10 +157,7 @@ func snapshotGraphBind(b graphBind) engine.Bind {
 		Resolved: true,
 	}
 	if b.members != nil {
-		eb.Members = make([]engine.Member, 0, len(b.members))
-		for _, m := range b.members {
-			eb.Members = append(eb.Members, engine.Member{Name: m.name, Spec: snapshotPath(m.spec)})
-		}
+		eb.Members = snapshotGraphMembers(b.members)
 	}
 	return eb
 }
@@ -248,7 +280,11 @@ func buildGraph(p *Pipeline) *Graph {
 func (r *resolver) buildGraph() *Graph {
 	g := &Graph{name: r.p.name}
 	for _, in := range r.p.inputs {
-		g.inputs = append(g.inputs, graphInput{name: in.name, spec: in.spec.clone()})
+		gi := graphInput{name: in.name, spec: in.spec.clone()}
+		if in.members != nil {
+			gi.members = authoredMembers(in.members)
+		}
+		g.inputs = append(g.inputs, gi)
 	}
 	for _, t := range r.p.tasks {
 		gt := graphTask{
@@ -368,6 +404,16 @@ func (r *resolver) resolveFromMembers(h Handle) ([]graphMember, bool) {
 		return nil, false
 	}
 	switch h.kind {
+	case handleInput:
+		for _, in := range r.p.inputs {
+			if in.name == h.name {
+				if in.members == nil {
+					return nil, false
+				}
+				return authoredMembers(in.members), true
+			}
+		}
+		return nil, false
 	case handleOut:
 		b, ok := findBind(h.task.spec.Outputs, h.name)
 		if !ok || b.Group == nil {

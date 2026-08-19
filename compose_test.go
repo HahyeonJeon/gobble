@@ -350,10 +350,17 @@ func TestComposeRejectDeclarations(t *testing.T) {
 			unit: "mem.idx",
 		},
 		{
-			name: "group from pipeline input",
-			pipe: groupFromPipelineInputPipeline(),
+			name: "group from single-file pipeline input",
+			pipe: groupFromSingleFilePipelineInputPipeline(),
 			code: gobble.DefectMissingInput,
 			unit: "mem.idx",
+		},
+		{
+			name:    "empty input group",
+			pipe:    emptyInputGroupPipeline(),
+			code:    gobble.DefectInvalidName,
+			unit:    "idx",
+			message: "empty group",
 		},
 		{
 			name:    "command and script both set",
@@ -415,6 +422,68 @@ func TestComposeRejectDeclarations(t *testing.T) {
 					tt.name, codes, units, messages, tt.code, tt.unit, tt.message)
 			}
 		})
+	}
+}
+
+func TestComposeGroupFromPipelineInput(t *testing.T) {
+	p := gobble.NewPipeline("group-from-in")
+	in := p.AddInputGroup("idx", gobble.Group{
+		{Name: "amb", Spec: gobble.PathSpec{Name: "ref", Ext: ".amb"}},
+	})
+	if in.IsZero() {
+		t.Fatalf("case group from pipeline input: AddInputGroup().IsZero() got true, want false")
+	}
+	if in.Name() != "idx" {
+		t.Fatalf("case group from pipeline input: AddInputGroup().Name() got %q, want %q", in.Name(), "idx")
+	}
+	p.AddTask(gobble.TaskSpec{
+		Name:    "mem",
+		Command: []string{"bwa"},
+		Inputs: []gobble.Bind{{
+			Name:  "idx",
+			From:  in,
+			Group: gobble.Group{{Name: "amb"}},
+		}},
+		Outputs: []gobble.Bind{fileOut("out")},
+	})
+	g, err := gobble.Compose(p)
+	if err != nil {
+		t.Fatalf("case group from pipeline input: Compose() error = %v, want nil", err)
+	}
+	if g == nil {
+		t.Fatalf("case group from pipeline input: Compose() graph = nil, want non-nil")
+	}
+	raw := mustBuildPlanJSON(t, groupFromPipelineInputPipeline())
+	type member struct {
+		Name string `json:"name"`
+		Path string `json:"path"`
+	}
+	var decoded struct {
+		Tasks []struct {
+			ID     string `json:"id"`
+			Inputs []struct {
+				Name    string   `json:"name"`
+				Members []member `json:"members"`
+			} `json:"inputs"`
+		} `json:"tasks"`
+	}
+	if err := json.Unmarshal(raw, &decoded); err != nil {
+		t.Fatalf("case group from pipeline input: Unmarshal() error = %v", err)
+	}
+	var inMembers []member
+	for _, task := range decoded.Tasks {
+		if task.ID != "mem" {
+			continue
+		}
+		for _, b := range task.Inputs {
+			if b.Name == "idx" {
+				inMembers = b.Members
+			}
+		}
+	}
+	want := []member{{Name: "amb", Path: "ref.amb"}}
+	if !jsonEqual(inMembers, want) {
+		t.Fatalf("case group from pipeline input: mem.idx members got %#v, want %#v", inMembers, want)
 	}
 }
 
@@ -1307,6 +1376,24 @@ func groupFromMismatchPipeline() *gobble.Pipeline {
 
 func groupFromPipelineInputPipeline() *gobble.Pipeline {
 	p := gobble.NewPipeline("group-from-in")
+	in := p.AddInputGroup("idx", gobble.Group{
+		{Name: "amb", Spec: gobble.PathSpec{Name: "ref", Ext: ".amb"}},
+	})
+	p.AddTask(gobble.TaskSpec{
+		Name:    "mem",
+		Command: []string{"bwa"},
+		Inputs: []gobble.Bind{{
+			Name:  "idx",
+			From:  in,
+			Group: gobble.Group{{Name: "amb"}},
+		}},
+		Outputs: []gobble.Bind{fileOut("out")},
+	})
+	return p
+}
+
+func groupFromSingleFilePipelineInputPipeline() *gobble.Pipeline {
+	p := gobble.NewPipeline("group-from-file-in")
 	in := p.AddInput("idx", gobble.PathSpec{Name: "ref", Ext: ".amb"})
 	p.AddTask(gobble.TaskSpec{
 		Name:    "mem",
@@ -1316,6 +1403,17 @@ func groupFromPipelineInputPipeline() *gobble.Pipeline {
 			From:  in,
 			Group: gobble.Group{{Name: "amb"}},
 		}},
+		Outputs: []gobble.Bind{fileOut("out")},
+	})
+	return p
+}
+
+func emptyInputGroupPipeline() *gobble.Pipeline {
+	p := gobble.NewPipeline("empty-input-group")
+	p.AddInputGroup("idx", nil)
+	p.AddTask(gobble.TaskSpec{
+		Name:    "mem",
+		Command: []string{"bwa"},
 		Outputs: []gobble.Bind{fileOut("out")},
 	})
 	return p

@@ -9,8 +9,9 @@ type Graph struct {
 }
 
 type graphInput struct {
-	name string
-	spec PathSpec
+	name    string
+	spec    PathSpec
+	members []graphMember
 }
 
 type graphTask struct {

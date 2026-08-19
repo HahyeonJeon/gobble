@@ -275,6 +275,48 @@ func TestComposeCheckIllegalSnapshots(t *testing.T) {
 			code: DefectMissingInput,
 			unit: "mem.idx",
 		},
+		{
+			name: "group from single-file pipeline input",
+			snap: Snapshot{
+				Name: "group-from-file-in",
+				Inputs: []Input{{
+					Name: "idx",
+					Spec: Path{Name: "ref", Ext: ".amb"},
+				}},
+				Tasks: []Task{{
+					ID:      "mem",
+					Name:    "mem",
+					Command: []string{"bwa"},
+					Inputs: []Bind{{
+						Name:     "idx",
+						FromKind: FromInput,
+						FromName: "idx",
+						Members:  []Member{{Name: "amb"}},
+					}},
+					Outputs: []Bind{{Name: "out", Spec: file}},
+				}},
+			},
+			code: DefectMissingInput,
+			unit: "mem.idx",
+		},
+		{
+			name: "empty input group",
+			snap: Snapshot{
+				Name: "empty-input-group",
+				Inputs: []Input{{
+					Name:    "idx",
+					Members: []Member{},
+				}},
+				Tasks: []Task{{
+					ID:      "mem",
+					Name:    "mem",
+					Command: []string{"bwa"},
+					Outputs: []Bind{{Name: "out", Spec: file}},
+				}},
+			},
+			code: DefectInvalidName,
+			unit: "idx",
+		},
 	}
 
 	for _, tt := range tests {
@@ -284,6 +326,39 @@ func TestComposeCheckIllegalSnapshots(t *testing.T) {
 				t.Fatalf("case %s: ComposeCheck() defects %v, want code %s unit %q", tt.name, formatDefects(got), tt.code, tt.unit)
 			}
 		})
+	}
+}
+
+func TestComposeCheckGroupFromPipelineInput(t *testing.T) {
+	file := Path{Name: "out", Ext: ".txt"}
+	snap := Snapshot{
+		Name: "group-from-in",
+		Inputs: []Input{{
+			Name: "idx",
+			Members: []Member{{
+				Name: "amb",
+				Spec: Path{Name: "ref", Ext: ".amb"},
+			}},
+		}},
+		Tasks: []Task{{
+			ID:      "mem",
+			Name:    "mem",
+			Command: []string{"bwa"},
+			Inputs: []Bind{{
+				Name:     "idx",
+				FromKind: FromInput,
+				FromName: "idx",
+				Members:  []Member{{Name: "amb"}},
+			}},
+			Outputs: []Bind{{Name: "out", Spec: file}},
+		}},
+	}
+	got := ComposeCheck(snap)
+	if hasDefect(got, DefectMissingInput, "mem.idx") {
+		t.Fatalf("case group from pipeline input: ComposeCheck() defects %v, want no missing-input", formatDefects(got))
+	}
+	if len(got) != 0 {
+		t.Fatalf("case group from pipeline input: ComposeCheck() defects %v, want none", formatDefects(got))
 	}
 }
 

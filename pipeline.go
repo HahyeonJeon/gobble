@@ -11,8 +11,9 @@ type Pipeline struct {
 }
 
 type pipeInput struct {
-	name string
-	spec PathSpec
+	name    string
+	spec    PathSpec
+	members Group
 }
 
 type nodeKind int
@@ -108,6 +109,17 @@ func (p *Pipeline) Name() string {
 func (p *Pipeline) AddInput(name string, spec PathSpec) Handle {
 	p.inputs = append(p.inputs, pipeInput{name: name, spec: spec})
 	return Handle{kind: handleInput, name: name, spec: spec.clone(), pipe: p}
+}
+
+// AddInputGroup records a Group pipeline input named name and returns a
+// non-zero Handle for it. Members must be a non-empty Group. A nil or
+// empty Group is invalid at compose time, matching other Group rules.
+func (p *Pipeline) AddInputGroup(name string, members Group) Handle {
+	if members == nil {
+		members = Group{}
+	}
+	p.inputs = append(p.inputs, pipeInput{name: name, members: members})
+	return Handle{kind: handleInput, name: name, pipe: p}
 }
 
 // AddModule records a child module and returns it.
