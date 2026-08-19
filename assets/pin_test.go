@@ -53,6 +53,85 @@ func TestWGSPins(t *testing.T) {
 	}
 }
 
+func TestRNASeqPins(t *testing.T) {
+	want := []Pin{
+		{
+			Name:   "SRR6357072_1.fastq.gz",
+			URL:    "https://raw.githubusercontent.com/nf-core/test-datasets/626c8fab639062eade4b10747e919341cbf9b41a/testdata/GSE110004/SRR6357072_1.fastq.gz",
+			Bytes:  2148269,
+			SHA256: "6c92efe43dc8145951c4131cd30e3e169f9877f041fcf20c2577eeeb7ec2b6ed",
+		},
+		{
+			Name:   "SRR6357072_2.fastq.gz",
+			URL:    "https://raw.githubusercontent.com/nf-core/test-datasets/626c8fab639062eade4b10747e919341cbf9b41a/testdata/GSE110004/SRR6357072_2.fastq.gz",
+			Bytes:  2167239,
+			SHA256: "4501eb0062d4005cc1a4c836a86c036c15d3c38d685138d02675c5ecef84c0a3",
+		},
+		{
+			Name:   "genome.fasta",
+			URL:    "https://raw.githubusercontent.com/nf-core/test-datasets/626c8fab639062eade4b10747e919341cbf9b41a/reference/genome.fasta",
+			Bytes:  234058,
+			SHA256: "df70973809f672aa58a414fef3f01e0e465bf26f10159174a616b0dee2d458e1",
+		},
+		{
+			Name:   "genes.gtf",
+			URL:    "https://raw.githubusercontent.com/nf-core/test-datasets/626c8fab639062eade4b10747e919341cbf9b41a/reference/genes.gtf",
+			Bytes:  204286,
+			SHA256: "8d9e66311d90f14517cdb8683066d4b376547ea7c2153b05b510fb9ba7988835",
+		},
+	}
+	if len(RNASeqPins) != len(want) {
+		t.Fatalf("RNASeqPins len = %d, want %d", len(RNASeqPins), len(want))
+	}
+	named := []Pin{PinRNATest1FASTQ, PinRNATest2FASTQ, PinRNAGenomeFASTA, PinRNAGTF}
+	for i, pin := range want {
+		if RNASeqPins[i] != pin {
+			t.Fatalf("RNASeqPins[%d] = %+v, want %+v", i, RNASeqPins[i], pin)
+		}
+		if named[i] != pin {
+			t.Fatalf("named RNA pin[%d] = %+v, want %+v", i, named[i], pin)
+		}
+	}
+	if PinRNAGenomeFASTA.CachePath() == PinWGSGenomeFASTA.CachePath() {
+		t.Fatalf("RNA and WGS genome.fasta CachePath collided: %s", PinRNAGenomeFASTA.CachePath())
+	}
+}
+
+func TestMethylSeqPins(t *testing.T) {
+	want := []Pin{
+		{
+			Name:   "Ecoli_10K_methylated_R1.fastq.gz",
+			URL:    "https://raw.githubusercontent.com/nf-core/test-datasets/e7e1fb8940fc14e2336101147a31ce8e0eda6264/testdata/Ecoli_10K_methylated_R1.fastq.gz",
+			Bytes:  467487,
+			SHA256: "3d84b54e065f0760e830357d37bbc1ce511570b0443b6d0a7da1cf26261fe79b",
+		},
+		{
+			Name:   "Ecoli_10K_methylated_R2.fastq.gz",
+			URL:    "https://raw.githubusercontent.com/nf-core/test-datasets/e7e1fb8940fc14e2336101147a31ce8e0eda6264/testdata/Ecoli_10K_methylated_R2.fastq.gz",
+			Bytes:  467335,
+			SHA256: "2f3e6de0edf9bbc6dae46a5a43a2152d6d9d724b8b8ecd46281d47dd0606a646",
+		},
+		{
+			Name:   "genome.fa",
+			URL:    "https://raw.githubusercontent.com/nf-core/test-datasets/e7e1fb8940fc14e2336101147a31ce8e0eda6264/reference/genome.fa",
+			Bytes:  49200,
+			SHA256: "52a320d932e0d873141d5a326d80a7d811653cf2d782d07f8926f6c0e1ceb21e",
+		},
+	}
+	if len(MethylSeqPins) != len(want) {
+		t.Fatalf("MethylSeqPins len = %d, want %d", len(MethylSeqPins), len(want))
+	}
+	named := []Pin{PinMethylTest1FASTQ, PinMethylTest2FASTQ, PinMethylGenomeFASTA}
+	for i, pin := range want {
+		if MethylSeqPins[i] != pin {
+			t.Fatalf("MethylSeqPins[%d] = %+v, want %+v", i, MethylSeqPins[i], pin)
+		}
+		if named[i] != pin {
+			t.Fatalf("named Methyl pin[%d] = %+v, want %+v", i, named[i], pin)
+		}
+	}
+}
+
 func TestPinCheck(t *testing.T) {
 	content := []byte("hello pin")
 	sum := sha256.Sum256(content)

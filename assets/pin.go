@@ -7,6 +7,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/HahyeonJeon/gobble"
 )
 
 // CacheDir is the uncommitted download cache relative to this package.
@@ -55,6 +57,101 @@ var WGSPins = []Pin{
 	PinWGSTest2FASTQ,
 	PinWGSGenomeFASTA,
 	PinWGSGenomeFAI,
+}
+
+// RNA-seq pins from nf-core/rnaseq 3.26.0 test.config snapshot
+// 626c8fab639062eade4b10747e919341cbf9b41a. Not the WGS modules pins.
+var (
+	PinRNATest1FASTQ = Pin{
+		Name:   "SRR6357072_1.fastq.gz",
+		URL:    "https://raw.githubusercontent.com/nf-core/test-datasets/626c8fab639062eade4b10747e919341cbf9b41a/testdata/GSE110004/SRR6357072_1.fastq.gz",
+		Bytes:  2148269,
+		SHA256: "6c92efe43dc8145951c4131cd30e3e169f9877f041fcf20c2577eeeb7ec2b6ed",
+	}
+	PinRNATest2FASTQ = Pin{
+		Name:   "SRR6357072_2.fastq.gz",
+		URL:    "https://raw.githubusercontent.com/nf-core/test-datasets/626c8fab639062eade4b10747e919341cbf9b41a/testdata/GSE110004/SRR6357072_2.fastq.gz",
+		Bytes:  2167239,
+		SHA256: "4501eb0062d4005cc1a4c836a86c036c15d3c38d685138d02675c5ecef84c0a3",
+	}
+	PinRNAGenomeFASTA = Pin{
+		Name:   "genome.fasta",
+		URL:    "https://raw.githubusercontent.com/nf-core/test-datasets/626c8fab639062eade4b10747e919341cbf9b41a/reference/genome.fasta",
+		Bytes:  234058,
+		SHA256: "df70973809f672aa58a414fef3f01e0e465bf26f10159174a616b0dee2d458e1",
+	}
+	PinRNAGTF = Pin{
+		Name:   "genes.gtf",
+		URL:    "https://raw.githubusercontent.com/nf-core/test-datasets/626c8fab639062eade4b10747e919341cbf9b41a/reference/genes.gtf",
+		Bytes:  204286,
+		SHA256: "8d9e66311d90f14517cdb8683066d4b376547ea7c2153b05b510fb9ba7988835",
+	}
+)
+
+// RNASeqPins is the four official RNA-seq pin records.
+var RNASeqPins = []Pin{
+	PinRNATest1FASTQ,
+	PinRNATest2FASTQ,
+	PinRNAGenomeFASTA,
+	PinRNAGTF,
+}
+
+// Methyl-seq pins from nf-core/test-datasets methylseq
+// e7e1fb8940fc14e2336101147a31ce8e0eda6264. Not the WGS modules pins.
+var (
+	PinMethylTest1FASTQ = Pin{
+		Name:   "Ecoli_10K_methylated_R1.fastq.gz",
+		URL:    "https://raw.githubusercontent.com/nf-core/test-datasets/e7e1fb8940fc14e2336101147a31ce8e0eda6264/testdata/Ecoli_10K_methylated_R1.fastq.gz",
+		Bytes:  467487,
+		SHA256: "3d84b54e065f0760e830357d37bbc1ce511570b0443b6d0a7da1cf26261fe79b",
+	}
+	PinMethylTest2FASTQ = Pin{
+		Name:   "Ecoli_10K_methylated_R2.fastq.gz",
+		URL:    "https://raw.githubusercontent.com/nf-core/test-datasets/e7e1fb8940fc14e2336101147a31ce8e0eda6264/testdata/Ecoli_10K_methylated_R2.fastq.gz",
+		Bytes:  467335,
+		SHA256: "2f3e6de0edf9bbc6dae46a5a43a2152d6d9d724b8b8ecd46281d47dd0606a646",
+	}
+	PinMethylGenomeFASTA = Pin{
+		Name:   "genome.fa",
+		URL:    "https://raw.githubusercontent.com/nf-core/test-datasets/e7e1fb8940fc14e2336101147a31ce8e0eda6264/reference/genome.fa",
+		Bytes:  49200,
+		SHA256: "52a320d932e0d873141d5a326d80a7d811653cf2d782d07f8926f6c0e1ceb21e",
+	}
+)
+
+// MethylSeqPins is the three official Methyl-seq pin records.
+var MethylSeqPins = []Pin{
+	PinMethylTest1FASTQ,
+	PinMethylTest2FASTQ,
+	PinMethylGenomeFASTA,
+}
+
+func pinnedRNAFASTQ1() gobble.PathSpec {
+	return gobble.PathSpec{Dir: gobble.Dir("in"), Name: "SRR6357072_1", Ext: ".fastq.gz"}
+}
+
+func pinnedRNAFASTQ2() gobble.PathSpec {
+	return gobble.PathSpec{Dir: gobble.Dir("in"), Name: "SRR6357072_2", Ext: ".fastq.gz"}
+}
+
+func pinnedRNAFASTA() gobble.PathSpec {
+	return gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genome", Ext: ".fasta"}
+}
+
+func pinnedRNAGTF() gobble.PathSpec {
+	return gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genes", Ext: ".gtf"}
+}
+
+func pinnedMethylFASTQ1() gobble.PathSpec {
+	return gobble.PathSpec{Dir: gobble.Dir("in"), Name: "Ecoli_10K_methylated_R1", Ext: ".fastq.gz"}
+}
+
+func pinnedMethylFASTQ2() gobble.PathSpec {
+	return gobble.PathSpec{Dir: gobble.Dir("in"), Name: "Ecoli_10K_methylated_R2", Ext: ".fastq.gz"}
+}
+
+func pinnedMethylFASTA() gobble.PathSpec {
+	return gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genome", Ext: ".fa"}
 }
 
 // CachePath is CacheDir/<sha256[:16]>/<Name>. Name stays the workspace
