@@ -4,13 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"syscall"
 	"testing"
-	"time"
 
 	"github.com/HahyeonJeon/gobble"
 )
@@ -235,48 +233,11 @@ func requireDocker(t *testing.T) {
 
 func cachePin(t *testing.T, pin Pin) string {
 	t.Helper()
-	if err := os.MkdirAll(CacheDir, 0o755); err != nil {
-		t.Fatalf("MkdirAll(%s) error = %v", CacheDir, err)
-	}
-	dest := filepath.Join(CacheDir, pin.Name)
-	if err := pin.Check(dest); err == nil {
-		return dest
-	}
-	if err := downloadURL(pin.URL, dest); err != nil {
+	dest, err := FetchPin(pin)
+	if err != nil {
 		t.Skipf("download %s: %v", pin.URL, err)
 	}
-	if err := pin.Check(dest); err != nil {
-		t.Fatalf("pin.Check(%s) error = %v", dest, err)
-	}
 	return dest
-}
-
-func downloadURL(rawURL, dest string) error {
-	client := &http.Client{Timeout: 60 * time.Second}
-	resp, err := client.Get(rawURL)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return os.ErrNotExist
-	}
-	tmp := dest + ".tmp"
-	f, err := os.Create(tmp)
-	if err != nil {
-		return err
-	}
-	_, copyErr := io.Copy(f, resp.Body)
-	closeErr := f.Close()
-	if copyErr != nil {
-		os.Remove(tmp)
-		return copyErr
-	}
-	if closeErr != nil {
-		os.Remove(tmp)
-		return closeErr
-	}
-	return os.Rename(tmp, dest)
 }
 
 func stageFile(t *testing.T, workspace, rel, src string) {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 )
 
 // CacheDir is the uncommitted download cache relative to this package.
@@ -54,6 +55,15 @@ var WGSPins = []Pin{
 	PinWGSTest2FASTQ,
 	PinWGSGenomeFASTA,
 	PinWGSGenomeFAI,
+}
+
+// CachePath is CacheDir/<sha256[:16]>/<Name>. Name stays the workspace
+// basename. It panics if SHA256 is shorter than 16 hex characters.
+func (p Pin) CachePath() string {
+	if len(p.SHA256) < 16 {
+		panic(fmt.Sprintf("pin %s: sha256 too short", p.Name))
+	}
+	return filepath.Join(CacheDir, p.SHA256[:16], p.Name)
 }
 
 // Check reports whether path is a regular file whose size and sha256 match
