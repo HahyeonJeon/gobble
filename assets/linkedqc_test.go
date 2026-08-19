@@ -20,16 +20,16 @@ func TestLinkedQCComposeBuildPlan(t *testing.T) {
 		t.Fatalf("task count = %d ids %v, want 3 (FastQC+MultiQC only)", len(tasks), ids)
 	}
 
-	mustHaveTaskID(t, tasks, "r1.fastqc")
-	mustHaveTaskID(t, tasks, "r2.fastqc")
+	mustHaveTaskID(t, tasks, "rna.fastqc")
+	mustHaveTaskID(t, tasks, "methyl.fastqc")
 	mustHaveTaskID(t, tasks, "multiqc")
 
-	assertIOPath(t, planTask(t, raw, "r1.fastqc").Inputs, "reads", "in/test_1.fastq.gz")
-	assertIOPath(t, planTask(t, raw, "r2.fastqc").Inputs, "reads", "in/test_2.fastq.gz")
-	assertIOPath(t, planTask(t, raw, "multiqc").Inputs, "report_0", "work/r1/fastqc/test_1_fastqc.html")
-	assertIOPath(t, planTask(t, raw, "multiqc").Inputs, "report_1", "work/r1/fastqc/test_1_fastqc.zip")
-	assertIOPath(t, planTask(t, raw, "multiqc").Inputs, "report_2", "work/r2/fastqc/test_2_fastqc.html")
-	assertIOPath(t, planTask(t, raw, "multiqc").Inputs, "report_3", "work/r2/fastqc/test_2_fastqc.zip")
+	assertIOPath(t, planTask(t, raw, "rna.fastqc").Inputs, "reads", "in/SRR6357072_1.fastq.gz")
+	assertIOPath(t, planTask(t, raw, "methyl.fastqc").Inputs, "reads", "in/Ecoli_10K_methylated_R1.fastq.gz")
+	assertIOPath(t, planTask(t, raw, "multiqc").Inputs, "report_0", "work/rna/fastqc/SRR6357072_1_fastqc.html")
+	assertIOPath(t, planTask(t, raw, "multiqc").Inputs, "report_1", "work/rna/fastqc/SRR6357072_1_fastqc.zip")
+	assertIOPath(t, planTask(t, raw, "multiqc").Inputs, "report_2", "work/methyl/fastqc/Ecoli_10K_methylated_R1_fastqc.html")
+	assertIOPath(t, planTask(t, raw, "multiqc").Inputs, "report_3", "work/methyl/fastqc/Ecoli_10K_methylated_R1_fastqc.zip")
 
 	assertNoTaskName(t, tasks,
 		"fastp",
@@ -52,8 +52,8 @@ func TestLinkedQCSharesPinPathSpecs(t *testing.T) {
 	assertIOPath(t, planTask(t, rna, "fastp").Inputs, "r2", "in/SRR6357072_2.fastq.gz")
 	assertIOPath(t, planTask(t, methyl, "fastp").Inputs, "r1", "in/Ecoli_10K_methylated_R1.fastq.gz")
 	assertIOPath(t, planTask(t, methyl, "fastp").Inputs, "r2", "in/Ecoli_10K_methylated_R2.fastq.gz")
-	assertIOPath(t, planTask(t, qc, "r1.fastqc").Inputs, "reads", "in/test_1.fastq.gz")
-	assertIOPath(t, planTask(t, qc, "r2.fastqc").Inputs, "reads", "in/test_2.fastq.gz")
+	assertIOPath(t, planTask(t, qc, "rna.fastqc").Inputs, "reads", "in/SRR6357072_1.fastq.gz")
+	assertIOPath(t, planTask(t, qc, "methyl.fastqc").Inputs, "reads", "in/Ecoli_10K_methylated_R1.fastq.gz")
 }
 
 func TestLinkedQCOmitsRawAddTask(t *testing.T) {
