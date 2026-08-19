@@ -1,6 +1,12 @@
 package assets
 
-import "testing"
+import (
+	"os"
+	"path/filepath"
+	"testing"
+
+	"github.com/HahyeonJeon/gobble"
+)
 
 func TestRNASeqComposeBuildPlan(t *testing.T) {
 	raw := mustPlanJSON(t, RNASeq())
@@ -31,14 +37,64 @@ func TestRNASeqComposeBuildPlan(t *testing.T) {
 		t.Fatalf("clean.fastqc module = %q, want clean", cleanQC.Module)
 	}
 
-	assertIOPath(t, planTask(t, raw, "fastp").Inputs, "r1", "in/test_1.fastq.gz")
-	assertIOPath(t, planTask(t, raw, "star_genome_generate").Inputs, "fasta", "in/genome.fasta")
-	assertIOPath(t, planTask(t, raw, "multiqc").Inputs, "report_0", "work/raw/fastqc/test_1_fastqc.html")
-	assertIOPath(t, planTask(t, raw, "multiqc").Inputs, "report_4", "work/fastp/test_1.fastp.json")
+	gg := planTask(t, raw, "star_genome_generate")
+	if !containsAll(gg.Command,
+		"--sjdbGTFfile", "in/genes.gtf",
+		"--runThreadN", "2",
+		"--genomeSAindexNbases", "7",
+		"--sjdbOverhang", "100",
+	) {
+		t.Fatalf("genomeGenerate command = %#v, want GTF, threads, and extra-args", gg.Command)
+	}
+	assertIOPath(t, gg.Inputs, "fasta", "in/genome.fasta")
+	assertIOPath(t, gg.Inputs, "gtf", "in/genes.gtf")
+	assertGroupMembers(t, gg.Outputs, "index", wantSTARGenomeSJDBMembers("work/star-genome"))
+
+	align := planTask(t, raw, "star_align")
+	if !containsAll(align.Command, "--runThreadN", "2") {
+		t.Fatalf("align command = %#v, want --runThreadN 2", align.Command)
+	}
+	assertIOPath(t, align.Outputs, "bam", "work/star-align/Aligned.out.bam")
+	assertIOPath(t, align.Outputs, "log_final", "work/star-align/Log.final.out")
+	assertGroupMembers(t, align.Inputs, "index", wantSTARGenomeSJDBMembers("work/star-genome"))
+
+	assertIOPath(t, planTask(t, raw, "fastp").Inputs, "r1", "in/SRR6357072_1.fastq.gz")
+	assertIOPath(t, planTask(t, raw, "fastp").Inputs, "r2", "in/SRR6357072_2.fastq.gz")
+	assertIOPath(t, planTask(t, raw, "multiqc").Inputs, "report_0", "work/raw/fastqc/SRR6357072_1_fastqc.html")
+	assertIOPath(t, planTask(t, raw, "multiqc").Inputs, "report_4", "work/fastp/SRR6357072_1.fastp.json")
+	assertIOPath(t, planTask(t, raw, "multiqc").Inputs, "report_6", "work/star-align/Aligned.out.bam")
+	assertIOPath(t, planTask(t, raw, "multiqc").Inputs, "report_7", "work/star-align/Log.final.out")
 
 	assertNoTaskName(t, tasks, "bwa_index", "bwa_mem", "bismark_align", "bismark_genome", "bismark_methylation_extractor")
 }
 
 func TestRNASeqOmitsRawAddTask(t *testing.T) {
 	assertNoCall(t, "rnaseq.go", "AddTask")
+}
+
+func TestRNASeqRun(t *testing.T) {
+	requireDocker(t)
+	dir := t.TempDir()
+	stageFile(t, dir, "in/genome.fasta", cachePin(t, PinRNAGenomeFASTA))
+	stageFile(t, dir, "in/genes.gtf", cachePin(t, PinRNAGTF))
+	stageFile(t, dir, "in/SRR6357072_1.fastq.gz", cachePin(t, PinRNATest1FASTQ))
+	stageFile(t, dir, "in/SRR6357072_2.fastq.gz", cachePin(t, PinRNATest2FASTQ))
+	g, err := gobble.Compose(RNASeq())
+	if err != nil {
+		t.Fatalf("Compose() error = %v", err)
+	}
+	if err := gobble.Run(g, dir, 2); err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	logPath := filepath.Join(dir, filepath.FromSlash("work/star-align/Log.final.out"))
+	assertUniquelyMappedAbove(t, logPath, 10)
+	for _, rel := range []string{
+		"work/star-align/Aligned.out.bam",
+		"work/multiqc/multiqc_report.html",
+	} {
+		info, err := os.Stat(filepath.Join(dir, filepath.FromSlash(rel)))
+		if err != nil || !info.Mode().IsRegular() {
+			t.Fatalf("published %s: %v", rel, err)
+		}
+	}
 }

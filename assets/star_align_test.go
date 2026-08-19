@@ -3,6 +3,8 @@ package assets
 import (
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
@@ -17,6 +19,8 @@ func TestSTARAlignStandaloneComposeBuildPlan(t *testing.T) {
 	}
 	p := STARAlignPipeline(r1, r2, opts)
 	raw := mustPlanJSON(t, p)
+	tasks := planAllTasks(t, raw)
+	assertNoTaskName(t, tasks, "index_files")
 	task := planTask(t, raw, "star_align")
 	if task.Name != "star_align" {
 		t.Fatalf("task name = %q, want star_align", task.Name)
@@ -45,6 +49,7 @@ func TestSTARAlignStandaloneComposeBuildPlan(t *testing.T) {
 	}
 	assertUniqueParamNames(t, task.Params)
 	assertIOPath(t, task.Outputs, "bam", "work/star-align/Aligned.out.bam")
+	assertIOPath(t, task.Outputs, "log_final", "work/star-align/Log.final.out")
 	assertGroupMembers(t, task.Inputs, "index", wantSTARGenomeMembers("work/star-genome"))
 }
 
@@ -57,10 +62,13 @@ func TestSTARAlignNestedModule(t *testing.T) {
 	h1 := p.AddInput("r1", r1)
 	h2 := p.AddInput("r2", r2)
 	mod := AddModule(p, "align")
-	idx := AddSTARGenomeGenerate(mod, hf, STARGenomeGenerateOptions{ExtraArgs: []string{"--genomeSAindexNbases", "7"}})
+	idx := AddSTARGenomeGenerate(mod, hf, gobble.Handle{}, STARGenomeGenerateOptions{ExtraArgs: []string{"--genomeSAindexNbases", "7"}})
 	ports := AddSTARAlign(mod, idx.Index, h1, h2, STARAlignOptions{ExtraArgs: []string{"--outFilterMultimapNmax", "1"}})
 	if ports.BAM.IsZero() {
 		t.Fatalf("ports.BAM IsZero = true, want false")
+	}
+	if ports.LogFinalOut.IsZero() {
+		t.Fatalf("ports.LogFinalOut IsZero = true, want false")
 	}
 	raw := mustPlanJSON(t, p)
 	task := planTask(t, raw, "align.star_align")
@@ -74,27 +82,37 @@ func TestSTARAlignNestedModule(t *testing.T) {
 		t.Fatalf("command = %#v, want extra-args", task.Command)
 	}
 	assertIOPath(t, task.Outputs, "bam", "work/star-align/Aligned.out.bam")
+	assertIOPath(t, task.Outputs, "log_final", "work/star-align/Log.final.out")
 	assertGroupMembers(t, task.Inputs, "index", wantSTARGenomeMembers("work/star-genome"))
 }
 
 func TestSTARAlignNestedRun(t *testing.T) {
 	requireDocker(t)
-	srcFASTA := cachePin(t, PinWGSGenomeFASTA)
-	srcR1 := cachePin(t, PinWGSTest1FASTQ)
-	srcR2 := cachePin(t, PinWGSTest2FASTQ)
+	srcFASTA := cachePin(t, PinRNAGenomeFASTA)
+	srcGTF := cachePin(t, PinRNAGTF)
+	srcR1 := cachePin(t, PinRNATest1FASTQ)
+	srcR2 := cachePin(t, PinRNATest2FASTQ)
 	dir := t.TempDir()
 	stageFile(t, dir, "in/genome.fasta", srcFASTA)
-	stageFile(t, dir, "in/test_1.fastq.gz", srcR1)
-	stageFile(t, dir, "in/test_2.fastq.gz", srcR2)
+	stageFile(t, dir, "in/genes.gtf", srcGTF)
+	stageFile(t, dir, "in/SRR6357072_1.fastq.gz", srcR1)
+	stageFile(t, dir, "in/SRR6357072_2.fastq.gz", srcR2)
 	p := gobble.NewPipeline("rna")
 	hf := p.AddInput("fasta", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genome", Ext: ".fasta"})
-	h1 := p.AddInput("r1", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_1", Ext: ".fastq.gz"})
-	h2 := p.AddInput("r2", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_2", Ext: ".fastq.gz"})
-	idx := AddSTARGenomeGenerate(p, hf, STARGenomeGenerateOptions{
-		ExtraArgs: []string{"--genomeSAindexNbases", "7"},
+	hg := p.AddInput("gtf", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genes", Ext: ".gtf"})
+	h1 := p.AddInput("r1", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "SRR6357072_1", Ext: ".fastq.gz"})
+	h2 := p.AddInput("r2", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "SRR6357072_2", Ext: ".fastq.gz"})
+	idx := AddSTARGenomeGenerate(p, hf, hg, STARGenomeGenerateOptions{
+		ExtraArgs: []string{"--genomeSAindexNbases", "7", "--sjdbOverhang", "100"},
 		Resources: gobble.Resources{CPU: 1},
 	})
-	AddSTARAlign(p, idx.Index, h1, h2, STARAlignOptions{Resources: gobble.Resources{CPU: 1}})
+	ports := AddSTARAlign(p, idx.Index, h1, h2, STARAlignOptions{
+		SJDB:      true,
+		Resources: gobble.Resources{CPU: 1},
+	})
+	if ports.LogFinalOut.IsZero() {
+		t.Fatalf("ports.LogFinalOut IsZero = true, want false")
+	}
 	g, err := gobble.Compose(p)
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
@@ -102,8 +120,43 @@ func TestSTARAlignNestedRun(t *testing.T) {
 	if err := gobble.Run(g, dir, 1); err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
-	info, err := os.Stat(filepath.Join(dir, filepath.FromSlash("work/star-align/Aligned.out.bam")))
+	bam := filepath.Join(dir, filepath.FromSlash("work/star-align/Aligned.out.bam"))
+	info, err := os.Stat(bam)
 	if err != nil || !info.Mode().IsRegular() {
 		t.Fatalf("published BAM: %v", err)
 	}
+	logPath := filepath.Join(dir, filepath.FromSlash("work/star-align/Log.final.out"))
+	assertUniquelyMappedAbove(t, logPath, 10)
+}
+
+func assertUniquelyMappedAbove(t *testing.T, path string, floor int) {
+	t.Helper()
+	n := uniquelyMappedReads(t, path)
+	if n < floor {
+		t.Fatalf("uniquely mapped reads = %d, want >= %d in %s", n, floor, path)
+	}
+}
+
+func uniquelyMappedReads(t *testing.T, path string) int {
+	t.Helper()
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read %s: %v", path, err)
+	}
+	for _, line := range strings.Split(string(data), "\n") {
+		if !strings.Contains(line, "Uniquely mapped reads number") {
+			continue
+		}
+		i := strings.LastIndex(line, "|")
+		if i < 0 {
+			t.Fatalf("uniquely mapped line %q: missing |", line)
+		}
+		n, err := strconv.Atoi(strings.TrimSpace(line[i+1:]))
+		if err != nil {
+			t.Fatalf("uniquely mapped line %q: %v", line, err)
+		}
+		return n
+	}
+	t.Fatalf("%s: missing Uniquely mapped reads number", path)
+	return 0
 }
