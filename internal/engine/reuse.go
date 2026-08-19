@@ -123,7 +123,7 @@ func compareInputIdentity(workspace string, latest jsonTaskState, current TaskPl
 		}
 		return reasonIdentityChanged, []string{fingerprintsAbsent}
 	}
-	recorded := hashByPath(latest.Fingerprints)
+	recorded := recordByPath(latest.Fingerprints)
 	missing := false
 	changed := false
 	seen := make(map[string]bool, len(files))
@@ -134,8 +134,9 @@ func compareInputIdentity(workspace string, latest jsonTaskState, current TaskPl
 			missing = true
 			continue
 		}
-		sum, err := sha256File(path)
-		if err != nil || recorded[f.path] != sum {
+		cur, err := cheapKey(path)
+		rec := recorded[f.path]
+		if err != nil || !hasCheap(rec) || !sameCheap(rec, cur) {
 			changed = true
 		}
 	}
@@ -189,7 +190,15 @@ func destReuseMiss(workspace string, latest jsonTaskState, current TaskPlan) boo
 		if h.Path == "" {
 			continue
 		}
-		if !regularFile(workspaceFile(workspace, h.Path)) {
+		path := workspaceFile(workspace, h.Path)
+		if !regularFile(path) {
+			return true
+		}
+		if !hasCheap(h) {
+			continue
+		}
+		cur, err := cheapKey(path)
+		if err != nil || !sameCheap(h, cur) {
 			return true
 		}
 	}

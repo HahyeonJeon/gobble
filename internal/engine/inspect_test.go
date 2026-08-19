@@ -14,10 +14,7 @@ func TestInspectNoFingerprintsAffectsDownstream(t *testing.T) {
 	writeCheckFile(t, filepath.Join(dir, "in", "a.txt"), "a")
 	writeCheckFile(t, filepath.Join(dir, "out", "a.txt"), "a")
 	writeCheckFile(t, filepath.Join(dir, "out", "b.txt"), "b")
-	depSum, err := sha256File(filepath.Join(dir, "out", "a.txt"))
-	if err != nil {
-		t.Fatal(err)
-	}
+	depRec := mustFileRecord(t, filepath.Join(dir, "out", "a.txt"), "out/a.txt")
 	doc := Document{
 		Name: "pipe",
 		Tasks: []TaskPlan{
@@ -68,7 +65,7 @@ func TestInspectNoFingerprintsAffectsDownstream(t *testing.T) {
 				Command:      []string{"true"},
 				Attempt:      1,
 				Params:       []jsonParam{},
-				Fingerprints: []jsonFileHash{{Path: "out/a.txt", SHA256: depSum}},
+				Fingerprints: []jsonFileHash{depRec},
 			},
 		},
 	}
@@ -113,10 +110,7 @@ func TestInspectRemainingInstanceUsesFullSet(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "a.txt"), "a")
 	writeCheckFile(t, filepath.Join(dir, "out", "b.txt"), "b")
-	inSum, err := sha256File(filepath.Join(dir, "in", "a.txt"))
-	if err != nil {
-		t.Fatal(err)
-	}
+	inRec := mustFileRecord(t, filepath.Join(dir, "in", "a.txt"), "in/a.txt")
 	doc := Document{
 		Name: "pipe",
 		Tasks: []TaskPlan{
@@ -167,7 +161,7 @@ func TestInspectRemainingInstanceUsesFullSet(t *testing.T) {
 				Command:      []string{"true"},
 				Attempt:      1,
 				Params:       []jsonParam{},
-				Fingerprints: []jsonFileHash{{Path: "in/a.txt", SHA256: inSum}},
+				Fingerprints: []jsonFileHash{inRec},
 			},
 		},
 	}
@@ -377,10 +371,8 @@ func TestClassifyReuseReasons(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "a.txt"), "reads")
 	writeCheckFile(t, filepath.Join(dir, "out", "a.txt"), "reads")
-	sum, err := sha256File(filepath.Join(dir, "in", "a.txt"))
-	if err != nil {
-		t.Fatal(err)
-	}
+	inRec := mustFileRecord(t, filepath.Join(dir, "in", "a.txt"), "in/a.txt")
+	outRec := mustFileRecord(t, filepath.Join(dir, "out", "a.txt"), "out/a.txt")
 	base := jsonTaskState{
 		ID:           "copy",
 		Status:       StatusSucceeded,
@@ -388,9 +380,9 @@ func TestClassifyReuseReasons(t *testing.T) {
 		Image:        "alpine:3.19.1",
 		Params:       []jsonParam{{Name: "mode", Value: "fast"}},
 		Env:          map[string]string{"HOME": "/tmp"},
-		Fingerprints: []jsonFileHash{{Path: "in/a.txt", SHA256: sum}},
-		Checksums:    []jsonFileHash{{Path: "out/a.txt", SHA256: sum}},
-		Lineage:      []jsonLineage{{Producer: "copy", Path: "out/a.txt", Checksum: sum}},
+		Fingerprints: []jsonFileHash{inRec},
+		Checksums:    []jsonFileHash{outRec},
+		Lineage:      []jsonLineage{{Producer: "copy", Path: "out/a.txt", Checksum: outRec.SHA256}},
 	}
 	plan := TaskPlan{
 		ID:      "copy",

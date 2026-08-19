@@ -828,11 +828,11 @@ func (s *sched) apply(r report) {
 }
 
 func (s *sched) recordSuccess(st *jsonTaskState, task TaskPlan) error {
-	inputs, err := fileHashes(s.workspace, task.Inputs)
+	inputs, err := inputRecords(s.workspace, task.Inputs)
 	if err != nil {
 		return err
 	}
-	outputs, err := fileHashes(s.workspace, task.Outputs)
+	outputs, err := destRecords(s.workspace, task.Outputs)
 	if err != nil {
 		return err
 	}

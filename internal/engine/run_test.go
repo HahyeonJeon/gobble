@@ -877,12 +877,32 @@ func TestRunGroupStagePublishByName(t *testing.T) {
 	}
 	isolate := filepath.Join(dir, ControlDir, "tasks", "copy", "_", "0", "1", "work")
 	for _, name := range []string{"ref.amb", "ref.ann"} {
-		info, err := os.Stat(filepath.Join(isolate, name))
+		src := filepath.Join(dir, name)
+		dst := filepath.Join(isolate, name)
+		info, err := os.Lstat(dst)
 		if err != nil {
 			t.Fatalf("staged group member %s: %v", name, err)
 		}
-		if info.Mode().Perm() != 0o444 {
-			t.Fatalf("staged %s mode %o, want 0444", name, info.Mode().Perm())
+		if !info.Mode().IsRegular() {
+			t.Fatalf("staged %s is not regular", name)
+		}
+		srcKey, err := cheapKey(src)
+		if err != nil {
+			t.Fatal(err)
+		}
+		dstKey, err := cheapKey(dst)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if srcKey.Inode != dstKey.Inode || srcKey.Dev != dstKey.Dev {
+			t.Fatalf("staged %s is not a hardlink", name)
+		}
+		srcInfo, err := os.Lstat(src)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if srcInfo.Mode().Perm() != 0o644 {
+			t.Fatalf("hardlink stage chmod source %s to %o", name, srcInfo.Mode().Perm())
 		}
 	}
 

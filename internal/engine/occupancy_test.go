@@ -145,8 +145,28 @@ func TestRunPersistsIdentityFacts(t *testing.T) {
 	if len(st.Fingerprints) != 1 || st.Fingerprints[0].Path != "in/sample.txt" || st.Fingerprints[0].SHA256 == "" {
 		t.Fatalf("fingerprints got %#v", st.Fingerprints)
 	}
+	if !hasCheap(st.Fingerprints[0]) {
+		t.Fatalf("input cheap keys missing: %#v", st.Fingerprints[0])
+	}
+	inKey, err := cheapKey(filepath.Join(dir, "in", "sample.txt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !sameCheap(st.Fingerprints[0], inKey) {
+		t.Fatalf("input cheap keys got %+v, want workspace input %+v", st.Fingerprints[0], inKey)
+	}
 	if len(st.Checksums) != 1 || st.Checksums[0].Path != "out/sample.txt" || st.Checksums[0].SHA256 == "" {
 		t.Fatalf("checksums got %#v", st.Checksums)
+	}
+	if !hasCheap(st.Checksums[0]) {
+		t.Fatalf("dest cheap keys missing: %#v", st.Checksums[0])
+	}
+	destKey, err := cheapKey(filepath.Join(dir, "out", "sample.txt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !sameCheap(st.Checksums[0], destKey) {
+		t.Fatalf("dest cheap keys got %+v, want dest %+v", st.Checksums[0], destKey)
 	}
 	if st.Fingerprints[0].SHA256 != st.Checksums[0].SHA256 {
 		t.Fatalf("copy fingerprint %s != checksum %s", st.Fingerprints[0].SHA256, st.Checksums[0].SHA256)

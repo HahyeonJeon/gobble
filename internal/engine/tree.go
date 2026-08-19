@@ -1,6 +1,8 @@
 package engine
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"io/fs"
@@ -19,10 +21,16 @@ var (
 
 type treeManifest struct {
 	Members []treeManifestMember `json:"members"`
+	Digest  string               `json:"digest"`
 }
 
 type treeManifestMember struct {
-	Path string `json:"path"`
+	Path   string `json:"path"`
+	Size   int64  `json:"size"`
+	Mtime  int64  `json:"mtime"`
+	Dev    uint64 `json:"dev"`
+	Inode  uint64 `json:"inode"`
+	SHA256 string `json:"sha256"`
 }
 
 func isTreeIO(io IO) bool {
@@ -110,7 +118,7 @@ func checkTreeOutput(isolate string, out IO) error {
 	return nil
 }
 
-func stageTree(workspace, isolate string, in IO) error {
+func stageTree(workspace, isolate string, in IO, allowSymlink bool) error {
 	srcRoot := workspaceFile(workspace, treeSourceDir(in))
 	dstRoot := workspaceFile(isolate, treeDir(in))
 	members, err := walkTreeMembers(srcRoot)
@@ -123,10 +131,7 @@ func stageTree(workspace, isolate string, in IO) error {
 	for _, rel := range members {
 		src := filepath.Join(srcRoot, filepath.FromSlash(rel))
 		dst := filepath.Join(dstRoot, filepath.FromSlash(rel))
-		if err := exec.CopyFile(src, dst); err != nil {
-			return err
-		}
-		if err := os.Chmod(dst, 0o444); err != nil {
+		if err := exec.StageFile(src, dst, allowSymlink); err != nil {
 			return err
 		}
 	}
@@ -173,7 +178,7 @@ func publishTree(workspace, isolate string, out IO, replace bool) (wrote []strin
 				return nil, err
 			}
 		} else {
-			if err := exec.CopyFile(src, dst); err != nil {
+			if err := exec.PublishFile(src, dst); err != nil {
 				rollback()
 				return nil, err
 			}
@@ -182,7 +187,7 @@ func publishTree(workspace, isolate string, out IO, replace bool) (wrote []strin
 		delete(old, rel)
 	}
 	manPath := workspaceFile(workspace, treeManifestPath(out))
-	if err := writeTreeManifest(manPath, members, replace); err != nil {
+	if err := writeTreeManifest(manPath, dstRoot, members, replace); err != nil {
 		rollback()
 		return nil, err
 	}
@@ -197,11 +202,26 @@ func publishTree(workspace, isolate string, out IO, replace bool) (wrote []strin
 	return wrote, nil
 }
 
-func writeTreeManifest(path string, members []string, replace bool) error {
+func writeTreeManifest(path, destRoot string, members []string, replace bool) error {
 	body := treeManifest{Members: make([]treeManifestMember, 0, len(members))}
+	digests := make([]string, 0, len(members))
 	for _, rel := range members {
-		body.Members = append(body.Members, treeManifestMember{Path: rel})
+		abs := filepath.Join(destRoot, filepath.FromSlash(rel))
+		rec, err := fileRecord(abs, rel)
+		if err != nil {
+			return err
+		}
+		body.Members = append(body.Members, treeManifestMember{
+			Path:   rel,
+			Size:   rec.Size,
+			Mtime:  rec.Mtime,
+			Dev:    rec.Dev,
+			Inode:  rec.Inode,
+			SHA256: rec.SHA256,
+		})
+		digests = append(digests, rec.SHA256)
 	}
+	body.Digest = treeManifestDigest(digests)
 	data, err := json.MarshalIndent(body, "", "  ")
 	if err != nil {
 		return err
@@ -236,6 +256,17 @@ func writeTreeManifest(path string, members []string, replace bool) error {
 		return cerr
 	}
 	return nil
+}
+
+func treeManifestDigest(digests []string) string {
+	sorted := append([]string(nil), digests...)
+	sort.Strings(sorted)
+	h := sha256.New()
+	for _, d := range sorted {
+		h.Write([]byte(d))
+		h.Write([]byte{'\n'})
+	}
+	return hex.EncodeToString(h.Sum(nil))
 }
 
 func readTreeManifestMembers(path string) []string {

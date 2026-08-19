@@ -3,8 +3,11 @@ package engine
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"io"
+	"os"
 	"strconv"
+	"syscall"
 
 	"github.com/HahyeonJeon/gobble/internal/engine/exec"
 )
@@ -23,6 +26,10 @@ const (
 type jsonFileHash struct {
 	Path   string `json:"path"`
 	SHA256 string `json:"sha256"`
+	Size   int64  `json:"size"`
+	Mtime  int64  `json:"mtime"`
+	Dev    uint64 `json:"dev"`
+	Inode  uint64 `json:"inode"`
 }
 
 type jsonLineage struct {
@@ -83,35 +90,92 @@ func sha256File(path string) (string, error) {
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
-func fileHashes(workspace string, ios []IO) ([]jsonFileHash, error) {
+func cheapKey(path string) (jsonFileHash, error) {
+	info, err := os.Lstat(path)
+	if err != nil {
+		return jsonFileHash{}, err
+	}
+	if !info.Mode().IsRegular() {
+		return jsonFileHash{}, exec.ErrNotRegular
+	}
+	st, ok := info.Sys().(*syscall.Stat_t)
+	if !ok {
+		return jsonFileHash{}, errors.New("stat_t unavailable")
+	}
+	return jsonFileHash{
+		Size:  info.Size(),
+		Mtime: info.ModTime().UnixNano(),
+		Dev:   uint64(st.Dev),
+		Inode: uint64(st.Ino),
+	}, nil
+}
+
+func hasCheap(h jsonFileHash) bool {
+	return h.Dev != 0 || h.Inode != 0
+}
+
+func sameCheap(a, b jsonFileHash) bool {
+	return a.Size == b.Size && a.Mtime == b.Mtime && a.Dev == b.Dev && a.Inode == b.Inode
+}
+
+func fileRecord(abs, planPath string) (jsonFileHash, error) {
+	rec, err := cheapKey(abs)
+	if err != nil {
+		return jsonFileHash{}, err
+	}
+	sum, err := sha256File(abs)
+	if err != nil {
+		return jsonFileHash{}, err
+	}
+	rec.Path = planPath
+	rec.SHA256 = sum
+	return rec, nil
+}
+
+func inputRecords(workspace string, ios []IO) ([]jsonFileHash, error) {
+	return fileRecords(workspace, ios, false)
+}
+
+func destRecords(workspace string, ios []IO) ([]jsonFileHash, error) {
+	return fileRecords(workspace, ios, true)
+}
+
+func fileRecords(workspace string, ios []IO, dest bool) ([]jsonFileHash, error) {
 	var out []jsonFileHash
 	for _, io := range ios {
 		files := namedIOFiles(io)
 		if isTreeIO(io) {
 			probe := io
-			probe.Path = treeSourceDir(io)
+			if !dest {
+				probe.Path = treeSourceDir(io)
+			}
 			files = treeDestMemberPaths(workspace, probe)
 		}
 		for _, f := range files {
-			src := fileSource(f)
-			path := workspaceFile(workspace, src)
+			statRel := f.path
+			if !dest {
+				statRel = fileSource(f)
+			}
+			path := workspaceFile(workspace, statRel)
 			if !regularFile(path) {
 				out = append(out, jsonFileHash{Path: f.path})
 				continue
 			}
-			sum, err := sha256File(path)
+			rec, err := fileRecord(path, f.path)
 			if err != nil {
 				return nil, err
 			}
-			out = append(out, jsonFileHash{Path: f.path, SHA256: sum})
+			out = append(out, rec)
 		}
 	}
 	return out, nil
 }
 
-func ioFiles(io IO) []namedFile {
+func ioFiles(workspace string, io IO) []namedFile {
 	if isTreeIO(io) {
-		return nil
+		probe := io
+		probe.Path = treeSourceDir(io)
+		return treeDestMemberPaths(workspace, probe)
 	}
 	return namedIOFiles(io)
 }
@@ -120,6 +184,14 @@ func hashByPath(hashes []jsonFileHash) map[string]string {
 	out := make(map[string]string, len(hashes))
 	for _, h := range hashes {
 		out[h.Path] = h.SHA256
+	}
+	return out
+}
+
+func recordByPath(hashes []jsonFileHash) map[string]jsonFileHash {
+	out := make(map[string]jsonFileHash, len(hashes))
+	for _, h := range hashes {
+		out[h.Path] = h
 	}
 	return out
 }
@@ -142,7 +214,7 @@ func successLineage(s *sched, task TaskPlan, inputs, outputs []jsonFileHash) []j
 			}
 			break
 		}
-		for _, f := range ioFiles(in) {
+		for _, f := range ioFiles(s.workspace, in) {
 			out = append(out, jsonLineage{
 				Producer: producer,
 				Path:     f.path,
@@ -152,7 +224,7 @@ func successLineage(s *sched, task TaskPlan, inputs, outputs []jsonFileHash) []j
 		}
 	}
 	for _, pub := range task.Outputs {
-		for _, f := range ioFiles(pub) {
+		for _, f := range ioFiles(s.workspace, pub) {
 			out = append(out, jsonLineage{
 				Producer: consumer,
 				Path:     f.path,

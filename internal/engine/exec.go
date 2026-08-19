@@ -41,9 +41,10 @@ func prepareIsolate(workspace, isolate string, task TaskPlan) error {
 			}
 		}
 	}
+	allowSymlink := task.Image == ""
 	for _, in := range task.Inputs {
 		if isTreeIO(in) {
-			if err := stageTree(workspace, isolate, in); err != nil {
+			if err := stageTree(workspace, isolate, in, allowSymlink); err != nil {
 				return err
 			}
 			continue
@@ -51,10 +52,7 @@ func prepareIsolate(workspace, isolate string, task TaskPlan) error {
 		for _, f := range namedIOFiles(in) {
 			src := workspaceFile(workspace, fileSource(f))
 			dst := workspaceFile(isolate, f.path)
-			if err := exec.CopyFile(src, dst); err != nil {
-				return err
-			}
-			if err := os.Chmod(dst, 0o444); err != nil {
+			if err := exec.StageFile(src, dst, allowSymlink); err != nil {
 				return err
 			}
 		}
@@ -110,7 +108,7 @@ func publishAll(workspace, isolate string, task TaskPlan) error {
 		for _, f := range namedIOFiles(out) {
 			src := workspaceFile(isolate, f.path)
 			dst := workspaceFile(workspace, f.path)
-			if err := exec.CopyFile(src, dst); err != nil {
+			if err := exec.PublishFile(src, dst); err != nil {
 				rollback()
 				return err
 			}
@@ -132,7 +130,7 @@ func publishReplace(workspace, isolate string, task TaskPlan) error {
 			src := workspaceFile(isolate, f.path)
 			dst := workspaceFile(workspace, f.path)
 			if !pathPresent(dst) {
-				if err := exec.CopyFile(src, dst); err != nil {
+				if err := exec.PublishFile(src, dst); err != nil {
 					return err
 				}
 				continue

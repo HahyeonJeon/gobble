@@ -116,26 +116,27 @@ func TestStagedReplaceLeavesDestOnFailedWrite(t *testing.T) {
 	if err != nil || string(got) != "next" {
 		t.Fatalf("dest got %q, want next", got)
 	}
-	info, err := os.Stat(dst)
+	srcInfo, err := os.Lstat(src)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if info.Mode().Perm() != 0o644 {
-		t.Fatalf("dest mode got %o, want 0644", info.Mode().Perm())
+	if srcInfo.Mode().Perm() != 0o644 {
+		t.Fatalf("source mode got %o, want 0644", srcInfo.Mode().Perm())
 	}
-	if err := os.Chmod(dst, 0o600); err != nil {
+	info, err := os.Lstat(dst)
+	if err != nil {
 		t.Fatal(err)
+	}
+	if !info.Mode().IsRegular() {
+		t.Fatal("replaced dest is not regular")
 	}
 	writeCheckFile(t, src, "again")
 	if err := stagedReplace(src, dst); err != nil {
 		t.Fatalf("stagedReplace() second error = %v", err)
 	}
-	info, err = os.Stat(dst)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if info.Mode().Perm() != 0o600 {
-		t.Fatalf("dest mode after match got %o, want 0600", info.Mode().Perm())
+	got, err = os.ReadFile(dst)
+	if err != nil || string(got) != "again" {
+		t.Fatalf("dest after second replace got %q, want again", got)
 	}
 }
 
