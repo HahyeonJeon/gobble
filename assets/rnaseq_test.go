@@ -62,8 +62,12 @@ func TestRNASeqComposeBuildPlan(t *testing.T) {
 	assertIOPath(t, planTask(t, raw, "fastp").Inputs, "r2", "in/SRR6357072_2.fastq.gz")
 	assertIOPath(t, planTask(t, raw, "multiqc").Inputs, "report_0", "work/raw/fastqc/SRR6357072_1_fastqc.html")
 	assertIOPath(t, planTask(t, raw, "multiqc").Inputs, "report_4", "work/fastp/SRR6357072_1.fastp.json")
-	assertIOPath(t, planTask(t, raw, "multiqc").Inputs, "report_6", "work/star-align/Aligned.out.bam")
-	assertIOPath(t, planTask(t, raw, "multiqc").Inputs, "report_7", "work/star-align/Log.final.out")
+	assertIOPath(t, planTask(t, raw, "multiqc").Inputs, "report_6", "work/star-align/Log.final.out")
+	for _, in := range planTask(t, raw, "multiqc").Inputs {
+		if in.Path == "work/star-align/Aligned.out.bam" {
+			t.Fatalf("multiqc input %q path = %q, MultiQC must not consume the STAR BAM", in.Name, in.Path)
+		}
+	}
 
 	assertNoTaskName(t, tasks, "bwa_index", "bwa_mem", "bismark_align", "bismark_genome", "bismark_methylation_extractor")
 }

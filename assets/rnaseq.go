@@ -28,7 +28,7 @@ func RNASeq() *gobble.Pipeline {
 	AddMultiQC(p, []gobble.Handle{
 		rawQC.HTML, rawQC.Zip, cleanQC.HTML, cleanQC.Zip,
 		fastp.JSON, fastp.HTML,
-		align.BAM, align.LogFinalOut,
+		align.LogFinalOut,
 	}, MultiQCOptions{})
 	return p
 }

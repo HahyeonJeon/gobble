@@ -12,6 +12,25 @@ import (
 	"github.com/HahyeonJeon/gobble"
 )
 
+func TestBismarkExtractorStem(t *testing.T) {
+	got := bismarkExtractorStem(gobble.PathSpec{Dir: gobble.Dir("work/bismark-align"), Name: "aligned_pe", Ext: ".bam"})
+	if got != "aligned_pe" {
+		t.Fatalf("stem(bam) = %q, want aligned_pe", got)
+	}
+	got = bismarkExtractorStem(gobble.PathSpec{Dir: gobble.Dir("work"), Name: "reads", Ext: ".sam"})
+	if got != "reads" {
+		t.Fatalf("stem(sam) = %q, want reads", got)
+	}
+	func() {
+		defer func() {
+			if recover() == nil {
+				t.Fatalf("stem(invalid) panic = nil, want error")
+			}
+		}()
+		bismarkExtractorStem(gobble.PathSpec{Name: "."})
+	}()
+}
+
 func TestBismarkMethylationExtractorStandaloneComposeBuildPlan(t *testing.T) {
 	bam := gobble.PathSpec{Dir: gobble.Dir("work/bismark-align"), Name: "aligned_pe", Ext: ".bam"}
 	opts := BismarkMethylationExtractorOptions{

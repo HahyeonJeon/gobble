@@ -95,17 +95,10 @@ func addBismarkMethylationExtractor(parent Parent, bam gobble.Handle, opts Bisma
 }
 
 func bismarkExtractorStem(spec gobble.PathSpec) string {
-	path, err := CommandPath(spec)
-	base := spec.Name
-	if err == nil {
-		if i := strings.LastIndex(path, "/"); i >= 0 {
-			base = path[i+1:]
-		} else {
-			base = path
-		}
-	}
-	if base == "" {
-		base = "aligned_pe"
+	path := mustCommandPath(spec)
+	base := path
+	if i := strings.LastIndex(path, "/"); i >= 0 {
+		base = path[i+1:]
 	}
 	lower := strings.ToLower(base)
 	for _, suf := range []string{".bam", ".sam"} {
