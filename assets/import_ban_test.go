@@ -13,10 +13,7 @@ import (
 const bannedImport = "github.com/HahyeonJeon/gobble/assets"
 
 func TestImportBan(t *testing.T) {
-	root := moduleRoot(t)
-	var hits []string
-	hits = append(hits, importHits(t, filepath.Join(root), false)...)
-	hits = append(hits, importHits(t, filepath.Join(root, "tests", "wgs-e2e"), true)...)
+	hits := importHits(t, moduleRoot(t))
 	if len(hits) > 0 {
 		t.Fatalf("banned import %s in:\n%s", bannedImport, strings.Join(hits, "\n"))
 	}
@@ -35,15 +32,16 @@ func TestDummyComposeFileOmitsAssetsImport(t *testing.T) {
 	}
 }
 
-func importHits(t *testing.T, dir string, recurse bool) []string {
+func importHits(t *testing.T, root string) []string {
 	t.Helper()
 	var hits []string
+	assetsDir := filepath.Join(root, "assets")
 	walk := func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 		if d.IsDir() {
-			if !recurse && path != dir {
+			if path == assetsDir {
 				return fs.SkipDir
 			}
 			return nil
@@ -59,8 +57,8 @@ func importHits(t *testing.T, dir string, recurse bool) []string {
 		}
 		return nil
 	}
-	if err := filepath.WalkDir(dir, walk); err != nil {
-		t.Fatalf("WalkDir(%s) error = %v", dir, err)
+	if err := filepath.WalkDir(root, walk); err != nil {
+		t.Fatalf("WalkDir(%s) error = %v", root, err)
 	}
 	return hits
 }
