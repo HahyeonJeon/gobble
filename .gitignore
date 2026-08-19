@@ -10,3 +10,6 @@ vendor/
 
 # Official WGS e2e fixture cache (dataset bytes stay untracked)
 tests/wgs-e2e/testdata/cache/
+
+# First-party asset proof cache (dataset bytes stay untracked)
+assets/testdata/cache/

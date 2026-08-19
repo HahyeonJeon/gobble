@@ -1,0 +1,43 @@
+package assets
+
+import "github.com/HahyeonJeon/gobble"
+
+// Parent can record a task. Pipeline, Module, Branch, and Merge implement it.
+type Parent interface {
+	AddTask(spec gobble.TaskSpec) *gobble.Task
+}
+
+// ModuleParent can record a child module. Pipeline, Module, and Branch
+// implement it. Merge does not.
+type ModuleParent interface {
+	Parent
+	AddModule(name string) *gobble.Module
+}
+
+var (
+	_ Parent       = (*gobble.Pipeline)(nil)
+	_ Parent       = (*gobble.Module)(nil)
+	_ Parent       = (*gobble.Branch)(nil)
+	_ Parent       = (*gobble.Merge)(nil)
+	_ ModuleParent = (*gobble.Pipeline)(nil)
+	_ ModuleParent = (*gobble.Module)(nil)
+	_ ModuleParent = (*gobble.Branch)(nil)
+)
+
+// AddTask records spec on parent. First-party asset builders must call this
+// helper rather than parent.AddTask. The helper does not call AddInput.
+func AddTask(parent Parent, spec gobble.TaskSpec) *gobble.Task {
+	return parent.AddTask(spec)
+}
+
+// AddModule records a child module named name. Only a multi-task asset may
+// call AddModule.
+func AddModule(parent ModuleParent, name string) *gobble.Module {
+	return parent.AddModule(name)
+}
+
+// CommandPath renders spec as one Command token. Assets must build argv from
+// the same PathSpec the binds declare.
+func CommandPath(spec gobble.PathSpec) (string, error) {
+	return spec.Render()
+}
