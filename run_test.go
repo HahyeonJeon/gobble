@@ -338,6 +338,54 @@ func TestRunProcessGraph(t *testing.T) {
 	}
 }
 
+func TestRunRestagedPipelineInput(t *testing.T) {
+	dir := t.TempDir()
+	writeRunFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	if _, err := os.Stat(filepath.Join(dir, "work", "sample.txt")); !os.IsNotExist(err) {
+		t.Fatalf("workspace dest existed before Run")
+	}
+	p := gobble.NewPipeline("input-restage")
+	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "sample", Ext: ".txt"})
+	p.AddTask(gobble.TaskSpec{
+		Name:    "copy",
+		Command: []string{"cp", "work/sample.txt", "out/sample.txt"},
+		Inputs: []gobble.Bind{{
+			Name: "src",
+			From: in,
+			Spec: gobble.PathSpec{Dir: gobble.Dir("work")},
+		}},
+		Outputs: []gobble.Bind{{
+			Name: "dst",
+			Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "sample", Ext: ".txt"},
+		}},
+	})
+	g, err := gobble.Compose(p)
+	if err != nil {
+		t.Fatalf("Compose() error = %v, want nil", err)
+	}
+	if err := gobble.Run(g, dir, 0); err != nil {
+		t.Fatalf("Run() error = %v, want nil", err)
+	}
+	isolateDest := filepath.Join(dir, engine.ControlDir, "tasks", "copy", "_", "0", "1", "work", "work", "sample.txt")
+	got, err := os.ReadFile(isolateDest)
+	if err != nil {
+		t.Fatalf("isolate dest: %v", err)
+	}
+	if string(got) != "reads" {
+		t.Fatalf("isolate dest got %q, want reads", got)
+	}
+	published, err := os.ReadFile(filepath.Join(dir, "out", "sample.txt"))
+	if err != nil {
+		t.Fatalf("published output: %v", err)
+	}
+	if string(published) != "reads" {
+		t.Fatalf("published output got %q, want reads", published)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "work", "sample.txt")); !os.IsNotExist(err) {
+		t.Fatalf("copied dest into workspace, want isolate only")
+	}
+}
+
 func TestRunRefuseDoesNotOccupy(t *testing.T) {
 	dir := t.TempDir()
 	err := gobble.Run(mustCompose(processCopyPipeline)(t), dir, 0)

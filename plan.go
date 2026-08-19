@@ -112,14 +112,14 @@ func planDocument(g *Graph) (engine.Document, error) {
 			pt.Params = append(pt.Params, engine.ParamPlan{Name: p.Name, Value: p.Value})
 		}
 		for _, b := range t.inputs {
-			io, err := planIO(b)
+			io, err := planIO(g, b, true)
 			if err != nil {
 				return engine.Document{}, planPathError(bindUnit(t.id, b.name), err)
 			}
 			pt.Inputs = append(pt.Inputs, io)
 		}
 		for _, b := range t.outputs {
-			io, err := planIO(b)
+			io, err := planIO(g, b, false)
 			if err != nil {
 				return engine.Document{}, planPathError(bindUnit(t.id, b.name), err)
 			}
@@ -150,23 +150,32 @@ func scriptArgv(script string) []string {
 	return []string{"sh", "-c", "set -eu\n" + script}
 }
 
-func planIO(b graphBind) (engine.IO, error) {
+func planIO(g *Graph, b graphBind, asInput bool) (engine.IO, error) {
 	if b.members != nil {
 		io := engine.IO{
 			Name:    b.name,
 			Spec:    snapshotPath(b.spec),
 			Members: make([]engine.IOMember, 0, len(b.members)),
 		}
+		fromMembers := fromResolvedMembers(g, b)
 		for _, m := range b.members {
 			path, err := m.spec.Render()
 			if err != nil {
 				return engine.IO{}, err
 			}
-			io.Members = append(io.Members, engine.IOMember{
+			member := engine.IOMember{
 				Name: m.name,
 				Path: path,
 				Spec: snapshotPath(m.spec),
-			})
+			}
+			if asInput {
+				if from, ok := findGraphMember(fromMembers, m.name); ok {
+					if src, err := from.spec.Render(); err == nil && src != path {
+						member.Source = src
+					}
+				}
+			}
+			io.Members = append(io.Members, member)
 		}
 		return io, nil
 	}
@@ -174,11 +183,103 @@ func planIO(b graphBind) (engine.IO, error) {
 	if err != nil {
 		return engine.IO{}, err
 	}
-	return engine.IO{
+	io := engine.IO{
 		Name: b.name,
 		Path: path,
 		Spec: snapshotPath(b.spec),
-	}, nil
+	}
+	if asInput {
+		if from, ok := fromResolvedSpec(g, b); ok {
+			if src, err := from.Render(); err == nil && src != path {
+				io.Source = src
+			}
+		}
+	}
+	return io, nil
+}
+
+func fromResolvedSpec(g *Graph, b graphBind) (PathSpec, bool) {
+	switch b.fromKind {
+	case handleInput:
+		for _, in := range g.inputs {
+			if in.name != b.fromName {
+				continue
+			}
+			if in.members != nil {
+				return PathSpec{}, false
+			}
+			return in.spec, true
+		}
+	case handleOut:
+		for i := range g.tasks {
+			t := &g.tasks[i]
+			if t.id != b.fromTask {
+				continue
+			}
+			for _, ob := range t.outputs {
+				if ob.name != b.fromName {
+					continue
+				}
+				if ob.members != nil {
+					return PathSpec{}, false
+				}
+				return ob.spec, true
+			}
+		}
+	case handleIn:
+		for i := range g.tasks {
+			t := &g.tasks[i]
+			if t.id != b.fromTask {
+				continue
+			}
+			for _, ib := range t.inputs {
+				if ib.name != b.fromName {
+					continue
+				}
+				if ib.members != nil {
+					return PathSpec{}, false
+				}
+				return ib.spec, true
+			}
+		}
+	}
+	return PathSpec{}, false
+}
+
+func fromResolvedMembers(g *Graph, b graphBind) []graphMember {
+	switch b.fromKind {
+	case handleInput:
+		for _, in := range g.inputs {
+			if in.name == b.fromName {
+				return in.members
+			}
+		}
+	case handleOut:
+		for i := range g.tasks {
+			t := &g.tasks[i]
+			if t.id != b.fromTask {
+				continue
+			}
+			for _, ob := range t.outputs {
+				if ob.name == b.fromName {
+					return ob.members
+				}
+			}
+		}
+	case handleIn:
+		for i := range g.tasks {
+			t := &g.tasks[i]
+			if t.id != b.fromTask {
+				continue
+			}
+			for _, ib := range t.inputs {
+				if ib.name == b.fromName {
+					return ib.members
+				}
+			}
+		}
+	}
+	return nil
 }
 
 func planWait(byID map[string]*engine.TaskPlan, e graphEdge) ([]string, error) {
@@ -236,20 +337,28 @@ func waitPaths(io engine.IO, unit string) ([]string, error) {
 	if io.Members != nil {
 		waits := make([]string, 0, len(io.Members))
 		for _, m := range io.Members {
-			if m.Path == "" {
+			p := m.Path
+			if m.Source != "" {
+				p = m.Source
+			}
+			if p == "" {
 				return nil, neverReadyError(unit)
 			}
-			waits = append(waits, m.Path)
+			waits = append(waits, p)
 		}
 		if len(waits) == 0 {
 			return nil, neverReadyError(unit)
 		}
 		return waits, nil
 	}
-	if io.Path == "" {
+	p := io.Path
+	if io.Source != "" {
+		p = io.Source
+	}
+	if p == "" {
 		return nil, neverReadyError(unit)
 	}
-	return []string{io.Path}, nil
+	return []string{p}, nil
 }
 
 func neverReadyError(unit string) error {

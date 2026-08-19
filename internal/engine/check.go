@@ -294,26 +294,31 @@ func checkInputs(workspace string, doc Document) []Defect {
 			unit := bindUnit(t.ID, in.Name)
 			if in.Members != nil {
 				for _, f := range namedIOFiles(in) {
-					if regularFile(workspaceFile(workspace, f.path)) {
+					src := fileSource(f)
+					if regularFile(workspaceFile(workspace, src)) {
 						continue
 					}
 					defects = append(defects, Defect{
 						Code:    DefectMissingInput,
 						Unit:    bindUnit(unit, f.name),
 						Message: "missing input",
-						Paths:   []string{f.path},
+						Paths:   []string{src},
 					})
 				}
 				continue
 			}
-			if regularFile(workspaceFile(workspace, in.Path)) {
+			src := in.Path
+			if in.Source != "" {
+				src = in.Source
+			}
+			if regularFile(workspaceFile(workspace, src)) {
 				continue
 			}
 			defects = append(defects, Defect{
 				Code:    DefectMissingInput,
 				Unit:    unit,
 				Message: "missing input",
-				Paths:   []string{in.Path},
+				Paths:   []string{src},
 			})
 		}
 	}

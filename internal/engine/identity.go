@@ -94,7 +94,8 @@ func fileHashes(workspace string, ios []IO) ([]jsonFileHash, error) {
 	var out []jsonFileHash
 	for _, io := range ios {
 		for _, f := range namedIOFiles(io) {
-			path := workspaceFile(workspace, f.path)
+			src := fileSource(f)
+			path := workspaceFile(workspace, src)
 			if !regularFile(path) {
 				out = append(out, jsonFileHash{Path: f.path})
 				continue

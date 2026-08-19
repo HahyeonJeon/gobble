@@ -133,7 +133,7 @@ func prepareIsolate(workspace, isolate string, task TaskPlan) error {
 	}
 	for _, in := range task.Inputs {
 		for _, f := range namedIOFiles(in) {
-			src := workspaceFile(workspace, f.path)
+			src := workspaceFile(workspace, fileSource(f))
 			dst := workspaceFile(isolate, f.path)
 			if err := copyFile(src, dst); err != nil {
 				return err
@@ -267,8 +267,9 @@ func stagedReplace(src, dst string) error {
 }
 
 type namedFile struct {
-	name string
-	path string
+	name   string
+	path   string
+	source string
 }
 
 func namedIOFiles(io IO) []namedFile {
@@ -279,14 +280,21 @@ func namedIOFiles(io IO) []namedFile {
 			if !ok || found.Path == "" {
 				continue
 			}
-			out = append(out, namedFile{name: found.Name, path: found.Path})
+			out = append(out, namedFile{name: found.Name, path: found.Path, source: found.Source})
 		}
 		return out
 	}
 	if io.Path == "" {
 		return nil
 	}
-	return []namedFile{{name: io.Name, path: io.Path}}
+	return []namedFile{{name: io.Name, path: io.Path, source: io.Source}}
+}
+
+func fileSource(f namedFile) string {
+	if f.source != "" {
+		return f.source
+	}
+	return f.path
 }
 
 func findIOMember(members []IOMember, name string) (IOMember, bool) {

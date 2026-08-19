@@ -61,18 +61,25 @@ type ParamPlan struct {
 // IO is one recorded input or output bind.
 //
 // Path may be empty on a Group IO. Members is omitted on single-file IOs.
+// Source is the workspace path isolate copies from when it differs from
+// Path. Empty Source means Path is both source and dest.
 type IO struct {
 	Name    string
 	Path    string
+	Source  string
 	Spec    Path
 	Members []IOMember
 }
 
 // IOMember is one recorded Group member.
+//
+// Source is the workspace path isolate copies from when it differs from
+// Path. Empty Source means Path is both source and dest.
 type IOMember struct {
-	Name string
-	Path string
-	Spec Path
+	Name   string
+	Path   string
+	Source string
+	Spec   Path
 }
 
 // Edge is one directed bind edge. An empty FromTask is a pipeline input.
@@ -128,14 +135,16 @@ type jsonParam struct {
 type jsonIO struct {
 	Name    string       `json:"name"`
 	Path    string       `json:"path"`
+	Source  string       `json:"source,omitempty"`
 	Spec    jsonSpec     `json:"spec"`
 	Members []jsonMember `json:"members,omitempty"`
 }
 
 type jsonMember struct {
-	Name string   `json:"name"`
-	Path string   `json:"path"`
-	Spec jsonSpec `json:"spec"`
+	Name   string   `json:"name"`
+	Path   string   `json:"path"`
+	Source string   `json:"source,omitempty"`
+	Spec   jsonSpec `json:"spec"`
 }
 
 // jsonSpec uses locked PathSpec keys. Directory and PathSpec cannot use
@@ -278,6 +287,7 @@ func encodeIOs(in []IO) []jsonIO {
 		out = append(out, jsonIO{
 			Name:    b.Name,
 			Path:    b.Path,
+			Source:  b.Source,
 			Spec:    encodeSpec(b.Spec),
 			Members: encodeMembers(b.Members),
 		})
@@ -292,9 +302,10 @@ func encodeMembers(in []IOMember) []jsonMember {
 	out := make([]jsonMember, 0, len(in))
 	for _, m := range in {
 		out = append(out, jsonMember{
-			Name: m.Name,
-			Path: m.Path,
-			Spec: encodeSpec(m.Spec),
+			Name:   m.Name,
+			Path:   m.Path,
+			Source: m.Source,
+			Spec:   encodeSpec(m.Spec),
 		})
 	}
 	return out

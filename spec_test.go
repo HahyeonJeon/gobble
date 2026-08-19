@@ -93,6 +93,59 @@ func TestComposeRestageFromLiteralRendersNewFields(t *testing.T) {
 	}
 }
 
+func TestComposeValidatePlanRestagedPipelineInput(t *testing.T) {
+	p := NewPipeline("input-restage")
+	in := p.AddInput("reads", PathSpec{Dir: Dir("in"), Name: "sample", Ext: ".txt"})
+	p.AddTask(TaskSpec{
+		Name:    "copy",
+		Command: []string{"cp"},
+		Inputs: []Bind{{
+			Name: "src",
+			From: in,
+			Spec: PathSpec{Dir: Dir("work")},
+		}},
+		Outputs: []Bind{{
+			Name: "dst",
+			Spec: PathSpec{Dir: Dir("out"), Name: "sample", Ext: ".txt"},
+		}},
+	})
+	g, err := Compose(p)
+	if err != nil {
+		t.Fatalf("case input-restage: Compose() error = %v, want nil", err)
+	}
+	if err := Validate(g); err != nil {
+		t.Fatalf("case input-restage: Validate() error = %v, want nil", err)
+	}
+	plan, err := BuildPlan(g)
+	if err != nil {
+		t.Fatalf("case input-restage: BuildPlan() error = %v, want nil", err)
+	}
+	if plan == nil {
+		t.Fatalf("case input-restage: BuildPlan() plan = nil, want non-nil")
+	}
+	doc, err := planDocument(g)
+	if err != nil {
+		t.Fatalf("case input-restage: planDocument() error = %v, want nil", err)
+	}
+	if len(doc.Tasks) != 1 || len(doc.Tasks[0].Inputs) != 1 {
+		t.Fatalf("case input-restage: document tasks/inputs got %#v", doc.Tasks)
+	}
+	got := doc.Tasks[0].Inputs[0]
+	if got.Path != "work/sample.txt" {
+		t.Fatalf("case input-restage: dest path got %q, want %q", got.Path, "work/sample.txt")
+	}
+	if got.Source != "in/sample.txt" {
+		t.Fatalf("case input-restage: source path got %q, want %q", got.Source, "in/sample.txt")
+	}
+	if len(doc.Edges) != 1 {
+		t.Fatalf("case input-restage: edges got %d, want 1", len(doc.Edges))
+	}
+	wait := doc.Edges[0].Wait
+	if len(wait) != 1 || wait[0] != "in/sample.txt" {
+		t.Fatalf("case input-restage: wait got %#v, want [in/sample.txt]", wait)
+	}
+}
+
 func TestRenderAgreesWithSnapshot(t *testing.T) {
 	bam := PathSpec{Name: "aln", Ext: ".bam"}
 	r1 := PathSpec{Lead: "samplename_S1_L001_R1_", Name: "001", Ext: ".fastq.gz"}

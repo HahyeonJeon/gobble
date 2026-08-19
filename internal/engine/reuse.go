@@ -129,7 +129,7 @@ func compareInputIdentity(workspace string, latest jsonTaskState, current TaskPl
 	seen := make(map[string]bool, len(files))
 	for _, f := range files {
 		seen[f.path] = true
-		path := workspaceFile(workspace, f.path)
+		path := workspaceFile(workspace, fileSource(f))
 		if !regularFile(path) {
 			missing = true
 			continue

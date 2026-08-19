@@ -582,9 +582,10 @@ func decodeIOs(in []jsonIO) []IO {
 	out := make([]IO, 0, len(in))
 	for _, b := range in {
 		io := IO{
-			Name: b.Name,
-			Path: b.Path,
-			Spec: decodeSpec(b.Spec),
+			Name:   b.Name,
+			Path:   b.Path,
+			Source: b.Source,
+			Spec:   decodeSpec(b.Spec),
 		}
 		if b.Members != nil {
 			io.Members = decodeMembers(b.Members)
@@ -598,9 +599,10 @@ func decodeMembers(in []jsonMember) []IOMember {
 	out := make([]IOMember, 0, len(in))
 	for _, m := range in {
 		out = append(out, IOMember{
-			Name: m.Name,
-			Path: m.Path,
-			Spec: decodeSpec(m.Spec),
+			Name:   m.Name,
+			Path:   m.Path,
+			Source: m.Source,
+			Spec:   decodeSpec(m.Spec),
 		})
 	}
 	return out

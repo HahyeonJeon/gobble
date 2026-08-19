@@ -87,6 +87,46 @@ func TestRunProcessPublishesAndOccupies(t *testing.T) {
 	}
 }
 
+func TestRunRestagedInputCopiesFromSource(t *testing.T) {
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	if _, err := os.Stat(filepath.Join(dir, "work", "sample.txt")); !os.IsNotExist(err) {
+		t.Fatalf("workspace dest existed before Run")
+	}
+	defects := Run(Request{
+		Workspace: dir,
+		Document: Document{
+			Name: "restage",
+			Tasks: []TaskPlan{{
+				ID:      "copy",
+				Name:    "copy",
+				Command: []string{"cp", "work/sample.txt", "out/sample.txt"},
+				Inputs:  []IO{{Name: "in", Path: "work/sample.txt", Source: "in/sample.txt"}},
+				Outputs: []IO{{Name: "out", Path: "out/sample.txt"}},
+			}},
+			Edges: []Edge{{FromPort: "reads", ToTask: "copy", ToPort: "in", Wait: []string{"in/sample.txt"}}},
+		},
+	})
+	if len(defects) != 0 {
+		t.Fatalf("Run() defects %v, want none", defects)
+	}
+	isolateDest := filepath.Join(dir, ControlDir, "tasks", "copy", "_", "0", "1", "work", "work", "sample.txt")
+	got, err := os.ReadFile(isolateDest)
+	if err != nil {
+		t.Fatalf("isolate dest: %v", err)
+	}
+	if string(got) != "reads" {
+		t.Fatalf("isolate dest got %q, want reads", got)
+	}
+	published, err := os.ReadFile(filepath.Join(dir, "out", "sample.txt"))
+	if err != nil {
+		t.Fatalf("published output: %v", err)
+	}
+	if string(published) != "reads" {
+		t.Fatalf("published output got %q, want reads", published)
+	}
+}
+
 func TestRunOccupiedSecondStart(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
