@@ -3,6 +3,7 @@ package gobble
 import (
 	"errors"
 	"io"
+	"strings"
 
 	"github.com/HahyeonJeon/gobble/internal/engine"
 )
@@ -161,8 +162,8 @@ func (p *Plan) TaskOutputNames(taskID string) []string {
 	return planBindNames(t.outputs)
 }
 
-// BindKind returns ArtifactFile, ArtifactGroup, or empty if the bind is
-// missing.
+// BindKind returns ArtifactFile, ArtifactGroup, ArtifactTree, or empty
+// if the bind is missing.
 func (p *Plan) BindKind(taskID, name string) string {
 	b, ok := p.lookupBind(taskID, name)
 	if !ok {
@@ -171,8 +172,9 @@ func (p *Plan) BindKind(taskID, name string) string {
 	return b.kind
 }
 
-// BindPath returns the recorded file path for the named bind. Group
-// binds and missing binds return empty.
+// BindPath returns the recorded file path for the named bind, or the
+// declared directory for a Tree bind. Group binds and missing binds
+// return empty.
 func (p *Plan) BindPath(taskID, name string) string {
 	b, ok := p.lookupBind(taskID, name)
 	if !ok {
@@ -238,6 +240,8 @@ func planBindsFromIO(in []engine.IO) []planBindRead {
 			kind = ArtifactFile
 			if b.Members != nil {
 				kind = ArtifactGroup
+			} else if b.Manifest != "" {
+				kind = ArtifactTree
 			}
 		}
 		rec := planBindRead{name: b.Name, path: b.Path, kind: kind}
@@ -360,6 +364,24 @@ func scriptArgv(script string) []string {
 }
 
 func planIO(g *Graph, b graphBind, asInput bool) (engine.IO, error) {
+	if !b.tree.IsZero() {
+		dir := b.tree.Dir.String()
+		io := engine.IO{
+			Name:     b.name,
+			Kind:     engine.ArtifactTree,
+			Path:     dir,
+			Manifest: treeManifestRel(dir),
+		}
+		if asInput {
+			if from, ok := fromResolvedTree(g, b); ok {
+				src := from.Dir.String()
+				if src != "" && src != dir {
+					io.Source = src
+				}
+			}
+		}
+		return io, nil
+	}
 	if b.members != nil {
 		io := engine.IO{
 			Name:    b.name,
@@ -409,6 +431,60 @@ func planIO(g *Graph, b graphBind, asInput bool) (engine.IO, error) {
 	return io, nil
 }
 
+func treeManifestRel(dir string) string {
+	name := ".gobble-tree.json"
+	if dir == "" {
+		return name
+	}
+	cleaned := strings.ReplaceAll(dir, `\`, "/")
+	return strings.TrimSuffix(cleaned, "/") + "/" + name
+}
+
+func fromResolvedTree(g *Graph, b graphBind) (Tree, bool) {
+	switch b.fromKind {
+	case handleInput:
+		for _, in := range g.inputs {
+			if in.name == b.fromName {
+				if in.tree.IsZero() {
+					return Tree{}, false
+				}
+				return in.tree, true
+			}
+		}
+	case handleOut:
+		for i := range g.tasks {
+			t := &g.tasks[i]
+			if t.id != b.fromTask {
+				continue
+			}
+			for _, ob := range t.outputs {
+				if ob.name == b.fromName {
+					if ob.tree.IsZero() {
+						return Tree{}, false
+					}
+					return ob.tree, true
+				}
+			}
+		}
+	case handleIn:
+		for i := range g.tasks {
+			t := &g.tasks[i]
+			if t.id != b.fromTask {
+				continue
+			}
+			for _, ib := range t.inputs {
+				if ib.name == b.fromName {
+					if ib.tree.IsZero() {
+						return Tree{}, false
+					}
+					return ib.tree, true
+				}
+			}
+		}
+	}
+	return Tree{}, false
+}
+
 func fromResolvedSpec(g *Graph, b graphBind) (PathSpec, bool) {
 	switch b.fromKind {
 	case handleInput:
@@ -416,7 +492,7 @@ func fromResolvedSpec(g *Graph, b graphBind) (PathSpec, bool) {
 			if in.name != b.fromName {
 				continue
 			}
-			if in.members != nil {
+			if in.members != nil || !in.tree.IsZero() {
 				return PathSpec{}, false
 			}
 			return in.spec, true
@@ -431,7 +507,7 @@ func fromResolvedSpec(g *Graph, b graphBind) (PathSpec, bool) {
 				if ob.name != b.fromName {
 					continue
 				}
-				if ob.members != nil {
+				if ob.members != nil || !ob.tree.IsZero() {
 					return PathSpec{}, false
 				}
 				return ob.spec, true
@@ -447,7 +523,7 @@ func fromResolvedSpec(g *Graph, b graphBind) (PathSpec, bool) {
 				if ib.name != b.fromName {
 					continue
 				}
-				if ib.members != nil {
+				if ib.members != nil || !ib.tree.IsZero() {
 					return PathSpec{}, false
 				}
 				return ib.spec, true

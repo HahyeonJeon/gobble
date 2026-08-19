@@ -1,8 +1,11 @@
 package gobble
 
 import (
+	"path/filepath"
 	"regexp"
 	"strings"
+
+	intpath "github.com/HahyeonJeon/gobble/internal/path"
 )
 
 var namePat = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_-]*$`)
@@ -13,6 +16,7 @@ type composeChecker struct {
 	inputs     map[string]pipeInput
 	memo       map[bindKey]PathSpec
 	memberMemo map[bindKey][]graphMember
+	treeMemo   map[bindKey]Directory
 	walking    map[bindKey]bool
 }
 
@@ -22,6 +26,7 @@ func composeCheckPipeline(p *Pipeline) []Defect {
 		inputs:     make(map[string]pipeInput, len(p.inputs)),
 		memo:       make(map[bindKey]PathSpec),
 		memberMemo: make(map[bindKey][]graphMember),
+		treeMemo:   make(map[bindKey]Directory),
 		walking:    make(map[bindKey]bool),
 	}
 	for _, t := range p.tasks {
@@ -137,8 +142,9 @@ func (c *composeChecker) checkPipeInputs(p *Pipeline) {
 		if in.name != "" && namePat.MatchString(in.name) {
 			seen[in.name] = true
 		}
-		if in.members != nil {
-			c.checkGroup(in.name, in.spec, in.members)
+		c.checkArtifactXOR(in.name, in.spec, in.members, in.tree)
+		if !in.tree.IsZero() && in.tree.Dir.IsZero() {
+			c.add(DefectInvalidPath, in.name, "workspace-root tree")
 		}
 	}
 }
@@ -154,8 +160,9 @@ func (c *graphChecker) checkInputs() {
 		if in.name != "" && namePat.MatchString(in.name) {
 			seen[in.name] = true
 		}
-		if in.members != nil {
-			c.checkGraphGroup(in.name, in.spec, in.members)
+		c.checkArtifactXOR(in.name, in.spec, graphMembersAsGroup(in.members), in.tree)
+		if !in.tree.IsZero() && in.tree.Dir.IsZero() {
+			c.add(DefectInvalidPath, in.name, "workspace-root tree")
 		}
 	}
 }
@@ -219,7 +226,7 @@ func (c *composeChecker) checkPipeTask(t *Task) {
 		if b.Name != "" && namePat.MatchString(b.Name) {
 			seen[b.Name] = true
 		}
-		c.checkGroup(unit, b.Spec, b.Group)
+		c.checkArtifactXOR(unit, b.Spec, b.Group, b.Tree)
 	}
 	for _, b := range t.spec.Inputs {
 		checkPort(b)
@@ -291,7 +298,7 @@ func (c *graphChecker) checkTask(t *graphTask) {
 		if b.name != "" && namePat.MatchString(b.name) {
 			seen[b.name] = true
 		}
-		c.checkGraphGroup(unit, b.spec, b.members)
+		c.checkArtifactXOR(unit, b.spec, graphMembersAsGroup(b.members), b.tree)
 	}
 	for _, b := range t.inputs {
 		checkPort(b)
@@ -341,13 +348,36 @@ func (c *graphChecker) checkEnv(id string, env map[string]string) {
 	}
 }
 
-func (c *composeChecker) checkGroup(unit string, spec PathSpec, members Group) {
-	if members == nil {
-		return
+func (c *composeChecker) checkArtifactXOR(unit string, spec PathSpec, members Group, tree Tree) {
+	checkArtifactXORInto(c.add, unit, spec, members, tree)
+	if members != nil {
+		c.checkGroupMembers(unit, members)
 	}
-	if !isZeroSpec(spec) {
-		c.add(DefectInvalidValue, unit, "group and spec both set")
+}
+
+func (c *graphChecker) checkArtifactXOR(unit string, spec PathSpec, members Group, tree Tree) {
+	checkArtifactXORInto(c.add, unit, spec, members, tree)
+	if members != nil {
+		c.checkGroupMembers(unit, members)
 	}
+}
+
+func checkArtifactXORInto(add func(DefectCode, string, string, ...string), unit string, spec PathSpec, members Group, tree Tree) {
+	hasGroup := members != nil
+	hasTree := !tree.IsZero()
+	hasSpec := !isZeroSpec(spec)
+	if hasGroup && hasSpec {
+		add(DefectInvalidValue, unit, "group and spec both set")
+	}
+	if hasGroup && hasTree {
+		add(DefectInvalidValue, unit, "group and tree both set")
+	}
+	if hasSpec && hasTree {
+		add(DefectInvalidValue, unit, "spec and tree both set")
+	}
+}
+
+func (c *composeChecker) checkGroupMembers(unit string, members Group) {
 	if len(members) == 0 {
 		c.add(DefectInvalidValue, unit, "empty group")
 		return
@@ -369,32 +399,37 @@ func (c *composeChecker) checkGroup(unit string, spec PathSpec, members Group) {
 	}
 }
 
-func (c *graphChecker) checkGraphGroup(unit string, spec PathSpec, members []graphMember) {
-	if members == nil {
-		return
-	}
-	if !isZeroSpec(spec) {
-		c.add(DefectInvalidValue, unit, "group and spec both set")
-	}
+func (c *graphChecker) checkGroupMembers(unit string, members Group) {
 	if len(members) == 0 {
 		c.add(DefectInvalidValue, unit, "empty group")
 		return
 	}
 	seen := make(map[string]bool)
 	for _, m := range members {
-		munit := bindUnit(unit, m.name)
-		if m.name == "" {
+		munit := bindUnit(unit, m.Name)
+		if m.Name == "" {
 			munit = unit
 		}
-		c.checkName(m.name, munit, "member")
-		if m.name != "" && seen[m.name] {
+		c.checkName(m.Name, munit, "member")
+		if m.Name != "" && seen[m.Name] {
 			c.add(DefectInvalidName, munit, "duplicate name")
 			continue
 		}
-		if m.name != "" && namePat.MatchString(m.name) {
-			seen[m.name] = true
+		if m.Name != "" && namePat.MatchString(m.Name) {
+			seen[m.Name] = true
 		}
 	}
+}
+
+func graphMembersAsGroup(members []graphMember) Group {
+	if members == nil {
+		return nil
+	}
+	out := make(Group, len(members))
+	for i, m := range members {
+		out[i] = Member{Name: m.name, Spec: m.spec}
+	}
+	return out
 }
 
 func (c *composeChecker) fromInPipeline(t *Task, b Bind) bool {
@@ -426,89 +461,101 @@ func (c *graphChecker) fromInGraph(b graphBind) bool {
 }
 
 func (c *composeChecker) groupFromOK(t *Task, b Bind) bool {
-	srcGroup, srcMembers, ok := c.sourceMembers(t, b)
-	if b.Group != nil {
-		return ok && srcGroup && sameMemberNames(b.Group, srcMembers)
+	srcGroup, srcMembers, srcTree, ok := c.sourceKind(t, b)
+	if !ok {
+		return false
 	}
-	return !srcGroup
+	if !b.Tree.IsZero() {
+		return srcTree && !srcGroup
+	}
+	if b.Group != nil {
+		return srcGroup && !srcTree && sameMemberNames(b.Group, srcMembers)
+	}
+	return !srcGroup && !srcTree
 }
 
 func (c *graphChecker) groupFromOK(b graphBind) bool {
-	srcGroup, srcMembers, ok := c.sourceMembers(b)
-	if b.members != nil {
-		return ok && srcGroup && sameGraphMemberNames(b.members, srcMembers)
+	srcGroup, srcMembers, srcTree, ok := c.sourceKind(b)
+	if !ok {
+		return false
 	}
-	return !srcGroup
+	if !b.tree.IsZero() {
+		return srcTree && !srcGroup
+	}
+	if b.members != nil {
+		return srcGroup && !srcTree && sameGraphMemberNames(b.members, srcMembers)
+	}
+	return !srcGroup && !srcTree
 }
 
-func (c *composeChecker) sourceMembers(t *Task, b Bind) (bool, Group, bool) {
+func (c *composeChecker) sourceKind(t *Task, b Bind) (bool, Group, bool, bool) {
 	if foreignFrom(b.From, t.pipe) {
-		return false, nil, false
+		return false, nil, false, false
 	}
 	switch b.From.kind {
 	case handleInput:
 		in, ok := c.inputs[b.From.name]
 		if !ok {
-			return false, nil, false
+			return false, nil, false, false
 		}
-		return in.members != nil, in.members, true
+		return in.members != nil, in.members, !in.tree.IsZero(), true
 	case handleOut:
 		src := b.From.task
 		if src == nil {
-			return false, nil, false
+			return false, nil, false, false
 		}
 		ob, ok := findBind(src.spec.Outputs, b.From.name)
 		if !ok {
-			return false, nil, false
+			return false, nil, false, false
 		}
-		return ob.Group != nil, ob.Group, true
+		return ob.Group != nil, ob.Group, !ob.Tree.IsZero(), true
 	case handleIn:
 		src := b.From.task
 		if src == nil {
-			return false, nil, false
+			return false, nil, false, false
 		}
 		ib, ok := findBind(src.spec.Inputs, b.From.name)
 		if !ok {
-			return false, nil, false
+			return false, nil, false, false
 		}
-		return ib.Group != nil, ib.Group, true
+		return ib.Group != nil, ib.Group, !ib.Tree.IsZero(), true
 	default:
-		return false, nil, false
+		return false, nil, false, false
 	}
 }
 
-func (c *graphChecker) sourceMembers(b graphBind) (bool, []graphMember, bool) {
+func (c *graphChecker) sourceKind(b graphBind) (bool, []graphMember, bool, bool) {
 	switch b.fromKind {
 	case handleInput:
 		in, ok := c.inputs[b.fromName]
 		if !ok {
-			return false, nil, false
+			return false, nil, false, false
 		}
-		return in.members != nil, in.members, true
+		return in.members != nil, in.members, !in.tree.IsZero(), true
 	case handleOut:
 		src, ok := c.tasks[b.fromTask]
 		if !ok {
-			return false, nil, false
+			return false, nil, false, false
 		}
 		for _, ob := range src.outputs {
 			if ob.name == b.fromName {
-				return ob.members != nil, ob.members, true
+				return ob.members != nil, ob.members, !ob.tree.IsZero(), true
 			}
 		}
-		return false, nil, false
+		return false, nil, false, false
 	case handleIn:
 		src, ok := c.tasks[b.fromTask]
 		if !ok {
-			return false, nil, false
+			return false, nil, false, false
 		}
 		for _, ib := range src.inputs {
 			if ib.name == b.fromName {
-				return ib.members != nil, ib.members, true
+				return ib.members != nil, ib.members, !ib.tree.IsZero(), true
 			}
 		}
-		return false, nil, false
+		return false, nil, false, false
 	default:
-		return false, nil, false
+		return false, nil, false, false
 	}
 }
 
@@ -614,6 +661,10 @@ func reachesSelf(start string, adj map[string][]string) bool {
 
 func (c *composeChecker) checkPipePaths(p *Pipeline) {
 	for _, in := range p.inputs {
+		if !in.tree.IsZero() {
+			c.renderTreeDir(in.tree.Dir, in.name)
+			continue
+		}
 		if in.members != nil {
 			for _, m := range in.members {
 				c.renderPath(m.Spec, bindUnit(in.name, m.Name))
@@ -635,6 +686,10 @@ func (c *composeChecker) checkPipePaths(p *Pipeline) {
 
 func (c *graphChecker) checkPaths() {
 	for _, in := range c.g.inputs {
+		if !in.tree.IsZero() {
+			c.renderTreeDir(in.tree.Dir, in.name)
+			continue
+		}
 		if in.members != nil {
 			for _, m := range in.members {
 				c.renderPath(m.spec, bindUnit(in.name, m.name))
@@ -656,6 +711,14 @@ func (c *graphChecker) checkPaths() {
 
 func (c *composeChecker) recordBindPaths(t *Task, b Bind, id string, out bool) {
 	unit := bindUnit(id, b.Name)
+	if !b.Tree.IsZero() {
+		dir, ok := c.resolveTree(t, b, out)
+		if !ok {
+			return
+		}
+		c.renderTreeDir(dir, unit)
+		return
+	}
 	if b.Group != nil {
 		members, ok := c.resolveMembers(t, b, out)
 		if !ok {
@@ -675,6 +738,10 @@ func (c *composeChecker) recordBindPaths(t *Task, b Bind, id string, out bool) {
 
 func (c *graphChecker) recordBindPaths(t *graphTask, b graphBind, out bool) {
 	unit := bindUnit(t.id, b.name)
+	if !b.tree.IsZero() {
+		c.renderTreeDir(b.tree.Dir, unit)
+		return
+	}
 	if b.members != nil {
 		for _, m := range b.members {
 			c.renderPath(m.spec, unit)
@@ -712,6 +779,111 @@ func (c *graphChecker) renderPath(spec PathSpec, unit string) {
 		paths = ge.Defects[0].Paths
 	}
 	c.add(DefectInvalidPath, unit, msg, paths...)
+}
+
+func (c *composeChecker) renderTreeDir(dir Directory, unit string) {
+	if msg, paths := treeDirDefect(dir); msg != "" {
+		c.add(DefectInvalidPath, unit, msg, paths...)
+	}
+}
+
+func (c *graphChecker) renderTreeDir(dir Directory, unit string) {
+	if msg, paths := treeDirDefect(dir); msg != "" {
+		c.add(DefectInvalidPath, unit, msg, paths...)
+	}
+}
+
+func treeDirDefect(dir Directory) (string, []string) {
+	raw := strings.ReplaceAll(dir.String(), `\`, "/")
+	if raw == "" || raw == "." {
+		paths := []string(nil)
+		if raw != "" {
+			paths = []string{raw}
+		}
+		return "workspace-root tree", paths
+	}
+	if filepath.IsAbs(raw) || strings.HasPrefix(raw, "/") {
+		return "absolute plan path", []string{raw}
+	}
+	cleaned, escaped := intpath.Clean(raw)
+	if escaped {
+		return "path escapes directory", []string{raw}
+	}
+	if cleaned == "" || cleaned == "." {
+		return "workspace-root tree", []string{raw}
+	}
+	if cleaned == ".gobble" || strings.HasPrefix(cleaned, ".gobble/") {
+		return "path is under .gobble", []string{raw}
+	}
+	if cleaned == ".git" || strings.HasPrefix(cleaned, ".git/") {
+		return "path is under .git", []string{raw}
+	}
+	return "", nil
+}
+
+func (c *composeChecker) resolveTree(t *Task, b Bind, out bool) (Directory, bool) {
+	if b.Tree.IsZero() {
+		return Directory{}, true
+	}
+	key := bindKey{task: t, name: b.Name, out: out}
+	if dir, ok := c.treeMemo[key]; ok {
+		return dir, true
+	}
+	if c.walking[key] {
+		return Directory{}, false
+	}
+	if b.From.IsZero() || foreignFrom(b.From, t.pipe) {
+		c.treeMemo[key] = b.Tree.Dir
+		return b.Tree.Dir, true
+	}
+	c.walking[key] = true
+	from, ok := c.resolveFromTree(t, b)
+	c.walking[key] = false
+	if !ok {
+		return Directory{}, false
+	}
+	dir := b.Tree.Dir
+	if dir.IsZero() {
+		dir = from
+	}
+	c.treeMemo[key] = dir
+	return dir, true
+}
+
+func (c *composeChecker) resolveFromTree(t *Task, b Bind) (Directory, bool) {
+	if foreignFrom(b.From, t.pipe) {
+		return Directory{}, false
+	}
+	switch b.From.kind {
+	case handleInput:
+		in, ok := c.inputs[b.From.name]
+		if !ok || in.tree.IsZero() {
+			return Directory{}, false
+		}
+		return in.tree.Dir, true
+	case handleOut:
+		src := b.From.task
+		if src == nil {
+			return Directory{}, false
+		}
+		ob, ok := findBind(src.spec.Outputs, b.From.name)
+		if !ok || ob.Tree.IsZero() {
+			return Directory{}, false
+		}
+		return c.resolveTree(src, ob, true)
+	case handleIn:
+		src := b.From.task
+		if src == nil {
+			return Directory{}, false
+		}
+		ib, ok := findBind(src.spec.Inputs, b.From.name)
+		if !ok || ib.Tree.IsZero() {
+			return Directory{}, false
+		}
+		return c.resolveTree(src, ib, false)
+	default:
+		return Directory{}, false
+	}
 }
 
 func errorsAsRender(err error, ge **Error) bool {

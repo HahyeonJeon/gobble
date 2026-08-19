@@ -16,6 +16,12 @@ func executeArgv(task TaskPlan) []string {
 
 func prepareIsolate(workspace, isolate string, task TaskPlan) error {
 	for _, in := range task.Inputs {
+		if isTreeIO(in) {
+			if err := os.MkdirAll(workspaceFile(isolate, treeDir(in)), 0o755); err != nil {
+				return err
+			}
+			continue
+		}
 		for _, f := range namedIOFiles(in) {
 			if err := mkdirPlanParent(isolate, f.path); err != nil {
 				return err
@@ -23,6 +29,12 @@ func prepareIsolate(workspace, isolate string, task TaskPlan) error {
 		}
 	}
 	for _, out := range task.Outputs {
+		if isTreeIO(out) {
+			if err := os.MkdirAll(workspaceFile(isolate, treeDir(out)), 0o755); err != nil {
+				return err
+			}
+			continue
+		}
 		for _, f := range namedIOFiles(out) {
 			if err := mkdirPlanParent(isolate, f.path); err != nil {
 				return err
@@ -30,6 +42,12 @@ func prepareIsolate(workspace, isolate string, task TaskPlan) error {
 		}
 	}
 	for _, in := range task.Inputs {
+		if isTreeIO(in) {
+			if err := stageTree(workspace, isolate, in); err != nil {
+				return err
+			}
+			continue
+		}
 		for _, f := range namedIOFiles(in) {
 			src := workspaceFile(workspace, fileSource(f))
 			dst := workspaceFile(isolate, f.path)
@@ -52,27 +70,48 @@ func mkdirPlanParent(root, planPath string) error {
 	return os.MkdirAll(filepath.Join(root, dir), 0o755)
 }
 
-func missingOutputs(isolate string, task TaskPlan) string {
+func inspectOutputs(isolate string, task TaskPlan) error {
 	for _, out := range task.Outputs {
+		if isTreeIO(out) {
+			if err := checkTreeOutput(isolate, out); err != nil {
+				return err
+			}
+			continue
+		}
 		for _, f := range namedIOFiles(out) {
 			if !regularFile(workspaceFile(isolate, f.path)) {
-				return f.path
+				return errTreeMissing
 			}
 		}
 	}
-	return ""
+	return nil
 }
 
 func publishAll(workspace, isolate string, task TaskPlan) error {
 	var wrote []string
+	rollback := func() {
+		for _, p := range wrote {
+			os.Remove(p)
+		}
+	}
 	for _, out := range task.Outputs {
+		if isTreeIO(out) {
+			added, err := publishTree(workspace, isolate, out, false)
+			if err != nil {
+				rollback()
+				for _, p := range added {
+					os.Remove(p)
+				}
+				return err
+			}
+			wrote = append(wrote, added...)
+			continue
+		}
 		for _, f := range namedIOFiles(out) {
 			src := workspaceFile(isolate, f.path)
 			dst := workspaceFile(workspace, f.path)
 			if err := exec.CopyFile(src, dst); err != nil {
-				for _, p := range wrote {
-					os.Remove(p)
-				}
+				rollback()
 				return err
 			}
 			wrote = append(wrote, dst)
@@ -83,6 +122,12 @@ func publishAll(workspace, isolate string, task TaskPlan) error {
 
 func publishReplace(workspace, isolate string, task TaskPlan) error {
 	for _, out := range task.Outputs {
+		if isTreeIO(out) {
+			if _, err := publishTree(workspace, isolate, out, true); err != nil {
+				return err
+			}
+			continue
+		}
 		for _, f := range namedIOFiles(out) {
 			src := workspaceFile(isolate, f.path)
 			dst := workspaceFile(workspace, f.path)
@@ -115,6 +160,9 @@ type namedFile struct {
 }
 
 func namedIOFiles(io IO) []namedFile {
+	if isTreeIO(io) {
+		return nil
+	}
 	if io.Members != nil {
 		out := make([]namedFile, 0, len(io.Members))
 		for _, m := range io.Members {

@@ -116,7 +116,7 @@ func reuseReasonFor(component string) string {
 }
 
 func compareInputIdentity(workspace string, latest jsonTaskState, current TaskPlan) (string, []string) {
-	files := declaredIOFiles(current.Inputs)
+	files := identityFiles(workspace, current.Inputs)
 	if len(latest.Fingerprints) == 0 {
 		if len(files) == 0 {
 			return "", nil
@@ -158,6 +158,20 @@ func compareInputIdentity(workspace string, latest jsonTaskState, current TaskPl
 
 func publishedMissing(workspace string, outputs []IO) bool {
 	for _, out := range outputs {
+		if isTreeIO(out) {
+			if !isDir(workspaceFile(workspace, treeDir(out))) {
+				return true
+			}
+			if !regularFile(workspaceFile(workspace, treeManifestPath(out))) {
+				return true
+			}
+			for _, f := range treeDestMemberPaths(workspace, out) {
+				if !regularFile(workspaceFile(workspace, f.path)) {
+					return true
+				}
+			}
+			continue
+		}
 		for _, f := range namedIOFiles(out) {
 			if !regularFile(workspaceFile(workspace, f.path)) {
 				return true
@@ -191,7 +205,7 @@ func destReuseMiss(workspace string, latest jsonTaskState, current TaskPlan) boo
 			known[lin.Path] = true
 		}
 	}
-	for _, f := range declaredIOFiles(current.Outputs) {
+	for _, f := range identityFiles(workspace, current.Outputs) {
 		if !known[f.path] {
 			return true
 		}
@@ -199,9 +213,27 @@ func destReuseMiss(workspace string, latest jsonTaskState, current TaskPlan) boo
 	return false
 }
 
+func identityFiles(workspace string, ios []IO) []namedFile {
+	var out []namedFile
+	for _, io := range ios {
+		if isTreeIO(io) {
+			probe := io
+			probe.Path = treeSourceDir(io)
+			out = append(out, treeDestMemberPaths(workspace, probe)...)
+			continue
+		}
+		out = append(out, namedIOFiles(io)...)
+	}
+	return out
+}
+
 func declaredIOFiles(ios []IO) []namedFile {
 	var out []namedFile
 	for _, io := range ios {
+		if isTreeIO(io) {
+			out = append(out, namedFile{name: io.Name, path: io.Path})
+			continue
+		}
 		out = append(out, namedIOFiles(io)...)
 	}
 	return out

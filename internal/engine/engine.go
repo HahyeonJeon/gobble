@@ -47,12 +47,15 @@ const (
 // Schema 0 and 1 documents are unsupported-schema. There is no migration.
 const SchemaVersion = 2
 
-// Artifact kinds recorded on Document IO. Tree is unused until later work.
+// Artifact kinds recorded on Document IO.
 const (
 	ArtifactFile  = "file"
 	ArtifactGroup = "group"
 	ArtifactTree  = "tree"
 )
+
+// treeManifestName is the dest Tree manifest file. It is not a member.
+const treeManifestName = ".gobble-tree.json"
 
 // Defect is one named failure found by a validation walk.
 type Defect struct {

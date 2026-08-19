@@ -1,10 +1,11 @@
 package gobble
 
-// ArtifactFile and ArtifactGroup are bind kinds returned by Graph and Plan
-// readers. Tree is added later.
+// ArtifactFile, ArtifactGroup, and ArtifactTree are bind kinds returned
+// by Graph and Plan readers.
 const (
 	ArtifactFile  = "file"
 	ArtifactGroup = "group"
+	ArtifactTree  = "tree"
 )
 
 // Edge is a read-only directed bind edge. An empty FromTask is a pipeline
@@ -29,6 +30,7 @@ type graphInput struct {
 	name    string
 	spec    PathSpec
 	members []graphMember
+	tree    Tree
 }
 
 type graphTask struct {
@@ -55,6 +57,7 @@ type graphBind struct {
 	fromName string
 	fromTask string
 	members  []graphMember
+	tree     Tree
 }
 
 type graphMember struct {
@@ -136,12 +139,15 @@ func (g *Graph) TaskOutputNames(taskID string) []string {
 	return bindNames(t.outputs)
 }
 
-// BindKind returns ArtifactFile, ArtifactGroup, or empty if the bind is
-// missing.
+// BindKind returns ArtifactFile, ArtifactGroup, ArtifactTree, or empty
+// if the bind is missing.
 func (g *Graph) BindKind(taskID, name string) string {
 	b, ok := g.lookupBind(taskID, name)
 	if !ok {
 		return ""
+	}
+	if !b.tree.IsZero() {
+		return ArtifactTree
 	}
 	if b.members != nil {
 		return ArtifactGroup
@@ -149,12 +155,16 @@ func (g *Graph) BindKind(taskID, name string) string {
 	return ArtifactFile
 }
 
-// BindPath returns the rendered file path for the named bind. Group
-// binds and missing binds return empty.
+// BindPath returns the rendered file path for the named bind, or the
+// declared directory for a Tree bind. Group binds and missing binds
+// return empty.
 func (g *Graph) BindPath(taskID, name string) string {
 	b, ok := g.lookupBind(taskID, name)
 	if !ok || b.members != nil {
 		return ""
+	}
+	if !b.tree.IsZero() {
+		return b.tree.Dir.String()
 	}
 	s, err := b.spec.Render()
 	if err != nil {

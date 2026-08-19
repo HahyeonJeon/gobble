@@ -125,12 +125,18 @@ func checkArtifactXOR(unit string, b IO) []Defect {
 		if hasGroup {
 			return []Defect{{Code: DefectInvalidValue, Unit: unit, Message: "group and tree both set"}}
 		}
+		if !isZeroPath(b.Spec) && (b.Spec.Prefix != "" || b.Spec.Base != "" || len(b.Spec.Suffixes) > 0 || b.Spec.Ext != "" || b.Spec.Literal) {
+			return []Defect{{Code: DefectInvalidValue, Unit: unit, Message: "spec and tree both set"}}
+		}
 	case ArtifactFile, "":
 		if hasGroup && hasFile {
 			return []Defect{{Code: DefectInvalidValue, Unit: unit, Message: "group and spec both set"}}
 		}
 		if hasGroup && hasTree {
 			return []Defect{{Code: DefectInvalidValue, Unit: unit, Message: "group and tree both set"}}
+		}
+		if hasTree && hasFile {
+			return []Defect{{Code: DefectInvalidValue, Unit: unit, Message: "spec and tree both set"}}
 		}
 		if hasGroup && len(b.Members) == 0 {
 			return []Defect{{Code: DefectInvalidValue, Unit: unit, Message: "empty group"}}

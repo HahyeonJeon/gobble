@@ -23,29 +23,53 @@ type TaskSpec struct {
 // Bind is one named input or output port on a task.
 //
 // Name is the local port name only. It never implicitly matches a pipeline
-// input. A Bind is either a single Spec or a Group, not both. A non-nil
-// Group, including an empty list, is a Group bind. When From is set, Spec
-// is classified as follows: a zero Spec inherits the spec Compose resolves
-// for that port, which may itself be inherited, not Handle.Spec; a Spec
-// that has only Ext set, and optionally Dir, is a related file of From
-// using Rule; any other Spec restages field by field, taking each set field
-// from Spec and inheriting the rest from From. A Literal restage keeps
-// opacity and merges Dir unless Spec.Dir is set. From should name another
-// task or a pipeline input. A From that points at the same task is a cycle.
-// A Group From must name another Group port or Group pipeline input
-// with the same member-name set.
+// input. A Bind is exactly one of a File Spec, a Group, or a Tree.
+// A non-nil Group, including an empty list, is a Group bind. A Tree with
+// IsZero false is a Tree bind. When From is set, Spec is classified as
+// follows: a zero Spec inherits the spec Compose resolves for that port,
+// which may itself be inherited, not Handle.Spec; a Spec that has only Ext
+// set, and optionally Dir, is a related file of From using Rule; any other
+// Spec restages field by field, taking each set field from Spec and
+// inheriting the rest from From. A Literal restage keeps opacity and merges
+// Dir unless Spec.Dir is set. Tree has no related-file sugar: a present
+// Tree with a zero Dir inherits the From directory; a non-zero Dir uses
+// that directory. From should name another task or a pipeline input. A From
+// that points at the same task is a cycle. A Group From must name another
+// Group port or Group pipeline input with the same member-name set. A Tree
+// From must name another Tree port or Tree pipeline input.
 // Rule is used when this Bind is a related file of From. The zero Rule is
 // DeriveAppend.
 type Bind struct {
 	Name  string
 	Spec  PathSpec
 	Group Group
+	Tree  Tree
 	From  Handle
 	Rule  DeriveRule
 }
 
+// Tree is a declared directory artifact. Dir is placement inside the
+// isolate work root. IsZero is false only for a Tree constructed with
+// DeclareTree, including a zero Dir that inherits From.
+type Tree struct {
+	Dir     Directory
+	present bool
+}
+
+// DeclareTree returns a Tree bind for dir. A zero dir is still a Tree
+// bind: Compose inherits From or reports invalid-path.
+func DeclareTree(dir Directory) Tree {
+	return Tree{Dir: dir, present: true}
+}
+
+// IsZero reports whether t is not a Tree bind. A present Tree with a
+// zero Dir is not zero.
+func (t Tree) IsZero() bool {
+	return !t.present
+}
+
 // Group is an ordered list of named regular-file members on one Bind.
-// A nil Group is a single-file bind. A non-nil empty Group is invalid.
+// A nil Group is a non-Group bind. A non-nil empty Group is invalid.
 type Group []Member
 
 // Member is one named regular-file path in a Group.

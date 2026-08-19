@@ -109,6 +109,26 @@ func TestValidateDocumentPlanDefects(t *testing.T) {
 			unit: "index.idx",
 		},
 		{
+			name: "group and tree both set",
+			doc: Document{
+				Name: "xor-tree",
+				Tasks: []TaskPlan{{
+					ID:      "index",
+					Name:    "index",
+					Command: []string{"star"},
+					Outputs: []IO{{
+						Name:     "idx",
+						Kind:     ArtifactTree,
+						Path:     "work/idx",
+						Manifest: "work/idx/.gobble-tree.json",
+						Members:  []IOMember{{Name: "amb", Path: "ref.amb"}},
+					}},
+				}},
+			},
+			code: DefectInvalidValue,
+			unit: "index.idx",
+		},
+		{
 			name: "malformed image",
 			doc: Document{
 				Name: "image",

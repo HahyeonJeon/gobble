@@ -66,6 +66,7 @@ type resolver struct {
 	p          *Pipeline
 	memo       map[bindKey]PathSpec
 	memberMemo map[bindKey][]graphMember
+	treeMemo   map[bindKey]Directory
 	walking    map[bindKey]bool
 }
 
@@ -80,6 +81,7 @@ func buildGraph(p *Pipeline) *Graph {
 		p:          p,
 		memo:       make(map[bindKey]PathSpec),
 		memberMemo: make(map[bindKey][]graphMember),
+		treeMemo:   make(map[bindKey]Directory),
 		walking:    make(map[bindKey]bool),
 	}
 	return r.buildGraph()
@@ -88,7 +90,7 @@ func buildGraph(p *Pipeline) *Graph {
 func (r *resolver) buildGraph() *Graph {
 	g := &Graph{name: r.p.name}
 	for _, in := range r.p.inputs {
-		gi := graphInput{name: in.name, spec: in.spec.clone()}
+		gi := graphInput{name: in.name, spec: in.spec.clone(), tree: in.tree}
 		if in.members != nil {
 			gi.members = authoredMembers(in.members)
 		}
@@ -127,7 +129,13 @@ func (r *resolver) graphBind(t *Task, b Bind, out bool) graphBind {
 		fromKind: b.From.kind,
 		fromName: b.From.name,
 	}
-	if b.Group != nil {
+	if !b.Tree.IsZero() {
+		if dir, ok := r.resolveTree(t, b, out); ok {
+			gb.tree = DeclareTree(dir)
+		} else {
+			gb.tree = b.Tree
+		}
+	} else if b.Group != nil {
 		if members, ok := r.resolveMembers(t, b, out); ok {
 			gb.members = members
 		} else {
@@ -171,6 +179,67 @@ func (r *resolver) resolveBind(t *Task, b Bind, out bool) (PathSpec, bool) {
 	spec := classifySpec(b.Spec, from, b.Rule)
 	r.memo[key] = spec
 	return spec, true
+}
+
+func (r *resolver) resolveTree(t *Task, b Bind, out bool) (Directory, bool) {
+	if b.Tree.IsZero() {
+		return Directory{}, true
+	}
+	key := bindKey{task: t, name: b.Name, out: out}
+	if dir, ok := r.treeMemo[key]; ok {
+		return dir, true
+	}
+	if r.walking[key] {
+		return Directory{}, false
+	}
+	if b.From.IsZero() {
+		r.treeMemo[key] = b.Tree.Dir
+		return b.Tree.Dir, true
+	}
+	r.walking[key] = true
+	from, ok := r.resolveFromTree(b.From)
+	r.walking[key] = false
+	if !ok {
+		return Directory{}, false
+	}
+	dir := b.Tree.Dir
+	if dir.IsZero() {
+		dir = from
+	}
+	r.treeMemo[key] = dir
+	return dir, true
+}
+
+func (r *resolver) resolveFromTree(h Handle) (Directory, bool) {
+	if foreignFrom(h, r.p) {
+		return Directory{}, false
+	}
+	switch h.kind {
+	case handleInput:
+		for _, in := range r.p.inputs {
+			if in.name == h.name {
+				if in.tree.IsZero() {
+					return Directory{}, false
+				}
+				return in.tree.Dir, true
+			}
+		}
+		return Directory{}, false
+	case handleOut:
+		b, ok := findBind(h.task.spec.Outputs, h.name)
+		if !ok || b.Tree.IsZero() {
+			return Directory{}, false
+		}
+		return r.resolveTree(h.task, b, true)
+	case handleIn:
+		b, ok := findBind(h.task.spec.Inputs, h.name)
+		if !ok || b.Tree.IsZero() {
+			return Directory{}, false
+		}
+		return r.resolveTree(h.task, b, false)
+	default:
+		return Directory{}, false
+	}
 }
 
 func (r *resolver) resolveMembers(t *Task, b Bind, out bool) ([]graphMember, bool) {

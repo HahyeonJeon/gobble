@@ -363,6 +363,58 @@ func TestComposeRejectDeclarations(t *testing.T) {
 			message: "empty group",
 		},
 		{
+			name:    "spec and tree both set",
+			pipe:    specAndTreePipeline(),
+			code:    gobble.DefectInvalidValue,
+			unit:    "index.idx",
+			message: "spec and tree both set",
+		},
+		{
+			name:    "group and tree both set",
+			pipe:    groupAndTreePipeline(),
+			code:    gobble.DefectInvalidValue,
+			unit:    "index.idx",
+			message: "group and tree both set",
+		},
+		{
+			name: "file from tree",
+			pipe: fileFromTreePipeline(),
+			code: gobble.DefectMissingInput,
+			unit: "mem.idx",
+		},
+		{
+			name: "tree from file",
+			pipe: treeFromFilePipeline(),
+			code: gobble.DefectMissingInput,
+			unit: "mem.idx",
+		},
+		{
+			name: "tree from group",
+			pipe: treeFromGroupPipeline(),
+			code: gobble.DefectMissingInput,
+			unit: "mem.idx",
+		},
+		{
+			name: "group from tree",
+			pipe: groupFromTreePipeline(),
+			code: gobble.DefectMissingInput,
+			unit: "mem.idx",
+		},
+		{
+			name:    "workspace-root tree",
+			pipe:    workspaceRootTreePipeline(),
+			code:    gobble.DefectInvalidPath,
+			unit:    "index.idx",
+			message: "workspace-root tree",
+		},
+		{
+			name:    "empty input tree dir",
+			pipe:    emptyInputTreePipeline(),
+			code:    gobble.DefectInvalidPath,
+			unit:    "idx",
+			message: "workspace-root tree",
+		},
+		{
 			name:    "command and script both set",
 			pipe:    commandAndScriptPipeline(),
 			code:    gobble.DefectInvalidValue,
@@ -422,6 +474,91 @@ func TestComposeRejectDeclarations(t *testing.T) {
 					tt.name, codes, units, messages, tt.code, tt.unit, tt.message)
 			}
 		})
+	}
+}
+
+func TestComposeTreeFromPipelineInput(t *testing.T) {
+	p := gobble.NewPipeline("tree-from-in")
+	in := p.AddInputTree("idx", gobble.DeclareTree(gobble.Dir("work/idx")))
+	if in.IsZero() {
+		t.Fatalf("AddInputTree().IsZero() got true, want false")
+	}
+	if in.Name() != "idx" {
+		t.Fatalf("AddInputTree().Name() got %q, want idx", in.Name())
+	}
+	if in.Tree().IsZero() {
+		t.Fatalf("AddInputTree().Tree().IsZero() got true, want false")
+	}
+	if !in.Spec().Equal(gobble.PathSpec{}) {
+		t.Fatalf("AddInputTree().Spec() got %+v, want zero", in.Spec())
+	}
+	p.AddTask(gobble.TaskSpec{
+		Name:    "mem",
+		Command: []string{"star"},
+		Inputs: []gobble.Bind{{
+			Name: "idx",
+			From: in,
+			Tree: gobble.DeclareTree(gobble.Directory{}),
+		}},
+		Outputs: []gobble.Bind{fileOut("out")},
+	})
+	g, err := gobble.Compose(p)
+	if err != nil {
+		t.Fatalf("Compose() error = %v, want nil", err)
+	}
+	if g.BindKind("mem", "idx") != gobble.ArtifactTree {
+		t.Fatalf("BindKind(idx) got %q, want tree", g.BindKind("mem", "idx"))
+	}
+	if g.BindPath("mem", "idx") != "work/idx" {
+		t.Fatalf("BindPath(idx) got %q, want work/idx", g.BindPath("mem", "idx"))
+	}
+	raw := mustBuildPlanJSON(t, treeFromPipelineInputPipeline())
+	var decoded struct {
+		Tasks []struct {
+			ID     string `json:"id"`
+			Inputs []struct {
+				Name     string `json:"name"`
+				Kind     string `json:"kind"`
+				Path     string `json:"path"`
+				Manifest string `json:"manifest"`
+			} `json:"inputs"`
+		} `json:"tasks"`
+	}
+	if err := json.Unmarshal(raw, &decoded); err != nil {
+		t.Fatalf("Unmarshal() error = %v", err)
+	}
+	found := false
+	for _, task := range decoded.Tasks {
+		if task.ID != "mem" {
+			continue
+		}
+		for _, in := range task.Inputs {
+			if in.Name != "idx" {
+				continue
+			}
+			found = true
+			if in.Kind != "tree" || in.Path != "work/idx" || in.Manifest != "work/idx/.gobble-tree.json" {
+				t.Fatalf("tree input = %+v, want kind tree path work/idx", in)
+			}
+		}
+	}
+	if !found {
+		t.Fatalf("plan missing tree input idx")
+	}
+}
+
+func TestDeclareTreeIsZero(t *testing.T) {
+	var zero gobble.Tree
+	if !zero.IsZero() {
+		t.Fatalf("zero Tree.IsZero() got false, want true")
+	}
+	got := gobble.DeclareTree(gobble.Directory{})
+	if got.IsZero() {
+		t.Fatalf("DeclareTree(zero Dir).IsZero() got true, want false")
+	}
+	got = gobble.DeclareTree(gobble.Dir("work/idx"))
+	if got.IsZero() || got.Dir.String() != "work/idx" {
+		t.Fatalf("DeclareTree(work/idx) = %+v", got)
 	}
 }
 
@@ -1414,6 +1551,141 @@ func emptyInputGroupPipeline() *gobble.Pipeline {
 	p.AddTask(gobble.TaskSpec{
 		Name:    "mem",
 		Command: []string{"bwa"},
+		Outputs: []gobble.Bind{fileOut("out")},
+	})
+	return p
+}
+
+func specAndTreePipeline() *gobble.Pipeline {
+	return oneTask("tree-xor-spec", gobble.TaskSpec{
+		Name:    "index",
+		Command: []string{"star"},
+		Outputs: []gobble.Bind{{
+			Name: "idx",
+			Spec: gobble.PathSpec{Base: "ref", Ext: ".amb"},
+			Tree: gobble.DeclareTree(gobble.Dir("work/idx")),
+		}},
+	})
+}
+
+func groupAndTreePipeline() *gobble.Pipeline {
+	return oneTask("tree-xor-group", gobble.TaskSpec{
+		Name:    "index",
+		Command: []string{"star"},
+		Outputs: []gobble.Bind{{
+			Name:  "idx",
+			Group: gobble.Group{{Name: "amb", Spec: gobble.PathSpec{Base: "ref", Ext: ".amb"}}},
+			Tree:  gobble.DeclareTree(gobble.Dir("work/idx")),
+		}},
+	})
+}
+
+func fileFromTreePipeline() *gobble.Pipeline {
+	p := gobble.NewPipeline("file-from-tree")
+	src := p.AddTask(gobble.TaskSpec{
+		Name:    "index",
+		Command: []string{"star"},
+		Outputs: []gobble.Bind{{Name: "idx", Tree: gobble.DeclareTree(gobble.Dir("work/idx"))}},
+	})
+	p.AddTask(gobble.TaskSpec{
+		Name:    "mem",
+		Command: []string{"star"},
+		Inputs:  []gobble.Bind{{Name: "idx", From: src.Out("idx")}},
+		Outputs: []gobble.Bind{fileOut("out")},
+	})
+	return p
+}
+
+func treeFromFilePipeline() *gobble.Pipeline {
+	p := gobble.NewPipeline("tree-from-file")
+	src := p.AddTask(gobble.TaskSpec{
+		Name:    "index",
+		Command: []string{"star"},
+		Outputs: []gobble.Bind{fileOut("idx")},
+	})
+	p.AddTask(gobble.TaskSpec{
+		Name:    "mem",
+		Command: []string{"star"},
+		Inputs: []gobble.Bind{{
+			Name: "idx",
+			From: src.Out("idx"),
+			Tree: gobble.DeclareTree(gobble.Dir("work/idx")),
+		}},
+		Outputs: []gobble.Bind{fileOut("out")},
+	})
+	return p
+}
+
+func treeFromGroupPipeline() *gobble.Pipeline {
+	p := gobble.NewPipeline("tree-from-group")
+	src := p.AddTask(gobble.TaskSpec{
+		Name:    "index",
+		Command: []string{"bwa"},
+		Outputs: []gobble.Bind{groupOut("idx")},
+	})
+	p.AddTask(gobble.TaskSpec{
+		Name:    "mem",
+		Command: []string{"star"},
+		Inputs: []gobble.Bind{{
+			Name: "idx",
+			From: src.Out("idx"),
+			Tree: gobble.DeclareTree(gobble.Dir("work/idx")),
+		}},
+		Outputs: []gobble.Bind{fileOut("out")},
+	})
+	return p
+}
+
+func groupFromTreePipeline() *gobble.Pipeline {
+	p := gobble.NewPipeline("group-from-tree")
+	src := p.AddTask(gobble.TaskSpec{
+		Name:    "index",
+		Command: []string{"star"},
+		Outputs: []gobble.Bind{{Name: "idx", Tree: gobble.DeclareTree(gobble.Dir("work/idx"))}},
+	})
+	p.AddTask(gobble.TaskSpec{
+		Name:    "mem",
+		Command: []string{"bwa"},
+		Inputs: []gobble.Bind{{
+			Name:  "idx",
+			From:  src.Out("idx"),
+			Group: gobble.Group{{Name: "amb"}},
+		}},
+		Outputs: []gobble.Bind{fileOut("out")},
+	})
+	return p
+}
+
+func workspaceRootTreePipeline() *gobble.Pipeline {
+	return oneTask("workspace-root-tree", gobble.TaskSpec{
+		Name:    "index",
+		Command: []string{"star"},
+		Outputs: []gobble.Bind{{Name: "idx", Tree: gobble.DeclareTree(gobble.Directory{})}},
+	})
+}
+
+func emptyInputTreePipeline() *gobble.Pipeline {
+	p := gobble.NewPipeline("empty-input-tree")
+	p.AddInputTree("idx", gobble.DeclareTree(gobble.Directory{}))
+	p.AddTask(gobble.TaskSpec{
+		Name:    "mem",
+		Command: []string{"star"},
+		Outputs: []gobble.Bind{fileOut("out")},
+	})
+	return p
+}
+
+func treeFromPipelineInputPipeline() *gobble.Pipeline {
+	p := gobble.NewPipeline("tree-from-in")
+	in := p.AddInputTree("idx", gobble.DeclareTree(gobble.Dir("work/idx")))
+	p.AddTask(gobble.TaskSpec{
+		Name:    "mem",
+		Command: []string{"star"},
+		Inputs: []gobble.Bind{{
+			Name: "idx",
+			From: in,
+			Tree: gobble.DeclareTree(gobble.Directory{}),
+		}},
 		Outputs: []gobble.Bind{fileOut("out")},
 	})
 	return p

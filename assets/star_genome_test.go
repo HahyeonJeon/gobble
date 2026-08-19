@@ -41,7 +41,7 @@ func TestSTARGenomeGenerateStandaloneComposeBuildPlan(t *testing.T) {
 	}
 	assertUniqueParamNames(t, task.Params)
 	assertIOPath(t, task.Inputs, "fasta", "in/genome.fasta")
-	assertGroupMembers(t, task.Outputs, "index", wantSTARGenomeMembers("work/star-genome"))
+	assertTreeIO(t, task.Outputs, "index", "work/star-genome")
 }
 
 func TestSTARGenomeGenerateStandaloneComposeBuildPlanGTF(t *testing.T) {
@@ -71,8 +71,7 @@ func TestSTARGenomeGenerateStandaloneComposeBuildPlanGTF(t *testing.T) {
 	}
 	assertIOPath(t, task.Inputs, "fasta", "in/genome.fasta")
 	assertIOPath(t, task.Inputs, "gtf", "in/genes.gtf")
-	assertGroupMembers(t, task.Outputs, "index", wantSTARGenomeSJDBMembers("work/star-genome"))
-	assertSTARGenomeMemberNames(t)
+	assertTreeIO(t, task.Outputs, "index", "work/star-genome")
 }
 
 func TestSTARGenomeGenerateNestedModule(t *testing.T) {
@@ -98,7 +97,7 @@ func TestSTARGenomeGenerateNestedModule(t *testing.T) {
 	if containsAll(task.Command, "--sjdbGTFfile") {
 		t.Fatalf("command = %#v, zero gtf must omit --sjdbGTFfile", task.Command)
 	}
-	assertGroupMembers(t, task.Outputs, "index", wantSTARGenomeMembers("work/star-genome"))
+	assertTreeIO(t, task.Outputs, "index", "work/star-genome")
 }
 
 func TestSTARGenomeGenerateStandaloneRun(t *testing.T) {
@@ -130,55 +129,40 @@ func TestSTARGenomeGenerateStandaloneRun(t *testing.T) {
 		}
 	}
 	got := listRegularRel(t, filepath.Join(dir, filepath.FromSlash("work/star-genome")), "work/star-genome")
+	want = append(want, "work/star-genome/.gobble-tree.json")
 	if !sameStringSet(got, want) {
 		t.Fatalf("genome dir regular files = %v, want %v", got, want)
 	}
 }
 
-func wantSTARGenomeMembers(dir string) []groupMemberWant {
-	return starGenomeMemberWants(dir, false)
-}
-
-func wantSTARGenomeSJDBMembers(dir string) []groupMemberWant {
-	return starGenomeMemberWants(dir, true)
-}
-
-func starGenomeMemberWants(dir string, sjdb bool) []groupMemberWant {
-	files := starGenomeFiles(sjdb)
-	out := make([]groupMemberWant, len(files))
-	for i, f := range files {
-		out[i] = groupMemberWant{Name: f.member, Path: dir + "/" + f.name + f.ext}
-	}
-	return out
-}
-
 func starGenomePublishedPaths(dir string, sjdb bool) []string {
-	ms := starGenomeMemberWants(dir, sjdb)
-	out := make([]string, len(ms))
-	for i, m := range ms {
-		out[i] = m.Path
+	files := starGenomeLiveFiles(sjdb)
+	out := make([]string, len(files))
+	for i, f := range files {
+		out[i] = dir + "/" + f
 	}
 	return out
 }
 
-func assertSTARGenomeMemberNames(t *testing.T) {
-	t.Helper()
-	seen := make(map[string]bool)
-	for _, f := range starGenomeFiles(true) {
-		if f.member == "" || f.member[0] < 'A' || f.member[0] > 'z' {
-			t.Fatalf("member %q: empty or invalid start", f.member)
-		}
-		for _, r := range f.member {
-			ok := r >= 'A' && r <= 'Z' || r >= 'a' && r <= 'z' || r >= '0' && r <= '9' || r == '_' || r == '-'
-			if !ok {
-				t.Fatalf("member %q: invalid character %q", f.member, string(r))
-			}
-		}
-		if seen[f.member] {
-			t.Fatalf("member %q: duplicate after dropping filename dots", f.member)
-		}
-		seen[f.member] = true
+func starGenomeLiveFiles(sjdb bool) []string {
+	base := []string{
+		"Genome", "SA", "SAindex",
+		"chrLength.txt", "chrName.txt", "chrNameLength.txt", "chrStart.txt",
+		"genomeParameters.txt",
 	}
+	if !sjdb {
+		return base
+	}
+	return append(base,
+		"Log.out",
+		"exonGeTrInfo.tab",
+		"exonInfo.tab",
+		"geneInfo.tab",
+		"sjdbInfo.txt",
+		"sjdbList.fromGTF.out.tab",
+		"sjdbList.out.tab",
+		"transcriptInfo.tab",
+	)
 }
 
 func listRegularRel(t *testing.T, abs, prefix string) []string {

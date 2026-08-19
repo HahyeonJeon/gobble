@@ -34,13 +34,11 @@ func starAlignPrefix(dir gobble.Directory) string {
 // --runThreadN copies Resources.CPU when CPU is at least 1, as an integer.
 // GenomeDir is --genomeDir and must match the STAR genomeGenerate OutDir.
 // OutDir is the parent folder of Aligned.out.bam and Log.final.out.
-// SJDB selects the GTF-backed index Group member set.
 type STARAlignOptions struct {
 	ExtraArgs []string
 	Resources gobble.Resources
 	OutDir    gobble.Directory
 	GenomeDir gobble.Directory
-	SJDB      bool
 }
 
 // STARAlignPorts are the declared BAM and Log.final.out outputs.
@@ -49,21 +47,20 @@ type STARAlignPorts struct {
 	LogFinalOut gobble.Handle
 }
 
-// AddSTARAlign records one STAR align task on parent. index is the
-// Group handle from AddSTARGenomeGenerate. The command emits BAM and
-// Log.final.out and does not call samtools. The shared builder does
-// not call AddInput. Set SJDB when the index was built with a GTF.
+// AddSTARAlign records one STAR align task on parent. index is the Tree
+// handle from AddSTARGenomeGenerate. --genomeDir argv is the rendered
+// Tree directory. The command emits BAM and Log.final.out and does not
+// call samtools. The shared builder does not call AddInput.
 func AddSTARAlign(parent Parent, index, r1, r2 gobble.Handle, opts STARAlignOptions) STARAlignPorts {
 	return addSTARAlign(parent, index, r1, r2, opts)
 }
 
-// STARAlignPipeline returns a standalone STAR align pipeline. Index
-// siblings are a Group pipeline input under GenomeDir, not a live STAR
-// genomeGenerate run. Compose and BuildPlan do not need the members
-// staged.
+// STARAlignPipeline returns a standalone STAR align pipeline. Index is
+// a Tree pipeline input under GenomeDir, not a live STAR genomeGenerate
+// run. Compose and BuildPlan do not need the members staged.
 func STARAlignPipeline(r1, r2 gobble.PathSpec, opts STARAlignOptions) *gobble.Pipeline {
 	return Standalone("star-align", []Input{
-		{Name: "index", Group: starGenomeGroup(starGenomeDir(opts.GenomeDir), opts.SJDB)},
+		{Name: "index", Tree: gobble.DeclareTree(starGenomeDir(opts.GenomeDir))},
 		{Name: "r1", Spec: r1},
 		{Name: "r2", Spec: r2},
 	}, func(parent Parent, hs []gobble.Handle) {
@@ -94,7 +91,7 @@ func addSTARAlign(parent Parent, index, r1, r2 gobble.Handle, opts STARAlignOpti
 		Command: cmd,
 		Image:   starImage,
 		Inputs: []gobble.Bind{
-			{Name: "index", From: index, Group: starGenomeGroupFrom(opts.SJDB)},
+			{Name: "index", From: index, Tree: gobble.DeclareTree(genomeDir)},
 			{Name: "r1", From: r1},
 			{Name: "r2", From: r2},
 		},

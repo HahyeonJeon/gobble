@@ -61,10 +61,10 @@ type ParamPlan struct {
 // IO is one recorded input or output bind.
 //
 // Kind is file, group, or tree. Path may be empty on a Group IO.
-// Members is omitted on single-file IOs. Manifest is the tree manifest
-// path and is unused until Tree authoring. Source is the workspace path
-// isolate copies from when it differs from Path. Empty Source means
-// Path is both source and dest.
+// Members is omitted on single-file IOs. Manifest is the dest Tree
+// .gobble-tree.json path. Source is the workspace path isolate copies
+// from when it differs from Path. Empty Source means Path is both
+// source and dest.
 type IO struct {
 	Name     string
 	Kind     string

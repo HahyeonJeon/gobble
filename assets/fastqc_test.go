@@ -148,10 +148,12 @@ type planParamRec struct {
 }
 
 type planIORec struct {
-	Name    string `json:"name"`
-	Path    string `json:"path"`
-	Source  string `json:"source"`
-	Members []struct {
+	Name     string `json:"name"`
+	Kind     string `json:"kind"`
+	Path     string `json:"path"`
+	Source   string `json:"source"`
+	Manifest string `json:"manifest"`
+	Members  []struct {
 		Name string `json:"name"`
 		Path string `json:"path"`
 	} `json:"members"`
@@ -198,6 +200,30 @@ func assertIOPath(t *testing.T, ios []planIORec, name, path string) {
 		}
 	}
 	t.Fatalf("missing IO %q in %#v", name, ios)
+}
+
+func assertTreeIO(t *testing.T, ios []planIORec, name, dir string) {
+	t.Helper()
+	for _, io := range ios {
+		if io.Name != name {
+			continue
+		}
+		if io.Kind != "tree" {
+			t.Fatalf("%s kind = %q, want tree", name, io.Kind)
+		}
+		if io.Path != dir {
+			t.Fatalf("%s path = %q, want %q", name, io.Path, dir)
+		}
+		wantMan := dir + "/.gobble-tree.json"
+		if io.Manifest != wantMan {
+			t.Fatalf("%s manifest = %q, want %q", name, io.Manifest, wantMan)
+		}
+		if len(io.Members) != 0 {
+			t.Fatalf("%s members = %#v, want empty", name, io.Members)
+		}
+		return
+	}
+	t.Fatalf("missing tree IO %q in %#v", name, ios)
 }
 
 func assertIOSource(t *testing.T, ios []planIORec, name, source string) {

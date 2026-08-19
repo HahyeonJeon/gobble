@@ -143,6 +143,21 @@ func checkResumeOutputs(workspace string, doc Document, tasks []jsonTaskState, c
 		}
 		for _, out := range t.Outputs {
 			unit := bindUnit(t.ID, out.Name)
+			if isTreeIO(out) {
+				if !pathPresent(workspaceFile(workspace, out.Path)) {
+					continue
+				}
+				if treePublishedBy(tasks, ident, workspace, out) {
+					continue
+				}
+				defects = append(defects, Defect{
+					Code:    DefectOutputExists,
+					Unit:    unit,
+					Message: "output exists",
+					Paths:   []string{out.Path},
+				})
+				continue
+			}
 			for _, f := range namedIOFiles(out) {
 				if !pathPresent(workspaceFile(workspace, f.path)) {
 					continue
@@ -164,6 +179,18 @@ func checkResumeOutputs(workspace string, doc Document, tasks []jsonTaskState, c
 		}
 	}
 	return defects
+}
+
+func treePublishedBy(tasks []jsonTaskState, ident, workspace string, out IO) bool {
+	if destPublished(tasks, ident, treeManifestPath(out)) {
+		return true
+	}
+	for _, f := range treeDestMemberPaths(workspace, out) {
+		if destPublished(tasks, ident, f.path) {
+			return true
+		}
+	}
+	return false
 }
 
 func destPublished(tasks []jsonTaskState, ident, path string) bool {

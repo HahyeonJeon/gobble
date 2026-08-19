@@ -1,6 +1,7 @@
 package gobble_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"os"
@@ -449,6 +450,159 @@ func TestRunContainedFailure(t *testing.T) {
 	}
 	if byID["ok"] != engine.StatusSucceeded {
 		t.Fatalf("ok status got %q, want succeeded", byID["ok"])
+	}
+}
+
+func TestRunTreeTable(t *testing.T) {
+	tests := []struct {
+		name    string
+		script  string
+		fail    bool
+		wantSA  bool
+		wantMan bool
+	}{
+		{
+			name:    "one regular file",
+			script:  "mkdir -p work/idx && echo x > work/idx/SA && echo y > junk.txt",
+			wantSA:  true,
+			wantMan: true,
+		},
+		{
+			name:   "missing dir",
+			script: "true",
+			fail:   true,
+		},
+		{
+			name:   "empty dir",
+			script: "mkdir -p work/idx",
+			fail:   true,
+		},
+		{
+			name:   "manifest-only",
+			script: "mkdir -p work/idx && echo '{}' > work/idx/.gobble-tree.json",
+			fail:   true,
+		},
+		{
+			name:   "symlink leaf",
+			script: "mkdir -p work/idx && ln -s SA work/idx/link",
+			fail:   true,
+		},
+		{
+			name:   "fifo leaf",
+			script: "mkdir -p work/idx && mkfifo work/idx/pipe",
+			fail:   true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dir := t.TempDir()
+			p := gobble.NewPipeline("tree")
+			p.AddTask(gobble.TaskSpec{
+				Name:    "make",
+				Command: []string{"sh", "-c", tt.script},
+				Outputs: []gobble.Bind{{Name: "idx", Tree: gobble.DeclareTree(gobble.Dir("work/idx"))}},
+			})
+			g, err := gobble.Compose(p)
+			if err != nil {
+				t.Fatalf("Compose() error = %v", err)
+			}
+			err = gobble.Run(t.Context(), g, dir, 0)
+			sa := filepath.Join(dir, "work", "idx", "SA")
+			man := filepath.Join(dir, "work", "idx", ".gobble-tree.json")
+			junk := filepath.Join(dir, "junk.txt")
+			if tt.fail {
+				requireRunError(t, tt.name, err, gobble.DefectFailed, "make")
+				if _, statErr := os.Stat(sa); !os.IsNotExist(statErr) {
+					t.Fatalf("%s published SA", tt.name)
+				}
+				if _, statErr := os.Stat(man); !os.IsNotExist(statErr) {
+					t.Fatalf("%s published manifest", tt.name)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("%s Run() error = %v", tt.name, err)
+			}
+			if tt.wantSA {
+				if _, statErr := os.Stat(sa); statErr != nil {
+					t.Fatalf("published SA: %v", statErr)
+				}
+			}
+			if tt.wantMan {
+				data, readErr := os.ReadFile(man)
+				if readErr != nil {
+					t.Fatalf("published manifest: %v", readErr)
+				}
+				if !bytes.Contains(data, []byte(`"path": "SA"`)) {
+					t.Fatalf("manifest %s, want member SA", data)
+				}
+				if bytes.Contains(data, []byte(".gobble-tree.json")) {
+					t.Fatalf("manifest listed itself: %s", data)
+				}
+			}
+			if _, statErr := os.Stat(junk); !os.IsNotExist(statErr) {
+				t.Fatalf("extra isolate file was published")
+			}
+		})
+	}
+}
+
+func TestRunTreeConsumeDirectory(t *testing.T) {
+	dir := t.TempDir()
+	p := gobble.NewPipeline("tree-consume")
+	idx := p.AddTask(gobble.TaskSpec{
+		Name:    "make",
+		Command: []string{"sh", "-c", "mkdir -p work/idx && echo x > work/idx/SA"},
+		Outputs: []gobble.Bind{{Name: "idx", Tree: gobble.DeclareTree(gobble.Dir("work/idx"))}},
+	})
+	p.AddTask(gobble.TaskSpec{
+		Name:    "use",
+		Command: []string{"sh", "-c", "test -d work/idx && test -f work/idx/SA && echo ok > out/ok.txt"},
+		Inputs: []gobble.Bind{{
+			Name: "idx",
+			From: idx.Out("idx"),
+			Tree: gobble.DeclareTree(gobble.Dir("work/idx")),
+		}},
+		Outputs: []gobble.Bind{{
+			Name: "ok",
+			Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "ok", Ext: ".txt"},
+		}},
+	})
+	g, err := gobble.Compose(p)
+	if err != nil {
+		t.Fatalf("Compose() error = %v", err)
+	}
+	if err := gobble.Run(t.Context(), g, dir, 0); err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "out", "ok.txt")); err != nil {
+		t.Fatalf("consumer dest: %v", err)
+	}
+}
+
+func TestRunTreePublishRollback(t *testing.T) {
+	dir := t.TempDir()
+	writeRunFile(t, filepath.Join(dir, "out", "blocked"), "not-a-dir")
+	p := gobble.NewPipeline("tree-rollback")
+	p.AddTask(gobble.TaskSpec{
+		Name:    "make",
+		Command: []string{"sh", "-c", "mkdir -p work/idx && echo x > work/idx/SA && echo y > out/first.txt"},
+		Outputs: []gobble.Bind{
+			{Name: "idx", Tree: gobble.DeclareTree(gobble.Dir("work/idx"))},
+			{Name: "first", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "first", Ext: ".txt"}},
+			{Name: "second", Spec: gobble.PathSpec{Dir: gobble.Dir("out/blocked"), Base: "second", Ext: ".txt"}},
+		},
+	})
+	g, err := gobble.Compose(p)
+	if err != nil {
+		t.Fatalf("Compose() error = %v", err)
+	}
+	requireRunError(t, "tree rollback", gobble.Run(t.Context(), g, dir, 0), gobble.DefectFailed, "make")
+	if _, statErr := os.Stat(filepath.Join(dir, "work", "idx", "SA")); !os.IsNotExist(statErr) {
+		t.Fatalf("partial tree publish left SA")
+	}
+	if _, statErr := os.Stat(filepath.Join(dir, "out", "first.txt")); !os.IsNotExist(statErr) {
+		t.Fatalf("partial publish left out/first.txt")
 	}
 }
 

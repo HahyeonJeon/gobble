@@ -48,7 +48,7 @@ func TestRNASeqComposeBuildPlan(t *testing.T) {
 	}
 	assertIOPath(t, gg.Inputs, "fasta", "in/genome.fasta")
 	assertIOPath(t, gg.Inputs, "gtf", "in/genes.gtf")
-	assertGroupMembers(t, gg.Outputs, "index", wantSTARGenomeSJDBMembers("work/star-genome"))
+	assertTreeIO(t, gg.Outputs, "index", "work/star-genome")
 
 	align := planTask(t, raw, "star_align")
 	if !containsAll(align.Command, "--runThreadN", "2") {
@@ -56,7 +56,7 @@ func TestRNASeqComposeBuildPlan(t *testing.T) {
 	}
 	assertIOPath(t, align.Outputs, "bam", "work/star-align/Aligned.out.bam")
 	assertIOPath(t, align.Outputs, "log_final", "work/star-align/Log.final.out")
-	assertGroupMembers(t, align.Inputs, "index", wantSTARGenomeSJDBMembers("work/star-genome"))
+	assertTreeIO(t, align.Inputs, "index", "work/star-genome")
 
 	assertIOPath(t, planTask(t, raw, "fastp").Inputs, "r1", "in/SRR6357072_1.fastq.gz")
 	assertIOPath(t, planTask(t, raw, "fastp").Inputs, "r2", "in/SRR6357072_2.fastq.gz")

@@ -224,6 +224,25 @@ func TestValidateRejectDeclarations(t *testing.T) {
 			message: "group and spec both set",
 		},
 		{
+			name: "spec and tree both set",
+			graph: &Graph{
+				name: "xor-tree",
+				tasks: []graphTask{{
+					id:      "index",
+					name:    "index",
+					command: []string{"star"},
+					outputs: []graphBind{{
+						name: "idx",
+						spec: PathSpec{Base: "ref", Ext: ".amb"},
+						tree: DeclareTree(Dir("work/idx")),
+					}},
+				}},
+			},
+			code:    DefectInvalidValue,
+			unit:    "index.idx",
+			message: "spec and tree both set",
+		},
+		{
 			name: "command and script both set",
 			graph: &Graph{
 				name: "cmd-script",

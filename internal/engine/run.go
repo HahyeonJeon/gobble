@@ -491,12 +491,23 @@ func (s *sched) upstreamReady(id string) bool {
 			}
 		}
 		for _, path := range e.Wait {
-			if path == "" || !regularFile(workspaceFile(s.workspace, path)) {
+			if path == "" || !waitPathReady(s.workspace, path) {
 				return false
 			}
 		}
 	}
 	return true
+}
+
+func waitPathReady(workspace, path string) bool {
+	abs := workspaceFile(workspace, path)
+	if regularFile(abs) {
+		return true
+	}
+	if !isDir(abs) {
+		return false
+	}
+	return regularFile(filepath.Join(abs, treeManifestName))
 }
 
 func (s *sched) succeededThisResume(ident string) bool {
@@ -632,8 +643,8 @@ func (s *sched) runJob(workspace string, task TaskPlan, ex exec.Executor, starts
 			r.ImageDigest = pr.ImageDigest
 		}
 		if pr.Exit == 0 && pr.Message == "" && !pr.Published {
-			if missing := missingOutputs(isolate, task); missing != "" {
-				r.Message = "missing output"
+			if err := inspectOutputs(isolate, task); err != nil {
+				r.Message = err.Error()
 			} else {
 				var pubErr error
 				if task.Replace {

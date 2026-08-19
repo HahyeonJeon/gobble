@@ -208,6 +208,12 @@ func checkPlanPaths(doc Document) []Defect {
 }
 
 func checkIOPaths(unit string, io IO) []Defect {
+	if isTreeIO(io) {
+		if d := checkPlanPath(unit, io.Path); d != nil {
+			return []Defect{*d}
+		}
+		return nil
+	}
 	if io.Members != nil {
 		var defects []Defect
 		for _, m := range io.Members {
@@ -322,6 +328,19 @@ func checkInputs(workspace string, doc Document) []Defect {
 				continue
 			}
 			unit := bindUnit(t.ID, in.Name)
+			if isTreeIO(in) {
+				src := treeSourceDir(in)
+				if isDir(workspaceFile(workspace, src)) {
+					continue
+				}
+				defects = append(defects, Defect{
+					Code:    DefectMissingInput,
+					Unit:    unit,
+					Message: "missing input",
+					Paths:   []string{src},
+				})
+				continue
+			}
 			if in.Members != nil {
 				for _, f := range namedIOFiles(in) {
 					src := fileSource(f)
@@ -360,6 +379,18 @@ func checkOutputs(workspace string, doc Document) []Defect {
 	for _, t := range doc.Tasks {
 		for _, out := range t.Outputs {
 			unit := bindUnit(t.ID, out.Name)
+			if isTreeIO(out) {
+				if !pathPresent(workspaceFile(workspace, out.Path)) {
+					continue
+				}
+				defects = append(defects, Defect{
+					Code:    DefectOutputExists,
+					Unit:    unit,
+					Message: "output exists",
+					Paths:   []string{out.Path},
+				})
+				continue
+			}
 			if out.Members != nil {
 				for _, f := range namedIOFiles(out) {
 					if !pathPresent(workspaceFile(workspace, f.path)) {

@@ -20,7 +20,6 @@ func RNASeq() *gobble.Pipeline {
 		Resources: gobble.Resources{CPU: 2},
 	})
 	align := AddSTARAlign(p, index.Index, fastp.CleanR1, fastp.CleanR2, STARAlignOptions{
-		SJDB:      true,
 		Resources: gobble.Resources{CPU: 2},
 	})
 	sorted := AddSamtoolsSort(p, align.BAM, SamtoolsSortOptions{})

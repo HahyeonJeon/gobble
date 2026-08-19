@@ -86,7 +86,13 @@ func sha256File(path string) (string, error) {
 func fileHashes(workspace string, ios []IO) ([]jsonFileHash, error) {
 	var out []jsonFileHash
 	for _, io := range ios {
-		for _, f := range namedIOFiles(io) {
+		files := namedIOFiles(io)
+		if isTreeIO(io) {
+			probe := io
+			probe.Path = treeSourceDir(io)
+			files = treeDestMemberPaths(workspace, probe)
+		}
+		for _, f := range files {
 			src := fileSource(f)
 			path := workspaceFile(workspace, src)
 			if !regularFile(path) {
@@ -101,6 +107,13 @@ func fileHashes(workspace string, ios []IO) ([]jsonFileHash, error) {
 		}
 	}
 	return out, nil
+}
+
+func ioFiles(io IO) []namedFile {
+	if isTreeIO(io) {
+		return nil
+	}
+	return namedIOFiles(io)
 }
 
 func hashByPath(hashes []jsonFileHash) map[string]string {
@@ -129,7 +142,7 @@ func successLineage(s *sched, task TaskPlan, inputs, outputs []jsonFileHash) []j
 			}
 			break
 		}
-		for _, f := range namedIOFiles(in) {
+		for _, f := range ioFiles(in) {
 			out = append(out, jsonLineage{
 				Producer: producer,
 				Path:     f.path,
@@ -139,7 +152,7 @@ func successLineage(s *sched, task TaskPlan, inputs, outputs []jsonFileHash) []j
 		}
 	}
 	for _, pub := range task.Outputs {
-		for _, f := range namedIOFiles(pub) {
+		for _, f := range ioFiles(pub) {
 			out = append(out, jsonLineage{
 				Producer: consumer,
 				Path:     f.path,

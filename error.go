@@ -19,8 +19,8 @@ const (
 	// spelled.
 	DefectInvalidName DefectCode = "invalid-name"
 	// DefectInvalidValue means a value is not usable: non-finite or
-	// negative CPU, Command and Script both set, Spec and Group both
-	// set, empty Group, empty env key, host-capacity overflow, or a
+	// negative CPU, Command and Script both set, Spec/Group/Tree XOR,
+	// empty Group, empty env key, host-capacity overflow, or a
 	// similar rejected request value.
 	DefectInvalidValue DefectCode = "invalid-value"
 	// DefectInvalidRequest means a required pipeline or graph argument

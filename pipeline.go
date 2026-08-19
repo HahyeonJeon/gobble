@@ -14,6 +14,7 @@ type pipeInput struct {
 	name    string
 	spec    PathSpec
 	members Group
+	tree    Tree
 }
 
 type nodeKind int
@@ -88,6 +89,7 @@ type Handle struct {
 	kind handleKind
 	name string
 	spec PathSpec
+	tree Tree
 	task *Task
 	pipe *Pipeline
 }
@@ -117,6 +119,13 @@ func (p *Pipeline) AddInputGroup(name string, members Group) Handle {
 	}
 	p.inputs = append(p.inputs, pipeInput{name: name, members: members})
 	return Handle{kind: handleInput, name: name, pipe: p}
+}
+
+// AddInputTree records a Tree pipeline input named name and returns a
+// non-zero Handle for it. tree.Dir must be non-zero at compose time.
+func (p *Pipeline) AddInputTree(name string, tree Tree) Handle {
+	p.inputs = append(p.inputs, pipeInput{name: name, tree: tree})
+	return Handle{kind: handleInput, name: name, tree: tree, pipe: p}
 }
 
 // AddModule records a child module and returns it.
@@ -206,27 +215,37 @@ func (mg *Merge) AddTask(spec TaskSpec) *Task {
 func (t *Task) Out(name string) Handle {
 	t.outCalls = append(t.outCalls, name)
 	spec := PathSpec{}
+	var tree Tree
 	if b, ok := findBind(t.spec.Outputs, name); ok {
 		spec = b.Spec.clone()
+		tree = b.Tree
 	}
-	return Handle{kind: handleOut, name: name, spec: spec, task: t}
+	return Handle{kind: handleOut, name: name, spec: spec, tree: tree, task: t}
 }
 
 // In returns a non-zero Handle that records a request for input port name.
 func (t *Task) In(name string) Handle {
 	t.inCalls = append(t.inCalls, name)
 	spec := PathSpec{}
+	var tree Tree
 	if b, ok := findBind(t.spec.Inputs, name); ok {
 		spec = b.Spec.clone()
+		tree = b.Tree
 	}
-	return Handle{kind: handleIn, name: name, spec: spec, task: t}
+	return Handle{kind: handleIn, name: name, spec: spec, tree: tree, task: t}
 }
 
 // Spec returns the PathSpec recorded when the handle was created.
 // For Out and In that is the authored Bind spec, not the path Compose
-// later resolves for the plan.
+// later resolves for the plan. Group and Tree handles return a zero Spec.
 func (h Handle) Spec() PathSpec {
 	return h.spec.clone()
+}
+
+// Tree returns the authored Tree recorded when the handle was created.
+// File and Group handles return a zero Tree.
+func (h Handle) Tree() Tree {
+	return h.tree
 }
 
 // Name returns the input or port name recorded on this handle.

@@ -91,6 +91,35 @@ func TestPlanReaders(t *testing.T) {
 	}
 }
 
+func TestGraphPlanTreeKind(t *testing.T) {
+	p := gobble.NewPipeline("tree-kind")
+	p.AddTask(gobble.TaskSpec{
+		Name:    "index",
+		Command: []string{"star"},
+		Outputs: []gobble.Bind{{Name: "idx", Tree: gobble.DeclareTree(gobble.Dir("work/idx"))}},
+	})
+	g, err := gobble.Compose(p)
+	if err != nil {
+		t.Fatalf("Compose() error = %v", err)
+	}
+	if g.BindKind("index", "idx") != gobble.ArtifactTree {
+		t.Fatalf("Graph BindKind got %q, want tree", g.BindKind("index", "idx"))
+	}
+	if g.BindPath("index", "idx") != "work/idx" {
+		t.Fatalf("Graph BindPath got %q, want work/idx", g.BindPath("index", "idx"))
+	}
+	plan, err := gobble.BuildPlan(g)
+	if err != nil {
+		t.Fatalf("BuildPlan() error = %v", err)
+	}
+	if plan.BindKind("index", "idx") != gobble.ArtifactTree {
+		t.Fatalf("Plan BindKind got %q, want tree", plan.BindKind("index", "idx"))
+	}
+	if plan.BindPath("index", "idx") != "work/idx" {
+		t.Fatalf("Plan BindPath got %q, want work/idx", plan.BindPath("index", "idx"))
+	}
+}
+
 func TestComposeNilPipeline(t *testing.T) {
 	g, err := gobble.Compose(nil)
 	if g != nil {

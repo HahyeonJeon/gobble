@@ -50,7 +50,7 @@ func TestSTARAlignStandaloneComposeBuildPlan(t *testing.T) {
 	assertUniqueParamNames(t, task.Params)
 	assertIOPath(t, task.Outputs, "bam", "work/star-align/Aligned.out.bam")
 	assertIOPath(t, task.Outputs, "log_final", "work/star-align/Log.final.out")
-	assertGroupMembers(t, task.Inputs, "index", wantSTARGenomeMembers("work/star-genome"))
+	assertTreeIO(t, task.Inputs, "index", "work/star-genome")
 }
 
 func TestSTARAlignNestedModule(t *testing.T) {
@@ -83,7 +83,7 @@ func TestSTARAlignNestedModule(t *testing.T) {
 	}
 	assertIOPath(t, task.Outputs, "bam", "work/star-align/Aligned.out.bam")
 	assertIOPath(t, task.Outputs, "log_final", "work/star-align/Log.final.out")
-	assertGroupMembers(t, task.Inputs, "index", wantSTARGenomeMembers("work/star-genome"))
+	assertTreeIO(t, task.Inputs, "index", "work/star-genome")
 }
 
 func TestSTARAlignNestedRun(t *testing.T) {
@@ -107,7 +107,6 @@ func TestSTARAlignNestedRun(t *testing.T) {
 		Resources: gobble.Resources{CPU: 1},
 	})
 	ports := AddSTARAlign(p, idx.Index, h1, h2, STARAlignOptions{
-		SJDB:      true,
 		Resources: gobble.Resources{CPU: 1},
 	})
 	if ports.LogFinalOut.IsZero() {
