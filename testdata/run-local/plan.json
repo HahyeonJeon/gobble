@@ -1,9 +1,14 @@
 {
+  "schema_version": 2,
   "pipeline": "run-local",
   "tasks": [
     {
       "id": "image",
       "name": "image",
+      "instance": "",
+      "shard_index": 0,
+      "shard_count": 1,
+      "attempt": 1,
       "module": "",
       "branch": "",
       "merge": "",
@@ -27,6 +32,7 @@
       "inputs": [
         {
           "name": "in",
+          "kind": "file",
           "path": "in/sample.txt",
           "spec": {
             "dir": "in",
@@ -41,6 +47,7 @@
       "outputs": [
         {
           "name": "out",
+          "kind": "file",
           "path": "out/docker/sample.txt",
           "spec": {
             "dir": "out/docker",
@@ -53,6 +60,7 @@
         },
         {
           "name": "pwd",
+          "kind": "file",
           "path": "out/docker/pwd.txt",
           "spec": {
             "dir": "out/docker",
@@ -68,6 +76,10 @@
     {
       "id": "host",
       "name": "host",
+      "instance": "",
+      "shard_index": 0,
+      "shard_count": 1,
+      "attempt": 1,
       "module": "",
       "branch": "",
       "merge": "",
@@ -86,6 +98,7 @@
       "inputs": [
         {
           "name": "in",
+          "kind": "file",
           "path": "in/sample.txt",
           "spec": {
             "dir": "in",
@@ -100,6 +113,7 @@
       "outputs": [
         {
           "name": "out",
+          "kind": "file",
           "path": "out/process/sample.txt",
           "spec": {
             "dir": "out/process",

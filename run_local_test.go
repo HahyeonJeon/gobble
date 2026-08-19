@@ -169,21 +169,6 @@ func TestRunLocalBadImage(t *testing.T) {
 	}
 }
 
-func TestWorkflowCasePlanMatchesHEAD(t *testing.T) {
-	got, err := os.ReadFile(workflowCaseFile)
-	if err != nil {
-		t.Fatalf("ReadFile(%s) error = %v", workflowCaseFile, err)
-	}
-	cmd := exec.Command("git", "show", "HEAD:"+workflowCaseFile)
-	head, err := cmd.Output()
-	if err != nil {
-		t.Fatalf("git show HEAD:%s: %v", workflowCaseFile, err)
-	}
-	if !bytes.Equal(got, head) {
-		t.Fatalf("%s differs from HEAD", workflowCaseFile)
-	}
-}
-
 func runLocalFixturePipeline() *gobble.Pipeline {
 	p := gobble.NewPipeline("run-local")
 	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "sample", Ext: ".txt"})

@@ -156,6 +156,63 @@ func TestRunPersistsIdentityFacts(t *testing.T) {
 	}
 }
 
+func TestReservedIdentityKeysTwoInstances(t *testing.T) {
+	a := TaskPlan{
+		ID:       "copy",
+		Name:     "copy",
+		Instance: "s1",
+		Command:  []string{"cp", "in/a.txt", "out/a.txt"},
+		Inputs:   []IO{{Name: "in", Path: "in/a.txt"}},
+		Outputs:  []IO{{Name: "out", Path: "out/a.txt"}},
+	}
+	b := TaskPlan{
+		ID:       "copy",
+		Name:     "copy",
+		Instance: "s2",
+		Command:  []string{"cp", "in/b.txt", "out/b.txt"},
+		Inputs:   []IO{{Name: "in", Path: "in/b.txt"}},
+		Outputs:  []IO{{Name: "out", Path: "out/b.txt"}},
+	}
+	applyReservedDefaults(&a)
+	applyReservedDefaults(&b)
+	if reservedIdentity(a) != "copy/s1/0" || reservedIdentity(b) != "copy/s2/0" {
+		t.Fatalf("reservedIdentity got %q and %q", reservedIdentity(a), reservedIdentity(b))
+	}
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "a.txt"), "a")
+	writeCheckFile(t, filepath.Join(dir, "in", "b.txt"), "b")
+	if defects := Run(Request{
+		Workspace: dir,
+		Document:  Document{Name: "pair", Tasks: []TaskPlan{a, b}},
+		Cap:       2,
+	}); len(defects) != 0 {
+		t.Fatalf("Run() defects %v", defects)
+	}
+	states := taskStates(t, dir)
+	if _, ok := states["copy/s1/0"]; !ok {
+		t.Fatalf("tasks.json missing copy/s1/0: %#v", states)
+	}
+	if _, ok := states["copy/s2/0"]; !ok {
+		t.Fatalf("tasks.json missing copy/s2/0: %#v", states)
+	}
+	if _, ok := states["copy"]; ok {
+		t.Fatalf("first-horizon key copy should not collide with instances: %#v", states)
+	}
+	raw, defects := Inspect(dir, viewInstances, "copy/s1/0")
+	if len(defects) != 0 {
+		t.Fatalf("Inspect instance filter defects %v", defects)
+	}
+	recs := decodeInspectJSONL(t, raw)
+	if len(recs) != 1 || recs[0]["identity"] != "copy/s1/0" {
+		t.Fatalf("instance filter got %#v", recs)
+	}
+
+	forceDeadOwner(t, dir)
+	if defects := Release(dir); len(defects) != 0 {
+		t.Fatalf("Release() defects %v", defects)
+	}
+}
+
 func TestIsolatePathsDistinct(t *testing.T) {
 	a := isolateRel(TaskPlan{ID: "copy"})
 	b := isolateRel(TaskPlan{ID: "copy", Instance: "s1"})
@@ -207,7 +264,7 @@ func TestRunAfterReleaseHitsOutputExists(t *testing.T) {
 
 func closedRunJSON(id string) string {
 	return `{
-  "schema_version": 1,
+  "schema_version": 2,
   "id": "` + id + `",
   "status": "succeeded",
   "started": "2026-01-01T00:00:00Z",

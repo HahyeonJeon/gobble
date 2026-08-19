@@ -38,7 +38,7 @@ func TestResumeActiveOccupy(t *testing.T) {
 func TestResumeUnsupportedSchemaNoOccupy(t *testing.T) {
 	dir := readyRunWorkspace(t)
 	writeRunFile(t, filepath.Join(dir, engine.ControlDir, engine.RunIdentityFile), `{
-  "schema_version": 2,
+  "schema_version": 1,
   "id": "run-1",
   "status": "failed",
   "started": "2026-01-01T00:00:00Z",

@@ -43,12 +43,15 @@ func preflight(g *Graph, workspace string, cap int) error {
 			Message: "nil graph",
 		}}}
 	}
-	if pub := publicError("run", engine.Validate(snapshotGraph(g))); pub != nil {
-		return pub
+	if err := composeDefects("run", graphCheck(g)); err != nil {
+		return err
 	}
 	doc, err := planDocument(g)
 	if err != nil {
 		return runOp(err)
+	}
+	if pub := publicError("run", engine.Validate(doc)); pub != nil {
+		return pub
 	}
 	return publicError("run", engine.Check(engine.Request{
 		Workspace: workspace,

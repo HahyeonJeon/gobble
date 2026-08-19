@@ -48,15 +48,6 @@ func applyTaskStateDefaults(st *jsonTaskState) {
 	}
 }
 
-func applyLegacyTaskSlots(doc *jsonTasksFile) {
-	if doc.SchemaVersion != 0 {
-		return
-	}
-	for i := range doc.Tasks {
-		applyTaskStateDefaults(&doc.Tasks[i])
-	}
-}
-
 func instanceSeg(instance string) string {
 	if instance == "" {
 		return emptyInstanceSeg

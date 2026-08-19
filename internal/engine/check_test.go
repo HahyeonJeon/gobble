@@ -3,21 +3,8 @@ package engine
 import (
 	"os"
 	"path/filepath"
-	"reflect"
 	"testing"
 )
-
-func TestTaskSnapshotHasNoExecuteFields(t *testing.T) {
-	typ := reflect.TypeOf(Task{})
-	for _, name := range []string{"Image", "Params"} {
-		if _, ok := typ.FieldByName(name); ok {
-			t.Fatalf("engine.Task has %s; snapshot is not the execute path", name)
-		}
-	}
-	if _, ok := typ.FieldByName("Memory"); !ok {
-		t.Fatalf("engine.Task missing Memory; validate must parse the snapshot")
-	}
-}
 
 func TestDocumentCarriesExecutionFields(t *testing.T) {
 	doc := sampleDoc("alpine:3.19.1", "local", "in/sample.txt", "out/sample.txt")
@@ -136,7 +123,45 @@ func TestCheckRefuse(t *testing.T) {
 			prep: func(t *testing.T) (Request, string) {
 				dir := t.TempDir()
 				writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+				writeCheckFile(t, filepath.Join(dir, ControlDir, RunIdentityFile), `{
+  "schema_version": 2,
+  "id": "run-1",
+  "status": "running",
+  "occupancy": {"active": true, "host": "h", "pid": 1}
+}
+`)
+				return Request{
+					Workspace: dir,
+					Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
+				}, dir
+			},
+		},
+		{
+			name: "schema 0 control document",
+			code: DefectUnsupportedSchema,
+			prep: func(t *testing.T) (Request, string) {
+				dir := t.TempDir()
+				writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 				writeCheckFile(t, filepath.Join(dir, ControlDir, RunIdentityFile), `{"id":"run-1"}`)
+				return Request{
+					Workspace: dir,
+					Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
+				}, dir
+			},
+		},
+		{
+			name: "schema 1 control document",
+			code: DefectUnsupportedSchema,
+			prep: func(t *testing.T) (Request, string) {
+				dir := t.TempDir()
+				writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+				writeCheckFile(t, filepath.Join(dir, ControlDir, RunIdentityFile), `{
+  "schema_version": 1,
+  "id": "run-1",
+  "status": "succeeded",
+  "occupancy": {"active": false}
+}
+`)
 				return Request{
 					Workspace: dir,
 					Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
@@ -357,7 +382,13 @@ func TestCheckOccupiedNotOutputExists(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	writeCheckFile(t, filepath.Join(dir, "out", "sample.txt"), "leftover")
-	writeCheckFile(t, filepath.Join(dir, ControlDir, RunIdentityFile), `{"id":"run-1"}`)
+	writeCheckFile(t, filepath.Join(dir, ControlDir, RunIdentityFile), `{
+  "schema_version": 2,
+  "id": "run-1",
+  "status": "running",
+  "occupancy": {"active": true, "host": "h", "pid": 1}
+}
+`)
 	defects := Check(Request{
 		Workspace: dir,
 		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),

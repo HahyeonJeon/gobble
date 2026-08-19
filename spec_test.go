@@ -156,7 +156,7 @@ func TestRelatedFilePredicate(t *testing.T) {
 	}
 }
 
-func TestClassifyAgreesWithSnapshot(t *testing.T) {
+func TestClassifyAgreesWithInternalPath(t *testing.T) {
 	bam := PathSpec{Base: "aln", Ext: ".bam"}
 	from := PathSpec{Dir: Dir("work"), Base: "sample", Suffixes: []string{"sorted"}, Ext: ".bam"}
 	fromLit := Literal("aln.bam").WithDir(Dir("work"))
@@ -179,17 +179,17 @@ func TestClassifyAgreesWithSnapshot(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := classifySpec(tt.spec, tt.from, tt.rule)
 			eng := engine.Classify(snapshotPath(tt.spec), snapshotPath(tt.from), engine.DeriveRule(tt.rule))
-			snap := snapshotPath(got)
-			if snap.Dir != eng.Dir || snap.Prefix != eng.Prefix || snap.Base != eng.Base || snap.Ext != eng.Ext ||
-				snap.Literal != eng.Literal || snap.Opaque != eng.Opaque || snap.BadLit != eng.BadLit {
-				t.Fatalf("case %s: classifySpec snapshot %+v, Classify %+v", tt.name, snap, eng)
+			rec := snapshotPath(got)
+			if rec.Dir != eng.Dir || rec.Prefix != eng.Prefix || rec.Base != eng.Base || rec.Ext != eng.Ext ||
+				rec.Literal != eng.Literal || rec.Opaque != eng.Opaque || rec.BadLit != eng.BadLit {
+				t.Fatalf("case %s: classifySpec %+v, Classify %+v", tt.name, rec, eng)
 			}
-			if len(snap.Suffixes) != len(eng.Suffixes) {
-				t.Fatalf("case %s: suffixes got %v, want %v", tt.name, snap.Suffixes, eng.Suffixes)
+			if len(rec.Suffixes) != len(eng.Suffixes) {
+				t.Fatalf("case %s: suffixes got %v, want %v", tt.name, rec.Suffixes, eng.Suffixes)
 			}
-			for i := range snap.Suffixes {
-				if snap.Suffixes[i] != eng.Suffixes[i] {
-					t.Fatalf("case %s: suffixes got %v, want %v", tt.name, snap.Suffixes, eng.Suffixes)
+			for i := range rec.Suffixes {
+				if rec.Suffixes[i] != eng.Suffixes[i] {
+					t.Fatalf("case %s: suffixes got %v, want %v", tt.name, rec.Suffixes, eng.Suffixes)
 				}
 			}
 		})

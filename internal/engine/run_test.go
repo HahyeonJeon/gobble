@@ -515,7 +515,7 @@ func taskStates(t *testing.T, workspace string) map[string]jsonTaskState {
 	}
 	byID := make(map[string]jsonTaskState, len(file.Tasks))
 	for _, st := range file.Tasks {
-		byID[st.ID] = st
+		byID[reservedIdentity(taskPlanFromState(st))] = st
 	}
 	return byID
 }

@@ -52,8 +52,8 @@ const (
 	DefectLiveOccupancy DefectCode = "live-occupancy"
 	// DefectForeignHost means the recorded owner host is not this host.
 	DefectForeignHost DefectCode = "foreign-host"
-	// DefectUnsupportedSchema means a control document uses a future
-	// schema version this engine cannot read.
+	// DefectUnsupportedSchema means a control document uses a schema
+	// version this engine cannot read. Schema 0 and 1 are unsupported.
 	DefectUnsupportedSchema DefectCode = "unsupported-schema"
 	// DefectNothingToResume means the workspace has no run document.
 	DefectNothingToResume DefectCode = "nothing-to-resume"

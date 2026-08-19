@@ -261,11 +261,11 @@ func occupyResume(req Request) (*sched, []Defect) {
 				cp.ReuseReason = dec.Reason
 				cp.Differing = append([]string(nil), dec.Differing...)
 			}
-			s.tasks[t.ID] = &cp
+			s.tasks[ident] = &cp
 			continue
 		}
 		st := initialTask(t)
-		s.tasks[t.ID] = &st
+		s.tasks[ident] = &st
 	}
 	root := workspaceFile(req.Workspace, ControlDir)
 	lock, defects := claimOccupy(root)

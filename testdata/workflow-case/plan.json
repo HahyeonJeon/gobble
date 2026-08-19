@@ -1,9 +1,14 @@
 {
+  "schema_version": 2,
   "pipeline": "workflow-case",
   "tasks": [
     {
       "id": "prep.fastp",
       "name": "fastp",
+      "instance": "",
+      "shard_index": 0,
+      "shard_count": 1,
+      "attempt": 1,
       "module": "prep",
       "branch": "",
       "merge": "",
@@ -20,6 +25,7 @@
       "inputs": [
         {
           "name": "r1",
+          "kind": "file",
           "path": "in/sample_S1_L001_R1_001.fastq.gz",
           "spec": {
             "dir": "in",
@@ -32,6 +38,7 @@
         },
         {
           "name": "r2",
+          "kind": "file",
           "path": "in/sample_S1_L001_R2_001.fastq.gz",
           "spec": {
             "dir": "in",
@@ -46,6 +53,7 @@
       "outputs": [
         {
           "name": "clean_r1",
+          "kind": "file",
           "path": "work/prep/sample_S1_L001_R1_001.clean.fastq.gz",
           "spec": {
             "dir": "work/prep",
@@ -60,6 +68,7 @@
         },
         {
           "name": "clean_r2",
+          "kind": "file",
           "path": "work/prep/sample_S1_L001_R2_001.clean.fastq.gz",
           "spec": {
             "dir": "work/prep",
@@ -77,6 +86,10 @@
     {
       "id": "call.align.bwa",
       "name": "bwa",
+      "instance": "",
+      "shard_index": 0,
+      "shard_count": 1,
+      "attempt": 1,
       "module": "call",
       "branch": "align",
       "merge": "",
@@ -93,6 +106,7 @@
       "inputs": [
         {
           "name": "r1",
+          "kind": "file",
           "path": "work/prep/sample_S1_L001_R1_001.clean.fastq.gz",
           "spec": {
             "dir": "work/prep",
@@ -107,6 +121,7 @@
         },
         {
           "name": "r2",
+          "kind": "file",
           "path": "work/prep/sample_S1_L001_R2_001.clean.fastq.gz",
           "spec": {
             "dir": "work/prep",
@@ -123,6 +138,7 @@
       "outputs": [
         {
           "name": "bam",
+          "kind": "file",
           "path": "work/align/sample.sorted.bam",
           "spec": {
             "dir": "work/align",
@@ -137,6 +153,7 @@
         },
         {
           "name": "bai",
+          "kind": "file",
           "path": "work/align/sample.sorted.bam.bai",
           "spec": {
             "dir": "work/align",
@@ -154,6 +171,10 @@
     {
       "id": "call.qc.fastqc",
       "name": "fastqc",
+      "instance": "",
+      "shard_index": 0,
+      "shard_count": 1,
+      "attempt": 1,
       "module": "call",
       "branch": "qc",
       "merge": "",
@@ -170,6 +191,7 @@
       "inputs": [
         {
           "name": "r1",
+          "kind": "file",
           "path": "work/prep/sample_S1_L001_R1_001.clean.fastq.gz",
           "spec": {
             "dir": "work/prep",
@@ -184,6 +206,7 @@
         },
         {
           "name": "r2",
+          "kind": "file",
           "path": "work/prep/sample_S1_L001_R2_001.clean.fastq.gz",
           "spec": {
             "dir": "work/prep",
@@ -200,6 +223,7 @@
       "outputs": [
         {
           "name": "html",
+          "kind": "file",
           "path": "work/qc/sample_clean_fastqc.html",
           "spec": {
             "dir": "work/qc",
@@ -215,6 +239,10 @@
     {
       "id": "call.join.report",
       "name": "report",
+      "instance": "",
+      "shard_index": 0,
+      "shard_count": 1,
+      "attempt": 1,
       "module": "call",
       "branch": "",
       "merge": "join",
@@ -231,6 +259,7 @@
       "inputs": [
         {
           "name": "bam",
+          "kind": "file",
           "path": "work/align/sample.sorted.bam",
           "spec": {
             "dir": "work/align",
@@ -245,6 +274,7 @@
         },
         {
           "name": "bai",
+          "kind": "file",
           "path": "work/align/sample.sorted.bam.bai",
           "spec": {
             "dir": "work/align",
@@ -259,6 +289,7 @@
         },
         {
           "name": "html",
+          "kind": "file",
           "path": "work/qc/sample_clean_fastqc.html",
           "spec": {
             "dir": "work/qc",
@@ -273,6 +304,7 @@
       "outputs": [
         {
           "name": "summary",
+          "kind": "file",
           "path": "out/report.json",
           "spec": {
             "dir": "out",

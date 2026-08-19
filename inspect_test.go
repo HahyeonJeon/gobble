@@ -62,7 +62,7 @@ func TestInspectUnknownViewAndInstance(t *testing.T) {
 func TestInspectUnsupportedSchema(t *testing.T) {
 	dir := t.TempDir()
 	writeRunFile(t, filepath.Join(dir, engine.ControlDir, engine.RunIdentityFile), `{
-  "schema_version": 2,
+  "schema_version": 0,
   "id": "run-1",
   "status": "running",
   "started": "2026-01-01T00:00:00Z",
@@ -71,8 +71,25 @@ func TestInspectUnsupportedSchema(t *testing.T) {
 `)
 	before := snapshotWorkspace(t, dir)
 	_, err := gobble.Inspect(dir, gobble.ViewRun, "")
-	requireInspectError(t, "unsupported schema", err, gobble.DefectUnsupportedSchema, "")
+	requireInspectError(t, "unsupported schema 0", err, gobble.DefectUnsupportedSchema, "")
 	after := snapshotWorkspace(t, dir)
+	if before != after {
+		t.Fatalf("unsupported-schema Inspect mutated workspace")
+	}
+
+	dir = t.TempDir()
+	writeRunFile(t, filepath.Join(dir, engine.ControlDir, engine.RunIdentityFile), `{
+  "schema_version": 1,
+  "id": "run-1",
+  "status": "running",
+  "started": "2026-01-01T00:00:00Z",
+  "occupancy": {"active": true, "host": "h", "pid": 1}
+}
+`)
+	before = snapshotWorkspace(t, dir)
+	_, err = gobble.Inspect(dir, gobble.ViewRun, "")
+	requireInspectError(t, "unsupported schema", err, gobble.DefectUnsupportedSchema, "")
+	after = snapshotWorkspace(t, dir)
 	if before != after {
 		t.Fatalf("unsupported-schema Inspect mutated workspace")
 	}

@@ -36,11 +36,15 @@ func resumePreflight(g *Graph, workspace string, cap int) error {
 			Message: "nil graph",
 		}}}
 	}
-	if pub := publicError("resume", engine.Validate(snapshotGraph(g))); pub != nil {
-		return pub
+	if err := composeDefects("resume", graphCheck(g)); err != nil {
+		return err
 	}
-	if _, err := planDocument(g); err != nil {
+	doc, err := planDocument(g)
+	if err != nil {
 		return resumeOp(err)
+	}
+	if pub := publicError("resume", engine.Validate(doc)); pub != nil {
+		return pub
 	}
 	return publicError("resume", engine.CheckResumeStart(workspace, cap))
 }

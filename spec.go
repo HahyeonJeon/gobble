@@ -109,6 +109,11 @@ func findBind(binds []Bind, name string) (Bind, bool) {
 	return Bind{}, false
 }
 
+func hasBind(binds []Bind, name string) bool {
+	_, ok := findBind(binds, name)
+	return ok
+}
+
 func isZeroSpec(p PathSpec) bool {
 	return intpath.IsZero(specFrom(p))
 }

@@ -72,6 +72,9 @@ func Check(req Request) []Defect {
 	if d := checkWorkspace(req.Workspace); len(d) > 0 {
 		return d
 	}
+	if d := checkControlSchema(req.Workspace); len(d) > 0 {
+		return d
+	}
 	if d := checkOccupied(req.Workspace); len(d) > 0 {
 		return d
 	}
@@ -129,6 +132,31 @@ func checkWorkspace(workspace string) []Defect {
 		}}
 	}
 	return nil
+}
+
+func checkControlSchema(workspace string) []Defect {
+	run, exists, err := readRunIdentity(workspace)
+	if err != nil {
+		return []Defect{{
+			Code:    DefectInvalidPath,
+			Message: "workspace occupancy is not usable",
+			Paths:   []string{ControlDir + "/" + RunIdentityFile},
+		}}
+	}
+	if !exists {
+		root := workspaceFile(workspace, ControlDir)
+		for _, name := range []string{PlanFile, TasksFile} {
+			ver, found, err := readSchemaFile(workspaceFile(root, name))
+			if err != nil {
+				return pathDefects(err)
+			}
+			if found && schemaUnsupported(ver) {
+				return schemaDefect(ControlDir + "/" + name)
+			}
+		}
+		return nil
+	}
+	return unsupportedControlSchema(workspace, run.SchemaVersion)
 }
 
 func checkOccupied(workspace string) []Defect {

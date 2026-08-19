@@ -85,8 +85,9 @@ func Release(workspace string) []Defect {
 	}
 	for _, st := range latest {
 		cp := st
-		s.tasks[st.ID] = &cp
-		s.doc.Tasks = append(s.doc.Tasks, TaskPlan{ID: st.ID})
+		tp := taskPlanFromState(st)
+		s.tasks[reservedIdentity(tp)] = &cp
+		s.doc.Tasks = append(s.doc.Tasks, tp)
 	}
 	if found {
 		if err := s.writeTasks(); err != nil {
@@ -137,7 +138,6 @@ func markIncomplete(workspace, now string) ([]jsonTaskState, []string, bool, err
 	if err := json.Unmarshal(data, &doc); err != nil {
 		return nil, nil, false, err
 	}
-	applyLegacyTaskSlots(&doc)
 	var marked []string
 	for i := range doc.Tasks {
 		st := &doc.Tasks[i]

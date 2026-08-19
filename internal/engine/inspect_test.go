@@ -241,7 +241,7 @@ func TestInspectReuseViewReadsDecisions(t *testing.T) {
 	dir := t.TempDir()
 	writeOccupancy(t, dir, jsonOccupancy{Active: false, Closed: "2026-01-01T00:00:01Z"})
 	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), `{
-  "schema_version": 1,
+  "schema_version": 2,
   "tasks": [
     {
       "id": "copy",
@@ -278,7 +278,7 @@ func TestInspectReuseViewEmptyWithoutDecisions(t *testing.T) {
 	dir := t.TempDir()
 	writeOccupancy(t, dir, jsonOccupancy{Active: false, Closed: "2026-01-01T00:00:01Z"})
 	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), `{
-  "schema_version": 1,
+  "schema_version": 2,
   "tasks": [
     {
       "id": "copy",
@@ -308,7 +308,7 @@ func TestInspectLogTailBounded(t *testing.T) {
 	body := strings.Repeat("x", inspectLogTail+64)
 	writeCheckFile(t, filepath.Join(dir, filepath.FromSlash(rel), "stdout"), body)
 	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), `{
-  "schema_version": 1,
+  "schema_version": 2,
   "tasks": [
     {
       "id": "copy",

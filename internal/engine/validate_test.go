@@ -5,528 +5,167 @@ import (
 	"testing"
 )
 
-func TestComposeCheckIllegalSnapshots(t *testing.T) {
-	file := Path{Base: "out", Ext: ".txt"}
+func TestValidateDocumentPlanDefects(t *testing.T) {
+	file := IO{Name: "out", Kind: ArtifactFile, Path: "out.txt", Spec: Path{Base: "out", Ext: ".txt"}}
 	tests := []struct {
 		name string
-		snap Snapshot
+		doc  Document
 		code string
 		unit string
 	}{
 		{
-			name: "cycle",
-			snap: Snapshot{
-				Name: "cycle",
-				Tasks: []Task{{
-					ID:      "loop",
-					Name:    "loop",
-					Command: []string{"echo"},
-					Inputs: []Bind{{
-						Name:     "in",
-						FromKind: FromOut,
-						FromTask: "loop",
-						FromName: "out",
-					}},
-					Outputs: []Bind{{Name: "out", Spec: file}},
-				}},
-			},
-			code: DefectCycle,
-			unit: "loop",
-		},
-		{
-			name: "missing-input zero From",
-			snap: Snapshot{
-				Name: "missing-input",
-				Tasks: []Task{{
+			name: "unsupported-backend",
+			doc: Document{
+				Name: "plan-only",
+				Tasks: []TaskPlan{{
 					ID:      "copy",
 					Name:    "copy",
 					Command: []string{"cp"},
-					Inputs:  []Bind{{Name: "reads"}},
-					Outputs: []Bind{{Name: "out", Spec: file}},
+					Backend: "slurm",
+					Outputs: []IO{file},
 				}},
 			},
-			code: DefectMissingInput,
-			unit: "copy.reads",
-		},
-		{
-			name: "missing-output no binds",
-			snap: Snapshot{
-				Name: "missing-output",
-				Tasks: []Task{{
-					ID:      "copy",
-					Name:    "copy",
-					Command: []string{"cp"},
-					Inputs: []Bind{{
-						Name:     "src",
-						FromKind: FromInput,
-						FromName: "reads",
-					}},
-				}},
-				Inputs: []Input{{Name: "reads", Spec: Path{Base: "sample", Ext: ".fastq.gz"}}},
-			},
-			code: DefectMissingOutput,
+			code: DefectUnsupportedBackend,
 			unit: "copy",
 		},
 		{
-			name: "missing-output Out request",
-			snap: Snapshot{
-				Name: "missing-out",
-				Tasks: []Task{{
-					ID:       "copy",
-					Name:     "copy",
-					Command:  []string{"cp"},
-					Outputs:  []Bind{{Name: "out", Spec: file}},
-					OutCalls: []string{"nope"},
+			name: "NaN CPU",
+			doc: Document{
+				Name: "nan-cpu",
+				Tasks: []TaskPlan{{
+					ID:        "copy",
+					Name:      "copy",
+					Command:   []string{"cp"},
+					Resources: ResourcePlan{CPU: math.NaN()},
+					Outputs:   []IO{file},
 				}},
 			},
-			code: DefectMissingOutput,
-			unit: "copy.nope",
-		},
-		{
-			name: "missing-command",
-			snap: Snapshot{
-				Name: "missing-command",
-				Tasks: []Task{{
-					ID:      "copy",
-					Name:    "copy",
-					Outputs: []Bind{{Name: "out", Spec: file}},
-				}},
-			},
-			code: DefectMissingCommand,
+			code: DefectInvalidValue,
 			unit: "copy",
 		},
 		{
-			name: "invalid-name empty pipeline",
-			snap: Snapshot{
-				Name: "",
-				Tasks: []Task{{
-					ID:      "copy",
-					Name:    "copy",
-					Command: []string{"cp"},
-					Outputs: []Bind{{Name: "out", Spec: file}},
-				}},
-			},
-			code: DefectInvalidName,
-			unit: "pipeline",
-		},
-		{
-			name: "invalid-name spelling",
-			snap: Snapshot{
-				Name: "invalid-spelling",
-				Tasks: []Task{{
-					ID:      "1copy",
-					Name:    "1copy",
-					Command: []string{"cp"},
-					Outputs: []Bind{{Name: "out", Spec: file}},
-				}},
-			},
-			code: DefectInvalidName,
-			unit: "1copy",
-		},
-		{
-			name: "invalid-path slash name",
-			snap: Snapshot{
-				Name: "slash",
-				Tasks: []Task{{
-					ID:      "copy",
-					Name:    "copy",
-					Command: []string{"cp"},
-					Outputs: []Bind{{Name: "out", Spec: Path{Base: "a/b", Ext: ".txt"}}},
-				}},
-			},
-			code: DefectInvalidPath,
-			unit: "copy.out",
-		},
-		{
-			name: "invalid-path dir escape",
-			snap: Snapshot{
-				Name: "escape",
-				Tasks: []Task{{
-					ID:      "copy",
-					Name:    "copy",
-					Command: []string{"cp"},
-					Outputs: []Bind{{Name: "out", Spec: Path{Dir: "../out", Base: "x", Ext: ".txt"}}},
-				}},
-			},
-			code: DefectInvalidPath,
-			unit: "copy.out",
-		},
-		{
-			name: "empty step token",
-			snap: Snapshot{
-				Name: "empty-step",
-				Tasks: []Task{{
-					ID:      "copy",
-					Name:    "copy",
-					Command: []string{"cp"},
-					Outputs: []Bind{{Name: "out", Spec: Path{Base: "sample", Suffixes: []string{""}, Ext: ".fastq"}}},
-				}},
-			},
-			code: DefectInvalidPath,
-			unit: "copy.out",
-		},
-		{
-			name: "foreign output From complete spec",
-			snap: Snapshot{
-				Name: "run-b",
-				Tasks: []Task{{
-					ID:      "use",
-					Name:    "use",
-					Command: []string{"use"},
-					Outputs: []Bind{{
-						Name:     "out",
-						FromKind: FromOut,
-						FromName: "clean",
-						Spec:     Path{Dir: "out", Base: "use", Ext: ".txt"},
-					}},
-				}},
-			},
-			code: DefectMissingInput,
-			unit: "use.out",
-		},
-		{
-			name: "group and spec both set",
-			snap: Snapshot{
-				Name: "xor",
-				Tasks: []Task{{
-					ID:      "index",
-					Name:    "index",
-					Command: []string{"bwa"},
-					Outputs: []Bind{{
-						Name:    "idx",
-						Spec:    Path{Base: "ref", Ext: ".amb"},
-						Members: []Member{{Name: "amb", Spec: Path{Base: "ref", Ext: ".amb"}}},
-					}},
+			name: "negative CPU",
+			doc: Document{
+				Name: "neg-cpu",
+				Tasks: []TaskPlan{{
+					ID:        "copy",
+					Name:      "copy",
+					Command:   []string{"cp"},
+					Resources: ResourcePlan{CPU: -1},
+					Outputs:   []IO{file},
 				}},
 			},
 			code: DefectInvalidValue,
-			unit: "index.idx",
+			unit: "copy",
 		},
 		{
-			name: "empty group",
-			snap: Snapshot{
-				Name: "empty-group",
-				Tasks: []Task{{
-					ID:      "index",
-					Name:    "index",
-					Command: []string{"bwa"},
-					Outputs: []Bind{{Name: "idx", Members: []Member{}}},
+			name: "invalid memory",
+			doc: Document{
+				Name: "junk-mem",
+				Tasks: []TaskPlan{{
+					ID:        "copy",
+					Name:      "copy",
+					Command:   []string{"cp"},
+					Resources: ResourcePlan{Memory: "not-a-size"},
+					Outputs:   []IO{file},
 				}},
 			},
-			code: DefectInvalidValue,
-			unit: "index.idx",
-		},
-		{
-			name: "command and script both set",
-			snap: Snapshot{
-				Name: "cmd-script",
-				Tasks: []Task{{
-					ID:      "copy",
-					Name:    "copy",
-					Command: []string{"cp"},
-					Script:  "echo hi",
-					Outputs: []Bind{{Name: "out", Spec: file}},
-				}},
-			},
-			code: DefectInvalidValue,
+			code: DefectInvalidMemory,
 			unit: "copy",
 		},
 		{
 			name: "empty env key",
-			snap: Snapshot{
+			doc: Document{
 				Name: "env",
-				Tasks: []Task{{
+				Tasks: []TaskPlan{{
 					ID:      "copy",
 					Name:    "copy",
 					Command: []string{"cp"},
 					Env:     map[string]string{"": "x"},
-					Outputs: []Bind{{Name: "out", Spec: file}},
+					Outputs: []IO{file},
 				}},
 			},
 			code: DefectInvalidValue,
 			unit: "copy",
 		},
 		{
-			name: "group from single-file",
-			snap: Snapshot{
-				Name: "group-from-file",
-				Tasks: []Task{
-					{
-						ID:      "index",
-						Name:    "index",
-						Command: []string{"bwa"},
-						Outputs: []Bind{{Name: "idx", Spec: Path{Base: "ref", Ext: ".amb"}}},
-					},
-					{
-						ID:      "mem",
-						Name:    "mem",
-						Command: []string{"bwa"},
-						Inputs: []Bind{{
-							Name:     "idx",
-							FromKind: FromOut,
-							FromTask: "index",
-							FromName: "idx",
-							Members:  []Member{{Name: "amb"}},
-						}},
-						Outputs: []Bind{{Name: "out", Spec: file}},
-					},
-				},
-			},
-			code: DefectMissingInput,
-			unit: "mem.idx",
-		},
-		{
-			name: "group from single-file pipeline input",
-			snap: Snapshot{
-				Name: "group-from-file-in",
-				Inputs: []Input{{
-					Name: "idx",
-					Spec: Path{Base: "ref", Ext: ".amb"},
-				}},
-				Tasks: []Task{{
-					ID:      "mem",
-					Name:    "mem",
+			name: "group and spec both set",
+			doc: Document{
+				Name: "xor",
+				Tasks: []TaskPlan{{
+					ID:      "index",
+					Name:    "index",
 					Command: []string{"bwa"},
-					Inputs: []Bind{{
-						Name:     "idx",
-						FromKind: FromInput,
-						FromName: "idx",
-						Members:  []Member{{Name: "amb"}},
+					Outputs: []IO{{
+						Name:    "idx",
+						Kind:    ArtifactFile,
+						Path:    "ref.amb",
+						Spec:    Path{Base: "ref", Ext: ".amb"},
+						Members: []IOMember{{Name: "amb", Path: "ref.amb"}},
 					}},
-					Outputs: []Bind{{Name: "out", Spec: file}},
-				}},
-			},
-			code: DefectMissingInput,
-			unit: "mem.idx",
-		},
-		{
-			name: "empty input group",
-			snap: Snapshot{
-				Name: "empty-input-group",
-				Inputs: []Input{{
-					Name:    "idx",
-					Members: []Member{},
-				}},
-				Tasks: []Task{{
-					ID:      "mem",
-					Name:    "mem",
-					Command: []string{"bwa"},
-					Outputs: []Bind{{Name: "out", Spec: file}},
 				}},
 			},
 			code: DefectInvalidValue,
-			unit: "idx",
+			unit: "index.idx",
+		},
+		{
+			name: "malformed image",
+			doc: Document{
+				Name: "image",
+				Tasks: []TaskPlan{{
+					ID:      "copy",
+					Name:    "copy",
+					Command: []string{"cp"},
+					Image:   "--privileged",
+					Outputs: []IO{file},
+				}},
+			},
+			code: DefectInvalidValue,
+			unit: "copy",
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ComposeCheck(tt.snap)
+			got := Validate(tt.doc)
 			if !hasDefect(got, tt.code, tt.unit) {
-				t.Fatalf("case %s: ComposeCheck() defects %v, want code %s unit %q", tt.name, formatDefects(got), tt.code, tt.unit)
+				t.Fatalf("case %s: Validate() defects %v, want code %s unit %q", tt.name, formatDefects(got), tt.code, tt.unit)
 			}
 		})
 	}
 }
 
-func TestComposeCheckGroupFromPipelineInput(t *testing.T) {
-	file := Path{Base: "out", Ext: ".txt"}
-	snap := Snapshot{
-		Name: "group-from-in",
-		Inputs: []Input{{
-			Name: "idx",
-			Members: []Member{{
-				Name: "amb",
-				Spec: Path{Base: "ref", Ext: ".amb"},
-			}},
-		}},
-		Tasks: []Task{{
-			ID:      "mem",
-			Name:    "mem",
-			Command: []string{"bwa"},
-			Inputs: []Bind{{
-				Name:     "idx",
-				FromKind: FromInput,
-				FromName: "idx",
-				Members:  []Member{{Name: "amb"}},
-			}},
-			Outputs: []Bind{{Name: "out", Spec: file}},
-		}},
-	}
-	got := ComposeCheck(snap)
-	if hasDefect(got, DefectMissingInput, "mem.idx") {
-		t.Fatalf("case group from pipeline input: ComposeCheck() defects %v, want no missing-input", formatDefects(got))
-	}
-	if len(got) != 0 {
-		t.Fatalf("case group from pipeline input: ComposeCheck() defects %v, want none", formatDefects(got))
-	}
-}
-
-func TestValidateDirEscapeStaysInvalidPath(t *testing.T) {
-	snap := Snapshot{
-		Name: "escape",
-		Tasks: []Task{{
-			ID:      "copy",
-			Name:    "copy",
-			Command: []string{"cp"},
-			Outputs: []Bind{{Name: "out", Spec: Path{Dir: "../out", Base: "x", Ext: ".txt"}}},
-		}},
-	}
-	got := Validate(snap)
-	if !hasDefect(got, DefectInvalidPath, "copy.out") {
-		t.Fatalf("case dir-escape: Validate() defects %v, want code %s unit %q", formatDefects(got), DefectInvalidPath, "copy.out")
-	}
-	for _, d := range got {
-		if d.Code == DefectConflict {
-			t.Fatalf("case dir-escape: Validate() also reported conflict, want invalid-path only for escape")
-		}
-	}
-}
-
-func TestRestageClearsLiteralOpacity(t *testing.T) {
-	snap := Snapshot{
-		Name: "restage-literal",
-		Tasks: []Task{
-			{
-				ID:      "src",
-				Name:    "src",
-				Command: []string{"echo"},
-				Outputs: []Bind{{
-					Name: "html",
-					Spec: Path{Literal: true, Opaque: "sample.html", Dir: "work"},
-				}},
-			},
-			{
-				ID:      "copy",
-				Name:    "copy",
-				Command: []string{"cp"},
-				Inputs: []Bind{{
-					Name:     "in",
-					FromKind: FromOut,
-					FromTask: "src",
-					FromName: "html",
-				}},
-				Outputs: []Bind{{
-					Name:     "out",
-					FromKind: FromOut,
-					FromTask: "src",
-					FromName: "html",
-					Spec:     Path{Base: "a/b", Ext: ".txt"},
-				}},
-			},
-		},
-	}
-	got := ComposeCheck(snap)
-	if !hasDefect(got, DefectInvalidPath, "copy.out") {
-		t.Fatalf("case restage-literal: ComposeCheck() defects %v, want invalid-path unit copy.out from author Name", formatDefects(got))
-	}
-}
-
-func TestComposeCheckDoesNotReportPlanDefects(t *testing.T) {
-	snap := Snapshot{
-		Name: "plan-only",
-		Tasks: []Task{{
-			ID:      "copy",
-			Name:    "copy",
-			Command: []string{"cp"},
-			Backend: "slurm",
-			Outputs: []Bind{{Name: "out", Spec: Path{Base: "out", Ext: ".txt"}}},
-		}},
-	}
-	got := ComposeCheck(snap)
-	if hasDefect(got, DefectUnsupportedBackend, "copy") {
-		t.Fatalf("case plan-only: ComposeCheck() reported unsupported-backend, want compose defects only")
-	}
-	got = Validate(snap)
-	if !hasDefect(got, DefectUnsupportedBackend, "copy") {
-		t.Fatalf("case plan-only: Validate() defects %v, want unsupported-backend unit copy", formatDefects(got))
-	}
-
-	nan := Snapshot{
-		Name: "nan-cpu",
-		Tasks: []Task{{
-			ID:      "copy",
-			Name:    "copy",
-			Command: []string{"cp"},
-			CPU:     math.NaN(),
-			Outputs: []Bind{{Name: "out", Spec: Path{Base: "out", Ext: ".txt"}}},
-		}},
-	}
-	got = ComposeCheck(nan)
-	if hasDefect(got, DefectInvalidValue, "copy") {
-		t.Fatalf("case nan-cpu: ComposeCheck() reported invalid-value, want compose defects only")
-	}
-	got = Validate(nan)
-	if !hasDefect(got, DefectInvalidValue, "copy") {
-		t.Fatalf("case nan-cpu: Validate() defects %v, want invalid-value unit copy", formatDefects(got))
-	}
-}
-
-func TestValidateMemoryAndNegativeCPU(t *testing.T) {
-	file := Path{Base: "out", Ext: ".txt"}
-	junk := Snapshot{
-		Name: "junk-mem",
-		Tasks: []Task{{
-			ID:      "copy",
-			Name:    "copy",
-			Command: []string{"cp"},
-			Memory:  "not-a-size",
-			Outputs: []Bind{{Name: "out", Spec: file}},
-		}},
-	}
-	got := ComposeCheck(junk)
-	if hasDefect(got, DefectInvalidMemory, "copy") {
-		t.Fatalf("case junk-mem: ComposeCheck() reported invalid-memory, want compose defects only")
-	}
-	got = Validate(junk)
-	if !hasDefect(got, DefectInvalidMemory, "copy") {
-		t.Fatalf("case junk-mem: Validate() defects %v, want invalid-memory unit copy", formatDefects(got))
-	}
-
-	empty := Snapshot{
+func TestValidateEmptyMemoryOK(t *testing.T) {
+	got := Validate(Document{
 		Name: "empty-mem",
-		Tasks: []Task{{
+		Tasks: []TaskPlan{{
 			ID:      "copy",
 			Name:    "copy",
 			Command: []string{"cp"},
-			Outputs: []Bind{{Name: "out", Spec: file}},
+			Outputs: []IO{{Name: "out", Kind: ArtifactFile, Path: "out.txt", Spec: Path{Base: "out", Ext: ".txt"}}},
 		}},
-	}
-	got = Validate(empty)
+	})
 	if hasDefect(got, DefectInvalidMemory, "copy") {
-		t.Fatalf("case empty-mem: Validate() defects %v, want no invalid-memory", formatDefects(got))
+		t.Fatalf("empty-mem: Validate() defects %v, want no invalid-memory", formatDefects(got))
 	}
+}
 
-	neg := Snapshot{
-		Name: "neg-cpu",
-		Tasks: []Task{{
+func TestValidateConflict(t *testing.T) {
+	got := Validate(Document{
+		Name: "conflict",
+		Tasks: []TaskPlan{{
 			ID:      "copy",
 			Name:    "copy",
 			Command: []string{"cp"},
-			CPU:     -1,
-			Outputs: []Bind{{Name: "out", Spec: file}},
+			Inputs:  []IO{{Name: "in", Kind: ArtifactFile, Path: "sample.txt"}},
+			Outputs: []IO{{Name: "out", Kind: ArtifactFile, Path: "sample.txt"}},
 		}},
-	}
-	got = ComposeCheck(neg)
-	if hasDefect(got, DefectInvalidValue, "copy") {
-		t.Fatalf("case neg-cpu: ComposeCheck() reported invalid-value, want compose defects only")
-	}
-	got = Validate(neg)
-	if !hasDefect(got, DefectInvalidValue, "copy") {
-		t.Fatalf("case neg-cpu: Validate() defects %v, want invalid-value unit copy", formatDefects(got))
+	})
+	if !hasDefect(got, DefectConflict, "copy.out") {
+		t.Fatalf("conflict: Validate() defects %v, want conflict unit copy.out", formatDefects(got))
 	}
 }
 
 func TestBuildPlanEncodeFailureHasCode(t *testing.T) {
-	snap := Snapshot{
-		Name: "encode",
-		Tasks: []Task{{
-			ID:      "copy",
-			Name:    "copy",
-			Command: []string{"cp"},
-			Outputs: []Bind{{Name: "out", Spec: Path{Base: "out", Ext: ".txt"}}},
-		}},
-	}
 	doc := Document{
 		Name: "encode",
 		Tasks: []TaskPlan{{
@@ -537,7 +176,7 @@ func TestBuildPlanEncodeFailureHasCode(t *testing.T) {
 			Outputs:   []IO{{Name: "out", Path: "out.txt", Spec: Path{Base: "out", Ext: ".txt"}}},
 		}},
 	}
-	plan, defects := BuildPlan(snap, doc)
+	plan, defects := BuildPlan(doc)
 	if plan != nil {
 		t.Fatalf("case encode-fail: BuildPlan() plan != nil, want nil")
 	}

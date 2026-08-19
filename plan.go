@@ -66,14 +66,14 @@ func BuildPlan(g *Graph, opts ...PlanOption) (*Plan, error) {
 			Message: "nil graph",
 		}}}
 	}
-	if pub := publicError("plan", engine.Validate(snapshotGraph(g))); pub != nil {
-		return nil, pub
+	if err := composeDefects("plan", graphCheck(g)); err != nil {
+		return nil, err
 	}
 	doc, err := planDocument(g)
 	if err != nil {
 		return nil, err
 	}
-	inner, defects := engine.BuildPlan(snapshotGraph(g), doc)
+	inner, defects := engine.BuildPlan(doc)
 	if pub := publicError("plan", defects); pub != nil {
 		return nil, pub
 	}
@@ -233,8 +233,15 @@ func (p *Plan) load(doc engine.Document) {
 func planBindsFromIO(in []engine.IO) []planBindRead {
 	out := make([]planBindRead, 0, len(in))
 	for _, b := range in {
-		rec := planBindRead{name: b.Name, path: b.Path, kind: ArtifactFile}
-		if b.Members != nil {
+		kind := b.Kind
+		if kind == "" {
+			kind = ArtifactFile
+			if b.Members != nil {
+				kind = ArtifactGroup
+			}
+		}
+		rec := planBindRead{name: b.Name, path: b.Path, kind: kind}
+		if kind == ArtifactGroup || b.Members != nil {
 			rec.kind = ArtifactGroup
 			rec.path = ""
 			rec.members = make([]planMemberRead, 0, len(b.Members))
@@ -356,6 +363,7 @@ func planIO(g *Graph, b graphBind, asInput bool) (engine.IO, error) {
 	if b.members != nil {
 		io := engine.IO{
 			Name:    b.name,
+			Kind:    engine.ArtifactGroup,
 			Spec:    snapshotPath(b.spec),
 			Members: make([]engine.IOMember, 0, len(b.members)),
 		}
@@ -387,6 +395,7 @@ func planIO(g *Graph, b graphBind, asInput bool) (engine.IO, error) {
 	}
 	io := engine.IO{
 		Name: b.name,
+		Kind: engine.ArtifactFile,
 		Path: path,
 		Spec: snapshotPath(b.spec),
 	}

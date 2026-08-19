@@ -176,7 +176,6 @@ func readInspectTasks(workspace string) ([]jsonTaskState, []Defect) {
 			Paths:   []string{ControlDir + "/" + TasksFile},
 		}}
 	}
-	applyLegacyTaskSlots(&file)
 	return file.Tasks, nil
 }
 
@@ -576,15 +575,19 @@ func documentFromPlan(plan jsonPlan) Document {
 
 func decodeTask(t jsonTask) TaskPlan {
 	return TaskPlan{
-		ID:      t.ID,
-		Name:    t.Name,
-		Module:  t.Module,
-		Branch:  t.Branch,
-		Merge:   t.Merge,
-		Command: t.Command,
-		Script:  t.Script,
-		Image:   t.Image,
-		Backend: t.Backend,
+		ID:         t.ID,
+		Name:       t.Name,
+		Instance:   t.Instance,
+		ShardIndex: t.ShardIndex,
+		ShardCount: t.ShardCount,
+		Attempt:    t.Attempt,
+		Module:     t.Module,
+		Branch:     t.Branch,
+		Merge:      t.Merge,
+		Command:    t.Command,
+		Script:     t.Script,
+		Image:      t.Image,
+		Backend:    t.Backend,
 		Resources: ResourcePlan{
 			CPU:    t.Resources.CPU,
 			Memory: t.Resources.Memory,
@@ -600,10 +603,12 @@ func decodeIOs(in []jsonIO) []IO {
 	out := make([]IO, 0, len(in))
 	for _, b := range in {
 		io := IO{
-			Name:   b.Name,
-			Path:   b.Path,
-			Source: b.Source,
-			Spec:   decodeSpec(b.Spec),
+			Name:     b.Name,
+			Kind:     b.Kind,
+			Path:     b.Path,
+			Source:   b.Source,
+			Spec:     decodeSpec(b.Spec),
+			Manifest: b.Manifest,
 		}
 		if b.Members != nil {
 			io.Members = decodeMembers(b.Members)

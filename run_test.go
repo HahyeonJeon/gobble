@@ -61,7 +61,13 @@ func TestPreflightRefuse(t *testing.T) {
 			code: gobble.DefectOccupiedWorkspace,
 			prep: func(t *testing.T) (*gobble.Graph, string, int) {
 				dir := readyRunWorkspace(t)
-				writeRunFile(t, filepath.Join(dir, engine.ControlDir, engine.RunIdentityFile), `{"id":"run-1"}`)
+				writeRunFile(t, filepath.Join(dir, engine.ControlDir, engine.RunIdentityFile), `{
+  "schema_version": 2,
+  "id": "run-1",
+  "status": "running",
+  "occupancy": {"active": true, "host": "h", "pid": 1}
+}
+`)
 				return mustCompose(runCopyPipeline)(t), dir, 0
 			},
 		},
@@ -170,7 +176,13 @@ func TestPreflightRefuse(t *testing.T) {
 func TestPreflightOccupiedNotOutputExists(t *testing.T) {
 	dir := readyRunWorkspace(t)
 	writeRunFile(t, filepath.Join(dir, "out", "sample.txt"), "leftover")
-	writeRunFile(t, filepath.Join(dir, engine.ControlDir, engine.RunIdentityFile), `{"id":"run-1"}`)
+	writeRunFile(t, filepath.Join(dir, engine.ControlDir, engine.RunIdentityFile), `{
+  "schema_version": 2,
+  "id": "run-1",
+  "status": "running",
+  "occupancy": {"active": true, "host": "h", "pid": 1}
+}
+`)
 	err := gobble.Preflight(mustCompose(runCopyPipeline)(t), dir, 0)
 	requireRunError(t, "occupied+output", err, gobble.DefectOccupiedWorkspace, "")
 	var ge *gobble.Error

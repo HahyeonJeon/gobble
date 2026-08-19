@@ -64,7 +64,7 @@ func TestReleaseForeignHost(t *testing.T) {
 func TestReleaseUnsupportedSchema(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, ControlDir, RunIdentityFile), `{
-  "schema_version": 2,
+  "schema_version": 1,
   "id": "run-1",
   "status": "running",
   "started": "2026-01-01T00:00:00Z",
@@ -91,7 +91,7 @@ func TestReleaseDeadOwnerMarksIncomplete(t *testing.T) {
 	writeOccupancy(t, dir, jsonOccupancy{Active: true, Host: host, PID: deadPID(t), Started: "2026-01-01T00:00:00Z"})
 	writeCheckFile(t, filepath.Join(dir, "out", "keep.txt"), "keep")
 	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), `{
-  "schema_version": 1,
+  "schema_version": 2,
   "tasks": [
     {
       "id": "copy",
@@ -144,13 +144,48 @@ func TestReleaseDeadOwnerMarksIncomplete(t *testing.T) {
 	}
 }
 
-func TestReleaseLegacyTasksDefaultSlots(t *testing.T) {
+func TestReleaseSchema0And1Unsupported(t *testing.T) {
+	for _, ver := range []int{0, 1} {
+		dir := t.TempDir()
+		body := `{"id":"run-1"}`
+		if ver == 1 {
+			body = `{
+  "schema_version": 1,
+  "id": "run-1",
+  "status": "running",
+  "occupancy": {"active": true, "host": "h", "pid": 1}
+}
+`
+		}
+		writeCheckFile(t, filepath.Join(dir, ControlDir, RunIdentityFile), body)
+		before := snapshotDir(t, dir)
+		defects := Release(dir)
+		if !hasDefect(defects, DefectUnsupportedSchema, "") {
+			t.Fatalf("schema %d: Release() defects %v, want unsupported-schema", ver, defects)
+		}
+		after := snapshotDir(t, dir)
+		if before != after {
+			t.Fatalf("schema %d: Release mutated workspace", ver)
+		}
+	}
+}
+
+func TestReleaseMarksIncompleteWithSlots(t *testing.T) {
 	dir := t.TempDir()
-	writeCheckFile(t, filepath.Join(dir, ControlDir, RunIdentityFile), `{"id":"run-1"}`)
+	host, err := currentHost()
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeOccupancy(t, dir, jsonOccupancy{Active: true, Host: host, PID: deadPID(t), Started: "2026-01-01T00:00:00Z"})
 	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), `{
+  "schema_version": 2,
   "tasks": [
     {
       "id": "copy",
+      "instance": "",
+      "shard_index": 0,
+      "shard_count": 1,
+      "attempt": 1,
       "status": "running",
       "executor": "process",
       "image": "",
@@ -160,6 +195,10 @@ func TestReleaseLegacyTasksDefaultSlots(t *testing.T) {
     },
     {
       "id": "ok",
+      "instance": "",
+      "shard_index": 0,
+      "shard_count": 1,
+      "attempt": 1,
       "status": "succeeded",
       "executor": "process",
       "image": "",

@@ -60,15 +60,19 @@ type ParamPlan struct {
 
 // IO is one recorded input or output bind.
 //
-// Path may be empty on a Group IO. Members is omitted on single-file IOs.
-// Source is the workspace path isolate copies from when it differs from
-// Path. Empty Source means Path is both source and dest.
+// Kind is file, group, or tree. Path may be empty on a Group IO.
+// Members is omitted on single-file IOs. Manifest is the tree manifest
+// path and is unused until Tree authoring. Source is the workspace path
+// isolate copies from when it differs from Path. Empty Source means
+// Path is both source and dest.
 type IO struct {
-	Name    string
-	Path    string
-	Source  string
-	Spec    Path
-	Members []IOMember
+	Name     string
+	Kind     string
+	Path     string
+	Source   string
+	Spec     Path
+	Members  []IOMember
+	Manifest string
 }
 
 // IOMember is one recorded Group member.
@@ -106,20 +110,24 @@ type jsonPlan struct {
 }
 
 type jsonTask struct {
-	ID        string            `json:"id"`
-	Name      string            `json:"name"`
-	Module    string            `json:"module"`
-	Branch    string            `json:"branch"`
-	Merge     string            `json:"merge"`
-	Command   []string          `json:"command"`
-	Script    string            `json:"script,omitempty"`
-	Image     string            `json:"image"`
-	Backend   string            `json:"backend"`
-	Resources jsonResources     `json:"resources"`
-	Params    []jsonParam       `json:"params"`
-	Env       map[string]string `json:"env,omitempty"`
-	Inputs    []jsonIO          `json:"inputs"`
-	Outputs   []jsonIO          `json:"outputs"`
+	ID         string            `json:"id"`
+	Name       string            `json:"name"`
+	Instance   string            `json:"instance"`
+	ShardIndex int               `json:"shard_index"`
+	ShardCount int               `json:"shard_count"`
+	Attempt    int               `json:"attempt"`
+	Module     string            `json:"module"`
+	Branch     string            `json:"branch"`
+	Merge      string            `json:"merge"`
+	Command    []string          `json:"command"`
+	Script     string            `json:"script,omitempty"`
+	Image      string            `json:"image"`
+	Backend    string            `json:"backend"`
+	Resources  jsonResources     `json:"resources"`
+	Params     []jsonParam       `json:"params"`
+	Env        map[string]string `json:"env,omitempty"`
+	Inputs     []jsonIO          `json:"inputs"`
+	Outputs    []jsonIO          `json:"outputs"`
 }
 
 type jsonResources struct {
@@ -133,11 +141,13 @@ type jsonParam struct {
 }
 
 type jsonIO struct {
-	Name    string       `json:"name"`
-	Path    string       `json:"path"`
-	Source  string       `json:"source,omitempty"`
-	Spec    jsonSpec     `json:"spec"`
-	Members []jsonMember `json:"members,omitempty"`
+	Name     string       `json:"name"`
+	Kind     string       `json:"kind"`
+	Path     string       `json:"path"`
+	Source   string       `json:"source,omitempty"`
+	Spec     jsonSpec     `json:"spec"`
+	Members  []jsonMember `json:"members,omitempty"`
+	Manifest string       `json:"manifest,omitempty"`
 }
 
 type jsonMember struct {
@@ -170,9 +180,9 @@ type jsonEdge struct {
 	Wait []string `json:"wait"`
 }
 
-// BuildPlan validates s, then encodes doc. On defects it returns (nil, defects).
-func BuildPlan(s Snapshot, doc Document) (*Plan, []Defect) {
-	if defects := Validate(s); len(defects) > 0 {
+// BuildPlan validates doc, then encodes it. On defects it returns (nil, defects).
+func BuildPlan(doc Document) (*Plan, []Defect) {
+	if defects := Validate(doc); len(defects) > 0 {
 		return nil, defects
 	}
 	raw, err := marshalPlan(doc)
@@ -209,14 +219,14 @@ func (p *Plan) MarshalJSON() ([]byte, error) {
 }
 
 func marshalPlan(doc Document) ([]byte, error) {
-	return encodePlan(doc, 0)
+	return encodePlan(doc, SchemaVersion, false)
 }
 
 func marshalControlPlan(doc Document) ([]byte, error) {
-	return encodePlan(doc, SchemaVersion)
+	return encodePlan(doc, SchemaVersion, true)
 }
 
-func encodePlan(doc Document, schema int) ([]byte, error) {
+func encodePlan(doc Document, schema int, includeInputEdges bool) ([]byte, error) {
 	jp := jsonPlan{
 		SchemaVersion: schema,
 		Pipeline:      doc.Name,
@@ -231,7 +241,7 @@ func encodePlan(doc Document, schema int) ([]byte, error) {
 		jp.DAG.Nodes = append(jp.DAG.Nodes, t.ID)
 	}
 	for _, e := range doc.Edges {
-		if e.FromTask == "" && schema == 0 {
+		if e.FromTask == "" && !includeInputEdges {
 			continue
 		}
 		jp.DAG.Edges = append(jp.DAG.Edges, jsonEdge{
@@ -252,16 +262,21 @@ func encodeTask(t TaskPlan) jsonTask {
 	if backend == "" {
 		backend = "local"
 	}
+	applyReservedDefaults(&t)
 	return jsonTask{
-		ID:      t.ID,
-		Name:    t.Name,
-		Module:  t.Module,
-		Branch:  t.Branch,
-		Merge:   t.Merge,
-		Command: jsonStrings(t.Command),
-		Script:  t.Script,
-		Image:   t.Image,
-		Backend: backend,
+		ID:         t.ID,
+		Name:       t.Name,
+		Instance:   t.Instance,
+		ShardIndex: t.ShardIndex,
+		ShardCount: t.ShardCount,
+		Attempt:    t.Attempt,
+		Module:     t.Module,
+		Branch:     t.Branch,
+		Merge:      t.Merge,
+		Command:    jsonStrings(t.Command),
+		Script:     t.Script,
+		Image:      t.Image,
+		Backend:    backend,
 		Resources: jsonResources{
 			CPU:    t.Resources.CPU,
 			Memory: t.Resources.Memory,
@@ -285,14 +300,29 @@ func encodeIOs(in []IO) []jsonIO {
 	out := make([]jsonIO, 0, len(in))
 	for _, b := range in {
 		out = append(out, jsonIO{
-			Name:    b.Name,
-			Path:    b.Path,
-			Source:  b.Source,
-			Spec:    encodeSpec(b.Spec),
-			Members: encodeMembers(b.Members),
+			Name:     b.Name,
+			Kind:     ioKind(b),
+			Path:     b.Path,
+			Source:   b.Source,
+			Spec:     encodeSpec(b.Spec),
+			Members:  encodeMembers(b.Members),
+			Manifest: b.Manifest,
 		})
 	}
 	return out
+}
+
+func ioKind(b IO) string {
+	if b.Kind != "" {
+		return b.Kind
+	}
+	if b.Members != nil {
+		return ArtifactGroup
+	}
+	if b.Manifest != "" {
+		return ArtifactTree
+	}
+	return ArtifactFile
 }
 
 func encodeMembers(in []IOMember) []jsonMember {

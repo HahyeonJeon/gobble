@@ -2,10 +2,10 @@
 // pre-execution run checks, occupancy release, inspect, resume,
 // and process and Docker execution.
 //
-// Package gobble translates Pipeline and Graph values into the snapshot
-// and Document types defined here. Snapshot is the validate view.
-// Document and TaskPlan are the execution view. This package must not
-// import github.com/HahyeonJeon/gobble or any cmd path.
+// Package gobble renders PathSpec through internal/path, runs
+// compose-time checks, and translates Graph values into Document.
+// Document and TaskPlan are the only engine payload. This package
+// must not import github.com/HahyeonJeon/gobble or any cmd path.
 //
 // Path render, restage, and classify live in package internal/path.
 package engine
@@ -43,7 +43,15 @@ const (
 )
 
 // SchemaVersion is the control-document version this engine writes.
-const SchemaVersion = 1
+// Schema 0 and 1 documents are unsupported-schema. There is no migration.
+const SchemaVersion = 2
+
+// Artifact kinds recorded on Document IO. Tree is unused until later work.
+const (
+	ArtifactFile  = "file"
+	ArtifactGroup = "group"
+	ArtifactTree  = "tree"
+)
 
 // Defect is one named failure found by a validation walk.
 type Defect struct {
@@ -64,35 +72,7 @@ const (
 	DeriveReplaceExt
 )
 
-// FromKind is the kind of bind source recorded on a snapshot Bind.
-type FromKind int
-
-const (
-	// FromZero means From was never set.
-	FromZero FromKind = iota
-	// FromInput names a pipeline input.
-	FromInput
-	// FromOut names a task output port.
-	FromOut
-	// FromIn names a task input port.
-	FromIn
-)
-
-// NodeKind is a snapshot tree node kind used for sibling-name checks.
-type NodeKind int
-
-const (
-	// NodeModule is a named module.
-	NodeModule NodeKind = iota
-	// NodeBranch is a named branch.
-	NodeBranch
-	// NodeMerge is a named merge.
-	NodeMerge
-	// NodeTask is a task leaf.
-	NodeTask
-)
-
-// Path is an engine-owned snapshot of a PathSpec, including unexported
+// Path is the plan-document record of a PathSpec, including unexported
 // literal state that package gobble copies across the seam.
 type Path struct {
 	Dir      string
@@ -103,69 +83,6 @@ type Path struct {
 	Literal  bool
 	Opaque   string
 	BadLit   bool
-}
-
-// Bind is an engine-owned bind snapshot.
-//
-// When Resolved is true, Spec is the final path and is not classified
-// against From. Graph translation sets Resolved. A non-nil Members
-// slice is a Group bind, including an empty list.
-type Bind struct {
-	Name     string
-	Spec     Path
-	FromKind FromKind
-	FromName string
-	FromTask string
-	Rule     DeriveRule
-	Resolved bool
-	Members  []Member
-}
-
-// Member is one named regular-file path in a Group bind.
-type Member struct {
-	Name string
-	Spec Path
-}
-
-// Input is a pipeline input snapshot.
-//
-// A non-nil Members slice is a Group input, including an empty list.
-type Input struct {
-	Name    string
-	Spec    Path
-	Members []Member
-}
-
-// Task is an engine-owned task snapshot.
-type Task struct {
-	ID       string
-	Name     string
-	Command  []string
-	Script   string
-	Backend  string
-	CPU      float64
-	Memory   string
-	Env      map[string]string
-	Inputs   []Bind
-	Outputs  []Bind
-	OutCalls []string
-	InCalls  []string
-}
-
-// Node is a tree node for sibling-name checks on a Pipeline snapshot.
-type Node struct {
-	Kind     NodeKind
-	Name     string
-	Children []Node
-	TaskID   string
-}
-
-// Snapshot is the engine-owned Pipeline or Graph view used by the walks.
-type Snapshot struct {
-	Name   string
-	Inputs []Input
-	Tasks  []Task
-	Nodes  []Node
 }
 
 func (p Path) clone() Path {
@@ -220,7 +137,7 @@ func isZeroPath(p Path) bool {
 	return intpath.IsZero(p.spec())
 }
 
-// Classify applies inherit, related-file, and restage rules on snapshot Paths.
+// Classify applies inherit, related-file, and restage rules on Path records.
 func Classify(spec, from Path, rule DeriveRule) Path {
 	return pathFromSpec(intpath.Classify(spec.spec(), from.spec(), intpath.DeriveRule(rule)))
 }

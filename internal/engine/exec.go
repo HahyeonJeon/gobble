@@ -33,7 +33,7 @@ func executeTask(workspace string, task TaskPlan) report {
 
 func isolatedExecute(workspace string, task TaskPlan, run runner) report {
 	applyReservedDefaults(&task)
-	r := report{ID: task.ID}
+	r := report{ID: reservedIdentity(task)}
 	rel := isolateRel(task)
 	isolate := filepath.Join(workspace, filepath.FromSlash(rel), "work")
 	r.Stdout = rel + "/stdout"

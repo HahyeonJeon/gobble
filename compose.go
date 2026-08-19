@@ -14,7 +14,7 @@ func Compose(p *Pipeline) (*Graph, error) {
 			Message: "nil pipeline",
 		}}}
 	}
-	if err := publicError("compose", engine.ComposeCheck(snapshotPipeline(p))); err != nil {
+	if err := composeDefects("compose", composeCheckPipeline(p)); err != nil {
 		return nil, err
 	}
 	return buildGraph(p), nil
@@ -36,132 +36,6 @@ func publicError(op string, defects []engine.Defect) error {
 	return &Error{Op: op, Defects: out}
 }
 
-func snapshotPipeline(p *Pipeline) engine.Snapshot {
-	s := engine.Snapshot{Name: p.name}
-	for _, in := range p.inputs {
-		s.Inputs = append(s.Inputs, snapshotPipeInput(in))
-	}
-	for _, t := range p.tasks {
-		s.Tasks = append(s.Tasks, snapshotTask(t))
-	}
-	s.Nodes = snapshotNodes(p.children)
-	return s
-}
-
-func snapshotGraph(g *Graph) engine.Snapshot {
-	s := engine.Snapshot{Name: g.name}
-	for _, in := range g.inputs {
-		s.Inputs = append(s.Inputs, snapshotGraphInput(in))
-	}
-	for _, t := range g.tasks {
-		gt := engine.Task{
-			ID:      t.id,
-			Name:    t.name,
-			Command: copyStrings(t.command),
-			Script:  t.script,
-			Backend: t.backend,
-			CPU:     t.resources.CPU,
-			Memory:  t.resources.Memory,
-			Env:     copyEnv(t.env),
-		}
-		for _, b := range t.inputs {
-			gt.Inputs = append(gt.Inputs, snapshotGraphBind(b))
-		}
-		for _, b := range t.outputs {
-			gt.Outputs = append(gt.Outputs, snapshotGraphBind(b))
-		}
-		s.Tasks = append(s.Tasks, gt)
-	}
-	return s
-}
-
-func snapshotTask(t *Task) engine.Task {
-	gt := engine.Task{
-		ID:       t.id(),
-		Name:     t.spec.Name,
-		Command:  copyStrings(t.spec.Command),
-		Script:   t.spec.Script,
-		Backend:  t.spec.Backend,
-		CPU:      t.spec.Resources.CPU,
-		Env:      copyEnv(t.spec.Env),
-		OutCalls: copyStrings(t.outCalls),
-		InCalls:  copyStrings(t.inCalls),
-	}
-	for _, b := range t.spec.Inputs {
-		gt.Inputs = append(gt.Inputs, snapshotBind(b, t.pipe))
-	}
-	for _, b := range t.spec.Outputs {
-		gt.Outputs = append(gt.Outputs, snapshotBind(b, t.pipe))
-	}
-	return gt
-}
-
-func snapshotPipeInput(in pipeInput) engine.Input {
-	ei := engine.Input{Name: in.name, Spec: snapshotPath(in.spec)}
-	if in.members != nil {
-		ei.Members = snapshotMembers(in.members)
-	}
-	return ei
-}
-
-func snapshotGraphInput(in graphInput) engine.Input {
-	ei := engine.Input{Name: in.name, Spec: snapshotPath(in.spec)}
-	if in.members != nil {
-		ei.Members = snapshotGraphMembers(in.members)
-	}
-	return ei
-}
-
-func snapshotMembers(in Group) []engine.Member {
-	if in == nil {
-		return nil
-	}
-	out := make([]engine.Member, 0, len(in))
-	for _, m := range in {
-		out = append(out, engine.Member{Name: m.Name, Spec: snapshotPath(m.Spec)})
-	}
-	return out
-}
-
-func snapshotGraphMembers(in []graphMember) []engine.Member {
-	if in == nil {
-		return nil
-	}
-	out := make([]engine.Member, 0, len(in))
-	for _, m := range in {
-		out = append(out, engine.Member{Name: m.name, Spec: snapshotPath(m.spec)})
-	}
-	return out
-}
-
-func snapshotBind(b Bind, p *Pipeline) engine.Bind {
-	eb := engine.Bind{
-		Name: b.Name,
-		Spec: snapshotPath(b.Spec),
-		Rule: engine.DeriveRule(b.Rule),
-	}
-	eb.FromKind, eb.FromName, eb.FromTask = snapshotFrom(b.From, p)
-	if b.Group != nil {
-		eb.Members = snapshotMembers(b.Group)
-	}
-	return eb
-}
-
-func snapshotGraphBind(b graphBind) engine.Bind {
-	eb := engine.Bind{
-		Name:     b.name,
-		Spec:     snapshotPath(b.spec),
-		FromKind: snapshotFromKind(b.fromKind),
-		FromName: b.fromName,
-		FromTask: b.fromTask,
-		Resolved: true,
-	}
-	if b.members != nil {
-		eb.Members = snapshotGraphMembers(b.members)
-	}
-	return eb
-}
-
 func foreignFrom(h Handle, p *Pipeline) bool {
 	switch h.kind {
 	case handleZero:
@@ -173,72 +47,6 @@ func foreignFrom(h Handle, p *Pipeline) bool {
 	default:
 		return true
 	}
-}
-
-func snapshotFrom(h Handle, p *Pipeline) (engine.FromKind, string, string) {
-	// A non-zero authored Handle stays a From. Do not report FromZero
-	// for a foreign handle, or an output bind with a complete Spec
-	// looks like "no From".
-	if foreignFrom(h, p) {
-		return snapshotFromKind(h.kind), "", ""
-	}
-	switch h.kind {
-	case handleInput:
-		return engine.FromInput, h.name, ""
-	case handleOut:
-		return engine.FromOut, h.name, h.task.id()
-	case handleIn:
-		return engine.FromIn, h.name, h.task.id()
-	default:
-		return engine.FromZero, "", ""
-	}
-}
-
-func snapshotFromKind(k handleKind) engine.FromKind {
-	switch k {
-	case handleInput:
-		return engine.FromInput
-	case handleOut:
-		return engine.FromOut
-	case handleIn:
-		return engine.FromIn
-	default:
-		return engine.FromZero
-	}
-}
-
-func snapshotNodes(nodes []node) []engine.Node {
-	if nodes == nil {
-		return nil
-	}
-	out := make([]engine.Node, 0, len(nodes))
-	for _, n := range nodes {
-		en := engine.Node{Name: n.name}
-		switch n.kind {
-		case nodeModule:
-			en.Kind = engine.NodeModule
-			if n.module != nil {
-				en.Children = snapshotNodes(n.module.children)
-			}
-		case nodeBranch:
-			en.Kind = engine.NodeBranch
-			if n.branch != nil {
-				en.Children = snapshotNodes(n.branch.children)
-			}
-		case nodeMerge:
-			en.Kind = engine.NodeMerge
-			if n.merge != nil {
-				en.Children = snapshotNodes(n.merge.children)
-			}
-		case nodeTask:
-			en.Kind = engine.NodeTask
-			if n.task != nil {
-				en.TaskID = n.task.id()
-			}
-		}
-		out = append(out, en)
-	}
-	return out
 }
 
 func snapshotPath(p PathSpec) engine.Path {

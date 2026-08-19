@@ -179,7 +179,7 @@ func occupy(req Request) (*sched, []Defect) {
 	}
 	for _, t := range doc.Tasks {
 		st := initialTask(t)
-		s.tasks[t.ID] = &st
+		s.tasks[reservedIdentity(t)] = &st
 	}
 	root := filepath.Join(req.Workspace, ControlDir)
 	lock, defects := claimOccupy(root)
@@ -275,12 +275,12 @@ func (s *sched) loop(n int) []Defect {
 
 func (s *sched) nextReady() string {
 	for _, t := range s.doc.Tasks {
-		st := s.tasks[t.ID]
+		ident := reservedIdentity(t)
+		st := s.tasks[ident]
 		if st == nil {
 			continue
 		}
 		if s.resume != nil {
-			ident := reservedIdentity(t)
 			if s.resume[ident].Decision != reuseRerun || s.launched[ident] {
 				continue
 			}
@@ -293,9 +293,25 @@ func (s *sched) nextReady() string {
 		if !s.budget.fits(t) {
 			continue
 		}
-		return t.ID
+		return ident
 	}
 	return ""
+}
+
+func (s *sched) stateByTaskID(id string) *jsonTaskState {
+	if t, ok := s.taskByID(id); ok {
+		return s.tasks[reservedIdentity(t)]
+	}
+	return s.tasks[id]
+}
+
+func (s *sched) taskByIdent(ident string) (TaskPlan, bool) {
+	for _, t := range s.doc.Tasks {
+		if reservedIdentity(t) == ident {
+			return t, true
+		}
+	}
+	return TaskPlan{}, false
 }
 
 func (s *sched) upstreamReady(id string) bool {
@@ -304,7 +320,7 @@ func (s *sched) upstreamReady(id string) bool {
 			continue
 		}
 		if e.FromTask != "" {
-			up := s.tasks[e.FromTask]
+			up := s.stateByTaskID(e.FromTask)
 			if up == nil || up.Status != StatusSucceeded {
 				return false
 			}
@@ -342,7 +358,7 @@ func (s *sched) succeededThisResume(ident string) bool {
 		if reservedIdentity(t) != ident {
 			continue
 		}
-		st := s.tasks[t.ID]
+		st := s.tasks[ident]
 		return st != nil && st.Status == StatusSucceeded
 	}
 	return false
@@ -385,15 +401,15 @@ func (s *sched) taskByID(id string) (TaskPlan, bool) {
 	return TaskPlan{}, false
 }
 
-func (s *sched) launch(id string, reports chan report) {
+func (s *sched) launch(ident string, reports chan report) {
 	if s.resume != nil {
-		s.beginResumeAttempt(id)
+		s.beginResumeAttempt(ident)
 	}
-	st := s.tasks[id]
+	st := s.tasks[ident]
 	st.Status = StatusRunning
 	st.Reason = "ready"
 	st.Started = time.Now().UTC().Format(time.RFC3339Nano)
-	task, _ := s.taskByID(id)
+	task, _ := s.taskByIdent(ident)
 	if st != nil {
 		task.Attempt = st.Attempt
 		task.Instance = st.Instance
@@ -411,13 +427,12 @@ func (s *sched) launch(id string, reports chan report) {
 	}()
 }
 
-func (s *sched) beginResumeAttempt(id string) {
-	old := s.tasks[id]
-	task, _ := s.taskByID(id)
+func (s *sched) beginResumeAttempt(ident string) {
+	old := s.tasks[ident]
+	task, _ := s.taskByIdent(ident)
 	st := initialTask(task)
 	if old != nil {
 		applyTaskStateDefaults(old)
-		ident := reservedIdentity(taskPlanFromState(*old))
 		s.history = append(s.history, *old)
 		st.Attempt = old.Attempt + 1
 		if dec, ok := s.resume[ident]; ok {
@@ -429,9 +444,9 @@ func (s *sched) beginResumeAttempt(id string) {
 			s.launched[ident] = true
 		}
 	} else if s.launched != nil {
-		s.launched[reservedIdentity(task)] = true
+		s.launched[ident] = true
 	}
-	s.tasks[id] = &st
+	s.tasks[ident] = &st
 }
 
 func (s *sched) assignBlockedUpstream() {
@@ -444,7 +459,7 @@ func (s *sched) assignBlockedUpstream() {
 		if s.resume[ident].Decision != reuseRerun || s.launched[ident] {
 			continue
 		}
-		st := s.tasks[t.ID]
+		st := s.tasks[ident]
 		if st == nil {
 			continue
 		}
@@ -468,7 +483,7 @@ func (s *sched) waitProducerFailedThisResume(id string) bool {
 			continue
 		}
 		if e.FromTask != "" {
-			up := s.tasks[e.FromTask]
+			up := s.stateByTaskID(e.FromTask)
 			if up == nil {
 				continue
 			}
@@ -496,7 +511,7 @@ func (s *sched) waitPathProducerFailedThisResume(path string) bool {
 			continue
 		}
 		ident := reservedIdentity(t)
-		st := s.tasks[t.ID]
+		st := s.tasks[ident]
 		if s.launched[ident] && st != nil && st.Status != StatusSucceeded {
 			return true
 		}
@@ -510,7 +525,7 @@ func (s *sched) blockedReason(id string) string {
 			continue
 		}
 		if e.FromTask != "" {
-			up := s.tasks[e.FromTask]
+			up := s.stateByTaskID(e.FromTask)
 			if up == nil {
 				continue
 			}
@@ -537,7 +552,7 @@ func (s *sched) apply(r report) {
 	if st == nil {
 		return
 	}
-	if task, ok := s.taskByID(r.ID); ok {
+	if task, ok := s.taskByIdent(r.ID); ok {
 		s.budget.release(task)
 		st.Script = task.Script
 		st.Env = copyStringMap(task.Env)
@@ -549,7 +564,7 @@ func (s *sched) apply(r report) {
 		st.Status = StatusSucceeded
 		st.Reason = "ready"
 		st.Error = nil
-		if task, ok := s.taskByID(r.ID); ok {
+		if task, ok := s.taskByIdent(r.ID); ok {
 			s.notePersist(s.recordSuccess(st, task))
 		}
 	} else {
@@ -559,7 +574,11 @@ func (s *sched) apply(r report) {
 		if msg == "" {
 			msg = "exit " + strconv.Itoa(r.Exit)
 		}
-		st.Error = &jsonTaskErr{Unit: r.ID, Message: msg}
+		unit := r.ID
+		if task, ok := s.taskByIdent(r.ID); ok {
+			unit = task.ID
+		}
+		st.Error = &jsonTaskErr{Unit: unit, Message: msg}
 		s.blockFrom(r.ID)
 	}
 	s.notePersist(s.writeTasks())
@@ -580,24 +599,33 @@ func (s *sched) recordSuccess(st *jsonTaskState, task TaskPlan) error {
 	return nil
 }
 
-func (s *sched) blockFrom(id string) {
-	src := s.tasks[id]
+func (s *sched) blockFrom(ident string) {
+	src := s.tasks[ident]
 	why := "upstream failed"
 	if src != nil && src.Status == StatusBlocked {
 		why = "upstream blocked"
 	}
+	fromID := ident
+	if task, ok := s.taskByIdent(ident); ok {
+		fromID = task.ID
+	}
 	for _, e := range s.doc.Edges {
-		if e.FromTask != id {
+		if e.FromTask != fromID {
 			continue
 		}
-		dep := s.tasks[e.ToTask]
+		to, ok := s.taskByID(e.ToTask)
+		if !ok {
+			continue
+		}
+		depIdent := reservedIdentity(to)
+		dep := s.tasks[depIdent]
 		if dep == nil || dep.Status != StatusNotStarted {
 			continue
 		}
 		dep.Status = StatusBlocked
 		dep.Reason = why
 		dep.Ended = time.Now().UTC().Format(time.RFC3339Nano)
-		s.blockFrom(e.ToTask)
+		s.blockFrom(depIdent)
 	}
 }
 
@@ -605,7 +633,7 @@ func (s *sched) finish() {
 	s.run.Ended = time.Now().UTC().Format(time.RFC3339Nano)
 	s.run.Status = StatusSucceeded
 	for _, t := range s.doc.Tasks {
-		st := s.tasks[t.ID]
+		st := s.tasks[reservedIdentity(t)]
 		if st == nil || st.Status == StatusSucceeded {
 			continue
 		}
@@ -624,7 +652,7 @@ func (s *sched) notePersist(err error) {
 func (s *sched) failures() []Defect {
 	var out []Defect
 	for _, t := range s.doc.Tasks {
-		st := s.tasks[t.ID]
+		st := s.tasks[reservedIdentity(t)]
 		if st == nil {
 			out = append(out, Defect{
 				Code:    DefectFailed,
@@ -678,7 +706,7 @@ func (s *sched) writeTasks() error {
 	}
 	doc.Tasks = append(doc.Tasks, s.history...)
 	for _, t := range s.doc.Tasks {
-		if st := s.tasks[t.ID]; st != nil {
+		if st := s.tasks[reservedIdentity(t)]; st != nil {
 			doc.Tasks = append(doc.Tasks, *st)
 		}
 	}

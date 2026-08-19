@@ -22,9 +22,6 @@ type jsonOccupancy struct {
 }
 
 func occupancyIsActive(r jsonRun) bool {
-	if r.SchemaVersion == 0 && r.Occupancy == nil {
-		return true
-	}
 	if r.Occupancy == nil {
 		return false
 	}
@@ -32,7 +29,7 @@ func occupancyIsActive(r jsonRun) bool {
 }
 
 func schemaUnsupported(version int) bool {
-	return version > SchemaVersion
+	return version != SchemaVersion
 }
 
 func readRunIdentity(workspace string) (jsonRun, bool, error) {
