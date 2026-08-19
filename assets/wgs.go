@@ -4,22 +4,22 @@ import "github.com/HahyeonJeon/gobble"
 
 // pinnedWGSFASTQ1 is the workspace PathSpec for PinWGSTest1FASTQ.
 func pinnedWGSFASTQ1() gobble.PathSpec {
-	return gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_1", Ext: ".fastq.gz"}
+	return gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_1", Ext: ".fastq.gz"}
 }
 
 // pinnedWGSFASTQ2 is the workspace PathSpec for PinWGSTest2FASTQ.
 func pinnedWGSFASTQ2() gobble.PathSpec {
-	return gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_2", Ext: ".fastq.gz"}
+	return gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_2", Ext: ".fastq.gz"}
 }
 
 // pinnedWGSFASTA is the workspace PathSpec for PinWGSGenomeFASTA.
 func pinnedWGSFASTA() gobble.PathSpec {
-	return gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genome", Ext: ".fasta"}
+	return gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genome", Ext: ".fasta"}
 }
 
 // pinnedWGSFAI is the workspace PathSpec for PinWGSGenomeFAI.
 func pinnedWGSFAI() gobble.PathSpec {
-	return gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genome", Ext: ".fasta.fai"}
+	return gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genome", Ext: ".fasta.fai"}
 }
 
 // WGS returns a two-sample WGS proof pipeline. It calls first-party

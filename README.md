@@ -2,7 +2,9 @@
 
 Gobble is a Go library for composing, validating, planning, and running bioinformatics pipelines.
 
-PathSpec is the public parameterized path model. DirName, Prefix, BaseName, Suffixes, and Extension map to `Dir`, `Lead`, `Name`, `Steps`, and `Ext` (JSON `dir`, `lead`, `name`, `steps`, `ext`). The public surface is unsupported except these locked PathSpec concepts.
+PathSpec is the public parameterized path model. Fields are Dir, Prefix, Base, Suffixes, and Ext (JSON `dir`, `prefix`, `base`, `suffixes`, `ext`). Linux is the supported platform this session. macOS is not a support promise.
+
+The public surface is unsupported except these locked PathSpec concepts.
 
 This module can `Run` a valid graph in a caller workspace. `Inspect` reads a workspace, `Resume` continues a released run, and `Release` closes occupancy. `docs/gobble-draft.md` is a non-binding vision draft, not the shipped API.
 

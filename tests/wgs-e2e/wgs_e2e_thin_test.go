@@ -42,10 +42,10 @@ func wgsE2EThinPipeline() *gobble.Pipeline {
 
 func wgsE2EThinPipelineWithBWA(bwaImage string) *gobble.Pipeline {
 	p := gobble.NewPipeline("wgs-e2e-thin")
-	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genome", Ext: ".fasta"}
+	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genome", Ext: ".fasta"}
 	inFASTA := p.AddInput("fasta", fasta)
-	inR1 := p.AddInput("r1", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_1", Ext: ".fastq.gz"})
-	inR2 := p.AddInput("r2", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_2", Ext: ".fastq.gz"})
+	inR1 := p.AddInput("r1", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_1", Ext: ".fastq.gz"})
+	inR2 := p.AddInput("r2", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_2", Ext: ".fastq.gz"})
 
 	index := p.AddTask(gobble.TaskSpec{
 		Name:    "index",
@@ -53,15 +53,15 @@ func wgsE2EThinPipelineWithBWA(bwaImage string) *gobble.Pipeline {
 		Command: []string{"bwa", "index", wgsE2EStagedFASTA},
 		Inputs:  []gobble.Bind{{Name: "fasta", From: inFASTA}},
 		Outputs: []gobble.Bind{
-			{Name: "amb", Spec: fasta.Append(".amb")},
-			{Name: "ann", Spec: fasta.Append(".ann")},
-			{Name: "bwt", Spec: fasta.Append(".bwt")},
-			{Name: "pac", Spec: fasta.Append(".pac")},
-			{Name: "sa", Spec: fasta.Append(".sa")},
+			{Name: "amb", Spec: fasta.AppendExt(".amb")},
+			{Name: "ann", Spec: fasta.AppendExt(".ann")},
+			{Name: "bwt", Spec: fasta.AppendExt(".bwt")},
+			{Name: "pac", Spec: fasta.AppendExt(".pac")},
+			{Name: "sa", Spec: fasta.AppendExt(".sa")},
 		},
 	})
 
-	sam := gobble.PathSpec{Dir: gobble.Dir("work"), Name: "aligned", Ext: ".sam"}
+	sam := gobble.PathSpec{Dir: gobble.Dir("work"), Base: "aligned", Ext: ".sam"}
 	mem := p.AddTask(gobble.TaskSpec{
 		Name:  "mem",
 		Image: bwaImage,
@@ -82,7 +82,7 @@ func wgsE2EThinPipelineWithBWA(bwaImage string) *gobble.Pipeline {
 		Outputs: []gobble.Bind{{Name: "sam", Spec: sam}},
 	})
 
-	bam := gobble.PathSpec{Dir: gobble.Dir("work"), Name: "aligned", Ext: ".bam"}
+	bam := gobble.PathSpec{Dir: gobble.Dir("work"), Base: "aligned", Ext: ".bam"}
 	sort := p.AddTask(gobble.TaskSpec{
 		Name:    "sort",
 		Image:   wgsE2EThinSamtools,

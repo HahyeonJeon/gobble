@@ -53,8 +53,8 @@ func addMultiQC(parent Parent, reports []gobble.Handle, opts MultiQCOptions) Mul
 	if outDir.IsZero() {
 		outDir = gobble.Dir("work/multiqc")
 	}
-	htmlSpec := gobble.PathSpec{Dir: outDir, Name: "multiqc_report", Ext: ".html"}
-	dataSpec := gobble.PathSpec{Dir: outDir, Name: "multiqc_data", Ext: ".zip"}
+	htmlSpec := gobble.PathSpec{Dir: outDir, Base: "multiqc_report", Ext: ".html"}
+	dataSpec := gobble.PathSpec{Dir: outDir, Base: "multiqc_data", Ext: ".zip"}
 
 	cmd := []string{"multiqc", "--force", "--outdir", outDir.String(), "--zip-data-dir"}
 	inputs := make([]gobble.Bind, 0, len(reports))

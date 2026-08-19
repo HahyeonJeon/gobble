@@ -8,13 +8,13 @@ import (
 
 func TestAddTaskParents(t *testing.T) {
 	p := gobble.NewPipeline("helpers")
-	in := p.AddInput("in", gobble.PathSpec{Name: "in", Ext: ".txt"})
+	in := p.AddInput("in", gobble.PathSpec{Base: "in", Ext: ".txt"})
 	spec := func(name, out string) gobble.TaskSpec {
 		return gobble.TaskSpec{
 			Name:    name,
 			Command: []string{"echo"},
 			Inputs:  []gobble.Bind{{Name: "in", From: in}},
-			Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Name: out, Ext: ".txt"}}},
+			Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Base: out, Ext: ".txt"}}},
 		}
 	}
 
@@ -32,7 +32,7 @@ func TestAddTaskParents(t *testing.T) {
 	if got := AddTask(br, spec("brtask", "br")); got == nil {
 		t.Fatalf("AddTask(branch) = nil, want task")
 	}
-	mg := p.Merge("mg", br)
+	mg := p.Merge("mg")
 	if got := AddTask(mg, spec("mgtask", "mg")); got == nil {
 		t.Fatalf("AddTask(merge) = nil, want task")
 	}
@@ -43,7 +43,7 @@ func TestAddTaskParents(t *testing.T) {
 }
 
 func TestCommandPath(t *testing.T) {
-	spec := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "sample", Ext: ".fastq.gz"}
+	spec := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "sample", Ext: ".fastq.gz"}
 	got, err := CommandPath(spec)
 	if err != nil {
 		t.Fatalf("CommandPath() error = %v, want nil", err)
@@ -56,14 +56,14 @@ func TestCommandPath(t *testing.T) {
 		t.Fatalf("CommandPath() = %q, want %q", got, want)
 	}
 
-	if _, err := CommandPath(gobble.PathSpec{Name: "."}); err == nil {
+	if _, err := CommandPath(gobble.PathSpec{Base: "."}); err == nil {
 		t.Fatalf("CommandPath(invalid) error = nil, want error")
 	}
 }
 
 func TestStandalone(t *testing.T) {
-	reads := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "sample", Ext: ".txt"}
-	out := gobble.PathSpec{Dir: gobble.Dir("out"), Name: "sample", Ext: ".txt"}
+	reads := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "sample", Ext: ".txt"}
+	out := gobble.PathSpec{Dir: gobble.Dir("out"), Base: "sample", Ext: ".txt"}
 	token, err := CommandPath(reads)
 	if err != nil {
 		t.Fatalf("CommandPath() error = %v", err)
@@ -103,8 +103,8 @@ func TestStandalone(t *testing.T) {
 
 func TestStandaloneGroup(t *testing.T) {
 	idx := gobble.Group{
-		{Name: "amb", Spec: gobble.PathSpec{Dir: gobble.Dir("in"), Name: "ref", Ext: ".amb"}},
-		{Name: "ann", Spec: gobble.PathSpec{Dir: gobble.Dir("in"), Name: "ref", Ext: ".ann"}},
+		{Name: "amb", Spec: gobble.PathSpec{Dir: gobble.Dir("in"), Base: "ref", Ext: ".amb"}},
+		{Name: "ann", Spec: gobble.PathSpec{Dir: gobble.Dir("in"), Base: "ref", Ext: ".ann"}},
 	}
 	p := Standalone("wrap-group", []Input{{Name: "idx", Group: idx}}, func(parent Parent, hs []gobble.Handle) {
 		if len(hs) != 1 || hs[0].IsZero() || hs[0].Name() != "idx" {
@@ -118,7 +118,7 @@ func TestStandaloneGroup(t *testing.T) {
 				From:  hs[0],
 				Group: gobble.Group{{Name: "amb"}, {Name: "ann"}},
 			}},
-			Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "ok", Ext: ".txt"}}},
+			Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "ok", Ext: ".txt"}}},
 		})
 	})
 	if _, err := gobble.Compose(p); err != nil {

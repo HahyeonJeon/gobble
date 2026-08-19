@@ -14,7 +14,7 @@ const (
 	viewErrors    = "errors"
 	viewLogs      = "logs"
 	viewTiming    = "timing"
-	viewDAG       = "DAG"
+	viewDAG       = "dag"
 	viewLineage   = "lineage"
 	viewRemaining = "remaining"
 	viewReuse     = "reuse"
@@ -64,21 +64,21 @@ func Inspect(workspace, view, instance string) ([]byte, []Defect) {
 	case viewRun:
 		return marshalInspect(inspectRunView(run))
 	case viewInstances:
-		return marshalJSONL(inspectInstanceRecords(selected, doc))
+		return marshalJSONL(inspectInstanceRecords(selected, doc, run.SchemaVersion))
 	case viewErrors:
-		return marshalInspect(inspectErrorsView(selected))
+		return marshalInspect(inspectErrorsView(selected, run.SchemaVersion))
 	case viewLogs:
-		return marshalInspect(inspectLogsView(workspace, selected))
+		return marshalInspect(inspectLogsView(workspace, selected, run.SchemaVersion))
 	case viewTiming:
 		return marshalInspect(inspectTimingView(run, selected))
 	case viewDAG:
-		return marshalInspect(inspectDAGView(plan, hasPlan))
+		return marshalInspect(inspectDAGView(plan, hasPlan, run.SchemaVersion))
 	case viewLineage:
-		return marshalInspect(inspectLineageView(latest, instance))
+		return marshalInspect(inspectLineageView(latest, instance, run.SchemaVersion))
 	case viewRemaining:
-		return marshalJSONL(inspectRemainingRecords(workspace, doc, latest, instance))
+		return marshalJSONL(inspectRemainingRecords(workspace, doc, latest, instance, run.SchemaVersion))
 	case viewReuse:
-		return marshalJSONL(inspectReuseRecords(selected))
+		return marshalJSONL(inspectReuseRecords(selected, run.SchemaVersion))
 	default:
 		return nil, []Defect{{
 			Code:    DefectNotFound,
@@ -246,45 +246,47 @@ func ownerLooksLive(run jsonRun) bool {
 }
 
 type inspectInstanceDoc struct {
-	Identity   string            `json:"identity"`
-	Status     string            `json:"status"`
-	Executor   string            `json:"executor"`
-	Image      string            `json:"image"`
-	Command    []string          `json:"command"`
-	Script     string            `json:"script,omitempty"`
-	Params     []jsonParam       `json:"params"`
-	Env        map[string]string `json:"env,omitempty"`
-	Resources  jsonResources     `json:"resources"`
-	Instance   string            `json:"instance"`
-	ShardIndex int               `json:"shard_index"`
-	ShardCount int               `json:"shard_count"`
-	Attempt    int               `json:"attempt"`
-	Stdout     string            `json:"stdout,omitempty"`
-	Stderr     string            `json:"stderr,omitempty"`
-	Decision   string            `json:"decision,omitempty"`
-	Reason     string            `json:"reuse_reason,omitempty"`
+	SchemaVersion int               `json:"schema_version"`
+	Identity      string            `json:"identity"`
+	Status        string            `json:"status"`
+	Executor      string            `json:"executor"`
+	Image         string            `json:"image"`
+	Command       []string          `json:"command"`
+	Script        string            `json:"script,omitempty"`
+	Params        []jsonParam       `json:"params"`
+	Env           map[string]string `json:"env,omitempty"`
+	Resources     jsonResources     `json:"resources"`
+	Instance      string            `json:"instance"`
+	ShardIndex    int               `json:"shard_index"`
+	ShardCount    int               `json:"shard_count"`
+	Attempt       int               `json:"attempt"`
+	Stdout        string            `json:"stdout,omitempty"`
+	Stderr        string            `json:"stderr,omitempty"`
+	Decision      string            `json:"decision,omitempty"`
+	Reason        string            `json:"reuse_reason,omitempty"`
 }
 
-func inspectInstanceRecords(tasks []jsonTaskState, doc Document) []inspectInstanceDoc {
+func inspectInstanceRecords(tasks []jsonTaskState, doc Document, schema int) []inspectInstanceDoc {
 	out := make([]inspectInstanceDoc, 0, len(tasks))
 	for _, st := range tasks {
 		applyTaskStateDefaults(&st)
 		rec := inspectInstanceDoc{
-			Identity:   reservedIdentity(taskPlanFromState(st)),
-			Status:     st.Status,
-			Executor:   st.Executor,
-			Image:      st.Image,
-			Command:    jsonStrings(st.Command),
-			Params:     st.Params,
-			Resources:  st.Resources,
-			Instance:   st.Instance,
-			ShardIndex: st.ShardIndex,
-			ShardCount: st.ShardCount,
-			Attempt:    st.Attempt,
-			Stdout:     st.Stdout,
-			Stderr:     st.Stderr,
-			Decision:   st.Decision,
-			Reason:     reuseReasonOf(st),
+			SchemaVersion: schema,
+			Identity:      reservedIdentity(taskPlanFromState(st)),
+			Status:        st.Status,
+			Executor:      st.Executor,
+			Image:         st.Image,
+			Command:       jsonStrings(st.Command),
+			Params:        st.Params,
+			Resources:     st.Resources,
+			Instance:      st.Instance,
+			ShardIndex:    st.ShardIndex,
+			ShardCount:    st.ShardCount,
+			Attempt:       st.Attempt,
+			Stdout:        st.Stdout,
+			Stderr:        st.Stderr,
+			Decision:      st.Decision,
+			Reason:        reuseReasonOf(st),
 		}
 		if t, ok := planTaskByID(doc, st.ID); ok {
 			rec.Script = t.Script
@@ -312,7 +314,8 @@ func reuseReasonOf(st jsonTaskState) string {
 }
 
 type inspectErrorsDoc struct {
-	Errors []inspectError `json:"errors"`
+	SchemaVersion int            `json:"schema_version"`
+	Errors        []inspectError `json:"errors"`
 }
 
 type inspectError struct {
@@ -322,8 +325,8 @@ type inspectError struct {
 	Message  string `json:"message"`
 }
 
-func inspectErrorsView(tasks []jsonTaskState) inspectErrorsDoc {
-	out := inspectErrorsDoc{Errors: []inspectError{}}
+func inspectErrorsView(tasks []jsonTaskState, schema int) inspectErrorsDoc {
+	out := inspectErrorsDoc{SchemaVersion: schema, Errors: []inspectError{}}
 	for _, st := range tasks {
 		if st.Status == StatusSucceeded {
 			continue
@@ -349,7 +352,8 @@ func inspectErrorsView(tasks []jsonTaskState) inspectErrorsDoc {
 }
 
 type inspectLogsDoc struct {
-	Logs []inspectLog `json:"logs"`
+	SchemaVersion int          `json:"schema_version"`
+	Logs          []inspectLog `json:"logs"`
 }
 
 type inspectLog struct {
@@ -362,8 +366,8 @@ type inspectLog struct {
 	StderrTail string `json:"stderr_tail,omitempty"`
 }
 
-func inspectLogsView(workspace string, tasks []jsonTaskState) inspectLogsDoc {
-	out := inspectLogsDoc{Logs: []inspectLog{}}
+func inspectLogsView(workspace string, tasks []jsonTaskState, schema int) inspectLogsDoc {
+	out := inspectLogsDoc{SchemaVersion: schema, Logs: []inspectLog{}}
 	for _, st := range tasks {
 		rec := inspectLog{
 			Identity: reservedIdentity(taskPlanFromState(st)),
@@ -419,9 +423,10 @@ func readTail(path string, limit int64) string {
 }
 
 type inspectTimingDoc struct {
-	Started   string          `json:"started"`
-	Ended     string          `json:"ended,omitempty"`
-	Instances []inspectTiming `json:"instances"`
+	SchemaVersion int             `json:"schema_version"`
+	Started       string          `json:"started"`
+	Ended         string          `json:"ended,omitempty"`
+	Instances     []inspectTiming `json:"instances"`
 }
 
 type inspectTiming struct {
@@ -432,9 +437,10 @@ type inspectTiming struct {
 
 func inspectTimingView(run jsonRun, tasks []jsonTaskState) inspectTimingDoc {
 	out := inspectTimingDoc{
-		Started:   run.Started,
-		Ended:     run.Ended,
-		Instances: []inspectTiming{},
+		SchemaVersion: run.SchemaVersion,
+		Started:       run.Started,
+		Ended:         run.Ended,
+		Instances:     []inspectTiming{},
 	}
 	for _, st := range tasks {
 		out.Instances = append(out.Instances, inspectTiming{
@@ -446,25 +452,33 @@ func inspectTimingView(run jsonRun, tasks []jsonTaskState) inspectTimingDoc {
 	return out
 }
 
-func inspectDAGView(plan jsonPlan, hasPlan bool) jsonDAG {
-	if !hasPlan {
-		return jsonDAG{Nodes: []string{}, Edges: []jsonEdge{}}
+type inspectDAGDoc struct {
+	SchemaVersion int        `json:"schema_version"`
+	Nodes         []string   `json:"nodes"`
+	Edges         []jsonEdge `json:"edges"`
+}
+
+func inspectDAGView(plan jsonPlan, hasPlan bool, schema int) inspectDAGDoc {
+	dag := jsonDAG{Nodes: []string{}, Edges: []jsonEdge{}}
+	if hasPlan {
+		dag = plan.DAG
+		if dag.Nodes == nil {
+			dag.Nodes = []string{}
+		}
+		if dag.Edges == nil {
+			dag.Edges = []jsonEdge{}
+		}
 	}
-	if plan.DAG.Nodes == nil {
-		plan.DAG.Nodes = []string{}
-	}
-	if plan.DAG.Edges == nil {
-		plan.DAG.Edges = []jsonEdge{}
-	}
-	return plan.DAG
+	return inspectDAGDoc{SchemaVersion: schema, Nodes: dag.Nodes, Edges: dag.Edges}
 }
 
 type inspectLineageDoc struct {
-	Lineage []jsonLineage `json:"lineage"`
+	SchemaVersion int           `json:"schema_version"`
+	Lineage       []jsonLineage `json:"lineage"`
 }
 
-func inspectLineageView(tasks []jsonTaskState, instance string) inspectLineageDoc {
-	out := inspectLineageDoc{Lineage: []jsonLineage{}}
+func inspectLineageView(tasks []jsonTaskState, instance string, schema int) inspectLineageDoc {
+	out := inspectLineageDoc{SchemaVersion: schema, Lineage: []jsonLineage{}}
 	for _, st := range tasks {
 		ident := reservedIdentity(taskPlanFromState(st))
 		for _, lin := range st.Lineage {
@@ -478,15 +492,16 @@ func inspectLineageView(tasks []jsonTaskState, instance string) inspectLineageDo
 }
 
 type inspectRemainingDoc struct {
-	Identity  string   `json:"identity"`
-	Remaining bool     `json:"remaining"`
-	Affected  bool     `json:"affected"`
-	Status    string   `json:"status"`
-	Reason    string   `json:"reason,omitempty"`
-	Differing []string `json:"differing,omitempty"`
+	SchemaVersion int      `json:"schema_version"`
+	Identity      string   `json:"identity"`
+	Remaining     bool     `json:"remaining"`
+	Affected      bool     `json:"affected"`
+	Status        string   `json:"status"`
+	Reason        string   `json:"reason,omitempty"`
+	Differing     []string `json:"differing,omitempty"`
 }
 
-func inspectRemainingRecords(workspace string, doc Document, latest []jsonTaskState, instance string) []inspectRemainingDoc {
+func inspectRemainingRecords(workspace string, doc Document, latest []jsonTaskState, instance string, schema int) []inspectRemainingDoc {
 	class := classifyRemaining(workspace, doc, latest)
 	out := make([]inspectRemainingDoc, 0)
 	for _, st := range latest {
@@ -498,10 +513,11 @@ func inspectRemainingRecords(workspace string, doc Document, latest []jsonTaskSt
 			continue
 		}
 		rec := inspectRemainingDoc{
-			Identity:  ident,
-			Remaining: class.Remaining[ident],
-			Affected:  class.Affected[ident],
-			Status:    st.Status,
+			SchemaVersion: schema,
+			Identity:      ident,
+			Remaining:     class.Remaining[ident],
+			Affected:      class.Affected[ident],
+			Status:        st.Status,
 		}
 		if dec, ok := class.Decision[ident]; ok {
 			rec.Reason = dec.Reason
@@ -513,23 +529,25 @@ func inspectRemainingRecords(workspace string, doc Document, latest []jsonTaskSt
 }
 
 type inspectReuseDoc struct {
-	Identity  string   `json:"identity"`
-	Decision  string   `json:"decision"`
-	Reason    string   `json:"reason"`
-	Differing []string `json:"differing,omitempty"`
+	SchemaVersion int      `json:"schema_version"`
+	Identity      string   `json:"identity"`
+	Decision      string   `json:"decision"`
+	Reason        string   `json:"reason"`
+	Differing     []string `json:"differing,omitempty"`
 }
 
-func inspectReuseRecords(tasks []jsonTaskState) []inspectReuseDoc {
+func inspectReuseRecords(tasks []jsonTaskState, schema int) []inspectReuseDoc {
 	var out []inspectReuseDoc
 	for _, st := range tasks {
 		if st.Decision == "" {
 			continue
 		}
 		out = append(out, inspectReuseDoc{
-			Identity:  reservedIdentity(taskPlanFromState(st)),
-			Decision:  st.Decision,
-			Reason:    reuseReasonOf(st),
-			Differing: st.Differing,
+			SchemaVersion: schema,
+			Identity:      reservedIdentity(taskPlanFromState(st)),
+			Decision:      st.Decision,
+			Reason:        reuseReasonOf(st),
+			Differing:     st.Differing,
 		})
 	}
 	return out
@@ -610,12 +628,12 @@ func decodeMembers(in []jsonMember) []IOMember {
 
 func decodeSpec(s jsonSpec) Path {
 	return Path{
-		Dir:     s.Dir,
-		Lead:    s.Lead,
-		Name:    s.Name,
-		Steps:   s.Steps,
-		Ext:     s.Ext,
-		Literal: s.Literal,
+		Dir:      s.Dir,
+		Prefix:   s.Prefix,
+		Base:     s.Base,
+		Suffixes: s.Suffixes,
+		Ext:      s.Ext,
+		Literal:  s.Literal,
 	}
 }
 

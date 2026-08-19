@@ -61,7 +61,7 @@ func TestWGSOmitsRawAddTask(t *testing.T) {
 }
 
 func TestWGSAddsPinnedFAI(t *testing.T) {
-	if !pinnedWGSFAI().Equal(gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genome", Ext: ".fasta.fai"}) {
+	if !pinnedWGSFAI().Equal(gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genome", Ext: ".fasta.fai"}) {
 		t.Fatalf("pinnedWGSFAI() = %+v", pinnedWGSFAI())
 	}
 	assertCalls(t, "wgs.go", "AddInput")

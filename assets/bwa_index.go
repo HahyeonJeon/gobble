@@ -60,7 +60,7 @@ func addBWAIndex(parent Parent, fasta gobble.Handle, opts BWAIndexOptions) BWAIn
 func bwaIndexGroup(fasta gobble.PathSpec) gobble.Group {
 	g := make(gobble.Group, 0, len(bwaIndexMemberNames))
 	for _, name := range bwaIndexMemberNames {
-		g = append(g, gobble.Member{Name: name, Spec: fasta.Append("." + name)})
+		g = append(g, gobble.Member{Name: name, Spec: fasta.AppendExt("." + name)})
 	}
 	return g
 }

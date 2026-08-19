@@ -10,6 +10,27 @@ import (
 // Plan is the inspectable dry-run document for a valid graph.
 type Plan struct {
 	inner *engine.Plan
+	name  string
+	tasks []planTaskRead
+	edges []Edge
+}
+
+type planTaskRead struct {
+	id      string
+	inputs  []planBindRead
+	outputs []planBindRead
+}
+
+type planBindRead struct {
+	name    string
+	kind    string
+	path    string
+	members []planMemberRead
+}
+
+type planMemberRead struct {
+	name string
+	path string
 }
 
 // PlanOption configures [BuildPlan].
@@ -41,7 +62,7 @@ func BuildPlan(g *Graph, opts ...PlanOption) (*Plan, error) {
 	}
 	if g == nil {
 		return nil, &Error{Op: "plan", Defects: []Defect{{
-			Code:    DefectInvalidName,
+			Code:    DefectInvalidRequest,
 			Message: "nil graph",
 		}}}
 	}
@@ -57,6 +78,7 @@ func BuildPlan(g *Graph, opts ...PlanOption) (*Plan, error) {
 		return nil, pub
 	}
 	p := &Plan{inner: inner}
+	p.load(doc)
 	if cfg.w != nil {
 		if werr := p.WriteJSON(cfg.w); werr != nil {
 			return p, werr
@@ -81,6 +103,186 @@ func (p *Plan) MarshalJSON() ([]byte, error) {
 		return []byte("null"), nil
 	}
 	return p.inner.MarshalJSON()
+}
+
+// Pipeline returns the pipeline name recorded on the plan.
+func (p *Plan) Pipeline() string {
+	if p == nil {
+		return ""
+	}
+	return p.name
+}
+
+// TaskIDs returns task ids in plan order.
+func (p *Plan) TaskIDs() []string {
+	if p == nil {
+		return nil
+	}
+	out := make([]string, len(p.tasks))
+	for i, t := range p.tasks {
+		out[i] = t.id
+	}
+	return out
+}
+
+// Edges returns a copy of plan edges, including Wait paths.
+func (p *Plan) Edges() []Edge {
+	if p == nil {
+		return nil
+	}
+	out := make([]Edge, len(p.edges))
+	for i, e := range p.edges {
+		out[i] = Edge{
+			FromTask: e.FromTask,
+			FromPort: e.FromPort,
+			ToTask:   e.ToTask,
+			ToPort:   e.ToPort,
+			Wait:     copyStrings(e.Wait),
+		}
+	}
+	return out
+}
+
+// TaskInputNames returns input bind names for taskID.
+func (p *Plan) TaskInputNames(taskID string) []string {
+	t, ok := p.lookupTask(taskID)
+	if !ok {
+		return nil
+	}
+	return planBindNames(t.inputs)
+}
+
+// TaskOutputNames returns output bind names for taskID.
+func (p *Plan) TaskOutputNames(taskID string) []string {
+	t, ok := p.lookupTask(taskID)
+	if !ok {
+		return nil
+	}
+	return planBindNames(t.outputs)
+}
+
+// BindKind returns ArtifactFile, ArtifactGroup, or empty if the bind is
+// missing.
+func (p *Plan) BindKind(taskID, name string) string {
+	b, ok := p.lookupBind(taskID, name)
+	if !ok {
+		return ""
+	}
+	return b.kind
+}
+
+// BindPath returns the recorded file path for the named bind. Group
+// binds and missing binds return empty.
+func (p *Plan) BindPath(taskID, name string) string {
+	b, ok := p.lookupBind(taskID, name)
+	if !ok {
+		return ""
+	}
+	return b.path
+}
+
+// MemberNames returns Group member names for the named bind.
+func (p *Plan) MemberNames(taskID, bind string) []string {
+	b, ok := p.lookupBind(taskID, bind)
+	if !ok {
+		return nil
+	}
+	out := make([]string, len(b.members))
+	for i, m := range b.members {
+		out[i] = m.name
+	}
+	return out
+}
+
+// MemberPath returns the recorded path for one Group member.
+func (p *Plan) MemberPath(taskID, bind, member string) string {
+	b, ok := p.lookupBind(taskID, bind)
+	if !ok {
+		return ""
+	}
+	for _, m := range b.members {
+		if m.name == member {
+			return m.path
+		}
+	}
+	return ""
+}
+
+func (p *Plan) load(doc engine.Document) {
+	p.name = doc.Name
+	p.tasks = make([]planTaskRead, 0, len(doc.Tasks))
+	for _, t := range doc.Tasks {
+		p.tasks = append(p.tasks, planTaskRead{
+			id:      t.ID,
+			inputs:  planBindsFromIO(t.Inputs),
+			outputs: planBindsFromIO(t.Outputs),
+		})
+	}
+	p.edges = make([]Edge, 0, len(doc.Edges))
+	for _, e := range doc.Edges {
+		p.edges = append(p.edges, Edge{
+			FromTask: e.FromTask,
+			FromPort: e.FromPort,
+			ToTask:   e.ToTask,
+			ToPort:   e.ToPort,
+			Wait:     copyStrings(e.Wait),
+		})
+	}
+}
+
+func planBindsFromIO(in []engine.IO) []planBindRead {
+	out := make([]planBindRead, 0, len(in))
+	for _, b := range in {
+		rec := planBindRead{name: b.Name, path: b.Path, kind: ArtifactFile}
+		if b.Members != nil {
+			rec.kind = ArtifactGroup
+			rec.path = ""
+			rec.members = make([]planMemberRead, 0, len(b.Members))
+			for _, m := range b.Members {
+				rec.members = append(rec.members, planMemberRead{name: m.Name, path: m.Path})
+			}
+		}
+		out = append(out, rec)
+	}
+	return out
+}
+
+func (p *Plan) lookupTask(taskID string) (planTaskRead, bool) {
+	if p == nil {
+		return planTaskRead{}, false
+	}
+	for _, t := range p.tasks {
+		if t.id == taskID {
+			return t, true
+		}
+	}
+	return planTaskRead{}, false
+}
+
+func (p *Plan) lookupBind(taskID, name string) (planBindRead, bool) {
+	t, ok := p.lookupTask(taskID)
+	if !ok {
+		return planBindRead{}, false
+	}
+	for _, b := range t.inputs {
+		if b.name == name {
+			return b, true
+		}
+	}
+	for _, b := range t.outputs {
+		if b.name == name {
+			return b, true
+		}
+	}
+	return planBindRead{}, false
+}
+
+func planBindNames(binds []planBindRead) []string {
+	out := make([]string, len(binds))
+	for i, b := range binds {
+		out[i] = b.name
+	}
+	return out
 }
 
 func planDocument(g *Graph) (engine.Document, error) {

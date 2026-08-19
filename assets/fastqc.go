@@ -50,8 +50,8 @@ func addFastQC(parent Parent, reads gobble.Handle, opts FastQCOptions) FastQCPor
 		outDir = gobble.Dir("work/fastqc")
 	}
 	stem := fastqcStem(reads.Spec())
-	htmlSpec := gobble.PathSpec{Dir: outDir, Name: stem, Ext: ".html"}
-	zipSpec := gobble.PathSpec{Dir: outDir, Name: stem, Ext: ".zip"}
+	htmlSpec := gobble.PathSpec{Dir: outDir, Base: stem, Ext: ".html"}
+	zipSpec := gobble.PathSpec{Dir: outDir, Base: stem, Ext: ".zip"}
 
 	cmd := []string{"fastqc", "--outdir", outDir.String(), "--noextract"}
 	if n := threadCount(opts.Resources.CPU); n > 0 {
@@ -79,7 +79,7 @@ func addFastQC(parent Parent, reads gobble.Handle, opts FastQCOptions) FastQCPor
 // input basename.
 func fastqcStem(spec gobble.PathSpec) string {
 	path := mustCommandPath(spec)
-	base := spec.Name
+	base := spec.Base
 	if i := strings.LastIndex(path, "/"); i >= 0 {
 		base = path[i+1:]
 	} else if path != "" {

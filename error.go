@@ -16,10 +16,16 @@ const (
 	// DefectMissingCommand means a task has an empty command.
 	DefectMissingCommand DefectCode = "missing-command"
 	// DefectInvalidName means a name is empty, duplicate, or illegally
-	// spelled, a required value is nil, a CPU request is negative or not
-	// finite, a request exceeds known host capacity, or a plan could not
-	// be encoded. Message distinguishes those cases.
+	// spelled.
 	DefectInvalidName DefectCode = "invalid-name"
+	// DefectInvalidValue means a value is not usable: non-finite or
+	// negative CPU, Command and Script both set, Spec and Group both
+	// set, empty Group, empty env key, host-capacity overflow, or a
+	// similar rejected request value.
+	DefectInvalidValue DefectCode = "invalid-value"
+	// DefectInvalidRequest means a required pipeline or graph argument
+	// is nil.
+	DefectInvalidRequest DefectCode = "invalid-request"
 	// DefectInvalidPath means a PathSpec cannot be rendered or used.
 	DefectInvalidPath DefectCode = "invalid-path"
 	// DefectConflict means two binds render to the same path.

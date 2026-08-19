@@ -28,14 +28,14 @@ func TestComposeWorkflowCase(t *testing.T) {
 
 func TestComposeHandles(t *testing.T) {
 	p := gobble.NewPipeline("handles")
-	in := p.AddInput("reads", gobble.PathSpec{Name: "sample", Ext: ".fastq.gz"})
+	in := p.AddInput("reads", gobble.PathSpec{Base: "sample", Ext: ".fastq.gz"})
 	if in.IsZero() {
 		t.Fatalf("case handles: AddInput().IsZero() got true, want false")
 	}
 	if in.Name() != "reads" {
 		t.Fatalf("case handles: AddInput().Name() got %q, want %q", in.Name(), "reads")
 	}
-	if !in.Spec().Equal(gobble.PathSpec{Name: "sample", Ext: ".fastq.gz"}) {
+	if !in.Spec().Equal(gobble.PathSpec{Base: "sample", Ext: ".fastq.gz"}) {
 		t.Fatalf("case handles: AddInput().Spec() got %+v, want Name=sample Ext=.fastq.gz", in.Spec())
 	}
 
@@ -43,7 +43,7 @@ func TestComposeHandles(t *testing.T) {
 		Name:    "copy",
 		Command: []string{"cp"},
 		Inputs:  []gobble.Bind{{Name: "src", From: in}},
-		Outputs: []gobble.Bind{{Name: "dst", Spec: gobble.PathSpec{Name: "out", Ext: ".txt"}}},
+		Outputs: []gobble.Bind{{Name: "dst", Spec: gobble.PathSpec{Base: "out", Ext: ".txt"}}},
 	})
 	out := task.Out("dst")
 	inPort := task.In("src")
@@ -300,14 +300,14 @@ func TestComposeRejectDeclarations(t *testing.T) {
 		{
 			name:    "group and spec both set",
 			pipe:    groupAndSpecPipeline(),
-			code:    gobble.DefectInvalidName,
+			code:    gobble.DefectInvalidValue,
 			unit:    "index.idx",
 			message: "group and spec both set",
 		},
 		{
 			name:    "empty group",
 			pipe:    emptyGroupPipeline(),
-			code:    gobble.DefectInvalidName,
+			code:    gobble.DefectInvalidValue,
 			unit:    "index.idx",
 			message: "empty group",
 		},
@@ -358,35 +358,35 @@ func TestComposeRejectDeclarations(t *testing.T) {
 		{
 			name:    "empty input group",
 			pipe:    emptyInputGroupPipeline(),
-			code:    gobble.DefectInvalidName,
+			code:    gobble.DefectInvalidValue,
 			unit:    "idx",
 			message: "empty group",
 		},
 		{
 			name:    "command and script both set",
 			pipe:    commandAndScriptPipeline(),
-			code:    gobble.DefectInvalidName,
+			code:    gobble.DefectInvalidValue,
 			unit:    "copy",
 			message: "command and script both set",
 		},
 		{
 			name:    "empty env key",
 			pipe:    emptyEnvKeyPipeline(),
-			code:    gobble.DefectInvalidName,
+			code:    gobble.DefectInvalidValue,
 			unit:    "copy",
 			message: "empty env key",
 		},
 		{
 			name:    "empty env value",
 			pipe:    emptyEnvValuePipeline(),
-			code:    gobble.DefectInvalidName,
+			code:    gobble.DefectInvalidValue,
 			unit:    "copy",
 			message: "empty env value",
 		},
 		{
 			name:    "env key contains =",
 			pipe:    envKeyEqualsPipeline(),
-			code:    gobble.DefectInvalidName,
+			code:    gobble.DefectInvalidValue,
 			unit:    "copy",
 			message: "env key contains =",
 		},
@@ -428,7 +428,7 @@ func TestComposeRejectDeclarations(t *testing.T) {
 func TestComposeGroupFromPipelineInput(t *testing.T) {
 	p := gobble.NewPipeline("group-from-in")
 	in := p.AddInputGroup("idx", gobble.Group{
-		{Name: "amb", Spec: gobble.PathSpec{Name: "ref", Ext: ".amb"}},
+		{Name: "amb", Spec: gobble.PathSpec{Base: "ref", Ext: ".amb"}},
 	})
 	if in.IsZero() {
 		t.Fatalf("case group from pipeline input: AddInputGroup().IsZero() got true, want false")
@@ -680,22 +680,22 @@ func TestComposePipelineBranchMerge(t *testing.T) {
 	p := gobble.NewPipeline("root-branch")
 	align := p.Branch("align")
 	qc := p.Branch("qc")
-	join := p.Merge("join", align, qc)
+	join := p.Merge("join")
 	src := align.AddTask(gobble.TaskSpec{
 		Name:    "bwa",
 		Command: []string{"bwa"},
-		Outputs: []gobble.Bind{{Name: "bam", Spec: gobble.PathSpec{Name: "aln", Ext: ".bam"}}},
+		Outputs: []gobble.Bind{{Name: "bam", Spec: gobble.PathSpec{Base: "aln", Ext: ".bam"}}},
 	})
 	qc.AddTask(gobble.TaskSpec{
 		Name:    "fastqc",
 		Command: []string{"fastqc"},
-		Outputs: []gobble.Bind{{Name: "html", Spec: gobble.PathSpec{Name: "qc", Ext: ".html"}}},
+		Outputs: []gobble.Bind{{Name: "html", Spec: gobble.PathSpec{Base: "qc", Ext: ".html"}}},
 	})
 	join.AddTask(gobble.TaskSpec{
 		Name:    "report",
 		Command: []string{"report"},
 		Inputs:  []gobble.Bind{{Name: "bam", From: src.Out("bam")}},
-		Outputs: []gobble.Bind{{Name: "summary", Spec: gobble.PathSpec{Name: "report", Ext: ".json"}}},
+		Outputs: []gobble.Bind{{Name: "summary", Spec: gobble.PathSpec{Base: "report", Ext: ".json"}}},
 	})
 	g, err := gobble.Compose(p)
 	if err != nil {
@@ -742,7 +742,7 @@ func TestComposeDeriveReplaceExt(t *testing.T) {
 	align := p.AddTask(gobble.TaskSpec{
 		Name:    "align",
 		Command: []string{"bwa"},
-		Outputs: []gobble.Bind{{Name: "bam", Spec: gobble.PathSpec{Name: "aln", Ext: ".bam"}}},
+		Outputs: []gobble.Bind{{Name: "bam", Spec: gobble.PathSpec{Base: "aln", Ext: ".bam"}}},
 	})
 	p.AddTask(gobble.TaskSpec{
 		Name:    "index",
@@ -769,7 +769,7 @@ func TestComposeDirOnlyRestage(t *testing.T) {
 		Command: []string{"bwa"},
 		Outputs: []gobble.Bind{{
 			Name: "bam",
-			Spec: gobble.PathSpec{Dir: gobble.Dir("work/align"), Name: "sample", Steps: []string{"sorted"}, Ext: ".bam"},
+			Spec: gobble.PathSpec{Dir: gobble.Dir("work/align"), Base: "sample", Suffixes: []string{"sorted"}, Ext: ".bam"},
 		}},
 	})
 	p.AddTask(gobble.TaskSpec{
@@ -796,7 +796,7 @@ func TestComposeStepsOnlyRestage(t *testing.T) {
 		Command: []string{"bwa"},
 		Outputs: []gobble.Bind{{
 			Name: "bam",
-			Spec: gobble.PathSpec{Dir: gobble.Dir("work"), Name: "sample", Steps: []string{"sorted"}, Ext: ".bam"},
+			Spec: gobble.PathSpec{Dir: gobble.Dir("work"), Base: "sample", Suffixes: []string{"sorted"}, Ext: ".bam"},
 		}},
 	})
 	p.AddTask(gobble.TaskSpec{
@@ -806,7 +806,7 @@ func TestComposeStepsOnlyRestage(t *testing.T) {
 		Outputs: []gobble.Bind{{
 			Name: "out",
 			From: src.Out("bam"),
-			Spec: gobble.PathSpec{Steps: []string{"markdup"}},
+			Spec: gobble.PathSpec{Suffixes: []string{"markdup"}},
 		}},
 	})
 	raw := mustBuildPlanJSON(t, p)
@@ -850,18 +850,18 @@ func TestComposeBranchAddModule(t *testing.T) {
 
 func TestComposeFromInPort(t *testing.T) {
 	p := gobble.NewPipeline("from-in")
-	in := p.AddInput("reads", gobble.PathSpec{Name: "sample", Ext: ".fq"})
+	in := p.AddInput("reads", gobble.PathSpec{Base: "sample", Ext: ".fq"})
 	prep := p.AddTask(gobble.TaskSpec{
 		Name:    "prep",
 		Command: []string{"prep"},
 		Inputs:  []gobble.Bind{{Name: "src", From: in}},
-		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Name: "prep", Ext: ".fq"}}},
+		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Base: "prep", Ext: ".fq"}}},
 	})
 	p.AddTask(gobble.TaskSpec{
 		Name:    "copy",
 		Command: []string{"cp"},
 		Inputs:  []gobble.Bind{{Name: "in", From: prep.In("src")}},
-		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Name: "copy", Ext: ".fq"}}},
+		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Base: "copy", Ext: ".fq"}}},
 	})
 	raw := mustBuildPlanJSON(t, p)
 	got := planInputPath(t, raw, "copy", "in")
@@ -875,10 +875,10 @@ func TestHandleSpecIsAuthored(t *testing.T) {
 	src := p.AddTask(gobble.TaskSpec{
 		Name:    "align",
 		Command: []string{"bwa"},
-		Outputs: []gobble.Bind{{Name: "bam", Spec: gobble.PathSpec{Name: "aln", Ext: ".bam"}}},
+		Outputs: []gobble.Bind{{Name: "bam", Spec: gobble.PathSpec{Base: "aln", Ext: ".bam"}}},
 	})
 	h := src.Out("bam")
-	if !h.Spec().Equal(gobble.PathSpec{Name: "aln", Ext: ".bam"}) {
+	if !h.Spec().Equal(gobble.PathSpec{Base: "aln", Ext: ".bam"}) {
 		t.Fatalf("case authored-spec: Out.Spec() got %+v, want Name=aln Ext=.bam", h.Spec())
 	}
 	p.AddTask(gobble.TaskSpec{
@@ -892,7 +892,7 @@ func TestHandleSpecIsAuthored(t *testing.T) {
 	if got != "aln.bam.bai" {
 		t.Fatalf("case authored-spec: index.bai path got %q, want %q", got, "aln.bam.bai")
 	}
-	if !h.Spec().Equal(gobble.PathSpec{Name: "aln", Ext: ".bam"}) {
+	if !h.Spec().Equal(gobble.PathSpec{Base: "aln", Ext: ".bam"}) {
 		t.Fatalf("case authored-spec: Out.Spec() after plan got %+v, want authored Name=aln Ext=.bam", h.Spec())
 	}
 }
@@ -902,7 +902,7 @@ func ExampleCompose() {
 	src := p.AddTask(gobble.TaskSpec{
 		Name:    "align",
 		Command: []string{"bwa"},
-		Outputs: []gobble.Bind{{Name: "bam", Spec: gobble.PathSpec{Name: "sample", Ext: ".bam"}}},
+		Outputs: []gobble.Bind{{Name: "bam", Spec: gobble.PathSpec{Base: "sample", Ext: ".bam"}}},
 	})
 	p.AddTask(gobble.TaskSpec{
 		Name:    "index",
@@ -927,16 +927,16 @@ func ExampleCompose() {
 func workflowCasePipeline() *gobble.Pipeline {
 	p := gobble.NewPipeline("workflow-case")
 	readsR1 := p.AddInput("reads_r1", gobble.PathSpec{
-		Dir:  gobble.Dir("in"),
-		Lead: "sample_S1_L001_R1_",
-		Name: "001",
-		Ext:  ".fastq.gz",
+		Dir:    gobble.Dir("in"),
+		Prefix: "sample_S1_L001_R1_",
+		Base:   "001",
+		Ext:    ".fastq.gz",
 	})
 	readsR2 := p.AddInput("reads_r2", gobble.PathSpec{
-		Dir:  gobble.Dir("in"),
-		Lead: "sample_S1_L001_R2_",
-		Name: "001",
-		Ext:  ".fastq.gz",
+		Dir:    gobble.Dir("in"),
+		Prefix: "sample_S1_L001_R2_",
+		Base:   "001",
+		Ext:    ".fastq.gz",
 	})
 
 	prep := p.AddModule("prep")
@@ -945,13 +945,13 @@ func workflowCasePipeline() *gobble.Pipeline {
 	call := p.AddModule("call")
 	align := call.Branch("align")
 	qc := call.Branch("qc")
-	join := call.Merge("join", align, qc)
+	join := call.Merge("join")
 
 	bam := gobble.PathSpec{
-		Dir:   gobble.Dir("work/align"),
-		Name:  "sample",
-		Steps: []string{"sorted"},
-		Ext:   ".bam",
+		Dir:      gobble.Dir("work/align"),
+		Base:     "sample",
+		Suffixes: []string{"sorted"},
+		Ext:      ".bam",
 	}
 	bwa := align.AddTask(gobble.TaskSpec{
 		Name:    "bwa",
@@ -963,7 +963,7 @@ func workflowCasePipeline() *gobble.Pipeline {
 		},
 		Outputs: []gobble.Bind{
 			{Name: "bam", Spec: bam},
-			{Name: "bai", Spec: bam.Append(".bai")},
+			{Name: "bai", Spec: bam.AppendExt(".bai")},
 		},
 	})
 
@@ -989,7 +989,7 @@ func workflowCasePipeline() *gobble.Pipeline {
 			{Name: "html", From: fastqc.Out("html")},
 		},
 		Outputs: []gobble.Bind{
-			{Name: "summary", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "report", Ext: ".json"}},
+			{Name: "summary", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "report", Ext: ".json"}},
 		},
 	})
 	return p
@@ -1008,21 +1008,21 @@ func addFastp(prep *gobble.Module, r1, r2 gobble.Handle) *gobble.Task {
 			{
 				Name: "clean_r1",
 				Spec: gobble.PathSpec{
-					Dir:   gobble.Dir("work/prep"),
-					Lead:  "sample_S1_L001_R1_",
-					Name:  "001",
-					Steps: []string{"clean"},
-					Ext:   ".fastq.gz",
+					Dir:      gobble.Dir("work/prep"),
+					Prefix:   "sample_S1_L001_R1_",
+					Base:     "001",
+					Suffixes: []string{"clean"},
+					Ext:      ".fastq.gz",
 				},
 			},
 			{
 				Name: "clean_r2",
 				Spec: gobble.PathSpec{
-					Dir:   gobble.Dir("work/prep"),
-					Lead:  "sample_S1_L001_R2_",
-					Name:  "001",
-					Steps: []string{"clean"},
-					Ext:   ".fastq.gz",
+					Dir:      gobble.Dir("work/prep"),
+					Prefix:   "sample_S1_L001_R2_",
+					Base:     "001",
+					Suffixes: []string{"clean"},
+					Ext:      ".fastq.gz",
 				},
 			},
 		},
@@ -1036,7 +1036,7 @@ func oneTask(name string, spec gobble.TaskSpec) *gobble.Pipeline {
 }
 
 func fileOut(name string) gobble.Bind {
-	return gobble.Bind{Name: name, Spec: gobble.PathSpec{Name: "out", Ext: ".txt"}}
+	return gobble.Bind{Name: name, Spec: gobble.PathSpec{Base: "out", Ext: ".txt"}}
 }
 
 func cyclePipeline() *gobble.Pipeline {
@@ -1054,7 +1054,7 @@ func cyclePipeline() *gobble.Pipeline {
 
 func missingInputPipeline() *gobble.Pipeline {
 	p := gobble.NewPipeline("missing-input")
-	p.AddInput("reads", gobble.PathSpec{Name: "sample", Ext: ".fastq.gz"})
+	p.AddInput("reads", gobble.PathSpec{Base: "sample", Ext: ".fastq.gz"})
 	p.AddTask(gobble.TaskSpec{
 		Name:    "copy",
 		Command: []string{"cp"},
@@ -1066,7 +1066,7 @@ func missingInputPipeline() *gobble.Pipeline {
 
 func missingInRequestPipeline() *gobble.Pipeline {
 	p := gobble.NewPipeline("missing-in")
-	in := p.AddInput("reads", gobble.PathSpec{Name: "sample", Ext: ".fastq.gz"})
+	in := p.AddInput("reads", gobble.PathSpec{Base: "sample", Ext: ".fastq.gz"})
 	t := p.AddTask(gobble.TaskSpec{
 		Name:    "copy",
 		Command: []string{"cp"},
@@ -1079,7 +1079,7 @@ func missingInRequestPipeline() *gobble.Pipeline {
 
 func missingOutputPipeline() *gobble.Pipeline {
 	p := gobble.NewPipeline("missing-output")
-	in := p.AddInput("reads", gobble.PathSpec{Name: "sample", Ext: ".fastq.gz"})
+	in := p.AddInput("reads", gobble.PathSpec{Base: "sample", Ext: ".fastq.gz"})
 	p.AddTask(gobble.TaskSpec{
 		Name:    "copy",
 		Command: []string{"cp"},
@@ -1090,7 +1090,7 @@ func missingOutputPipeline() *gobble.Pipeline {
 
 func missingOutRequestPipeline() *gobble.Pipeline {
 	p := gobble.NewPipeline("missing-out")
-	in := p.AddInput("reads", gobble.PathSpec{Name: "sample", Ext: ".fastq.gz"})
+	in := p.AddInput("reads", gobble.PathSpec{Base: "sample", Ext: ".fastq.gz"})
 	t := p.AddTask(gobble.TaskSpec{
 		Name:    "copy",
 		Command: []string{"cp"},
@@ -1150,7 +1150,7 @@ func invalidPathSlashPipeline() *gobble.Pipeline {
 	return oneTask("slash", gobble.TaskSpec{
 		Name:    "copy",
 		Command: []string{"cp"},
-		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Name: "a/b", Ext: ".txt"}}},
+		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Base: "a/b", Ext: ".txt"}}},
 	})
 }
 
@@ -1166,7 +1166,7 @@ func invalidPathEscapePipeline() *gobble.Pipeline {
 	return oneTask("escape", gobble.TaskSpec{
 		Name:    "copy",
 		Command: []string{"cp"},
-		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("../out"), Name: "x", Ext: ".txt"}}},
+		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("../out"), Base: "x", Ext: ".txt"}}},
 	})
 }
 
@@ -1174,7 +1174,7 @@ func invalidPathLiteralPipeline() *gobble.Pipeline {
 	return oneTask("literal", gobble.TaskSpec{
 		Name:    "copy",
 		Command: []string{"cp"},
-		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.Literal("aln.bam").AppendStep("sorted")}},
+		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.Literal("aln.bam").AppendSuffix("sorted")}},
 	})
 }
 
@@ -1183,13 +1183,13 @@ func foreignFromCollidingIDPipeline() *gobble.Pipeline {
 	ta := a.AddModule("prep").AddTask(gobble.TaskSpec{
 		Name:    "fastp",
 		Command: []string{"fastp"},
-		Outputs: []gobble.Bind{{Name: "clean", Spec: gobble.PathSpec{Name: "foreign", Ext: ".fq"}}},
+		Outputs: []gobble.Bind{{Name: "clean", Spec: gobble.PathSpec{Base: "foreign", Ext: ".fq"}}},
 	})
 	b := gobble.NewPipeline("run-b")
 	b.AddModule("prep").AddTask(gobble.TaskSpec{
 		Name:    "fastp",
 		Command: []string{"fastp"},
-		Outputs: []gobble.Bind{{Name: "clean", Spec: gobble.PathSpec{Name: "local", Ext: ".fq"}}},
+		Outputs: []gobble.Bind{{Name: "clean", Spec: gobble.PathSpec{Base: "local", Ext: ".fq"}}},
 	})
 	b.AddTask(gobble.TaskSpec{
 		Name:    "use",
@@ -1205,13 +1205,13 @@ func foreignOutputFromCollidingIDPipeline() *gobble.Pipeline {
 	ta := a.AddModule("prep").AddTask(gobble.TaskSpec{
 		Name:    "fastp",
 		Command: []string{"fastp"},
-		Outputs: []gobble.Bind{{Name: "clean", Spec: gobble.PathSpec{Name: "foreign", Ext: ".fq"}}},
+		Outputs: []gobble.Bind{{Name: "clean", Spec: gobble.PathSpec{Base: "foreign", Ext: ".fq"}}},
 	})
 	b := gobble.NewPipeline("run-b")
 	b.AddModule("prep").AddTask(gobble.TaskSpec{
 		Name:    "fastp",
 		Command: []string{"fastp"},
-		Outputs: []gobble.Bind{{Name: "clean", Spec: gobble.PathSpec{Name: "local", Ext: ".fq"}}},
+		Outputs: []gobble.Bind{{Name: "clean", Spec: gobble.PathSpec{Base: "local", Ext: ".fq"}}},
 	})
 	b.AddTask(gobble.TaskSpec{
 		Name:    "use",
@@ -1219,7 +1219,7 @@ func foreignOutputFromCollidingIDPipeline() *gobble.Pipeline {
 		Outputs: []gobble.Bind{{
 			Name: "out",
 			From: ta.Out("clean"),
-			Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "use", Ext: ".txt"},
+			Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "use", Ext: ".txt"},
 		}},
 	})
 	return b
@@ -1229,8 +1229,8 @@ func groupOut(name string) gobble.Bind {
 	return gobble.Bind{
 		Name: name,
 		Group: gobble.Group{
-			{Name: "amb", Spec: gobble.PathSpec{Name: "ref", Ext: ".amb"}},
-			{Name: "ann", Spec: gobble.PathSpec{Name: "ref", Ext: ".ann"}},
+			{Name: "amb", Spec: gobble.PathSpec{Base: "ref", Ext: ".amb"}},
+			{Name: "ann", Spec: gobble.PathSpec{Base: "ref", Ext: ".ann"}},
 		},
 	}
 }
@@ -1261,8 +1261,8 @@ func groupAndSpecPipeline() *gobble.Pipeline {
 		Command: []string{"bwa"},
 		Outputs: []gobble.Bind{{
 			Name:  "idx",
-			Spec:  gobble.PathSpec{Name: "ref", Ext: ".amb"},
-			Group: gobble.Group{{Name: "amb", Spec: gobble.PathSpec{Name: "ref", Ext: ".amb"}}},
+			Spec:  gobble.PathSpec{Base: "ref", Ext: ".amb"},
+			Group: gobble.Group{{Name: "amb", Spec: gobble.PathSpec{Base: "ref", Ext: ".amb"}}},
 		}},
 	})
 }
@@ -1285,7 +1285,7 @@ func emptyMemberNamePipeline() *gobble.Pipeline {
 		Outputs: []gobble.Bind{{
 			Name: "idx",
 			Group: gobble.Group{
-				{Name: "", Spec: gobble.PathSpec{Name: "ref", Ext: ".amb"}},
+				{Name: "", Spec: gobble.PathSpec{Base: "ref", Ext: ".amb"}},
 			},
 		}},
 	})
@@ -1298,8 +1298,8 @@ func duplicateMemberNamePipeline() *gobble.Pipeline {
 		Outputs: []gobble.Bind{{
 			Name: "idx",
 			Group: gobble.Group{
-				{Name: "amb", Spec: gobble.PathSpec{Name: "ref", Ext: ".amb"}},
-				{Name: "amb", Spec: gobble.PathSpec{Name: "ref", Ext: ".ann"}},
+				{Name: "amb", Spec: gobble.PathSpec{Base: "ref", Ext: ".amb"}},
+				{Name: "amb", Spec: gobble.PathSpec{Base: "ref", Ext: ".ann"}},
 			},
 		}},
 	})
@@ -1312,7 +1312,7 @@ func invalidMemberNamePipeline() *gobble.Pipeline {
 		Outputs: []gobble.Bind{{
 			Name: "idx",
 			Group: gobble.Group{
-				{Name: "1amb", Spec: gobble.PathSpec{Name: "ref", Ext: ".amb"}},
+				{Name: "1amb", Spec: gobble.PathSpec{Base: "ref", Ext: ".amb"}},
 			},
 		}},
 	})
@@ -1323,7 +1323,7 @@ func groupFromSingleFilePipeline() *gobble.Pipeline {
 	src := p.AddTask(gobble.TaskSpec{
 		Name:    "index",
 		Command: []string{"bwa"},
-		Outputs: []gobble.Bind{{Name: "idx", Spec: gobble.PathSpec{Name: "ref", Ext: ".amb"}}},
+		Outputs: []gobble.Bind{{Name: "idx", Spec: gobble.PathSpec{Base: "ref", Ext: ".amb"}}},
 	})
 	p.AddTask(gobble.TaskSpec{
 		Name:    "mem",
@@ -1377,7 +1377,7 @@ func groupFromMismatchPipeline() *gobble.Pipeline {
 func groupFromPipelineInputPipeline() *gobble.Pipeline {
 	p := gobble.NewPipeline("group-from-in")
 	in := p.AddInputGroup("idx", gobble.Group{
-		{Name: "amb", Spec: gobble.PathSpec{Name: "ref", Ext: ".amb"}},
+		{Name: "amb", Spec: gobble.PathSpec{Base: "ref", Ext: ".amb"}},
 	})
 	p.AddTask(gobble.TaskSpec{
 		Name:    "mem",
@@ -1394,7 +1394,7 @@ func groupFromPipelineInputPipeline() *gobble.Pipeline {
 
 func groupFromSingleFilePipelineInputPipeline() *gobble.Pipeline {
 	p := gobble.NewPipeline("group-from-file-in")
-	in := p.AddInput("idx", gobble.PathSpec{Name: "ref", Ext: ".amb"})
+	in := p.AddInput("idx", gobble.PathSpec{Base: "ref", Ext: ".amb"})
 	p.AddTask(gobble.TaskSpec{
 		Name:    "mem",
 		Command: []string{"bwa"},
@@ -1461,7 +1461,7 @@ func groupMemberConflictPipeline() *gobble.Pipeline {
 		Command: []string{"bwa"},
 		Outputs: []gobble.Bind{
 			groupOut("idx"),
-			{Name: "collide", Spec: gobble.PathSpec{Name: "ref", Ext: ".amb"}},
+			{Name: "collide", Spec: gobble.PathSpec{Base: "ref", Ext: ".amb"}},
 		},
 	})
 }
@@ -1493,7 +1493,7 @@ func outputPortFromPipeline() *gobble.Pipeline {
 	src := p.AddTask(gobble.TaskSpec{
 		Name:    "align",
 		Command: []string{"bwa"},
-		Outputs: []gobble.Bind{{Name: "bam", Spec: gobble.PathSpec{Name: "aln", Ext: ".bam"}}},
+		Outputs: []gobble.Bind{{Name: "bam", Spec: gobble.PathSpec{Base: "aln", Ext: ".bam"}}},
 	})
 	p.AddTask(gobble.TaskSpec{
 		Name:    "index",
@@ -1513,7 +1513,7 @@ func foreignOutputFromNonCollidingIDPipeline() *gobble.Pipeline {
 	ta := a.AddTask(gobble.TaskSpec{
 		Name:    "src",
 		Command: []string{"echo"},
-		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Name: "foreign", Ext: ".txt"}}},
+		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Base: "foreign", Ext: ".txt"}}},
 	})
 	b := gobble.NewPipeline("run-b")
 	b.AddTask(gobble.TaskSpec{
@@ -1522,7 +1522,7 @@ func foreignOutputFromNonCollidingIDPipeline() *gobble.Pipeline {
 		Outputs: []gobble.Bind{{
 			Name: "out",
 			From: ta.Out("out"),
-			Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "use", Ext: ".txt"},
+			Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "use", Ext: ".txt"},
 		}},
 	})
 	return b

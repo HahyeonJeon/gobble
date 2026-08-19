@@ -7,7 +7,7 @@ import (
 )
 
 func TestSamtoolsIndexStandaloneComposeBuildPlan(t *testing.T) {
-	bam := gobble.PathSpec{Dir: gobble.Dir("work"), Name: "aligned", Ext: ".bam"}
+	bam := gobble.PathSpec{Dir: gobble.Dir("work"), Base: "aligned", Ext: ".bam"}
 	opts := SamtoolsIndexOptions{
 		ExtraArgs: []string{"-b"},
 		Resources: gobble.Resources{CPU: 2},
@@ -35,7 +35,7 @@ func TestSamtoolsIndexStandaloneComposeBuildPlan(t *testing.T) {
 }
 
 func TestSamtoolsIndexNestedModule(t *testing.T) {
-	bam := gobble.PathSpec{Dir: gobble.Dir("work"), Name: "aligned", Ext: ".bam"}
+	bam := gobble.PathSpec{Dir: gobble.Dir("work"), Base: "aligned", Ext: ".bam"}
 	p := gobble.NewPipeline("assay")
 	h := p.AddInput("bam", bam)
 	mod := AddModule(p, "align")
@@ -55,7 +55,7 @@ func TestSamtoolsIndexNestedModule(t *testing.T) {
 }
 
 func TestSamtoolsIndexSecondTaskFromSort(t *testing.T) {
-	sam := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "aligned", Ext: ".sam"}
+	sam := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "aligned", Ext: ".sam"}
 	p := gobble.NewPipeline("assay")
 	h := p.AddInput("sam", sam)
 	sortPorts := AddSamtoolsSort(p, h, SamtoolsSortOptions{})

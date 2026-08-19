@@ -18,8 +18,8 @@ var pinSARSCoV2R2 = Pin{
 }
 
 func TestFastpStandaloneComposeBuildPlan(t *testing.T) {
-	r1 := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_1", Ext: ".fastq.gz"}
-	r2 := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_2", Ext: ".fastq.gz"}
+	r1 := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_1", Ext: ".fastq.gz"}
+	r2 := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_2", Ext: ".fastq.gz"}
 	opts := FastpOptions{
 		ExtraArgs: []string{"--qualified_quality_phred", "15"},
 		Resources: gobble.Resources{CPU: 2},
@@ -59,8 +59,8 @@ func TestFastpStandaloneComposeBuildPlan(t *testing.T) {
 }
 
 func TestFastpNestedModule(t *testing.T) {
-	r1 := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_1", Ext: ".fastq.gz"}
-	r2 := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_2", Ext: ".fastq.gz"}
+	r1 := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_1", Ext: ".fastq.gz"}
+	r2 := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_2", Ext: ".fastq.gz"}
 	p := gobble.NewPipeline("assay")
 	h1 := p.AddInput("r1", r1)
 	h2 := p.AddInput("r2", r2)
@@ -86,8 +86,8 @@ func TestFastpStandaloneRun(t *testing.T) {
 	dir := t.TempDir()
 	stageFile(t, dir, "in/test_1.fastq.gz", src1)
 	stageFile(t, dir, "in/test_2.fastq.gz", src2)
-	r1 := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_1", Ext: ".fastq.gz"}
-	r2 := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_2", Ext: ".fastq.gz"}
+	r1 := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_1", Ext: ".fastq.gz"}
+	r2 := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_2", Ext: ".fastq.gz"}
 	p := FastpPipeline(r1, r2, FastpOptions{Resources: gobble.Resources{CPU: 1}})
 	g, err := gobble.Compose(p)
 	if err != nil {

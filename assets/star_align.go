@@ -74,8 +74,8 @@ func STARAlignPipeline(r1, r2 gobble.PathSpec, opts STARAlignOptions) *gobble.Pi
 func addSTARAlign(parent Parent, index, r1, r2 gobble.Handle, opts STARAlignOptions) STARAlignPorts {
 	outDir := starAlignDir(opts.OutDir)
 	genomeDir := starGenomeDir(opts.GenomeDir)
-	bamSpec := gobble.PathSpec{Dir: outDir, Name: "Aligned", Ext: ".out.bam"}
-	logSpec := gobble.PathSpec{Dir: outDir, Name: "Log", Ext: ".final.out"}
+	bamSpec := gobble.PathSpec{Dir: outDir, Base: "Aligned", Ext: ".out.bam"}
+	logSpec := gobble.PathSpec{Dir: outDir, Base: "Log", Ext: ".final.out"}
 
 	r1path := mustCommandPath(r1.Spec())
 	r2path := mustCommandPath(r2.Spec())

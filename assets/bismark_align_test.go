@@ -11,9 +11,9 @@ import (
 )
 
 func TestBismarkAlignStandaloneComposeBuildPlan(t *testing.T) {
-	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genome", Ext: ".fasta"}
-	r1 := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_1", Ext: ".fastq.gz"}
-	r2 := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_2", Ext: ".fastq.gz"}
+	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genome", Ext: ".fasta"}
+	r1 := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_1", Ext: ".fastq.gz"}
+	r2 := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_2", Ext: ".fastq.gz"}
 	opts := BismarkAlignOptions{
 		ExtraArgs: []string{"--quiet"},
 		Resources: gobble.Resources{CPU: 2},
@@ -62,9 +62,9 @@ func TestBismarkAlignStandaloneComposeBuildPlan(t *testing.T) {
 }
 
 func TestBismarkAlignNestedModule(t *testing.T) {
-	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genome", Ext: ".fasta"}
-	r1 := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_1", Ext: ".fastq.gz"}
-	r2 := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_2", Ext: ".fastq.gz"}
+	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genome", Ext: ".fasta"}
+	r1 := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_1", Ext: ".fastq.gz"}
+	r2 := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_2", Ext: ".fastq.gz"}
 	p := gobble.NewPipeline("assay")
 	hf := p.AddInput("fasta", fasta)
 	h1 := p.AddInput("r1", r1)

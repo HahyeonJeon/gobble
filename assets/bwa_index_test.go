@@ -9,7 +9,7 @@ import (
 )
 
 func TestBWAIndexStandaloneComposeBuildPlan(t *testing.T) {
-	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genome", Ext: ".fasta"}
+	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genome", Ext: ".fasta"}
 	opts := BWAIndexOptions{
 		ExtraArgs: []string{"-a", "is"},
 		Resources: gobble.Resources{CPU: 2},
@@ -44,7 +44,7 @@ func TestBWAIndexStandaloneComposeBuildPlan(t *testing.T) {
 }
 
 func TestBWAIndexNestedModule(t *testing.T) {
-	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genome", Ext: ".fasta"}
+	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genome", Ext: ".fasta"}
 	p := gobble.NewPipeline("assay")
 	h := p.AddInput("fasta", fasta)
 	mod := AddModule(p, "ref")
@@ -77,7 +77,7 @@ func TestBWAIndexStandaloneRun(t *testing.T) {
 	src := cachePin(t, PinWGSGenomeFASTA)
 	dir := t.TempDir()
 	stageFile(t, dir, "in/genome.fasta", src)
-	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genome", Ext: ".fasta"}
+	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genome", Ext: ".fasta"}
 	p := BWAIndexPipeline(fasta, BWAIndexOptions{})
 	g, err := gobble.Compose(p)
 	if err != nil {

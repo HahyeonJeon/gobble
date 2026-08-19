@@ -32,7 +32,7 @@ func Resume(g *Graph, workspace string, cap int) error {
 func resumePreflight(g *Graph, workspace string, cap int) error {
 	if g == nil {
 		return &Error{Op: "resume", Defects: []Defect{{
-			Code:    DefectInvalidName,
+			Code:    DefectInvalidRequest,
 			Message: "nil graph",
 		}}}
 	}

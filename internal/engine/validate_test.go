@@ -6,7 +6,7 @@ import (
 )
 
 func TestComposeCheckIllegalSnapshots(t *testing.T) {
-	file := Path{Name: "out", Ext: ".txt"}
+	file := Path{Base: "out", Ext: ".txt"}
 	tests := []struct {
 		name string
 		snap Snapshot
@@ -62,7 +62,7 @@ func TestComposeCheckIllegalSnapshots(t *testing.T) {
 						FromName: "reads",
 					}},
 				}},
-				Inputs: []Input{{Name: "reads", Spec: Path{Name: "sample", Ext: ".fastq.gz"}}},
+				Inputs: []Input{{Name: "reads", Spec: Path{Base: "sample", Ext: ".fastq.gz"}}},
 			},
 			code: DefectMissingOutput,
 			unit: "copy",
@@ -131,7 +131,7 @@ func TestComposeCheckIllegalSnapshots(t *testing.T) {
 					ID:      "copy",
 					Name:    "copy",
 					Command: []string{"cp"},
-					Outputs: []Bind{{Name: "out", Spec: Path{Name: "a/b", Ext: ".txt"}}},
+					Outputs: []Bind{{Name: "out", Spec: Path{Base: "a/b", Ext: ".txt"}}},
 				}},
 			},
 			code: DefectInvalidPath,
@@ -145,7 +145,7 @@ func TestComposeCheckIllegalSnapshots(t *testing.T) {
 					ID:      "copy",
 					Name:    "copy",
 					Command: []string{"cp"},
-					Outputs: []Bind{{Name: "out", Spec: Path{Dir: "../out", Name: "x", Ext: ".txt"}}},
+					Outputs: []Bind{{Name: "out", Spec: Path{Dir: "../out", Base: "x", Ext: ".txt"}}},
 				}},
 			},
 			code: DefectInvalidPath,
@@ -159,7 +159,7 @@ func TestComposeCheckIllegalSnapshots(t *testing.T) {
 					ID:      "copy",
 					Name:    "copy",
 					Command: []string{"cp"},
-					Outputs: []Bind{{Name: "out", Spec: Path{Name: "sample", Steps: []string{""}, Ext: ".fastq"}}},
+					Outputs: []Bind{{Name: "out", Spec: Path{Base: "sample", Suffixes: []string{""}, Ext: ".fastq"}}},
 				}},
 			},
 			code: DefectInvalidPath,
@@ -177,7 +177,7 @@ func TestComposeCheckIllegalSnapshots(t *testing.T) {
 						Name:     "out",
 						FromKind: FromOut,
 						FromName: "clean",
-						Spec:     Path{Dir: "out", Name: "use", Ext: ".txt"},
+						Spec:     Path{Dir: "out", Base: "use", Ext: ".txt"},
 					}},
 				}},
 			},
@@ -194,12 +194,12 @@ func TestComposeCheckIllegalSnapshots(t *testing.T) {
 					Command: []string{"bwa"},
 					Outputs: []Bind{{
 						Name:    "idx",
-						Spec:    Path{Name: "ref", Ext: ".amb"},
-						Members: []Member{{Name: "amb", Spec: Path{Name: "ref", Ext: ".amb"}}},
+						Spec:    Path{Base: "ref", Ext: ".amb"},
+						Members: []Member{{Name: "amb", Spec: Path{Base: "ref", Ext: ".amb"}}},
 					}},
 				}},
 			},
-			code: DefectInvalidName,
+			code: DefectInvalidValue,
 			unit: "index.idx",
 		},
 		{
@@ -213,7 +213,7 @@ func TestComposeCheckIllegalSnapshots(t *testing.T) {
 					Outputs: []Bind{{Name: "idx", Members: []Member{}}},
 				}},
 			},
-			code: DefectInvalidName,
+			code: DefectInvalidValue,
 			unit: "index.idx",
 		},
 		{
@@ -228,7 +228,7 @@ func TestComposeCheckIllegalSnapshots(t *testing.T) {
 					Outputs: []Bind{{Name: "out", Spec: file}},
 				}},
 			},
-			code: DefectInvalidName,
+			code: DefectInvalidValue,
 			unit: "copy",
 		},
 		{
@@ -243,7 +243,7 @@ func TestComposeCheckIllegalSnapshots(t *testing.T) {
 					Outputs: []Bind{{Name: "out", Spec: file}},
 				}},
 			},
-			code: DefectInvalidName,
+			code: DefectInvalidValue,
 			unit: "copy",
 		},
 		{
@@ -255,7 +255,7 @@ func TestComposeCheckIllegalSnapshots(t *testing.T) {
 						ID:      "index",
 						Name:    "index",
 						Command: []string{"bwa"},
-						Outputs: []Bind{{Name: "idx", Spec: Path{Name: "ref", Ext: ".amb"}}},
+						Outputs: []Bind{{Name: "idx", Spec: Path{Base: "ref", Ext: ".amb"}}},
 					},
 					{
 						ID:      "mem",
@@ -281,7 +281,7 @@ func TestComposeCheckIllegalSnapshots(t *testing.T) {
 				Name: "group-from-file-in",
 				Inputs: []Input{{
 					Name: "idx",
-					Spec: Path{Name: "ref", Ext: ".amb"},
+					Spec: Path{Base: "ref", Ext: ".amb"},
 				}},
 				Tasks: []Task{{
 					ID:      "mem",
@@ -314,7 +314,7 @@ func TestComposeCheckIllegalSnapshots(t *testing.T) {
 					Outputs: []Bind{{Name: "out", Spec: file}},
 				}},
 			},
-			code: DefectInvalidName,
+			code: DefectInvalidValue,
 			unit: "idx",
 		},
 	}
@@ -330,14 +330,14 @@ func TestComposeCheckIllegalSnapshots(t *testing.T) {
 }
 
 func TestComposeCheckGroupFromPipelineInput(t *testing.T) {
-	file := Path{Name: "out", Ext: ".txt"}
+	file := Path{Base: "out", Ext: ".txt"}
 	snap := Snapshot{
 		Name: "group-from-in",
 		Inputs: []Input{{
 			Name: "idx",
 			Members: []Member{{
 				Name: "amb",
-				Spec: Path{Name: "ref", Ext: ".amb"},
+				Spec: Path{Base: "ref", Ext: ".amb"},
 			}},
 		}},
 		Tasks: []Task{{
@@ -369,7 +369,7 @@ func TestValidateDirEscapeStaysInvalidPath(t *testing.T) {
 			ID:      "copy",
 			Name:    "copy",
 			Command: []string{"cp"},
-			Outputs: []Bind{{Name: "out", Spec: Path{Dir: "../out", Name: "x", Ext: ".txt"}}},
+			Outputs: []Bind{{Name: "out", Spec: Path{Dir: "../out", Base: "x", Ext: ".txt"}}},
 		}},
 	}
 	got := Validate(snap)
@@ -411,7 +411,7 @@ func TestRestageClearsLiteralOpacity(t *testing.T) {
 					FromKind: FromOut,
 					FromTask: "src",
 					FromName: "html",
-					Spec:     Path{Name: "a/b", Ext: ".txt"},
+					Spec:     Path{Base: "a/b", Ext: ".txt"},
 				}},
 			},
 		},
@@ -430,7 +430,7 @@ func TestComposeCheckDoesNotReportPlanDefects(t *testing.T) {
 			Name:    "copy",
 			Command: []string{"cp"},
 			Backend: "slurm",
-			Outputs: []Bind{{Name: "out", Spec: Path{Name: "out", Ext: ".txt"}}},
+			Outputs: []Bind{{Name: "out", Spec: Path{Base: "out", Ext: ".txt"}}},
 		}},
 	}
 	got := ComposeCheck(snap)
@@ -449,21 +449,21 @@ func TestComposeCheckDoesNotReportPlanDefects(t *testing.T) {
 			Name:    "copy",
 			Command: []string{"cp"},
 			CPU:     math.NaN(),
-			Outputs: []Bind{{Name: "out", Spec: Path{Name: "out", Ext: ".txt"}}},
+			Outputs: []Bind{{Name: "out", Spec: Path{Base: "out", Ext: ".txt"}}},
 		}},
 	}
 	got = ComposeCheck(nan)
-	if hasDefect(got, DefectInvalidName, "copy") {
-		t.Fatalf("case nan-cpu: ComposeCheck() reported invalid-name, want compose defects only")
+	if hasDefect(got, DefectInvalidValue, "copy") {
+		t.Fatalf("case nan-cpu: ComposeCheck() reported invalid-value, want compose defects only")
 	}
 	got = Validate(nan)
-	if !hasDefect(got, DefectInvalidName, "copy") {
-		t.Fatalf("case nan-cpu: Validate() defects %v, want invalid-name unit copy", formatDefects(got))
+	if !hasDefect(got, DefectInvalidValue, "copy") {
+		t.Fatalf("case nan-cpu: Validate() defects %v, want invalid-value unit copy", formatDefects(got))
 	}
 }
 
 func TestValidateMemoryAndNegativeCPU(t *testing.T) {
-	file := Path{Name: "out", Ext: ".txt"}
+	file := Path{Base: "out", Ext: ".txt"}
 	junk := Snapshot{
 		Name: "junk-mem",
 		Tasks: []Task{{
@@ -508,12 +508,12 @@ func TestValidateMemoryAndNegativeCPU(t *testing.T) {
 		}},
 	}
 	got = ComposeCheck(neg)
-	if hasDefect(got, DefectInvalidName, "copy") {
-		t.Fatalf("case neg-cpu: ComposeCheck() reported invalid-name, want compose defects only")
+	if hasDefect(got, DefectInvalidValue, "copy") {
+		t.Fatalf("case neg-cpu: ComposeCheck() reported invalid-value, want compose defects only")
 	}
 	got = Validate(neg)
-	if !hasDefect(got, DefectInvalidName, "copy") {
-		t.Fatalf("case neg-cpu: Validate() defects %v, want invalid-name unit copy", formatDefects(got))
+	if !hasDefect(got, DefectInvalidValue, "copy") {
+		t.Fatalf("case neg-cpu: Validate() defects %v, want invalid-value unit copy", formatDefects(got))
 	}
 }
 
@@ -524,7 +524,7 @@ func TestBuildPlanEncodeFailureHasCode(t *testing.T) {
 			ID:      "copy",
 			Name:    "copy",
 			Command: []string{"cp"},
-			Outputs: []Bind{{Name: "out", Spec: Path{Name: "out", Ext: ".txt"}}},
+			Outputs: []Bind{{Name: "out", Spec: Path{Base: "out", Ext: ".txt"}}},
 		}},
 	}
 	doc := Document{
@@ -534,7 +534,7 @@ func TestBuildPlanEncodeFailureHasCode(t *testing.T) {
 			Name:      "copy",
 			Command:   []string{"cp"},
 			Resources: ResourcePlan{CPU: math.NaN()},
-			Outputs:   []IO{{Name: "out", Path: "out.txt", Spec: Path{Name: "out", Ext: ".txt"}}},
+			Outputs:   []IO{{Name: "out", Path: "out.txt", Spec: Path{Base: "out", Ext: ".txt"}}},
 		}},
 	}
 	plan, defects := BuildPlan(snap, doc)
@@ -542,10 +542,10 @@ func TestBuildPlanEncodeFailureHasCode(t *testing.T) {
 		t.Fatalf("case encode-fail: BuildPlan() plan != nil, want nil")
 	}
 	if len(defects) == 0 {
-		t.Fatalf("case encode-fail: BuildPlan() defects empty, want DefectInvalidName")
+		t.Fatalf("case encode-fail: BuildPlan() defects empty, want DefectInvalidValue")
 	}
-	if defects[0].Code != DefectInvalidName {
-		t.Fatalf("case encode-fail: defect Code got %q, want %s", defects[0].Code, DefectInvalidName)
+	if defects[0].Code != DefectInvalidValue {
+		t.Fatalf("case encode-fail: defect Code got %q, want %s", defects[0].Code, DefectInvalidValue)
 	}
 	if defects[0].Message == "" {
 		t.Fatalf("case encode-fail: defect Message empty")

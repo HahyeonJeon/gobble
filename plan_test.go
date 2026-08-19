@@ -23,7 +23,7 @@ func TestBuildPlanReject(t *testing.T) {
 		{
 			name:     "nil graph",
 			nilGraph: true,
-			code:     gobble.DefectInvalidName,
+			code:     gobble.DefectInvalidRequest,
 		},
 		{
 			name:  "derived-path conflict",
@@ -52,19 +52,19 @@ func TestBuildPlanReject(t *testing.T) {
 		{
 			name:  "NaN CPU",
 			graph: mustCompose(nanCPUPipeline),
-			code:  gobble.DefectInvalidName,
+			code:  gobble.DefectInvalidValue,
 			unit:  "copy",
 		},
 		{
 			name:  "+Inf CPU",
 			graph: mustCompose(infCPUPipeline),
-			code:  gobble.DefectInvalidName,
+			code:  gobble.DefectInvalidValue,
 			unit:  "copy",
 		},
 		{
 			name:  "-Inf CPU",
 			graph: mustCompose(negInfCPUPipeline),
-			code:  gobble.DefectInvalidName,
+			code:  gobble.DefectInvalidValue,
 			unit:  "copy",
 		},
 	}
@@ -170,7 +170,7 @@ func TestBuildPlanWaitPaths(t *testing.T) {
 
 	g := mustCompose(func() *gobble.Pipeline {
 		p := gobble.NewPipeline("pipe-in")
-		in := p.AddInput("reads", gobble.PathSpec{Name: "sample", Ext: ".fq"})
+		in := p.AddInput("reads", gobble.PathSpec{Base: "sample", Ext: ".fq"})
 		p.AddTask(gobble.TaskSpec{
 			Name:    "copy",
 			Command: []string{"cp"},

@@ -13,11 +13,11 @@ import (
 )
 
 func TestBismarkExtractorStem(t *testing.T) {
-	got := bismarkExtractorStem(gobble.PathSpec{Dir: gobble.Dir("work/bismark-align"), Name: "aligned_pe", Ext: ".bam"})
+	got := bismarkExtractorStem(gobble.PathSpec{Dir: gobble.Dir("work/bismark-align"), Base: "aligned_pe", Ext: ".bam"})
 	if got != "aligned_pe" {
 		t.Fatalf("stem(bam) = %q, want aligned_pe", got)
 	}
-	got = bismarkExtractorStem(gobble.PathSpec{Dir: gobble.Dir("work"), Name: "reads", Ext: ".sam"})
+	got = bismarkExtractorStem(gobble.PathSpec{Dir: gobble.Dir("work"), Base: "reads", Ext: ".sam"})
 	if got != "reads" {
 		t.Fatalf("stem(sam) = %q, want reads", got)
 	}
@@ -27,12 +27,12 @@ func TestBismarkExtractorStem(t *testing.T) {
 				t.Fatalf("stem(invalid) panic = nil, want error")
 			}
 		}()
-		bismarkExtractorStem(gobble.PathSpec{Name: "."})
+		bismarkExtractorStem(gobble.PathSpec{Base: "."})
 	}()
 }
 
 func TestBismarkMethylationExtractorStandaloneComposeBuildPlan(t *testing.T) {
-	bam := gobble.PathSpec{Dir: gobble.Dir("work/bismark-align"), Name: "aligned_pe", Ext: ".bam"}
+	bam := gobble.PathSpec{Dir: gobble.Dir("work/bismark-align"), Base: "aligned_pe", Ext: ".bam"}
 	opts := BismarkMethylationExtractorOptions{
 		ExtraArgs: []string{"--no_overlap"},
 		Resources: gobble.Resources{CPU: 2},
@@ -71,9 +71,9 @@ func TestBismarkMethylationExtractorStandaloneComposeBuildPlan(t *testing.T) {
 }
 
 func TestBismarkMethylationExtractorNestedModule(t *testing.T) {
-	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genome", Ext: ".fasta"}
-	r1 := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_1", Ext: ".fastq.gz"}
-	r2 := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_2", Ext: ".fastq.gz"}
+	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genome", Ext: ".fasta"}
+	r1 := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_1", Ext: ".fastq.gz"}
+	r2 := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_2", Ext: ".fastq.gz"}
 	p := gobble.NewPipeline("assay")
 	hf := p.AddInput("fasta", fasta)
 	h1 := p.AddInput("r1", r1)

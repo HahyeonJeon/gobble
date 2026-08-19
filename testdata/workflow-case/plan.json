@@ -23,9 +23,9 @@
           "path": "in/sample_S1_L001_R1_001.fastq.gz",
           "spec": {
             "dir": "in",
-            "lead": "sample_S1_L001_R1_",
-            "name": "001",
-            "steps": [],
+            "prefix": "sample_S1_L001_R1_",
+            "base": "001",
+            "suffixes": [],
             "ext": ".fastq.gz",
             "literal": false
           }
@@ -35,9 +35,9 @@
           "path": "in/sample_S1_L001_R2_001.fastq.gz",
           "spec": {
             "dir": "in",
-            "lead": "sample_S1_L001_R2_",
-            "name": "001",
-            "steps": [],
+            "prefix": "sample_S1_L001_R2_",
+            "base": "001",
+            "suffixes": [],
             "ext": ".fastq.gz",
             "literal": false
           }
@@ -49,9 +49,9 @@
           "path": "work/prep/sample_S1_L001_R1_001.clean.fastq.gz",
           "spec": {
             "dir": "work/prep",
-            "lead": "sample_S1_L001_R1_",
-            "name": "001",
-            "steps": [
+            "prefix": "sample_S1_L001_R1_",
+            "base": "001",
+            "suffixes": [
               "clean"
             ],
             "ext": ".fastq.gz",
@@ -63,9 +63,9 @@
           "path": "work/prep/sample_S1_L001_R2_001.clean.fastq.gz",
           "spec": {
             "dir": "work/prep",
-            "lead": "sample_S1_L001_R2_",
-            "name": "001",
-            "steps": [
+            "prefix": "sample_S1_L001_R2_",
+            "base": "001",
+            "suffixes": [
               "clean"
             ],
             "ext": ".fastq.gz",
@@ -96,9 +96,9 @@
           "path": "work/prep/sample_S1_L001_R1_001.clean.fastq.gz",
           "spec": {
             "dir": "work/prep",
-            "lead": "sample_S1_L001_R1_",
-            "name": "001",
-            "steps": [
+            "prefix": "sample_S1_L001_R1_",
+            "base": "001",
+            "suffixes": [
               "clean"
             ],
             "ext": ".fastq.gz",
@@ -110,9 +110,9 @@
           "path": "work/prep/sample_S1_L001_R2_001.clean.fastq.gz",
           "spec": {
             "dir": "work/prep",
-            "lead": "sample_S1_L001_R2_",
-            "name": "001",
-            "steps": [
+            "prefix": "sample_S1_L001_R2_",
+            "base": "001",
+            "suffixes": [
               "clean"
             ],
             "ext": ".fastq.gz",
@@ -126,9 +126,9 @@
           "path": "work/align/sample.sorted.bam",
           "spec": {
             "dir": "work/align",
-            "lead": "",
-            "name": "sample",
-            "steps": [
+            "prefix": "",
+            "base": "sample",
+            "suffixes": [
               "sorted"
             ],
             "ext": ".bam",
@@ -140,9 +140,9 @@
           "path": "work/align/sample.sorted.bam.bai",
           "spec": {
             "dir": "work/align",
-            "lead": "",
-            "name": "sample",
-            "steps": [
+            "prefix": "",
+            "base": "sample",
+            "suffixes": [
               "sorted"
             ],
             "ext": ".bam.bai",
@@ -173,9 +173,9 @@
           "path": "work/prep/sample_S1_L001_R1_001.clean.fastq.gz",
           "spec": {
             "dir": "work/prep",
-            "lead": "sample_S1_L001_R1_",
-            "name": "001",
-            "steps": [
+            "prefix": "sample_S1_L001_R1_",
+            "base": "001",
+            "suffixes": [
               "clean"
             ],
             "ext": ".fastq.gz",
@@ -187,9 +187,9 @@
           "path": "work/prep/sample_S1_L001_R2_001.clean.fastq.gz",
           "spec": {
             "dir": "work/prep",
-            "lead": "sample_S1_L001_R2_",
-            "name": "001",
-            "steps": [
+            "prefix": "sample_S1_L001_R2_",
+            "base": "001",
+            "suffixes": [
               "clean"
             ],
             "ext": ".fastq.gz",
@@ -203,9 +203,9 @@
           "path": "work/qc/sample_clean_fastqc.html",
           "spec": {
             "dir": "work/qc",
-            "lead": "",
-            "name": "",
-            "steps": [],
+            "prefix": "",
+            "base": "",
+            "suffixes": [],
             "ext": "",
             "literal": true
           }
@@ -234,9 +234,9 @@
           "path": "work/align/sample.sorted.bam",
           "spec": {
             "dir": "work/align",
-            "lead": "",
-            "name": "sample",
-            "steps": [
+            "prefix": "",
+            "base": "sample",
+            "suffixes": [
               "sorted"
             ],
             "ext": ".bam",
@@ -248,9 +248,9 @@
           "path": "work/align/sample.sorted.bam.bai",
           "spec": {
             "dir": "work/align",
-            "lead": "",
-            "name": "sample",
-            "steps": [
+            "prefix": "",
+            "base": "sample",
+            "suffixes": [
               "sorted"
             ],
             "ext": ".bam.bai",
@@ -262,9 +262,9 @@
           "path": "work/qc/sample_clean_fastqc.html",
           "spec": {
             "dir": "work/qc",
-            "lead": "",
-            "name": "",
-            "steps": [],
+            "prefix": "",
+            "base": "",
+            "suffixes": [],
             "ext": "",
             "literal": true
           }
@@ -276,9 +276,9 @@
           "path": "out/report.json",
           "spec": {
             "dir": "out",
-            "lead": "",
-            "name": "report",
-            "steps": [],
+            "prefix": "",
+            "base": "report",
+            "suffixes": [],
             "ext": ".json",
             "literal": false
           }

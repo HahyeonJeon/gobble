@@ -40,7 +40,7 @@ func SamtoolsIndexPipeline(bam gobble.PathSpec, opts SamtoolsIndexOptions) *gobb
 }
 
 func addSamtoolsIndex(parent Parent, bam gobble.Handle, opts SamtoolsIndexOptions) SamtoolsIndexPorts {
-	baiSpec := bam.Spec().Append(".bai")
+	baiSpec := bam.Spec().AppendExt(".bai")
 
 	cmd := []string{"samtools", "index"}
 	if n := threadCount(opts.Resources.CPU); n > 0 {

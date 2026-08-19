@@ -39,8 +39,8 @@ func dummyAppendExtraArgs(command, extra []string) []string {
 }
 
 func TestDummyAssetCompose(t *testing.T) {
-	reads := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "sample", Ext: ".txt"}
-	out := gobble.PathSpec{Dir: gobble.Dir("out"), Name: "sample", Ext: ".txt"}
+	reads := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "sample", Ext: ".txt"}
+	out := gobble.PathSpec{Dir: gobble.Dir("out"), Base: "sample", Ext: ".txt"}
 	token, err := reads.Render()
 	if err != nil {
 		t.Fatalf("Render() error = %v", err)

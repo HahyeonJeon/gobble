@@ -61,11 +61,11 @@ func BismarkMethylationExtractorPipeline(bam gobble.PathSpec, opts BismarkMethyl
 func addBismarkMethylationExtractor(parent Parent, bam gobble.Handle, opts BismarkMethylationExtractorOptions) BismarkMethylationExtractorPorts {
 	outDir := bismarkExtractorDir(opts.OutDir)
 	stem := bismarkExtractorStem(bam.Spec())
-	bedGraph := gobble.PathSpec{Dir: outDir, Name: stem, Ext: ".bedGraph.gz"}
-	coverage := gobble.PathSpec{Dir: outDir, Name: stem, Ext: ".bismark.cov.gz"}
-	report := gobble.PathSpec{Dir: outDir, Name: stem + "_splitting_report", Ext: ".txt"}
-	mbias := gobble.PathSpec{Dir: outDir, Name: stem, Ext: ".M-bias.txt"}
-	cpg := gobble.PathSpec{Dir: outDir, Name: "CpG_context_" + stem, Ext: ".txt.gz"}
+	bedGraph := gobble.PathSpec{Dir: outDir, Base: stem, Ext: ".bedGraph.gz"}
+	coverage := gobble.PathSpec{Dir: outDir, Base: stem, Ext: ".bismark.cov.gz"}
+	report := gobble.PathSpec{Dir: outDir, Base: stem + "_splitting_report", Ext: ".txt"}
+	mbias := gobble.PathSpec{Dir: outDir, Base: stem, Ext: ".M-bias.txt"}
+	cpg := gobble.PathSpec{Dir: outDir, Base: "CpG_context_" + stem, Ext: ".txt.gz"}
 
 	cmd := []string{"bismark_methylation_extractor", "--bedGraph", "--counts", "--gzip", "--report", "--comprehensive", "-p", "--output_dir", outDir.String()}
 	cmd = AppendExtraArgs(cmd, opts.ExtraArgs)

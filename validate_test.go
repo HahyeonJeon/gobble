@@ -70,19 +70,19 @@ func TestValidateReject(t *testing.T) {
 		{
 			name: "NaN CPU",
 			pipe: nanCPUPipeline(),
-			code: gobble.DefectInvalidName,
+			code: gobble.DefectInvalidValue,
 			unit: "copy",
 		},
 		{
 			name: "+Inf CPU",
 			pipe: infCPUPipeline(),
-			code: gobble.DefectInvalidName,
+			code: gobble.DefectInvalidValue,
 			unit: "copy",
 		},
 		{
 			name: "-Inf CPU",
 			pipe: negInfCPUPipeline(),
-			code: gobble.DefectInvalidName,
+			code: gobble.DefectInvalidValue,
 			unit: "copy",
 		},
 		{
@@ -95,7 +95,7 @@ func TestValidateReject(t *testing.T) {
 		{
 			name: "negative CPU",
 			pipe: negativeCPUPipeline(),
-			code: gobble.DefectInvalidName,
+			code: gobble.DefectInvalidValue,
 			unit: "copy",
 		},
 		{
@@ -149,7 +149,7 @@ func derivedRelatedCollisionPipeline() *gobble.Pipeline {
 	align := p.AddTask(gobble.TaskSpec{
 		Name:    "align",
 		Command: []string{"bwa"},
-		Outputs: []gobble.Bind{{Name: "bam", Spec: gobble.PathSpec{Name: "aln", Ext: ".bam"}}},
+		Outputs: []gobble.Bind{{Name: "bam", Spec: gobble.PathSpec{Base: "aln", Ext: ".bam"}}},
 	})
 	p.AddTask(gobble.TaskSpec{
 		Name:    "index",
@@ -164,38 +164,38 @@ func derivedRelatedCollisionPipeline() *gobble.Pipeline {
 	p.AddTask(gobble.TaskSpec{
 		Name:    "collide",
 		Command: []string{"cp"},
-		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Name: "aln", Ext: ".bam.bai"}}},
+		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Base: "aln", Ext: ".bam.bai"}}},
 	})
 	return p
 }
 
 func derivedIndexCollisionPipeline() *gobble.Pipeline {
 	p := gobble.NewPipeline("index-collision")
-	bam := gobble.PathSpec{Name: "aln", Ext: ".bam"}
+	bam := gobble.PathSpec{Base: "aln", Ext: ".bam"}
 	p.AddTask(gobble.TaskSpec{
 		Name:    "align",
 		Command: []string{"bwa"},
 		Outputs: []gobble.Bind{
 			{Name: "bam", Spec: bam},
-			{Name: "bai", Spec: bam.Append(".bai")},
+			{Name: "bai", Spec: bam.AppendExt(".bai")},
 		},
 	})
 	p.AddTask(gobble.TaskSpec{
 		Name:    "collide",
 		Command: []string{"cp"},
-		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Name: "aln", Ext: ".bam.bai"}}},
+		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Base: "aln", Ext: ".bam.bai"}}},
 	})
 	return p
 }
 
 func sameTaskIOPipeline() *gobble.Pipeline {
 	p := gobble.NewPipeline("same-io")
-	in := p.AddInput("reads", gobble.PathSpec{Name: "sample", Ext: ".txt"})
+	in := p.AddInput("reads", gobble.PathSpec{Base: "sample", Ext: ".txt"})
 	p.AddTask(gobble.TaskSpec{
 		Name:    "copy",
 		Command: []string{"cp"},
 		Inputs:  []gobble.Bind{{Name: "in", From: in}},
-		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Lead: "sam", Name: "ple", Ext: ".txt"}}},
+		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Prefix: "sam", Base: "ple", Ext: ".txt"}}},
 	})
 	return p
 }

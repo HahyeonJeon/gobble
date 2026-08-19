@@ -55,14 +55,11 @@ type Branch struct {
 	children []node
 }
 
-// Merge is a named fan-in of known branches.
-// The branch list records author intent. Edges come from Bind.From wiring,
-// not from this list.
+// Merge is a named fan-in scope. Edges come from Bind.From wiring.
 type Merge struct {
 	pipe     *Pipeline
 	anc      []ancestor
 	name     string
-	branches []*Branch
 	children []node
 }
 
@@ -143,11 +140,10 @@ func (p *Pipeline) Branch(name string) *Branch {
 	return b
 }
 
-// Merge records a child merge of branches and returns it.
-// The branch list records author intent. Edges come from Bind.From wiring,
-// not from this list.
-func (p *Pipeline) Merge(name string, branches ...*Branch) *Merge {
-	mg := &Merge{pipe: p, name: name, branches: append([]*Branch(nil), branches...)}
+// Merge records a child merge and returns it. Edges come from Bind.From
+// wiring, not from a branch list.
+func (p *Pipeline) Merge(name string) *Merge {
+	mg := &Merge{pipe: p, name: name}
 	p.children = append(p.children, node{kind: nodeMerge, name: name, merge: mg})
 	return mg
 }
@@ -173,15 +169,13 @@ func (m *Module) Branch(name string) *Branch {
 	return b
 }
 
-// Merge records a child merge of branches and returns it.
-// The branch list records author intent. Edges come from Bind.From wiring,
-// not from this list.
-func (m *Module) Merge(name string, branches ...*Branch) *Merge {
+// Merge records a child merge and returns it. Edges come from Bind.From
+// wiring, not from a branch list.
+func (m *Module) Merge(name string) *Merge {
 	mg := &Merge{
-		pipe:     m.pipe,
-		anc:      childAnc(m.anc, nodeModule, m.name),
-		name:     name,
-		branches: append([]*Branch(nil), branches...),
+		pipe: m.pipe,
+		anc:  childAnc(m.anc, nodeModule, m.name),
+		name: name,
 	}
 	m.children = append(m.children, node{kind: nodeMerge, name: name, merge: mg})
 	return mg

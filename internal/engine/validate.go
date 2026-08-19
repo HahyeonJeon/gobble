@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	intpath "github.com/HahyeonJeon/gobble/internal/path"
 )
 
 var namePat = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_-]*$`)
@@ -165,7 +167,7 @@ func (c *checker) checkTask(t *Task) {
 	hasScript := t.Script != ""
 	switch {
 	case hasCmd && hasScript:
-		c.add(DefectInvalidName, id, "command and script both set")
+		c.add(DefectInvalidValue, id, "command and script both set")
 	case !hasCmd && !hasScript:
 		c.add(DefectMissingCommand, id, "missing command")
 	}
@@ -177,9 +179,9 @@ func (c *checker) checkTask(t *Task) {
 		c.add(DefectUnsupportedBackend, id, "unsupported backend")
 	}
 	if c.plan && !finiteCPU(t.CPU) {
-		c.add(DefectInvalidName, id, "non-finite cpu")
+		c.add(DefectInvalidValue, id, "non-finite cpu")
 	} else if c.plan && t.CPU < 0 {
-		c.add(DefectInvalidName, id, "negative cpu")
+		c.add(DefectInvalidValue, id, "negative cpu")
 	}
 	if c.plan {
 		if _, ok := parseMemory(t.Memory); !ok {
@@ -244,12 +246,12 @@ func (c *checker) checkTask(t *Task) {
 func (c *checker) checkEnv(id string, env map[string]string) {
 	for k, v := range env {
 		if k == "" {
-			c.add(DefectInvalidName, id, "empty env key")
+			c.add(DefectInvalidValue, id, "empty env key")
 		} else if strings.Contains(k, "=") {
-			c.add(DefectInvalidName, id, "env key contains =")
+			c.add(DefectInvalidValue, id, "env key contains =")
 		}
 		if v == "" {
-			c.add(DefectInvalidName, id, "empty env value")
+			c.add(DefectInvalidValue, id, "empty env value")
 		}
 	}
 }
@@ -259,10 +261,10 @@ func (c *checker) checkGroup(unit string, b Bind) {
 		return
 	}
 	if !isZeroPath(b.Spec) {
-		c.add(DefectInvalidName, unit, "group and spec both set")
+		c.add(DefectInvalidValue, unit, "group and spec both set")
 	}
 	if len(b.Members) == 0 {
-		c.add(DefectInvalidName, unit, "empty group")
+		c.add(DefectInvalidValue, unit, "empty group")
 		return
 	}
 	seen := make(map[string]bool)
@@ -477,7 +479,7 @@ func (c *checker) resolveBind(t *Task, b Bind, out bool) (Path, bool) {
 	if !ok {
 		return Path{}, false
 	}
-	spec := classifyPath(b.Spec, from, b.Rule)
+	spec := Classify(b.Spec, from, b.Rule)
 	c.memo[key] = spec
 	return spec, true
 }
@@ -513,7 +515,7 @@ func (c *checker) resolveMembers(t *Task, b Bind, out bool) ([]Member, bool) {
 		if !ok {
 			return nil, false
 		}
-		outm = append(outm, Member{Name: m.Name, Spec: classifyPath(m.Spec, from.Spec, b.Rule)})
+		outm = append(outm, Member{Name: m.Name, Spec: Classify(m.Spec, from.Spec, b.Rule)})
 	}
 	c.memberMemo[key] = outm
 	return outm, true
@@ -621,7 +623,7 @@ func (c *checker) checkConflicts() {
 
 func comparablePath(p string) string {
 	p = strings.ReplaceAll(p, `\`, "/")
-	cleaned, escaped := cleanPath(p)
+	cleaned, escaped := intpath.Clean(p)
 	if escaped || cleaned == "" {
 		return p
 	}

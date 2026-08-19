@@ -127,31 +127,31 @@ var MethylSeqPins = []Pin{
 }
 
 func pinnedRNAFASTQ1() gobble.PathSpec {
-	return gobble.PathSpec{Dir: gobble.Dir("in"), Name: "SRR6357072_1", Ext: ".fastq.gz"}
+	return gobble.PathSpec{Dir: gobble.Dir("in"), Base: "SRR6357072_1", Ext: ".fastq.gz"}
 }
 
 func pinnedRNAFASTQ2() gobble.PathSpec {
-	return gobble.PathSpec{Dir: gobble.Dir("in"), Name: "SRR6357072_2", Ext: ".fastq.gz"}
+	return gobble.PathSpec{Dir: gobble.Dir("in"), Base: "SRR6357072_2", Ext: ".fastq.gz"}
 }
 
 func pinnedRNAFASTA() gobble.PathSpec {
-	return gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genome", Ext: ".fasta"}
+	return gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genome", Ext: ".fasta"}
 }
 
 func pinnedRNAGTF() gobble.PathSpec {
-	return gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genes", Ext: ".gtf"}
+	return gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genes", Ext: ".gtf"}
 }
 
 func pinnedMethylFASTQ1() gobble.PathSpec {
-	return gobble.PathSpec{Dir: gobble.Dir("in"), Name: "Ecoli_10K_methylated_R1", Ext: ".fastq.gz"}
+	return gobble.PathSpec{Dir: gobble.Dir("in"), Base: "Ecoli_10K_methylated_R1", Ext: ".fastq.gz"}
 }
 
 func pinnedMethylFASTQ2() gobble.PathSpec {
-	return gobble.PathSpec{Dir: gobble.Dir("in"), Name: "Ecoli_10K_methylated_R2", Ext: ".fastq.gz"}
+	return gobble.PathSpec{Dir: gobble.Dir("in"), Base: "Ecoli_10K_methylated_R2", Ext: ".fastq.gz"}
 }
 
 func pinnedMethylFASTA() gobble.PathSpec {
-	return gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genome", Ext: ".fa"}
+	return gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genome", Ext: ".fa"}
 }
 
 // CachePath is CacheDir/<sha256[:16]>/<Name>. Name stays the workspace

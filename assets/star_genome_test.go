@@ -9,7 +9,7 @@ import (
 )
 
 func TestSTARGenomeGenerateStandaloneComposeBuildPlan(t *testing.T) {
-	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genome", Ext: ".fasta"}
+	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genome", Ext: ".fasta"}
 	opts := STARGenomeGenerateOptions{
 		ExtraArgs: []string{"--genomeSAindexNbases", "7"},
 		Resources: gobble.Resources{CPU: 2},
@@ -45,8 +45,8 @@ func TestSTARGenomeGenerateStandaloneComposeBuildPlan(t *testing.T) {
 }
 
 func TestSTARGenomeGenerateStandaloneComposeBuildPlanGTF(t *testing.T) {
-	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genome", Ext: ".fasta"}
-	gtf := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genes", Ext: ".gtf"}
+	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genome", Ext: ".fasta"}
+	gtf := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genes", Ext: ".gtf"}
 	opts := STARGenomeGenerateOptions{
 		GTF:       gtf,
 		ExtraArgs: []string{"--genomeSAindexNbases", "7", "--sjdbOverhang", "100"},
@@ -76,7 +76,7 @@ func TestSTARGenomeGenerateStandaloneComposeBuildPlanGTF(t *testing.T) {
 }
 
 func TestSTARGenomeGenerateNestedModule(t *testing.T) {
-	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genome", Ext: ".fasta"}
+	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genome", Ext: ".fasta"}
 	p := gobble.NewPipeline("assay")
 	h := p.AddInput("fasta", fasta)
 	mod := AddModule(p, "ref")
@@ -108,8 +108,8 @@ func TestSTARGenomeGenerateStandaloneRun(t *testing.T) {
 	dir := t.TempDir()
 	stageFile(t, dir, "in/genome.fasta", srcFASTA)
 	stageFile(t, dir, "in/genes.gtf", srcGTF)
-	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genome", Ext: ".fasta"}
-	gtf := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genes", Ext: ".gtf"}
+	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genome", Ext: ".fasta"}
+	gtf := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genes", Ext: ".gtf"}
 	p := STARGenomeGeneratePipeline(fasta, STARGenomeGenerateOptions{
 		GTF:       gtf,
 		ExtraArgs: []string{"--genomeSAindexNbases", "7", "--sjdbOverhang", "100"},

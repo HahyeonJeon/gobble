@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+
+	intpath "github.com/HahyeonJeon/gobble/internal/path"
 )
 
 // ControlDir is the reserved workspace subtree for run identity.
@@ -151,13 +153,13 @@ func checkCap(cap int) []Defect {
 	}
 	if n < 1 {
 		return []Defect{{
-			Code:    DefectInvalidName,
+			Code:    DefectInvalidValue,
 			Message: "concurrency cap below 1",
 		}}
 	}
 	if n > MaxCap {
 		return []Defect{{
-			Code:    DefectInvalidName,
+			Code:    DefectInvalidValue,
 			Message: "concurrency cap above 64",
 		}}
 	}
@@ -214,7 +216,7 @@ func checkPlanPath(unit, path string) *Defect {
 			Paths:   []string{path},
 		}
 	}
-	cleaned, escaped := cleanPath(normalized)
+	cleaned, escaped := intpath.Clean(normalized)
 	if escaped {
 		return &Defect{
 			Code:    DefectInvalidPath,
@@ -261,7 +263,7 @@ func checkImages(doc Document) []Defect {
 	for _, t := range doc.Tasks {
 		if msg := invalidImage(t.Image); msg != "" {
 			defects = append(defects, Defect{
-				Code:    DefectInvalidName,
+				Code:    DefectInvalidValue,
 				Unit:    t.ID,
 				Message: msg,
 			})
@@ -363,7 +365,7 @@ func checkCapacity(doc Document, host hostCapacity) []Defect {
 	for _, t := range doc.Tasks {
 		if host.CPUKnown && t.Resources.CPU > 0 && t.Resources.CPU > host.CPU {
 			defects = append(defects, Defect{
-				Code:    DefectInvalidName,
+				Code:    DefectInvalidValue,
 				Unit:    t.ID,
 				Message: "cpu exceeds host capacity",
 			})
@@ -379,7 +381,7 @@ func checkCapacity(doc Document, host hostCapacity) []Defect {
 		}
 		if host.MemKnown && bytes > 0 && bytes > host.Memory {
 			defects = append(defects, Defect{
-				Code:    DefectInvalidName,
+				Code:    DefectInvalidValue,
 				Unit:    t.ID,
 				Message: "memory exceeds host capacity",
 			})

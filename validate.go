@@ -11,7 +11,7 @@ import "github.com/HahyeonJeon/gobble/internal/engine"
 func Validate(g *Graph) error {
 	if g == nil {
 		return &Error{Op: "validate", Defects: []Defect{{
-			Code:    DefectInvalidName,
+			Code:    DefectInvalidRequest,
 			Message: "nil graph",
 		}}}
 	}

@@ -20,7 +20,7 @@ var pinSARSCoV2FastQCZip = Pin{
 }
 
 func TestMultiQCStandaloneComposeBuildPlan(t *testing.T) {
-	report := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_fastqc", Ext: ".zip"}
+	report := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_fastqc", Ext: ".zip"}
 	opts := MultiQCOptions{
 		ExtraArgs: []string{"--title", "qc"},
 		Resources: gobble.Resources{CPU: 1},
@@ -51,7 +51,7 @@ func TestMultiQCStandaloneComposeBuildPlan(t *testing.T) {
 }
 
 func TestMultiQCNestedModule(t *testing.T) {
-	report := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_fastqc", Ext: ".zip"}
+	report := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_fastqc", Ext: ".zip"}
 	p := gobble.NewPipeline("assay")
 	h := p.AddInput("zip", report)
 	mod := AddModule(p, "qc")
@@ -74,7 +74,7 @@ func TestMultiQCStandaloneRun(t *testing.T) {
 	src := cachePin(t, pinSARSCoV2FastQCZip)
 	dir := t.TempDir()
 	stageFile(t, dir, "in/test_fastqc.zip", src)
-	report := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_fastqc", Ext: ".zip"}
+	report := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_fastqc", Ext: ".zip"}
 	p := MultiQCPipeline([]gobble.PathSpec{report}, MultiQCOptions{})
 	g, err := gobble.Compose(p)
 	if err != nil {

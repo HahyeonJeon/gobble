@@ -8,27 +8,21 @@
 // [Plan]. [WriteTo] is a [PlanOption] that writes the same JSON
 // [Plan.WriteJSON] emits. [Run] executes a valid graph in a caller workspace
 // after the same checks. The default concurrency cap is 1. [Inspect]
-// returns a read-only workspace view. [Resume] occupies a released run
-// and continues remaining work. [Release] closes occupancy and leaves
-// documents and artifacts. Compose, Validate, BuildPlan, Run, Inspect,
-// Resume, and Release report defects as [*Error] values inspected with
-// errors.As. A WriteTo failure returns the writer's own error and the
+// returns a read-only workspace view selected by [View]. [Resume] occupies
+// a released run and continues remaining work. [Release] closes occupancy
+// and leaves documents and artifacts. Compose, Validate, BuildPlan, Run,
+// Inspect, Resume, and Release report defects as [*Error] values inspected
+// with errors.As. A WriteTo failure returns the writer's own error and the
 // built Plan. WriteJSON on a nil Plan is not an [*Error].
 //
-// PathSpec is the public parameterized path model. Locked concepts map to
-// exported fields and JSON keys:
-//
-//	DirName    → Dir    (JSON dir)
-//	Prefix     → Lead   (JSON lead)
-//	BaseName   → Name   (JSON name)
-//	Suffixes   → Steps  (JSON steps)
-//	Extension  → Ext    (JSON ext)
+// PathSpec is the public parameterized path model. Fields are Dir, Prefix,
+// Base, Suffixes, and Ext (JSON dir, prefix, base, suffixes, ext).
 //
 // Shipped types and functions include PathSpec, Directory, Literal, Dir,
 // DeriveRule, DeriveAppend, DeriveReplaceExt, Pipeline, NewPipeline,
 // Module, Branch, Merge, Task, Handle, TaskSpec, Bind, Group, Member,
-// Param, Resources, Script, Env, Graph, Compose, Validate, BuildPlan,
-// WriteTo, PlanOption, Plan, Run, Inspect, Resume, Release, Error, Defect,
+// Param, Resources, Graph, Edge, Compose, Validate, BuildPlan, WriteTo,
+// PlanOption, Plan, Run, Inspect, View, Resume, Release, Error, Defect,
 // DefectCode, and the Defect* constants. PathSpec methods and builder
 // methods belong to those types.
 // The public surface is unsupported except these locked PathSpec concepts.

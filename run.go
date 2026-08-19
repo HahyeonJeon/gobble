@@ -39,7 +39,7 @@ func Run(g *Graph, workspace string, cap int) error {
 func preflight(g *Graph, workspace string, cap int) error {
 	if g == nil {
 		return &Error{Op: "run", Defects: []Defect{{
-			Code:    DefectInvalidName,
+			Code:    DefectInvalidRequest,
 			Message: "nil graph",
 		}}}
 	}

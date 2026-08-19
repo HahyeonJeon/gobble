@@ -93,28 +93,28 @@ func assertWorkflowCasePlan(t *testing.T, got workflowCasePlan) {
 	assertTaskMeta(t, byID["call.join.report"], "report", "call", "", "join", "")
 
 	assertIO(t, "prep.fastp.r1", byID["prep.fastp"].Inputs, "r1", "in/sample_S1_L001_R1_001.fastq.gz", workflowCaseSpec{
-		Dir: "in", Lead: "sample_S1_L001_R1_", Name: "001", Steps: []string{}, Ext: ".fastq.gz",
+		Dir: "in", Prefix: "sample_S1_L001_R1_", Base: "001", Suffixes: []string{}, Ext: ".fastq.gz",
 	})
 	assertIO(t, "prep.fastp.r2", byID["prep.fastp"].Inputs, "r2", "in/sample_S1_L001_R2_001.fastq.gz", workflowCaseSpec{
-		Dir: "in", Lead: "sample_S1_L001_R2_", Name: "001", Steps: []string{}, Ext: ".fastq.gz",
+		Dir: "in", Prefix: "sample_S1_L001_R2_", Base: "001", Suffixes: []string{}, Ext: ".fastq.gz",
 	})
 	assertIO(t, "prep.fastp.clean_r1", byID["prep.fastp"].Outputs, "clean_r1", "work/prep/sample_S1_L001_R1_001.clean.fastq.gz", workflowCaseSpec{
-		Dir: "work/prep", Lead: "sample_S1_L001_R1_", Name: "001", Steps: []string{"clean"}, Ext: ".fastq.gz",
+		Dir: "work/prep", Prefix: "sample_S1_L001_R1_", Base: "001", Suffixes: []string{"clean"}, Ext: ".fastq.gz",
 	})
 	assertIO(t, "prep.fastp.clean_r2", byID["prep.fastp"].Outputs, "clean_r2", "work/prep/sample_S1_L001_R2_001.clean.fastq.gz", workflowCaseSpec{
-		Dir: "work/prep", Lead: "sample_S1_L001_R2_", Name: "001", Steps: []string{"clean"}, Ext: ".fastq.gz",
+		Dir: "work/prep", Prefix: "sample_S1_L001_R2_", Base: "001", Suffixes: []string{"clean"}, Ext: ".fastq.gz",
 	})
 	assertIO(t, "call.align.bwa.bam", byID["call.align.bwa"].Outputs, "bam", "work/align/sample.sorted.bam", workflowCaseSpec{
-		Dir: "work/align", Name: "sample", Steps: []string{"sorted"}, Ext: ".bam",
+		Dir: "work/align", Base: "sample", Suffixes: []string{"sorted"}, Ext: ".bam",
 	})
 	assertIO(t, "call.align.bwa.bai", byID["call.align.bwa"].Outputs, "bai", "work/align/sample.sorted.bam.bai", workflowCaseSpec{
-		Dir: "work/align", Name: "sample", Steps: []string{"sorted"}, Ext: ".bam.bai",
+		Dir: "work/align", Base: "sample", Suffixes: []string{"sorted"}, Ext: ".bam.bai",
 	})
 	assertIO(t, "call.qc.fastqc.html", byID["call.qc.fastqc"].Outputs, "html", "work/qc/sample_clean_fastqc.html", workflowCaseSpec{
-		Dir: "work/qc", Steps: []string{}, Literal: true,
+		Dir: "work/qc", Suffixes: []string{}, Literal: true,
 	})
 	assertIO(t, "call.join.report.summary", byID["call.join.report"].Outputs, "summary", "out/report.json", workflowCaseSpec{
-		Dir: "out", Name: "report", Steps: []string{}, Ext: ".json",
+		Dir: "out", Base: "report", Suffixes: []string{}, Ext: ".json",
 	})
 }
 
@@ -138,11 +138,11 @@ func assertIO(t *testing.T, unit string, binds []workflowCaseIO, name, path stri
 		if b.Path != path {
 			t.Fatalf("case workflow-case: %s path got %q, want %q", unit, b.Path, path)
 		}
-		if spec.Steps == nil {
-			spec.Steps = []string{}
+		if spec.Suffixes == nil {
+			spec.Suffixes = []string{}
 		}
-		if b.Spec.Steps == nil {
-			b.Spec.Steps = []string{}
+		if b.Spec.Suffixes == nil {
+			b.Spec.Suffixes = []string{}
 		}
 		if !reflect.DeepEqual(b.Spec, spec) {
 			t.Fatalf("case workflow-case: %s spec got %#v, want %#v", unit, b.Spec, spec)
@@ -190,12 +190,12 @@ type workflowCaseIO struct {
 }
 
 type workflowCaseSpec struct {
-	Dir     string   `json:"dir"`
-	Lead    string   `json:"lead"`
-	Name    string   `json:"name"`
-	Steps   []string `json:"steps"`
-	Ext     string   `json:"ext"`
-	Literal bool     `json:"literal"`
+	Dir      string   `json:"dir"`
+	Prefix   string   `json:"prefix"`
+	Base     string   `json:"base"`
+	Suffixes []string `json:"suffixes"`
+	Ext      string   `json:"ext"`
+	Literal  bool     `json:"literal"`
 }
 
 type workflowCaseDAG struct {

@@ -145,7 +145,7 @@ func TestCheckRefuse(t *testing.T) {
 		},
 		{
 			name: "cap below 1",
-			code: DefectInvalidName,
+			code: DefectInvalidValue,
 			prep: func(t *testing.T) (Request, string) {
 				dir := t.TempDir()
 				writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
@@ -158,7 +158,7 @@ func TestCheckRefuse(t *testing.T) {
 		},
 		{
 			name: "cap above 64",
-			code: DefectInvalidName,
+			code: DefectInvalidValue,
 			prep: func(t *testing.T) (Request, string) {
 				dir := t.TempDir()
 				writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
@@ -236,7 +236,7 @@ func TestCheckRefuse(t *testing.T) {
 		},
 		{
 			name: "image starts with dash",
-			code: DefectInvalidName,
+			code: DefectInvalidValue,
 			unit: "copy",
 			prep: func(t *testing.T) (Request, string) {
 				dir := t.TempDir()
@@ -249,7 +249,7 @@ func TestCheckRefuse(t *testing.T) {
 		},
 		{
 			name: "image contains whitespace",
-			code: DefectInvalidName,
+			code: DefectInvalidValue,
 			unit: "copy",
 			prep: func(t *testing.T) (Request, string) {
 				dir := t.TempDir()
@@ -417,8 +417,8 @@ func TestCheckTaskExceedsCapacity(t *testing.T) {
 	doc.Tasks[0].Resources = ResourcePlan{CPU: 2, Memory: ""}
 	before := snapshotDir(t, dir)
 	defects := Check(Request{Workspace: dir, Document: doc})
-	if !hasDefect(defects, DefectInvalidName, "copy") {
-		t.Fatalf("cpu over capacity Check() defects %v, want invalid-name copy", defects)
+	if !hasDefect(defects, DefectInvalidValue, "copy") {
+		t.Fatalf("cpu over capacity Check() defects %v, want invalid-value copy", defects)
 	}
 	after := snapshotDir(t, dir)
 	if before != after {
@@ -427,8 +427,8 @@ func TestCheckTaskExceedsCapacity(t *testing.T) {
 
 	doc.Tasks[0].Resources = ResourcePlan{CPU: 0, Memory: "512m"}
 	defects = Check(Request{Workspace: dir, Document: doc})
-	if !hasDefect(defects, DefectInvalidName, "copy") {
-		t.Fatalf("memory over capacity Check() defects %v, want invalid-name copy", defects)
+	if !hasDefect(defects, DefectInvalidValue, "copy") {
+		t.Fatalf("memory over capacity Check() defects %v, want invalid-value copy", defects)
 	}
 	if _, err := os.Stat(filepath.Join(dir, ControlDir)); !os.IsNotExist(err) {
 		t.Fatalf("over capacity Check occupied workspace")

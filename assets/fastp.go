@@ -52,14 +52,14 @@ func addFastp(parent Parent, r1, r2 gobble.Handle, opts FastpOptions) FastpPorts
 	if outDir.IsZero() {
 		outDir = gobble.Dir("work/fastp")
 	}
-	cleanR1 := r1.Spec().AppendStep("clean").WithDir(outDir)
-	cleanR2 := r2.Spec().AppendStep("clean").WithDir(outDir)
-	prefix := r1.Spec().Name
+	cleanR1 := r1.Spec().AppendSuffix("clean").WithDir(outDir)
+	cleanR2 := r2.Spec().AppendSuffix("clean").WithDir(outDir)
+	prefix := r1.Spec().Base
 	if prefix == "" {
 		prefix = "reads"
 	}
-	jsonSpec := gobble.PathSpec{Dir: outDir, Name: prefix, Ext: ".fastp.json"}
-	htmlSpec := gobble.PathSpec{Dir: outDir, Name: prefix, Ext: ".fastp.html"}
+	jsonSpec := gobble.PathSpec{Dir: outDir, Base: prefix, Ext: ".fastp.json"}
+	htmlSpec := gobble.PathSpec{Dir: outDir, Base: prefix, Ext: ".fastp.html"}
 
 	cmd := []string{
 		"fastp",

@@ -57,11 +57,11 @@ func TestResumeUnsupportedSchemaNoOccupy(t *testing.T) {
 func TestResumeNilGraphAndCap(t *testing.T) {
 	dir := readyRunWorkspace(t)
 	err := gobble.Resume(nil, dir, 0)
-	requireResumeError(t, "nil graph", err, gobble.DefectInvalidName, "")
+	requireResumeError(t, "nil graph", err, gobble.DefectInvalidRequest, "")
 	err = gobble.Resume(mustCompose(processCopyPipeline)(t), dir, -1)
-	requireResumeError(t, "cap below 1", err, gobble.DefectInvalidName, "")
+	requireResumeError(t, "cap below 1", err, gobble.DefectInvalidValue, "")
 	err = gobble.Resume(mustCompose(processCopyPipeline)(t), dir, 65)
-	requireResumeError(t, "cap above 64", err, gobble.DefectInvalidName, "")
+	requireResumeError(t, "cap above 64", err, gobble.DefectInvalidValue, "")
 }
 
 func TestResumeOp(t *testing.T) {
@@ -384,7 +384,7 @@ func processCopyPlusPipeline() *gobble.Pipeline {
 		Command: []string{"sh", "-c", "echo extra > out/extra.txt"},
 		Outputs: []gobble.Bind{{
 			Name: "out",
-			Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "extra", Ext: ".txt"},
+			Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "extra", Ext: ".txt"},
 		}},
 	})
 	return p
@@ -392,14 +392,14 @@ func processCopyPlusPipeline() *gobble.Pipeline {
 
 func processContainIndependentPipeline() *gobble.Pipeline {
 	p := gobble.NewPipeline("contain")
-	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "sample", Ext: ".txt"})
+	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "sample", Ext: ".txt"})
 	p.AddTask(gobble.TaskSpec{
 		Name:    "fail",
 		Command: []string{"sh", "-c", "exit 1"},
 		Inputs:  []gobble.Bind{{Name: "in", From: in}},
 		Outputs: []gobble.Bind{{
 			Name: "out",
-			Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "fail", Ext: ".txt"},
+			Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "fail", Ext: ".txt"},
 		}},
 	})
 	p.AddTask(gobble.TaskSpec{
@@ -408,7 +408,7 @@ func processContainIndependentPipeline() *gobble.Pipeline {
 		Inputs:  []gobble.Bind{{Name: "in", From: in}},
 		Outputs: []gobble.Bind{{
 			Name: "out",
-			Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "dep", Ext: ".txt"},
+			Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "dep", Ext: ".txt"},
 		}},
 	})
 	p.AddTask(gobble.TaskSpec{
@@ -417,7 +417,7 @@ func processContainIndependentPipeline() *gobble.Pipeline {
 		Inputs:  []gobble.Bind{{Name: "in", From: in}},
 		Outputs: []gobble.Bind{{
 			Name: "out",
-			Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "ok", Ext: ".txt"},
+			Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "ok", Ext: ".txt"},
 		}},
 	})
 	return p
@@ -426,14 +426,14 @@ func processContainIndependentPipeline() *gobble.Pipeline {
 func processCopyCmdPipeline(cmd string) func() *gobble.Pipeline {
 	return func() *gobble.Pipeline {
 		p := gobble.NewPipeline("copy")
-		in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "sample", Ext: ".txt"})
+		in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "sample", Ext: ".txt"})
 		p.AddTask(gobble.TaskSpec{
 			Name:    "copy",
 			Command: []string{"sh", "-c", cmd},
 			Inputs:  []gobble.Bind{{Name: "in", From: in}},
 			Outputs: []gobble.Bind{
-				{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "sample", Ext: ".txt"}},
-				{Name: "pwd", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "pwd", Ext: ".txt"}},
+				{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "sample", Ext: ".txt"}},
+				{Name: "pwd", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "pwd", Ext: ".txt"}},
 			},
 			Params:    []gobble.Param{{Name: "mode", Value: "fast"}},
 			Resources: gobble.Resources{CPU: 1, Memory: "512m"},
@@ -445,13 +445,13 @@ func processCopyCmdPipeline(cmd string) func() *gobble.Pipeline {
 func processScriptCopyPipeline(script string) func() *gobble.Pipeline {
 	return func() *gobble.Pipeline {
 		p := gobble.NewPipeline("copy")
-		in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "sample", Ext: ".txt"})
+		in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "sample", Ext: ".txt"})
 		p.AddTask(gobble.TaskSpec{
 			Name:   "copy",
 			Script: script,
 			Inputs: []gobble.Bind{{Name: "in", From: in}},
 			Outputs: []gobble.Bind{
-				{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "sample", Ext: ".txt"}},
+				{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "sample", Ext: ".txt"}},
 			},
 		})
 		return p
@@ -466,14 +466,14 @@ func processEnvCopyHomePipeline(home string) func() *gobble.Pipeline {
 
 func processEnvCopyWithHome(home string) *gobble.Pipeline {
 	p := gobble.NewPipeline("copy")
-	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "sample", Ext: ".txt"})
+	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "sample", Ext: ".txt"})
 	p.AddTask(gobble.TaskSpec{
 		Name:    "copy",
 		Command: []string{"sh", "-c", "pwd > out/pwd.txt && cp in/sample.txt out/sample.txt"},
 		Inputs:  []gobble.Bind{{Name: "in", From: in}},
 		Outputs: []gobble.Bind{
-			{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "sample", Ext: ".txt"}},
-			{Name: "pwd", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "pwd", Ext: ".txt"}},
+			{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "sample", Ext: ".txt"}},
+			{Name: "pwd", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "pwd", Ext: ".txt"}},
 		},
 		Params:    []gobble.Param{{Name: "mode", Value: "fast"}},
 		Env:       map[string]string{"HOME": home},
@@ -485,14 +485,14 @@ func processEnvCopyWithHome(home string) *gobble.Pipeline {
 func processCopyChainPipeline(aCmd, bCmd string) func() *gobble.Pipeline {
 	return func() *gobble.Pipeline {
 		p := gobble.NewPipeline("chain")
-		in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "sample", Ext: ".txt"})
+		in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "sample", Ext: ".txt"})
 		a := p.AddTask(gobble.TaskSpec{
 			Name:    "a",
 			Command: []string{"sh", "-c", aCmd},
 			Inputs:  []gobble.Bind{{Name: "in", From: in}},
 			Outputs: []gobble.Bind{{
 				Name: "out",
-				Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "a", Ext: ".txt"},
+				Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "a", Ext: ".txt"},
 			}},
 		})
 		p.AddTask(gobble.TaskSpec{
@@ -501,7 +501,7 @@ func processCopyChainPipeline(aCmd, bCmd string) func() *gobble.Pipeline {
 			Inputs:  []gobble.Bind{{Name: "in", From: a.Out("out")}},
 			Outputs: []gobble.Bind{{
 				Name: "out",
-				Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "b", Ext: ".txt"},
+				Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "b", Ext: ".txt"},
 			}},
 		})
 		return p
@@ -511,14 +511,14 @@ func processCopyChainPipeline(aCmd, bCmd string) func() *gobble.Pipeline {
 func processCopyDestPipeline(name string) func() *gobble.Pipeline {
 	return func() *gobble.Pipeline {
 		p := gobble.NewPipeline("copy")
-		in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "sample", Ext: ".txt"})
+		in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "sample", Ext: ".txt"})
 		p.AddTask(gobble.TaskSpec{
 			Name:    "copy",
 			Command: []string{"cp", "in/sample.txt", "out/sample.txt"},
 			Inputs:  []gobble.Bind{{Name: "in", From: in}},
 			Outputs: []gobble.Bind{{
 				Name: "out",
-				Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: name, Ext: ".txt"},
+				Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: name, Ext: ".txt"},
 			}},
 		})
 		return p
@@ -527,14 +527,14 @@ func processCopyDestPipeline(name string) func() *gobble.Pipeline {
 
 func processCopyOtherInputPipeline() *gobble.Pipeline {
 	p := gobble.NewPipeline("copy")
-	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "other", Ext: ".txt"})
+	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "other", Ext: ".txt"})
 	p.AddTask(gobble.TaskSpec{
 		Name:    "copy",
 		Command: []string{"sh", "-c", "pwd > out/pwd.txt && cp in/sample.txt out/sample.txt"},
 		Inputs:  []gobble.Bind{{Name: "in", From: in}},
 		Outputs: []gobble.Bind{
-			{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "sample", Ext: ".txt"}},
-			{Name: "pwd", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "pwd", Ext: ".txt"}},
+			{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "sample", Ext: ".txt"}},
+			{Name: "pwd", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "pwd", Ext: ".txt"}},
 		},
 		Params:    []gobble.Param{{Name: "mode", Value: "fast"}},
 		Resources: gobble.Resources{CPU: 1, Memory: "512m"},
@@ -544,14 +544,14 @@ func processCopyOtherInputPipeline() *gobble.Pipeline {
 
 func processCopyResourcePipelineHeavy() *gobble.Pipeline {
 	p := gobble.NewPipeline("copy")
-	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "sample", Ext: ".txt"})
+	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "sample", Ext: ".txt"})
 	p.AddTask(gobble.TaskSpec{
 		Name:    "copy",
 		Command: []string{"sh", "-c", "pwd > out/pwd.txt && cp in/sample.txt out/sample.txt"},
 		Inputs:  []gobble.Bind{{Name: "in", From: in}},
 		Outputs: []gobble.Bind{
-			{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "sample", Ext: ".txt"}},
-			{Name: "pwd", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "pwd", Ext: ".txt"}},
+			{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "sample", Ext: ".txt"}},
+			{Name: "pwd", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "pwd", Ext: ".txt"}},
 		},
 		Params:    []gobble.Param{{Name: "mode", Value: "fast"}},
 		Resources: gobble.Resources{CPU: 2, Memory: "1g"},

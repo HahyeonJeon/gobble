@@ -50,7 +50,7 @@ func addBWAMem(parent Parent, fasta, index, r1, r2 gobble.Handle, opts BWAMemOpt
 	if outDir.IsZero() {
 		outDir = gobble.Dir("work/bwa-mem")
 	}
-	samSpec := gobble.PathSpec{Dir: outDir, Name: "aligned", Ext: ".sam"}
+	samSpec := gobble.PathSpec{Dir: outDir, Base: "aligned", Ext: ".sam"}
 
 	cmd := []string{"bwa", "mem"}
 	if n := threadCount(opts.Resources.CPU); n > 0 {

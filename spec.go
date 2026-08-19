@@ -1,5 +1,7 @@
 package gobble
 
+import intpath "github.com/HahyeonJeon/gobble/internal/path"
+
 // TaskSpec is the declaration of one pipeline task.
 //
 // Image non-empty means a container task. Image empty means a local process.
@@ -108,64 +110,15 @@ func findBind(binds []Bind, name string) (Bind, bool) {
 }
 
 func isZeroSpec(p PathSpec) bool {
-	return !p.literal && p.Dir.IsZero() && p.Lead == "" && p.Name == "" && len(p.Steps) == 0 && p.Ext == ""
+	return intpath.IsZero(specFrom(p))
 }
 
 func isRelatedFile(p PathSpec) bool {
-	return !p.literal && p.Lead == "" && p.Name == "" && len(p.Steps) == 0 && p.Ext != ""
+	return intpath.IsRelated(specFrom(p))
 }
 
 // classifySpec resolves spec against from: zero inherit, related-file sugar,
 // then restage.
 func classifySpec(spec, from PathSpec, rule DeriveRule) PathSpec {
-	if isZeroSpec(spec) {
-		return from.clone()
-	}
-	if isRelatedFile(spec) {
-		var derived PathSpec
-		if rule == DeriveReplaceExt {
-			derived = from.ReplaceExtension(spec.Ext)
-		} else {
-			derived = from.Append(spec.Ext)
-		}
-		if !spec.Dir.IsZero() {
-			return derived.WithDir(spec.Dir)
-		}
-		return derived
-	}
-	return restageSpec(spec, from)
-}
-
-func restageSpec(spec, from PathSpec) PathSpec {
-	if spec.literal {
-		out := spec.clone()
-		if spec.Dir.IsZero() {
-			out.Dir = from.Dir
-		}
-		return out
-	}
-	out := from.clone()
-	if !spec.Dir.IsZero() {
-		out.Dir = spec.Dir
-	}
-	if spec.Lead != "" {
-		out.Lead = spec.Lead
-	}
-	if spec.Name != "" {
-		out.Name = spec.Name
-	}
-	if len(spec.Steps) > 0 {
-		out.Steps = copyStrings(spec.Steps)
-	}
-	if spec.Ext != "" {
-		out.Ext = spec.Ext
-	}
-	// Non-literal restage that sets Lead, Name, Steps, or Ext must not
-	// keep a Literal parent's opacity; Render would ignore the new fields.
-	if spec.Lead != "" || spec.Name != "" || len(spec.Steps) > 0 || spec.Ext != "" {
-		out.literal = false
-		out.opaque = ""
-		out.badLit = false
-	}
-	return out
+	return specTo(intpath.Classify(specFrom(spec), specFrom(from), intpath.DeriveRule(rule)))
 }

@@ -112,7 +112,7 @@ func bismarkGenomeGroup(dir gobble.Directory) gobble.Group {
 	for _, m := range bismarkGenomeMembers {
 		g = append(g, gobble.Member{
 			Name: m.name,
-			Spec: gobble.PathSpec{Dir: dir.Join(m.sub...), Name: m.file, Ext: m.ext},
+			Spec: gobble.PathSpec{Dir: dir.Join(m.sub...), Base: m.file, Ext: m.ext},
 		})
 	}
 	return g

@@ -30,9 +30,9 @@
           "path": "in/sample.txt",
           "spec": {
             "dir": "in",
-            "lead": "",
-            "name": "sample",
-            "steps": [],
+            "prefix": "",
+            "base": "sample",
+            "suffixes": [],
             "ext": ".txt",
             "literal": false
           }
@@ -44,9 +44,9 @@
           "path": "out/docker/sample.txt",
           "spec": {
             "dir": "out/docker",
-            "lead": "",
-            "name": "sample",
-            "steps": [],
+            "prefix": "",
+            "base": "sample",
+            "suffixes": [],
             "ext": ".txt",
             "literal": false
           }
@@ -56,9 +56,9 @@
           "path": "out/docker/pwd.txt",
           "spec": {
             "dir": "out/docker",
-            "lead": "",
-            "name": "pwd",
-            "steps": [],
+            "prefix": "",
+            "base": "pwd",
+            "suffixes": [],
             "ext": ".txt",
             "literal": false
           }
@@ -89,9 +89,9 @@
           "path": "in/sample.txt",
           "spec": {
             "dir": "in",
-            "lead": "",
-            "name": "sample",
-            "steps": [],
+            "prefix": "",
+            "base": "sample",
+            "suffixes": [],
             "ext": ".txt",
             "literal": false
           }
@@ -103,9 +103,9 @@
           "path": "out/process/sample.txt",
           "spec": {
             "dir": "out/process",
-            "lead": "",
-            "name": "sample",
-            "steps": [],
+            "prefix": "",
+            "base": "sample",
+            "suffixes": [],
             "ext": ".txt",
             "literal": false
           }

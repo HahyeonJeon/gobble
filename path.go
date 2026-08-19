@@ -1,7 +1,10 @@
 package gobble
 
 import (
+	"errors"
 	"strings"
+
+	intpath "github.com/HahyeonJeon/gobble/internal/path"
 )
 
 // Directory is placement for a PathSpec. It is not a directory output artifact.
@@ -28,7 +31,7 @@ func (d Directory) Join(elem ...string) Directory {
 			parts = append(parts, e)
 		}
 	}
-	return Directory{path: joinSlash(parts...)}
+	return Directory{path: intpath.Join(parts...)}
 }
 
 // String returns the directory path.
@@ -43,19 +46,19 @@ func (d Directory) IsZero() bool {
 
 // PathSpec is the public parameterized path model.
 //
-// Field names map from the locked concepts DirName, Prefix, BaseName,
-// Suffixes, and Extension. Equality is field equality, not rendered-path
-// equality. Methods use value receivers and return a new PathSpec.
+// Fields are Dir, Prefix, Base, Suffixes, and Ext. Equality is field
+// equality, not rendered-path equality. Methods use value receivers
+// and return a new PathSpec.
 type PathSpec struct {
-	// Dir is directory placement (DirName).
+	// Dir is directory placement.
 	Dir Directory
-	// Lead is the leading author tokens (Prefix).
-	Lead string
-	// Name is the stable name (BaseName). "." and ".." are invalid.
-	Name string
-	// Steps is the ordered processing stack (Suffixes).
-	Steps []string
-	// Ext is the exact compound extension (Extension).
+	// Prefix is the leading author tokens.
+	Prefix string
+	// Base is the stable name. "." and ".." are invalid.
+	Base string
+	// Suffixes is the ordered processing stack.
+	Suffixes []string
+	// Ext is the exact compound extension.
 	Ext string
 
 	literal bool
@@ -77,7 +80,7 @@ const (
 
 // Literal returns a PathSpec that stores path as an opaque filename.
 // If path has a directory, Dir is the parent and the last component is the
-// opaque filename. Lead, Name, Steps, and Ext stay empty.
+// opaque filename. Prefix, Base, Suffixes, and Ext stay empty.
 func Literal(path string) PathSpec {
 	normalized := strings.ReplaceAll(path, `\`, "/")
 	if normalized == "" {
@@ -97,54 +100,36 @@ func Literal(path string) PathSpec {
 // Render returns one comparable path string for a valid PathSpec.
 // Invalid specs return an [*Error] with Op "render" and DefectInvalidPath.
 func (p PathSpec) Render() (string, error) {
-	if err := p.fieldError(); err != nil {
-		return "", err
-	}
-	var filename string
-	if p.literal {
-		filename = p.opaque
-	} else {
-		filename = p.Lead + p.Name
-		for _, step := range p.Steps {
-			filename += "." + stripOneLeadingDot(step)
+	s, err := specFrom(p).Render()
+	if err != nil {
+		var pe *intpath.Error
+		if errors.As(err, &pe) {
+			return "", renderInvalid(pe.Message, pe.Paths...)
 		}
-		if p.Ext != "" {
-			if strings.HasPrefix(p.Ext, ".") {
-				filename += p.Ext
-			} else {
-				filename += "." + p.Ext
-			}
-		}
+		return "", renderInvalid(err.Error())
 	}
-	raw := filename
-	if !p.Dir.IsZero() {
-		raw = joinSlash(p.Dir.String(), filename)
-	}
-	cleaned, escaped := cleanPath(raw)
-	if escaped {
-		return "", renderInvalid("path escapes directory", raw)
-	}
-	return cleaned, nil
+	return s, nil
 }
 
-// Equal reports whether p and q have the same Dir string, Lead, Name, Steps
-// elements, Ext, and literal opacity. It does not compare rendered strings
-// or the invalid-method marker set when a Literal method is refused.
+// Equal reports whether p and q have the same Dir string, Prefix, Base,
+// Suffixes elements, Ext, and literal opacity. It does not compare
+// rendered strings or the invalid-method marker set when a Literal
+// method is refused.
 func (p PathSpec) Equal(q PathSpec) bool {
 	if p.Dir.String() != q.Dir.String() {
 		return false
 	}
-	if p.Lead != q.Lead || p.Name != q.Name || p.Ext != q.Ext {
+	if p.Prefix != q.Prefix || p.Base != q.Base || p.Ext != q.Ext {
 		return false
 	}
 	if p.literal != q.literal || p.opaque != q.opaque {
 		return false
 	}
-	if len(p.Steps) != len(q.Steps) {
+	if len(p.Suffixes) != len(q.Suffixes) {
 		return false
 	}
-	for i := range p.Steps {
-		if p.Steps[i] != q.Steps[i] {
+	for i := range p.Suffixes {
+		if p.Suffixes[i] != q.Suffixes[i] {
 			return false
 		}
 	}
@@ -158,31 +143,42 @@ func (p PathSpec) WithDir(d Directory) PathSpec {
 	return out
 }
 
-// WithLead returns a copy of p with Lead replaced. On a Literal the copy is
-// marked invalid and Render returns DefectInvalidPath.
-func (p PathSpec) WithLead(lead string) PathSpec {
+// WithPrefix returns a copy of p with Prefix replaced. On a Literal the
+// copy is marked invalid and Render returns DefectInvalidPath.
+func (p PathSpec) WithPrefix(prefix string) PathSpec {
 	out := p.clone()
-	out.Lead = lead
+	out.Prefix = prefix
 	if out.literal {
 		out.badLit = true
 	}
 	return out
 }
 
-// AppendStep returns a copy of p with token appended to Steps after stripping
-// one leading ".". On a Literal the copy is marked invalid and Render returns
-// DefectInvalidPath.
-func (p PathSpec) AppendStep(token string) PathSpec {
-	out := p.clone()
-	out.Steps = append(out.Steps, stripOneLeadingDot(token))
-	if out.literal {
-		out.badLit = true
-	}
-	return out
-}
-
-// WithExt returns a copy of p with Ext replaced by ext. On a Literal the copy
+// WithBase returns a copy of p with Base replaced. On a Literal the copy
 // is marked invalid and Render returns DefectInvalidPath.
+func (p PathSpec) WithBase(base string) PathSpec {
+	out := p.clone()
+	out.Base = base
+	if out.literal {
+		out.badLit = true
+	}
+	return out
+}
+
+// AppendSuffix returns a copy of p with token appended to Suffixes after
+// stripping one leading ".". On a Literal the copy is marked invalid and
+// Render returns DefectInvalidPath.
+func (p PathSpec) AppendSuffix(token string) PathSpec {
+	out := p.clone()
+	out.Suffixes = append(out.Suffixes, intpath.StripDot(token))
+	if out.literal {
+		out.badLit = true
+	}
+	return out
+}
+
+// WithExt returns a copy of p with Ext replaced by ext. On a Literal the
+// copy is marked invalid and Render returns DefectInvalidPath.
 func (p PathSpec) WithExt(ext string) PathSpec {
 	out := p.clone()
 	out.Ext = ext
@@ -192,172 +188,45 @@ func (p PathSpec) WithExt(ext string) PathSpec {
 	return out
 }
 
-// Append returns a related PathSpec by appending extra to Ext, or to a Literal
-// opaque filename. One leading "." is stripped from extra, then "." is prepended.
-// An extra that is empty after strip makes Render return DefectInvalidPath.
-func (p PathSpec) Append(extra string) PathSpec {
-	out := p.clone()
-	token := "." + stripOneLeadingDot(extra)
-	if out.literal {
-		out.opaque += token
-		return out
-	}
-	out.Ext += token
-	return out
-}
-
-// ReplaceExtension returns a copy of p with Ext replaced by ext. On a Literal
-// the copy is marked invalid and Render returns DefectInvalidPath.
-func (p PathSpec) ReplaceExtension(ext string) PathSpec {
-	out := p.clone()
-	out.Ext = ext
-	if out.literal {
-		out.badLit = true
-	}
-	return out
+// AppendExt returns a related PathSpec by appending extra to Ext, or to a
+// Literal opaque filename. One leading "." is stripped from extra, then
+// "." is prepended. An extra that is empty after strip makes Render
+// return DefectInvalidPath.
+func (p PathSpec) AppendExt(extra string) PathSpec {
+	return specTo(intpath.AppendExt(specFrom(p), extra))
 }
 
 func (p PathSpec) clone() PathSpec {
-	if len(p.Steps) > 0 {
-		steps := make([]string, len(p.Steps))
-		copy(steps, p.Steps)
-		p.Steps = steps
+	if len(p.Suffixes) > 0 {
+		suf := make([]string, len(p.Suffixes))
+		copy(suf, p.Suffixes)
+		p.Suffixes = suf
 	}
 	return p
 }
 
-func (p PathSpec) fieldError() *Error {
-	if p.badLit {
-		return renderInvalid("literal does not allow this method")
+func specFrom(p PathSpec) intpath.Spec {
+	return intpath.Spec{
+		Dir:      p.Dir.String(),
+		Prefix:   p.Prefix,
+		Base:     p.Base,
+		Suffixes: copyStrings(p.Suffixes),
+		Ext:      p.Ext,
+		Literal:  p.literal,
+		Opaque:   p.opaque,
+		BadLit:   p.badLit,
 	}
-	if p.literal {
-		if p.opaque == "" {
-			return renderInvalid("empty literal path")
-		}
-		if strings.HasSuffix(p.opaque, ".") {
-			return renderInvalid("empty extension token", p.opaque)
-		}
-		return nil
-	}
-	if p.Lead == "" && p.Name == "" {
-		return renderInvalid("empty lead and name")
-	}
-	if err := fieldChars("lead", p.Lead); err != nil {
-		return err
-	}
-	if err := fieldChars("name", p.Name); err != nil {
-		return err
-	}
-	if hasDotComponent(p.Name) {
-		return renderInvalid("name is a dot path component", p.Name)
-	}
-	for _, step := range p.Steps {
-		if stripOneLeadingDot(step) == "" {
-			return renderInvalid("empty step", step)
-		}
-		if err := fieldChars("step", step); err != nil {
-			return err
-		}
-		if hasDotComponent(step) {
-			return renderInvalid("step is a dot path component", step)
-		}
-	}
-	if err := fieldChars("ext", p.Ext); err != nil {
-		return err
-	}
-	if p.Ext != "" && (stripOneLeadingDot(p.Ext) == "" || hasDotComponent(p.Ext) || strings.HasSuffix(p.Ext, ".")) {
-		return renderInvalid("ext is a dot path component", p.Ext)
-	}
-	return nil
 }
 
-func fieldChars(field, value string) *Error {
-	if strings.ContainsAny(value, "/\\\x00") {
-		return renderInvalid(field + " contains an illegal character")
+func specTo(s intpath.Spec) PathSpec {
+	return PathSpec{
+		Dir:      Dir(s.Dir),
+		Prefix:   s.Prefix,
+		Base:     s.Base,
+		Suffixes: copyStrings(s.Suffixes),
+		Ext:      s.Ext,
+		literal:  s.Literal,
+		opaque:   s.Opaque,
+		badLit:   s.BadLit,
 	}
-	return nil
-}
-
-func hasDotComponent(s string) bool {
-	if s == "." || s == ".." {
-		return true
-	}
-	s = strings.ReplaceAll(s, `\`, "/")
-	for _, part := range strings.Split(s, "/") {
-		if part == "." || part == ".." {
-			return true
-		}
-	}
-	return false
-}
-
-func stripOneLeadingDot(s string) string {
-	if strings.HasPrefix(s, ".") {
-		return s[1:]
-	}
-	return s
-}
-
-func joinSlash(parts ...string) string {
-	var b strings.Builder
-	for _, p := range parts {
-		if p == "" {
-			continue
-		}
-		p = strings.ReplaceAll(p, `\`, "/")
-		if b.Len() == 0 {
-			b.WriteString(p)
-			continue
-		}
-		if !strings.HasSuffix(b.String(), "/") {
-			b.WriteByte('/')
-		}
-		b.WriteString(strings.TrimPrefix(p, "/"))
-	}
-	return b.String()
-}
-
-// cleanPath collapses "." and duplicate slashes. It applies ".." only
-// while the first path component remains. escaped is true when ".."
-// would leave that component.
-func cleanPath(p string) (string, bool) {
-	p = strings.ReplaceAll(p, `\`, "/")
-	if p == "" {
-		return "", false
-	}
-	abs := strings.HasPrefix(p, "/")
-	out := make([]string, 0, strings.Count(p, "/")+1)
-	for i, seg := range strings.Split(p, "/") {
-		if seg == "" || seg == "." {
-			if i == 0 && abs {
-				out = append(out, "")
-			}
-			continue
-		}
-		if seg == ".." {
-			if abs {
-				if len(out) <= 2 {
-					return "", true
-				}
-				out = out[:len(out)-1]
-				continue
-			}
-			if len(out) <= 1 {
-				return "", true
-			}
-			out = out[:len(out)-1]
-			continue
-		}
-		out = append(out, seg)
-	}
-	if abs {
-		if len(out) == 0 || (len(out) == 1 && out[0] == "") {
-			return "/", false
-		}
-		return strings.Join(out, "/"), false
-	}
-	if len(out) == 0 {
-		return ".", false
-	}
-	return strings.Join(out, "/"), false
 }

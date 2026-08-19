@@ -37,10 +37,10 @@ type wgsSpineAlign struct {
 }
 
 func addWGSSpineAlign(p *gobble.Pipeline) wgsSpineAlign {
-	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genome", Ext: ".fasta"}
+	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genome", Ext: ".fasta"}
 	inFASTA := p.AddInput("fasta", fasta)
-	inR1 := p.AddInput("r1", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_1", Ext: ".fastq.gz"})
-	inR2 := p.AddInput("r2", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_2", Ext: ".fastq.gz"})
+	inR1 := p.AddInput("r1", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_1", Ext: ".fastq.gz"})
+	inR2 := p.AddInput("r2", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_2", Ext: ".fastq.gz"})
 
 	index := p.AddTask(gobble.TaskSpec{
 		Name:    "index",
@@ -48,15 +48,15 @@ func addWGSSpineAlign(p *gobble.Pipeline) wgsSpineAlign {
 		Command: []string{"bwa", "index", wgsE2EStagedFASTA},
 		Inputs:  []gobble.Bind{{Name: "fasta", From: inFASTA}},
 		Outputs: []gobble.Bind{
-			{Name: "amb", Spec: fasta.Append(".amb")},
-			{Name: "ann", Spec: fasta.Append(".ann")},
-			{Name: "bwt", Spec: fasta.Append(".bwt")},
-			{Name: "pac", Spec: fasta.Append(".pac")},
-			{Name: "sa", Spec: fasta.Append(".sa")},
+			{Name: "amb", Spec: fasta.AppendExt(".amb")},
+			{Name: "ann", Spec: fasta.AppendExt(".ann")},
+			{Name: "bwt", Spec: fasta.AppendExt(".bwt")},
+			{Name: "pac", Spec: fasta.AppendExt(".pac")},
+			{Name: "sa", Spec: fasta.AppendExt(".sa")},
 		},
 	})
 
-	sam := gobble.PathSpec{Dir: gobble.Dir("work"), Name: "aligned", Ext: ".sam"}
+	sam := gobble.PathSpec{Dir: gobble.Dir("work"), Base: "aligned", Ext: ".sam"}
 	mem := p.AddTask(gobble.TaskSpec{
 		Name:  "mem",
 		Image: wgsE2EThinBWA,
@@ -77,7 +77,7 @@ func addWGSSpineAlign(p *gobble.Pipeline) wgsSpineAlign {
 		Outputs: []gobble.Bind{{Name: "sam", Spec: sam}},
 	})
 
-	bam := gobble.PathSpec{Dir: gobble.Dir("work"), Name: "aligned", Ext: ".bam"}
+	bam := gobble.PathSpec{Dir: gobble.Dir("work"), Base: "aligned", Ext: ".bam"}
 	sort := p.AddTask(gobble.TaskSpec{
 		Name:    "sort",
 		Image:   wgsE2EThinSamtools,
@@ -104,7 +104,7 @@ func addWGSSpineAlign(p *gobble.Pipeline) wgsSpineAlign {
 		Image:   wgsE2EThinSamtools,
 		Command: []string{"samtools", "faidx", wgsE2EStagedFASTA},
 		Inputs:  []gobble.Bind{{Name: "fasta", From: inFASTA}},
-		Outputs: []gobble.Bind{{Name: "fai", Spec: fasta.Append(".fai")}},
+		Outputs: []gobble.Bind{{Name: "fai", Spec: fasta.AppendExt(".fai")}},
 	})
 
 	return wgsSpineAlign{fasta: inFASTA, faidx: faidx, sort: sort, bai: bai}
@@ -122,7 +122,7 @@ func callerBinds(a wgsSpineAlign) []gobble.Bind {
 func wgsE2ESpineStrelkaPipeline() *gobble.Pipeline {
 	p := gobble.NewPipeline("wgs-e2e-spine")
 	a := addWGSSpineAlign(p)
-	vcf := gobble.PathSpec{Dir: gobble.Dir("work"), Name: "sample", Ext: ".variants.vcf.gz"}
+	vcf := gobble.PathSpec{Dir: gobble.Dir("work"), Base: "sample", Ext: ".variants.vcf.gz"}
 	p.AddTask(gobble.TaskSpec{
 		Name:    "strelka",
 		Image:   wgsE2ESpineStrelka,
@@ -136,7 +136,7 @@ func wgsE2ESpineStrelkaPipeline() *gobble.Pipeline {
 func wgsE2ESpineBCFToolsPipeline() *gobble.Pipeline {
 	p := gobble.NewPipeline("wgs-e2e-spine-bcftools")
 	a := addWGSSpineAlign(p)
-	pileup := gobble.PathSpec{Dir: gobble.Dir("work"), Name: "pileup", Ext: ".vcf"}
+	pileup := gobble.PathSpec{Dir: gobble.Dir("work"), Base: "pileup", Ext: ".vcf"}
 	mpileup := p.AddTask(gobble.TaskSpec{
 		Name:    "mpileup",
 		Image:   wgsE2ESpineBCFTools,
@@ -144,7 +144,7 @@ func wgsE2ESpineBCFToolsPipeline() *gobble.Pipeline {
 		Inputs:  callerBinds(a),
 		Outputs: []gobble.Bind{{Name: "pileup", Spec: pileup}},
 	})
-	calls := gobble.PathSpec{Dir: gobble.Dir("work"), Name: "calls", Ext: ".vcf"}
+	calls := gobble.PathSpec{Dir: gobble.Dir("work"), Base: "calls", Ext: ".vcf"}
 	p.AddTask(gobble.TaskSpec{
 		Name:    "call",
 		Image:   wgsE2ESpineBCFTools,

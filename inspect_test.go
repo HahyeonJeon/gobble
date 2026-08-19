@@ -15,7 +15,7 @@ import (
 
 func TestInspectMissingWorkspace(t *testing.T) {
 	missing := filepath.Join(t.TempDir(), "absent")
-	data, err := gobble.Inspect(missing, "run", "")
+	data, err := gobble.Inspect(missing, gobble.ViewRun, "")
 	if data != nil {
 		t.Fatalf("Inspect() data = %q, want nil", data)
 	}
@@ -28,7 +28,7 @@ func TestInspectMissingWorkspace(t *testing.T) {
 func TestInspectMissingRunDoesNotCreate(t *testing.T) {
 	dir := t.TempDir()
 	before := snapshotWorkspace(t, dir)
-	data, err := gobble.Inspect(dir, "run", "")
+	data, err := gobble.Inspect(dir, gobble.ViewRun, "")
 	if data != nil {
 		t.Fatalf("Inspect() data = %q, want nil", data)
 	}
@@ -49,9 +49,9 @@ func TestInspectUnknownViewAndInstance(t *testing.T) {
 		t.Fatalf("Run() error = %v", err)
 	}
 	before := snapshotWorkspace(t, dir)
-	_, err := gobble.Inspect(dir, "events", "")
+	_, err := gobble.Inspect(dir, gobble.View("events"), "")
 	requireInspectError(t, "unknown view", err, gobble.DefectNotFound, "events")
-	_, err = gobble.Inspect(dir, "instances", "nope")
+	_, err = gobble.Inspect(dir, gobble.ViewInstances, "nope")
 	requireInspectError(t, "unknown instance", err, gobble.DefectNotFound, "nope")
 	after := snapshotWorkspace(t, dir)
 	if before != after {
@@ -70,7 +70,7 @@ func TestInspectUnsupportedSchema(t *testing.T) {
 }
 `)
 	before := snapshotWorkspace(t, dir)
-	_, err := gobble.Inspect(dir, "run", "")
+	_, err := gobble.Inspect(dir, gobble.ViewRun, "")
 	requireInspectError(t, "unsupported schema", err, gobble.DefectUnsupportedSchema, "")
 	after := snapshotWorkspace(t, dir)
 	if before != after {
@@ -79,7 +79,7 @@ func TestInspectUnsupportedSchema(t *testing.T) {
 }
 
 func TestInspectOp(t *testing.T) {
-	_, err := gobble.Inspect(t.TempDir(), "run", "")
+	_, err := gobble.Inspect(t.TempDir(), gobble.ViewRun, "")
 	var ge *gobble.Error
 	if !errors.As(err, &ge) {
 		t.Fatalf("error = %v, want *Error", err)
@@ -122,6 +122,9 @@ func TestInspectViewsAfterSuccessfulRun(t *testing.T) {
 	if len(instances) != 1 {
 		t.Fatalf("instances got %d records, want 1", len(instances))
 	}
+	if instances[0]["schema_version"] != float64(engine.SchemaVersion) {
+		t.Fatalf("instance schema_version got %#v, want %d", instances[0]["schema_version"], engine.SchemaVersion)
+	}
 	if instances[0]["identity"] != "copy" || instances[0]["status"] != engine.StatusSucceeded {
 		t.Fatalf("instance record got %#v", instances[0])
 	}
@@ -163,11 +166,16 @@ func TestInspectViewsAfterSuccessfulRun(t *testing.T) {
 		t.Fatalf("timing instance got %#v, want start and end", one)
 	}
 
-	dag := mustInspectObject(t, dir, "DAG", "")
+	dag := mustInspectObject(t, dir, string(gobble.ViewDAG), "")
+	if dag["schema_version"] != float64(engine.SchemaVersion) {
+		t.Fatalf("dag.schema_version got %#v, want %d", dag["schema_version"], engine.SchemaVersion)
+	}
 	nodes, _ := dag["nodes"].([]any)
 	if len(nodes) != 1 || nodes[0] != "copy" {
 		t.Fatalf("DAG nodes got %#v", dag["nodes"])
 	}
+	_, err := gobble.Inspect(dir, gobble.View("DAG"), "")
+	requireInspectError(t, "uppercase DAG view", err, gobble.DefectNotFound, "DAG")
 
 	lineage := mustInspectObject(t, dir, "lineage", "")
 	if _, ok := lineage["lineage"]; !ok {
@@ -268,14 +276,14 @@ func TestInspectReleasedWorkspace(t *testing.T) {
 
 func processEnvCopyPipeline() *gobble.Pipeline {
 	p := gobble.NewPipeline("copy")
-	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "sample", Ext: ".txt"})
+	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "sample", Ext: ".txt"})
 	p.AddTask(gobble.TaskSpec{
 		Name:    "copy",
 		Command: []string{"sh", "-c", "pwd > out/pwd.txt && cp in/sample.txt out/sample.txt"},
 		Inputs:  []gobble.Bind{{Name: "in", From: in}},
 		Outputs: []gobble.Bind{
-			{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "sample", Ext: ".txt"}},
-			{Name: "pwd", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Name: "pwd", Ext: ".txt"}},
+			{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "sample", Ext: ".txt"}},
+			{Name: "pwd", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "pwd", Ext: ".txt"}},
 		},
 		Params:    []gobble.Param{{Name: "mode", Value: "fast"}},
 		Env:       map[string]string{"HOME": "/tmp/gobble-home"},
@@ -308,7 +316,7 @@ func requireInspectError(t *testing.T, name string, err error, code gobble.Defec
 
 func mustInspectObject(t *testing.T, workspace, view, instance string) map[string]any {
 	t.Helper()
-	data, err := gobble.Inspect(workspace, view, instance)
+	data, err := gobble.Inspect(workspace, gobble.View(view), instance)
 	if err != nil {
 		t.Fatalf("Inspect(%s) error = %v", view, err)
 	}
@@ -321,7 +329,7 @@ func mustInspectObject(t *testing.T, workspace, view, instance string) map[strin
 
 func mustInspectJSONL(t *testing.T, workspace, view, instance string) []map[string]any {
 	t.Helper()
-	data, err := gobble.Inspect(workspace, view, instance)
+	data, err := gobble.Inspect(workspace, gobble.View(view), instance)
 	if err != nil {
 		t.Fatalf("Inspect(%s) error = %v", view, err)
 	}

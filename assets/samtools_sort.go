@@ -46,7 +46,7 @@ func addSamtoolsSort(parent Parent, sam gobble.Handle, opts SamtoolsSortOptions)
 	if outDir.IsZero() {
 		outDir = gobble.Dir("work/samtools-sort")
 	}
-	bamSpec := sam.Spec().ReplaceExtension(".bam").WithDir(outDir)
+	bamSpec := sam.Spec().WithExt(".bam").WithDir(outDir)
 
 	cmd := []string{"samtools", "sort"}
 	if n := threadCount(opts.Resources.CPU); n > 0 {

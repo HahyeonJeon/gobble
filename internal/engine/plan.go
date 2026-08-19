@@ -151,12 +151,12 @@ type jsonMember struct {
 // default json.Marshal: Directory.path is unexported and literal is not
 // an exported field.
 type jsonSpec struct {
-	Dir     string   `json:"dir"`
-	Lead    string   `json:"lead"`
-	Name    string   `json:"name"`
-	Steps   []string `json:"steps"`
-	Ext     string   `json:"ext"`
-	Literal bool     `json:"literal"`
+	Dir      string   `json:"dir"`
+	Prefix   string   `json:"prefix"`
+	Base     string   `json:"base"`
+	Suffixes []string `json:"suffixes"`
+	Ext      string   `json:"ext"`
+	Literal  bool     `json:"literal"`
 }
 
 type jsonDAG struct {
@@ -178,7 +178,7 @@ func BuildPlan(s Snapshot, doc Document) (*Plan, []Defect) {
 	raw, err := marshalPlan(doc)
 	if err != nil {
 		return nil, []Defect{{
-			Code:    DefectInvalidName,
+			Code:    DefectInvalidValue,
 			Message: "encode plan: " + err.Error(),
 		}}
 	}
@@ -313,12 +313,12 @@ func encodeMembers(in []IOMember) []jsonMember {
 
 func encodeSpec(p Path) jsonSpec {
 	return jsonSpec{
-		Dir:     p.Dir,
-		Lead:    p.Lead,
-		Name:    p.Name,
-		Steps:   jsonStrings(p.Steps),
-		Ext:     p.Ext,
-		Literal: p.Literal,
+		Dir:      p.Dir,
+		Prefix:   p.Prefix,
+		Base:     p.Base,
+		Suffixes: jsonStrings(p.Suffixes),
+		Ext:      p.Ext,
+		Literal:  p.Literal,
 	}
 }
 

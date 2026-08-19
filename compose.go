@@ -10,7 +10,7 @@ import "github.com/HahyeonJeon/gobble/internal/engine"
 func Compose(p *Pipeline) (*Graph, error) {
 	if p == nil {
 		return nil, &Error{Op: "compose", Defects: []Defect{{
-			Code:    DefectInvalidName,
+			Code:    DefectInvalidRequest,
 			Message: "nil pipeline",
 		}}}
 	}
@@ -243,14 +243,14 @@ func snapshotNodes(nodes []node) []engine.Node {
 
 func snapshotPath(p PathSpec) engine.Path {
 	return engine.Path{
-		Dir:     p.Dir.String(),
-		Lead:    p.Lead,
-		Name:    p.Name,
-		Steps:   copyStrings(p.Steps),
-		Ext:     p.Ext,
-		Literal: p.literal,
-		Opaque:  p.opaque,
-		BadLit:  p.badLit,
+		Dir:      p.Dir.String(),
+		Prefix:   p.Prefix,
+		Base:     p.Base,
+		Suffixes: copyStrings(p.Suffixes),
+		Ext:      p.Ext,
+		Literal:  p.literal,
+		Opaque:   p.opaque,
+		BadLit:   p.badLit,
 	}
 }
 

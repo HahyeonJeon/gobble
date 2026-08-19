@@ -22,22 +22,14 @@ func testDefectCodes(e *Error) []DefectCode {
 
 func TestRestageSpecClearsLiteralOpacity(t *testing.T) {
 	from := Literal("sample.html").WithDir(Dir("work"))
-	spec := PathSpec{Name: "report", Ext: ".txt"}
-	got := restageSpec(spec, from)
+	spec := PathSpec{Base: "report", Ext: ".txt"}
+	got := classifySpec(spec, from, DeriveAppend)
 	rendered, err := got.Render()
-	if err != nil {
-		t.Fatalf("case restage-literal: restageSpec().Render() error = %v, want nil", err)
-	}
-	if rendered != "work/report.txt" {
-		t.Fatalf("case restage-literal: restageSpec().Render() got %q, want %q", rendered, "work/report.txt")
-	}
-	classified := classifySpec(spec, from, DeriveAppend)
-	classRendered, err := classified.Render()
 	if err != nil {
 		t.Fatalf("case restage-literal: classifySpec().Render() error = %v, want nil", err)
 	}
-	if classRendered != "work/report.txt" {
-		t.Fatalf("case restage-literal: classifySpec().Render() got %q, want %q", classRendered, "work/report.txt")
+	if rendered != "work/report.txt" {
+		t.Fatalf("case restage-literal: classifySpec().Render() got %q, want %q", rendered, "work/report.txt")
 	}
 }
 
@@ -58,7 +50,7 @@ func TestComposeRestageFromLiteralRendersNewFields(t *testing.T) {
 		Outputs: []Bind{{
 			Name: "out",
 			From: src.Out("html"),
-			Spec: PathSpec{Name: "report", Ext: ".txt"},
+			Spec: PathSpec{Base: "report", Ext: ".txt"},
 		}},
 	})
 	g, err := Compose(p)
@@ -95,7 +87,7 @@ func TestComposeRestageFromLiteralRendersNewFields(t *testing.T) {
 
 func TestComposeValidatePlanRestagedPipelineInput(t *testing.T) {
 	p := NewPipeline("input-restage")
-	in := p.AddInput("reads", PathSpec{Dir: Dir("in"), Name: "sample", Ext: ".txt"})
+	in := p.AddInput("reads", PathSpec{Dir: Dir("in"), Base: "sample", Ext: ".txt"})
 	p.AddTask(TaskSpec{
 		Name:    "copy",
 		Command: []string{"cp"},
@@ -106,7 +98,7 @@ func TestComposeValidatePlanRestagedPipelineInput(t *testing.T) {
 		}},
 		Outputs: []Bind{{
 			Name: "dst",
-			Spec: PathSpec{Dir: Dir("out"), Name: "sample", Ext: ".txt"},
+			Spec: PathSpec{Dir: Dir("out"), Base: "sample", Ext: ".txt"},
 		}},
 	})
 	g, err := Compose(p)
@@ -146,105 +138,27 @@ func TestComposeValidatePlanRestagedPipelineInput(t *testing.T) {
 	}
 }
 
-func TestRenderAgreesWithSnapshot(t *testing.T) {
-	bam := PathSpec{Name: "aln", Ext: ".bam"}
-	r1 := PathSpec{Lead: "samplename_S1_L001_R1_", Name: "001", Ext: ".fastq.gz"}
-	chain := PathSpec{Name: "sample", Steps: []string{"sorted", "markdup"}, Ext: ".bam"}
-	accept := []struct {
-		name string
-		spec PathSpec
-		want string
-	}{
-		{name: "gzipped FASTQ", spec: PathSpec{Name: "sample", Ext: ".fastq.gz"}, want: "sample.fastq.gz"},
-		{name: "Illumina R1", spec: r1, want: "samplename_S1_L001_R1_001.fastq.gz"},
-		{name: "Illumina R2", spec: r1.WithLead("samplename_S1_L001_R2_"), want: "samplename_S1_L001_R2_001.fastq.gz"},
-		{name: "htslib BAI", spec: bam.Append(".bai"), want: "aln.bam.bai"},
-		{name: "Picard BAI", spec: bam.ReplaceExtension(".bai"), want: "aln.bai"},
-		{name: "processing chain", spec: chain, want: "sample.sorted.markdup.bam"},
-		{name: "literal", spec: Literal("sample.Aligned.sortedByCoord.out.bam"), want: "sample.Aligned.sortedByCoord.out.bam"},
-		{name: "directory", spec: PathSpec{Dir: Dir("work/align"), Name: "sample", Steps: []string{"sorted"}, Ext: ".bam"}, want: "work/align/sample.sorted.bam"},
-		{name: "empty Steps and Ext", spec: PathSpec{Name: "LICENSE"}, want: "LICENSE"},
-		{name: ".fastq stays on name", spec: PathSpec{Name: "sample", Ext: ".fastq"}, want: "sample.fastq"},
-		{name: "internal dotdot", spec: PathSpec{Dir: Dir("work/align/../lane"), Name: "x", Ext: ".txt"}, want: "work/lane/x.txt"},
+func TestRelatedFilePredicate(t *testing.T) {
+	if !isRelatedFile(PathSpec{Ext: ".bai"}) {
+		t.Fatalf("isRelatedFile(Ext only) got false, want true")
 	}
-	for _, tt := range accept {
-		t.Run("accept/"+tt.name, func(t *testing.T) {
-			got, err := tt.spec.Render()
-			eng, ed := snapshotPath(tt.spec).Render()
-			if err != nil {
-				t.Fatalf("case %s: PathSpec.Render() error = %v, want nil", tt.name, err)
-			}
-			if ed != nil {
-				t.Fatalf("case %s: snapshotPath.Render() defect = %v, want nil", tt.name, ed)
-			}
-			if got != tt.want || eng != tt.want || got != eng {
-				t.Fatalf("case %s: PathSpec.Render()=%q snapshotPath.Render()=%q want %q", tt.name, got, eng, tt.want)
-			}
-		})
+	if !isRelatedFile(PathSpec{Dir: Dir("out"), Ext: ".bai"}) {
+		t.Fatalf("isRelatedFile(Dir+Ext) got false, want true")
 	}
-
-	lit := Literal("aln.bam")
-	invalid := []struct {
-		name string
-		spec PathSpec
-	}{
-		{name: "empty lead and name", spec: PathSpec{Ext: ".bam"}},
-		{name: "zero PathSpec", spec: PathSpec{}},
-		{name: "step is dot", spec: PathSpec{Name: "x", Steps: []string{"."}}},
-		{name: "empty step token", spec: PathSpec{Name: "sample", Steps: []string{""}}},
-		{name: "AppendStep empty", spec: PathSpec{Name: "sample"}.AppendStep("")},
-		{name: "AppendStep dot", spec: PathSpec{Name: "sample", Ext: ".bam"}.AppendStep(".")},
-		{name: "sample. hole", spec: PathSpec{Name: "sample"}.AppendStep("")},
-		{name: ".fastq hole empty step", spec: PathSpec{Name: "sample", Steps: []string{""}, Ext: ".fastq"}},
-		{name: "ext is dot", spec: PathSpec{Name: "x", Ext: "."}},
-		{name: "ext is dotdot", spec: PathSpec{Name: "x", Ext: ".."}},
-		{name: "dir escape parent", spec: PathSpec{Dir: Dir("work/../out"), Name: "x"}},
-		{name: "literal AppendStep", spec: lit.AppendStep("sorted")},
-		{name: "name slash", spec: PathSpec{Name: "a/b"}},
-		{name: "name is dot", spec: PathSpec{Name: "."}},
-		{name: "name is dotdot", spec: PathSpec{Name: ".."}},
-		{name: "Append empty extra", spec: PathSpec{Name: "sample", Ext: ".bam"}.Append("")},
-		{name: "Append dot extra", spec: PathSpec{Name: "sample", Ext: ".bam"}.Append(".")},
-		{name: "ext trailing dot", spec: PathSpec{Name: "sample", Ext: ".bam."}},
-		{name: "literal Append empty extra", spec: Literal("aln.bam").Append("")},
+	if isRelatedFile(PathSpec{Base: "aln", Ext: ".bam"}) {
+		t.Fatalf("isRelatedFile(Base+Ext) got true, want false")
 	}
-	for _, tt := range invalid {
-		t.Run("invalid/"+tt.name, func(t *testing.T) {
-			got, err := tt.spec.Render()
-			eng, ed := snapshotPath(tt.spec).Render()
-			var ge *Error
-			if !errors.As(err, &ge) {
-				t.Fatalf("case %s: PathSpec.Render() got path %q error = %v, want *Error", tt.name, got, err)
-			}
-			if ed == nil {
-				t.Fatalf("case %s: snapshotPath.Render() path %q defect = nil, want invalid-path", tt.name, eng)
-			}
-			if ge.Op != "render" {
-				t.Fatalf("case %s: PathSpec.Render() Op got %q, want render", tt.name, ge.Op)
-			}
-			if ed.Code != string(DefectInvalidPath) {
-				t.Fatalf("case %s: snapshotPath.Render() code got %q, want %s", tt.name, ed.Code, DefectInvalidPath)
-			}
-			found := false
-			for _, d := range ge.Defects {
-				if d.Code == DefectInvalidPath {
-					found = true
-					break
-				}
-			}
-			if !found {
-				t.Fatalf("case %s: PathSpec.Render() codes got %v, want %s", tt.name, testDefectCodes(ge), DefectInvalidPath)
-			}
-			if got != "" || eng != "" {
-				t.Fatalf("case %s: Render paths got PathSpec %q snapshot %q, want empty", tt.name, got, eng)
-			}
-		})
+	if !isZeroSpec(PathSpec{}) {
+		t.Fatalf("isZeroSpec(zero) got false, want true")
+	}
+	if isZeroSpec(PathSpec{Ext: ".bai"}) {
+		t.Fatalf("isZeroSpec(related) got true, want false")
 	}
 }
 
 func TestClassifyAgreesWithSnapshot(t *testing.T) {
-	bam := PathSpec{Name: "aln", Ext: ".bam"}
-	from := PathSpec{Dir: Dir("work"), Name: "sample", Steps: []string{"sorted"}, Ext: ".bam"}
+	bam := PathSpec{Base: "aln", Ext: ".bam"}
+	from := PathSpec{Dir: Dir("work"), Base: "sample", Suffixes: []string{"sorted"}, Ext: ".bam"}
 	fromLit := Literal("aln.bam").WithDir(Dir("work"))
 	tests := []struct {
 		name string
@@ -257,8 +171,8 @@ func TestClassifyAgreesWithSnapshot(t *testing.T) {
 		{name: "related replace", spec: PathSpec{Ext: ".bai"}, from: bam, rule: DeriveReplaceExt},
 		{name: "related with dir", spec: PathSpec{Dir: Dir("out"), Ext: ".bai"}, from: bam, rule: DeriveAppend},
 		{name: "dir only restage", spec: PathSpec{Dir: Dir("out")}, from: from, rule: DeriveAppend},
-		{name: "steps only restage", spec: PathSpec{Steps: []string{"markdup"}}, from: from, rule: DeriveAppend},
-		{name: "literal parent restage", spec: PathSpec{Name: "report", Ext: ".txt"}, from: fromLit, rule: DeriveAppend},
+		{name: "steps only restage", spec: PathSpec{Suffixes: []string{"markdup"}}, from: from, rule: DeriveAppend},
+		{name: "literal parent restage", spec: PathSpec{Base: "report", Ext: ".txt"}, from: fromLit, rule: DeriveAppend},
 		{name: "literal spec restage", spec: Literal("out.bam"), from: bam, rule: DeriveAppend},
 	}
 	for _, tt := range tests {
@@ -266,16 +180,16 @@ func TestClassifyAgreesWithSnapshot(t *testing.T) {
 			got := classifySpec(tt.spec, tt.from, tt.rule)
 			eng := engine.Classify(snapshotPath(tt.spec), snapshotPath(tt.from), engine.DeriveRule(tt.rule))
 			snap := snapshotPath(got)
-			if snap.Dir != eng.Dir || snap.Lead != eng.Lead || snap.Name != eng.Name || snap.Ext != eng.Ext ||
+			if snap.Dir != eng.Dir || snap.Prefix != eng.Prefix || snap.Base != eng.Base || snap.Ext != eng.Ext ||
 				snap.Literal != eng.Literal || snap.Opaque != eng.Opaque || snap.BadLit != eng.BadLit {
 				t.Fatalf("case %s: classifySpec snapshot %+v, Classify %+v", tt.name, snap, eng)
 			}
-			if len(snap.Steps) != len(eng.Steps) {
-				t.Fatalf("case %s: steps got %v, want %v", tt.name, snap.Steps, eng.Steps)
+			if len(snap.Suffixes) != len(eng.Suffixes) {
+				t.Fatalf("case %s: suffixes got %v, want %v", tt.name, snap.Suffixes, eng.Suffixes)
 			}
-			for i := range snap.Steps {
-				if snap.Steps[i] != eng.Steps[i] {
-					t.Fatalf("case %s: steps got %v, want %v", tt.name, snap.Steps, eng.Steps)
+			for i := range snap.Suffixes {
+				if snap.Suffixes[i] != eng.Suffixes[i] {
+					t.Fatalf("case %s: suffixes got %v, want %v", tt.name, snap.Suffixes, eng.Suffixes)
 				}
 			}
 		})
@@ -300,12 +214,12 @@ func TestValidateRejectDeclarations(t *testing.T) {
 					command: []string{"bwa"},
 					outputs: []graphBind{{
 						name:    "idx",
-						spec:    PathSpec{Name: "ref", Ext: ".amb"},
-						members: []graphMember{{name: "amb", spec: PathSpec{Name: "ref", Ext: ".amb"}}},
+						spec:    PathSpec{Base: "ref", Ext: ".amb"},
+						members: []graphMember{{name: "amb", spec: PathSpec{Base: "ref", Ext: ".amb"}}},
 					}},
 				}},
 			},
-			code:    DefectInvalidName,
+			code:    DefectInvalidValue,
 			unit:    "index.idx",
 			message: "group and spec both set",
 		},
@@ -318,10 +232,10 @@ func TestValidateRejectDeclarations(t *testing.T) {
 					name:    "copy",
 					command: []string{"cp"},
 					script:  "echo hi",
-					outputs: []graphBind{{name: "out", spec: PathSpec{Name: "out", Ext: ".txt"}}},
+					outputs: []graphBind{{name: "out", spec: PathSpec{Base: "out", Ext: ".txt"}}},
 				}},
 			},
-			code:    DefectInvalidName,
+			code:    DefectInvalidValue,
 			unit:    "copy",
 			message: "command and script both set",
 		},
@@ -334,10 +248,10 @@ func TestValidateRejectDeclarations(t *testing.T) {
 					name:    "copy",
 					command: []string{"cp"},
 					env:     map[string]string{"": "x"},
-					outputs: []graphBind{{name: "out", spec: PathSpec{Name: "out", Ext: ".txt"}}},
+					outputs: []graphBind{{name: "out", spec: PathSpec{Base: "out", Ext: ".txt"}}},
 				}},
 			},
-			code:    DefectInvalidName,
+			code:    DefectInvalidValue,
 			unit:    "copy",
 			message: "empty env key",
 		},
@@ -373,7 +287,7 @@ func TestBuildPlanNeverReady(t *testing.T) {
 			id:      "copy",
 			name:    "copy",
 			command: []string{"cp"},
-			outputs: []graphBind{{name: "out", spec: PathSpec{Name: "out", Ext: ".txt"}}},
+			outputs: []graphBind{{name: "out", spec: PathSpec{Base: "out", Ext: ".txt"}}},
 		}},
 		edges: []graphEdge{{
 			fromTask: "ghost",
@@ -426,7 +340,7 @@ func TestPlanDocumentRenderFailure(t *testing.T) {
 			command: []string{"cp"},
 			outputs: []graphBind{{
 				name: "out",
-				spec: PathSpec{Name: "sample"}.AppendStep(""),
+				spec: PathSpec{Base: "sample"}.AppendSuffix(""),
 			}},
 		}},
 	}

@@ -11,8 +11,8 @@ import (
 )
 
 func TestSTARAlignStandaloneComposeBuildPlan(t *testing.T) {
-	r1 := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_1", Ext: ".fastq.gz"}
-	r2 := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_2", Ext: ".fastq.gz"}
+	r1 := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_1", Ext: ".fastq.gz"}
+	r2 := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_2", Ext: ".fastq.gz"}
 	opts := STARAlignOptions{
 		ExtraArgs: []string{"--outFilterMultimapNmax", "1"},
 		Resources: gobble.Resources{CPU: 2},
@@ -54,9 +54,9 @@ func TestSTARAlignStandaloneComposeBuildPlan(t *testing.T) {
 }
 
 func TestSTARAlignNestedModule(t *testing.T) {
-	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genome", Ext: ".fasta"}
-	r1 := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_1", Ext: ".fastq.gz"}
-	r2 := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_2", Ext: ".fastq.gz"}
+	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genome", Ext: ".fasta"}
+	r1 := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_1", Ext: ".fastq.gz"}
+	r2 := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_2", Ext: ".fastq.gz"}
 	p := gobble.NewPipeline("assay")
 	hf := p.AddInput("fasta", fasta)
 	h1 := p.AddInput("r1", r1)
@@ -98,10 +98,10 @@ func TestSTARAlignNestedRun(t *testing.T) {
 	stageFile(t, dir, "in/SRR6357072_1.fastq.gz", srcR1)
 	stageFile(t, dir, "in/SRR6357072_2.fastq.gz", srcR2)
 	p := gobble.NewPipeline("rna")
-	hf := p.AddInput("fasta", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genome", Ext: ".fasta"})
-	hg := p.AddInput("gtf", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genes", Ext: ".gtf"})
-	h1 := p.AddInput("r1", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "SRR6357072_1", Ext: ".fastq.gz"})
-	h2 := p.AddInput("r2", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "SRR6357072_2", Ext: ".fastq.gz"})
+	hf := p.AddInput("fasta", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genome", Ext: ".fasta"})
+	hg := p.AddInput("gtf", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genes", Ext: ".gtf"})
+	h1 := p.AddInput("r1", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "SRR6357072_1", Ext: ".fastq.gz"})
+	h2 := p.AddInput("r2", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "SRR6357072_2", Ext: ".fastq.gz"})
 	idx := AddSTARGenomeGenerate(p, hf, hg, STARGenomeGenerateOptions{
 		ExtraArgs: []string{"--genomeSAindexNbases", "7", "--sjdbOverhang", "100"},
 		Resources: gobble.Resources{CPU: 1},

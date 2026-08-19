@@ -146,7 +146,7 @@ func starGenomeGroup(dir gobble.Directory, sjdb bool) gobble.Group {
 	files := starGenomeFiles(sjdb)
 	g := make(gobble.Group, 0, len(files))
 	for _, f := range files {
-		g = append(g, gobble.Member{Name: f.member, Spec: gobble.PathSpec{Dir: dir, Name: f.name, Ext: f.ext}})
+		g = append(g, gobble.Member{Name: f.member, Spec: gobble.PathSpec{Dir: dir, Base: f.name, Ext: f.ext}})
 	}
 	return g
 }
@@ -161,5 +161,5 @@ func starGenomeGroupFrom(sjdb bool) gobble.Group {
 }
 
 func pathSpecUnset(p gobble.PathSpec) bool {
-	return p.Dir.IsZero() && p.Lead == "" && p.Name == "" && len(p.Steps) == 0 && p.Ext == ""
+	return p.Dir.IsZero() && p.Prefix == "" && p.Base == "" && len(p.Suffixes) == 0 && p.Ext == ""
 }

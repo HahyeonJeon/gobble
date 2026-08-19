@@ -24,7 +24,7 @@ var pinSARSCoV2R1 = Pin{
 }
 
 func TestFastQCStandaloneComposeBuildPlan(t *testing.T) {
-	reads := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_1", Ext: ".fastq.gz"}
+	reads := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_1", Ext: ".fastq.gz"}
 	opts := FastQCOptions{
 		ExtraArgs: []string{"--kmers", "7"},
 		Resources: gobble.Resources{CPU: 2},
@@ -50,7 +50,7 @@ func TestFastQCStandaloneComposeBuildPlan(t *testing.T) {
 }
 
 func TestFastQCNestedModule(t *testing.T) {
-	reads := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_1", Ext: ".fastq.gz"}
+	reads := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_1", Ext: ".fastq.gz"}
 	p := gobble.NewPipeline("assay")
 	h := p.AddInput("reads", reads)
 	mod := AddModule(p, "raw")
@@ -76,7 +76,7 @@ func TestFastQCStandaloneRun(t *testing.T) {
 	src := cachePin(t, pinSARSCoV2R1)
 	dir := t.TempDir()
 	stageFile(t, dir, "in/test_1.fastq.gz", src)
-	reads := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_1", Ext: ".fastq.gz"}
+	reads := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_1", Ext: ".fastq.gz"}
 	p := FastQCPipeline(reads, FastQCOptions{
 		ExtraArgs: []string{"--quiet"},
 		Resources: gobble.Resources{CPU: 1},
@@ -101,7 +101,7 @@ func TestFastQCExtraArgsResume(t *testing.T) {
 	src := cachePin(t, pinSARSCoV2R1)
 	dir := t.TempDir()
 	stageFile(t, dir, "in/test_1.fastq.gz", src)
-	reads := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "test_1", Ext: ".fastq.gz"}
+	reads := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_1", Ext: ".fastq.gz"}
 	opts := FastQCOptions{ExtraArgs: []string{"--quiet"}, Resources: gobble.Resources{CPU: 1}}
 	g, err := gobble.Compose(FastQCPipeline(reads, opts))
 	if err != nil {
@@ -323,7 +323,7 @@ func deadPID(t *testing.T) int {
 
 func inspectJSONL(t *testing.T, workspace, view string) []map[string]any {
 	t.Helper()
-	data, err := gobble.Inspect(workspace, view, "")
+	data, err := gobble.Inspect(workspace, gobble.View(view), "")
 	if err != nil {
 		t.Fatalf("Inspect(%s) error = %v", view, err)
 	}

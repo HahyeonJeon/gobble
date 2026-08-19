@@ -67,8 +67,8 @@ func BismarkAlignPipeline(fasta, r1, r2 gobble.PathSpec, opts BismarkAlignOption
 func addBismarkAlign(parent Parent, fasta, index, r1, r2 gobble.Handle, opts BismarkAlignOptions) BismarkAlignPorts {
 	outDir := bismarkAlignDir(opts.OutDir)
 	genomeDir := bismarkGenomeDir()
-	bamSpec := gobble.PathSpec{Dir: outDir, Name: bismarkAlignBasename + "_pe", Ext: ".bam"}
-	reportSpec := gobble.PathSpec{Dir: outDir, Name: bismarkAlignBasename + "_PE_report", Ext: ".txt"}
+	bamSpec := gobble.PathSpec{Dir: outDir, Base: bismarkAlignBasename + "_pe", Ext: ".bam"}
+	reportSpec := gobble.PathSpec{Dir: outDir, Base: bismarkAlignBasename + "_PE_report", Ext: ".txt"}
 
 	cmd := []string{"bismark", "--genome", bismarkGenomeFolderToken(genomeDir), "--bam", "--output_dir", outDir.String(), "--basename", bismarkAlignBasename}
 	if n := threadCount(opts.Resources.CPU); n >= 2 {

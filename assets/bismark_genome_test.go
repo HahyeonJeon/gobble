@@ -11,7 +11,7 @@ import (
 const wantBismarkImage = "community.wave.seqera.io/library/bismark:0.25.1--1f50935de5d79c47"
 
 func TestBismarkGenomeStandaloneComposeBuildPlan(t *testing.T) {
-	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genome", Ext: ".fasta"}
+	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genome", Ext: ".fasta"}
 	opts := BismarkGenomeOptions{
 		ExtraArgs: []string{"--verbose"},
 		Resources: gobble.Resources{CPU: 2},
@@ -47,7 +47,7 @@ func TestBismarkGenomeStandaloneComposeBuildPlan(t *testing.T) {
 }
 
 func TestBismarkGenomeNestedModule(t *testing.T) {
-	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Name: "genome", Ext: ".fasta"}
+	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genome", Ext: ".fasta"}
 	p := gobble.NewPipeline("assay")
 	h := p.AddInput("fasta", fasta)
 	mod := AddModule(p, "ref")

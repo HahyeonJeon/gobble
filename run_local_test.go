@@ -186,15 +186,15 @@ func TestWorkflowCasePlanMatchesHEAD(t *testing.T) {
 
 func runLocalFixturePipeline() *gobble.Pipeline {
 	p := gobble.NewPipeline("run-local")
-	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "sample", Ext: ".txt"})
+	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "sample", Ext: ".txt"})
 	p.AddTask(gobble.TaskSpec{
 		Name:    "image",
 		Image:   runLocalImage,
 		Command: []string{"sh", "-c", "pwd > out/docker/pwd.txt && cp in/sample.txt out/docker/sample.txt"},
 		Inputs:  []gobble.Bind{{Name: "in", From: in}},
 		Outputs: []gobble.Bind{
-			{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("out/docker"), Name: "sample", Ext: ".txt"}},
-			{Name: "pwd", Spec: gobble.PathSpec{Dir: gobble.Dir("out/docker"), Name: "pwd", Ext: ".txt"}},
+			{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("out/docker"), Base: "sample", Ext: ".txt"}},
+			{Name: "pwd", Spec: gobble.PathSpec{Dir: gobble.Dir("out/docker"), Base: "pwd", Ext: ".txt"}},
 		},
 		Params:    []gobble.Param{{Name: "mode", Value: "fast"}},
 		Resources: gobble.Resources{CPU: 1, Memory: "256m"},
@@ -205,7 +205,7 @@ func runLocalFixturePipeline() *gobble.Pipeline {
 		Inputs:  []gobble.Bind{{Name: "in", From: in}},
 		Outputs: []gobble.Bind{{
 			Name: "out",
-			Spec: gobble.PathSpec{Dir: gobble.Dir("out/process"), Name: "sample", Ext: ".txt"},
+			Spec: gobble.PathSpec{Dir: gobble.Dir("out/process"), Base: "sample", Ext: ".txt"},
 		}},
 	})
 	return p
@@ -213,7 +213,7 @@ func runLocalFixturePipeline() *gobble.Pipeline {
 
 func runLocalBadImagePipeline() *gobble.Pipeline {
 	p := gobble.NewPipeline("run-local-bad")
-	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Name: "sample", Ext: ".txt"})
+	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "sample", Ext: ".txt"})
 	p.AddTask(gobble.TaskSpec{
 		Name:    "image",
 		Image:   "gobble-missing-image:not-a-tag",
@@ -221,7 +221,7 @@ func runLocalBadImagePipeline() *gobble.Pipeline {
 		Inputs:  []gobble.Bind{{Name: "in", From: in}},
 		Outputs: []gobble.Bind{{
 			Name: "out",
-			Spec: gobble.PathSpec{Dir: gobble.Dir("out/docker"), Name: "sample", Ext: ".txt"},
+			Spec: gobble.PathSpec{Dir: gobble.Dir("out/docker"), Base: "sample", Ext: ".txt"},
 		}},
 	})
 	p.AddTask(gobble.TaskSpec{
@@ -230,7 +230,7 @@ func runLocalBadImagePipeline() *gobble.Pipeline {
 		Inputs:  []gobble.Bind{{Name: "in", From: in}},
 		Outputs: []gobble.Bind{{
 			Name: "out",
-			Spec: gobble.PathSpec{Dir: gobble.Dir("out/process"), Name: "sample", Ext: ".txt"},
+			Spec: gobble.PathSpec{Dir: gobble.Dir("out/process"), Base: "sample", Ext: ".txt"},
 		}},
 	})
 	return p
