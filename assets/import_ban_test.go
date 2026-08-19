@@ -44,6 +44,9 @@ func importHits(t *testing.T, root string) []string {
 			if path == assetsDir {
 				return fs.SkipDir
 			}
+			if path == filepath.Join(root, "tests") {
+				return fs.SkipDir
+			}
 			if path != root && strings.HasPrefix(d.Name(), ".") {
 				return fs.SkipDir
 			}

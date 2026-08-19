@@ -1,12 +1,6 @@
 package assets
 
-import (
-	"os"
-	"path/filepath"
-	"testing"
-
-	"github.com/HahyeonJeon/gobble"
-)
+import "testing"
 
 func TestRNASeqComposeBuildPlan(t *testing.T) {
 	raw := mustPlanJSON(t, RNASeq())
@@ -74,32 +68,4 @@ func TestRNASeqComposeBuildPlan(t *testing.T) {
 
 func TestRNASeqOmitsRawAddTask(t *testing.T) {
 	assertNoCall(t, "rnaseq.go", "AddTask")
-}
-
-func TestRNASeqRun(t *testing.T) {
-	requireDocker(t)
-	dir := t.TempDir()
-	stageFile(t, dir, "in/genome.fasta", cachePin(t, PinRNAGenomeFASTA))
-	stageFile(t, dir, "in/genes.gtf", cachePin(t, PinRNAGTF))
-	stageFile(t, dir, "in/SRR6357072_1.fastq.gz", cachePin(t, PinRNATest1FASTQ))
-	stageFile(t, dir, "in/SRR6357072_2.fastq.gz", cachePin(t, PinRNATest2FASTQ))
-	g, err := gobble.Compose(RNASeq())
-	if err != nil {
-		t.Fatalf("Compose() error = %v", err)
-	}
-	if err := gobble.Run(t.Context(), g, dir, 2); err != nil {
-		t.Fatalf("Run() error = %v", err)
-	}
-	logPath := filepath.Join(dir, filepath.FromSlash("work/star-align/Log.final.out"))
-	assertUniquelyMappedAbove(t, logPath, 10)
-	assertSplicesRecorded(t, logPath)
-	for _, rel := range []string{
-		"work/star-align/Aligned.out.bam",
-		"work/multiqc/multiqc_report.html",
-	} {
-		info, err := os.Stat(filepath.Join(dir, filepath.FromSlash(rel)))
-		if err != nil || !info.Mode().IsRegular() {
-			t.Fatalf("published %s: %v", rel, err)
-		}
-	}
 }

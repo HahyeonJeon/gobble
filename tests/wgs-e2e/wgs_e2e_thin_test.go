@@ -107,6 +107,8 @@ func wgsE2EThinPipelineWithBWA(bwaImage string) *gobble.Pipeline {
 	return p
 }
 
+// TestWGSThinSlicePlan is a demoted four-task graph. It is not the WGS
+// product proof; that is tests/wgs-e2e executing assets.WGS().
 func TestWGSThinSlicePlan(t *testing.T) {
 	p := wgsE2EThinPipeline()
 	g, err := gobble.Compose(p)
@@ -128,93 +130,6 @@ func TestWGSThinSlicePlan(t *testing.T) {
 		t.Fatalf("BuildPlan() plan = nil, want non-nil")
 	}
 	assertThinSlicePlan(t, buf.Bytes())
-}
-
-func TestWGSThinSliceRun(t *testing.T) {
-	requireDocker(t)
-
-	rec := thinSliceRecord{
-		SamtoolsTag: wgsE2EThinSamtools,
-		PairCount:   wgsE2EPairCount,
-	}
-	var (
-		dir     string
-		g       *gobble.Graph
-		usedBWA string
-	)
-	for i, image := range []string{wgsE2EThinBWA, wgsE2EThinBWAFallback} {
-		dir = t.TempDir()
-		stageWGSFixture(t, dir)
-		rec.Inputs = thinSliceInputFacts(t, dir)
-		rec.PairCount = countFASTQRecords(t, filepath.Join(dir, wgsE2EStagedR1))
-		gotR2 := countFASTQRecords(t, filepath.Join(dir, wgsE2EStagedR2))
-		if rec.PairCount != wgsE2EPairCount || gotR2 != wgsE2EPairCount {
-			rec.Stop = "pair count is not 266736; not this session's proof"
-			writeThinSliceRecord(t, rec)
-			t.Fatalf("FASTQ records R1=%d R2=%d, want %d pairs each", rec.PairCount, gotR2, wgsE2EPairCount)
-		}
-
-		g = mustCompose(func() *gobble.Pipeline {
-			return wgsE2EThinPipelineWithBWA(image)
-		})(t)
-		err := gobble.Run(t.Context(), g, dir, 1)
-		if err == nil {
-			usedBWA = image
-			rec.BWATag = image
-			break
-		}
-		rec.BWATag = image
-		rec.RunError = formatRunDefects(err)
-		rec.TaskLogs = thinSliceLogs(dir)
-		rec.TaskState = thinSliceTaskState(dir)
-		if !bwaWriteFallback(err, dir) {
-			finishThinSliceAfterRunError(t, g, dir, &rec, err)
-			t.Fatalf("Run(%s) error = %v, want nil\n%s\n%s", image, err, rec.TaskState, rec.TaskLogs)
-		}
-		t.Logf("bwa %s failed -o or --user: %v", image, err)
-		if i == 1 {
-			rec.BWATag = image
-			rec.Stop = "D5 joint hole: both bwa tags failed -o or --user"
-			writeThinSliceRecord(t, rec)
-			t.Fatalf("D5 joint hole: %s and %s failed -o or --user: %v\n%s",
-				wgsE2EThinBWA, wgsE2EThinBWAFallback, err, rec.TaskLogs)
-		}
-	}
-	if usedBWA == "" {
-		t.Fatalf("Run() did not succeed on either bwa tag")
-	}
-
-	assertThinSliceFiles(t, dir)
-	assertThinSliceRealOutputs(t, dir)
-	rec.FilesOK = true
-	rec.BWADigest = dockerImageDigest(t, usedBWA)
-	rec.SamtoolsDigest = dockerImageDigest(t, wgsE2EThinSamtools)
-
-	count, method := countMappedReads(t, dir)
-	rec.MappedCount = count
-	rec.MappedMethod = method
-	t.Logf("mapped reads %d via %s; bwa %s digest %s; samtools digest %s",
-		count, method, usedBWA, rec.BWADigest, rec.SamtoolsDigest)
-	if count == 0 {
-		rec.Stop = "mapped-read count is 0; fixture writer set owns new same-tree pins and restage; not a D5 hole; do not reopen D2 first"
-		writeThinSliceRecord(t, rec)
-		t.Fatalf("mapped-read count = 0 via %s; stop for fixture handoff, not PASS", method)
-	}
-
-	err := gobble.Run(t.Context(), g, dir, 0)
-	ge := requireRunError(t, "second Run", err, gobble.DefectOccupiedWorkspace, "")
-	for _, d := range ge.Defects {
-		if d.Code == gobble.DefectOutputExists {
-			t.Fatalf("second Run also reported output-exists, want occupied-workspace")
-		}
-	}
-	if _, statErr := os.Stat(filepath.Join(dir, ".gobble", "run.json")); statErr != nil {
-		t.Fatalf("run.json after occupy: %v", statErr)
-	}
-	rec.OccupyError = err.Error()
-	rec.OccupyOK = true
-	writeThinSliceRecord(t, rec)
-	t.Logf("occupy error: %v", err)
 }
 
 type thinSlicePlan struct {
@@ -681,52 +596,6 @@ func wgsE2ERecordDir(t *testing.T) string {
 		return dir
 	}
 	return t.TempDir()
-}
-
-func mustCompose(pipe func() *gobble.Pipeline) func(t *testing.T) *gobble.Graph {
-	return func(t *testing.T) *gobble.Graph {
-		t.Helper()
-		g, err := gobble.Compose(pipe())
-		if err != nil {
-			t.Fatalf("Compose() error = %v, want nil", err)
-		}
-		if g == nil {
-			t.Fatalf("Compose() graph = nil, want compose-valid graph")
-		}
-		return g
-	}
-}
-
-func requireDocker(t *testing.T) {
-	t.Helper()
-	if err := exec.Command("docker", "info").Run(); err != nil {
-		t.Skipf("docker info: %v", err)
-	}
-}
-
-func requireRunError(t *testing.T, name string, err error, code gobble.DefectCode, unit string) *gobble.Error {
-	t.Helper()
-	var ge *gobble.Error
-	if !errors.As(err, &ge) {
-		t.Fatalf("case %s: error = %v, want *Error", name, err)
-	}
-	if ge.Op != "run" {
-		t.Fatalf("case %s: Error.Op got %q, want run", name, ge.Op)
-	}
-	found := false
-	codes := make([]gobble.DefectCode, len(ge.Defects))
-	units := make([]string, len(ge.Defects))
-	for i, d := range ge.Defects {
-		codes[i] = d.Code
-		units[i] = d.Unit
-		if d.Code == code && (unit == "" || d.Unit == unit) {
-			found = true
-		}
-	}
-	if !found {
-		t.Fatalf("case %s: defects codes got %v units %v, want code %s unit %q", name, codes, units, code, unit)
-	}
-	return ge
 }
 
 func formatThinSliceRecord(rec thinSliceRecord) string {

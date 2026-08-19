@@ -97,45 +97,6 @@ func TestBismarkMethylationExtractorNestedModule(t *testing.T) {
 	assertIOPath(t, task.Outputs, "cpg", "work/bismark-extractor/CpG_context_aligned_pe.txt.gz")
 }
 
-func TestBismarkMethylationExtractorNestedRun(t *testing.T) {
-	requireDocker(t)
-	dir := t.TempDir()
-	stageMethylPins(t, dir)
-	p := gobble.NewPipeline("methyl")
-	hf := p.AddInput("fasta", pinnedMethylFASTA())
-	h1 := p.AddInput("r1", pinnedMethylFASTQ1())
-	h2 := p.AddInput("r2", pinnedMethylFASTQ2())
-	idx := AddBismarkGenome(p, hf, BismarkGenomeOptions{Resources: gobble.Resources{CPU: 1}})
-	aln := AddBismarkAlign(p, hf, idx.Index, h1, h2, BismarkAlignOptions{Resources: gobble.Resources{CPU: 1}})
-	AddBismarkMethylationExtractor(p, aln.BAM, BismarkMethylationExtractorOptions{})
-	g, err := gobble.Compose(p)
-	if err != nil {
-		t.Fatalf("Compose() error = %v", err)
-	}
-	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
-		t.Fatalf("Run() error = %v", err)
-	}
-	for _, rel := range []string{
-		"work/bismark-extractor/aligned_pe.bedGraph.gz",
-		"work/bismark-extractor/aligned_pe.bismark.cov.gz",
-		"work/bismark-extractor/aligned_pe_splitting_report.txt",
-		"work/bismark-extractor/aligned_pe.M-bias.txt",
-		"work/bismark-extractor/CpG_context_aligned_pe.txt.gz",
-	} {
-		info, err := os.Stat(filepath.Join(dir, filepath.FromSlash(rel)))
-		if err != nil || !info.Mode().IsRegular() {
-			t.Fatalf("published %s: %v", rel, err)
-		}
-	}
-	unique := uniquePEAlignments(t, filepath.Join(dir, filepath.FromSlash("work/bismark-align/aligned_PE_report.txt")))
-	t.Logf("unique paired-end alignments = %d", unique)
-	assertUniqueAlignmentFloor(t, unique)
-	assertMethylationCallRows(t, unique,
-		filepath.Join(dir, filepath.FromSlash("work/bismark-extractor/CpG_context_aligned_pe.txt.gz")),
-		filepath.Join(dir, filepath.FromSlash("work/bismark-extractor/aligned_pe.bismark.cov.gz")),
-	)
-}
-
 func assertMethylationCallRows(t *testing.T, unique int, paths ...string) {
 	t.Helper()
 	rows := 0

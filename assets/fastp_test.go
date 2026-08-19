@@ -1,8 +1,6 @@
 package assets
 
 import (
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
@@ -76,35 +74,5 @@ func TestFastpNestedModule(t *testing.T) {
 	}
 	if !containsAll(task.Command, "--disable_quality_filtering") {
 		t.Fatalf("command = %#v, want extra-args", task.Command)
-	}
-}
-
-func TestFastpStandaloneRun(t *testing.T) {
-	requireDocker(t)
-	src1 := cachePin(t, pinSARSCoV2R1)
-	src2 := cachePin(t, pinSARSCoV2R2)
-	dir := t.TempDir()
-	stageFile(t, dir, "in/test_1.fastq.gz", src1)
-	stageFile(t, dir, "in/test_2.fastq.gz", src2)
-	r1 := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_1", Ext: ".fastq.gz"}
-	r2 := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_2", Ext: ".fastq.gz"}
-	p := FastpPipeline(r1, r2, FastpOptions{Resources: gobble.Resources{CPU: 1}})
-	g, err := gobble.Compose(p)
-	if err != nil {
-		t.Fatalf("Compose() error = %v", err)
-	}
-	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
-		t.Fatalf("Run() error = %v", err)
-	}
-	for _, rel := range []string{
-		"work/fastp/test_1.clean.fastq.gz",
-		"work/fastp/test_2.clean.fastq.gz",
-		"work/fastp/test_1.fastp.json",
-		"work/fastp/test_1.fastp.html",
-	} {
-		info, err := os.Stat(filepath.Join(dir, filepath.FromSlash(rel)))
-		if err != nil || !info.Mode().IsRegular() {
-			t.Fatalf("published %s: %v", rel, err)
-		}
 	}
 }

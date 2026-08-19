@@ -2,7 +2,6 @@ package assets
 
 import (
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
@@ -84,49 +83,6 @@ func TestSTARAlignNestedModule(t *testing.T) {
 	assertIOPath(t, task.Outputs, "bam", "work/star-align/Aligned.out.bam")
 	assertIOPath(t, task.Outputs, "log_final", "work/star-align/Log.final.out")
 	assertTreeIO(t, task.Inputs, "index", "work/star-genome")
-}
-
-func TestSTARAlignNestedRun(t *testing.T) {
-	requireDocker(t)
-	srcFASTA := cachePin(t, PinRNAGenomeFASTA)
-	srcGTF := cachePin(t, PinRNAGTF)
-	srcR1 := cachePin(t, PinRNATest1FASTQ)
-	srcR2 := cachePin(t, PinRNATest2FASTQ)
-	dir := t.TempDir()
-	stageFile(t, dir, "in/genome.fasta", srcFASTA)
-	stageFile(t, dir, "in/genes.gtf", srcGTF)
-	stageFile(t, dir, "in/SRR6357072_1.fastq.gz", srcR1)
-	stageFile(t, dir, "in/SRR6357072_2.fastq.gz", srcR2)
-	p := gobble.NewPipeline("rna")
-	hf := p.AddInput("fasta", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genome", Ext: ".fasta"})
-	hg := p.AddInput("gtf", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genes", Ext: ".gtf"})
-	h1 := p.AddInput("r1", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "SRR6357072_1", Ext: ".fastq.gz"})
-	h2 := p.AddInput("r2", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "SRR6357072_2", Ext: ".fastq.gz"})
-	idx := AddSTARGenomeGenerate(p, hf, hg, STARGenomeGenerateOptions{
-		ExtraArgs: []string{"--genomeSAindexNbases", "7", "--sjdbOverhang", "100"},
-		Resources: gobble.Resources{CPU: 1},
-	})
-	ports := AddSTARAlign(p, idx.Index, h1, h2, STARAlignOptions{
-		Resources: gobble.Resources{CPU: 1},
-	})
-	if ports.LogFinalOut.IsZero() {
-		t.Fatalf("ports.LogFinalOut IsZero = true, want false")
-	}
-	g, err := gobble.Compose(p)
-	if err != nil {
-		t.Fatalf("Compose() error = %v", err)
-	}
-	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
-		t.Fatalf("Run() error = %v", err)
-	}
-	bam := filepath.Join(dir, filepath.FromSlash("work/star-align/Aligned.out.bam"))
-	info, err := os.Stat(bam)
-	if err != nil || !info.Mode().IsRegular() {
-		t.Fatalf("published BAM: %v", err)
-	}
-	logPath := filepath.Join(dir, filepath.FromSlash("work/star-align/Log.final.out"))
-	assertUniquelyMappedAbove(t, logPath, 10)
-	assertSplicesRecorded(t, logPath)
 }
 
 func assertUniquelyMappedAbove(t *testing.T, path string, floor int) {

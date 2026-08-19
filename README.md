@@ -16,8 +16,23 @@ Guarded Clean is designed and not shipped. Occupancy must be closed first. Defau
 
 ## First check
 
-Requires Go 1.26 or newer. Docker is not required.
+Requires Go 1.26 or newer. Docker and network are not required.
 
 ```sh
 go test ./...
 ```
+
+Hermetic first-check must not skip for Docker or network. Live packs use
+build tag `live` and fail when Docker or a required download is missing.
+
+```sh
+go test -tags=live ./tests/wgs-e2e
+go test -tags=live ./assets
+go test -tags=live .
+```
+
+`./tests/wgs-e2e` is the live WGS assay: `assets.WGS()` success
+Inspect+Release+Resume, plus a pack-local thin fail fixture for contained
+failure Inspect+Release+Resume. `./assets` RNASeq and MethylSeq are live
+Run packs, not that assay. `testdata/run-local` alpine+process is the
+live Run pack in package `gobble`. LinkedQC is plan-only.

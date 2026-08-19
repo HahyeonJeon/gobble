@@ -2,7 +2,6 @@ package assets
 
 import (
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
@@ -89,32 +88,6 @@ func TestBismarkAlignNestedModule(t *testing.T) {
 	assertIOPath(t, task.Outputs, "bam", "work/bismark-align/aligned_pe.bam")
 	assertIOPath(t, task.Outputs, "report", "work/bismark-align/aligned_PE_report.txt")
 	assertGroupMembers(t, task.Inputs, "index", wantBismarkGenomeMembers("work/bismark-genome"))
-}
-
-func TestBismarkAlignNestedRun(t *testing.T) {
-	requireDocker(t)
-	dir := t.TempDir()
-	stageMethylPins(t, dir)
-	p := gobble.NewPipeline("methyl")
-	hf := p.AddInput("fasta", pinnedMethylFASTA())
-	h1 := p.AddInput("r1", pinnedMethylFASTQ1())
-	h2 := p.AddInput("r2", pinnedMethylFASTQ2())
-	idx := AddBismarkGenome(p, hf, BismarkGenomeOptions{Resources: gobble.Resources{CPU: 1}})
-	AddBismarkAlign(p, hf, idx.Index, h1, h2, BismarkAlignOptions{Resources: gobble.Resources{CPU: 1}})
-	g, err := gobble.Compose(p)
-	if err != nil {
-		t.Fatalf("Compose() error = %v", err)
-	}
-	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
-		t.Fatalf("Run() error = %v", err)
-	}
-	info, err := os.Stat(filepath.Join(dir, filepath.FromSlash("work/bismark-align/aligned_pe.bam")))
-	if err != nil || !info.Mode().IsRegular() {
-		t.Fatalf("published BAM: %v", err)
-	}
-	unique := uniquePEAlignments(t, filepath.Join(dir, filepath.FromSlash("work/bismark-align/aligned_PE_report.txt")))
-	t.Logf("unique paired-end alignments = %d", unique)
-	assertUniqueAlignmentFloor(t, unique)
 }
 
 const uniquePEAlignmentField = "Number of paired-end alignments with a unique best hit:"

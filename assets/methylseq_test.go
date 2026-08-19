@@ -1,8 +1,6 @@
 package assets
 
 import (
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
@@ -93,29 +91,6 @@ func TestMethylSeqCPUFlagsCompose(t *testing.T) {
 	if !containsAll(align.Command, "-p", "2") {
 		t.Fatalf("bismark_align command = %#v, want -p 2", align.Command)
 	}
-}
-
-func TestMethylSeqRun(t *testing.T) {
-	requireDocker(t)
-	dir := t.TempDir()
-	stageMethylPins(t, dir)
-	g, err := gobble.Compose(MethylSeq())
-	if err != nil {
-		t.Fatalf("Compose() error = %v", err)
-	}
-	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
-		t.Fatalf("Run() error = %v", err)
-	}
-	if _, err := os.Stat(filepath.Join(dir, filepath.FromSlash("in/Bisulfite_Genome"))); !os.IsNotExist(err) {
-		t.Fatalf("Bisulfite_Genome written into in/: %v", err)
-	}
-	unique := uniquePEAlignments(t, filepath.Join(dir, filepath.FromSlash("work/bismark-align/aligned_PE_report.txt")))
-	t.Logf("unique paired-end alignments = %d", unique)
-	assertUniqueAlignmentFloor(t, unique)
-	assertMethylationCallRows(t, unique,
-		filepath.Join(dir, filepath.FromSlash("work/bismark-extractor/CpG_context_aligned_pe.txt.gz")),
-		filepath.Join(dir, filepath.FromSlash("work/bismark-extractor/aligned_pe.bismark.cov.gz")),
-	)
 }
 
 func TestMethylSeqOmitsRawAddTask(t *testing.T) {

@@ -1,8 +1,6 @@
 package assets
 
 import (
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
@@ -69,31 +67,6 @@ func TestBismarkGenomeNestedModule(t *testing.T) {
 	assertGroupMembers(t, task.Outputs, "index", wantBismarkGenomeMembers("work/bismark-genome"))
 }
 
-func TestBismarkGenomeStandaloneRun(t *testing.T) {
-	requireDocker(t)
-	src := cachePin(t, PinMethylGenomeFASTA)
-	dir := t.TempDir()
-	stageFile(t, dir, "in/genome.fa", src)
-	fasta := pinnedMethylFASTA()
-	p := BismarkGenomePipeline(fasta, BismarkGenomeOptions{Resources: gobble.Resources{CPU: 1}})
-	g, err := gobble.Compose(p)
-	if err != nil {
-		t.Fatalf("Compose() error = %v", err)
-	}
-	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
-		t.Fatalf("Run() error = %v", err)
-	}
-	if _, err := os.Stat(filepath.Join(dir, filepath.FromSlash("in/Bisulfite_Genome"))); !os.IsNotExist(err) {
-		t.Fatalf("Bisulfite_Genome written into in/: %v", err)
-	}
-	for _, rel := range bismarkGenomePublishedPaths("work/bismark-genome") {
-		info, err := os.Stat(filepath.Join(dir, filepath.FromSlash(rel)))
-		if err != nil || !info.Mode().IsRegular() {
-			t.Fatalf("published %s: %v", rel, err)
-		}
-	}
-}
-
 func wantBismarkGenomeMembers(dir string) []groupMemberWant {
 	ct := dir + "/Bisulfite_Genome/CT_conversion"
 	ga := dir + "/Bisulfite_Genome/GA_conversion"
@@ -122,11 +95,4 @@ func bismarkGenomePublishedPaths(dir string) []string {
 		out[i] = m.Path
 	}
 	return out
-}
-
-func stageMethylPins(t *testing.T, dir string) {
-	t.Helper()
-	stageFile(t, dir, "in/genome.fa", cachePin(t, PinMethylGenomeFASTA))
-	stageFile(t, dir, "in/Ecoli_10K_methylated_R1.fastq.gz", cachePin(t, PinMethylTest1FASTQ))
-	stageFile(t, dir, "in/Ecoli_10K_methylated_R2.fastq.gz", cachePin(t, PinMethylTest2FASTQ))
 }

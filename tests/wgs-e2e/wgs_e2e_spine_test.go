@@ -155,6 +155,8 @@ func wgsE2ESpineBCFToolsPipeline() *gobble.Pipeline {
 	return p
 }
 
+// TestWGSSpinePlan is a demoted Strelka/BCFTools graph. It is not the WGS
+// product proof; that is tests/wgs-e2e executing assets.WGS().
 func TestWGSSpinePlan(t *testing.T) {
 	g, err := gobble.Compose(wgsE2ESpineStrelkaPipeline())
 	if err != nil {
@@ -181,86 +183,6 @@ func TestWGSSpinePlan(t *testing.T) {
 		t.Fatalf("BuildPlan(bcftools) error = %v, want nil", err)
 	}
 	assertSpineBCFToolsPlan(t, buf.Bytes())
-}
-
-func TestWGSSpineRun(t *testing.T) {
-	requireDocker(t)
-
-	rec := spineRecord{
-		BWATag:       wgsE2EThinBWA,
-		SamtoolsTag:  wgsE2EThinSamtools,
-		StrelkaTag:   wgsE2ESpineStrelka,
-		NewWorkspace: true,
-	}
-
-	dir := t.TempDir()
-	if _, err := os.Stat(filepath.Join(dir, ".gobble", "run.json")); !os.IsNotExist(err) {
-		t.Fatalf("new workspace run.json: %v, want not exist", err)
-	}
-	stageWGSSpineWorkspace(t, dir)
-	rec.Inputs = thinSliceInputFacts(t, dir)
-
-	g := mustCompose(wgsE2ESpineStrelkaPipeline)(t)
-	err := gobble.Run(t.Context(), g, dir, 1)
-	rec.StrelkaAttempted = true
-	rec.StrelkaError = formatRunError(err)
-	rec.TaskLogs = spineLogs(dir, "index", "mem", "sort", "bai", "faidx", "strelka")
-	rec.TaskState = thinSliceTaskState(dir)
-
-	if err == nil && regularNonEmpty(dir, wgsE2ESpineVCF) {
-		assertSpineFiles(t, dir)
-		assertSpineFAI(t, dir)
-		assertGzipVCF(t, dir, wgsE2ESpineVCF)
-		rec.Caller = "strelka"
-		rec.VCFPaths = []string{wgsE2ESpineVCF}
-		rec.FilesOK = true
-		rec.BWADigest = dockerImageDigest(t, wgsE2EThinBWA)
-		rec.SamtoolsDigest = dockerImageDigest(t, wgsE2EThinSamtools)
-		rec.StrelkaDigest = dockerImageDigest(t, wgsE2ESpineStrelka)
-		writeSpineRecord(t, rec)
-		t.Logf("strelka published %s; digest %s", wgsE2ESpineVCF, rec.StrelkaDigest)
-		return
-	}
-
-	rec.StrelkaFailure = classifyStrelkaFailure(err, dir)
-	t.Logf("strelka isolate failed: %s", rec.StrelkaFailure)
-
-	fallback := t.TempDir()
-	if _, err := os.Stat(filepath.Join(fallback, ".gobble", "run.json")); !os.IsNotExist(err) {
-		t.Fatalf("fallback workspace run.json: %v, want not exist", err)
-	}
-	stageWGSSpineWorkspace(t, fallback)
-	rec.FallbackNewWorkspace = true
-	rec.BCFToolsTag = wgsE2ESpineBCFTools
-
-	g2 := mustCompose(wgsE2ESpineBCFToolsPipeline)(t)
-	err2 := gobble.Run(t.Context(), g2, fallback, 1)
-	rec.BCFToolsError = formatRunError(err2)
-	rec.TaskLogs += spineLogs(fallback, "index", "mem", "sort", "bai", "faidx", "mpileup", "call")
-	rec.TaskState += "\n" + thinSliceTaskState(fallback)
-	rec.BWADigest = dockerImageDigest(t, wgsE2EThinBWA)
-	rec.SamtoolsDigest = dockerImageDigest(t, wgsE2EThinSamtools)
-	rec.StrelkaDigest = dockerImageDigest(t, wgsE2ESpineStrelka)
-
-	if err2 != nil || !regularNonEmpty(fallback, wgsE2ESpinePileup) || !regularNonEmpty(fallback, wgsE2ESpineCalls) {
-		rec.Stop = "D5 joint hole: both callers failed isolate. Do not invent directory-output or HOME APIs."
-		writeSpineRecord(t, rec)
-		t.Fatalf("D5 joint hole: strelka %s; bcftools error = %v\n%s\n%s",
-			rec.StrelkaFailure, err2, rec.TaskState, rec.TaskLogs)
-	}
-
-	assertSpineFiles(t, fallback)
-	assertSpineFAI(t, fallback)
-	assertTextVCF(t, fallback, wgsE2ESpinePileup)
-	assertTextVCF(t, fallback, wgsE2ESpineCalls)
-	rec.Caller = "bcftools"
-	rec.Substitution = true
-	rec.VCFPaths = []string{wgsE2ESpinePileup, wgsE2ESpineCalls}
-	rec.FilesOK = true
-	rec.BCFToolsDigest = dockerImageDigest(t, wgsE2ESpineBCFTools)
-	writeSpineRecord(t, rec)
-	t.Logf("bcftools substitution after strelka isolate failure: %s; digest %s",
-		rec.StrelkaFailure, rec.BCFToolsDigest)
 }
 
 func assertSpineStrelkaPlan(t *testing.T, raw []byte) {

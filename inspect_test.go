@@ -248,6 +248,47 @@ func TestInspectRemainingAfterFailure(t *testing.T) {
 	}
 }
 
+func TestInspectRemainingCheapNoHash(t *testing.T) {
+	dir := readyRunWorkspace(t)
+	if err := gobble.Run(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0); err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	inPath := filepath.Join(dir, "in", "sample.txt")
+	outPath := filepath.Join(dir, "out", "sample.txt")
+	if err := os.Chmod(inPath, 0); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(outPath, 0); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		os.Chmod(inPath, 0o644)
+		os.Chmod(outPath, 0o644)
+	})
+	if _, err := os.ReadFile(inPath); err == nil {
+		t.Fatal("input is readable, chmod 000 did not block reads")
+	}
+	remaining := mustInspectJSONL(t, dir, "remaining", "")
+	if len(remaining) != 0 {
+		t.Fatalf("remaining got %#v, want empty (cheap keys must not read bytes)", remaining)
+	}
+
+	failDir := readyRunWorkspace(t)
+	err := gobble.Run(t.Context(), mustCompose(processContainPipeline)(t), failDir, 2)
+	requireRunError(t, "contained failure", err, gobble.DefectFailed, "fail")
+	for _, rec := range mustInspectJSONL(t, failDir, "remaining", "") {
+		if _, ok := rec["sha256"]; ok {
+			t.Fatalf("remaining emitted hash: %#v", rec)
+		}
+		if _, ok := rec["hash"]; ok {
+			t.Fatalf("remaining emitted hash: %#v", rec)
+		}
+		if _, ok := rec["checksum"]; ok {
+			t.Fatalf("remaining emitted checksum: %#v", rec)
+		}
+	}
+}
+
 func TestInspectLiveOccupancyDoesNotBlock(t *testing.T) {
 	dir := readyRunWorkspace(t)
 	if err := gobble.Run(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0); err != nil {

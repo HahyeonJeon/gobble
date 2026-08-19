@@ -367,6 +367,8 @@ func TestInspectInstanceSelector(t *testing.T) {
 	}
 }
 
+// TestClassifyReuseReasons covers the unexported classifyReuse seam.
+// Public reuse-reason contract rows live in package gobble tests.
 func TestClassifyReuseReasons(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "a.txt"), "reads")

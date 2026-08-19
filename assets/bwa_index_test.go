@@ -1,8 +1,6 @@
 package assets
 
 import (
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
@@ -70,34 +68,6 @@ func TestBWAIndexNestedModule(t *testing.T) {
 		{Name: "pac", Path: "in/genome.fasta.pac"},
 		{Name: "sa", Path: "in/genome.fasta.sa"},
 	})
-}
-
-func TestBWAIndexStandaloneRun(t *testing.T) {
-	requireDocker(t)
-	src := cachePin(t, PinWGSGenomeFASTA)
-	dir := t.TempDir()
-	stageFile(t, dir, "in/genome.fasta", src)
-	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genome", Ext: ".fasta"}
-	p := BWAIndexPipeline(fasta, BWAIndexOptions{})
-	g, err := gobble.Compose(p)
-	if err != nil {
-		t.Fatalf("Compose() error = %v", err)
-	}
-	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
-		t.Fatalf("Run() error = %v", err)
-	}
-	for _, rel := range []string{
-		"in/genome.fasta.amb",
-		"in/genome.fasta.ann",
-		"in/genome.fasta.bwt",
-		"in/genome.fasta.pac",
-		"in/genome.fasta.sa",
-	} {
-		info, err := os.Stat(filepath.Join(dir, filepath.FromSlash(rel)))
-		if err != nil || !info.Mode().IsRegular() {
-			t.Fatalf("published %s: %v", rel, err)
-		}
-	}
 }
 
 type groupMemberWant struct {

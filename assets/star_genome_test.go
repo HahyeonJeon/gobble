@@ -2,7 +2,6 @@ package assets
 
 import (
 	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
@@ -98,41 +97,6 @@ func TestSTARGenomeGenerateNestedModule(t *testing.T) {
 		t.Fatalf("command = %#v, zero gtf must omit --sjdbGTFfile", task.Command)
 	}
 	assertTreeIO(t, task.Outputs, "index", "work/star-genome")
-}
-
-func TestSTARGenomeGenerateStandaloneRun(t *testing.T) {
-	requireDocker(t)
-	srcFASTA := cachePin(t, PinRNAGenomeFASTA)
-	srcGTF := cachePin(t, PinRNAGTF)
-	dir := t.TempDir()
-	stageFile(t, dir, "in/genome.fasta", srcFASTA)
-	stageFile(t, dir, "in/genes.gtf", srcGTF)
-	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genome", Ext: ".fasta"}
-	gtf := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genes", Ext: ".gtf"}
-	p := STARGenomeGeneratePipeline(fasta, STARGenomeGenerateOptions{
-		GTF:       gtf,
-		ExtraArgs: []string{"--genomeSAindexNbases", "7", "--sjdbOverhang", "100"},
-		Resources: gobble.Resources{CPU: 1},
-	})
-	g, err := gobble.Compose(p)
-	if err != nil {
-		t.Fatalf("Compose() error = %v", err)
-	}
-	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
-		t.Fatalf("Run() error = %v", err)
-	}
-	want := starGenomePublishedPaths("work/star-genome", true)
-	for _, rel := range want {
-		info, err := os.Stat(filepath.Join(dir, filepath.FromSlash(rel)))
-		if err != nil || !info.Mode().IsRegular() {
-			t.Fatalf("published %s: %v", rel, err)
-		}
-	}
-	got := listRegularRel(t, filepath.Join(dir, filepath.FromSlash("work/star-genome")), "work/star-genome")
-	want = append(want, "work/star-genome/.gobble-tree.json")
-	if !sameStringSet(got, want) {
-		t.Fatalf("genome dir regular files = %v, want %v", got, want)
-	}
 }
 
 func starGenomePublishedPaths(dir string, sjdb bool) []string {

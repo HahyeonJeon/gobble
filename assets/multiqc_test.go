@@ -1,8 +1,6 @@
 package assets
 
 import (
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
@@ -66,27 +64,5 @@ func TestMultiQCNestedModule(t *testing.T) {
 	}
 	if !containsAll(task.Command, "--fullnames") {
 		t.Fatalf("command = %#v, want extra-args", task.Command)
-	}
-}
-
-func TestMultiQCStandaloneRun(t *testing.T) {
-	requireDocker(t)
-	src := cachePin(t, pinSARSCoV2FastQCZip)
-	dir := t.TempDir()
-	stageFile(t, dir, "in/test_fastqc.zip", src)
-	report := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_fastqc", Ext: ".zip"}
-	p := MultiQCPipeline([]gobble.PathSpec{report}, MultiQCOptions{})
-	g, err := gobble.Compose(p)
-	if err != nil {
-		t.Fatalf("Compose() error = %v", err)
-	}
-	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
-		t.Fatalf("Run() error = %v", err)
-	}
-	for _, rel := range []string{"work/multiqc/multiqc_report.html", "work/multiqc/multiqc_data.zip"} {
-		info, err := os.Stat(filepath.Join(dir, filepath.FromSlash(rel)))
-		if err != nil || !info.Mode().IsRegular() {
-			t.Fatalf("published %s: %v", rel, err)
-		}
 	}
 }

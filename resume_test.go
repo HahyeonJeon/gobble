@@ -364,6 +364,44 @@ func TestResumeFailedIdentityForeignDestOutputExists(t *testing.T) {
 	}
 }
 
+func TestResumeDestReplaceTable(t *testing.T) {
+	t.Run("failed attempt keeps prior dest", func(t *testing.T) {
+		dir := readyReleasedRun(t, processCopyPipeline)
+		prior, err := os.ReadFile(filepath.Join(dir, "out", "sample.txt"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = gobble.Resume(t.Context(), mustCompose(processCopyCmdPipeline("exit 1"))(t), dir, 0)
+		requireResumeError(t, "failed rerun", err, gobble.DefectFailed, "copy")
+		got, err := os.ReadFile(filepath.Join(dir, "out", "sample.txt"))
+		if err != nil || string(got) != string(prior) {
+			t.Fatalf("failed attempt dest got %q, want %q", got, prior)
+		}
+	})
+	t.Run("authorized replace publishes new dest", func(t *testing.T) {
+		dir := readyReleasedRun(t, processCopyPipeline)
+		err := gobble.Resume(t.Context(), mustCompose(processCopyCmdPipeline("exit 1"))(t), dir, 0)
+		requireResumeError(t, "failed rerun", err, gobble.DefectFailed, "copy")
+		forcePublicDeadOwner(t, dir)
+		if err := gobble.Release(dir); err != nil {
+			t.Fatalf("Release() error = %v", err)
+		}
+		if err := gobble.Resume(t.Context(), mustCompose(processCopyCmdPipeline("pwd > out/pwd.txt && echo new > out/sample.txt"))(t), dir, 0); err != nil {
+			t.Fatalf("successful replace Resume() error = %v", err)
+		}
+		got, err := os.ReadFile(filepath.Join(dir, "out", "sample.txt"))
+		if err != nil || string(got) != "new\n" {
+			t.Fatalf("replaced dest got %q, want new", got)
+		}
+	})
+	t.Run("reused dests not output-exists", func(t *testing.T) {
+		dir := readyReleasedRun(t, processCopyPipeline)
+		if err := gobble.Resume(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0); err != nil {
+			t.Fatalf("Resume() error = %v", err)
+		}
+	})
+}
+
 func TestResumeFailedAttemptKeepsPriorDestThenReplace(t *testing.T) {
 	dir := readyReleasedRun(t, processCopyPipeline)
 	prior, err := os.ReadFile(filepath.Join(dir, "out", "sample.txt"))

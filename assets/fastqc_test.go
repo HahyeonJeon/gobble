@@ -5,9 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"syscall"
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
@@ -68,66 +66,6 @@ func TestFastQCNestedModule(t *testing.T) {
 	}
 	if !containsAll(task.Command, "--quiet") {
 		t.Fatalf("command = %#v, want extra-args --quiet", task.Command)
-	}
-}
-
-func TestFastQCStandaloneRun(t *testing.T) {
-	requireDocker(t)
-	src := cachePin(t, pinSARSCoV2R1)
-	dir := t.TempDir()
-	stageFile(t, dir, "in/test_1.fastq.gz", src)
-	reads := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_1", Ext: ".fastq.gz"}
-	p := FastQCPipeline(reads, FastQCOptions{
-		ExtraArgs: []string{"--quiet"},
-		Resources: gobble.Resources{CPU: 1},
-	})
-	g, err := gobble.Compose(p)
-	if err != nil {
-		t.Fatalf("Compose() error = %v", err)
-	}
-	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
-		t.Fatalf("Run() error = %v", err)
-	}
-	for _, rel := range []string{"work/fastqc/test_1_fastqc.html", "work/fastqc/test_1_fastqc.zip"} {
-		info, err := os.Stat(filepath.Join(dir, filepath.FromSlash(rel)))
-		if err != nil || !info.Mode().IsRegular() {
-			t.Fatalf("published %s: %v", rel, err)
-		}
-	}
-}
-
-func TestFastQCExtraArgsResume(t *testing.T) {
-	requireDocker(t)
-	src := cachePin(t, pinSARSCoV2R1)
-	dir := t.TempDir()
-	stageFile(t, dir, "in/test_1.fastq.gz", src)
-	reads := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_1", Ext: ".fastq.gz"}
-	opts := FastQCOptions{ExtraArgs: []string{"--quiet"}, Resources: gobble.Resources{CPU: 1}}
-	g, err := gobble.Compose(FastQCPipeline(reads, opts))
-	if err != nil {
-		t.Fatalf("Compose() error = %v", err)
-	}
-	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
-		t.Fatalf("Run() error = %v", err)
-	}
-	forceDeadOwner(t, dir)
-	if err := gobble.Release(dir); err != nil {
-		t.Fatalf("Release() error = %v", err)
-	}
-	opts.ExtraArgs = []string{"--quiet", "--kmers", "7"}
-	g2, err := gobble.Compose(FastQCPipeline(reads, opts))
-	if err != nil {
-		t.Fatalf("Compose(changed extra-args) error = %v", err)
-	}
-	if err := gobble.Resume(t.Context(), g2, dir, 1); err != nil {
-		t.Fatalf("Resume() error = %v", err)
-	}
-	instances := inspectJSONL(t, dir, "instances")
-	if len(instances) == 0 {
-		t.Fatalf("Inspect(instances) empty")
-	}
-	if instances[0]["reuse_reason"] != "command-or-script-changed" {
-		t.Fatalf("reuse_reason = %#v, want command-or-script-changed", instances[0]["reuse_reason"])
 	}
 }
 
@@ -264,22 +202,6 @@ func containsAll(got []string, want ...string) bool {
 	return true
 }
 
-func requireDocker(t *testing.T) {
-	t.Helper()
-	if err := exec.Command("docker", "info").Run(); err != nil {
-		t.Skipf("docker info: %v", err)
-	}
-}
-
-func cachePin(t *testing.T, pin Pin) string {
-	t.Helper()
-	dest, err := FetchPin(pin)
-	if err != nil {
-		t.Skipf("download %s: %v", pin.URL, err)
-	}
-	return dest
-}
-
 func stageFile(t *testing.T, workspace, rel, src string) {
 	t.Helper()
 	dst := filepath.Join(workspace, filepath.FromSlash(rel))
@@ -302,68 +224,4 @@ func stageFile(t *testing.T, workspace, rel, src string) {
 	if err := out.Close(); err != nil {
 		t.Fatalf("Close(%s) error = %v", dst, err)
 	}
-}
-
-func forceDeadOwner(t *testing.T, workspace string) {
-	t.Helper()
-	path := filepath.Join(workspace, ".gobble", "run.json")
-	data, err := os.ReadFile(path)
-	if err != nil {
-		t.Fatalf("ReadFile(%s) error = %v", path, err)
-	}
-	var run map[string]any
-	if err := json.Unmarshal(data, &run); err != nil {
-		t.Fatalf("Unmarshal run.json: %v", err)
-	}
-	occ, _ := run["occupancy"].(map[string]any)
-	if occ == nil {
-		occ = map[string]any{"active": true}
-		run["occupancy"] = occ
-	}
-	host, err := os.Hostname()
-	if err != nil {
-		t.Fatalf("Hostname() error = %v", err)
-	}
-	occ["active"] = true
-	occ["host"] = host
-	occ["pid"] = deadPID(t)
-	out, err := json.MarshalIndent(run, "", "  ")
-	if err != nil {
-		t.Fatalf("MarshalIndent: %v", err)
-	}
-	if err := os.WriteFile(path, append(out, '\n'), 0o644); err != nil {
-		t.Fatalf("WriteFile(%s) error = %v", path, err)
-	}
-}
-
-func deadPID(t *testing.T) int {
-	t.Helper()
-	for pid := 1 << 22; pid > 2; pid-- {
-		if err := syscall.Kill(pid, 0); err != nil && err != syscall.EPERM {
-			return pid
-		}
-	}
-	t.Fatal("no dead pid")
-	return 0
-}
-
-func inspectJSONL(t *testing.T, workspace, view string) []map[string]any {
-	t.Helper()
-	data, err := gobble.Inspect(workspace, gobble.View(view), "")
-	if err != nil {
-		t.Fatalf("Inspect(%s) error = %v", view, err)
-	}
-	if len(bytes.TrimSpace(data)) == 0 {
-		return nil
-	}
-	var out []map[string]any
-	dec := json.NewDecoder(bytes.NewReader(data))
-	for dec.More() {
-		var rec map[string]any
-		if err := dec.Decode(&rec); err != nil {
-			t.Fatalf("Inspect(%s) JSONL: %v\n%s", view, err, data)
-		}
-		out = append(out, rec)
-	}
-	return out
 }

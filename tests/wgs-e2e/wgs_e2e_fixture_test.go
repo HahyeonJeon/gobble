@@ -80,40 +80,6 @@ func TestWGSFixtureManifestPins(t *testing.T) {
 	}
 }
 
-func TestWGSFixtureStagesOfficialPair(t *testing.T) {
-	fillWGSFixtureCache(t)
-	verifyWGSFixtureCache(t)
-
-	dir := t.TempDir()
-	stageWGSFixture(t, dir)
-
-	byName := wgsE2EFileByName(t)
-	for _, rel := range wgsE2EStaged {
-		file := byName[filepath.Base(rel)]
-		path := filepath.Join(dir, rel)
-		info, err := os.Stat(path)
-		if err != nil {
-			t.Fatalf("Stat(%s) error = %v", path, err)
-		}
-		if !info.Mode().IsRegular() {
-			t.Fatalf("staged %s is not a regular file", path)
-		}
-		sum, size := wgsE2EHashFile(t, path)
-		if size != file.Bytes || sum != file.SHA256 {
-			t.Fatalf("staged %s size %d sha256 %s, want %d %s", path, size, sum, file.Bytes, file.SHA256)
-		}
-	}
-	if _, err := os.Stat(filepath.Join(dir, "in", "genome.fasta.fai")); !os.IsNotExist(err) {
-		t.Fatalf("staged FAI: %v, want not exist", err)
-	}
-
-	gotR1 := countFASTQRecords(t, filepath.Join(dir, wgsE2EStagedR1))
-	gotR2 := countFASTQRecords(t, filepath.Join(dir, wgsE2EStagedR2))
-	if gotR1 != wgsE2EPairCount || gotR2 != wgsE2EPairCount {
-		t.Fatalf("FASTQ records R1=%d R2=%d, want %d pairs each", gotR1, gotR2, wgsE2EPairCount)
-	}
-}
-
 func fillWGSFixtureCache(t *testing.T) {
 	t.Helper()
 	if err := os.MkdirAll(wgsE2ECacheDir, 0o755); err != nil {
@@ -125,9 +91,6 @@ func fillWGSFixtureCache(t *testing.T) {
 			continue
 		}
 		if err := downloadWGSFixture(file.URL, dest); err != nil {
-			if wgsE2ENetworkUnavailable(err) {
-				t.Skipf("download %s: %v", file.URL, err)
-			}
 			t.Fatalf("download %s: %v", file.URL, err)
 		}
 	}
