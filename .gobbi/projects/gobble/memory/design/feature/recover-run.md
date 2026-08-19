@@ -30,7 +30,7 @@ is blocking. Ask before leaving those Open.
 
 ### Normal
 
-- After a contained failure, resume remaining work using reusable outputs. Remaining work is tasks not yet successful in this run. Reusable outputs follow the temporary first-horizon rule on run-local until `cache-inputs` is accepted. Affected work is the unmatched task plus its downstream dependents.
+- After a contained failure, resume remaining work using reusable outputs. Remaining work is tasks not yet successful in this run. Reusable outputs follow the dest and input cheap-key rule on run-local until `cache-inputs` is accepted. Affected work is the unmatched task plus its downstream dependents. Topology edits classify as Change instead of `plan-drift`.
 - Source: `task-behavior`
 
 ### Alternate
@@ -70,7 +70,7 @@ is blocking. Ask before leaving those Open.
 ### Interfaces
 
 - Statement: Library retry, resume, cancel, and clean operations. CLI for the same operations is required at first-horizon exit. CLI command names stay Open (`invocation-contract`).
-- Current: `Resume(*Graph, workspace, cap)` occupies a released existing run after re-validation. Plan drift is a changed task set or edges, including wait-only edges. Remaining is unsuccessful latest attempts. Affected is a reuse miss plus downstream. Dest-scope `output-exists` applies only to dests this Resume would publish that are not authorized replace dests. Dest attribution is checksum or producer lineage. Replacement is staged replace plus per-attempt isolate. Script and env persist on the attempt. A stale `succeeded` rerun is not ready. A dest rename is a reuse miss. `blocked-upstream` is assigned only when a wait producer failed. Reuse identity is task instance, command or script, params, env, authored image, and input path plus content fingerprints. Resources and image digest are not identity. `Release(workspace)` closes occupancy, marks in-flight instances `incomplete`, and is not deletion. Occupancy is an owner record on `.gobble/run.json`. After Release, `run.json` stays; a later claim uses a lock file plus owner record. Live cancel, named retry with backoff, and guarded clean are not shipped. There is no CLI.
+- Current: `Resume(ctx, *Graph, workspace, cap)` occupies a released existing run after re-validation and classifies every reserved identity as Change: Added, Removed, Rewired, Repathed, IdentityChanged, or Unchanged. `plan-drift` is not a Resume result. `DefectPlanDrift` is removed. Wait-only edge change is Repathed. Remaining is unsuccessful latest attempts. Affected is a reuse miss plus downstream (`downstream-of-rerun`). Dest-scope `output-exists` applies only to dests this Resume would publish that are not authorized replace dests. Dest attribution is checksum or producer lineage. Replacement is staged replace plus per-attempt isolate. Script and env persist on the attempt. A dest rename is a reuse miss. `blocked-upstream` is assigned only when a wait producer failed. Reuse identity is reservedIdentity, command or script, params, env, authored image string, and cheap fingerprints. Resources and image digest are not identity. Schema 0 and 1 workspaces are `unsupported-schema` and are not resume-compatible. When `ctx` is done, in-flight work is canceled, identities persist incomplete, occupancy stays active, and the error is `canceled`. If Reconcile finds `runtime_id` still live, Cancel that handle then classify `previous-incomplete` (R2). `Release(workspace)` closes occupancy, marks in-flight instances `incomplete`, and is not deletion. Occupancy is an owner record on `.gobble/run.json`. After Release, `run.json` stays; a later claim uses a lock file plus owner record. Production Release requires the occupying process not live; same-process tests may use a dead-PID helper (R4). There is no public Cancel, named retry, or guarded Clean. There is no CLI.
 - Source: `interfaces`
 
 ## Constraints and qualities
@@ -82,7 +82,7 @@ is blocking. Ask before leaving those Open.
 
 | Id | Question | Blocking | What would resolve it |
 |---|---|---|---|
-| cache-inputs | Which long-term inputs decide reusable versus affected work? Temporary first-horizon rule is recorded on run-local. | no | An accepted long-term cache fingerprint rule |
+| cache-inputs | Which long-term inputs decide reusable versus affected work? First-horizon cheap-key rule is recorded on run-local. | no | An accepted long-term cache fingerprint rule |
 | retention-deletion | How long is run state kept beyond explicit clean? | no | An accepted retention policy |
 
 - Source: open ids used above

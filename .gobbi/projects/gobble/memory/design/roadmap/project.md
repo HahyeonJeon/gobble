@@ -13,7 +13,7 @@ Build a local agent-operable core first: Go library, then engine, then CLI. Firs
 
 ## Current position
 
-- Now: Ready inspect/resume is shipped on `13c42a68fed6e01a9ffbe46b6e3a5273c5696ddd` in module `github.com/HahyeonJeon/gobble` (`go 1.26`) with `internal/engine`. Same-module package `assets` holds first-party dual-entry proofs (not product tools). First-check is `go test ./...` and includes `assets` and `tests/wgs-e2e`. Public verbs are Compose, Validate, BuildPlan, Run, Inspect, Resume, and Release. Additive names remain `Group`, `Script`, and `Env`. `Inspect(workspace, view, instance)` is read-only. `Resume(graph, workspace, cap)` occupies a released run after re-validation. `Release` closes occupancy and is not deletion. Occupancy is an owner record on `.gobble/run.json`. There is no CLI and no `cmd/`. CLI and WGS-as-resume-proof remain required for local-core horizon exit. This session started from `develop` `06024e87a0b77452727ba9a484050eaf876009df`. Pre-bootstrap baseline remains `a2d561fea2846bc1c55213d66a7025dac980f330`.
+- Now: Design-review evolve is shipped on `9a57abb9a4984bb979558e63ea7913ccf5551c30` in module `github.com/HahyeonJeon/gobble` (`go 1.26`) with `internal/path`, `internal/engine`, and `internal/engine/exec`. Same-module package `assets` holds first-party dual-entry proofs (not product tools). First-check is hermetic `go test ./...`. Live is `go test -tags=live` and fails closed without Docker. Public verbs are Compose, Validate, BuildPlan, Run, Inspect, Resume, and Release. PathSpec fields are Dir, Prefix, Base, Suffixes, Ext. A Bind is File, Group, or Tree. `Run(ctx)` and `Resume(ctx)` cancel through context. Document is the only engine payload. SchemaVersion is 2. Scheduler keys `reservedIdentity`. Resume classifies graph-diff Change and does not return `plan-drift`. Occupancy is an owner record on `.gobble/run.json` until `Release`. There is no public Cancel, Diff, Retry, Clean, CLI, or `cmd/`. Live WGS Inspect+Release+Resume via `assets.WGS()` is shipped. CLI remains required for local-core horizon exit. This session started from `develop` `2b25ce0d762a31eaeeabeda0e75f38e03dbb5c56`. Pre-bootstrap baseline remains `a2d561fea2846bc1c55213d66a7025dac980f330`.
 - Local or cloud: local
 - Bootstrap: run; committed as `3389767462780dc0cfc436de864580959dfbb0ce` after user authorization to replace the existing README.
 - Source: `local-or-cloud`, `first-check`, `current-baseline`
@@ -81,7 +81,7 @@ Every feature file appears in exactly one horizon or in Not scheduled.
 
 ## Replan and stop
 
-- Replan: The pipeline model cannot leave room for later scatter/gather, conditionals, or dynamic expansion without a breaking rewrite. Or the CLI cannot express the same loop as the Go API.
+- Replan: Later scatter cannot attach as plan-time Document expansion of `reservedIdentity` without a breaking rewrite. Or the CLI cannot express the same loop as the Go API.
 - Stop: After the local core exists, agents still cannot validate, run, diagnose, and resume without a human translating logs. Or a Gobble DSL becomes required.
 - Source: `success-and-stop`
 
@@ -97,7 +97,7 @@ Every feature file appears in exactly one horizon or in Not scheduled.
 
 | Id | Question | What would resolve it |
 |---|---|---|
-| cache-inputs | Which long-term inputs participate in reuse? A temporary first-horizon rule is in force: reuse only when task identity, declared command or image, declared parameters, and recorded input path plus content fingerprints match and published outputs still exist; otherwise treat the task and its downstream dependents as affected. Remaining work is tasks not yet successful in this run. Changed work is tasks whose reuse check failed. | An accepted long-term cache fingerprint rule |
+| cache-inputs | Which long-term inputs participate in reuse? First-horizon workspace reuse uses reservedIdentity, command or script, params, env, authored image string, and dest plus input cheap keys; content digest is stored at publish. Cross-workspace cache is excluded. Remaining work is tasks not yet successful in this run. Changed work is tasks whose reuse check failed. | An accepted long-term cache fingerprint rule |
 | later-features | Which engine-class features enter HPC, cloud, or ecosystem horizons? | A named later-horizon feature list |
 
 - Source: open placement or rule items

@@ -34,8 +34,8 @@
 
 ## Cached go test is not a live Docker e2e
 
-**Context:** First-check is `go test ./...`. Live WGS tests skip if Docker is down. Go may cache a prior package result.
+**Context:** First-check is hermetic `go test ./...`. Live tests use build tag `live` and fail closed without Docker. Go may cache a prior package result.
 
-**Mistake:** Treating a cached `go test ./...` as proof that a live Docker WGS e2e ran.
+**Mistake:** Treating a cached `go test ./...` as proof that a live Docker WGS e2e ran, or treating a skipped live test as pass.
 
-**Correction:** Reproduce `go test ./tests/wgs-e2e -count=1`. A skip is not a live pass. Cached ok is not a fresh live run.
+**Correction:** First-check cannot skip for Docker. Live proof is `go test -tags=live` (WGS assay executes `assets.WGS()`). A skip is not a live pass. Cached ok is not a fresh live run.

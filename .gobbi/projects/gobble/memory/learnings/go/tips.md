@@ -14,7 +14,7 @@
 
 **Tip:** Resolve the wait-path set at `BuildPlan`. `upstreamReady` reads `Edge.Wait` only. Do not guess from `ToPort`. FromIn waits on the consuming input path. Output-port `From` waits on the published from-path. A Group edge waits on every named member path.
 
-**Application:** An empty or unproducible wait set is `never-ready` at plan. After the named upstream task succeeds, every wait path must be a regular file.
+**Application:** An empty or unproducible wait set is `never-ready` at plan. After the named upstream task succeeds, a File or Group wait path must be a regular file. A Tree wait path is ready when the declared directory holds dest `.gobble-tree.json`.
 
 ## Leftover not-started is not success
 
@@ -34,11 +34,11 @@
 
 ## Isolate scratch is not a directory port
 
-**Context:** Isolate already lets a tool write undeclared directories.
+**Context:** Isolate already lets a tool write undeclared directories. Tree is the declared directory artifact.
 
-**Tip:** Tools may write undeclared dirs; only declared regular files publish. Strelka wrote `strelka/` then `mv` to a declared VCF. STAR and Bismark declare index and align outputs as regular files (Group members); PathSpec.Dir is the parent folder token, not a directory port.
+**Tip:** Tools may write undeclared dirs; only declared File, Group members, or Tree contents plus dest `.gobble-tree.json` publish. PathSpec.Dir and `Directory` are placement, not artifacts. STAR `--genomeDir` is Tree via `DeclareTree`.
 
-**Application:** Reject first-class directory artifacts until a required consumer needs an index directory in place. Do not add directory ports for STAR genomeGenerate or Bismark genome preparation.
+**Application:** Do not treat isolate scratch or implicit cwd as a port. Do not revive glob Set for directory tools that can declare Tree.
 
 ## Claim occupy with a lock plus owner record
 
@@ -56,13 +56,29 @@
 
 **Application:** Collision tests must cover two pins with the same Name and different hashes.
 
-## Isolate restage copies Source onto dest
+## Isolate restage stages Source onto dest
 
 **Context:** A pipeline-input bind may restage so dest Dir differs from the authored From path.
 
-**Tip:** Record `IO.Source` (and `IOMember.Source`) when the From rendered path differs from dest. Empty Source keeps Path as both. Isolate copies `workspace[source]` onto `isolate[dest]`. Plan Wait, `checkInputs`, and identity hash the source file.
+**Tip:** Record `IO.Source` (and `IOMember.Source`) when the From rendered path differs from dest. Empty Source keeps Path as both. Isolate stages `workspace[source]` onto `isolate[dest]` by hardlink, then process-only symlink, then copy. Docker skips symlink. Publish is hardlink then copy; never symlink.
 
 **Application:** Bismark and BWA can restage a FASTA out of `in/` into a dest Dir the tool writes beside.
+
+## Schedule keys reservedIdentity
+
+**Context:** Later scatter needs instance and shard slots. First-horizon sample lists stay Go loops.
+
+**Tip:** Scheduler maps, `tasks.json` latest attempts, Inspect instance filter, and Release incomplete lists key `reservedIdentity`. Document is the only engine payload. Empty Image is process; non-empty is docker.
+
+**Application:** Adding a sample this horizon still adds authored IDs (Change Added). Do not revive `task.ID`-only maps or Snapshot as a parallel contract.
+
+## Inspect remaining uses dest cheap keys
+
+**Context:** Remaining used to SHA-256 dataset bytes. Content digest is still stored at publish.
+
+**Tip:** Classify remaining and reuse from dest cheap keys (size, mtime, dev, inode) recorded after publish, plus input cheap keys recorded at task success. Do not read file bytes on Inspect remaining. Image digest is recorded on the attempt and is not reuse identity.
+
+**Application:** Cheap dest mismatch is `output-missing`. Schema 0 and 1 workspaces are `unsupported-schema`.
 
 ## Staged replace never unlinks a published dest
 

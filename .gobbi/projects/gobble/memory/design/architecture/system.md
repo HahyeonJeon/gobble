@@ -16,7 +16,7 @@ when the project has one product. Start an inherited answer with `Inherited — 
 
 ### Gobble
 
-- Statement: Major parts are the Go core library (pipeline model: task, pipeline, input, output, resource, environment), engine services (validator, planner, scheduler), executors (local process and Docker), and interfaces (Go API, then CLI). The seam between scheduler and executors is required. The first-horizon scheduler is DAG- and resource-aware: per-task CPU and memory, and a run-level concurrency cap. Admission uses remaining CPU, memory, and the count cap. Docker receives `--cpus` and `--memory` when non-zero. Zero stays unspecified. Fairness, quotas, and job arrays wait. Each task declares its environment and must be runnable by itself. A container task must declare its Docker image. A local-process task must not require an image. Construction order is library, then engine, then CLI. The Go API may prove the loop before the CLI exists. First-horizon exit still requires the same loop on the CLI.
+- Statement: Major parts are the Go core library (pipeline model: task, pipeline, input, output, resource, environment), engine services (validator, planner, scheduler), executors (local process and Docker), and interfaces (Go API, then CLI). The seam between scheduler and executors is `Executor` Submit/Poll/Cancel/Reconcile in `internal/engine/exec`. Empty Image selects the process adapter; non-empty Image selects docker. Path render lives in `internal/path`. Document is the only engine payload. SchemaVersion is 2. The first-horizon scheduler keys `reservedIdentity`. Admission uses remaining CPU, memory, and the count cap. Docker receives `--cpus` and `--memory` when non-zero. Zero stays unspecified. Fairness, quotas, and job arrays wait. Each task declares its environment and must be runnable by itself. A container task must declare its Docker image. A local-process task must not require an image. Construction order is library, then engine, then CLI. The Go API may prove the loop before the CLI exists. First-horizon exit still requires the same loop on the CLI.
 - Source: `shape`
 
 ## Parts and responsibilities
@@ -39,7 +39,7 @@ when the project has one product. Start an inherited answer with `Inherited — 
 
 ### Gobble
 
-- Statement: Assumption — pipeline definitions live in Go source. First-horizon run state, cache or reuse decisions, artifacts, logs, and provenance live as local files in the run workspace. A run creates isolated task work directories, stages inputs, writes intermediates, publishes outputs on success, and keeps enough state to resume. Secrets must not be persisted in logs or metadata. Retention policy is unset. A later store may replace the file implementation. Until `cache-inputs` is accepted, reuse a prior successful task output only when task identity, declared command or image, declared parameters, and recorded input path plus content fingerprints all match and the published outputs still exist; otherwise treat that task and its downstream dependents as affected.
+- Statement: Assumption — pipeline definitions live in Go source. First-horizon run state, cache or reuse decisions, artifacts, logs, and provenance live as local files in the run workspace. A run creates isolated task work directories, stages inputs (hardlink, then process-only symlink, then copy), writes intermediates, publishes outputs on success (hardlink then copy, never symlink), and keeps enough state to resume. Secrets must not be persisted in logs or metadata. Retention policy is unset. A later store may replace the file implementation. Until `cache-inputs` is accepted, reuse a prior successful task output only when reservedIdentity, command or script, params, env, authored image string, recorded input path plus dest cheap keys, and published dest cheap keys all match; otherwise treat that task and its downstream dependents as affected. Content SHA-256 is stored at publish. Inspect remaining does not hash bytes. Input cheap keys are recorded at task success (R1). Image digest is recorded on the attempt and is not identity. Cross-workspace cache stays excluded.
 - Authoritative source: the run workspace on the local filesystem for that run
 - Source: `data`, `data-lifecycle`
 
@@ -48,7 +48,7 @@ when the project has one product. Start an inherited answer with `Inherited — 
 ### Gobble
 
 - Statement: Internal seams are library to engine, scheduler to executor, and engine to state and artifact files. External seams are the public Go API first and the CLI second. The Go API may prove the loop before the CLI exists. First-horizon exit still requires the same loop on the CLI. CLI command names stay Open (`invocation-contract`). Later agent APIs share the same model. JSON or JSONL is the default library and CLI response encoding. JSON or YAML as a pipeline interchange document is later, not a first-horizon pipeline language.
-- Current: Public verbs are `Compose`, `Validate`, `BuildPlan`, `Run`, `Inspect`, `Resume`, and `Release`. Occupancy is an owner record on `.gobble/run.json`. `Release` is the occupancy-break path and is not deletion. There is no CLI.
+- Current: Public verbs are `Compose`, `Validate`, `BuildPlan`, `Run`, `Inspect`, `Resume`, and `Release`. `Run(ctx, graph, workspace, cap)` and `Resume(ctx, graph, workspace, cap)` cancel through context and return `canceled`; occupancy stays until `Release`. There is no public Cancel, Diff, Retry, or Clean. Occupancy is an owner record on `.gobble/run.json`. `Release` is the occupancy-break path and is not deletion. There is no CLI.
 - Source: `interfaces`
 
 ## Stack
@@ -79,7 +79,7 @@ Do not use a no-op, `echo`, or any command that ignores the local toolchain.
 ### Gobble
 
 - Command: `go test ./...`
-- What it proves: Go 1.26 or newer is installed, the module `github.com/HahyeonJeon/gobble` builds, and package tests for `gobble`, `assets`, `internal/engine`, and `tests/wgs-e2e` pass, including public `Run`. Live Docker tests skip if the daemon is down. Cached package results are not proof a live Docker e2e ran. It is not proof of agent-operable run, inspect, or resume, and it does not require Docker.
+- What it proves: Go 1.26 or newer is installed, the module `github.com/HahyeonJeon/gobble` builds, and hermetic package tests for `gobble`, `assets`, `internal/engine`, `internal/path`, `internal/engine/exec`, and `tests/wgs-e2e` pass. Live tests use build tag `live` and are not in this command. It cannot skip for Docker. It is not proof of a live Docker assay.
 - Source: `first-check`
 
 Project command, after every product subsection. If two local products
@@ -106,7 +106,7 @@ disagree, mark Open and ask.
 
 ### Gobble
 
-- Verification: Assumption — a change is safe to keep when `go test ./...` passes, including package tests for `gobble`, `assets`, `internal/engine`, and `tests/wgs-e2e` when those packages change. Agent-operability of run, inspect, and resume is not proved by those tests. A live WGS Docker proof needs `go test ./tests/wgs-e2e -count=1`. Live RNA/Methyl proofs are in package `assets`.
+- Verification: Assumption — a change is safe to keep when hermetic `go test ./...` passes, including package tests for `gobble`, `assets`, `internal/engine`, `internal/path`, `internal/engine/exec`, and `tests/wgs-e2e` when those packages change. Agent-operability of live Docker run, inspect, and resume is not proved by first-check. Live is `go test -tags=live` and fails closed without Docker. The WGS assay is `tests/wgs-e2e` executing `assets.WGS()`, including Inspect, Release, and Resume. Live RNA/Methyl proofs remain in package `assets`.
 - Build risk: Assumption — the part most likely to be wrong is the pipeline model: whether it can express modules, branch, and merge so an agent can plan, run, and resume without a DSL. Early evidence is the synthetic workflow-case pipeline, then WGS end-to-end on a small dataset.
 - Source: `verification`, `build-risk`
 
@@ -121,7 +121,7 @@ disagree, mark Open and ask.
 
 | Id | Question | What would resolve it |
 |---|---|---|
-| cache-inputs | Which long-term inputs participate in reuse? Temporary first-horizon rule is recorded under Data and flow. | An accepted long-term cache fingerprint rule |
+| cache-inputs | Which long-term inputs participate in reuse? The first-horizon workspace rule is dest and input cheap keys plus stored content digest; cross-workspace cache is excluded. | An accepted long-term cache fingerprint rule |
 | retention-deletion | How long is run state kept, and what deletes it? | An accepted retention policy |
 | processing-model | Do pipeline results arrive live, in batches, or on demand? | A recorded processing model |
 | public-contract | Which public types or functions must current callers keep? | Project Design public API after first library surface |

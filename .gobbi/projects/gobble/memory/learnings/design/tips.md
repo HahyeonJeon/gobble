@@ -13,3 +13,11 @@
 **Context:** Containers inherit image `ENV`. Host inheritance stays forbidden.
 
 **Tip:** `Env: {"HOME":"/work"}` is an author literal, not a Nextflow env port.
+
+## File, Group, and Tree are the artifact sum
+
+**Context:** Directory-output tools such as STAR genomeGenerate need a declared directory. Glob Set and Nextflow wildcards were offered and rejected this horizon.
+
+**Tip:** A Bind is File, Group, or Tree. Tree is a declared directory plus dest `.gobble-tree.json`. Directory is placement, not an artifact. Group stays named regular files. Do not add glob Set this horizon.
+
+**Application:** STAR `--genomeDir` is Tree. BAM+BAI stays Group. Undeclared cwd files do not publish.
