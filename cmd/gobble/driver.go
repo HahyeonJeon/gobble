@@ -139,7 +139,7 @@ func compileMessage(out []byte, err error) string {
 }
 
 func driverSource(importPath string, req *request) string {
-	return fmt.Sprintf(driverTemplate, importPath, req.command, req.workspace, req.cap)
+	return fmt.Sprintf(driverTemplate, importPath, req.command, req.workspace, req.cap, req.sample)
 }
 
 const driverTemplate = `package main
@@ -161,6 +161,7 @@ const (
 	verb      = %q
 	workspace = %q
 	cap       = %d
+	sample    = %q
 )
 
 func main() {
@@ -168,6 +169,7 @@ func main() {
 }
 
 func run() int {
+	gobble.SetSampleSheetPath(sample)
 	g, err := gobble.Compose(userpipe.Pipeline())
 	if err != nil {
 		return writeLibErr(err)
@@ -238,7 +240,11 @@ func writeLibErr(err error) int {
 	if !errors.As(err, &ge) {
 		return writeFail(err.Error())
 	}
-	return writeErrJSON(ge)
+	code := 1
+	if gobble.IsSampleSheetError(ge) {
+		code = 2
+	}
+	return writeErrJSON(ge, code)
 }
 
 func writeFail(message string) int {
@@ -248,15 +254,15 @@ func writeFail(message string) int {
 			Code:    gobble.DefectInvalidRequest,
 			Message: message,
 		}},
-	})
+	}, 1)
 }
 
-func writeErrJSON(ge *gobble.Error) int {
+func writeErrJSON(ge *gobble.Error, code int) int {
 	data, err := json.Marshal(ge)
 	if err != nil {
 		return 1
 	}
 	_, _ = os.Stderr.Write(append(data, '\n'))
-	return 1
+	return code
 }
 `

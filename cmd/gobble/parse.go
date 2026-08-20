@@ -14,6 +14,7 @@ type request struct {
 	workspace string
 	cap       int
 	instance  string
+	sample    string
 	help      bool
 	version   bool
 }
@@ -29,6 +30,9 @@ type rawArgs struct {
 	instance        string
 	instanceSet     bool
 	instanceRepeat  bool
+	sample          string
+	sampleSet       bool
+	sampleRepeat    bool
 	help            bool
 	version         bool
 	unknown         []string
@@ -93,6 +97,12 @@ func collectArgs(args []string) rawArgs {
 				}
 				raw.instanceSet = true
 				raw.instance = val
+			case "sample":
+				if raw.sampleSet {
+					raw.sampleRepeat = true
+				}
+				raw.sampleSet = true
+				raw.sample = val
 			default:
 				raw.unknown = append(raw.unknown, "--"+name)
 			}
@@ -139,9 +149,9 @@ func interpret(raw rawArgs) (*request, *gobble.Error) {
 		return nil, invalidRequest("cli", "unknown command")
 	}
 
-	allowWS, allowCap, allowInst := flagsFor(cmd)
+	allowWS, allowCap, allowInst, allowSample := flagsFor(cmd)
 	if cmd == "help" || cmd == "version" || cmd == "" {
-		allowWS, allowCap, allowInst = false, false, false
+		allowWS, allowCap, allowInst, allowSample = false, false, false, false
 	}
 	unknown := append([]string(nil), raw.unknown...)
 	if raw.workspaceSet && !allowWS {
@@ -152,6 +162,9 @@ func interpret(raw rawArgs) (*request, *gobble.Error) {
 	}
 	if raw.instanceSet && !allowInst {
 		unknown = append(unknown, "--instance")
+	}
+	if raw.sampleSet && !allowSample {
+		unknown = append(unknown, "--sample")
 	}
 
 	if cmd == "help" {
@@ -178,7 +191,7 @@ func interpret(raw rawArgs) (*request, *gobble.Error) {
 		if len(unknown) > 0 {
 			return nil, inv("unknown flag " + unknown[0])
 		}
-		if raw.workspaceRepeat || raw.capRepeat || raw.instanceRepeat {
+		if raw.workspaceRepeat || raw.capRepeat || raw.instanceRepeat || raw.sampleRepeat {
 			return nil, repeatedFlagError(op, raw)
 		}
 		return &request{command: cmd, help: true}, nil
@@ -208,7 +221,7 @@ func interpret(raw rawArgs) (*request, *gobble.Error) {
 	if len(unknown) > 0 {
 		return nil, inv("unknown flag " + unknown[0])
 	}
-	if raw.workspaceRepeat || raw.capRepeat || raw.instanceRepeat {
+	if raw.workspaceRepeat || raw.capRepeat || raw.instanceRepeat || raw.sampleRepeat {
 		return nil, repeatedFlagError(op, raw)
 	}
 
@@ -267,6 +280,16 @@ func interpret(raw rawArgs) (*request, *gobble.Error) {
 	default:
 		return nil, invalidRequest("cli", "unknown command")
 	}
+	if cmd == "compose" || cmd == "validate" || cmd == "plan" || cmd == "run" || cmd == "resume" {
+		if raw.sampleSet {
+			if strings.TrimSpace(raw.sample) == "" {
+				return nil, inv("empty --sample")
+			}
+			req.sample = raw.sample
+		} else {
+			req.sample = gobble.DefaultSampleSheetPath
+		}
+	}
 	return req, nil
 }
 
@@ -276,8 +299,10 @@ func repeatedFlagError(op string, raw rawArgs) *gobble.Error {
 		return invalidRequest(op, "repeated flag --workspace")
 	case raw.capRepeat:
 		return invalidRequest(op, "repeated flag --cap")
-	default:
+	case raw.instanceRepeat:
 		return invalidRequest(op, "repeated flag --instance")
+	default:
+		return invalidRequest(op, "repeated flag --sample")
 	}
 }
 
@@ -290,15 +315,17 @@ func isOperate(cmd string) bool {
 	}
 }
 
-func flagsFor(cmd string) (workspace, cap, instance bool) {
+func flagsFor(cmd string) (workspace, cap, instance, sample bool) {
 	switch cmd {
+	case "compose", "validate", "plan":
+		return false, false, false, true
 	case "run", "resume":
-		return true, true, false
+		return true, true, false, true
 	case "inspect":
-		return true, false, true
+		return true, false, true, false
 	case "release":
-		return true, false, false
+		return true, false, false, false
 	default:
-		return false, false, false
+		return false, false, false, false
 	}
 }

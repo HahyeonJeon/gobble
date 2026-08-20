@@ -128,6 +128,19 @@ func TestInvocationFailures(t *testing.T) {
 		{name: "cap on inspect", args: []string{"inspect", "run", "--workspace", dir, "--cap", "1"}, op: "inspect"},
 		{name: "instance on run", args: []string{"run", "--workspace", dir, "--instance", "x"}, op: "run"},
 		{name: "workspace on compose", args: []string{"compose", "--workspace", dir}, op: "compose"},
+		{name: "repeated sample", args: []string{"compose", "--sample", "a.csv", "--sample", "b.csv"}, op: "compose"},
+		{name: "empty sample", args: []string{"compose", "--sample="}, op: "compose"},
+		{name: "whitespace sample", args: []string{"plan", "--sample", " \t"}, op: "plan"},
+		{name: "missing sample value", args: []string{"validate", "--sample"}, op: "validate"},
+		{name: "unknown --samples", args: []string{"compose", "--samples", "a.csv"}, op: "compose"},
+		{name: "unknown --constructor", args: []string{"compose", "--constructor", "RNASeq"}, op: "compose"},
+		{name: "unknown --no-sample", args: []string{"compose", "--no-sample", "x"}, op: "compose"},
+		{name: "sample on inspect", args: []string{"inspect", "run", "--workspace", dir, "--sample", "a.csv"}, op: "inspect"},
+		{name: "sample on release", args: []string{"release", "--workspace", dir, "--sample", "a.csv"}, op: "release"},
+		{name: "sample on help", args: []string{"help", "--sample", "a.csv"}, op: "cli"},
+		{name: "sample on version", args: []string{"version", "--sample", "a.csv"}, op: "cli"},
+		{name: "sample on inspect help", args: []string{"inspect", "--help", "--sample", "a.csv"}, op: "inspect"},
+		{name: "sample equals form on release", args: []string{"release", "--workspace", dir, "--sample=a.csv"}, op: "release"},
 		{name: "help unknown command", args: []string{"help", "nope"}, op: "cli"},
 		{name: "version extra", args: []string{"version", "extra"}, op: "cli"},
 		{name: "missing workspace value", args: []string{"release", "--workspace"}, op: "release"},
@@ -138,6 +151,70 @@ func TestInvocationFailures(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			requireInvocationFailure(t, tc.args, tc.op)
+		})
+	}
+}
+
+func TestSampleHelp(t *testing.T) {
+	graph := []string{"compose", "validate", "plan", "run", "resume"}
+	for _, cmd := range graph {
+		t.Run(cmd, func(t *testing.T) {
+			res := runCLI(cmd, "--help")
+			if res.code != 0 {
+				t.Fatalf("exit = %d, want 0\nstderr: %s", res.code, res.stderr)
+			}
+			out := string(res.stdout)
+			if !strings.Contains(out, "[--sample PATH]") {
+				t.Fatalf("help missing --sample PATH: %s", out)
+			}
+			if !strings.Contains(out, "samplesheet CSV") {
+				t.Fatalf("help missing samplesheet meaning: %s", out)
+			}
+			if !strings.Contains(out, "samplesheet.csv in the process current directory") {
+				t.Fatalf("help missing process cwd default: %s", out)
+			}
+		})
+	}
+	for _, cmd := range []string{"inspect", "release"} {
+		t.Run(cmd, func(t *testing.T) {
+			res := runCLI(cmd, "--help")
+			if res.code != 0 {
+				t.Fatalf("exit = %d, want 0\nstderr: %s", res.code, res.stderr)
+			}
+			if strings.Contains(string(res.stdout), "--sample") {
+				t.Fatalf("%s help mentions --sample: %s", cmd, res.stdout)
+			}
+		})
+	}
+}
+
+func TestParseSampleFlag(t *testing.T) {
+	dir := t.TempDir()
+	cases := []struct {
+		name   string
+		args   []string
+		sample string
+	}{
+		{name: "compose default", args: []string{"compose"}, sample: gobble.DefaultSampleSheetPath},
+		{name: "validate default", args: []string{"validate", "."}, sample: gobble.DefaultSampleSheetPath},
+		{name: "plan default", args: []string{"plan"}, sample: gobble.DefaultSampleSheetPath},
+		{name: "run default", args: []string{"run", "--workspace", dir}, sample: gobble.DefaultSampleSheetPath},
+		{name: "resume default", args: []string{"resume", "--workspace", dir}, sample: gobble.DefaultSampleSheetPath},
+		{name: "compose space form", args: []string{"compose", "--sample", "foo.csv"}, sample: "foo.csv"},
+		{name: "compose equals form", args: []string{"compose", "--sample=rel/sheet.csv"}, sample: "rel/sheet.csv"},
+		{name: "relative not cleaned", args: []string{"plan", "--sample", "../x.csv"}, sample: "../x.csv"},
+		{name: "run explicit", args: []string{"run", "--workspace", dir, "--sample", "s.csv"}, sample: "s.csv"},
+		{name: "resume equals", args: []string{"resume", "--sample=keep/as.csv", "--workspace", dir}, sample: "keep/as.csv"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := parse(tc.args)
+			if err != nil {
+				t.Fatalf("parse() error = %v", err)
+			}
+			if req.sample != tc.sample {
+				t.Fatalf("sample = %q, want %q", req.sample, tc.sample)
+			}
 		})
 	}
 }

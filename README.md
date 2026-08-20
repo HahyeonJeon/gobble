@@ -25,18 +25,18 @@ go install github.com/HahyeonJeon/gobble/cmd/gobble@<version>
 Graph verbs compile a Go package that exports `func Pipeline() *gobble.Pipeline`, then Compose. They need the `go` tool on `PATH` and a module that can resolve the package. The package operand defaults to `.`.
 
 ```sh
-gobble compose [package]
-gobble validate [package]
-gobble plan [package]
-gobble run [package] --workspace DIR [--cap N]
+gobble compose [package] [--sample PATH]
+gobble validate [package] [--sample PATH]
+gobble plan [package] [--sample PATH]
+gobble run [package] --workspace DIR [--cap N] [--sample PATH]
 gobble inspect VIEW --workspace DIR
-gobble resume [package] --workspace DIR [--cap N]
+gobble resume [package] --workspace DIR [--cap N] [--sample PATH]
 gobble release --workspace DIR
 ```
 
-`--workspace` is required on `run`, `inspect`, `resume`, and `release`. Gobble does not create DIR.
+`--workspace` is required on `run`, `inspect`, `resume`, and `release`. Gobble does not create DIR. `--sample PATH` is the samplesheet CSV on `compose`, `validate`, `plan`, `run`, and `resume`. When omitted, pipelines that read a sheet use `samplesheet.csv` in the process current directory, not `--workspace`.
 
-Success writes JSON or JSONL to stdout. Failures leave stdout empty and write `*Error` JSON to stderr. Exits are `0` success, `1` domain error, and `2` invocation error. A panic in `Pipeline` or package `init` is a process abort: stderr is not JSON.
+Success writes JSON or JSONL to stdout. Failures leave stdout empty and write `*Error` JSON to stderr. Exits are `0` success, `1` domain error, and `2` invocation error. A samplesheet load or parse error also exits `2`. A panic in `Pipeline` or package `init` is a process abort: stderr is not JSON.
 
 Recovery after a contained failure or interrupt is `inspect`, then `release`, then `resume`. Linux is the supported platform.
 

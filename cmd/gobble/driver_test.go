@@ -224,6 +224,106 @@ func TestPlanFailureEmptyStdout(t *testing.T) {
 	requireDomainError(t, res, libErr)
 }
 
+func TestDriverSampleInjection(t *testing.T) {
+	def, err := parse([]string{"compose"})
+	if err != nil {
+		t.Fatalf("parse() error = %v", err)
+	}
+	src := driverSource("example.com/pipe", def)
+	if !strings.Contains(src, `sample    = "`+gobble.DefaultSampleSheetPath+`"`) {
+		t.Fatalf("generated driver missing default sample constant:\n%s", src)
+	}
+	if !strings.Contains(src, "gobble.SetSampleSheetPath(sample)") {
+		t.Fatalf("generated driver missing SetSampleSheetPath:\n%s", src)
+	}
+	setAt := strings.Index(src, "gobble.SetSampleSheetPath(sample)")
+	pipeAt := strings.Index(src, "userpipe.Pipeline()")
+	if setAt < 0 || pipeAt < 0 || setAt > pipeAt {
+		t.Fatalf("SetSampleSheetPath must run before Pipeline():\n%s", src)
+	}
+
+	explicit, err := parse([]string{"validate", "--sample", "my/sheet.csv"})
+	if err != nil {
+		t.Fatalf("parse() error = %v", err)
+	}
+	got := driverSource("example.com/pipe", explicit)
+	if !strings.Contains(got, `sample    = "my/sheet.csv"`) {
+		t.Fatalf("generated driver missing explicit sample constant:\n%s", got)
+	}
+}
+
+func TestSheetErrorExit2(t *testing.T) {
+	watchDriverTemps(t)
+	missing := filepath.Join(t.TempDir(), "absent.csv")
+	res := runCLI("compose", "./testdata/sheetpipe", "--sample", missing)
+	ge := requireSheetError(t, res, "compose")
+	if len(ge.Defects) == 0 || len(ge.Defects[0].Paths) == 0 || ge.Defects[0].Paths[0] != missing {
+		t.Fatalf("paths = %#v, want %q", ge.Defects, missing)
+	}
+
+	def := runCLI("compose", "./testdata/sheetpipe")
+	dge := requireSheetError(t, def, "compose")
+	if len(dge.Defects) == 0 || len(dge.Defects[0].Paths) == 0 || dge.Defects[0].Paths[0] != gobble.DefaultSampleSheetPath {
+		t.Fatalf("default paths = %#v, want %q", dge.Defects, gobble.DefaultSampleSheetPath)
+	}
+}
+
+func TestSheetMalformedExit2(t *testing.T) {
+	watchDriverTemps(t)
+	path := filepath.Join(t.TempDir(), "bad.csv")
+	if err := os.WriteFile(path, []byte("not-a-sheet\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	res := runCLI("plan", "./testdata/sheetpipe", "--sample", path)
+	requireSheetError(t, res, "compose")
+}
+
+func TestSheetSuccessExplicitPath(t *testing.T) {
+	watchDriverTemps(t)
+	path := filepath.Join(t.TempDir(), "sheet.csv")
+	if err := os.WriteFile(path, []byte("sample,read1,read2\ns1,reads/r1.fq,reads/r2.fq\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	res := runCLI("compose", "./testdata/sheetpipe", "--sample", path)
+	if res.code != 0 {
+		t.Fatalf("exit = %d\nstderr: %s", res.code, res.stderr)
+	}
+	if len(res.stderr) != 0 {
+		t.Fatalf("stderr = %q, want empty", res.stderr)
+	}
+	if !strings.Contains(string(res.stdout), `"op":"compose"`) {
+		t.Fatalf("stdout = %q, want compose JSON", res.stdout)
+	}
+}
+
+func TestComposeDefectStaysExit1(t *testing.T) {
+	watchDriverTemps(t)
+	_, libErr := gobble.Compose(badpipe.Pipeline())
+	res := runCLI("compose", "./testdata/badpipe", "--sample", "ignored.csv")
+	requireDomainError(t, res, libErr)
+}
+
+func requireSheetError(t *testing.T, res cliResult, wantOp string) *gobble.Error {
+	t.Helper()
+	if len(res.stdout) != 0 {
+		t.Fatalf("stdout = %q, want empty", res.stdout)
+	}
+	if res.code != 2 {
+		t.Fatalf("exit = %d, want 2\nstderr: %s", res.code, res.stderr)
+	}
+	var ge gobble.Error
+	if err := json.Unmarshal(res.stderr, &ge); err != nil {
+		t.Fatalf("stderr JSON: %v\n%s", err, res.stderr)
+	}
+	if ge.Op != wantOp {
+		t.Fatalf("op = %q, want %q", ge.Op, wantOp)
+	}
+	if !gobble.IsSampleSheetError(&ge) {
+		t.Fatalf("IsSampleSheetError = false, defects = %#v", ge.Defects)
+	}
+	return &ge
+}
+
 func requireCompileFailure(t *testing.T, res cliResult, wantOp string) {
 	t.Helper()
 	if len(res.stdout) != 0 {
