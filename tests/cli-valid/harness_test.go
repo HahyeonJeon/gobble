@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -49,6 +50,16 @@ func gobbleCommand(t *testing.T, bin string, args ...string) *exec.Cmd {
 	t.Helper()
 	cmd := exec.Command(bin, args...)
 	cmd.Dir = moduleRoot(t)
+	tmp := t.TempDir()
+	env := os.Environ()
+	out := make([]string, 0, len(env)+1)
+	for _, e := range env {
+		if strings.HasPrefix(e, "TMPDIR=") {
+			continue
+		}
+		out = append(out, e)
+	}
+	cmd.Env = append(out, "TMPDIR="+tmp)
 	return cmd
 }
 
