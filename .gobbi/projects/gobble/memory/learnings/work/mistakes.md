@@ -48,6 +48,14 @@
 
 **Correction:** Partner is `claude` with the Partner Manual command, one writing path, and a preimage check.
 
+## Executor DONE is not a running live test
+
+**Context:** Workflow execution of live-tagged `go test` commands that can run for minutes.
+
+**Mistake:** Reporting executor DONE while a live `go test` is still running. The handoff then claims completion before the command exits.
+
+**Correction:** Wait for the live command to exit before the handoff. A still-running live test is not completion.
+
 ## Start DISCUSSION Partner before the plan writer
 
 **Context:** Workflow Planning DISCUSSION that uses a Partner grouping pass.

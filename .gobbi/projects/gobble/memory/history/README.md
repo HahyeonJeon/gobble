@@ -2,6 +2,7 @@
 
 Recursive navigation across completed-session history, newest first.
 
+- [CLI live validation](2026-08-20-cli-valid.md)
 - [Gobble CLI](2026-08-20-gobble-cli.md)
 - [Design-review engine evolve](2026-08-19-design-review.md)
 - [Multiomics assets proofs](2026-08-19-multiomics-assets.md)

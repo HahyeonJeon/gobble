@@ -4,6 +4,7 @@ Recursive navigation across reports, grouped by category, newest first.
 
 ## Note
 
+- [CLI live validation](note/2026-08-20-cli-valid.md)
 - [Gobble CLI](note/2026-08-20-gobble-cli.md)
 - [Design-review engine evolve](note/2026-08-19-design-review.md)
 - [Multiomics assets](note/2026-08-19-multiomics-assets.md)

@@ -48,6 +48,14 @@
 
 **Correction:** Read stdout only (`cmd.Output()`). Surface diagnostics from `ExitError.Stderr`.
 
+## Isolate gobble child TMPDIR under package-parallel tests
+
+**Context:** Hermetic tests that exec a built `gobble` while `cmd/gobble` tests call `watchDriverTemps`.
+
+**Mistake:** Leaving the child `TMPDIR` as the shared process temp. Graph verbs then write `gobble-driver-*` where `watchDriverTemps` globs, so package-parallel `go test` fails.
+
+**Correction:** Set the child `TMPDIR` to a test-owned directory before exec. Do not change product `cmd/gobble` for this isolation.
+
 ## Signaled ExitCode is not 255
 
 **Context:** Graph verbs wait on the compiled driver and map its status to the launcher exit.

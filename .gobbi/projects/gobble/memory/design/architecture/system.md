@@ -79,7 +79,7 @@ Do not use a no-op, `echo`, or any command that ignores the local toolchain.
 ### Gobble
 
 - Command: `go test ./...`
-- What it proves: Go 1.26 or newer is installed, the module `github.com/HahyeonJeon/gobble` builds, and hermetic package tests for `gobble`, `cmd/gobble`, `assets`, `internal/engine`, `internal/path`, `internal/engine/exec`, and `tests/wgs-e2e` pass. Live tests use build tag `live` and are not in this command. It cannot skip for Docker. It is not proof of a live Docker assay.
+- What it proves: Go 1.26 or newer is installed, the module `github.com/HahyeonJeon/gobble` builds, and hermetic package tests for `gobble`, `cmd/gobble`, `assets`, `internal/engine`, `internal/path`, `internal/engine/exec`, `tests/wgs-e2e`, and `tests/cli-valid` pass. Live tests use build tag `live` and are not in this command. It cannot skip for Docker. It is not proof of a live Docker assay.
 - Source: `first-check`
 
 Project command, after every product subsection. If two local products
@@ -106,7 +106,7 @@ disagree, mark Open and ask.
 
 ### Gobble
 
-- Verification: Assumption — a change is safe to keep when hermetic `go test ./...` passes, including package tests for `gobble`, `cmd/gobble`, `assets`, `internal/engine`, `internal/path`, `internal/engine/exec`, and `tests/wgs-e2e` when those packages change. Agent-operability of live Docker run, inspect, and resume is not proved by first-check. Live is `go test -tags=live` and fails closed without Docker. The WGS assay is `tests/wgs-e2e` executing `assets.WGS()`, including Inspect, Release, and Resume. Live RNA/Methyl proofs remain in package `assets`.
+- Verification: Assumption — a change is safe to keep when hermetic `go test ./...` passes, including package tests for `gobble`, `cmd/gobble`, `assets`, `internal/engine`, `internal/path`, `internal/engine/exec`, `tests/wgs-e2e`, and hermetic `tests/cli-valid` when those packages change. Agent-operability of live Docker run, inspect, and resume is not proved by first-check. Live is `go test -tags=live` and fails closed without Docker. The WGS assay is `tests/wgs-e2e` executing `assets.WGS()`, including Inspect, Release, and Resume. Live RNA/Methyl proofs remain in package `assets`. `tests/cli-valid` live-tagged tests prove CLI `compose`, `validate`, `plan`, `run`, `inspect`, `release`, and `resume` on named surfaces (run-local recover, WGS recover, RNA-seq run+inspect, Methyl-seq run+inspect). First-check remains `go test ./...` without the live tag.
 - Build risk: Assumption — the part most likely to be wrong is the pipeline model: whether it can express modules, branch, and merge so an agent can plan, run, and resume without a DSL. Early evidence is the synthetic workflow-case pipeline, then WGS end-to-end on a small dataset.
 - Source: `verification`, `build-risk`
 
