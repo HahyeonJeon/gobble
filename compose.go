@@ -6,6 +6,8 @@ import "github.com/HahyeonJeon/gobble/internal/engine"
 //
 // A From handle must belong to p. A handle from another Pipeline is
 // missing-input on that bind, including output binds.
+// If p has a recorded compose error from [Pipeline.RecordComposeError],
+// Compose returns (nil, that *Error) and does not build a graph.
 // On any compose defect it returns (nil, *Error) with Op "compose".
 func Compose(p *Pipeline) (*Graph, error) {
 	if p == nil {
@@ -13,6 +15,9 @@ func Compose(p *Pipeline) (*Graph, error) {
 			Code:    DefectInvalidRequest,
 			Message: "nil pipeline",
 		}}}
+	}
+	if p.composeErr != nil {
+		return nil, p.composeErr
 	}
 	if err := composeDefects("compose", composeCheckPipeline(p)); err != nil {
 		return nil, err

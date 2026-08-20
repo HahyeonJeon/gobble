@@ -1,13 +1,17 @@
 package gobble
 
-import "strings"
+import (
+	"errors"
+	"strings"
+)
 
 // Pipeline is the root builder for a compose graph.
 type Pipeline struct {
-	name     string
-	inputs   []pipeInput
-	children []node
-	tasks    []*Task
+	name       string
+	inputs     []pipeInput
+	children   []node
+	tasks      []*Task
+	composeErr *Error
 }
 
 type pipeInput struct {
@@ -102,6 +106,44 @@ func NewPipeline(name string) *Pipeline {
 // Name returns the pipeline name.
 func (p *Pipeline) Name() string {
 	return p.name
+}
+
+// RecordComposeError records err so Compose returns it and does not build
+// a graph. A nil receiver or nil err is a no-op. err is stored as [*Error]
+// with Op "compose". The first recorded error is kept.
+func (p *Pipeline) RecordComposeError(err error) {
+	if p == nil || err == nil || p.composeErr != nil {
+		return
+	}
+	if ge := normalizeComposeError(err); ge != nil {
+		p.composeErr = ge
+	}
+}
+
+func normalizeComposeError(err error) *Error {
+	var ge *Error
+	if errors.As(err, &ge) {
+		if ge == nil {
+			return nil
+		}
+		out := &Error{Op: "compose", Defects: make([]Defect, len(ge.Defects))}
+		for i, d := range ge.Defects {
+			out.Defects[i] = Defect{
+				Code:    d.Code,
+				Unit:    d.Unit,
+				Message: d.Message,
+				Paths:   copyStrings(d.Paths),
+			}
+		}
+		return out
+	}
+	return &Error{
+		Op: "compose",
+		Defects: []Defect{{
+			Code:    DefectInvalidRequest,
+			Message: err.Error(),
+		}},
+	}
 }
 
 // AddInput records a pipeline input and returns a non-zero Handle for it.

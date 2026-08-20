@@ -28,6 +28,9 @@ const (
 	DefectInvalidRequest DefectCode = "invalid-request"
 	// DefectInvalidPath means a PathSpec cannot be rendered or used.
 	DefectInvalidPath DefectCode = "invalid-path"
+	// DefectInvalidSampleSheet means a samplesheet is malformed, missing
+	// required cells, or fails constructor-time sheet rules.
+	DefectInvalidSampleSheet DefectCode = "invalid-samplesheet"
 	// DefectConflict means two binds render to the same path.
 	DefectConflict DefectCode = "conflict"
 	// DefectUnsupportedBackend means a task names a backend other than local.
