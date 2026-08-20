@@ -14,6 +14,32 @@ A Bind is File, Group, or Tree. Tree is a declared directory artifact published 
 
 Guarded Clean is designed and not shipped. Occupancy must be closed first. Default scope is isolate directories under `.gobble/tasks`. Dry-run a manifest before delete. Never unguarded dest delete. Refuse while occupied. Tree remains correct without this verb.
 
+## CLI
+
+Install on Linux:
+
+```sh
+go install github.com/HahyeonJeon/gobble/cmd/gobble@<version>
+```
+
+Graph verbs compile a Go package that exports `func Pipeline() *gobble.Pipeline`, then Compose. The package operand defaults to `.`.
+
+```sh
+gobble compose [package]
+gobble validate [package]
+gobble plan [package]
+gobble run [package] --workspace DIR [--cap N]
+gobble inspect VIEW --workspace DIR
+gobble resume [package] --workspace DIR [--cap N]
+gobble release --workspace DIR
+```
+
+`--workspace` is required on `run`, `inspect`, `resume`, and `release`. Gobble does not create DIR.
+
+Success writes JSON or JSONL to stdout. Failures write `*Error` JSON to stderr. Exits are `0` success, `1` domain error, and `2` invocation error.
+
+Recovery after a contained failure or interrupt is `inspect`, then `release`, then `resume`. Linux is the supported platform.
+
 ## First check
 
 Requires Go 1.26 or newer. Docker and network are not required.

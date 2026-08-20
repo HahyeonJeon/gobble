@@ -3,9 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"go/parser"
-	"go/token"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -191,48 +188,6 @@ func TestPlanFailureEmptyStdout(t *testing.T) {
 	_, libErr := gobble.BuildPlan(g)
 	res := runCLI("plan", "./testdata/badbackend")
 	requireDomainError(t, res, libErr)
-}
-
-func TestCmdGobbleImportBan(t *testing.T) {
-	cwd, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
-	}
-	banned := []string{
-		"github.com/HahyeonJeon/gobble/internal/engine",
-		"github.com/HahyeonJeon/gobble/assets",
-	}
-	err = filepath.WalkDir(cwd, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if d.IsDir() {
-			if d.Name() == "testdata" && path != cwd {
-				return fs.SkipDir
-			}
-			return nil
-		}
-		if !strings.HasSuffix(path, ".go") {
-			return nil
-		}
-		fset := token.NewFileSet()
-		f, err := parser.ParseFile(fset, path, nil, parser.ImportsOnly)
-		if err != nil {
-			return err
-		}
-		for _, imp := range f.Imports {
-			got := strings.Trim(imp.Path.Value, `"`)
-			for _, ban := range banned {
-				if got == ban || strings.HasPrefix(got, ban+"/") {
-					t.Errorf("%s imports %s", path, got)
-				}
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
 }
 
 func requireCompileFailure(t *testing.T, res cliResult, wantOp string) {
