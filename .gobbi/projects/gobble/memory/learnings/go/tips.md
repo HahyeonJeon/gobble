@@ -87,3 +87,19 @@
 **Tip:** Never unlink, truncate, or overwrite a published dest in place. Exclusive-create a temp, write all bytes, then rename over the dest after complete isolate outputs.
 
 **Application:** A failed new attempt that never renamed leaves the prior dest in place.
+
+## testdata packages are importable
+
+**Context:** CLI graph-verb tests need fixture packages that export `Pipeline()`.
+
+**Tip:** `cmd/gobble/testdata/<pkg>` is an explicit import path. Do not assume testdata is unlistable.
+
+**Application:** `go test ./...` skips testdata, but `go list` of that explicit path still resolves the fixture.
+
+## Exec the built driver, not go run
+
+**Context:** Graph verbs compile a generated driver and must forward child stderr byte-exact.
+
+**Tip:** Exec the built driver binary. Do not use `go run`. `go run` prints `exit status N` to stderr on a non-zero child.
+
+**Application:** Panic and signal tests compare stderr bytes against the child, not a `go run` wrapper.

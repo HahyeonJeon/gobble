@@ -39,3 +39,19 @@
 **Mistake:** Classifying resume identity from the plan after occupy overwrites it. Filtering latest attempts before remaining classification. Treating any executed identity as dest owner.
 
 **Correction:** Persist script and env on the attempt, or classify before replacing `plan.json`. Classify remaining on all latest attempts, then instance-filter emit. Attribute dests by checksum or producer lineage, not executed identity.
+
+## Parse go list from stdout only
+
+**Context:** Graph verbs resolve a user package with `go list -f '{{.ImportPath}}'`.
+
+**Mistake:** `CombinedOutput` plus first-line parse treats `go: downloading` on stderr as the import path.
+
+**Correction:** Read stdout only (`cmd.Output()`). Surface diagnostics from `ExitError.Stderr`.
+
+## Signaled ExitCode is not 255
+
+**Context:** Graph verbs wait on the compiled driver and map its status to the launcher exit.
+
+**Mistake:** Passing `exec.ExitError.ExitCode()` of a signaled child to `os.Exit`. That code is `-1`; `os.Exit(-1)` yields 255.
+
+**Correction:** Map a signaled wait to `128+signal`. Keep other mapped codes in `{0,1,2}`.

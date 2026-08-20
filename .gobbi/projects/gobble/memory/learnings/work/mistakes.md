@@ -22,7 +22,7 @@
 
 **Mistake:** An observer wait under 300 seconds dies while the Partner process continues. The wrapper then loses EXIT. A 120s kill can leave stdout `Execution error` with no report.
 
-**Correction:** Keep the wait at least 300 seconds. Long design reviews may need about 900 seconds. Capture EXIT in a file written by the same long command that runs the Partner CLI.
+**Correction:** The wrapper must outlive the inner `timeout N`, including the `echo $? > exit.txt` tail. A 300s outer wait can kill after Claude already wrote the result when the inner timeout is 900s. Keep the wait at least as long as that whole command. Capture EXIT in a file written by the same long command that runs the Partner CLI.
 
 ## Do not average conflicting prior-art studies
 
@@ -39,3 +39,19 @@
 **Mistake:** Treating a cached `go test ./...` as proof that a live Docker WGS e2e ran, or treating a skipped live test as pass.
 
 **Correction:** First-check cannot skip for Docker. Live proof is `go test -tags=live` (WGS assay executes `assets.WGS()`). A skip is not a live pass. Cached ok is not a fresh live run.
+
+## Do not spawn general-purpose as Partner
+
+**Context:** Gobbi Partner review or evaluation on Claude Code.
+
+**Mistake:** Spawning `general-purpose` as Partner. That is not the Partner Manual command.
+
+**Correction:** Partner is `claude` with the Partner Manual command, one writing path, and a preimage check.
+
+## Start DISCUSSION Partner before the plan writer
+
+**Context:** Workflow Planning DISCUSSION that uses a Partner grouping pass.
+
+**Mistake:** Starting the plan writer before the DISCUSSION Partner finishes. The writer then groups without independent Partner input.
+
+**Correction:** Finish the DISCUSSION Partner before the plan writer starts. Planning Partner grouping is an input, not a later patch.

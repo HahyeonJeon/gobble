@@ -69,8 +69,8 @@ is blocking. Ask before leaving those Open.
 
 ### Interfaces
 
-- Statement: Library inspect operations. CLI for the same operations is required at first-horizon exit. CLI command names stay Open (`invocation-contract`). Default response encoding is JSON or JSONL, not a pipeline language.
-- Current: `Inspect(workspace, View, instance)` is the shipped read-only library verb. `View` constants are `run`, `instances`, `errors`, `logs`, `timing`, `dag`, `lineage`, `remaining`, and `reuse`. Unknown view is `not-found`. `run`, `errors`, `logs`, `timing`, `dag`, and `lineage` return one JSON object. `instances`, `remaining`, and `reuse` return JSONL. Each object or JSONL record includes `schema_version`. Empty instance selects every reserved identity. Logs are pointers plus an optional bounded tail. Remaining is classified on all latest attempts using dest cheap keys recorded after publish and input cheap keys recorded at success, then instance-filtered for emit. Remaining does not hash content. Dest cheap mismatch uses `output-missing`. Remaining and reuse omit `change` until Resume has classified that identity. Inspect does not occupy, create, or rewrite control files. There is no events view. There is no CLI.
+- Statement: Library inspect operations. CLI for the same operations is required at first-horizon exit. Shipped `gobble inspect VIEW --workspace DIR [--instance ID]`; library bytes pass through; contract in [architecture/system.md](../architecture/system.md) Interfaces Current. Default response encoding is JSON or JSONL, not a pipeline language.
+- Current: `Inspect(workspace, View, instance)` is the shipped read-only library verb. `View` constants are `run`, `instances`, `errors`, `logs`, `timing`, `dag`, `lineage`, `remaining`, and `reuse`. Unknown view is `not-found`. `run`, `errors`, `logs`, `timing`, `dag`, and `lineage` return one JSON object. `instances`, `remaining`, and `reuse` return JSONL. Each object or JSONL record includes `schema_version`. Empty instance selects every reserved identity. Logs are pointers plus an optional bounded tail. Remaining is classified on all latest attempts using dest cheap keys recorded after publish and input cheap keys recorded at success, then instance-filtered for emit. Remaining does not hash content. Dest cheap mismatch uses `output-missing`. Remaining and reuse omit `change` until Resume has classified that identity. Inspect does not occupy, create, or rewrite control files. There is no events view. Shipped `gobble inspect VIEW --workspace DIR [--instance ID]`; library bytes pass through; contract in [architecture/system.md](../architecture/system.md) Interfaces Current.
 - Source: `interfaces`
 
 ## Constraints and qualities
@@ -83,7 +83,6 @@ is blocking. Ask before leaving those Open.
 | Id | Question | Blocking | What would resolve it |
 |---|---|---|---|
 | visual-principles | Which few visual principles must stay recognizable if human text is shown? | no | A recorded CLI visual rule |
-| invocation-contract | Which inspect CLI names must stay compatible? Names are not locked. | no | An accepted CLI contract |
 
 - Source: open ids used above
 
@@ -101,5 +100,4 @@ is blocking. Ask before leaving those Open.
 - `constraints`
 - `quality-priority`
 - `visual-principles`
-- `invocation-contract`
 - Source: the topic ids actually cited

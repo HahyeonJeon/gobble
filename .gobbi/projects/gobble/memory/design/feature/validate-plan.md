@@ -69,7 +69,7 @@ is blocking. Ask before leaving those Open.
 
 ### Interfaces
 
-- Statement: Library validate and plan operations. CLI for the same operations is required at first-horizon exit. CLI command names stay Open (`invocation-contract`). Default response encoding is JSON or JSONL, not a pipeline language.
+- Statement: Library validate and plan operations. CLI for the same operations is required at first-horizon exit. Shipped `gobble validate [PKG]` and `gobble plan [PKG]`; contract in [architecture/system.md](../architecture/system.md) Interfaces Current. Default response encoding is JSON or JSONL, not a pipeline language.
 - Current: Package `gobble` builds `engine.Document` and runs compose-time checks. Engine `Validate`, `Check`, and `BuildPlan` take Document only. There is no parallel Snapshot contract. Validate sees image, params, memory, backend, CPU, artifact XOR, env literals, and path conflicts. Control `SchemaVersion` is 2. Schema 0 and 1 documents are `unsupported-schema`. There is no migration. `BuildPlan` validates first, resolves wait paths onto DAG `wait`, and returns a `Plan`. An unproducible wait set is `never-ready`. Dry run is `BuildPlan`. `WriteTo` is optional and keeps the plan if the writer fails. Plan JSON keys are `pipeline`, `tasks`, and `dag`. Tasks persist instance, shard, and attempt slots. IO records artifact kind `file` | `group` | `tree`. Group IO may list `members`. Tree IO records dest `.gobble-tree.json`. `script` and `env` are omitted when empty. The workflow-case golden is `testdata/workflow-case/plan.json`.
 - Source: `interfaces`
 
@@ -80,11 +80,8 @@ is blocking. Ask before leaving those Open.
 
 ## Open questions
 
-| Id | Question | Blocking | What would resolve it |
-|---|---|---|---|
-| invocation-contract | Which validate and plan CLI names must stay compatible? Names are not locked. | no | An accepted CLI contract |
-
-- Source: open ids used above
+- Not applicable — `invocation-contract` is closed; names live in [architecture/system.md](../architecture/system.md) Interfaces Current.
+- Source: none remaining
 
 ## Interview sources
 
@@ -99,5 +96,4 @@ is blocking. Ask before leaving those Open.
 - `interfaces`
 - `constraints`
 - `quality-priority`
-- `invocation-contract`
 - Source: the topic ids actually cited

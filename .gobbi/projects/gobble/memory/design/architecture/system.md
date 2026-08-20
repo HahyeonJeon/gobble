@@ -16,7 +16,7 @@ when the project has one product. Start an inherited answer with `Inherited — 
 
 ### Gobble
 
-- Statement: Major parts are the Go core library (pipeline model: task, pipeline, input, output, resource, environment), engine services (validator, planner, scheduler), executors (local process and Docker), and interfaces (Go API, then CLI). The seam between scheduler and executors is `Executor` Submit/Poll/Cancel/Reconcile in `internal/engine/exec`. Empty Image selects the process adapter; non-empty Image selects docker. Path render lives in `internal/path`. Document is the only engine payload. SchemaVersion is 2. The first-horizon scheduler keys `reservedIdentity`. Admission uses remaining CPU, memory, and the count cap. Docker receives `--cpus` and `--memory` when non-zero. Zero stays unspecified. Fairness, quotas, and job arrays wait. Each task declares its environment and must be runnable by itself. A container task must declare its Docker image. A local-process task must not require an image. Construction order is library, then engine, then CLI. The Go API may prove the loop before the CLI exists. First-horizon exit still requires the same loop on the CLI.
+- Statement: Major parts are the Go core library (pipeline model: task, pipeline, input, output, resource, environment), engine services (validator, planner, scheduler), executors (local process and Docker), and interfaces (Go API, then CLI). The seam between scheduler and executors is `Executor` Submit/Poll/Cancel/Reconcile in `internal/engine/exec`. Empty Image selects the process adapter; non-empty Image selects docker. Path render lives in `internal/path`. Document is the only engine payload. SchemaVersion is 2. The first-horizon scheduler keys `reservedIdentity`. Admission uses remaining CPU, memory, and the count cap. Docker receives `--cpus` and `--memory` when non-zero. Zero stays unspecified. Fairness, quotas, and job arrays wait. Each task declares its environment and must be runnable by itself. A container task must declare its Docker image. A local-process task must not require an image. Construction order is library, then engine, then CLI. First-horizon exit still requires the same loop on the CLI.
 - Source: `shape`
 
 ## Parts and responsibilities
@@ -47,8 +47,8 @@ when the project has one product. Start an inherited answer with `Inherited — 
 
 ### Gobble
 
-- Statement: Internal seams are library to engine, scheduler to executor, and engine to state and artifact files. External seams are the public Go API first and the CLI second. The Go API may prove the loop before the CLI exists. First-horizon exit still requires the same loop on the CLI. CLI command names stay Open (`invocation-contract`). Later agent APIs share the same model. JSON or JSONL is the default library and CLI response encoding. JSON or YAML as a pipeline interchange document is later, not a first-horizon pipeline language.
-- Current: Public verbs are `Compose`, `Validate`, `BuildPlan`, `Run`, `Inspect`, `Resume`, and `Release`. `Run(ctx, graph, workspace, cap)` and `Resume(ctx, graph, workspace, cap)` cancel through context and return `canceled`; occupancy stays until `Release`. There is no public Cancel, Diff, Retry, or Clean. Occupancy is an owner record on `.gobble/run.json`. `Release` is the occupancy-break path and is not deletion. There is no CLI.
+- Statement: Internal seams are library to engine, scheduler to executor, and engine to state and artifact files. External seams are the public Go API first and the CLI second. First-horizon exit still requires the same loop on the CLI. Later agent APIs share the same model. JSON or JSONL is the default library and CLI response encoding. JSON or YAML as a pipeline interchange document is later, not a first-horizon pipeline language.
+- Current: Public library verbs are `Compose`, `Validate`, `BuildPlan`, `Run`, `Inspect`, `Resume`, and `Release`. `Run(ctx, graph, workspace, cap)` and `Resume(ctx, graph, workspace, cap)` cancel through context and return `canceled`; occupancy stays until `Release`. There is no public Cancel, Diff, Retry, or Clean. Occupancy is an owner record on `.gobble/run.json`. `Release` is the occupancy-break path and is not deletion. Installed product binary is `cmd/gobble`. No public `cli` package. No Graph JSON. Graph verbs take a Go package path (default `.`), require `go` on PATH, compile a generated driver, call `func Pipeline() *gobble.Pipeline`, then Compose. Inspect and release run in-process. Seven product verbs: `compose`, `validate`, `plan`, `run`, `inspect`, `resume`, `release`. Inspect is `gobble inspect VIEW --workspace DIR`. VIEW matches library views. Supporting `help` and `version` exist; they are not the product loop. `--workspace DIR` is required on run, inspect, resume, and release. Do not create DIR. Do not infer from cwd. `--cap N` is optional on run and resume; omit passes `0`. `--instance ID` is optional on inspect; empty selects every reserved identity. SIGINT/SIGTERM on run and resume cancel ctx. Occupancy stays. No `cancel` verb. Success: JSON or JSONL on stdout. Failure: empty stdout, `*Error` JSON on stderr. Exits `0` / `1` / `2`. Domain → `1`. Invocation, unknown command, bad flag, compile, missing constructor → `2`. `Pipeline` or `init` panic is a process abort; stderr is not JSON. Missing-workspace codes stay verb-specific (`invalid-path` vs `not-found`). Do not collapse them. Linux is the supported platform. Deferred: Graph/Document JSON load, public `cli`, human pretty output, color, progress, completions, config files, env workspace, workspace auto-create, macOS support promise, public Cancel/Diff/Retry/Clean, `--format`, `--constructor`.
 - Source: `interfaces`
 
 ## Stack
@@ -79,7 +79,7 @@ Do not use a no-op, `echo`, or any command that ignores the local toolchain.
 ### Gobble
 
 - Command: `go test ./...`
-- What it proves: Go 1.26 or newer is installed, the module `github.com/HahyeonJeon/gobble` builds, and hermetic package tests for `gobble`, `assets`, `internal/engine`, `internal/path`, `internal/engine/exec`, and `tests/wgs-e2e` pass. Live tests use build tag `live` and are not in this command. It cannot skip for Docker. It is not proof of a live Docker assay.
+- What it proves: Go 1.26 or newer is installed, the module `github.com/HahyeonJeon/gobble` builds, and hermetic package tests for `gobble`, `cmd/gobble`, `assets`, `internal/engine`, `internal/path`, `internal/engine/exec`, and `tests/wgs-e2e` pass. Live tests use build tag `live` and are not in this command. It cannot skip for Docker. It is not proof of a live Docker assay.
 - Source: `first-check`
 
 Project command, after every product subsection. If two local products
@@ -106,7 +106,7 @@ disagree, mark Open and ask.
 
 ### Gobble
 
-- Verification: Assumption — a change is safe to keep when hermetic `go test ./...` passes, including package tests for `gobble`, `assets`, `internal/engine`, `internal/path`, `internal/engine/exec`, and `tests/wgs-e2e` when those packages change. Agent-operability of live Docker run, inspect, and resume is not proved by first-check. Live is `go test -tags=live` and fails closed without Docker. The WGS assay is `tests/wgs-e2e` executing `assets.WGS()`, including Inspect, Release, and Resume. Live RNA/Methyl proofs remain in package `assets`.
+- Verification: Assumption — a change is safe to keep when hermetic `go test ./...` passes, including package tests for `gobble`, `cmd/gobble`, `assets`, `internal/engine`, `internal/path`, `internal/engine/exec`, and `tests/wgs-e2e` when those packages change. Agent-operability of live Docker run, inspect, and resume is not proved by first-check. Live is `go test -tags=live` and fails closed without Docker. The WGS assay is `tests/wgs-e2e` executing `assets.WGS()`, including Inspect, Release, and Resume. Live RNA/Methyl proofs remain in package `assets`.
 - Build risk: Assumption — the part most likely to be wrong is the pipeline model: whether it can express modules, branch, and merge so an agent can plan, run, and resume without a DSL. Early evidence is the synthetic workflow-case pipeline, then WGS end-to-end on a small dataset.
 - Source: `verification`, `build-risk`
 
@@ -125,7 +125,6 @@ disagree, mark Open and ask.
 | retention-deletion | How long is run state kept, and what deletes it? | An accepted retention policy |
 | processing-model | Do pipeline results arrive live, in batches, or on demand? | A recorded processing model |
 | public-contract | Which public types or functions must current callers keep? | Project Design public API after first library surface |
-| invocation-contract | Which CLI command names, inputs, and outputs must stay compatible? Names are not locked. | An accepted CLI contract |
 | dependency-unavailable | What does the consumer see while Docker is down? | A recorded Docker-down status shape |
 
 - Source: open topic ids

@@ -16,7 +16,7 @@ product under the remaining product headings.
 
 ### Gobble
 
-- Statement: A consumer installs the Go module, writes a small pipeline in Go that uses modules, branch, and merge, validates and inspects the plan, runs it locally in containers, and can resume after a contained failure. Construction order is library, then engine, then CLI. The Go API may prove the loop before the CLI exists. First-horizon exit still requires the same loop on the CLI. CLI command names stay Open (`invocation-contract`). First useful outcome is that agent loop, not Nextflow- or Snakemake-class feature parity. Today consumers write Nextflow, Snakemake, Cromwell/WDL, or ad-hoc scripts and operate them as humans; the hypothesized switch is agent-native compose and recover without a Gobble DSL. No named external consumer is recorded.
+- Statement: A consumer installs the Go module, writes a small pipeline in Go that uses modules, branch, and merge, validates and inspects the plan, runs it locally in containers, and can resume after a contained failure. Construction order is library, then engine, then CLI. First-horizon exit still requires the same loop on the CLI. Command names live in [system.md](../architecture/system.md) Interfaces Current. First useful outcome is that agent loop, not Nextflow- or Snakemake-class feature parity. Today consumers write Nextflow, Snakemake, Cromwell/WDL, or ad-hoc scripts and operate them as humans; the hypothesized switch is agent-native compose and recover without a Gobble DSL. No named external consumer is recorded.
 - Source: `first-use`, `current-alternative`
 
 ## Refused uses
@@ -31,6 +31,7 @@ product under the remaining product headings.
 ### Gobble
 
 - Statement: The human-facing surface is a small CLI. Audience is coding agents first and human developers second. Interaction is the Go API plus that CLI. Default output is structured JSON or JSONL. Human text is secondary. There is no TUI or GUI. The CLI is used from a local terminal and from agent tool runners, often unattended. Color-only status is assumed insufficient. Assumed CLI style follows `go` and `git`: small verbs, stable flags, structured or plain output. Do not take Nextflow or Snakemake CLI or DSL as the interaction reference.
+- Current: Installed binary is `gobble` (`cmd/gobble`). Seven product verbs. JSON or JSONL only. No color or pretty output this session. Contract in [system.md](../architecture/system.md) Interfaces Current.
 - Source: `experience-direction`, `accessibility-needs`, `design-reference`
 
 ## Access and data promises
@@ -83,7 +84,6 @@ feature files and say so here. Roadmap owns feature-to-horizon placement.
 | Id | Question | What would resolve it |
 |---|---|---|
 | visual-principles | Which few visual principles must stay recognizable on the CLI? | A recorded CLI visual rule |
-| invocation-contract | Which command names, inputs, and outputs must stay compatible? | An accepted CLI contract |
 | support-update | Is GitHub the lasting help channel? | A named support or release process |
 | end-of-life | What export or retirement is promised? | An accepted end-of-life promise |
 

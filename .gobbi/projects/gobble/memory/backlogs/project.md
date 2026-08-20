@@ -1,11 +1,21 @@
 # project backlog
 
-## CLI and cmd
+## CLI live and WGS first-horizon proof
 
-**Backlogged at:** 2026-08-18T15:07:00Z
+**Backlogged at:** 2026-08-20T05:09:58Z
 
-**What:** Add structured CLI and `cmd/` for the same loop as the Go API.
+**What:** Prove the shipped CLI on the synthetic fixture and on a small WGS pipeline, with at least one real Docker task.
 
-**Why backlogged:** D4 excluded CLI this session. The library loop evolved without `cmd/`.
+**Why backlogged:** This session shipped `cmd/gobble` and hermetic tests only. Live CLI tests were excluded.
 
-**Context:** First-horizon exit still requires the same compose-validate-plan-run-inspect-resume loop on the CLI. Public verbs now include context cancel on Run and Resume. `invocation-contract` stays Open. There is no `cmd/`.
+**Context:** Local-core exit evidence in [roadmap](../design/roadmap/project.md) is unchanged: an agent completes the local loop on the synthetic fixture and on a small WGS pipeline, using the Go API and the CLI, with at least one real Docker task. Compile or `go test ./...` is not exit evidence. Product CLI is accepted at `4f5e6b8`. Temp compile leak is a separate item.
+
+## Temp driver cleanup on interrupt during compile
+
+**Backlogged at:** 2026-08-20T05:09:58Z
+
+**What:** Remove leftover generated driver files if the user interrupts while a graph verb is compiling.
+
+**Why backlogged:** Wrap-up-readiness iteration 2 accepted this as a non-blocker.
+
+**Context:** The leak is during compile, before the driver runs. Occupancy and signal tests do not cover it.

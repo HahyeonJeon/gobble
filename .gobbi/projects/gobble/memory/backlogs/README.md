@@ -4,7 +4,8 @@ Recursive index of deferred items, grouped alphabetically, without implied prior
 
 ## project
 
-- [CLI and cmd](project.md#cli-and-cmd)
+- [CLI live and WGS first-horizon proof](project.md#cli-live-and-wgs-first-horizon-proof)
+- [Temp driver cleanup on interrupt during compile](project.md#temp-driver-cleanup-on-interrupt-during-compile)
 
 ## recover-run
 
