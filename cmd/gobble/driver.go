@@ -6,8 +6,11 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"strings"
+	"sync"
+	"syscall"
 )
 
 const driverTempPrefix = "gobble-driver-"
@@ -45,7 +48,13 @@ func runDriver(req *request, stdout, stderr io.Writer) int {
 	cmd.Dir = cwd
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
-	if err := cmd.Run(); err != nil {
+	if err := cmd.Start(); err != nil {
+		return writeErr(stderr, invalidRequest(req.command, err.Error()), 2)
+	}
+	if req.command == "run" || req.command == "resume" {
+		defer forwardSignals(cmd.Process)()
+	}
+	if err := cmd.Wait(); err != nil {
 		var ee *exec.ExitError
 		if errors.As(err, &ee) {
 			return ee.ExitCode()
@@ -53,6 +62,30 @@ func runDriver(req *request, stdout, stderr io.Writer) int {
 		return writeErr(stderr, invalidRequest(req.command, err.Error()), 2)
 	}
 	return 0
+}
+
+func forwardSignals(proc *os.Process) func() {
+	sigs := make(chan os.Signal, 2)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	done := make(chan struct{})
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case s := <-sigs:
+				_ = proc.Signal(s)
+			case <-done:
+				return
+			}
+		}
+	}()
+	return func() {
+		signal.Stop(sigs)
+		close(done)
+		wg.Wait()
+	}
 }
 
 func resolveImport(goBin, cwd, pkg string) (string, error) {
@@ -91,9 +124,12 @@ const driverTemplate = `package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"os"
+	"os/signal"
+	"syscall"
 
 	userpipe %q
 	"github.com/HahyeonJeon/gobble"
@@ -140,9 +176,28 @@ func run() int {
 			return writeFail("stdout write failed")
 		}
 		return 0
+	case "run", "resume":
+		return occupy(g)
 	default:
 		return writeFail("invalid request")
 	}
+}
+
+func occupy(g *gobble.Graph) int {
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+	var err error
+	if verb == "run" {
+		err = gobble.Run(ctx, g, workspace, cap)
+	} else {
+		err = gobble.Resume(ctx, g, workspace, cap)
+	}
+	if err != nil {
+		return writeLibErr(err)
+	}
+	return writeJSON(struct {
+		Op string ` + "`json:\"op\"`" + `
+	}{Op: verb})
 }
 
 func writeJSON(v any) int {
