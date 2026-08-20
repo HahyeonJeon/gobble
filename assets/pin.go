@@ -96,6 +96,60 @@ var RNASeqPins = []Pin{
 	PinRNAGTF,
 }
 
+// Distinct GSE110004 PE pairs used when the reused-FASTQ RNA live
+// fixture cannot fit DESeq2. Snapshot 626c8fab639062eade4b10747e919341cbf9b41a.
+var (
+	PinRNACtrl1FASTQ1 = Pin{
+		Name:   "SRR6357070_1.fastq.gz",
+		URL:    "https://raw.githubusercontent.com/nf-core/test-datasets/626c8fab639062eade4b10747e919341cbf9b41a/testdata/GSE110004/SRR6357070_1.fastq.gz",
+		Bytes:  2239317,
+		SHA256: "3f50541fa9cf2bedc87e7b682ada0fccfdfcd6d27b9bb81f17be230ff140ebe7",
+	}
+	PinRNACtrl1FASTQ2 = Pin{
+		Name:   "SRR6357070_2.fastq.gz",
+		URL:    "https://raw.githubusercontent.com/nf-core/test-datasets/626c8fab639062eade4b10747e919341cbf9b41a/testdata/GSE110004/SRR6357070_2.fastq.gz",
+		Bytes:  2232117,
+		SHA256: "8590e1e01e568fba256aa7dced40519604cbb111ee44ab106a3dcb869660aaf4",
+	}
+	PinRNACtrl2FASTQ1 = Pin{
+		Name:   "SRR6357071_1.fastq.gz",
+		URL:    "https://raw.githubusercontent.com/nf-core/test-datasets/626c8fab639062eade4b10747e919341cbf9b41a/testdata/GSE110004/SRR6357071_1.fastq.gz",
+		Bytes:  2189243,
+		SHA256: "06951c97884df8975d5419a2f0d03d435b9da722564000536524b01926970c93",
+	}
+	PinRNACtrl2FASTQ2 = Pin{
+		Name:   "SRR6357071_2.fastq.gz",
+		URL:    "https://raw.githubusercontent.com/nf-core/test-datasets/626c8fab639062eade4b10747e919341cbf9b41a/testdata/GSE110004/SRR6357071_2.fastq.gz",
+		Bytes:  2183711,
+		SHA256: "00bbbf100ee90c5f681c3b4814637283732cd06e620171bd48718aa02de3a91d",
+	}
+	PinRNATreat2FASTQ1 = Pin{
+		Name:   "SRR6357073_1.fastq.gz",
+		URL:    "https://raw.githubusercontent.com/nf-core/test-datasets/626c8fab639062eade4b10747e919341cbf9b41a/testdata/GSE110004/SRR6357073_1.fastq.gz",
+		Bytes:  2253497,
+		SHA256: "c564e722216fb74116b237cc88d76cd33cf198216fb01fd9febd735a4503d18f",
+	}
+	PinRNATreat2FASTQ2 = Pin{
+		Name:   "SRR6357073_2.fastq.gz",
+		URL:    "https://raw.githubusercontent.com/nf-core/test-datasets/626c8fab639062eade4b10747e919341cbf9b41a/testdata/GSE110004/SRR6357073_2.fastq.gz",
+		Bytes:  2282958,
+		SHA256: "599adca68abe6a6116802fb2134104cfcc545d397edb49c070e4a443831226f8",
+	}
+)
+
+// RNASeqDistinctPairPins is the four-sample live RNA FASTQ set.
+// treat1 reuses PinRNATest1FASTQ / PinRNATest2FASTQ (SRR6357072).
+var RNASeqDistinctPairPins = []Pin{
+	PinRNACtrl1FASTQ1,
+	PinRNACtrl1FASTQ2,
+	PinRNACtrl2FASTQ1,
+	PinRNACtrl2FASTQ2,
+	PinRNATest1FASTQ,
+	PinRNATest2FASTQ,
+	PinRNATreat2FASTQ1,
+	PinRNATreat2FASTQ2,
+}
+
 // Methyl-seq pins from nf-core/test-datasets methylseq
 // e7e1fb8940fc14e2336101147a31ce8e0eda6264. Not the WGS modules pins.
 var (

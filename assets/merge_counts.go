@@ -9,6 +9,9 @@ import (
 const mergeCountsTaskName = "merge_counts"
 
 const mergeCountsR = `args <- commandArgs(trailingOnly=TRUE)
+if (length(args) >= 1L && identical(args[[1]], "--")) {
+  args <- args[-1L]
+}
 out <- args[[1]]
 n <- as.integer(args[[2]])
 mat <- NULL

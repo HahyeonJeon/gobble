@@ -52,13 +52,14 @@ Hermetic first-check must not skip for Docker or network. Live packs use
 build tag `live` and fail when Docker or a required download is missing.
 
 ```sh
-go test -tags=live ./tests/wgs-e2e
+go test -tags=live ./tests/local-e2e
 go test -tags=live ./assets
-go test -tags=live .
+go test -tags=live ./internal/engine
 ```
 
-`./tests/wgs-e2e` is the live WGS assay: `assets.WGS()` success
-Inspect+Release+Resume, plus a pack-local thin fail fixture for contained
-failure Inspect+Release+Resume. `./assets` RNASeq and MethylSeq are live
-Run packs, not that assay. `testdata/run-local` alpine+process is the
-live Run pack in package `gobble`. LinkedQC is plan-only.
+`./tests/local-e2e` is the scenario live pack: run-local, `assets.WGS()`,
+RNASeq, and MethylSeq occupy/remaining/release/resume through API and
+CLI, plus a pack-local thin fail fixture. WGS spine/thin stay hermetic
+in that pack. `./assets` keeps standalone tool live proofs and pin
+fetch. `./internal/engine` keeps the Docker primitive. LinkedQC is
+plan-only.

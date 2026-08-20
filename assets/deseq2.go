@@ -12,6 +12,9 @@ const deseq2Image = "quay.io/biocontainers/bioconductor-deseq2:1.50.2--r45ha27e3
 const deseq2TaskName = "deseq2"
 
 const deseq2R = `args <- commandArgs(trailingOnly=TRUE)
+if (length(args) >= 1L && identical(args[[1]], "--")) {
+  args <- args[-1L]
+}
 counts_path <- args[[1]]
 out <- args[[2]]
 n <- as.integer(args[[3]])

@@ -1,4 +1,4 @@
-package wgs_e2e_test
+package local_e2e_test
 
 import (
 	"bufio"

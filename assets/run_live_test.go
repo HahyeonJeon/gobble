@@ -228,34 +228,6 @@ func TestSTARAlignNestedRun(t *testing.T) {
 	assertSplicesRecorded(t, logPath)
 }
 
-func TestRNASeqRun(t *testing.T) {
-	requireDocker(t)
-	dir := t.TempDir()
-	stageFile(t, dir, "in/genome.fasta", cachePin(t, PinRNAGenomeFASTA))
-	stageFile(t, dir, "in/genes.gtf", cachePin(t, PinRNAGTF))
-	stageFile(t, dir, "in/SRR6357072_1.fastq.gz", cachePin(t, PinRNATest1FASTQ))
-	stageFile(t, dir, "in/SRR6357072_2.fastq.gz", cachePin(t, PinRNATest2FASTQ))
-	g, err := gobble.Compose(RNASeq())
-	if err != nil {
-		t.Fatalf("Compose() error = %v", err)
-	}
-	if err := gobble.Run(t.Context(), g, dir, 2); err != nil {
-		t.Fatalf("Run() error = %v", err)
-	}
-	logPath := filepath.Join(dir, filepath.FromSlash("work/star-align/Log.final.out"))
-	assertUniquelyMappedAbove(t, logPath, 10)
-	assertSplicesRecorded(t, logPath)
-	for _, rel := range []string{
-		"work/star-align/Aligned.out.bam",
-		"work/multiqc/multiqc_report.html",
-	} {
-		info, err := os.Stat(filepath.Join(dir, filepath.FromSlash(rel)))
-		if err != nil || !info.Mode().IsRegular() {
-			t.Fatalf("published %s: %v", rel, err)
-		}
-	}
-}
-
 func TestBismarkGenomeStandaloneRun(t *testing.T) {
 	requireDocker(t)
 	src := cachePin(t, PinMethylGenomeFASTA)
@@ -336,29 +308,6 @@ func TestBismarkMethylationExtractorNestedRun(t *testing.T) {
 		if err != nil || !info.Mode().IsRegular() {
 			t.Fatalf("published %s: %v", rel, err)
 		}
-	}
-	unique := uniquePEAlignments(t, filepath.Join(dir, filepath.FromSlash("work/bismark-align/aligned_PE_report.txt")))
-	t.Logf("unique paired-end alignments = %d", unique)
-	assertUniqueAlignmentFloor(t, unique)
-	assertMethylationCallRows(t, unique,
-		filepath.Join(dir, filepath.FromSlash("work/bismark-extractor/CpG_context_aligned_pe.txt.gz")),
-		filepath.Join(dir, filepath.FromSlash("work/bismark-extractor/aligned_pe.bismark.cov.gz")),
-	)
-}
-
-func TestMethylSeqRun(t *testing.T) {
-	requireDocker(t)
-	dir := t.TempDir()
-	stageMethylPins(t, dir)
-	g, err := gobble.Compose(MethylSeq())
-	if err != nil {
-		t.Fatalf("Compose() error = %v", err)
-	}
-	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
-		t.Fatalf("Run() error = %v", err)
-	}
-	if _, err := os.Stat(filepath.Join(dir, filepath.FromSlash("in/Bisulfite_Genome"))); !os.IsNotExist(err) {
-		t.Fatalf("Bisulfite_Genome written into in/: %v", err)
 	}
 	unique := uniquePEAlignments(t, filepath.Join(dir, filepath.FromSlash("work/bismark-align/aligned_PE_report.txt")))
 	t.Logf("unique paired-end alignments = %d", unique)

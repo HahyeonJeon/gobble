@@ -1,11 +1,10 @@
 //go:build live
 
-package gobble_test
+package local_e2e_test
 
 import (
 	"encoding/json"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -13,13 +12,6 @@ import (
 	"github.com/HahyeonJeon/gobble"
 	"github.com/HahyeonJeon/gobble/internal/engine"
 )
-
-func requireDocker(t *testing.T) {
-	t.Helper()
-	if err := exec.Command("docker", "info").Run(); err != nil {
-		t.Fatalf("docker info: %v", err)
-	}
-}
 
 func TestRunLocalFixture(t *testing.T) {
 	requireDocker(t)
@@ -93,9 +85,7 @@ func TestRunLocalFixture(t *testing.T) {
 	if host.Status != engine.StatusSucceeded || host.Executor != "process" || host.Image != "" {
 		t.Fatalf("host task got %#v", host)
 	}
-
-	err = gobble.Run(t.Context(), g, dir, 0)
-	requireRunError(t, "second Run", err, gobble.DefectOccupiedWorkspace, "")
+	recoverAfterSuccessAPI(t, g, dir, 2)
 }
 
 func TestRunLocalBadImage(t *testing.T) {
@@ -146,4 +136,56 @@ func TestRunLocalBadImage(t *testing.T) {
 	if byID["host"] != engine.StatusSucceeded {
 		t.Fatalf("host status got %q, want succeeded", byID["host"])
 	}
+}
+
+func runLocalFixturePipeline() *gobble.Pipeline {
+	p := gobble.NewPipeline("run-local")
+	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "sample", Ext: ".txt"})
+	p.AddTask(gobble.TaskSpec{
+		Name:    "image",
+		Image:   runLocalImage,
+		Command: []string{"sh", "-c", "pwd > out/docker/pwd.txt && cp in/sample.txt out/docker/sample.txt"},
+		Inputs:  []gobble.Bind{{Name: "in", From: in}},
+		Outputs: []gobble.Bind{
+			{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("out/docker"), Base: "sample", Ext: ".txt"}},
+			{Name: "pwd", Spec: gobble.PathSpec{Dir: gobble.Dir("out/docker"), Base: "pwd", Ext: ".txt"}},
+		},
+		Params:    []gobble.Param{{Name: "mode", Value: "fast"}},
+		Resources: gobble.Resources{CPU: 1, Memory: "256m"},
+	})
+	p.AddTask(gobble.TaskSpec{
+		Name:    "host",
+		Command: []string{"cp", "in/sample.txt", "out/process/sample.txt"},
+		Inputs:  []gobble.Bind{{Name: "in", From: in}},
+		Outputs: []gobble.Bind{{
+			Name: "out",
+			Spec: gobble.PathSpec{Dir: gobble.Dir("out/process"), Base: "sample", Ext: ".txt"},
+		}},
+	})
+	return p
+}
+
+func runLocalBadImagePipeline() *gobble.Pipeline {
+	p := gobble.NewPipeline("run-local-bad")
+	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "sample", Ext: ".txt"})
+	p.AddTask(gobble.TaskSpec{
+		Name:    "image",
+		Image:   "gobble-missing-image:not-a-tag",
+		Command: []string{"cp", "in/sample.txt", "out/docker/sample.txt"},
+		Inputs:  []gobble.Bind{{Name: "in", From: in}},
+		Outputs: []gobble.Bind{{
+			Name: "out",
+			Spec: gobble.PathSpec{Dir: gobble.Dir("out/docker"), Base: "sample", Ext: ".txt"},
+		}},
+	})
+	p.AddTask(gobble.TaskSpec{
+		Name:    "host",
+		Command: []string{"cp", "in/sample.txt", "out/process/sample.txt"},
+		Inputs:  []gobble.Bind{{Name: "in", From: in}},
+		Outputs: []gobble.Bind{{
+			Name: "out",
+			Spec: gobble.PathSpec{Dir: gobble.Dir("out/process"), Base: "sample", Ext: ".txt"},
+		}},
+	})
+	return p
 }

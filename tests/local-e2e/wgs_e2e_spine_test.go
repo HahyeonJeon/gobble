@@ -1,4 +1,4 @@
-package wgs_e2e_test
+package local_e2e_test
 
 import (
 	"bytes"
@@ -156,7 +156,7 @@ func wgsE2ESpineBCFToolsPipeline() *gobble.Pipeline {
 }
 
 // TestWGSSpinePlan is a demoted Strelka/BCFTools graph. It is not the WGS
-// product proof; that is tests/wgs-e2e executing assets.WGS().
+// product proof; that is tests/local-e2e executing assets.WGS().
 func TestWGSSpinePlan(t *testing.T) {
 	g, err := gobble.Compose(wgsE2ESpineStrelkaPipeline())
 	if err != nil {
