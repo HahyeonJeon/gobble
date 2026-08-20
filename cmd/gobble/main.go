@@ -28,7 +28,9 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runInspect(req, stdout, stderr)
 	case "release":
 		return runRelease(req, stdout, stderr)
-	case "compose", "validate", "plan", "run", "resume":
+	case "compose", "validate", "plan":
+		return runDriver(req, stdout, stderr)
+	case "run", "resume":
 		return writeErr(stderr, invalidRequest(req.command, "invalid request"), 2)
 	default:
 		return writeErr(stderr, invalidRequest("cli", "unknown command"), 2)

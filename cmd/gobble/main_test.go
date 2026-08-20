@@ -148,9 +148,6 @@ func TestGraphVerbsParseWithoutCompile(t *testing.T) {
 		args []string
 		op   string
 	}{
-		{args: []string{"compose"}, op: "compose"},
-		{args: []string{"validate", "."}, op: "validate"},
-		{args: []string{"plan"}, op: "plan"},
 		{args: []string{"run", "--workspace", dir}, op: "run"},
 		{args: []string{"resume", "--workspace", dir}, op: "resume"},
 	}
