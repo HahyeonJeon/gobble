@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
@@ -14,6 +16,38 @@ import (
 	"github.com/HahyeonJeon/gobble/cmd/gobble/testdata/nilpipe"
 	"github.com/HahyeonJeon/gobble/cmd/gobble/testdata/okpipe"
 )
+
+func TestResolveImportIgnoresListStderr(t *testing.T) {
+	dir := t.TempDir()
+	stub := filepath.Join(dir, "go")
+	script := "#!/bin/sh\necho 'go: downloading example.com/x v1.0.0' >&2\necho 'example.com/pipe'\n"
+	if err := os.WriteFile(stub, []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	got, err := resolveImport(stub, dir, ".")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != "example.com/pipe" {
+		t.Fatalf("import path = %q, want example.com/pipe", got)
+	}
+}
+
+func TestDriverWaitCodeSignaled(t *testing.T) {
+	cmd := exec.Command("sleep", "30")
+	if err := cmd.Start(); err != nil {
+		t.Fatal(err)
+	}
+	if err := cmd.Process.Kill(); err != nil {
+		t.Fatal(err)
+	}
+	err := cmd.Wait()
+	code := driverWaitCode(err)
+	want := 128 + int(syscall.SIGKILL)
+	if code != want {
+		t.Fatalf("wait code = %d, want %d", code, want)
+	}
+}
 
 func TestMissingGo(t *testing.T) {
 	watchDriverTemps(t)

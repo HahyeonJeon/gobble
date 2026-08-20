@@ -22,7 +22,7 @@ Install on Linux:
 go install github.com/HahyeonJeon/gobble/cmd/gobble@<version>
 ```
 
-Graph verbs compile a Go package that exports `func Pipeline() *gobble.Pipeline`, then Compose. The package operand defaults to `.`.
+Graph verbs compile a Go package that exports `func Pipeline() *gobble.Pipeline`, then Compose. They need the `go` tool on `PATH` and a module that can resolve the package. The package operand defaults to `.`.
 
 ```sh
 gobble compose [package]
@@ -36,7 +36,7 @@ gobble release --workspace DIR
 
 `--workspace` is required on `run`, `inspect`, `resume`, and `release`. Gobble does not create DIR.
 
-Success writes JSON or JSONL to stdout. Failures write `*Error` JSON to stderr. Exits are `0` success, `1` domain error, and `2` invocation error.
+Success writes JSON or JSONL to stdout. Failures leave stdout empty and write `*Error` JSON to stderr. Exits are `0` success, `1` domain error, and `2` invocation error. A panic in `Pipeline` or package `init` is a process abort: stderr is not JSON.
 
 Recovery after a contained failure or interrupt is `inspect`, then `release`, then `resume`. Linux is the supported platform.
 

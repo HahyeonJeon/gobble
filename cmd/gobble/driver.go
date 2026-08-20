@@ -55,13 +55,28 @@ func runDriver(req *request, stdout, stderr io.Writer) int {
 		defer forwardSignals(cmd.Process)()
 	}
 	if err := cmd.Wait(); err != nil {
-		var ee *exec.ExitError
-		if errors.As(err, &ee) {
-			return ee.ExitCode()
+		code := driverWaitCode(err)
+		if code < 0 {
+			return writeErr(stderr, invalidRequest(req.command, err.Error()), 2)
 		}
-		return writeErr(stderr, invalidRequest(req.command, err.Error()), 2)
+		return code
 	}
 	return 0
+}
+
+func driverWaitCode(err error) int {
+	var ee *exec.ExitError
+	if !errors.As(err, &ee) {
+		return -1
+	}
+	code := ee.ExitCode()
+	if code >= 0 {
+		return code
+	}
+	if ws, ok := ee.Sys().(syscall.WaitStatus); ok && ws.Signaled() {
+		return 128 + int(ws.Signal())
+	}
+	return 1
 }
 
 func forwardSignals(proc *os.Process) func() {
@@ -91,13 +106,20 @@ func forwardSignals(proc *os.Process) func() {
 func resolveImport(goBin, cwd, pkg string) (string, error) {
 	cmd := exec.Command(goBin, "list", "-f", "{{.ImportPath}}", "--", pkg)
 	cmd.Dir = cwd
-	out, err := cmd.CombinedOutput()
+	out, err := cmd.Output()
 	msg := strings.TrimSpace(string(out))
 	if err != nil {
-		if msg == "" {
-			return "", err
+		var ee *exec.ExitError
+		if errors.As(err, &ee) {
+			stderr := strings.TrimSpace(string(ee.Stderr))
+			if stderr != "" {
+				return "", errors.New(stderr)
+			}
 		}
-		return "", errors.New(msg)
+		if msg != "" {
+			return "", errors.New(msg)
+		}
+		return "", err
 	}
 	if msg == "" {
 		return "", errors.New("empty import path")
