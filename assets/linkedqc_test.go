@@ -1,6 +1,10 @@
 package assets
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/HahyeonJeon/gobble"
+)
 
 func TestLinkedQCComposeBuildPlan(t *testing.T) {
 	raw := mustPlanJSON(t, LinkedQC())
@@ -42,16 +46,20 @@ func TestLinkedQCComposeBuildPlan(t *testing.T) {
 
 func TestLinkedQCSharesPinPathSpecs(t *testing.T) {
 	wgs := mustPlanJSON(t, WGS())
+	prev := gobble.SampleSheetPath()
+	t.Cleanup(func() { gobble.SetSampleSheetPath(prev) })
+	gobble.SetSampleSheetPath(rnaFixtureSheet)
 	rna := mustPlanJSON(t, RNASeq())
+	gobble.SetSampleSheetPath(methylFixtureSheet)
 	methyl := mustPlanJSON(t, MethylSeq())
 	qc := mustPlanJSON(t, LinkedQC())
 
 	assertIOPath(t, planTask(t, wgs, "sample1.fastp").Inputs, "r1", "in/test_1.fastq.gz")
 	assertIOPath(t, planTask(t, wgs, "sample1.fastp").Inputs, "r2", "in/test_2.fastq.gz")
-	assertIOPath(t, planTask(t, rna, "fastp").Inputs, "r1", "in/SRR6357072_1.fastq.gz")
-	assertIOPath(t, planTask(t, rna, "fastp").Inputs, "r2", "in/SRR6357072_2.fastq.gz")
-	assertIOPath(t, planTask(t, methyl, "fastp").Inputs, "r1", "in/Ecoli_10K_methylated_R1.fastq.gz")
-	assertIOPath(t, planTask(t, methyl, "fastp").Inputs, "r2", "in/Ecoli_10K_methylated_R2.fastq.gz")
+	assertIOPath(t, planTask(t, rna, "ctrl1.fastp").Inputs, "r1", "in/SRR6357072_1.fastq.gz")
+	assertIOPath(t, planTask(t, rna, "ctrl1.fastp").Inputs, "r2", "in/SRR6357072_2.fastq.gz")
+	assertIOPath(t, planTask(t, methyl, "sample1.fastp").Inputs, "r1", "in/Ecoli_10K_methylated_R1.fastq.gz")
+	assertIOPath(t, planTask(t, methyl, "sample1.fastp").Inputs, "r2", "in/Ecoli_10K_methylated_R2.fastq.gz")
 	assertIOPath(t, planTask(t, qc, "rna.fastqc").Inputs, "reads", "in/SRR6357072_1.fastq.gz")
 	assertIOPath(t, planTask(t, qc, "methyl.fastqc").Inputs, "reads", "in/Ecoli_10K_methylated_R1.fastq.gz")
 }
