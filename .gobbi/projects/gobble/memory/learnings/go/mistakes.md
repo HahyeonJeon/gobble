@@ -63,3 +63,11 @@
 **Mistake:** Passing `exec.ExitError.ExitCode()` of a signaled child to `os.Exit`. That code is `-1`; `os.Exit(-1)` yields 255.
 
 **Correction:** Map a signaled wait to `128+signal`. Keep other mapped codes in `{0,1,2}`.
+
+## Binding sheet FASTQ cells as Literal
+
+**Context:** Samplesheet read cells must feed adders such as fastp that call `PathSpec.AppendSuffix`.
+
+**Mistake:** Binding those cells with `Literal(cell)` stores an opaque filename. `AppendSuffix` marks a Literal invalid, so cleaned-read dests cannot render.
+
+**Correction:** Split a validated workspace-relative cell into Dir, Base, and Ext (`sheetFileSpec`). Keep `Literal` for opaque shared reference or GTF cells that are not suffixed. Match WGS pin PathSpecs.

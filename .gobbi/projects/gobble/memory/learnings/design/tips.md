@@ -21,3 +21,11 @@
 **Tip:** A Bind is File, Group, or Tree. Tree is a declared directory plus dest `.gobble-tree.json`. Directory is placement, not an artifact. Group stays named regular files. Do not add glob Set this horizon.
 
 **Application:** STAR `--genomeDir` is Tree. BAM+BAI stays Group. Undeclared cwd files do not publish.
+
+## Samplesheet file root is not the workspace
+
+**Context:** Graph verbs take `--sample PATH` and run/resume also take `--workspace DIR`.
+
+**Tip:** The CSV is opened relative to process cwd, or as an absolute `--sample` path. Cell PathSpecs and published outputs live under DIR. Compose does not search DIR for the sheet.
+
+**Application:** Put `samplesheet.csv` in the command cwd when `--sample` is omitted. Stage FASTQ, FASTA, and GTF under DIR before run. Help text must say process current directory, not workspace.

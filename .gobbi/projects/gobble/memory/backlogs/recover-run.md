@@ -8,7 +8,7 @@
 
 **Why backlogged:** Ready inspect/resume treats dest rename as a reuse miss. This session still did not ship a successful new-dest publish proof.
 
-**Context:** Public dest-rename Resume may still fail to publish if the command writes the old path. `TestResumeDestRenameDoesNotReuse` proves the miss. A successful new dest needs a command that writes the new path.
+**Context:** Public dest-rename Resume may still fail to publish if the command writes the old path. `TestResumeDestRenameDoesNotReuse` proves the miss. A successful new dest needs a command that writes the new path. This session still did not ship a live dest-rename proof (D11).
 
 ## Group and branch-merge resume e2e
 
@@ -18,7 +18,7 @@
 
 **Why backlogged:** Session proofs were occupy-release, two-instance isolation, reuse decisions, graph-diff Change tables, and the WGS assay.
 
-**Context:** Group members already stage and publish by name on Run. Compose covers a branch-merge pipeline. There is no Group or branch-merge Resume e2e.
+**Context:** Group members already stage and publish by name on Run. Compose covers a branch-merge pipeline. There is no Group or branch-merge Resume e2e. `tests/local-e2e` proves occupy/remaining/release/resume on run-local, WGS, RNA, and Methyl through API and CLI. Those graphs use module fan-out, not Group or Branch/Merge (D11).
 
 ## Guarded clean and retention
 

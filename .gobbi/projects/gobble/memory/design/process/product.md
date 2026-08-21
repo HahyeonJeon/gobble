@@ -31,7 +31,7 @@ product under the remaining product headings.
 ### Gobble
 
 - Statement: The human-facing surface is a small CLI. Audience is coding agents first and human developers second. Interaction is the Go API plus that CLI. Default output is structured JSON or JSONL. Human text is secondary. There is no TUI or GUI. The CLI is used from a local terminal and from agent tool runners, often unattended. Color-only status is assumed insufficient. Assumed CLI style follows `go` and `git`: small verbs, stable flags, structured or plain output. Do not take Nextflow or Snakemake CLI or DSL as the interaction reference.
-- Current: Installed binary is `gobble` (`cmd/gobble`). Seven product verbs. JSON or JSONL only. No color or pretty output this session. Contract in [system.md](../architecture/system.md) Interfaces Current.
+- Current: Installed binary is `gobble` (`cmd/gobble`). Seven product verbs. `--sample PATH` is on compose, validate, plan, run, and resume. Inspect and release reject it. JSON or JSONL only. No color or pretty output this session. Contract in [system.md](../architecture/system.md) Interfaces Current.
 - Source: `experience-direction`, `accessibility-needs`, `design-reference`
 
 ## Access and data promises

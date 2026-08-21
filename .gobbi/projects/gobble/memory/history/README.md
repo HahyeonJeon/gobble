@@ -2,6 +2,7 @@
 
 Recursive navigation across completed-session history, newest first.
 
+- [Local samplesheet e2e pack](2026-08-21-local-e2e.md)
 - [CLI live validation](2026-08-20-cli-valid.md)
 - [Gobble CLI](2026-08-20-gobble-cli.md)
 - [Design-review engine evolve](2026-08-19-design-review.md)

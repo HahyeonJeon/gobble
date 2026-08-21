@@ -2,6 +2,19 @@
 
 Recursive index of deferred items, grouped alphabetically, without implied priority.
 
+## assets
+
+- [Methyl DMR](assets.md#methyl-dmr)
+- [RNA multi-group DEG](assets.md#rna-multi-group-deg)
+- [Salmon/tximport Phase 1 quant](assets.md#salmontximport-phase-1-quant)
+- [WGS samplesheet conversion](assets.md#wgs-samplesheet-conversion)
+
+## compose-pipeline
+
+- [CLI --samples](compose-pipeline.md#cli---samples)
+- [Engine scatter / reservedIdentity expansion](compose-pipeline.md#engine-scatter--reservedidentity-expansion)
+- [TSV auto-detect](compose-pipeline.md#tsv-auto-detect)
+
 ## project
 
 - [Temp driver cleanup on interrupt during compile](project.md#temp-driver-cleanup-on-interrupt-during-compile)
