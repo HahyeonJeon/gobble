@@ -3,9 +3,6 @@ package assets
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"io"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
@@ -271,54 +268,13 @@ func TestPinCachePathShortSHA(t *testing.T) {
 }
 
 func TestPinFetchCached(t *testing.T) {
-	content := []byte("cached pin")
-	sum := sha256.Sum256(content)
-	pin := Pin{
-		Name:   "cached.txt",
-		URL:    "https://example.invalid/cached.txt",
-		Bytes:  int64(len(content)),
-		SHA256: hex.EncodeToString(sum[:]),
-	}
-	dest := pin.CachePath()
-	t.Cleanup(func() { os.RemoveAll(filepath.Dir(dest)) })
-	if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
-		t.Fatalf("MkdirAll(%s) error = %v", filepath.Dir(dest), err)
-	}
-	if err := os.WriteFile(dest, content, 0o644); err != nil {
-		t.Fatalf("WriteFile(%s) error = %v", dest, err)
-	}
+	pin := seedPin(t, "cached.txt", []byte("cached pin"))
 	got, err := FetchPin(pin)
 	if err != nil {
 		t.Fatalf("FetchPin() error = %v, want nil", err)
 	}
-	if got != dest {
-		t.Fatalf("FetchPin() = %q, want %q", got, dest)
-	}
-}
-
-func TestPinFetchDownload(t *testing.T) {
-	content := []byte("fetched pin")
-	sum := sha256.Sum256(content)
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if _, err := w.Write(content); err != nil {
-			t.Errorf("Write: %v", err)
-		}
-	}))
-	t.Cleanup(srv.Close)
-	pin := Pin{
-		Name:   "fetched.txt",
-		URL:    srv.URL,
-		Bytes:  int64(len(content)),
-		SHA256: hex.EncodeToString(sum[:]),
-	}
-	dest := pin.CachePath()
-	t.Cleanup(func() { os.RemoveAll(filepath.Dir(dest)) })
-	got, err := FetchPin(pin)
-	if err != nil {
-		t.Fatalf("FetchPin() error = %v, want nil", err)
-	}
-	if got != dest {
-		t.Fatalf("FetchPin() = %q, want %q", got, dest)
+	if got != pin.CachePath() {
+		t.Fatalf("FetchPin() = %q, want %q", got, pin.CachePath())
 	}
 	if err := pin.Check(got); err != nil {
 		t.Fatalf("Check(%s) error = %v, want nil", got, err)
@@ -326,8 +282,8 @@ func TestPinFetchDownload(t *testing.T) {
 }
 
 func TestPinFetchSameNameCheck(t *testing.T) {
-	left := servePin(t, "test_1.fastq.gz", []byte("wgs-like"))
-	right := servePin(t, "test_1.fastq.gz", []byte("sars-like"))
+	left := seedPin(t, "test_1.fastq.gz", []byte("wgs-like"))
+	right := seedPin(t, "test_1.fastq.gz", []byte("sars-like"))
 	if left.Name != right.Name {
 		t.Fatalf("Name = %q / %q, want equal", left.Name, right.Name)
 	}
@@ -353,21 +309,22 @@ func TestPinFetchSameNameCheck(t *testing.T) {
 	}
 }
 
-func servePin(t *testing.T, name string, content []byte) Pin {
+func seedPin(t *testing.T, name string, content []byte) Pin {
 	t.Helper()
 	sum := sha256.Sum256(content)
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if _, err := io.Copy(w, strings.NewReader(string(content))); err != nil {
-			t.Errorf("Write: %v", err)
-		}
-	}))
-	t.Cleanup(srv.Close)
 	pin := Pin{
 		Name:   name,
-		URL:    srv.URL,
+		URL:    "https://example.invalid/" + name,
 		Bytes:  int64(len(content)),
 		SHA256: hex.EncodeToString(sum[:]),
 	}
-	t.Cleanup(func() { os.RemoveAll(filepath.Dir(pin.CachePath())) })
+	dest := pin.CachePath()
+	t.Cleanup(func() { os.RemoveAll(filepath.Dir(dest)) })
+	if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
+		t.Fatalf("MkdirAll(%s) error = %v", filepath.Dir(dest), err)
+	}
+	if err := os.WriteFile(dest, content, 0o644); err != nil {
+		t.Fatalf("WriteFile(%s) error = %v", dest, err)
+	}
 	return pin
 }

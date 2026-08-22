@@ -32,6 +32,7 @@ func TestStageHardlinkDoesNotChmodSource(t *testing.T) {
 	if err := os.WriteFile(src, []byte("data"), 0o644); err != nil {
 		t.Fatal(err)
 	}
+	wantPerm := filePerm(t, src)
 	dst := filepath.Join(dir, "iso", "src.txt")
 	if err := StageFile(src, dst, true); err != nil {
 		t.Fatalf("StageFile() error = %v", err)
@@ -39,12 +40,8 @@ func TestStageHardlinkDoesNotChmodSource(t *testing.T) {
 	if !sameInode(src, dst) {
 		t.Fatal("same-device stage did not hardlink")
 	}
-	srcInfo, err := os.Lstat(src)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if srcInfo.Mode().Perm() != 0o644 {
-		t.Fatalf("source mode got %o, want 0644", srcInfo.Mode().Perm())
+	if got := filePerm(t, src); got != wantPerm {
+		t.Fatalf("source mode got %o, want %o", got, wantPerm)
 	}
 	dstInfo, err := os.Lstat(dst)
 	if err != nil {
@@ -65,6 +62,7 @@ func TestStageCopyFallbackDestInodeAndChmod(t *testing.T) {
 	if err := os.WriteFile(src, []byte("data"), 0o644); err != nil {
 		t.Fatal(err)
 	}
+	wantPerm := filePerm(t, src)
 	dst := filepath.Join(dir, "iso", "src.txt")
 	if err := StageFile(src, dst, false); err != nil {
 		t.Fatalf("StageFile() error = %v", err)
@@ -72,12 +70,8 @@ func TestStageCopyFallbackDestInodeAndChmod(t *testing.T) {
 	if sameInode(src, dst) {
 		t.Fatal("copy fallback dest inode equals source")
 	}
-	srcInfo, err := os.Lstat(src)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if srcInfo.Mode().Perm() != 0o644 {
-		t.Fatalf("source mode after copy got %o, want 0644", srcInfo.Mode().Perm())
+	if got := filePerm(t, src); got != wantPerm {
+		t.Fatalf("source mode after copy got %o, want %o", got, wantPerm)
 	}
 	dstInfo, err := os.Lstat(dst)
 	if err != nil {
@@ -204,6 +198,7 @@ func TestStagedReplaceHardlinkDoesNotChmodSource(t *testing.T) {
 	if err := os.WriteFile(src, []byte("next"), 0o644); err != nil {
 		t.Fatal(err)
 	}
+	wantPerm := filePerm(t, src)
 	if err := StagedReplace(src, dst); err != nil {
 		t.Fatalf("StagedReplace() error = %v", err)
 	}
@@ -214,11 +209,16 @@ func TestStagedReplaceHardlinkDoesNotChmodSource(t *testing.T) {
 	if !sameInode(src, dst) {
 		t.Fatal("StagedReplace did not hardlink")
 	}
-	srcInfo, err := os.Lstat(src)
+	if srcPerm := filePerm(t, src); srcPerm != wantPerm {
+		t.Fatalf("source mode got %o, want %o", srcPerm, wantPerm)
+	}
+}
+
+func filePerm(t *testing.T, path string) os.FileMode {
+	t.Helper()
+	info, err := os.Lstat(path)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if srcInfo.Mode().Perm() != 0o644 {
-		t.Fatalf("source mode got %o, want 0644", srcInfo.Mode().Perm())
-	}
+	return info.Mode().Perm()
 }

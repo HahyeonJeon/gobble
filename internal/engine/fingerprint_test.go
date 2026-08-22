@@ -200,7 +200,9 @@ func TestPrepareIsolateDockerSkipsSymlink(t *testing.T) {
 	exec.LinkFn = func(string, string) error { return syscall.EXDEV }
 
 	dir := t.TempDir()
-	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	src := filepath.Join(dir, "in", "sample.txt")
+	writeCheckFile(t, src, "reads")
+	wantPerm := filePerm(t, src)
 	isolate := filepath.Join(dir, "iso")
 	task := TaskPlan{
 		ID:     "copy",
@@ -218,13 +220,8 @@ func TestPrepareIsolateDockerSkipsSymlink(t *testing.T) {
 	if !info.Mode().IsRegular() {
 		t.Fatal("docker stage used symlink")
 	}
-	src := filepath.Join(dir, "in", "sample.txt")
-	srcInfo, err := os.Lstat(src)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if srcInfo.Mode().Perm() != 0o644 {
-		t.Fatalf("source mode got %o, want 0644", srcInfo.Mode().Perm())
+	if got := filePerm(t, src); got != wantPerm {
+		t.Fatalf("source mode got %o, want %o", got, wantPerm)
 	}
 }
 
@@ -232,6 +229,7 @@ func TestHardlinkStageDoesNotChmodSource(t *testing.T) {
 	dir := t.TempDir()
 	src := filepath.Join(dir, "in", "sample.txt")
 	writeCheckFile(t, src, "reads")
+	wantPerm := filePerm(t, src)
 	isolate := filepath.Join(dir, "iso")
 	task := TaskPlan{
 		ID:     "copy",
@@ -252,12 +250,8 @@ func TestHardlinkStageDoesNotChmodSource(t *testing.T) {
 	if srcKey.Inode != dstKey.Inode || srcKey.Dev != dstKey.Dev {
 		t.Fatal("same-device stage did not hardlink")
 	}
-	info, err := os.Lstat(src)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if info.Mode().Perm() != 0o644 {
-		t.Fatalf("hardlink stage chmod source to %o", info.Mode().Perm())
+	if got := filePerm(t, src); got != wantPerm {
+		t.Fatalf("hardlink stage chmod source from %o to %o", wantPerm, got)
 	}
 }
 
@@ -268,4 +262,13 @@ func mustFileRecord(t *testing.T, abs, plan string) jsonFileHash {
 		t.Fatal(err)
 	}
 	return rec
+}
+
+func filePerm(t *testing.T, path string) os.FileMode {
+	t.Helper()
+	info, err := os.Lstat(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return info.Mode().Perm()
 }

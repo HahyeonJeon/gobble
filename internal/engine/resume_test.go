@@ -194,6 +194,7 @@ func TestStagedReplaceLeavesDestOnFailedWrite(t *testing.T) {
 	writeCheckFile(t, dst, "prior")
 	src := filepath.Join(dir, "work", "sample.txt")
 	writeCheckFile(t, src, "next")
+	wantPerm := filePerm(t, src)
 	if err := stagedReplace(src, dst); err != nil {
 		t.Fatalf("stagedReplace() error = %v", err)
 	}
@@ -201,12 +202,8 @@ func TestStagedReplaceLeavesDestOnFailedWrite(t *testing.T) {
 	if err != nil || string(got) != "next" {
 		t.Fatalf("dest got %q, want next", got)
 	}
-	srcInfo, err := os.Lstat(src)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if srcInfo.Mode().Perm() != 0o644 {
-		t.Fatalf("source mode got %o, want 0644", srcInfo.Mode().Perm())
+	if srcPerm := filePerm(t, src); srcPerm != wantPerm {
+		t.Fatalf("source mode got %o, want %o", srcPerm, wantPerm)
 	}
 	info, err := os.Lstat(dst)
 	if err != nil {

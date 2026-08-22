@@ -843,6 +843,10 @@ func TestRunGroupStagePublishByName(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "ref.amb"), "amb")
 	writeCheckFile(t, filepath.Join(dir, "ref.ann"), "ann")
+	wantPerm := map[string]os.FileMode{
+		"ref.amb": filePerm(t, filepath.Join(dir, "ref.amb")),
+		"ref.ann": filePerm(t, filepath.Join(dir, "ref.ann")),
+	}
 	doc := Document{
 		Name: "group",
 		Tasks: []TaskPlan{{
@@ -897,12 +901,8 @@ func TestRunGroupStagePublishByName(t *testing.T) {
 		if srcKey.Inode != dstKey.Inode || srcKey.Dev != dstKey.Dev {
 			t.Fatalf("staged %s is not a hardlink", name)
 		}
-		srcInfo, err := os.Lstat(src)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if srcInfo.Mode().Perm() != 0o644 {
-			t.Fatalf("hardlink stage chmod source %s to %o", name, srcInfo.Mode().Perm())
+		if got := filePerm(t, src); got != wantPerm[name] {
+			t.Fatalf("hardlink stage chmod source %s from %o to %o", name, wantPerm[name], got)
 		}
 	}
 
