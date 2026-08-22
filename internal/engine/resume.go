@@ -248,6 +248,7 @@ func occupyResume(req Request) (*sched, []Defect) {
 		tasks:    make(map[string]*jsonTaskState, len(doc.Tasks)),
 		history:  priorAttempts(tasks),
 		resume:   class.Decision,
+		whenDown: whenRerunDescendants(doc, class.Decision),
 		launched: make(map[string]bool),
 		budget:   newBudget(readHostCapacity()),
 		exec:     ex,
@@ -258,7 +259,7 @@ func occupyResume(req Request) (*sched, []Defect) {
 	if s.run.Started == "" {
 		s.run.Started = now
 	}
-	whenDown := whenRerunDescendants(doc, class.Decision)
+	whenDown := s.whenDown
 	for _, t := range doc.Tasks {
 		ident := reservedIdentity(t)
 		dec := class.Decision[ident]
@@ -309,6 +310,31 @@ func occupyResume(req Request) (*sched, []Defect) {
 			parentIdent := reservedIdentity(parent)
 			parentDec := class.Decision[parentIdent]
 			if parentDec.Change == changeUnchanged {
+				if (whenDown[st.ID] || parent.When != "") && !liveResumeState(cp) &&
+					(cp.Status == StatusFailed || cp.Status == StatusBlocked || cp.Status == StatusIncomplete) {
+					member := cloneTaskPlan(parent)
+					member.Instance = cp.Instance
+					member.ShardIndex = cp.ShardIndex
+					applyReservedDefaults(&member)
+					s.history = append(s.history, cp)
+					fresh := initialTask(member)
+					fresh.Attempt = cp.Attempt + 1
+					dec := reuseDecision{
+						Identity: ident,
+						Decision: reuseRerun,
+						Change:   changeUnchanged,
+						Reason:   reasonPreviousUnsuccessful,
+					}
+					if parentDec.Decision == reuseRerun {
+						dec.Change = parentDec.Change
+						dec.Reason = parentDec.Reason
+						dec.Differing = append([]string(nil), parentDec.Differing...)
+					}
+					applyResumeDecision(&fresh, dec, true)
+					s.resume[ident] = dec
+					s.tasks[ident] = &fresh
+					continue
+				}
 				s.tasks[ident] = &cp
 				if cp.Status != StatusSucceeded && cp.Status != StatusSkipped &&
 					cp.Status != StatusRunning && cp.Status != StatusUnknown {
@@ -339,8 +365,22 @@ func occupyResume(req Request) (*sched, []Defect) {
 	return s, nil
 }
 
+func liveResumeState(st jsonTaskState) bool {
+	switch st.Status {
+	case StatusRunning, StatusUnknown:
+		return true
+	case StatusIncomplete:
+		return st.RuntimeID != ""
+	default:
+		return false
+	}
+}
+
 func resumeNeedsFreshAttempt(t TaskPlan, st jsonTaskState, whenDownstream bool) bool {
 	if isScatterTemplate(t) {
+		return false
+	}
+	if liveResumeState(st) {
 		return false
 	}
 	if t.When != "" {
@@ -349,7 +389,7 @@ func resumeNeedsFreshAttempt(t TaskPlan, st jsonTaskState, whenDownstream bool) 
 	if st.Status == StatusSucceeded || st.Status == StatusSkipped {
 		return true
 	}
-	if whenDownstream && (st.Status == StatusFailed || st.Status == StatusBlocked) {
+	if whenDownstream && (st.Status == StatusFailed || st.Status == StatusBlocked || st.Status == StatusIncomplete) {
 		return true
 	}
 	return false

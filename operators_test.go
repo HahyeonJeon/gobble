@@ -2,6 +2,7 @@ package gobble_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/HahyeonJeon/gobble"
 	"github.com/HahyeonJeon/gobble/internal/engine"
@@ -828,6 +830,93 @@ func TestResumeTrueToFalseWhenSkipsPreviouslyFailedDownstream(t *testing.T) {
 	}
 }
 
+func TestResumeTrueToFalseWhenSkipsPreviouslyIncompleteDownstream(t *testing.T) {
+	dir := t.TempDir()
+	writeRunFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	g1 := mustCompose(func() *gobble.Pipeline {
+		return whenPredWithAfterCmd("run", []string{"sleep", "30"})
+	})(t)
+	ctx, cancel := context.WithCancel(t.Context())
+	done := make(chan error, 1)
+	go func() {
+		done <- gobble.Run(ctx, g1, dir, 0)
+	}()
+	waitTaskStatus(t, dir, "after", engine.StatusRunning, engine.StatusUnknown)
+	cancel()
+	select {
+	case err := <-done:
+		if err == nil {
+			t.Fatalf("Run() error = nil, want canceled")
+		}
+	case <-time.After(8 * time.Second):
+		t.Fatal("timeout waiting for canceled Run")
+	}
+	if err := gobble.Release(dir); err != nil {
+		t.Fatalf("Release() error = %v", err)
+	}
+	g2, err := gobble.Compose(whenPredWithAfterCmd("keep", []string{"sleep", "30"}))
+	if err != nil {
+		t.Fatalf("Compose() error = %v", err)
+	}
+	if err := gobble.Resume(t.Context(), g2, dir, 0); err != nil {
+		t.Fatalf("Resume() error = %v, want skipped incomplete downstream", err)
+	}
+	rawInst, err := gobble.Inspect(dir, gobble.ViewInstances, "")
+	if err != nil {
+		t.Fatalf("Inspect: %v", err)
+	}
+	got := inspectLatestByID(t, rawInst)
+	if got["opt.copy"].Status != engine.StatusSkipped || got["opt.copy"].Condition != "false-param" {
+		t.Fatalf("true-to-false When did not skip: %s", rawInst)
+	}
+	if got["after"].Status != engine.StatusSkipped {
+		t.Fatalf("incomplete downstream of skip stayed %q, want skipped: %s", got["after"].Status, rawInst)
+	}
+	rawRem, err := gobble.Inspect(dir, gobble.ViewRemaining, "")
+	if err != nil {
+		t.Fatalf("Inspect remaining: %v", err)
+	}
+	if bytes.Contains(rawRem, []byte(`"after"`)) {
+		t.Fatalf("remaining listed skipped incomplete downstream: %s", rawRem)
+	}
+}
+
+func TestResumeTrueToFalseWhenSkipsFailedScatterMember(t *testing.T) {
+	dir := t.TempDir()
+	writeRunFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	writeRunFile(t, filepath.Join(dir, "in", "s1.txt"), "one")
+	writeRunFile(t, filepath.Join(dir, "in", "s2.txt"), "two")
+	g1 := mustCompose(func() *gobble.Pipeline {
+		return whenScatterFailPipeline("run")
+	})(t)
+	if err := gobble.Run(t.Context(), g1, dir, 2); err == nil {
+		t.Fatalf("Run() error = nil, want failed scatter members")
+	}
+	if err := gobble.Release(dir); err != nil {
+		t.Fatalf("Release() error = %v", err)
+	}
+	g2, err := gobble.Compose(whenScatterFailPipeline("keep"))
+	if err != nil {
+		t.Fatalf("Compose() error = %v", err)
+	}
+	if err := gobble.Resume(t.Context(), g2, dir, 2); err != nil {
+		t.Fatalf("Resume() error = %v, want skipped failed members", err)
+	}
+	rawInst, err := gobble.Inspect(dir, gobble.ViewInstances, "")
+	if err != nil {
+		t.Fatalf("Inspect: %v", err)
+	}
+	got := inspectLatestByID(t, rawInst)
+	if got["opt.gate"].Status != engine.StatusSkipped {
+		t.Fatalf("true-to-false When gate stayed %q: %s", got["opt.gate"].Status, rawInst)
+	}
+	for _, ident := range []string{"each.copy/s1/0", "each.copy/s2/0"} {
+		if got[ident].Status != engine.StatusSkipped {
+			t.Fatalf("failed member %s stayed %q, want skipped: %s", ident, got[ident].Status, rawInst)
+		}
+	}
+}
+
 func memberAttempt(raw []byte, key string) int {
 	var file struct {
 		Tasks []struct {
@@ -914,6 +1003,33 @@ func inspectLatestByID(t *testing.T, raw []byte) map[string]inspectInstRec {
 	return out
 }
 
+func waitTaskStatus(t *testing.T, dir, id string, want ...string) {
+	t.Helper()
+	deadline := time.Now().Add(8 * time.Second)
+	for time.Now().Before(deadline) {
+		raw, err := os.ReadFile(filepath.Join(dir, engine.ControlDir, engine.TasksFile))
+		if err == nil {
+			var file struct {
+				Tasks []taskRecord `json:"tasks"`
+			}
+			if json.Unmarshal(raw, &file) == nil {
+				for _, rec := range file.Tasks {
+					if rec.ID != id || rec.Instance != "" {
+						continue
+					}
+					for _, w := range want {
+						if rec.Status == w {
+							return
+						}
+					}
+				}
+			}
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	t.Fatalf("timeout waiting for %s in %v", id, want)
+}
+
 func whenPredWithAfter(skipParam string) *gobble.Pipeline {
 	return whenPredWithAfterCmd(skipParam, []string{"cp", "out/sample.txt", "out/after.txt"})
 }
@@ -936,6 +1052,35 @@ func whenPredWithAfterCmd(skipParam string, afterCmd []string) *gobble.Pipeline 
 		Command: afterCmd,
 		Inputs:  []gobble.Bind{{Name: "in", From: copyTask.Out("out")}},
 		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "after", Ext: ".txt"}}},
+	})
+	return p
+}
+
+func whenScatterFailPipeline(skipParam string) *gobble.Pipeline {
+	p := gobble.NewPipeline("when-scatter")
+	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "sample", Ext: ".txt"})
+	gate := p.When("opt").SkipIfFalse(skipParam).AddTask(gobble.TaskSpec{
+		Name:    "gate",
+		Command: []string{"cp", "in/sample.txt", "out/gate.txt"},
+		Inputs:  []gobble.Bind{{Name: "in", From: in}},
+		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "gate", Ext: ".txt"}}},
+		Params: []gobble.Param{
+			{Name: "keep", Value: "false"},
+			{Name: "run", Value: "true"},
+		},
+	})
+	samples := p.AddInputGroup("samples", gobble.Group{
+		{Name: "s1", Spec: gobble.PathSpec{Dir: gobble.Dir("in"), Base: "s1", Ext: ".txt"}},
+		{Name: "s2", Spec: gobble.PathSpec{Dir: gobble.Dir("in"), Base: "s2", Ext: ".txt"}},
+	})
+	p.Scatter("each").From(samples).AddTask(gobble.TaskSpec{
+		Name:   "copy",
+		Script: "false",
+		Inputs: []gobble.Bind{
+			{Name: "in", From: samples},
+			{Name: "gate", From: gate.Out("out")},
+		},
+		Outputs: []gobble.Bind{{Name: "out", From: samples, Spec: gobble.PathSpec{Ext: ".out"}}},
 	})
 	return p
 }

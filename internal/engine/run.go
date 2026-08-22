@@ -113,6 +113,7 @@ type sched struct {
 	tasks     map[string]*jsonTaskState
 	history   []jsonTaskState
 	resume    map[string]reuseDecision
+	whenDown  map[string]bool
 	launched  map[string]bool
 	persist   error
 	escape    *Defect
@@ -356,6 +357,7 @@ func (s *sched) executor() exec.Executor {
 func (s *sched) loop(ctx context.Context, n int) []Defect {
 	if s.resume != nil {
 		s.reapLive()
+		s.freshenWhenBranchAfterReap()
 	}
 	reports := make(chan report, n)
 	starts := make(chan startEvent, n)
@@ -1066,24 +1068,32 @@ func (s *sched) assignBlockedUpstream() {
 		return
 	}
 	now := time.Now().UTC().Format(time.RFC3339Nano)
-	for _, t := range s.doc.Tasks {
-		ident := reservedIdentity(t)
-		if isScatterTemplate(t) {
-			continue
-		}
-		if s.resume[ident].Decision != reuseRerun || s.launched[ident] {
-			continue
-		}
+	for _, ident := range s.readyCandidates() {
 		st := s.tasks[ident]
-		if st == nil {
+		if st == nil || s.launched[ident] {
+			continue
+		}
+		task, ok := s.taskByIdent(ident)
+		if !ok || isScatterTemplate(task) {
+			continue
+		}
+		if !s.resumeSkipAdmit(ident, st) {
 			continue
 		}
 		if st.Status == StatusSkipped || st.Status == StatusSucceeded {
 			continue
 		}
-		if s.waitProducerFailedThisResume(t.ID) {
+		if s.cascadeSkip(task) || s.scatterParentSkipped(st) {
+			st.Status = StatusSkipped
+			st.Reason = "skipped"
+			if st.Ended == "" {
+				st.Ended = now
+			}
+			continue
+		}
+		if s.waitProducerFailedThisResume(task.ID) {
 			st.Decision = decisionBlockedUpstream
-			st.ReuseReason = s.blockedReason(t.ID)
+			st.ReuseReason = s.blockedReason(task.ID)
 			st.Differing = nil
 			st.Status = StatusBlocked
 			if st.Ended == "" {
@@ -2109,16 +2119,24 @@ func (s *sched) latestHistoryAttempt(ident string) int {
 
 func (s *sched) maybeSkip() *Defect {
 	now := time.Now().UTC().Format(time.RFC3339Nano)
-	for _, t := range s.doc.Tasks {
-		ident := reservedIdentity(t)
+	for _, ident := range s.readyCandidates() {
 		st := s.tasks[ident]
 		if st == nil || st.Status != StatusNotStarted {
 			continue
 		}
-		if s.resume != nil && (s.resume[ident].Decision != reuseRerun || s.launched[ident]) {
+		if s.resume != nil {
+			if s.launched[ident] {
+				continue
+			}
+			if !s.resumeSkipAdmit(ident, st) {
+				continue
+			}
+		}
+		task, ok := s.taskByIdent(ident)
+		if !ok {
 			continue
 		}
-		if s.cascadeSkip(t) {
+		if s.cascadeSkip(task) || s.scatterParentSkipped(st) {
 			st.Status = StatusSkipped
 			st.Reason = "skipped"
 			if st.Ended == "" {
@@ -2127,10 +2145,10 @@ func (s *sched) maybeSkip() *Defect {
 			s.notePersist(s.persistControl())
 			continue
 		}
-		if t.When == "" {
+		if task.When == "" {
 			continue
 		}
-		skip, reason, ready, d := s.evalWhen(t)
+		skip, reason, ready, d := s.evalWhen(task)
 		if d != nil {
 			return d
 		}
@@ -2146,6 +2164,94 @@ func (s *sched) maybeSkip() *Defect {
 		s.notePersist(s.persistControl())
 	}
 	return nil
+}
+
+func (s *sched) resumeSkipAdmit(ident string, st *jsonTaskState) bool {
+	if dec, ok := s.resume[ident]; ok {
+		return dec.Decision == reuseRerun
+	}
+	if st == nil || st.Instance == "" {
+		return false
+	}
+	parent, ok := s.taskByID(st.ID)
+	if !ok {
+		return false
+	}
+	return s.resume[reservedIdentity(parent)].Decision == reuseRerun
+}
+
+func (s *sched) scatterParentSkipped(st *jsonTaskState) bool {
+	if st == nil || st.Instance == "" {
+		return false
+	}
+	t, ok := s.taskByID(st.ID)
+	if !ok {
+		return false
+	}
+	up := s.tasks[reservedIdentity(t)]
+	return up != nil && up.Status == StatusSkipped
+}
+
+func (s *sched) onWhenSkipBranch(t TaskPlan) bool {
+	if t.When != "" {
+		return true
+	}
+	return s.whenDown[t.ID]
+}
+
+func (s *sched) freshenWhenBranchAfterReap() {
+	if s.resume == nil {
+		return
+	}
+	var idents []string
+	for ident, st := range s.tasks {
+		if st == nil {
+			continue
+		}
+		switch st.Status {
+		case StatusSucceeded, StatusSkipped, StatusNotStarted:
+			continue
+		case StatusRunning:
+			if _, ok := backendHandle(s.workspace, ident, st); ok {
+				continue
+			}
+		}
+		task, ok := s.taskByIdent(ident)
+		if !ok || isScatterTemplate(task) {
+			continue
+		}
+		if !s.onWhenSkipBranch(task) {
+			continue
+		}
+		idents = append(idents, ident)
+	}
+	sort.Strings(idents)
+	for _, ident := range idents {
+		st := s.tasks[ident]
+		task, ok := s.taskByIdent(ident)
+		if !ok || st == nil {
+			continue
+		}
+		dec, hasDec := s.resume[ident]
+		if !hasDec {
+			dec = reuseDecision{Identity: ident, Decision: reuseRerun, Reason: reasonPreviousUnsuccessful}
+			if p, pok := s.taskByID(st.ID); pok {
+				pdec := s.resume[reservedIdentity(p)]
+				if pdec.Decision == reuseRerun {
+					dec.Change = pdec.Change
+					dec.Reason = pdec.Reason
+					dec.Differing = append([]string(nil), pdec.Differing...)
+				}
+			}
+			hasDec = true
+		}
+		s.history = append(s.history, *st)
+		fresh := initialTask(task)
+		fresh.Attempt = st.Attempt + 1
+		applyResumeDecision(&fresh, dec, hasDec)
+		s.tasks[ident] = &fresh
+		s.resume[ident] = dec
+	}
 }
 
 func (s *sched) cascadeSkip(t TaskPlan) bool {
