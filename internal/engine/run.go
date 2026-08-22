@@ -1026,6 +1026,9 @@ func (s *sched) beginResumeAttempt(ident string) {
 	task, _ := s.taskByIdent(ident)
 	dec, hasDec := s.resume[ident]
 	if old != nil && old.Status == StatusNotStarted && (dec.Change == changeAdded || dec.Decision == reuseRerun) {
+		if prev := s.latestHistoryAttempt(ident); prev >= old.Attempt {
+			old.Attempt = prev + 1
+		}
 		applyResumeDecision(old, dec, hasDec)
 		if s.launched != nil {
 			s.launched[ident] = true
@@ -1719,8 +1722,19 @@ func (s *sched) seedMembers(t TaskPlan, keys []string) *Defect {
 			continue
 		}
 		st := initialTask(member)
-		if prev := s.latestHistoryAttempt(ident); prev > 0 {
-			st.Attempt = prev + 1
+		if s.resume != nil {
+			parentIdent := reservedIdentity(t)
+			if pdec, ok := s.resume[parentIdent]; ok && pdec.Decision == reuseRerun {
+				dec := reuseDecision{
+					Identity:  ident,
+					Decision:  reuseRerun,
+					Change:    pdec.Change,
+					Reason:    pdec.Reason,
+					Differing: append([]string(nil), pdec.Differing...),
+				}
+				s.resume[ident] = dec
+				applyResumeDecision(&st, dec, true)
+			}
 		}
 		s.tasks[ident] = &st
 	}

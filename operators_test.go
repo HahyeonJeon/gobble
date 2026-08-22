@@ -6,6 +6,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -723,11 +724,37 @@ func TestResumeFromChangeDoesNotSubmitLeftoverMembers(t *testing.T) {
 	if !bytes.Contains(raw, []byte(`"s1"`)) || !bytes.Contains(raw, []byte(`"s3"`)) {
 		t.Fatalf("From Change missing new expansion: %s", raw)
 	}
-	if memberAttempt(raw, "s2") > 1 {
-		t.Fatalf("From Change submitted leftover s2: %s", raw)
+	recs := decodeTaskRecords(t, raw)
+	s2 := recordsByInstance(recs, "s2")
+	if len(s2) != 1 || s2[0].Attempt != 1 || s2[0].Status != engine.StatusSucceeded {
+		t.Fatalf("leftover s2 got %#v, want one succeeded attempt 1", s2)
 	}
-	if memberAttempt(raw, "s3") < 1 {
-		t.Fatalf("From Change did not run s3: %s", raw)
+	if isolateExists(dir, "each.copy", "s2", 2) {
+		t.Fatalf("From Change submitted leftover s2 isolate")
+	}
+	s1 := latestByInstance(recs, "s1")
+	if s1.Attempt != 2 || s1.Status != engine.StatusSucceeded ||
+		s1.Decision != "rerun" || s1.Change != "IdentityChanged" {
+		t.Fatalf("retained s1 got %#v, want attempt 2 rerun IdentityChanged", s1)
+	}
+	for _, rec := range recordsByInstance(recs, "s1") {
+		if rec.Status == engine.StatusNotStarted {
+			t.Fatalf("retained s1 invented not-started attempt: %#v", rec)
+		}
+	}
+	if isolateExists(dir, "each.copy", "s1", 3) {
+		t.Fatalf("retained s1 invented attempt 3 isolate")
+	}
+	s3 := latestByInstance(recs, "s3")
+	if s3.Attempt != 1 || s3.Status != engine.StatusSucceeded ||
+		s3.Decision != "rerun" || s3.Change != "IdentityChanged" {
+		t.Fatalf("new s3 got %#v, want attempt 1 rerun IdentityChanged", s3)
+	}
+	if len(recordsByInstance(recs, "s3")) != 1 {
+		t.Fatalf("new s3 invented extra attempts: %#v", recordsByInstance(recs, "s3"))
+	}
+	if isolateExists(dir, "each.copy", "s3", 2) {
+		t.Fatalf("new s3 invented attempt 2 isolate")
 	}
 	if _, err := os.Stat(filepath.Join(dir, "in", "s3.txt.out")); err != nil {
 		t.Fatalf("new member dest: %v", err)
@@ -738,19 +765,7 @@ func TestResumeTrueToFalseWhenSkips(t *testing.T) {
 	dir := t.TempDir()
 	writeRunFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	first := func() *gobble.Pipeline {
-		p := gobble.NewPipeline("when-pred")
-		in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "sample", Ext: ".txt"})
-		p.When("opt").SkipIfFalse("run").AddTask(gobble.TaskSpec{
-			Name:    "copy",
-			Command: []string{"cp", "in/sample.txt", "out/sample.txt"},
-			Inputs:  []gobble.Bind{{Name: "in", From: in}},
-			Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "sample", Ext: ".txt"}}},
-			Params: []gobble.Param{
-				{Name: "keep", Value: "false"},
-				{Name: "run", Value: "true"},
-			},
-		})
-		return p
+		return whenPredWithAfter("run")
 	}
 	g1 := mustCompose(first)(t)
 	if err := gobble.Run(t.Context(), g1, dir, 0); err != nil {
@@ -759,19 +774,7 @@ func TestResumeTrueToFalseWhenSkips(t *testing.T) {
 	if err := gobble.Release(dir); err != nil {
 		t.Fatalf("Release() error = %v", err)
 	}
-	p2 := gobble.NewPipeline("when-pred")
-	in := p2.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "sample", Ext: ".txt"})
-	p2.When("opt").SkipIfFalse("keep").AddTask(gobble.TaskSpec{
-		Name:    "copy",
-		Command: []string{"cp", "in/sample.txt", "out/sample.txt"},
-		Inputs:  []gobble.Bind{{Name: "in", From: in}},
-		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "sample", Ext: ".txt"}}},
-		Params: []gobble.Param{
-			{Name: "keep", Value: "false"},
-			{Name: "run", Value: "true"},
-		},
-	})
-	g2, err := gobble.Compose(p2)
+	g2, err := gobble.Compose(whenPredWithAfter("keep"))
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
@@ -782,8 +785,14 @@ func TestResumeTrueToFalseWhenSkips(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Inspect: %v", err)
 	}
-	if !bytes.Contains(rawInst, []byte(`"skipped"`)) || !bytes.Contains(rawInst, []byte("false-param")) {
+	got := inspectLatestByID(t, rawInst)
+	copyRec := got["opt.copy"]
+	if copyRec.Status != engine.StatusSkipped || copyRec.Condition != "false-param" {
 		t.Fatalf("true-to-false When did not skip: %s", rawInst)
+	}
+	after := got["after"]
+	if after.Status != engine.StatusSkipped {
+		t.Fatalf("downstream of skip stayed %q, want skipped: %s", after.Status, rawInst)
 	}
 }
 
@@ -804,6 +813,95 @@ func memberAttempt(raw []byte, key string) int {
 		}
 	}
 	return best
+}
+
+type taskRecord struct {
+	ID          string `json:"id"`
+	Instance    string `json:"instance"`
+	Attempt     int    `json:"attempt"`
+	Status      string `json:"status"`
+	Decision    string `json:"decision"`
+	Change      string `json:"change"`
+	ReuseReason string `json:"reuse_reason"`
+}
+
+func decodeTaskRecords(t *testing.T, raw []byte) []taskRecord {
+	t.Helper()
+	var file struct {
+		Tasks []taskRecord `json:"tasks"`
+	}
+	if err := json.Unmarshal(raw, &file); err != nil {
+		t.Fatalf("tasks.json: %v", err)
+	}
+	return file.Tasks
+}
+
+func recordsByInstance(recs []taskRecord, key string) []taskRecord {
+	var out []taskRecord
+	for _, rec := range recs {
+		if rec.Instance == key {
+			out = append(out, rec)
+		}
+	}
+	return out
+}
+
+func latestByInstance(recs []taskRecord, key string) taskRecord {
+	var best taskRecord
+	for _, rec := range recs {
+		if rec.Instance == key && rec.Attempt >= best.Attempt {
+			best = rec
+		}
+	}
+	return best
+}
+
+func isolateExists(workspace, id, instance string, attempt int) bool {
+	_, err := os.Stat(filepath.Join(workspace, engine.ControlDir, "tasks", id, instance, "0", strconv.Itoa(attempt)))
+	return err == nil
+}
+
+type inspectInstRec struct {
+	Identity  string `json:"identity"`
+	Status    string `json:"status"`
+	Attempt   int    `json:"attempt"`
+	Condition string `json:"condition"`
+}
+
+func inspectLatestByID(t *testing.T, raw []byte) map[string]inspectInstRec {
+	t.Helper()
+	out := map[string]inspectInstRec{}
+	dec := json.NewDecoder(bytes.NewReader(raw))
+	for dec.More() {
+		var rec inspectInstRec
+		if err := dec.Decode(&rec); err != nil {
+			t.Fatalf("Inspect JSONL: %v", err)
+		}
+		out[rec.Identity] = rec
+	}
+	return out
+}
+
+func whenPredWithAfter(skipParam string) *gobble.Pipeline {
+	p := gobble.NewPipeline("when-pred")
+	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "sample", Ext: ".txt"})
+	copyTask := p.When("opt").SkipIfFalse(skipParam).AddTask(gobble.TaskSpec{
+		Name:    "copy",
+		Command: []string{"cp", "in/sample.txt", "out/sample.txt"},
+		Inputs:  []gobble.Bind{{Name: "in", From: in}},
+		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "sample", Ext: ".txt"}}},
+		Params: []gobble.Param{
+			{Name: "keep", Value: "false"},
+			{Name: "run", Value: "true"},
+		},
+	})
+	p.AddTask(gobble.TaskSpec{
+		Name:    "after",
+		Command: []string{"cp", "out/sample.txt", "out/after.txt"},
+		Inputs:  []gobble.Bind{{Name: "in", From: copyTask.Out("out")}},
+		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "after", Ext: ".txt"}}},
+	})
+	return p
 }
 
 func scatterGroupPipeline(script string) *gobble.Pipeline {

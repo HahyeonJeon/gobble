@@ -264,20 +264,20 @@ func occupyResume(req Request) (*sched, []Defect) {
 		if st, ok := byIdent[ident]; ok {
 			cp := st
 			cp.Change = dec.Change
+			if dec.Decision == reuseRerun && resumeNeedsFreshAttempt(t, st) {
+				s.history = append(s.history, cp)
+				fresh := initialTask(t)
+				fresh.Attempt = st.Attempt + 1
+				fresh.Change = dec.Change
+				fresh.Decision = reuseRerun
+				fresh.ReuseReason = dec.Reason
+				fresh.Differing = append([]string(nil), dec.Differing...)
+				s.tasks[ident] = &fresh
+				continue
+			}
 			if dec.Change != changeUnchanged && dec.Change != "" {
 				cp.Expansion = nil
 				cp.Condition = ""
-				if t.When != "" && dec.Decision == reuseRerun {
-					s.history = append(s.history, cp)
-					fresh := initialTask(t)
-					fresh.Attempt = st.Attempt + 1
-					fresh.Change = dec.Change
-					fresh.Decision = reuseRerun
-					fresh.ReuseReason = dec.Reason
-					fresh.Differing = append([]string(nil), dec.Differing...)
-					s.tasks[ident] = &fresh
-					continue
-				}
 				if cp.Status == StatusSkipped {
 					cp.Status = StatusNotStarted
 					cp.Reason = ""
@@ -336,6 +336,16 @@ func occupyResume(req Request) (*sched, []Defect) {
 	}
 	retainLease(req.Workspace, lock, ex)
 	return s, nil
+}
+
+func resumeNeedsFreshAttempt(t TaskPlan, st jsonTaskState) bool {
+	if isScatterTemplate(t) {
+		return false
+	}
+	if t.When != "" {
+		return true
+	}
+	return st.Status == StatusSucceeded || st.Status == StatusSkipped
 }
 
 func unknownTaskUnits(tasks []jsonTaskState) []string {
