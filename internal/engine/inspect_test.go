@@ -50,15 +50,15 @@ func TestInspectNoFingerprintsAffectsDownstream(t *testing.T) {
 	tasks := jsonTasksFile{
 		SchemaVersion: SchemaVersion,
 		Tasks: []jsonTaskState{
-			{
+			mustExecState(t, jsonTaskState{
 				ID:       "copy",
 				Status:   StatusSucceeded,
 				Executor: executorProcess,
 				Command:  []string{"true"},
 				Attempt:  1,
 				Params:   []jsonParam{},
-			},
-			{
+			}, "true"),
+			mustExecState(t, jsonTaskState{
 				ID:           "dep",
 				Status:       StatusSucceeded,
 				Executor:     executorProcess,
@@ -66,7 +66,7 @@ func TestInspectNoFingerprintsAffectsDownstream(t *testing.T) {
 				Attempt:      1,
 				Params:       []jsonParam{},
 				Fingerprints: []jsonFileHash{depRec},
-			},
+			}, "true"),
 		},
 	}
 	taskBytes, err := json.MarshalIndent(tasks, "", "  ")
@@ -154,7 +154,7 @@ func TestInspectRemainingInstanceUsesFullSet(t *testing.T) {
 				Attempt:  1,
 				Params:   []jsonParam{},
 			},
-			{
+			mustExecState(t, jsonTaskState{
 				ID:           "b",
 				Status:       StatusSucceeded,
 				Executor:     executorProcess,
@@ -162,7 +162,7 @@ func TestInspectRemainingInstanceUsesFullSet(t *testing.T) {
 				Attempt:      1,
 				Params:       []jsonParam{},
 				Fingerprints: []jsonFileHash{inRec},
-			},
+			}, "true"),
 		},
 	}
 	taskBytes, err := json.MarshalIndent(tasks, "", "  ")
@@ -196,6 +196,149 @@ func TestInspectRemainingInstanceUsesFullSet(t *testing.T) {
 	}
 	if one["b"]["remaining"] != all["b"]["remaining"] || one["b"]["affected"] != all["b"]["affected"] || one["b"]["reason"] != all["b"]["reason"] {
 		t.Fatalf("filtered b got %#v, want %#v", one["b"], all["b"])
+	}
+}
+
+func TestInspectRemainingEmptyExecIdentityMiss(t *testing.T) {
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "a.txt"), "reads")
+	writeCheckFile(t, filepath.Join(dir, "out", "a.txt"), "reads")
+	inRec := mustFileRecord(t, filepath.Join(dir, "in", "a.txt"), "in/a.txt")
+	outRec := mustFileRecord(t, filepath.Join(dir, "out", "a.txt"), "out/a.txt")
+	doc := Document{
+		Name: "copy",
+		Tasks: []TaskPlan{{
+			ID:      "copy",
+			Command: []string{"true"},
+			Inputs:  []IO{{Name: "in", Path: "in/a.txt"}},
+			Outputs: []IO{{Name: "out", Path: "out/a.txt"}},
+		}},
+	}
+	plan, err := marshalControlPlan(doc, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeCheckFile(t, filepath.Join(dir, ControlDir, PlanFile), string(plan))
+	writeOccupancy(t, dir, jsonOccupancy{Active: false, Closed: "2026-01-01T00:00:01Z"})
+	tasks := jsonTasksFile{
+		SchemaVersion: SchemaVersion,
+		Tasks: []jsonTaskState{{
+			ID:           "copy",
+			Status:       StatusSucceeded,
+			Executor:     executorProcess,
+			Command:      []string{"true"},
+			Attempt:      1,
+			Params:       []jsonParam{},
+			Fingerprints: []jsonFileHash{inRec},
+			Checksums:    []jsonFileHash{outRec},
+		}},
+	}
+	taskBytes, err := json.MarshalIndent(tasks, "", "  ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), string(append(taskBytes, '\n')))
+	raw, defects := Inspect(dir, viewRemaining, "")
+	if len(defects) != 0 {
+		t.Fatalf("Inspect(remaining) defects %v", defects)
+	}
+	recs := remainingByID(t, raw)
+	if recs["copy"]["affected"] != true || recs["copy"]["reason"] != reasonImageChanged {
+		t.Fatalf("empty exec identity remaining got %#v, want image-changed miss", recs["copy"])
+	}
+}
+
+func TestInspectRemainingEmptyImageDigestMiss(t *testing.T) {
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "a.txt"), "reads")
+	writeCheckFile(t, filepath.Join(dir, "out", "a.txt"), "reads")
+	inRec := mustFileRecord(t, filepath.Join(dir, "in", "a.txt"), "in/a.txt")
+	outRec := mustFileRecord(t, filepath.Join(dir, "out", "a.txt"), "out/a.txt")
+	stubImageID(t, "sha256:now")
+	doc := Document{
+		Name: "copy",
+		Tasks: []TaskPlan{{
+			ID:      "copy",
+			Command: []string{"true"},
+			Image:   "alpine:3.19.1",
+			Inputs:  []IO{{Name: "in", Path: "in/a.txt"}},
+			Outputs: []IO{{Name: "out", Path: "out/a.txt"}},
+		}},
+	}
+	plan, err := marshalControlPlan(doc, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeCheckFile(t, filepath.Join(dir, ControlDir, PlanFile), string(plan))
+	writeOccupancy(t, dir, jsonOccupancy{Active: false, Closed: "2026-01-01T00:00:01Z"})
+	tasks := jsonTasksFile{
+		SchemaVersion: SchemaVersion,
+		Tasks: []jsonTaskState{{
+			ID:           "copy",
+			Status:       StatusSucceeded,
+			Executor:     executorDocker,
+			Command:      []string{"true"},
+			Image:        "alpine:3.19.1",
+			Attempt:      1,
+			Params:       []jsonParam{},
+			Fingerprints: []jsonFileHash{inRec},
+			Checksums:    []jsonFileHash{outRec},
+		}},
+	}
+	taskBytes, err := json.MarshalIndent(tasks, "", "  ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), string(append(taskBytes, '\n')))
+	raw, defects := Inspect(dir, viewRemaining, "")
+	if len(defects) != 0 {
+		t.Fatalf("Inspect(remaining) defects %v", defects)
+	}
+	recs := remainingByID(t, raw)
+	if recs["copy"]["affected"] != true || recs["copy"]["reason"] != reasonImageChanged {
+		t.Fatalf("empty image digest remaining got %#v, want image-changed miss", recs["copy"])
+	}
+}
+
+func TestInspectLogsEscapedPathInvalid(t *testing.T) {
+	outside := t.TempDir()
+	sentinel := filepath.Join(outside, "secret.log")
+	if err := os.WriteFile(sentinel, []byte("secret-log"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	dir := t.TempDir()
+	writeOccupancy(t, dir, jsonOccupancy{Active: true, Host: "h", PID: 1, Lease: "lease"})
+	rel := isolateRel(TaskPlan{ID: "copy", Attempt: 1})
+	if err := os.MkdirAll(filepath.Join(dir, filepath.FromSlash(rel)), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(sentinel, filepath.Join(dir, filepath.FromSlash(rel), "stdout")); err != nil {
+		t.Fatal(err)
+	}
+	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), `{
+  "schema_version": 2,
+  "tasks": [
+    {
+      "id": "copy",
+      "status": "failed",
+      "executor": "process",
+      "command": ["true"],
+      "resources": {"cpu": 0, "memory": ""},
+      "params": [],
+      "stdout": "`+rel+`/stdout"
+    }
+  ]
+}
+`)
+	_, defects := Inspect(dir, viewLogs, "")
+	found := false
+	for _, d := range defects {
+		if d.Code == DefectInvalidPath {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("escaped log Inspect(logs) defects %v, want invalid-path", defects)
 	}
 }
 

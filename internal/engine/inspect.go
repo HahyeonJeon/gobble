@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -72,7 +71,11 @@ func Inspect(workspace, view, instance string) ([]byte, []Defect) {
 	case viewErrors:
 		return marshalInspect(inspectErrorsView(selected, run.SchemaVersion))
 	case viewLogs:
-		return marshalInspect(inspectLogsView(workspace, selected, run.SchemaVersion))
+		doc, d := inspectLogsView(workspace, selected, run.SchemaVersion)
+		if len(d) > 0 {
+			return nil, d
+		}
+		return marshalInspect(doc)
 	case viewTiming:
 		return marshalInspect(inspectTimingView(run, selected))
 	case viewDAG:
@@ -123,7 +126,21 @@ func inspectWorkspace(workspace string) []Defect {
 }
 
 func readInspectRun(workspace string) (jsonRun, []Defect) {
-	path := filepath.Join(workspace, ControlDir, RunIdentityFile)
+	path, present, err := containedRel(workspace, ControlDir+"/"+RunIdentityFile, false)
+	if err != nil {
+		return jsonRun{}, []Defect{{
+			Code:    DefectInvalidPath,
+			Message: "path escapes directory",
+			Paths:   []string{ControlDir + "/" + RunIdentityFile},
+		}}
+	}
+	if !present {
+		return jsonRun{}, []Defect{{
+			Code:    DefectNotFound,
+			Message: "run not found",
+			Paths:   []string{ControlDir + "/" + RunIdentityFile},
+		}}
+	}
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -147,7 +164,17 @@ func readInspectRun(workspace string) (jsonRun, []Defect) {
 }
 
 func readInspectPlan(workspace string) (jsonPlan, bool, []Defect) {
-	path := filepath.Join(workspace, ControlDir, PlanFile)
+	path, present, err := containedRel(workspace, ControlDir+"/"+PlanFile, false)
+	if err != nil {
+		return jsonPlan{}, false, []Defect{{
+			Code:    DefectInvalidPath,
+			Message: "path escapes directory",
+			Paths:   []string{ControlDir + "/" + PlanFile},
+		}}
+	}
+	if !present {
+		return jsonPlan{}, false, nil
+	}
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -172,7 +199,17 @@ func readInspectTasks(workspace string) ([]jsonTaskState, []Defect) {
 }
 
 func readInspectTasksFile(workspace string) (jsonTasksFile, bool, []Defect) {
-	path := filepath.Join(workspace, ControlDir, TasksFile)
+	path, present, err := containedRel(workspace, ControlDir+"/"+TasksFile, false)
+	if err != nil {
+		return jsonTasksFile{}, false, []Defect{{
+			Code:    DefectInvalidPath,
+			Message: "path escapes directory",
+			Paths:   []string{ControlDir + "/" + TasksFile},
+		}}
+	}
+	if !present {
+		return jsonTasksFile{}, false, nil
+	}
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -407,7 +444,7 @@ type inspectLog struct {
 	StderrTail string `json:"stderr_tail,omitempty"`
 }
 
-func inspectLogsView(workspace string, tasks []jsonTaskState, schema int) inspectLogsDoc {
+func inspectLogsView(workspace string, tasks []jsonTaskState, schema int) (inspectLogsDoc, []Defect) {
 	out := inspectLogsDoc{SchemaVersion: schema, Logs: []inspectLog{}}
 	for _, st := range tasks {
 		rec := inspectLog{
@@ -415,23 +452,40 @@ func inspectLogsView(workspace string, tasks []jsonTaskState, schema int) inspec
 			Stdout:   st.Stdout,
 			Stderr:   st.Stderr,
 		}
-		rec.StdoutSize, rec.StdoutTail = logPointer(workspace, st.Stdout)
-		rec.StderrSize, rec.StderrTail = logPointer(workspace, st.Stderr)
+		var d []Defect
+		rec.StdoutSize, rec.StdoutTail, d = logPointer(workspace, st.Stdout)
+		if len(d) > 0 {
+			return inspectLogsDoc{}, d
+		}
+		rec.StderrSize, rec.StderrTail, d = logPointer(workspace, st.Stderr)
+		if len(d) > 0 {
+			return inspectLogsDoc{}, d
+		}
 		out.Logs = append(out.Logs, rec)
 	}
-	return out
+	return out, nil
 }
 
-func logPointer(workspace, rel string) (int64, string) {
+func logPointer(workspace, rel string) (int64, string, []Defect) {
 	if rel == "" {
-		return 0, ""
+		return 0, "", nil
 	}
-	path := filepath.Join(workspace, filepath.FromSlash(rel))
+	path, present, err := containedRel(workspace, rel, false)
+	if err != nil {
+		return 0, "", []Defect{{
+			Code:    DefectInvalidPath,
+			Message: "path escapes directory",
+			Paths:   []string{rel},
+		}}
+	}
+	if !present {
+		return 0, "", nil
+	}
 	info, err := os.Lstat(path)
 	if err != nil || !info.Mode().IsRegular() {
-		return 0, ""
+		return 0, "", nil
 	}
-	return info.Size(), readTail(path, inspectLogTail)
+	return info.Size(), readTail(path, inspectLogTail), nil
 }
 
 func readTail(path string, limit int64) string {

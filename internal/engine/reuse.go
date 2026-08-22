@@ -126,22 +126,16 @@ func envIdentityChanged(latest jsonTaskState, current TaskPlan) bool {
 	return stored != cur
 }
 
-func execEnvChanged(_ string, latest jsonTaskState, current TaskPlan, hashContent bool) bool {
+func execEnvChanged(_ string, latest jsonTaskState, current TaskPlan, _ bool) bool {
 	if current.Image != "" || latest.Image != "" {
 		if latest.Image != current.Image {
 			return true
-		}
-		if !hashContent && latest.ImageDigest == "" {
-			return false
 		}
 		stored := latest.ImageDigest
 		looked := lookupImageID(current.Image)
 		if stored == "" || looked == "" || stored != looked {
 			return true
 		}
-		return false
-	}
-	if !hashContent && latest.ExecutableSHA256 == "" {
 		return false
 	}
 	argv := current.Command
@@ -200,8 +194,8 @@ func compareInputIdentity(workspace string, latest jsonTaskState, current TaskPl
 	seen := make(map[string]bool, len(files))
 	for _, f := range files {
 		seen[f.path] = true
-		path := workspaceFile(workspace, fileSource(f))
-		if !regularFile(path) {
+		path, present, err := containedRel(workspace, fileSource(f), false)
+		if err != nil || !present || !regularFile(path) {
 			missing = true
 			continue
 		}
@@ -269,8 +263,8 @@ func destReuseMiss(workspace string, latest jsonTaskState, current TaskPlan, has
 		if h.Path == "" {
 			continue
 		}
-		path := workspaceFile(workspace, h.Path)
-		if !regularFile(path) {
+		path, present, err := containedRel(workspace, h.Path, false)
+		if err != nil || !present || !regularFile(path) {
 			return true
 		}
 		if h.SHA256 == "" {

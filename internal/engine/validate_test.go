@@ -182,6 +182,7 @@ func TestParseMemoryGrammar(t *testing.T) {
 		{"1g", 1 << 30, true},
 		{"1.5g", 1610612736, true},
 		{"1K", 1024, true},
+		{"0.5b", 0, false},
 		{"not-a-size", 0, false},
 		{"-1g", 0, false},
 	}
@@ -203,6 +204,19 @@ func TestParseMemoryGrammar(t *testing.T) {
 	})
 	if hasDefect(got, DefectInvalidMemory, "copy") {
 		t.Fatalf("1.5g: Validate() defects %v, want accepted", formatDefects(got))
+	}
+	got = Validate(Document{
+		Name: "mem-half-byte",
+		Tasks: []TaskPlan{{
+			ID:        "copy",
+			Name:      "copy",
+			Command:   []string{"cp"},
+			Resources: ResourcePlan{Memory: "0.5b"},
+			Outputs:   []IO{{Name: "out", Kind: ArtifactFile, Path: "out.txt", Spec: Path{Base: "out", Ext: ".txt"}}},
+		}},
+	})
+	if !hasDefect(got, DefectInvalidMemory, "copy") {
+		t.Fatalf("0.5b: Validate() defects %v, want invalid-memory", formatDefects(got))
 	}
 }
 

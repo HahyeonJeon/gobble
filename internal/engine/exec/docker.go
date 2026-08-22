@@ -18,13 +18,10 @@ import (
 
 const containerWorkDir = "/work"
 
-// DockerCLI runs docker argv without the docker token. Tests replace it.
+// DockerCLI runs docker argv without the docker token. env is the client
+// process environment for that one call; nil means PATH=/usr/bin:/bin only.
+// Tests replace it.
 var DockerCLI = runDockerCLI
-
-var (
-	dockerJobEnvMu sync.Mutex
-	dockerJobEnv   []string
-)
 
 // Docker runs each job as a container.
 type Docker struct {
@@ -53,7 +50,7 @@ func (d *Docker) Submit(ctx context.Context, job Job) (Handle, Report, error) {
 	}
 	var idBuf, errBuf bytes.Buffer
 	args := dockerRunArgs(job)
-	exit, err := dockerRunCLI(ctx, args, dockerClientEnv(job.Env), &idBuf, &errBuf)
+	exit, err := DockerCLI(ctx, args, dockerClientEnv(job.Env), &idBuf, &errBuf)
 	if err != nil {
 		return Handle{}, Report{}, dockerErr(ctx, "docker", err)
 	}
@@ -68,7 +65,7 @@ func (d *Docker) Submit(ctx context.Context, job Job) (Handle, Report, error) {
 	if id == "" {
 		return Handle{}, Report{}, errors.New("docker: empty container id")
 	}
-	digest := imageDigest(ctx, job.Image)
+	digest := containerImageID(ctx, id)
 	h := Handle{Identity: job.Identity, Backend: BackendDocker, RuntimeID: id}
 	return h, Report{
 		Identity:    job.Identity,
@@ -97,7 +94,7 @@ func (d *Docker) Poll(ctx context.Context, h Handle) (Report, error) {
 		return Report{Identity: h.Identity, RuntimeID: h.RuntimeID, Running: true}, nil
 	}
 	writeDockerLogs(ctx, h)
-	_, _ = DockerCLI(ctx, []string{"rm", "-f", h.RuntimeID}, discard(), discard())
+	_, _ = dockerCLI(ctx, []string{"rm", "-f", h.RuntimeID}, discard(), discard())
 	msg := ""
 	if exit != 0 {
 		msg = "exit " + strconv.Itoa(exit)
@@ -112,7 +109,7 @@ func (d *Docker) Cancel(ctx context.Context, h Handle) error {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	exit, err := DockerCLI(ctx, []string{"kill", h.RuntimeID}, discard(), discard())
+	exit, err := dockerCLI(ctx, []string{"kill", h.RuntimeID}, discard(), discard())
 	if err != nil {
 		return dockerErr(ctx, "docker kill", err)
 	}
@@ -176,7 +173,7 @@ func dockerRunArgs(job Job) []string {
 }
 
 func ensureImage(ctx context.Context, image string) error {
-	exit, err := DockerCLI(ctx, []string{"image", "inspect", image}, discard(), discard())
+	exit, err := dockerCLI(ctx, []string{"image", "inspect", image}, discard(), discard())
 	if err == nil && exit == 0 {
 		return nil
 	}
@@ -187,7 +184,7 @@ func ensureImage(ctx context.Context, image string) error {
 		return ctx.Err()
 	}
 	var buf bytes.Buffer
-	exit, err = DockerCLI(ctx, []string{"pull", image}, discard(), &buf)
+	exit, err = dockerCLI(ctx, []string{"pull", image}, discard(), &buf)
 	if err != nil {
 		return dockerErr(ctx, "docker pull", err)
 	}
@@ -203,7 +200,18 @@ func ensureImage(ctx context.Context, image string) error {
 
 func imageDigest(ctx context.Context, image string) string {
 	var buf bytes.Buffer
-	if exit, err := DockerCLI(ctx, []string{"image", "inspect", "--format", "{{.Id}}", image}, &buf, discard()); err != nil || exit != 0 {
+	if exit, err := dockerCLI(ctx, []string{"image", "inspect", "--format", "{{.Id}}", image}, &buf, discard()); err != nil || exit != 0 {
+		return ""
+	}
+	return strings.TrimSpace(buf.String())
+}
+
+func containerImageID(ctx context.Context, id string) string {
+	if id == "" {
+		return ""
+	}
+	var buf bytes.Buffer
+	if exit, err := dockerCLI(ctx, []string{"inspect", "--format", "{{.Image}}", id}, &buf, discard()); err != nil || exit != 0 {
 		return ""
 	}
 	return strings.TrimSpace(buf.String())
@@ -241,7 +249,7 @@ func dockerClientEnv(env map[string]string) []string {
 
 func inspectContainer(ctx context.Context, id string) (running bool, exit int, err error) {
 	var buf, errBuf bytes.Buffer
-	code, cliErr := DockerCLI(ctx, []string{"inspect", "--format", "{{.State.Running}} {{.State.ExitCode}}", id}, &buf, &errBuf)
+	code, cliErr := dockerCLI(ctx, []string{"inspect", "--format", "{{.State.Running}} {{.State.ExitCode}}", id}, &buf, &errBuf)
 	if cliErr != nil {
 		return false, -1, dockerErr(ctx, "docker inspect", cliErr)
 	}
@@ -267,7 +275,7 @@ func writeDockerLogs(ctx context.Context, h Handle) {
 	// need logs pass Isolate on Submit; Poll writes beside the volume by
 	// inspecting the container's first bind mount when possible.
 	var buf bytes.Buffer
-	if exit, err := DockerCLI(ctx, []string{"inspect", "--format", "{{range .Mounts}}{{if eq .Destination \"" + containerWorkDir + "\"}}{{.Source}}{{end}}{{end}}", h.RuntimeID}, &buf, discard()); err != nil || exit != 0 {
+	if exit, err := dockerCLI(ctx, []string{"inspect", "--format", "{{range .Mounts}}{{if eq .Destination \"" + containerWorkDir + "\"}}{{.Source}}{{end}}{{end}}", h.RuntimeID}, &buf, discard()); err != nil || exit != 0 {
 		return
 	}
 	src := strings.TrimSpace(buf.String())
@@ -284,35 +292,16 @@ func writeDockerLogs(ctx context.Context, h Handle) {
 		outf.Close()
 		return
 	}
-	_, _ = DockerCLI(ctx, []string{"logs", h.RuntimeID}, outf, errf)
+	_, _ = dockerCLI(ctx, []string{"logs", h.RuntimeID}, outf, errf)
 	outf.Close()
 	errf.Close()
 }
 
-func dockerRunCLI(ctx context.Context, args, env []string, stdout, stderr io.Writer) (int, error) {
-	dockerJobEnvMu.Lock()
-	prev := dockerJobEnv
-	dockerJobEnv = env
-	dockerJobEnvMu.Unlock()
-	defer func() {
-		dockerJobEnvMu.Lock()
-		dockerJobEnv = prev
-		dockerJobEnvMu.Unlock()
-	}()
-	return DockerCLI(ctx, args, stdout, stderr)
+func dockerCLI(ctx context.Context, args []string, stdout, stderr io.Writer) (int, error) {
+	return DockerCLI(ctx, args, nil, stdout, stderr)
 }
 
-func runDockerCLI(ctx context.Context, args []string, stdout, stderr io.Writer) (int, error) {
-	env := []string{"PATH=/usr/bin:/bin"}
-	dockerJobEnvMu.Lock()
-	if dockerJobEnv != nil {
-		env = append([]string(nil), dockerJobEnv...)
-	}
-	dockerJobEnvMu.Unlock()
-	return runDockerCLIEnv(ctx, args, env, stdout, stderr)
-}
-
-func runDockerCLIEnv(ctx context.Context, args, env []string, stdout, stderr io.Writer) (int, error) {
+func runDockerCLI(ctx context.Context, args, env []string, stdout, stderr io.Writer) (int, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}

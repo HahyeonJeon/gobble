@@ -93,6 +93,9 @@ func Check(req Request) []Defect {
 	if d := checkPlanPaths(req.Document); len(d) > 0 {
 		return d
 	}
+	if d := checkWaitPaths(req.Document); len(d) > 0 {
+		return d
+	}
 	if d := checkBackends(req.Document); len(d) > 0 {
 		return d
 	}
@@ -543,6 +546,21 @@ func escapeDefect(unit, path string) Defect {
 	}
 }
 
+func checkWaitPaths(doc Document) []Defect {
+	var defects []Defect
+	for _, e := range doc.Edges {
+		for _, p := range e.Wait {
+			if p == "" {
+				continue
+			}
+			if d := checkPlanPath(e.ToTask, p); d != nil {
+				defects = append(defects, *d)
+			}
+		}
+	}
+	return defects
+}
+
 func checkControlContainment(workspace string) []Defect {
 	abs, present, err := containedRel(workspace, ControlDir, false)
 	if err != nil {
@@ -569,6 +587,22 @@ func checkControlContainment(workspace string) []Defect {
 			Message: "path escapes directory",
 			Paths:   []string{ControlDir},
 		}}
+	}
+	children := []string{
+		ControlDir + "/" + RunIdentityFile,
+		ControlDir + "/" + PlanFile,
+		ControlDir + "/" + TasksFile,
+		ControlDir + "/" + occupyLockFile,
+		ControlDir + "/tasks",
+	}
+	for _, rel := range children {
+		if _, _, err := containedRel(workspace, rel, false); err != nil {
+			return []Defect{{
+				Code:    DefectInvalidPath,
+				Message: "path escapes directory",
+				Paths:   []string{rel},
+			}}
+		}
 	}
 	return nil
 }

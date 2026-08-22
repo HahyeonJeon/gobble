@@ -654,14 +654,18 @@ func (s *sched) upstreamReady(id string) bool {
 }
 
 func waitPathReady(workspace, path string) bool {
-	abs := workspaceFile(workspace, path)
+	abs, present, err := containedRel(workspace, path, true)
+	if err != nil || !present {
+		return false
+	}
 	if regularFile(abs) {
 		return true
 	}
 	if !isDir(abs) {
 		return false
 	}
-	return regularFile(filepath.Join(abs, treeManifestName))
+	man := filepath.Join(abs, treeManifestName)
+	return regularFile(man)
 }
 
 func (s *sched) succeededThisResume(ident string) bool {
@@ -747,8 +751,14 @@ func (s *sched) runJob(workspace string, task TaskPlan, ex exec.Executor, starts
 	applyReservedDefaults(&task)
 	ident := reservedIdentity(task)
 	rel := isolateRel(task)
-	isolate := filepath.Join(workspace, filepath.FromSlash(rel), "work")
+	workRel := rel + "/work"
+	isolate, _, err := containedRel(workspace, workRel, false)
 	r := report{ID: ident, Stdout: rel + "/stdout", Stderr: rel + "/stderr"}
+	if err != nil {
+		r.Message = err.Error()
+		reports <- r
+		return
+	}
 	if err := os.MkdirAll(isolate, 0o755); err != nil {
 		r.Message = err.Error()
 		reports <- r

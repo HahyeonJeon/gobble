@@ -19,7 +19,7 @@ const containerWorkDir = "/work"
 func TestEmptyImageNeverReachesDocker(t *testing.T) {
 	orig := gobexec.DockerCLI
 	t.Cleanup(func() { gobexec.DockerCLI = orig })
-	gobexec.DockerCLI = func(ctx context.Context, args []string, stdout, stderr io.Writer) (int, error) {
+	gobexec.DockerCLI = func(ctx context.Context, args []string, env []string, stdout, stderr io.Writer) (int, error) {
 		t.Fatalf("docker invoked for empty Image: %v", args)
 		return -1, errors.New("docker invoked")
 	}
@@ -58,7 +58,7 @@ func TestRunDockerUnparseableMemory(t *testing.T) {
 func TestDockerDaemonFailureNamed(t *testing.T) {
 	orig := gobexec.DockerCLI
 	t.Cleanup(func() { gobexec.DockerCLI = orig })
-	gobexec.DockerCLI = func(ctx context.Context, args []string, stdout, stderr io.Writer) (int, error) {
+	gobexec.DockerCLI = func(ctx context.Context, args []string, env []string, stdout, stderr io.Writer) (int, error) {
 		return -1, errors.New("Cannot connect to the Docker daemon")
 	}
 	dir := t.TempDir()

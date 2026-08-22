@@ -155,6 +155,31 @@ func TestClassifyReuseCheapKeysAndImageDigest(t *testing.T) {
 	}
 }
 
+func TestClassifyReuseEmptyExecIdentityMiss(t *testing.T) {
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "a.txt"), "reads")
+	writeCheckFile(t, filepath.Join(dir, "out", "a.txt"), "reads")
+	inRec := mustFileRecord(t, filepath.Join(dir, "in", "a.txt"), "in/a.txt")
+	outRec := mustFileRecord(t, filepath.Join(dir, "out", "a.txt"), "out/a.txt")
+	base := jsonTaskState{
+		ID:           "copy",
+		Status:       StatusSucceeded,
+		Command:      []string{"true"},
+		Fingerprints: []jsonFileHash{inRec},
+		Checksums:    []jsonFileHash{outRec},
+	}
+	plan := TaskPlan{
+		ID:      "copy",
+		Command: []string{"true"},
+		Inputs:  []IO{{Name: "in", Path: "in/a.txt"}},
+		Outputs: []IO{{Name: "out", Path: "out/a.txt"}},
+	}
+	got := classifyReuse(dir, base, plan, plan)
+	if got.Decision != reuseRerun || got.Reason != reasonImageChanged {
+		t.Fatalf("empty exec identity got %#v, want image-changed miss", got)
+	}
+}
+
 func stubImageID(t *testing.T, id string) {
 	t.Helper()
 	orig := lookupImageID

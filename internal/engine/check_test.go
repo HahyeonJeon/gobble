@@ -594,6 +594,40 @@ func TestCheckControlSymlinkInvalidPath(t *testing.T) {
 	}
 }
 
+func TestCheckControlChildSymlinkInvalidPath(t *testing.T) {
+	outside := t.TempDir()
+	sentinel := filepath.Join(outside, "sentinel")
+	if err := os.WriteFile(sentinel, []byte("outside"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	if err := os.Mkdir(filepath.Join(dir, ControlDir), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(sentinel, filepath.Join(dir, ControlDir, RunIdentityFile)); err != nil {
+		t.Fatal(err)
+	}
+	defects := Check(Request{
+		Workspace: dir,
+		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
+	})
+	found := false
+	for _, d := range defects {
+		if d.Code == DefectInvalidPath {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("control child symlink Check() defects %v, want invalid-path", defects)
+	}
+	got, err := os.ReadFile(sentinel)
+	if err != nil || string(got) != "outside" {
+		t.Fatalf("sentinel got %q, want outside", got)
+	}
+}
+
 func TestCheckMissingDestContainedAncestorOK(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")

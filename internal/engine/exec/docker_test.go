@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -119,10 +120,134 @@ func hasArgPair(args []string, flag, value string) bool {
 	return false
 }
 
+func TestDockerSubmitEnvIsCallScoped(t *testing.T) {
+	orig := DockerCLI
+	t.Cleanup(func() { DockerCLI = orig })
+	type rec struct {
+		args []string
+		env  []string
+	}
+	var mu sync.Mutex
+	var recs []rec
+	DockerCLI = func(ctx context.Context, args []string, env []string, stdout, stderr io.Writer) (int, error) {
+		cpArgs := append([]string(nil), args...)
+		cpEnv := append([]string(nil), env...)
+		mu.Lock()
+		recs = append(recs, rec{args: cpArgs, env: cpEnv})
+		mu.Unlock()
+		if len(args) > 0 && args[0] == "run" {
+			id := "cid-a"
+			for _, e := range env {
+				if strings.HasPrefix(e, "TOKEN=") {
+					id = "cid-" + strings.TrimPrefix(e, "TOKEN=")
+				}
+			}
+			_, _ = io.WriteString(stdout, id+"\n")
+			return 0, nil
+		}
+		if strings.Contains(strings.Join(args, " "), "{{.Image}}") {
+			_, _ = io.WriteString(stdout, "sha256:launched\n")
+			return 0, nil
+		}
+		if len(args) >= 1 && args[0] == "image" {
+			return 0, nil
+		}
+		return 0, nil
+	}
+	d := NewDocker()
+	var wg sync.WaitGroup
+	errc := make(chan error, 2)
+	jobs := []Job{
+		{Image: pinnedAlpine, Argv: []string{"true"}, Isolate: t.TempDir(), Env: map[string]string{"TOKEN": "alpha"}},
+		{Image: pinnedAlpine, Argv: []string{"true"}, Isolate: t.TempDir(), Env: map[string]string{"TOKEN": "beta"}},
+	}
+	for i := range jobs {
+		wg.Add(1)
+		go func(job Job) {
+			defer wg.Done()
+			_, _, err := d.Submit(context.Background(), job)
+			errc <- err
+		}(jobs[i])
+	}
+	wg.Wait()
+	close(errc)
+	for err := range errc {
+		if err != nil {
+			t.Fatalf("Submit() error = %v", err)
+		}
+	}
+	var runEnvs [][]string
+	mu.Lock()
+	for _, r := range recs {
+		if len(r.args) > 0 && r.args[0] == "run" {
+			runEnvs = append(runEnvs, r.env)
+			joined := strings.Join(r.args, " ")
+			if strings.Contains(joined, "alpha") || strings.Contains(joined, "beta") {
+				t.Fatalf("run argv contains env value: %v", r.args)
+			}
+		}
+	}
+	mu.Unlock()
+	if len(runEnvs) != 2 {
+		t.Fatalf("run calls got %d, want 2", len(runEnvs))
+	}
+	seen := map[string]bool{}
+	for _, env := range runEnvs {
+		hasA, hasB := contains(env, "TOKEN=alpha"), contains(env, "TOKEN=beta")
+		if hasA && hasB {
+			t.Fatalf("mixed env on one Submit: %v", env)
+		}
+		if hasA {
+			seen["alpha"] = true
+		}
+		if hasB {
+			seen["beta"] = true
+		}
+	}
+	if !seen["alpha"] || !seen["beta"] {
+		t.Fatalf("env vectors got %#v, want alpha and beta unmixed", runEnvs)
+	}
+}
+
+func TestDockerSubmitPersistsLaunchedContainerImage(t *testing.T) {
+	orig := DockerCLI
+	t.Cleanup(func() { DockerCLI = orig })
+	DockerCLI = func(ctx context.Context, args []string, env []string, stdout, stderr io.Writer) (int, error) {
+		joined := strings.Join(args, " ")
+		if strings.Contains(joined, "{{.Image}}") && strings.Contains(joined, "cid-launched") {
+			_, _ = io.WriteString(stdout, "sha256:launched-container\n")
+			return 0, nil
+		}
+		if strings.Contains(joined, "{{.Id}}") {
+			_, _ = io.WriteString(stdout, "sha256:authored-tag\n")
+			return 0, nil
+		}
+		if len(args) > 0 && args[0] == "run" {
+			_, _ = io.WriteString(stdout, "cid-launched\n")
+			return 0, nil
+		}
+		if len(args) >= 1 && args[0] == "image" {
+			return 0, nil
+		}
+		return 0, nil
+	}
+	_, rep, err := NewDocker().Submit(context.Background(), Job{
+		Image:   pinnedAlpine,
+		Argv:    []string{"true"},
+		Isolate: t.TempDir(),
+	})
+	if err != nil {
+		t.Fatalf("Submit() error = %v", err)
+	}
+	if rep.ImageDigest != "sha256:launched-container" {
+		t.Fatalf("ImageDigest got %q, want launched container id", rep.ImageDigest)
+	}
+}
+
 func TestDockerSubmitPreservesContextDeadline(t *testing.T) {
 	orig := DockerCLI
 	t.Cleanup(func() { DockerCLI = orig })
-	DockerCLI = func(ctx context.Context, args []string, stdout, stderr io.Writer) (int, error) {
+	DockerCLI = func(ctx context.Context, args []string, env []string, stdout, stderr io.Writer) (int, error) {
 		<-ctx.Done()
 		return -1, ctx.Err()
 	}
@@ -137,7 +262,7 @@ func TestDockerSubmitPreservesContextDeadline(t *testing.T) {
 func TestDockerSubmitKilledCLIReturnsContextErr(t *testing.T) {
 	orig := DockerCLI
 	t.Cleanup(func() { DockerCLI = orig })
-	DockerCLI = func(ctx context.Context, args []string, stdout, stderr io.Writer) (int, error) {
+	DockerCLI = func(ctx context.Context, args []string, env []string, stdout, stderr io.Writer) (int, error) {
 		<-ctx.Done()
 		return -1, nil
 	}
@@ -152,7 +277,7 @@ func TestDockerSubmitKilledCLIReturnsContextErr(t *testing.T) {
 func TestRunDockerCLICanceledContext(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	_, err := runDockerCLI(ctx, []string{"version"}, io.Discard, io.Discard)
+	_, err := runDockerCLI(ctx, []string{"version"}, nil, io.Discard, io.Discard)
 	if !errors.Is(err, context.Canceled) {
 		t.Fatalf("runDockerCLI() error = %v, want context.Canceled", err)
 	}
@@ -161,7 +286,7 @@ func TestRunDockerCLICanceledContext(t *testing.T) {
 func TestEmptyImageNeverInvokesDockerAdapter(t *testing.T) {
 	orig := DockerCLI
 	t.Cleanup(func() { DockerCLI = orig })
-	DockerCLI = func(ctx context.Context, args []string, stdout, stderr io.Writer) (int, error) {
+	DockerCLI = func(ctx context.Context, args []string, env []string, stdout, stderr io.Writer) (int, error) {
 		t.Fatalf("docker invoked for empty Image: %v", args)
 		return -1, nil
 	}

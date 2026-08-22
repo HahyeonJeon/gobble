@@ -288,7 +288,11 @@ func parseMemory(s string) (int64, bool) {
 	if bytes > float64(math.MaxInt64) {
 		return 0, false
 	}
-	return int64(bytes), true
+	n := int64(bytes)
+	if n == 0 && f > 0 {
+		return 0, false
+	}
+	return n, true
 }
 
 func bindUnit(taskID, port string) string {
