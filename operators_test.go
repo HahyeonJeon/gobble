@@ -796,6 +796,38 @@ func TestResumeTrueToFalseWhenSkips(t *testing.T) {
 	}
 }
 
+func TestResumeTrueToFalseWhenSkipsPreviouslyFailedDownstream(t *testing.T) {
+	dir := t.TempDir()
+	writeRunFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	g1 := mustCompose(func() *gobble.Pipeline {
+		return whenPredWithAfterCmd("run", []string{"false"})
+	})(t)
+	if err := gobble.Run(t.Context(), g1, dir, 0); err == nil {
+		t.Fatalf("Run() error = nil, want failed downstream")
+	}
+	if err := gobble.Release(dir); err != nil {
+		t.Fatalf("Release() error = %v", err)
+	}
+	g2, err := gobble.Compose(whenPredWithAfterCmd("keep", []string{"false"}))
+	if err != nil {
+		t.Fatalf("Compose() error = %v", err)
+	}
+	if err := gobble.Resume(t.Context(), g2, dir, 0); err != nil {
+		t.Fatalf("Resume() error = %v, want skipped downstream", err)
+	}
+	rawInst, err := gobble.Inspect(dir, gobble.ViewInstances, "")
+	if err != nil {
+		t.Fatalf("Inspect: %v", err)
+	}
+	got := inspectLatestByID(t, rawInst)
+	if got["opt.copy"].Status != engine.StatusSkipped || got["opt.copy"].Condition != "false-param" {
+		t.Fatalf("true-to-false When did not skip: %s", rawInst)
+	}
+	if got["after"].Status != engine.StatusSkipped {
+		t.Fatalf("failed downstream of skip stayed %q, want skipped: %s", got["after"].Status, rawInst)
+	}
+}
+
 func memberAttempt(raw []byte, key string) int {
 	var file struct {
 		Tasks []struct {
@@ -883,6 +915,10 @@ func inspectLatestByID(t *testing.T, raw []byte) map[string]inspectInstRec {
 }
 
 func whenPredWithAfter(skipParam string) *gobble.Pipeline {
+	return whenPredWithAfterCmd(skipParam, []string{"cp", "out/sample.txt", "out/after.txt"})
+}
+
+func whenPredWithAfterCmd(skipParam string, afterCmd []string) *gobble.Pipeline {
 	p := gobble.NewPipeline("when-pred")
 	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "sample", Ext: ".txt"})
 	copyTask := p.When("opt").SkipIfFalse(skipParam).AddTask(gobble.TaskSpec{
@@ -897,7 +933,7 @@ func whenPredWithAfter(skipParam string) *gobble.Pipeline {
 	})
 	p.AddTask(gobble.TaskSpec{
 		Name:    "after",
-		Command: []string{"cp", "out/sample.txt", "out/after.txt"},
+		Command: afterCmd,
 		Inputs:  []gobble.Bind{{Name: "in", From: copyTask.Out("out")}},
 		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "after", Ext: ".txt"}}},
 	})

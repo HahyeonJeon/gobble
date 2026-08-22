@@ -258,13 +258,14 @@ func occupyResume(req Request) (*sched, []Defect) {
 	if s.run.Started == "" {
 		s.run.Started = now
 	}
+	whenDown := whenRerunDescendants(doc, class.Decision)
 	for _, t := range doc.Tasks {
 		ident := reservedIdentity(t)
 		dec := class.Decision[ident]
 		if st, ok := byIdent[ident]; ok {
 			cp := st
 			cp.Change = dec.Change
-			if dec.Decision == reuseRerun && resumeNeedsFreshAttempt(t, st) {
+			if dec.Decision == reuseRerun && resumeNeedsFreshAttempt(t, st, whenDown[t.ID]) {
 				s.history = append(s.history, cp)
 				fresh := initialTask(t)
 				fresh.Attempt = st.Attempt + 1
@@ -338,14 +339,52 @@ func occupyResume(req Request) (*sched, []Defect) {
 	return s, nil
 }
 
-func resumeNeedsFreshAttempt(t TaskPlan, st jsonTaskState) bool {
+func resumeNeedsFreshAttempt(t TaskPlan, st jsonTaskState, whenDownstream bool) bool {
 	if isScatterTemplate(t) {
 		return false
 	}
 	if t.When != "" {
 		return true
 	}
-	return st.Status == StatusSucceeded || st.Status == StatusSkipped
+	if st.Status == StatusSucceeded || st.Status == StatusSkipped {
+		return true
+	}
+	if whenDownstream && (st.Status == StatusFailed || st.Status == StatusBlocked) {
+		return true
+	}
+	return false
+}
+
+func whenRerunDescendants(doc Document, decisions map[string]reuseDecision) map[string]bool {
+	seen := make(map[string]bool)
+	var stack []string
+	for _, t := range doc.Tasks {
+		if t.When == "" {
+			continue
+		}
+		ident := reservedIdentity(t)
+		if decisions[ident].Decision != reuseRerun {
+			continue
+		}
+		if !seen[t.ID] {
+			seen[t.ID] = true
+			stack = append(stack, t.ID)
+		}
+	}
+	out := make(map[string]bool)
+	for len(stack) > 0 {
+		id := stack[len(stack)-1]
+		stack = stack[:len(stack)-1]
+		for _, e := range doc.Edges {
+			if e.FromTask != id || e.ToTask == "" || seen[e.ToTask] {
+				continue
+			}
+			seen[e.ToTask] = true
+			out[e.ToTask] = true
+			stack = append(stack, e.ToTask)
+		}
+	}
+	return out
 }
 
 func unknownTaskUnits(tasks []jsonTaskState) []string {
