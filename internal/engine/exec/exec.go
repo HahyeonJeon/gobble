@@ -4,7 +4,10 @@
 // run.json, plan.json, or tasks.json.
 package exec
 
-import "io"
+import (
+	"context"
+	"io"
+)
 
 // Backend names recorded on a Handle.
 const (
@@ -43,11 +46,12 @@ type Report struct {
 }
 
 // Executor submits, observes, cancels, and reconciles backend jobs.
+// ctx bounds that one call. It is not a public occupancy Cancel verb.
 type Executor interface {
-	Submit(job Job) (Handle, Report, error)
-	Poll(h Handle) (Report, error)
-	Cancel(h Handle) error
-	Reconcile(h Handle) (Report, error)
+	Submit(ctx context.Context, job Job) (Handle, Report, error)
+	Poll(ctx context.Context, h Handle) (Report, error)
+	Cancel(ctx context.Context, h Handle) error
+	Reconcile(ctx context.Context, h Handle) (Report, error)
 }
 
 // Local selects process or docker by Image (R3). Empty Image is process.
@@ -63,20 +67,20 @@ type local struct {
 	docker  *Docker
 }
 
-func (l *local) Submit(job Job) (Handle, Report, error) {
-	return l.pickImage(job.Image).Submit(job)
+func (l *local) Submit(ctx context.Context, job Job) (Handle, Report, error) {
+	return l.pickImage(job.Image).Submit(ctx, job)
 }
 
-func (l *local) Poll(h Handle) (Report, error) {
-	return l.pickBackend(h.Backend).Poll(h)
+func (l *local) Poll(ctx context.Context, h Handle) (Report, error) {
+	return l.pickBackend(h.Backend).Poll(ctx, h)
 }
 
-func (l *local) Cancel(h Handle) error {
-	return l.pickBackend(h.Backend).Cancel(h)
+func (l *local) Cancel(ctx context.Context, h Handle) error {
+	return l.pickBackend(h.Backend).Cancel(ctx, h)
 }
 
-func (l *local) Reconcile(h Handle) (Report, error) {
-	return l.pickBackend(h.Backend).Reconcile(h)
+func (l *local) Reconcile(ctx context.Context, h Handle) (Report, error) {
+	return l.pickBackend(h.Backend).Reconcile(ctx, h)
 }
 
 func (l *local) pickImage(image string) Executor {

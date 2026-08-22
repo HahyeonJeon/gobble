@@ -11,7 +11,7 @@ import (
 func TestProcessCancelKillsGroup(t *testing.T) {
 	dir := t.TempDir()
 	p := NewProcess()
-	h, _, err := p.Submit(Job{
+	h, _, err := p.Submit(t.Context(), Job{
 		Identity: "sleep",
 		Isolate:  dir,
 		Argv:     []string{"sh", "-c", "sleep 30"},
@@ -26,12 +26,12 @@ func TestProcessCancelKillsGroup(t *testing.T) {
 	if err != nil || pid <= 0 {
 		t.Fatalf("runtime_id got %q, want pid", h.RuntimeID)
 	}
-	if err := p.Cancel(h); err != nil {
+	if err := p.Cancel(t.Context(), h); err != nil {
 		t.Fatalf("Cancel() error = %v", err)
 	}
 	deadline := time.Now().Add(2 * time.Second)
 	for time.Now().Before(deadline) {
-		r, err := p.Poll(h)
+		r, err := p.Poll(t.Context(), h)
 		if err != nil {
 			t.Fatalf("Poll() error = %v", err)
 		}
@@ -45,6 +45,20 @@ func TestProcessCancelKillsGroup(t *testing.T) {
 		time.Sleep(10 * time.Millisecond)
 	}
 	t.Fatal("process still running after cancel")
+}
+
+func TestProcessUnprovedPIDUnknown(t *testing.T) {
+	p := NewProcess()
+	h := Handle{Identity: "copy", Backend: BackendProcess, RuntimeID: "1"}
+	if err := p.Cancel(t.Context(), h); err == nil {
+		t.Fatal("Cancel unproved PID error = nil, want unproved")
+	}
+	if _, err := p.Poll(t.Context(), h); err == nil {
+		t.Fatal("Poll unproved PID error = nil, want unproved")
+	}
+	if _, err := p.Reconcile(t.Context(), h); err == nil {
+		t.Fatal("Reconcile unproved PID error = nil, want unproved")
+	}
 }
 
 func TestProcessEnvDefaultPATH(t *testing.T) {

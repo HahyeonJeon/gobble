@@ -2,8 +2,10 @@ package gobble_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
@@ -64,16 +66,30 @@ func TestReleaseTable(t *testing.T) {
 		err := gobble.Release(t.TempDir())
 		requireReleaseError(t, "missing run", err, gobble.DefectNotFound, "")
 	})
+	t.Run("occupying-process Release", func(t *testing.T) {
+		dir := readyRunWorkspace(t)
+		if err := gobble.Run(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0); err != nil {
+			t.Fatalf("Run() error = %v", err)
+		}
+		if err := gobble.Release(dir); err != nil {
+			t.Fatalf("occupying-process Release() error = %v", err)
+		}
+		if occupancySnapshot(t, dir) != "closed" {
+			t.Fatalf("occupancy got %s, want closed", occupancySnapshot(t, dir))
+		}
+	})
 	t.Run("live-occupancy", func(t *testing.T) {
 		dir := readyRunWorkspace(t)
 		if err := gobble.Run(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0); err != nil {
 			t.Fatalf("Run() error = %v", err)
 		}
+		gobble.ForgetHeldLease(dir)
 		err := gobble.Release(dir)
-		requireReleaseError(t, "live owner", err, gobble.DefectLiveOccupancy, "")
+		requireReleaseError(t, "later process", err, gobble.DefectLiveOccupancy, "")
 		if occupancySnapshot(t, dir) != "active" {
 			t.Fatalf("live Release closed occupancy")
 		}
+		gobble.DropHeldLease(dir)
 	})
 	t.Run("dead owner then already-released", func(t *testing.T) {
 		dir := readyRunWorkspace(t)
@@ -103,6 +119,43 @@ func TestReleaseTable(t *testing.T) {
 			t.Fatalf("foreign-host Release closed occupancy")
 		}
 	})
+}
+
+func TestConcurrentSetSampleSheetThenComposeRun(t *testing.T) {
+	var wg sync.WaitGroup
+	errs := make(chan error, 2)
+	for i := 0; i < 2; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			dir := readyRunWorkspace(t)
+			sheet := filepath.Join(dir, fmt.Sprintf("sheet-%d.csv", i))
+			body := fmt.Sprintf("sample,read1,read2\ns%d,reads/r1.fq,reads/r2.fq\n", i)
+			if err := os.WriteFile(sheet, []byte(body), 0o644); err != nil {
+				errs <- err
+				return
+			}
+			gobble.SetSampleSheetPath(sheet)
+			loaded, err := gobble.LoadSampleSheet()
+			if err != nil {
+				errs <- err
+				return
+			}
+			if loaded.Path != sheet || loaded.Rows[0].Sample != fmt.Sprintf("s%d", i) {
+				errs <- fmt.Errorf("sheet got path %q sample %q", loaded.Path, loaded.Rows[0].Sample)
+				return
+			}
+			g := mustCompose(processCopyPipeline)(t)
+			errs <- gobble.Run(t.Context(), g, dir, 0)
+		}(i)
+	}
+	wg.Wait()
+	close(errs)
+	for err := range errs {
+		if err != nil {
+			t.Fatalf("concurrent SetSampleSheetPath Compose/Run: %v", err)
+		}
+	}
 }
 
 func patchOccupancyHost(t *testing.T, dir, host string) {

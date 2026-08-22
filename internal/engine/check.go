@@ -156,7 +156,7 @@ func checkControlSchema(workspace string) []Defect {
 		}
 		return nil
 	}
-	return unsupportedControlSchema(workspace, run.SchemaVersion)
+	return unsupportedControlSchema(workspace, run)
 }
 
 func checkOccupied(workspace string) []Defect {

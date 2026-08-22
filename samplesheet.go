@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -14,7 +15,7 @@ import (
 )
 
 // DefaultSampleSheetPath is the process-cwd relative sheet used when
-// [SetSampleSheetPath] has not been called or was restored.
+// [SetSampleSheetPath] has not been called on this goroutine or was restored.
 const DefaultSampleSheetPath = "samplesheet.csv"
 
 const (
@@ -42,16 +43,14 @@ const (
 )
 
 var optionalCols = map[string]bool{
+	colRead2:        true,
 	colReference:    true,
 	colGTF:          true,
 	colGroup:        true,
 	colStrandedness: true,
 }
 
-var (
-	sampleSheetMu   sync.Mutex
-	sampleSheetPath string
-)
+var sampleSheetByG sync.Map
 
 // SampleRow is one samplesheet data row. Fields are the locked column
 // names. Empty optional cells are empty strings. The zero SampleRow is
@@ -73,28 +72,43 @@ type SampleSheet struct {
 	Rows []SampleRow
 }
 
-// SetSampleSheetPath stores path for this process. Empty or
+// SetSampleSheetPath stores path for the calling goroutine. Empty or
 // whitespace-only restores [DefaultSampleSheetPath]. The stored string
-// is copied.
+// is copied. Concurrent goroutines isolate. Process-global string is
+// not the contract.
 func SetSampleSheetPath(path string) {
-	sampleSheetMu.Lock()
-	defer sampleSheetMu.Unlock()
+	id := goroutineID()
 	if strings.TrimSpace(path) == "" {
-		sampleSheetPath = ""
+		sampleSheetByG.Delete(id)
 		return
 	}
-	sampleSheetPath = strings.Clone(path)
+	sampleSheetByG.Store(id, strings.Clone(path))
 }
 
-// SampleSheetPath returns the path stored by [SetSampleSheetPath], or
-// [DefaultSampleSheetPath] if never set or restored.
+// SampleSheetPath returns the path stored by [SetSampleSheetPath] on
+// this goroutine, or [DefaultSampleSheetPath] if never set or restored.
 func SampleSheetPath() string {
-	sampleSheetMu.Lock()
-	defer sampleSheetMu.Unlock()
-	if sampleSheetPath == "" {
+	v, ok := sampleSheetByG.Load(goroutineID())
+	if !ok {
 		return DefaultSampleSheetPath
 	}
-	return sampleSheetPath
+	s, _ := v.(string)
+	if s == "" {
+		return DefaultSampleSheetPath
+	}
+	return s
+}
+
+func goroutineID() uint64 {
+	var buf [32]byte
+	n := runtime.Stack(buf[:], false)
+	i := len("goroutine ")
+	var id uint64
+	for i < n && buf[i] >= '0' && buf[i] <= '9' {
+		id = id*10 + uint64(buf[i]-'0')
+		i++
+	}
+	return id
 }
 
 // LoadSampleSheet loads the sheet at [SampleSheetPath].
@@ -235,9 +249,7 @@ func parseSampleSheet(r io.Reader, path string) (*SampleSheet, error) {
 		} else if !validSheetPath(row.Read1) {
 			defects = append(defects, illegalSheetPath(row.Read1))
 		}
-		if row.Read2 == "" {
-			defects = append(defects, emptyRequiredCell(path, colRead2, rowNum))
-		} else if !validSheetPath(row.Read2) {
+		if row.Read2 != "" && !validSheetPath(row.Read2) {
 			defects = append(defects, illegalSheetPath(row.Read2))
 		}
 		if row.Reference != "" {
@@ -291,7 +303,7 @@ func headerIndex(header []string) (map[string]int, bool) {
 		}
 		seen[h] = true
 		switch h {
-		case colSample, colRead1, colRead2:
+		case colSample, colRead1:
 			idx[h] = i
 		default:
 			if optionalCols[h] {
@@ -301,7 +313,7 @@ func headerIndex(header []string) (map[string]int, bool) {
 			}
 		}
 	}
-	for _, req := range []string{colSample, colRead1, colRead2} {
+	for _, req := range []string{colSample, colRead1} {
 		if _, exists := idx[req]; !exists {
 			ok = false
 		}

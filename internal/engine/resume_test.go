@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -354,9 +355,9 @@ func TestResumeSequentialRerunWaitsForUpstreamDest(t *testing.T) {
 		[]string{"sh", "-c", "cp in/sample.txt out/a.txt"},
 		[]string{"sh", "-c", "cp out/a.txt out/b.txt"},
 	)
-	inner := runExecutor
+	inner := schedulerExecutor()
 	useExec(t, &fnExec{
-		submit: func(job exec.Job) (exec.Handle, exec.Report, error) {
+		submit: func(ctx context.Context, job exec.Job) (exec.Handle, exec.Report, error) {
 			if job.Identity == "b" {
 				got, err := os.ReadFile(filepath.Join(isolateWorkspace(job.Isolate), "out", "a.txt"))
 				if err != nil {
@@ -365,7 +366,7 @@ func TestResumeSequentialRerunWaitsForUpstreamDest(t *testing.T) {
 					t.Errorf("b saw a dest %q, want new", got)
 				}
 			}
-			return inner.Submit(job)
+			return inner.Submit(ctx, job)
 		},
 		poll:      inner.Poll,
 		cancel:    inner.Cancel,

@@ -89,6 +89,26 @@ func TestParseSampleSheetAllowsConstructorDeferredRules(t *testing.T) {
 	}
 }
 
+func TestParseSampleSheetEmptyRead2(t *testing.T) {
+	sheet, err := gobble.ParseSampleSheet(strings.NewReader("sample,read1,read2\ns1,reads/r1.fq,\n"))
+	if err != nil {
+		t.Fatalf("ParseSampleSheet() empty read2 error = %v, want nil", err)
+	}
+	got := sheet.Rows[0]
+	want := gobble.SampleRow{Sample: "s1", Read1: "reads/r1.fq"}
+	if got != want {
+		t.Fatalf("ParseSampleSheet() empty read2 row got %+v, want %+v", got, want)
+	}
+	sheet, err = gobble.ParseSampleSheet(strings.NewReader("sample,read1\ns1,reads/r1.fq\n"))
+	if err != nil {
+		t.Fatalf("ParseSampleSheet() omitted read2 header error = %v, want nil", err)
+	}
+	got = sheet.Rows[0]
+	if got != want {
+		t.Fatalf("ParseSampleSheet() omitted read2 row got %+v, want %+v", got, want)
+	}
+}
+
 func TestParseSampleSheetEmptyOptionalCells(t *testing.T) {
 	csv := "sample,read1,read2,reference,gtf,group,strandedness\ns1,reads/r1.fq,reads/r2.fq, ,\t,,\n"
 	sheet, err := gobble.ParseSampleSheet(strings.NewReader(csv))
@@ -155,7 +175,7 @@ func TestParseSampleSheetReject(t *testing.T) {
 		},
 		{
 			name:    "missing required header",
-			csv:     "sample,read1\ns1,reads/r1.fq\n",
+			csv:     "sample,read2\ns1,reads/r2.fq\n",
 			code:    gobble.DefectInvalidSampleSheet,
 			unit:    "samplesheet",
 			message: "samplesheet is malformed",
@@ -191,14 +211,6 @@ func TestParseSampleSheetReject(t *testing.T) {
 			code:    gobble.DefectInvalidSampleSheet,
 			unit:    "samplesheet",
 			message: "required cell is empty: read1 row 2",
-			path:    "<reader>",
-		},
-		{
-			name:    "empty read2",
-			csv:     "sample,read1,read2\ns1,reads/r1.fq,\n",
-			code:    gobble.DefectInvalidSampleSheet,
-			unit:    "samplesheet",
-			message: "required cell is empty: read2 row 2",
 			path:    "<reader>",
 		},
 		{

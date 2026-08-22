@@ -104,6 +104,7 @@ type Plan struct {
 
 type jsonPlan struct {
 	SchemaVersion int        `json:"schema_version,omitempty"`
+	Snapshot      string     `json:"snapshot,omitempty"`
 	Pipeline      string     `json:"pipeline"`
 	Tasks         []jsonTask `json:"tasks"`
 	DAG           jsonDAG    `json:"dag"`
@@ -219,16 +220,17 @@ func (p *Plan) MarshalJSON() ([]byte, error) {
 }
 
 func marshalPlan(doc Document) ([]byte, error) {
-	return encodePlan(doc, SchemaVersion, false)
+	return encodePlan(doc, SchemaVersion, false, "")
 }
 
-func marshalControlPlan(doc Document) ([]byte, error) {
-	return encodePlan(doc, SchemaVersion, true)
+func marshalControlPlan(doc Document, snapshot string) ([]byte, error) {
+	return encodePlan(doc, SchemaVersion, true, snapshot)
 }
 
-func encodePlan(doc Document, schema int, includeInputEdges bool) ([]byte, error) {
+func encodePlan(doc Document, schema int, includeInputEdges bool, snapshot string) ([]byte, error) {
 	jp := jsonPlan{
 		SchemaVersion: schema,
+		Snapshot:      snapshot,
 		Pipeline:      doc.Name,
 		Tasks:         make([]jsonTask, 0, len(doc.Tasks)),
 		DAG: jsonDAG{

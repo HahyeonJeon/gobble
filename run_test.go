@@ -66,7 +66,7 @@ func TestPreflightRefuse(t *testing.T) {
   "schema_version": 2,
   "id": "run-1",
   "status": "running",
-  "occupancy": {"active": true, "host": "h", "pid": 1}
+  "occupancy": {"active": true, "host": "h", "pid": 1, "lease": "lease"}
 }
 `)
 				return mustCompose(runCopyPipeline)(t), dir, 0
@@ -181,7 +181,7 @@ func TestPreflightOccupiedNotOutputExists(t *testing.T) {
   "schema_version": 2,
   "id": "run-1",
   "status": "running",
-  "occupancy": {"active": true, "host": "h", "pid": 1}
+  "occupancy": {"active": true, "host": "h", "pid": 1, "lease": "lease"}
 }
 `)
 	err := gobble.Preflight(mustCompose(runCopyPipeline)(t), dir, 0)

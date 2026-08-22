@@ -115,8 +115,8 @@ func TestRunPersistsIdentityFacts(t *testing.T) {
 	if run.SchemaVersion != SchemaVersion {
 		t.Fatalf("run schema_version got %d, want %d", run.SchemaVersion, SchemaVersion)
 	}
-	if run.Occupancy == nil || !run.Occupancy.Active || run.Occupancy.PID != os.Getpid() {
-		t.Fatalf("run occupancy got %#v, want active this pid", run.Occupancy)
+	if run.Occupancy == nil || !run.Occupancy.Active || run.Occupancy.PID != os.Getpid() || run.Occupancy.Lease == "" {
+		t.Fatalf("run occupancy got %#v, want active this pid with lease", run.Occupancy)
 	}
 	host, err := currentHost()
 	if err != nil {
@@ -302,6 +302,7 @@ func closedRunJSON(id string) string {
 
 func forceDeadOwner(t *testing.T, workspace string) {
 	t.Helper()
+	DropHeldLease(workspace)
 	path := filepath.Join(workspace, ControlDir, RunIdentityFile)
 	data, err := os.ReadFile(path)
 	if err != nil {

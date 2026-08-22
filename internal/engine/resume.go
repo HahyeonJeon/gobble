@@ -63,7 +63,7 @@ func checkResume(req Request) []Defect {
 			Paths:   []string{ControlDir + "/" + RunIdentityFile},
 		}}
 	}
-	if d := unsupportedControlSchema(req.Workspace, run.SchemaVersion); len(d) > 0 {
+	if d := unsupportedControlSchema(req.Workspace, run); len(d) > 0 {
 		return d
 	}
 	recorded, hasPlan, d := readInspectPlan(req.Workspace)
@@ -77,6 +77,9 @@ func checkResume(req Request) []Defect {
 	tasks, d := readInspectTasks(req.Workspace)
 	if len(d) > 0 {
 		return d
+	}
+	if unknown := unknownTaskUnits(tasks); len(unknown) > 0 {
+		return unknownBackendDefects(unknown)
 	}
 	class := classifyResume(req.Workspace, recordedDoc, req.Document, tasks)
 	return checkResumeOutputs(req.Workspace, req.Document, tasks, class)
@@ -149,7 +152,7 @@ func destPublished(tasks []jsonTaskState, ident, path string) bool {
 			continue
 		}
 		switch st.Status {
-		case StatusSucceeded, StatusFailed, StatusIncomplete, StatusRunning:
+		case StatusSucceeded, StatusFailed, StatusIncomplete, StatusRunning, StatusUnknown:
 		default:
 			continue
 		}
@@ -196,7 +199,22 @@ func occupyResume(req Request) (*sched, []Defect) {
 	if len(d) > 0 {
 		return nil, d
 	}
-	doc := req.Document
+	if unknown := unknownTaskUnits(tasks); len(unknown) > 0 {
+		return nil, unknownBackendDefects(unknown)
+	}
+	root := workspaceFile(req.Workspace, ControlDir)
+	lock, defects := claimOccupy(root)
+	if len(defects) > 0 {
+		return nil, defects
+	}
+	if current, found, err := readRunIdentity(req.Workspace); err != nil {
+		lock.Close()
+		return nil, pathDefects(err)
+	} else if found && occupancyIsActive(current) {
+		lock.Close()
+		return nil, occupiedDefect()
+	}
+	doc := cloneDocument(req.Document)
 	for i := range doc.Tasks {
 		applyReservedDefaults(&doc.Tasks[i])
 	}
@@ -206,11 +224,16 @@ func occupyResume(req Request) (*sched, []Defect) {
 	for _, st := range latest {
 		byIdent[reservedIdentity(taskPlanFromState(st))] = st
 	}
+	lease := newOccupancyID()
+	snapshot := newOccupancyID()
+	ex := schedulerExecutor()
 	s := &sched{
 		workspace: req.Workspace,
 		doc:       doc,
+		snapshot:  snapshot,
 		run: jsonRun{
 			SchemaVersion: SchemaVersion,
+			Snapshot:      snapshot,
 			ID:            existing.ID,
 			Status:        StatusRunning,
 			Started:       existing.Started,
@@ -218,6 +241,7 @@ func occupyResume(req Request) (*sched, []Defect) {
 				Active:  true,
 				Host:    host,
 				PID:     os.Getpid(),
+				Lease:   lease,
 				Started: now,
 			},
 		},
@@ -226,7 +250,7 @@ func occupyResume(req Request) (*sched, []Defect) {
 		resume:   class.Decision,
 		launched: make(map[string]bool),
 		budget:   newBudget(readHostCapacity()),
-		exec:     runExecutor,
+		exec:     ex,
 	}
 	if s.run.ID == "" {
 		s.run.ID = runID(doc)
@@ -265,29 +289,27 @@ func occupyResume(req Request) (*sched, []Defect) {
 		}
 		s.history = append(s.history, cp)
 	}
-	root := workspaceFile(req.Workspace, ControlDir)
-	lock, defects := claimOccupy(root)
-	if len(defects) > 0 {
-		return nil, defects
-	}
-	defer lock.Close()
-	if current, found, err := readRunIdentity(req.Workspace); err != nil {
-		return nil, pathDefects(err)
-	} else if found && occupancyIsActive(current) {
-		return nil, occupiedDefect()
-	}
-	plan, err := marshalControlPlan(doc)
-	if err != nil {
+	if err := s.writeControl(); err != nil {
+		lock.Close()
 		return nil, pathDefects(err)
 	}
-	if err := writeAtomic(workspaceFile(req.Workspace, ControlDir+"/"+PlanFile), plan); err != nil {
-		return nil, pathDefects(err)
-	}
-	if err := s.writeTasks(); err != nil {
-		return nil, pathDefects(err)
-	}
-	if err := s.writeRun(); err != nil {
-		return nil, pathDefects(err)
-	}
+	retainLease(req.Workspace, lock, ex)
 	return s, nil
+}
+
+func unknownTaskUnits(tasks []jsonTaskState) []string {
+	var units []string
+	seen := map[string]bool{}
+	for _, st := range latestAttempts(tasks) {
+		if st.Status != StatusUnknown {
+			continue
+		}
+		ident := reservedIdentity(taskPlanFromState(st))
+		if seen[ident] {
+			continue
+		}
+		seen[ident] = true
+		units = append(units, ident)
+	}
+	return units
 }

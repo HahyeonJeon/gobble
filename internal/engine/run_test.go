@@ -969,12 +969,12 @@ func TestRunWaitUsesPlanPathsOnly(t *testing.T) {
 		t.Fatalf("wait-only launched %v, want align and index", got)
 	}
 
-	runExecutor = blockingExec(doc.Tasks, func(workspace string, task TaskPlan) report {
+	useExec(t, blockingExec(doc.Tasks, func(workspace string, task TaskPlan) report {
 		mu.Lock()
 		launched = append(launched, task.ID)
 		mu.Unlock()
 		return report{ID: task.ID, Published: true}
-	})
+	}))
 	launched = nil
 	dir = t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "missing-to-port.txt"), "unused")

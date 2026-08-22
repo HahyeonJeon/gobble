@@ -31,11 +31,14 @@ func TestReleaseAlreadyReleased(t *testing.T) {
 
 func TestReleaseLiveOccupancy(t *testing.T) {
 	dir := t.TempDir()
-	host, err := currentHost()
-	if err != nil {
-		t.Fatal(err)
+	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	if defects := Run(t.Context(), Request{
+		Workspace: dir,
+		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
+	}); len(defects) != 0 {
+		t.Fatalf("Run() defects %v, want none", defects)
 	}
-	writeOccupancy(t, dir, jsonOccupancy{Active: true, Host: host, PID: os.Getpid(), Started: "2026-01-01T00:00:00Z"})
+	ForgetHeldLease(dir)
 	before := snapshotDir(t, dir)
 	defects := Release(dir)
 	if !hasDefect(defects, DefectLiveOccupancy, "") {
@@ -45,11 +48,46 @@ func TestReleaseLiveOccupancy(t *testing.T) {
 	if before != after {
 		t.Fatalf("live-occupancy mutated workspace")
 	}
+	DropHeldLease(dir)
+}
+
+func TestReleaseOccupyingProcessAfterRun(t *testing.T) {
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	if defects := Run(t.Context(), Request{
+		Workspace: dir,
+		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
+	}); len(defects) != 0 {
+		t.Fatalf("Run() defects %v, want none", defects)
+	}
+	if defects := Release(dir); len(defects) != 0 {
+		t.Fatalf("occupying-process Release() defects %v, want none", defects)
+	}
+	run, exists, err := readRunIdentity(dir)
+	if err != nil || !exists {
+		t.Fatalf("run.json exists=%v err=%v", exists, err)
+	}
+	if occupancyIsActive(run) {
+		t.Fatal("occupancy still active after occupying-process Release")
+	}
+}
+
+func TestReleasePIDOnlyUnsupported(t *testing.T) {
+	dir := t.TempDir()
+	host, err := currentHost()
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeOccupancy(t, dir, jsonOccupancy{Active: true, Host: host, PID: os.Getpid(), Started: "2026-01-01T00:00:00Z"})
+	defects := Release(dir)
+	if !hasDefect(defects, DefectUnsupportedSchema, "") {
+		t.Fatalf("PID-only Release() defects %v, want unsupported-schema", defects)
+	}
 }
 
 func TestReleaseForeignHost(t *testing.T) {
 	dir := t.TempDir()
-	writeOccupancy(t, dir, jsonOccupancy{Active: true, Host: "other-host", PID: deadPID(t), Started: "2026-01-01T00:00:00Z"})
+	writeOccupancy(t, dir, jsonOccupancy{Active: true, Host: "other-host", PID: deadPID(t), Lease: "lease", Started: "2026-01-01T00:00:00Z"})
 	before := snapshotDir(t, dir)
 	defects := Release(dir)
 	if !hasDefect(defects, DefectForeignHost, "") {
@@ -82,13 +120,13 @@ func TestReleaseUnsupportedSchema(t *testing.T) {
 	}
 }
 
-func TestReleaseDeadOwnerMarksIncomplete(t *testing.T) {
+func TestReleaseDeadOwnerEmptyRuntimeIDKeepsUnknown(t *testing.T) {
 	dir := t.TempDir()
 	host, err := currentHost()
 	if err != nil {
 		t.Fatal(err)
 	}
-	writeOccupancy(t, dir, jsonOccupancy{Active: true, Host: host, PID: deadPID(t), Started: "2026-01-01T00:00:00Z"})
+	writeOccupancy(t, dir, jsonOccupancy{Active: true, Host: host, PID: deadPID(t), Lease: "lease", Started: "2026-01-01T00:00:00Z"})
 	writeCheckFile(t, filepath.Join(dir, "out", "keep.txt"), "keep")
 	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), `{
   "schema_version": 2,
@@ -110,11 +148,9 @@ func TestReleaseDeadOwnerMarksIncomplete(t *testing.T) {
   ]
 }
 `)
-	if defects := Release(dir); len(defects) != 0 {
-		t.Fatalf("Release() defects %v, want none", defects)
-	}
-	if _, err := os.Stat(filepath.Join(dir, ControlDir, RunIdentityFile)); err != nil {
-		t.Fatalf("Release deleted run.json: %v", err)
+	defects := Release(dir)
+	if !hasDefect(defects, DefectUnknownBackend, "copy") {
+		t.Fatalf("Release() defects %v, want unknown-backend", defects)
 	}
 	if _, err := os.ReadFile(filepath.Join(dir, "out", "keep.txt")); err != nil {
 		t.Fatalf("Release deleted artifact: %v", err)
@@ -123,24 +159,12 @@ func TestReleaseDeadOwnerMarksIncomplete(t *testing.T) {
 	if err != nil || !exists {
 		t.Fatalf("run.json exists=%v err=%v", exists, err)
 	}
-	if run.SchemaVersion != SchemaVersion {
-		t.Fatalf("released schema_version got %d, want %d", run.SchemaVersion, SchemaVersion)
-	}
-	if occupancyIsActive(run) {
-		t.Fatalf("occupancy still active after Release")
-	}
-	if run.Occupancy == nil || run.Occupancy.Closed == "" {
-		t.Fatalf("missing close audit: %#v", run.Occupancy)
-	}
-	if run.Status != StatusFailed {
-		t.Fatalf("run status got %q, want failed", run.Status)
+	if !occupancyIsActive(run) {
+		t.Fatal("later-process Release closed occupancy for running with empty runtime_id")
 	}
 	st := taskStates(t, dir)["copy"]
-	if st.Status != StatusIncomplete {
-		t.Fatalf("copy status got %q, want incomplete", st.Status)
-	}
-	if st.Ended == "" {
-		t.Fatal("incomplete task end empty")
+	if st.Status != StatusUnknown {
+		t.Fatalf("copy status got %q, want unknown", st.Status)
 	}
 }
 
@@ -176,7 +200,7 @@ func TestReleaseMarksIncompleteWithSlots(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	writeOccupancy(t, dir, jsonOccupancy{Active: true, Host: host, PID: deadPID(t), Started: "2026-01-01T00:00:00Z"})
+	writeOccupancy(t, dir, jsonOccupancy{Active: true, Host: host, PID: deadPID(t), Lease: "lease", Started: "2026-01-01T00:00:00Z"})
 	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), `{
   "schema_version": 2,
   "tasks": [
@@ -209,8 +233,9 @@ func TestReleaseMarksIncompleteWithSlots(t *testing.T) {
   ]
 }
 `)
-	if defects := Release(dir); len(defects) != 0 {
-		t.Fatalf("Release() defects %v, want none", defects)
+	defects := Release(dir)
+	if !hasDefect(defects, DefectUnknownBackend, "copy") {
+		t.Fatalf("Release() defects %v, want unknown-backend for running without runtime_id", defects)
 	}
 	raw := mustJSONFile(t, filepath.Join(dir, ControlDir, TasksFile))
 	var file jsonTasksFile
@@ -231,8 +256,8 @@ func TestReleaseMarksIncompleteWithSlots(t *testing.T) {
 				st.ID, st.Instance, st.ShardIndex, st.ShardCount, st.Attempt)
 		}
 	}
-	if byID["copy"].Status != StatusIncomplete {
-		t.Fatalf("copy status got %q, want incomplete", byID["copy"].Status)
+	if byID["copy"].Status != StatusUnknown {
+		t.Fatalf("copy status got %q, want unknown", byID["copy"].Status)
 	}
 	if byID["ok"].Status != StatusSucceeded {
 		t.Fatalf("ok status got %q, want succeeded", byID["ok"].Status)

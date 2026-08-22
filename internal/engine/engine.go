@@ -40,6 +40,7 @@ const (
 	DefectUnsupportedSchema  = "unsupported-schema"
 	DefectNothingToResume    = "nothing-to-resume"
 	DefectCanceled           = "canceled"
+	DefectUnknownBackend     = "unknown-backend"
 )
 
 // SchemaVersion is the control-document version this engine writes.

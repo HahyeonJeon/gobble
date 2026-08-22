@@ -3,9 +3,12 @@ package engine
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
+	"sync/atomic"
 	"time"
 
 	"github.com/HahyeonJeon/gobble/internal/engine/exec"
@@ -25,6 +28,7 @@ const (
 	StatusFailed     = "failed"
 	StatusBlocked    = "blocked"
 	StatusIncomplete = "incomplete"
+	StatusUnknown    = "unknown"
 )
 
 const (
@@ -34,8 +38,41 @@ const (
 
 const pollInterval = 20 * time.Millisecond
 
-// runExecutor is the scheduler-to-backend seam. Tests replace it.
-var runExecutor exec.Executor = exec.Local()
+const defaultCompletionBound = 30 * time.Second
+
+var errEngineBound = errors.New("engine bound")
+
+// completionBoundNanos is the Engine ceiling on each Submit/Poll/Cancel/Reconcile
+// call that has not returned a known disposition. Tests may shorten it.
+// It is not a public timeout API.
+var completionBoundNanos atomic.Int64
+
+func init() {
+	setCompletionBound(defaultCompletionBound)
+}
+
+func setCompletionBound(d time.Duration) {
+	completionBoundNanos.Store(int64(d))
+}
+
+func currentBound() time.Duration {
+	n := completionBoundNanos.Load()
+	if n <= 0 {
+		return defaultCompletionBound
+	}
+	return time.Duration(n)
+}
+
+// runExecutor is an optional test seam. Nil means each occupy creates
+// its own Local executor.
+var runExecutor exec.Executor
+
+func schedulerExecutor() exec.Executor {
+	if runExecutor != nil {
+		return runExecutor
+	}
+	return exec.Local()
+}
 
 // Run occupies workspace after Check, schedules doc, and returns when
 // no more independent work can start. A nil result means every task
@@ -64,6 +101,7 @@ type sched struct {
 	workspace string
 	doc       Document
 	run       jsonRun
+	snapshot  string
 	tasks     map[string]*jsonTaskState
 	history   []jsonTaskState
 	resume    map[string]reuseDecision
@@ -114,6 +152,7 @@ func (b *resourceBudget) release(t TaskPlan) {
 
 type jsonRun struct {
 	SchemaVersion int            `json:"schema_version"`
+	Snapshot      string         `json:"snapshot,omitempty"`
 	ID            string         `json:"id"`
 	Status        string         `json:"status"`
 	Started       string         `json:"started"`
@@ -159,6 +198,7 @@ type jsonTaskErr struct {
 
 type jsonTasksFile struct {
 	SchemaVersion int             `json:"schema_version"`
+	Snapshot      string          `json:"snapshot,omitempty"`
 	Tasks         []jsonTaskState `json:"tasks"`
 }
 
@@ -168,15 +208,32 @@ func occupy(req Request) (*sched, []Defect) {
 	if err != nil {
 		return nil, pathDefects(err)
 	}
-	doc := req.Document
+	root := filepath.Join(req.Workspace, ControlDir)
+	lock, defects := claimOccupy(root)
+	if len(defects) > 0 {
+		return nil, defects
+	}
+	if existing, exists, err := readRunIdentity(req.Workspace); err != nil {
+		lock.Close()
+		return nil, pathDefects(err)
+	} else if exists && occupancyIsActive(existing) {
+		lock.Close()
+		return nil, occupiedDefect()
+	}
+	doc := cloneDocument(req.Document)
 	for i := range doc.Tasks {
 		applyReservedDefaults(&doc.Tasks[i])
 	}
+	lease := newOccupancyID()
+	snapshot := newOccupancyID()
+	ex := schedulerExecutor()
 	s := &sched{
 		workspace: req.Workspace,
 		doc:       doc,
+		snapshot:  snapshot,
 		run: jsonRun{
 			SchemaVersion: SchemaVersion,
+			Snapshot:      snapshot,
 			ID:            runID(doc),
 			Status:        StatusRunning,
 			Started:       now,
@@ -184,41 +241,23 @@ func occupy(req Request) (*sched, []Defect) {
 				Active:  true,
 				Host:    host,
 				PID:     os.Getpid(),
+				Lease:   lease,
 				Started: now,
 			},
 		},
 		tasks:  make(map[string]*jsonTaskState, len(doc.Tasks)),
 		budget: newBudget(readHostCapacity()),
-		exec:   runExecutor,
+		exec:   ex,
 	}
 	for _, t := range doc.Tasks {
 		st := initialTask(t)
 		s.tasks[reservedIdentity(t)] = &st
 	}
-	root := filepath.Join(req.Workspace, ControlDir)
-	lock, defects := claimOccupy(root)
-	if len(defects) > 0 {
-		return nil, defects
-	}
-	defer lock.Close()
-	if existing, exists, err := readRunIdentity(req.Workspace); err != nil {
-		return nil, pathDefects(err)
-	} else if exists && occupancyIsActive(existing) {
-		return nil, occupiedDefect()
-	}
-	plan, err := marshalControlPlan(doc)
-	if err != nil {
+	if err := s.writeControl(); err != nil {
+		lock.Close()
 		return nil, pathDefects(err)
 	}
-	if err := writeAtomic(filepath.Join(root, PlanFile), plan); err != nil {
-		return nil, pathDefects(err)
-	}
-	if err := s.writeTasks(); err != nil {
-		return nil, pathDefects(err)
-	}
-	if err := s.writeRun(); err != nil {
-		return nil, pathDefects(err)
-	}
+	retainLease(req.Workspace, lock, ex)
 	return s, nil
 }
 
@@ -271,6 +310,7 @@ type report struct {
 	Published   bool
 	RuntimeID   string
 	ImageDigest string
+	Unknown     bool
 }
 
 type startEvent struct {
@@ -283,7 +323,7 @@ func (s *sched) executor() exec.Executor {
 	if s.exec != nil {
 		return s.exec
 	}
-	return runExecutor
+	return schedulerExecutor()
 }
 
 func (s *sched) loop(ctx context.Context, n int) []Defect {
@@ -294,11 +334,23 @@ func (s *sched) loop(ctx context.Context, n int) []Defect {
 	starts := make(chan startEvent, n)
 	running := 0
 	handles := make(map[string]exec.Handle)
+	inflight := make(map[string]bool)
 	canceled := false
+	finishIdent := func(ident string) {
+		if !inflight[ident] {
+			return
+		}
+		delete(inflight, ident)
+		delete(handles, ident)
+		running--
+	}
 	cancelInFlight := func() {
 		canceled = true
-		for _, h := range handles {
-			_ = s.executor().Cancel(h)
+		for ident, h := range handles {
+			if err := boundedCancel(s.executor(), h); err != nil {
+				s.markUnknown(ident, err.Error())
+				finishIdent(ident)
+			}
 		}
 	}
 	for {
@@ -311,6 +363,7 @@ func (s *sched) loop(ctx context.Context, n int) []Defect {
 				break
 			}
 			s.launch(id, starts, reports)
+			inflight[id] = true
 			running++
 		}
 		if running == 0 {
@@ -319,38 +372,55 @@ func (s *sched) loop(ctx context.Context, n int) []Defect {
 		if canceled {
 			select {
 			case st := <-starts:
+				if !inflight[st.ident] {
+					continue
+				}
 				handles[st.ident] = st.handle
 				s.persistStart(st)
-				_ = s.executor().Cancel(st.handle)
+				if err := boundedCancel(s.executor(), st.handle); err != nil {
+					s.markUnknown(st.ident, err.Error())
+					finishIdent(st.ident)
+				}
 			case r := <-reports:
-				running--
-				delete(handles, r.ID)
-				s.markIncomplete(r.ID)
+				if !inflight[r.ID] {
+					continue
+				}
+				finishIdent(r.ID)
+				if r.Unknown {
+					s.markUnknown(r.ID, r.Message)
+				} else {
+					s.markIncomplete(r.ID)
+				}
 			}
 			continue
 		}
 		select {
 		case st := <-starts:
+			if !inflight[st.ident] {
+				continue
+			}
 			handles[st.ident] = st.handle
 			s.persistStart(st)
 		case r := <-reports:
-			running--
-			delete(handles, r.ID)
+			if !inflight[r.ID] {
+				continue
+			}
+			finishIdent(r.ID)
 			s.apply(r)
 		case <-ctx.Done():
 			cancelInFlight()
 		}
 	}
 	if canceled {
-		s.notePersist(s.writeTasks())
-		s.notePersist(s.writeRun())
-		return []Defect{{
-			Code:    DefectCanceled,
-			Message: "canceled",
-		}}
+		s.syncUnknown()
+		s.notePersist(s.persistControl())
+		out := s.cancelDefects()
+		if unknown := s.unknownUnits(); len(unknown) > 0 {
+			out = append(out, unknownBackendDefects(unknown)...)
+		}
+		return out
 	}
 	s.assignBlockedUpstream()
-	s.notePersist(s.writeTasks())
 	s.finish()
 	return s.failures()
 }
@@ -360,11 +430,17 @@ func (s *sched) persistStart(st startEvent) {
 	if task == nil {
 		return
 	}
+	if st.handle.RuntimeID == "" || st.sub.RuntimeID == "" {
+		s.markUnknown(st.ident, "empty runtime id")
+		return
+	}
+	task.Status = StatusRunning
+	task.Reason = "ready"
 	task.RuntimeID = st.sub.RuntimeID
 	if st.sub.ImageDigest != "" {
 		task.ImageDigest = st.sub.ImageDigest
 	}
-	s.notePersist(s.writeTasks())
+	s.notePersist(s.persistControl())
 }
 
 func (s *sched) markIncomplete(ident string) {
@@ -380,36 +456,73 @@ func (s *sched) markIncomplete(ident string) {
 	if st.Ended == "" {
 		st.Ended = time.Now().UTC().Format(time.RFC3339Nano)
 	}
-	s.notePersist(s.writeTasks())
+	s.notePersist(s.persistControl())
+}
+
+func (s *sched) markUnknown(ident, message string) {
+	st := s.tasks[ident]
+	if st == nil {
+		return
+	}
+	if st.Status != StatusUnknown {
+		if task, ok := s.taskByIdent(ident); ok && st.Status == StatusRunning {
+			s.budget.release(task)
+		}
+	}
+	st.Status = StatusUnknown
+	st.Reason = "unknown-backend"
+	if message != "" {
+		st.Error = &jsonTaskErr{Unit: ident, Message: message}
+	}
+	if st.Ended == "" {
+		st.Ended = time.Now().UTC().Format(time.RFC3339Nano)
+	}
+	s.syncUnknown()
+	s.notePersist(s.persistControl())
 }
 
 func (s *sched) reapLive() {
 	ex := s.executor()
 	for ident, st := range s.tasks {
-		if st == nil || st.RuntimeID == "" {
+		if st == nil {
 			continue
 		}
-		if st.Status != StatusRunning && st.Status != StatusIncomplete {
+		if st.Status != StatusRunning && st.Status != StatusIncomplete && st.Status != StatusUnknown {
 			continue
 		}
-		backend := st.Executor
-		if backend == "" {
-			if st.Image != "" {
-				backend = executorDocker
-			} else {
-				backend = executorProcess
+		h, ok := backendHandle(s.workspace, ident, st)
+		if !ok {
+			if st.Status == StatusUnknown {
+				continue
 			}
+			continue
 		}
-		h := exec.Handle{Identity: ident, Backend: backend, RuntimeID: st.RuntimeID}
-		r, _ := ex.Reconcile(h)
+		r, err := boundedReconcile(ex, h)
+		if err != nil {
+			s.markUnknown(ident, err.Error())
+			continue
+		}
 		if r.Running {
-			_ = ex.Cancel(h)
+			if err := boundedCancel(ex, h); err != nil {
+				s.markUnknown(ident, err.Error())
+				continue
+			}
+			stopped := false
 			for {
-				pr, _ := ex.Poll(h)
+				pr, perr := boundedPoll(ex, h)
+				if perr != nil {
+					s.markUnknown(ident, perr.Error())
+					stopped = true
+					break
+				}
 				if !pr.Running {
+					stopped = true
 					break
 				}
 				time.Sleep(pollInterval)
+			}
+			if !stopped || (s.tasks[ident] != nil && s.tasks[ident].Status == StatusUnknown) {
+				continue
 			}
 		}
 		if st.Status == StatusRunning {
@@ -420,7 +533,43 @@ func (s *sched) reapLive() {
 			}
 		}
 	}
-	s.notePersist(s.writeTasks())
+	s.syncUnknown()
+	s.notePersist(s.persistControl())
+}
+
+func backendHandle(workspace, ident string, st *jsonTaskState) (exec.Handle, bool) {
+	backend := st.Executor
+	if backend == "" {
+		if st.Image != "" {
+			backend = executorDocker
+		} else {
+			backend = executorProcess
+		}
+	}
+	if st.RuntimeID != "" {
+		return exec.Handle{Identity: ident, Backend: backend, RuntimeID: st.RuntimeID}, true
+	}
+	h, sub, ok := awaitLateSubmit(workspace, ident)
+	if !ok {
+		return exec.Handle{}, false
+	}
+	if sub.RuntimeID != "" {
+		st.RuntimeID = sub.RuntimeID
+	}
+	if h.Backend == "" {
+		h.Backend = backend
+	}
+	if h.Identity == "" {
+		h.Identity = ident
+	}
+	return h, true
+}
+
+func boundedReconcile(ex exec.Executor, h exec.Handle) (exec.Report, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), currentBound())
+	defer cancel()
+	r, err := ex.Reconcile(ctx, h)
+	return r, boundCallErrAfter(ctx, err)
 }
 
 func (s *sched) nextReady() string {
@@ -567,9 +716,10 @@ func (s *sched) launch(ident string, starts chan startEvent, reports chan report
 		s.beginResumeAttempt(ident)
 	}
 	st := s.tasks[ident]
-	st.Status = StatusRunning
-	st.Reason = "ready"
+	st.Status = StatusUnknown
+	st.Reason = "unknown-backend"
 	st.Started = time.Now().UTC().Format(time.RFC3339Nano)
+	st.RuntimeID = ""
 	task, _ := s.taskByIdent(ident)
 	if st != nil {
 		task.Attempt = st.Attempt
@@ -581,7 +731,7 @@ func (s *sched) launch(ident string, starts chan startEvent, reports chan report
 		task.Replace = true
 	}
 	s.budget.occupy(task)
-	s.notePersist(s.writeTasks())
+	s.notePersist(s.persistControl())
 	ws := s.workspace
 	ex := s.executor()
 	go func() {
@@ -614,9 +764,18 @@ func (s *sched) runJob(workspace string, task TaskPlan, ex exec.Executor, starts
 		CPU:      task.Resources.CPU,
 		Memory:   task.Resources.Memory,
 	}
-	h, sub, err := ex.Submit(job)
+	h, sub, err := boundedSubmit(workspace, ex, job)
 	if err != nil {
 		r.Message = err.Error()
+		if errors.Is(err, errEngineBound) {
+			r.Unknown = true
+		}
+		reports <- r
+		return
+	}
+	if h.RuntimeID == "" || sub.RuntimeID == "" {
+		r.Unknown = true
+		r.Message = "empty runtime id"
 		reports <- r
 		return
 	}
@@ -624,8 +783,9 @@ func (s *sched) runJob(workspace string, task TaskPlan, ex exec.Executor, starts
 	r.ImageDigest = sub.ImageDigest
 	starts <- startEvent{ident: ident, handle: h, sub: sub}
 	for {
-		pr, perr := ex.Poll(h)
+		pr, perr := boundedPoll(ex, h)
 		if perr != nil {
+			r.Unknown = true
 			r.Message = perr.Error()
 			reports <- r
 			return
@@ -819,6 +979,14 @@ func (s *sched) apply(r report) {
 		st.ImageDigest = r.ImageDigest
 	}
 	st.Ended = time.Now().UTC().Format(time.RFC3339Nano)
+	if r.Unknown {
+		st.Status = StatusUnknown
+		st.Reason = "unknown-backend"
+		st.Error = &jsonTaskErr{Unit: r.ID, Message: r.Message}
+		s.syncUnknown()
+		s.notePersist(s.persistControl())
+		return
+	}
 	if r.Published && r.Exit == 0 && r.Message == "" {
 		st.Status = StatusSucceeded
 		st.Reason = "ready"
@@ -840,7 +1008,7 @@ func (s *sched) apply(r report) {
 		st.Error = &jsonTaskErr{Unit: unit, Message: msg}
 		s.blockFrom(r.ID)
 	}
-	s.notePersist(s.writeTasks())
+	s.notePersist(s.persistControl())
 }
 
 func (s *sched) recordSuccess(st *jsonTaskState, task TaskPlan) error {
@@ -889,6 +1057,12 @@ func (s *sched) blockFrom(ident string) {
 }
 
 func (s *sched) finish() {
+	s.syncUnknown()
+	if len(s.unknownUnits()) > 0 {
+		s.run.Status = StatusUnknown
+		s.notePersist(s.persistControl())
+		return
+	}
 	s.run.Ended = time.Now().UTC().Format(time.RFC3339Nano)
 	s.run.Status = StatusSucceeded
 	for _, t := range s.doc.Tasks {
@@ -899,7 +1073,7 @@ func (s *sched) finish() {
 		s.run.Status = StatusFailed
 		break
 	}
-	s.notePersist(s.writeRun())
+	s.notePersist(s.persistControl())
 }
 
 func (s *sched) notePersist(err error) {
@@ -923,6 +1097,12 @@ func (s *sched) failures() []Defect {
 		switch st.Status {
 		case StatusSucceeded, StatusBlocked:
 			continue
+		case StatusUnknown:
+			out = append(out, Defect{
+				Code:    DefectUnknownBackend,
+				Unit:    reservedIdentity(t),
+				Message: "unknown backend",
+			})
 		case StatusNotStarted:
 			out = append(out, Defect{
 				Code:    DefectFailed,
@@ -950,6 +1130,39 @@ func (s *sched) failures() []Defect {
 	return out
 }
 
+func (s *sched) persistControl() error {
+	s.snapshot = newOccupancyID()
+	s.run.Snapshot = s.snapshot
+	s.run.SchemaVersion = SchemaVersion
+	if err := s.writePlan(); err != nil {
+		return err
+	}
+	if err := s.writeTasks(); err != nil {
+		return err
+	}
+	return s.writeRun()
+}
+
+func (s *sched) writeControl() error {
+	s.run.Snapshot = s.snapshot
+	s.run.SchemaVersion = SchemaVersion
+	if err := s.writePlan(); err != nil {
+		return err
+	}
+	if err := s.writeTasks(); err != nil {
+		return err
+	}
+	return s.writeRun()
+}
+
+func (s *sched) writePlan() error {
+	plan, err := marshalControlPlan(s.doc, s.snapshot)
+	if err != nil {
+		return err
+	}
+	return writeAtomic(filepath.Join(s.workspace, ControlDir, PlanFile), plan)
+}
+
 func (s *sched) writeRun() error {
 	data, err := json.MarshalIndent(s.run, "", "  ")
 	if err != nil {
@@ -961,6 +1174,7 @@ func (s *sched) writeRun() error {
 func (s *sched) writeTasks() error {
 	doc := jsonTasksFile{
 		SchemaVersion: SchemaVersion,
+		Snapshot:      s.snapshot,
 		Tasks:         make([]jsonTaskState, 0, len(s.history)+len(s.doc.Tasks)),
 	}
 	doc.Tasks = append(doc.Tasks, s.history...)
@@ -974,6 +1188,78 @@ func (s *sched) writeTasks() error {
 		return err
 	}
 	return writeAtomic(filepath.Join(s.workspace, ControlDir, TasksFile), append(data, '\n'))
+}
+
+func (s *sched) syncUnknown() {
+	units := s.unknownUnits()
+	if s.run.Occupancy == nil {
+		return
+	}
+	s.run.Occupancy.Unknown = units
+}
+
+func (s *sched) unknownUnits() []string {
+	var units []string
+	seen := map[string]bool{}
+	for _, t := range s.doc.Tasks {
+		ident := reservedIdentity(t)
+		st := s.tasks[ident]
+		if st != nil && st.Status == StatusUnknown && !seen[ident] {
+			units = append(units, ident)
+			seen[ident] = true
+		}
+	}
+	sort.Strings(units)
+	return units
+}
+
+func (s *sched) cancelDefects() []Defect {
+	return []Defect{{
+		Code:    DefectCanceled,
+		Message: "canceled",
+	}}
+}
+
+func boundCallErr(err error) error {
+	if err == nil {
+		return nil
+	}
+	if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
+		return errEngineBound
+	}
+	return err
+}
+
+func boundCallErrAfter(ctx context.Context, err error) error {
+	if err == nil {
+		return nil
+	}
+	if ctx.Err() != nil {
+		return errEngineBound
+	}
+	return boundCallErr(err)
+}
+
+func boundedSubmit(workspace string, ex exec.Executor, job exec.Job) (exec.Handle, exec.Report, error) {
+	ls := registerLateSubmit(workspace, job.Identity)
+	ctx, cancel := context.WithTimeout(context.Background(), currentBound())
+	defer cancel()
+	h, r, err := ex.Submit(ctx, job)
+	finishLateSubmit(ls, h, r, err)
+	return h, r, boundCallErrAfter(ctx, err)
+}
+
+func boundedPoll(ex exec.Executor, h exec.Handle) (exec.Report, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), currentBound())
+	defer cancel()
+	r, err := ex.Poll(ctx, h)
+	return r, boundCallErrAfter(ctx, err)
+}
+
+func boundedCancel(ex exec.Executor, h exec.Handle) error {
+	ctx, cancel := context.WithTimeout(context.Background(), currentBound())
+	defer cancel()
+	return boundCallErrAfter(ctx, ex.Cancel(ctx, h))
 }
 
 func writeAtomic(path string, data []byte) error {

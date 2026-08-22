@@ -127,7 +127,7 @@ func TestCheckRefuse(t *testing.T) {
   "schema_version": 2,
   "id": "run-1",
   "status": "running",
-  "occupancy": {"active": true, "host": "h", "pid": 1}
+  "occupancy": {"active": true, "host": "h", "pid": 1, "lease": "lease"}
 }
 `)
 				return Request{
@@ -386,7 +386,7 @@ func TestCheckOccupiedNotOutputExists(t *testing.T) {
   "schema_version": 2,
   "id": "run-1",
   "status": "running",
-  "occupancy": {"active": true, "host": "h", "pid": 1}
+  "occupancy": {"active": true, "host": "h", "pid": 1, "lease": "lease"}
 }
 `)
 	defects := Check(Request{

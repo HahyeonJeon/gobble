@@ -829,8 +829,10 @@ func markCopyRunning(t *testing.T, dir string) {
 	for _, raw := range tasks {
 		st, _ := raw.(map[string]any)
 		if st["id"] == "copy" {
-			st["status"] = engine.StatusRunning
-			st["ended"] = ""
+			st["status"] = engine.StatusIncomplete
+			st["ended"] = "2026-01-01T00:00:01Z"
+			st["runtime_id"] = ""
+			st["reason"] = "released"
 		}
 	}
 	out, err := json.MarshalIndent(doc, "", "  ")

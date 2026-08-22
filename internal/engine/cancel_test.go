@@ -17,18 +17,18 @@ func TestRunContextCancelPersistsIncomplete(t *testing.T) {
 	var once syncClose
 	var cancelCalled atomic.Bool
 	useExec(t, &fnExec{
-		submit: func(job exec.Job) (exec.Handle, exec.Report, error) {
+		submit: func(ctx context.Context, job exec.Job) (exec.Handle, exec.Report, error) {
 			once.do(submitted)
 			h := exec.Handle{Identity: job.Identity, Backend: exec.BackendProcess, RuntimeID: "9"}
 			return h, exec.Report{Identity: job.Identity, RuntimeID: "9", Running: true}, nil
 		},
-		poll: func(h exec.Handle) (exec.Report, error) {
+		poll: func(ctx context.Context, h exec.Handle) (exec.Report, error) {
 			if cancelCalled.Load() {
 				return exec.Report{Identity: h.Identity, RuntimeID: h.RuntimeID, Running: false, Exit: -1, Message: "killed"}, nil
 			}
 			return exec.Report{Identity: h.Identity, RuntimeID: h.RuntimeID, Running: true}, nil
 		},
-		cancel: func(h exec.Handle) error {
+		cancel: func(ctx context.Context, h exec.Handle) error {
 			cancelCalled.Store(true)
 			return nil
 		},
@@ -94,20 +94,20 @@ func TestResumeReconcileLiveCancelsIncomplete(t *testing.T) {
 	var cancelCalled atomic.Bool
 	var canceledID string
 	useExec(t, &fnExec{
-		submit: func(job exec.Job) (exec.Handle, exec.Report, error) {
+		submit: func(ctx context.Context, job exec.Job) (exec.Handle, exec.Report, error) {
 			writeCheckFile(t, filepath.Join(isolateWorkspace(job.Isolate), "out", "sample.txt"), "reads")
 			h := exec.Handle{Identity: job.Identity, Backend: exec.BackendProcess, RuntimeID: "2"}
 			return h, exec.Report{Identity: job.Identity, RuntimeID: "2", Running: true}, nil
 		},
-		poll: func(h exec.Handle) (exec.Report, error) {
+		poll: func(ctx context.Context, h exec.Handle) (exec.Report, error) {
 			return exec.Report{Identity: h.Identity, RuntimeID: h.RuntimeID, Running: false, Published: true}, nil
 		},
-		cancel: func(h exec.Handle) error {
+		cancel: func(ctx context.Context, h exec.Handle) error {
 			cancelCalled.Store(true)
 			canceledID = h.RuntimeID
 			return nil
 		},
-		reconcile: func(h exec.Handle) (exec.Report, error) {
+		reconcile: func(ctx context.Context, h exec.Handle) (exec.Report, error) {
 			if h.RuntimeID == "99" && !cancelCalled.Load() {
 				return exec.Report{Identity: h.Identity, RuntimeID: h.RuntimeID, Running: true}, nil
 			}

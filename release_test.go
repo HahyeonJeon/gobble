@@ -23,12 +23,8 @@ func TestReleaseLiveAndDeadOwner(t *testing.T) {
 	if err := gobble.Run(t.Context(), g, dir, 0); err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
-	err := gobble.Release(dir)
-	requireReleaseError(t, "live owner", err, gobble.DefectLiveOccupancy, "")
-
-	forcePublicDeadOwner(t, dir)
 	if err := gobble.Release(dir); err != nil {
-		t.Fatalf("Release() error = %v, want nil", err)
+		t.Fatalf("occupying-process Release() error = %v, want nil", err)
 	}
 	if _, statErr := os.Stat(filepath.Join(dir, engine.ControlDir, engine.RunIdentityFile)); statErr != nil {
 		t.Fatalf("Release deleted run.json: %v", statErr)
@@ -37,7 +33,7 @@ func TestReleaseLiveAndDeadOwner(t *testing.T) {
 		t.Fatalf("Release deleted dest: %v", statErr)
 	}
 
-	err = gobble.Release(dir)
+	err := gobble.Release(dir)
 	requireReleaseError(t, "already released", err, gobble.DefectAlreadyReleased, "")
 
 	err = gobble.Run(t.Context(), g, dir, 0)
@@ -79,6 +75,7 @@ func requireReleaseError(t *testing.T, name string, err error, code gobble.Defec
 
 func forcePublicDeadOwner(t *testing.T, workspace string) {
 	t.Helper()
+	gobble.DropHeldLease(workspace)
 	path := filepath.Join(workspace, engine.ControlDir, engine.RunIdentityFile)
 	data, err := os.ReadFile(path)
 	if err != nil {

@@ -1,6 +1,7 @@
 package exec
 
 import (
+	"context"
 	"errors"
 	"os"
 	osexec "os/exec"
@@ -29,7 +30,13 @@ func NewProcess() *Process {
 }
 
 // Submit starts argv in Isolate with declared Env only.
-func (p *Process) Submit(job Job) (Handle, Report, error) {
+func (p *Process) Submit(ctx context.Context, job Job) (Handle, Report, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if err := ctx.Err(); err != nil {
+		return Handle{}, Report{}, err
+	}
 	if len(job.Argv) == 0 {
 		return Handle{}, Report{}, errors.New("empty command")
 	}
@@ -82,14 +89,22 @@ func (p *Process) Submit(job Job) (Handle, Report, error) {
 }
 
 // Poll reports whether the process has exited.
-func (p *Process) Poll(h Handle) (Report, error) {
+func (p *Process) Poll(ctx context.Context, h Handle) (Report, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if err := ctx.Err(); err != nil {
+		return Report{}, err
+	}
 	p.mu.Lock()
 	pr, ok := p.live[h.RuntimeID]
 	p.mu.Unlock()
 	if !ok {
-		return p.Reconcile(h)
+		return Report{}, errors.New("unproved process identity")
 	}
 	select {
+	case <-ctx.Done():
+		return Report{}, ctx.Err()
 	case <-pr.done:
 		msg := ""
 		if pr.err != nil {
@@ -109,32 +124,45 @@ func (p *Process) Poll(h Handle) (Report, error) {
 	}
 }
 
-// Cancel kills the job's process group.
-func (p *Process) Cancel(h Handle) error {
-	pid, err := strconv.Atoi(h.RuntimeID)
-	if err != nil || pid <= 0 {
-		return nil
+// Cancel kills the job's process group when the PID is proved to be
+// this adapter's Gobble job.
+func (p *Process) Cancel(ctx context.Context, h Handle) error {
+	if ctx == nil {
+		ctx = context.Background()
 	}
-	_ = syscall.Kill(-pid, syscall.SIGKILL)
-	_ = syscall.Kill(pid, syscall.SIGKILL)
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	p.mu.Lock()
+	pr, ok := p.live[h.RuntimeID]
+	p.mu.Unlock()
+	if !ok || pr == nil || pr.cmd == nil || pr.cmd.Process == nil {
+		return errors.New("unproved process identity")
+	}
+	pid := pr.cmd.Process.Pid
+	err1 := syscall.Kill(-pid, syscall.SIGKILL)
+	err2 := syscall.Kill(pid, syscall.SIGKILL)
+	if err1 != nil && !errors.Is(err1, syscall.ESRCH) && err2 != nil && !errors.Is(err2, syscall.ESRCH) {
+		return err2
+	}
 	return nil
 }
 
-// Reconcile uses in-memory wait state, then pid liveness.
-func (p *Process) Reconcile(h Handle) (Report, error) {
+// Reconcile uses in-memory wait state. An unproved PID is unknown.
+func (p *Process) Reconcile(ctx context.Context, h Handle) (Report, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if err := ctx.Err(); err != nil {
+		return Report{}, err
+	}
 	p.mu.Lock()
 	_, ok := p.live[h.RuntimeID]
 	p.mu.Unlock()
-	if ok {
-		return p.Poll(h)
+	if !ok {
+		return Report{}, errors.New("unproved process identity")
 	}
-	pid, err := strconv.Atoi(h.RuntimeID)
-	if err != nil || pid <= 0 {
-		return Report{Identity: h.Identity, RuntimeID: h.RuntimeID, Running: false}, nil
-	}
-	err = syscall.Kill(pid, 0)
-	live := err == nil || errors.Is(err, syscall.EPERM)
-	return Report{Identity: h.Identity, RuntimeID: h.RuntimeID, Running: live}, nil
+	return p.Poll(ctx, h)
 }
 
 func processEnv(env map[string]string) []string {

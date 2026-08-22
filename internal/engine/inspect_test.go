@@ -41,7 +41,7 @@ func TestInspectNoFingerprintsAffectsDownstream(t *testing.T) {
 			Wait:     []string{"out/a.txt"},
 		}},
 	}
-	plan, err := marshalControlPlan(doc)
+	plan, err := marshalControlPlan(doc, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -137,7 +137,7 @@ func TestInspectRemainingInstanceUsesFullSet(t *testing.T) {
 			Wait:     []string{"out/a.txt"},
 		}},
 	}
-	plan, err := marshalControlPlan(doc)
+	plan, err := marshalControlPlan(doc, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -297,7 +297,7 @@ func TestInspectReuseViewEmptyWithoutDecisions(t *testing.T) {
 
 func TestInspectLogTailBounded(t *testing.T) {
 	dir := t.TempDir()
-	writeOccupancy(t, dir, jsonOccupancy{Active: true, Host: "h", PID: 1})
+	writeOccupancy(t, dir, jsonOccupancy{Active: true, Host: "h", PID: 1, Lease: "lease"})
 	rel := isolateRel(TaskPlan{ID: "copy", Attempt: 1})
 	body := strings.Repeat("x", inspectLogTail+64)
 	writeCheckFile(t, filepath.Join(dir, filepath.FromSlash(rel), "stdout"), body)

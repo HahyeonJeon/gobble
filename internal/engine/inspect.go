@@ -23,8 +23,8 @@ const (
 )
 
 // Inspect returns one read-only view of workspace. It does not occupy,
-// create, or rewrite control files. Each control file is one atomic
-// snapshot; cross-file combinations may be mid-update.
+// create, or rewrite control files. Control files that do not share a
+// completed snapshot identity are refused as not a coherent view.
 func Inspect(workspace, view, instance string) ([]byte, []Defect) {
 	if d := inspectWorkspace(workspace); len(d) > 0 {
 		return nil, d
@@ -40,17 +40,21 @@ func Inspect(workspace, view, instance string) ([]byte, []Defect) {
 	if len(d) > 0 {
 		return nil, d
 	}
-	if d := unsupportedControlSchema(workspace, run.SchemaVersion); len(d) > 0 {
+	if d := unsupportedControlSchema(workspace, run); len(d) > 0 {
 		return nil, d
 	}
 	plan, hasPlan, d := readInspectPlan(workspace)
 	if len(d) > 0 {
 		return nil, d
 	}
-	tasks, d := readInspectTasks(workspace)
+	taskFile, hasTasks, d := readInspectTasksFile(workspace)
 	if len(d) > 0 {
 		return nil, d
 	}
+	if d := coherentSnapshots(run, plan, hasPlan, taskFile, hasTasks); len(d) > 0 {
+		return nil, d
+	}
+	tasks := taskFile.Tasks
 	doc := Document{}
 	if hasPlan {
 		doc = documentFromPlan(plan)
@@ -62,7 +66,7 @@ func Inspect(workspace, view, instance string) ([]byte, []Defect) {
 	}
 	switch view {
 	case viewRun:
-		return marshalInspect(inspectRunView(run))
+		return marshalInspect(inspectRunView(workspace, run, tasks))
 	case viewInstances:
 		return marshalJSONL(inspectInstanceRecords(selected, doc, run.SchemaVersion))
 	case viewErrors:
@@ -160,23 +164,65 @@ func readInspectPlan(workspace string) (jsonPlan, bool, []Defect) {
 }
 
 func readInspectTasks(workspace string) ([]jsonTaskState, []Defect) {
+	file, _, d := readInspectTasksFile(workspace)
+	return file.Tasks, d
+}
+
+func readInspectTasksFile(workspace string) (jsonTasksFile, bool, []Defect) {
 	path := filepath.Join(workspace, ControlDir, TasksFile)
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, nil
+			return jsonTasksFile{}, false, nil
 		}
-		return nil, pathDefects(err)
+		return jsonTasksFile{}, false, pathDefects(err)
 	}
 	var file jsonTasksFile
 	if err := json.Unmarshal(data, &file); err != nil {
-		return nil, []Defect{{
+		return jsonTasksFile{}, false, []Defect{{
 			Code:    DefectInvalidPath,
 			Message: "tasks are not usable",
 			Paths:   []string{ControlDir + "/" + TasksFile},
 		}}
 	}
-	return file.Tasks, nil
+	return file, true, nil
+}
+
+func coherentSnapshots(run jsonRun, plan jsonPlan, hasPlan bool, tasks jsonTasksFile, hasTasks bool) []Defect {
+	snaps := []string{run.Snapshot}
+	if hasPlan {
+		snaps = append(snaps, plan.Snapshot)
+	}
+	if hasTasks {
+		snaps = append(snaps, tasks.Snapshot)
+	}
+	var saw string
+	any := false
+	empty := false
+	for _, s := range snaps {
+		if s == "" {
+			empty = true
+			continue
+		}
+		any = true
+		if saw == "" {
+			saw = s
+		} else if s != saw {
+			return snapshotDefect()
+		}
+	}
+	if any && empty {
+		return snapshotDefect()
+	}
+	return nil
+}
+
+func snapshotDefect() []Defect {
+	return []Defect{{
+		Code:    DefectInvalidPath,
+		Message: "control snapshot is not coherent",
+		Paths:   []string{ControlDir},
+	}}
 }
 
 func selectLatest(tasks []jsonTaskState, instance string) ([]jsonTaskState, []Defect) {
@@ -201,6 +247,7 @@ type inspectRunDoc struct {
 	Status        string           `json:"status"`
 	SchemaVersion int              `json:"schema_version"`
 	Occupancy     inspectOccupancy `json:"occupancy"`
+	Unknown       bool             `json:"unknown,omitempty"`
 	Started       string           `json:"started"`
 	Ended         string           `json:"ended,omitempty"`
 }
@@ -214,7 +261,7 @@ type inspectOccupancy struct {
 	Live    bool   `json:"live"`
 }
 
-func inspectRunView(run jsonRun) inspectRunDoc {
+func inspectRunView(workspace string, run jsonRun, tasks []jsonTaskState) inspectRunDoc {
 	occ := inspectOccupancy{Active: occupancyIsActive(run)}
 	if run.Occupancy != nil {
 		occ.Host = run.Occupancy.Host
@@ -222,26 +269,20 @@ func inspectRunView(run jsonRun) inspectRunDoc {
 		occ.Started = run.Occupancy.Started
 		occ.Closed = run.Occupancy.Closed
 	}
-	occ.Live = ownerLooksLive(run)
+	occ.Live = occupancyIsActive(run) && ownerLive(workspace)
+	unknown := len(unknownTaskUnits(tasks)) > 0
+	if run.Occupancy != nil && len(run.Occupancy.Unknown) > 0 {
+		unknown = true
+	}
 	return inspectRunDoc{
 		ID:            run.ID,
 		Status:        run.Status,
 		SchemaVersion: run.SchemaVersion,
 		Occupancy:     occ,
+		Unknown:       unknown,
 		Started:       run.Started,
 		Ended:         run.Ended,
 	}
-}
-
-func ownerLooksLive(run jsonRun) bool {
-	if !occupancyIsActive(run) || run.Occupancy == nil {
-		return false
-	}
-	host, err := currentHost()
-	if err != nil {
-		return false
-	}
-	return run.Occupancy.Host == host && pidExists(run.Occupancy.PID)
 }
 
 type inspectInstanceDoc struct {

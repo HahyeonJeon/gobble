@@ -63,6 +63,10 @@ const (
 	// DefectCanceled means Run or Resume stopped because its context
 	// was done. Occupancy stays active.
 	DefectCanceled DefectCode = "canceled"
+	// DefectUnknownBackend means Submit, Poll, Cancel, or Reconcile
+	// left a reserved identity's disposition unproved. Occupancy stays
+	// active and Resume does not occupy while any identity is unknown.
+	DefectUnknownBackend DefectCode = "unknown-backend"
 )
 
 // Defect is one named failure inside an [Error].

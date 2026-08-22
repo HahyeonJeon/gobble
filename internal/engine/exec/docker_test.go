@@ -1,6 +1,8 @@
 package exec
 
 import (
+	"context"
+	"errors"
 	"io"
 	"os"
 	"strconv"
@@ -97,24 +99,63 @@ func hasArgPair(args []string, flag, value string) bool {
 	return false
 }
 
+func TestDockerSubmitPreservesContextDeadline(t *testing.T) {
+	orig := DockerCLI
+	t.Cleanup(func() { DockerCLI = orig })
+	DockerCLI = func(ctx context.Context, args []string, stdout, stderr io.Writer) (int, error) {
+		<-ctx.Done()
+		return -1, ctx.Err()
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Millisecond)
+	defer cancel()
+	_, _, err := NewDocker().Submit(ctx, Job{Image: pinnedAlpine, Argv: []string{"true"}, Isolate: t.TempDir()})
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("Submit() error = %v, want context.DeadlineExceeded", err)
+	}
+}
+
+func TestDockerSubmitKilledCLIReturnsContextErr(t *testing.T) {
+	orig := DockerCLI
+	t.Cleanup(func() { DockerCLI = orig })
+	DockerCLI = func(ctx context.Context, args []string, stdout, stderr io.Writer) (int, error) {
+		<-ctx.Done()
+		return -1, nil
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Millisecond)
+	defer cancel()
+	_, _, err := NewDocker().Submit(ctx, Job{Image: pinnedAlpine, Argv: []string{"true"}, Isolate: t.TempDir()})
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("Submit() killed CLI error = %v, want context.DeadlineExceeded", err)
+	}
+}
+
+func TestRunDockerCLICanceledContext(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	_, err := runDockerCLI(ctx, []string{"version"}, io.Discard, io.Discard)
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("runDockerCLI() error = %v, want context.Canceled", err)
+	}
+}
+
 func TestEmptyImageNeverInvokesDockerAdapter(t *testing.T) {
 	orig := DockerCLI
 	t.Cleanup(func() { DockerCLI = orig })
-	DockerCLI = func(args []string, stdout, stderr io.Writer) (int, error) {
+	DockerCLI = func(ctx context.Context, args []string, stdout, stderr io.Writer) (int, error) {
 		t.Fatalf("docker invoked for empty Image: %v", args)
 		return -1, nil
 	}
 	ex := Local()
-	h, _, err := ex.Submit(Job{Identity: "copy", Isolate: t.TempDir(), Argv: []string{"true"}})
+	h, _, err := ex.Submit(t.Context(), Job{Identity: "copy", Isolate: t.TempDir(), Argv: []string{"true"}})
 	if err != nil {
 		t.Fatalf("process Submit() error = %v", err)
 	}
 	if h.Backend != BackendProcess {
 		t.Fatalf("backend got %q, want %s", h.Backend, BackendProcess)
 	}
-	_ = ex.Cancel(h)
+	_ = ex.Cancel(t.Context(), h)
 	for i := 0; i < 50; i++ {
-		r, err := ex.Poll(h)
+		r, err := ex.Poll(t.Context(), h)
 		if err != nil {
 			t.Fatalf("Poll() error = %v", err)
 		}
