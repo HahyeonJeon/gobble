@@ -18,4 +18,5 @@ Recursive navigation across reports, grouped by category, newest first.
 
 ## Review
 
+- [Adversarial codebase and Engine review](review/2026-08-22-adversarial-codebase-engine-review.md)
 - [Engine design review after WGS e2e](review/2026-08-18-engine-design-review.md)
