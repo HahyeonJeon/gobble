@@ -107,6 +107,7 @@ type sched struct {
 	resume    map[string]reuseDecision
 	launched  map[string]bool
 	persist   error
+	escape    *Defect
 	budget    resourceBudget
 	exec      exec.Executor
 }
@@ -315,6 +316,7 @@ type report struct {
 	ExecutablePath   string
 	ExecutableSHA256 string
 	Unknown          bool
+	InvalidPath      bool
 }
 
 type startEvent struct {
@@ -361,8 +363,12 @@ func (s *sched) loop(ctx context.Context, n int) []Defect {
 		if ctx.Err() != nil && !canceled {
 			cancelInFlight()
 		}
-		for !canceled && s.persist == nil && running < n {
-			id := s.nextReady()
+		for !canceled && s.persist == nil && s.escape == nil && running < n {
+			id, d := s.nextReady()
+			if d != nil {
+				s.escape = d
+				break
+			}
 			if id == "" {
 				break
 			}
@@ -426,6 +432,9 @@ func (s *sched) loop(ctx context.Context, n int) []Defect {
 	}
 	s.assignBlockedUpstream()
 	s.finish()
+	if s.escape != nil {
+		return []Defect{*s.escape}
+	}
 	return s.failures()
 }
 
@@ -576,7 +585,7 @@ func boundedReconcile(ex exec.Executor, h exec.Handle) (exec.Report, error) {
 	return r, boundCallErrAfter(ctx, err)
 }
 
-func (s *sched) nextReady() string {
+func (s *sched) nextReady() (string, *Defect) {
 	for _, t := range s.doc.Tasks {
 		ident := reservedIdentity(t)
 		st := s.tasks[ident]
@@ -590,15 +599,19 @@ func (s *sched) nextReady() string {
 		} else if st.Status != StatusNotStarted {
 			continue
 		}
-		if !s.upstreamReady(t.ID) {
+		ready, d := s.upstreamReady(t.ID)
+		if d != nil {
+			return "", d
+		}
+		if !ready {
 			continue
 		}
 		if !s.budget.fits(t) {
 			continue
 		}
-		return ident
+		return ident, nil
 	}
-	return ""
+	return "", nil
 }
 
 func (s *sched) stateByTaskID(id string) *jsonTaskState {
@@ -617,7 +630,7 @@ func (s *sched) taskByIdent(ident string) (TaskPlan, bool) {
 	return TaskPlan{}, false
 }
 
-func (s *sched) upstreamReady(id string) bool {
+func (s *sched) upstreamReady(id string) (bool, *Defect) {
 	for _, e := range s.doc.Edges {
 		if e.ToTask != id {
 			continue
@@ -625,47 +638,61 @@ func (s *sched) upstreamReady(id string) bool {
 		if e.FromTask != "" {
 			up := s.stateByTaskID(e.FromTask)
 			if up == nil || up.Status != StatusSucceeded {
-				return false
+				return false, nil
 			}
 			if s.resume != nil {
 				upTask, ok := s.taskByID(e.FromTask)
 				if !ok {
-					return false
+					return false, nil
 				}
 				ident := reservedIdentity(upTask)
 				if s.resume[ident].Decision == reuseRerun && !s.succeededThisResume(ident) {
-					return false
+					return false, nil
 				}
 			}
 		} else if s.resume != nil {
 			for _, path := range e.Wait {
 				if s.waitPathPendingRerun(path) {
-					return false
+					return false, nil
 				}
 			}
 		}
 		for _, path := range e.Wait {
-			if path == "" || !waitPathReady(s.workspace, path) {
-				return false
+			if path == "" {
+				continue
+			}
+			ready, d := waitPathReady(s.workspace, path)
+			if d != nil {
+				if d.Unit == "" {
+					d.Unit = id
+				}
+				return false, d
+			}
+			if !ready {
+				return false, nil
 			}
 		}
 	}
-	return true
+	return true, nil
 }
 
-func waitPathReady(workspace, path string) bool {
+func waitPathReady(workspace, path string) (bool, *Defect) {
 	abs, present, err := containedRel(workspace, path, true)
-	if err != nil || !present {
-		return false
+	if err != nil {
+		d := escapeDefect("", path)
+		return false, &d
+	}
+	if !present {
+		return false, nil
 	}
 	if regularFile(abs) {
-		return true
+		return true, nil
 	}
 	if !isDir(abs) {
-		return false
+		return false, nil
 	}
 	man := filepath.Join(abs, treeManifestName)
-	return regularFile(man)
+	return regularFile(man), nil
 }
 
 func (s *sched) succeededThisResume(ident string) bool {
@@ -755,7 +782,8 @@ func (s *sched) runJob(workspace string, task TaskPlan, ex exec.Executor, starts
 	isolate, _, err := containedRel(workspace, workRel, false)
 	r := report{ID: ident, Stdout: rel + "/stdout", Stderr: rel + "/stderr"}
 	if err != nil {
-		r.Message = err.Error()
+		r.Message = "path escapes directory"
+		r.InvalidPath = true
 		reports <- r
 		return
 	}
@@ -763,6 +791,14 @@ func (s *sched) runJob(workspace string, task TaskPlan, ex exec.Executor, starts
 		r.Message = err.Error()
 		reports <- r
 		return
+	}
+	for _, logRel := range []string{rel + "/stdout", rel + "/stderr"} {
+		if _, _, err := containedRel(workspace, logRel, false); err != nil {
+			r.Message = "path escapes directory"
+			r.InvalidPath = true
+			reports <- r
+			return
+		}
 	}
 	if err := prepareIsolate(workspace, isolate, task); err != nil {
 		r.Message = err.Error()
@@ -801,6 +837,10 @@ func (s *sched) runJob(workspace string, task TaskPlan, ex exec.Executor, starts
 	h, sub, err := boundedSubmit(workspace, ex, job)
 	if err != nil {
 		r.Message = err.Error()
+		if errors.Is(err, exec.ErrEscapedPath) {
+			r.Message = "path escapes directory"
+			r.InvalidPath = true
+		}
 		if errors.Is(err, errEngineBound) {
 			r.Unknown = true
 		}
@@ -1027,6 +1067,18 @@ func (s *sched) apply(r report) {
 		s.notePersist(s.persistControl())
 		return
 	}
+	if r.InvalidPath {
+		st.Status = StatusFailed
+		st.Reason = "path escapes directory"
+		unit := r.ID
+		if task, ok := s.taskByIdent(r.ID); ok {
+			unit = task.ID
+		}
+		st.Error = &jsonTaskErr{Unit: unit, Message: "path escapes directory"}
+		s.blockFrom(r.ID)
+		s.notePersist(s.persistControl())
+		return
+	}
 	if r.Published && r.Exit == 0 && r.Message == "" {
 		st.Status = StatusSucceeded
 		st.Reason = "ready"
@@ -1154,8 +1206,12 @@ func (s *sched) failures() []Defect {
 			if st.Error != nil && st.Error.Message != "" {
 				msg = st.Error.Message
 			}
+			code := DefectFailed
+			if st.Reason == "path escapes directory" || msg == "path escapes directory" {
+				code = DefectInvalidPath
+			}
 			out = append(out, Defect{
-				Code:    DefectFailed,
+				Code:    code,
 				Unit:    t.ID,
 				Message: msg,
 			})

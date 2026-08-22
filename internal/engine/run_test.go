@@ -1024,6 +1024,34 @@ func TestRunProcessEnvIsFixed(t *testing.T) {
 	}
 }
 
+func TestRunRefusesEscapingAttemptLog(t *testing.T) {
+	outside := t.TempDir()
+	sentinel := filepath.Join(outside, "secret.log")
+	if err := os.WriteFile(sentinel, []byte("keep"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	rel := isolateRel(TaskPlan{ID: "copy", Attempt: 1})
+	if err := os.MkdirAll(filepath.Join(dir, filepath.FromSlash(rel)), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(sentinel, filepath.Join(dir, filepath.FromSlash(rel), "stdout")); err != nil {
+		t.Fatal(err)
+	}
+	defects := Run(t.Context(), Request{
+		Workspace: dir,
+		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
+	})
+	if !hasDefect(defects, DefectInvalidPath, "copy") {
+		t.Fatalf("escaping attempt log Run() defects %v, want invalid-path copy", defects)
+	}
+	got, err := os.ReadFile(sentinel)
+	if err != nil || string(got) != "keep" {
+		t.Fatalf("sentinel got %q, want keep", got)
+	}
+}
+
 const envCanary = "s3cret-canary-9f3c-gobble"
 
 func TestSecretFreePlanTasksInspect(t *testing.T) {

@@ -129,9 +129,15 @@ func TestDockerSubmitEnvIsCallScoped(t *testing.T) {
 	}
 	var mu sync.Mutex
 	var recs []rec
+	entered := make(chan struct{}, 2)
+	release := make(chan struct{})
 	DockerCLI = func(ctx context.Context, args []string, env []string, stdout, stderr io.Writer) (int, error) {
 		cpArgs := append([]string(nil), args...)
 		cpEnv := append([]string(nil), env...)
+		if len(args) > 0 && args[0] == "run" {
+			entered <- struct{}{}
+			<-release
+		}
 		mu.Lock()
 		recs = append(recs, rec{args: cpArgs, env: cpEnv})
 		mu.Unlock()
@@ -169,6 +175,9 @@ func TestDockerSubmitEnvIsCallScoped(t *testing.T) {
 			errc <- err
 		}(jobs[i])
 	}
+	<-entered
+	<-entered
+	close(release)
 	wg.Wait()
 	close(errc)
 	for err := range errc {

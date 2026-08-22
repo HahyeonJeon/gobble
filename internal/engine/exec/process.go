@@ -51,11 +51,11 @@ func (p *Process) Submit(ctx context.Context, job Job) (Handle, Report, error) {
 	cmd.Env = processEnv(job.Env)
 	stdoutPath := filepath.Join(filepath.Dir(job.Isolate), "stdout")
 	stderrPath := filepath.Join(filepath.Dir(job.Isolate), "stderr")
-	outf, err := os.Create(stdoutPath)
+	outf, err := createAttemptFile(stdoutPath)
 	if err != nil {
 		return Handle{}, Report{}, err
 	}
-	errf, err := os.Create(stderrPath)
+	errf, err := createAttemptFile(stderrPath)
 	if err != nil {
 		outf.Close()
 		return Handle{}, Report{}, err

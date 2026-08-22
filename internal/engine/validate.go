@@ -289,7 +289,7 @@ func parseMemory(s string) (int64, bool) {
 		return 0, false
 	}
 	n := int64(bytes)
-	if n == 0 && f > 0 {
+	if float64(n) != bytes {
 		return 0, false
 	}
 	return n, true

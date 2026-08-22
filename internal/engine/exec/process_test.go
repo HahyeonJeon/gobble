@@ -1,6 +1,7 @@
 package exec
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -9,6 +10,58 @@ import (
 	"testing"
 	"time"
 )
+
+func TestCreateAttemptFileRefusesSymlink(t *testing.T) {
+	outside := t.TempDir()
+	sentinel := filepath.Join(outside, "secret.log")
+	if err := os.WriteFile(sentinel, []byte("keep"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	dir := t.TempDir()
+	path := filepath.Join(dir, "stdout")
+	if err := os.Symlink(sentinel, path); err != nil {
+		t.Fatal(err)
+	}
+	f, err := createAttemptFile(path)
+	if f != nil {
+		f.Close()
+	}
+	if !errors.Is(err, ErrEscapedPath) {
+		t.Fatalf("createAttemptFile() error = %v, want ErrEscapedPath", err)
+	}
+	got, err := os.ReadFile(sentinel)
+	if err != nil || string(got) != "keep" {
+		t.Fatalf("sentinel got %q, want keep", got)
+	}
+}
+
+func TestProcessSubmitRefusesEscapingLogSymlink(t *testing.T) {
+	outside := t.TempDir()
+	sentinel := filepath.Join(outside, "secret.log")
+	if err := os.WriteFile(sentinel, []byte("keep"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	root := t.TempDir()
+	iso := filepath.Join(root, "work")
+	if err := os.Mkdir(iso, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(sentinel, filepath.Join(root, "stdout")); err != nil {
+		t.Fatal(err)
+	}
+	_, _, err := NewProcess().Submit(t.Context(), Job{
+		Identity: "copy",
+		Isolate:  iso,
+		Argv:     []string{"true"},
+	})
+	if !errors.Is(err, ErrEscapedPath) {
+		t.Fatalf("Submit() error = %v, want ErrEscapedPath", err)
+	}
+	got, err := os.ReadFile(sentinel)
+	if err != nil || string(got) != "keep" {
+		t.Fatalf("sentinel got %q, want keep", got)
+	}
+}
 
 func TestProcessCancelKillsGroup(t *testing.T) {
 	dir := t.TempDir()

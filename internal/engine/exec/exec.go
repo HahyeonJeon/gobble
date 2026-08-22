@@ -6,8 +6,32 @@ package exec
 
 import (
 	"context"
+	"errors"
 	"io"
+	"os"
+	"syscall"
 )
+
+// ErrEscapedPath means a log or dest path is a symlink or otherwise untrusted.
+var ErrEscapedPath = errors.New("invalid-path")
+
+func createAttemptFile(path string) (*os.File, error) {
+	info, err := os.Lstat(path)
+	if err == nil && info.Mode()&os.ModeSymlink != 0 {
+		return nil, ErrEscapedPath
+	}
+	if err != nil && !os.IsNotExist(err) {
+		return nil, err
+	}
+	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC|syscall.O_NOFOLLOW, 0o644)
+	if err != nil {
+		if errors.Is(err, syscall.ELOOP) {
+			return nil, ErrEscapedPath
+		}
+		return nil, err
+	}
+	return f, nil
+}
 
 // Backend names recorded on a Handle.
 const (

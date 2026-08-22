@@ -283,11 +283,11 @@ func writeDockerLogs(ctx context.Context, h Handle) {
 		return
 	}
 	attempt := filepath.Dir(src)
-	outf, err := os.Create(filepath.Join(attempt, "stdout"))
+	outf, err := createAttemptFile(filepath.Join(attempt, "stdout"))
 	if err != nil {
 		return
 	}
-	errf, err := os.Create(filepath.Join(attempt, "stderr"))
+	errf, err := createAttemptFile(filepath.Join(attempt, "stderr"))
 	if err != nil {
 		outf.Close()
 		return
