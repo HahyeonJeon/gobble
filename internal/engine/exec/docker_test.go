@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -250,6 +251,64 @@ func TestDockerSubmitPersistsLaunchedContainerImage(t *testing.T) {
 	}
 	if rep.ImageDigest != "sha256:launched-container" {
 		t.Fatalf("ImageDigest got %q, want launched container id", rep.ImageDigest)
+	}
+}
+
+func TestDockerPollLogCreateFailureIsEscapedPath(t *testing.T) {
+	outside := t.TempDir()
+	sentinel := filepath.Join(outside, "secret.log")
+	if err := os.WriteFile(sentinel, []byte("keep"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	root := t.TempDir()
+	work := filepath.Join(root, "work")
+	if err := os.Mkdir(work, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Link(sentinel, filepath.Join(root, "stdout")); err != nil {
+		t.Fatal(err)
+	}
+	orig := DockerCLI
+	t.Cleanup(func() { DockerCLI = orig })
+	DockerCLI = func(ctx context.Context, args []string, env []string, stdout, stderr io.Writer) (int, error) {
+		joined := strings.Join(args, " ")
+		if len(args) > 0 && args[0] == "run" {
+			_, _ = io.WriteString(stdout, "cid-log\n")
+			return 0, nil
+		}
+		if strings.Contains(joined, "State.Running") {
+			_, _ = io.WriteString(stdout, "false 0\n")
+			return 0, nil
+		}
+		if strings.Contains(joined, containerWorkDir) && strings.Contains(joined, "Mounts") {
+			_, _ = io.WriteString(stdout, work+"\n")
+			return 0, nil
+		}
+		if strings.Contains(joined, "{{.Image}}") {
+			_, _ = io.WriteString(stdout, "sha256:img\n")
+			return 0, nil
+		}
+		if len(args) > 0 && (args[0] == "image" || args[0] == "logs" || args[0] == "rm") {
+			return 0, nil
+		}
+		return 0, nil
+	}
+	d := NewDocker()
+	h, _, err := d.Submit(context.Background(), Job{
+		Image:   pinnedAlpine,
+		Argv:    []string{"true"},
+		Isolate: work,
+	})
+	if err != nil {
+		t.Fatalf("Submit() error = %v", err)
+	}
+	_, err = d.Poll(context.Background(), h)
+	if !errors.Is(err, ErrEscapedPath) {
+		t.Fatalf("Poll() error = %v, want ErrEscapedPath", err)
+	}
+	got, err := os.ReadFile(sentinel)
+	if err != nil || string(got) != "keep" {
+		t.Fatalf("sentinel got %q, want keep", got)
 	}
 }
 

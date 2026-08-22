@@ -17,13 +17,27 @@ var ErrEscapedPath = errors.New("invalid-path")
 
 func createAttemptFile(path string) (*os.File, error) {
 	info, err := os.Lstat(path)
-	if err == nil && info.Mode()&os.ModeSymlink != 0 {
-		return nil, ErrEscapedPath
+	if err == nil {
+		if info.Mode()&os.ModeSymlink != 0 || !info.Mode().IsRegular() {
+			return nil, ErrEscapedPath
+		}
+		st, ok := info.Sys().(*syscall.Stat_t)
+		if !ok || st.Nlink > 1 {
+			return nil, ErrEscapedPath
+		}
+		f, err := os.OpenFile(path, os.O_RDWR|os.O_TRUNC|syscall.O_NOFOLLOW, 0o644)
+		if err != nil {
+			if errors.Is(err, syscall.ELOOP) {
+				return nil, ErrEscapedPath
+			}
+			return nil, err
+		}
+		return f, nil
 	}
-	if err != nil && !os.IsNotExist(err) {
+	if !os.IsNotExist(err) {
 		return nil, err
 	}
-	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC|syscall.O_NOFOLLOW, 0o644)
+	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_EXCL|syscall.O_NOFOLLOW, 0o644)
 	if err != nil {
 		if errors.Is(err, syscall.ELOOP) {
 			return nil, ErrEscapedPath

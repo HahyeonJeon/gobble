@@ -93,8 +93,11 @@ func (d *Docker) Poll(ctx context.Context, h Handle) (Report, error) {
 	if running {
 		return Report{Identity: h.Identity, RuntimeID: h.RuntimeID, Running: true}, nil
 	}
-	writeDockerLogs(ctx, h)
+	logErr := writeDockerLogs(ctx, h)
 	_, _ = dockerCLI(ctx, []string{"rm", "-f", h.RuntimeID}, discard(), discard())
+	if logErr != nil {
+		return Report{Identity: h.Identity, RuntimeID: h.RuntimeID, Exit: exit, Running: false}, logErr
+	}
 	msg := ""
 	if exit != 0 {
 		msg = "exit " + strconv.Itoa(exit)
@@ -269,32 +272,33 @@ func inspectContainer(ctx context.Context, id string) (running bool, exit int, e
 	return running, exit, nil
 }
 
-func writeDockerLogs(ctx context.Context, h Handle) {
+func writeDockerLogs(ctx context.Context, h Handle) error {
 	// Isolate is not on Handle. Logs go to the attempt directory only when
 	// the scheduler created stdout/stderr files next to work/. Callers that
 	// need logs pass Isolate on Submit; Poll writes beside the volume by
 	// inspecting the container's first bind mount when possible.
 	var buf bytes.Buffer
 	if exit, err := dockerCLI(ctx, []string{"inspect", "--format", "{{range .Mounts}}{{if eq .Destination \"" + containerWorkDir + "\"}}{{.Source}}{{end}}{{end}}", h.RuntimeID}, &buf, discard()); err != nil || exit != 0 {
-		return
+		return nil
 	}
 	src := strings.TrimSpace(buf.String())
 	if src == "" {
-		return
+		return nil
 	}
 	attempt := filepath.Dir(src)
 	outf, err := createAttemptFile(filepath.Join(attempt, "stdout"))
 	if err != nil {
-		return
+		return err
 	}
 	errf, err := createAttemptFile(filepath.Join(attempt, "stderr"))
 	if err != nil {
 		outf.Close()
-		return
+		return err
 	}
 	_, _ = dockerCLI(ctx, []string{"logs", h.RuntimeID}, outf, errf)
 	outf.Close()
 	errf.Close()
+	return nil
 }
 
 func dockerCLI(ctx context.Context, args []string, stdout, stderr io.Writer) (int, error) {

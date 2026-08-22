@@ -557,7 +557,7 @@ func checkWaitPaths(workspace string, doc Document) []Defect {
 				defects = append(defects, *d)
 				continue
 			}
-			if _, _, err := containedRel(workspace, p, true); err != nil {
+			if _, _, err := containedRel(workspace, p, false); err != nil {
 				defects = append(defects, escapeDefect(e.ToTask, p))
 			}
 		}

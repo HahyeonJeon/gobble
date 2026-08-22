@@ -617,6 +617,54 @@ func TestCheckWaitAncestorSymlinkInvalidPath(t *testing.T) {
 	}
 }
 
+func TestCheckWaitLeafSymlinkInvalidPath(t *testing.T) {
+	outside := t.TempDir()
+	sentinel := filepath.Join(outside, "sentinel")
+	if err := os.WriteFile(sentinel, []byte("outside"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	if err := os.Mkdir(filepath.Join(dir, "wait"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(sentinel, filepath.Join(dir, "wait", "file.txt")); err != nil {
+		t.Fatal(err)
+	}
+	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
+	doc.Edges[0].Wait = []string{"wait/file.txt"}
+	defects := Check(Request{Workspace: dir, Document: doc})
+	if !hasDefect(defects, DefectInvalidPath, "copy") {
+		t.Fatalf("wait leaf symlink Check() defects %v, want invalid-path copy", defects)
+	}
+	got, err := os.ReadFile(sentinel)
+	if err != nil || string(got) != "outside" {
+		t.Fatalf("sentinel got %q, want outside", got)
+	}
+}
+
+func TestWaitPathReadyLeafSymlinkIsDefect(t *testing.T) {
+	outside := t.TempDir()
+	sentinel := filepath.Join(outside, "sentinel")
+	if err := os.WriteFile(sentinel, []byte("outside"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	dir := t.TempDir()
+	if err := os.Mkdir(filepath.Join(dir, "wait"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(sentinel, filepath.Join(dir, "wait", "file.txt")); err != nil {
+		t.Fatal(err)
+	}
+	ready, d := waitPathReady(dir, "wait/file.txt")
+	if ready {
+		t.Fatal("wait leaf symlink ready = true, want false")
+	}
+	if d == nil || d.Code != DefectInvalidPath {
+		t.Fatalf("wait leaf symlink defect got %#v, want invalid-path", d)
+	}
+}
+
 func TestWaitPathReadyEscapeIsDefect(t *testing.T) {
 	outside := t.TempDir()
 	dir := t.TempDir()

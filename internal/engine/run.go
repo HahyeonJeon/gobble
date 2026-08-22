@@ -677,7 +677,7 @@ func (s *sched) upstreamReady(id string) (bool, *Defect) {
 }
 
 func waitPathReady(workspace, path string) (bool, *Defect) {
-	abs, present, err := containedRel(workspace, path, true)
+	abs, present, err := containedRel(workspace, path, false)
 	if err != nil {
 		d := escapeDefect("", path)
 		return false, &d
@@ -859,8 +859,13 @@ func (s *sched) runJob(workspace string, task TaskPlan, ex exec.Executor, starts
 	for {
 		pr, perr := boundedPoll(ex, h)
 		if perr != nil {
-			r.Unknown = true
 			r.Message = perr.Error()
+			if errors.Is(perr, exec.ErrEscapedPath) {
+				r.Message = "path escapes directory"
+				r.InvalidPath = true
+			} else {
+				r.Unknown = true
+			}
 			reports <- r
 			return
 		}

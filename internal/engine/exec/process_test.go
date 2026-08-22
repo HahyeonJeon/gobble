@@ -35,6 +35,30 @@ func TestCreateAttemptFileRefusesSymlink(t *testing.T) {
 	}
 }
 
+func TestCreateAttemptFileRefusesHardlink(t *testing.T) {
+	outside := t.TempDir()
+	sentinel := filepath.Join(outside, "secret.log")
+	if err := os.WriteFile(sentinel, []byte("keep"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	dir := t.TempDir()
+	path := filepath.Join(dir, "stdout")
+	if err := os.Link(sentinel, path); err != nil {
+		t.Fatal(err)
+	}
+	f, err := createAttemptFile(path)
+	if f != nil {
+		f.Close()
+	}
+	if !errors.Is(err, ErrEscapedPath) {
+		t.Fatalf("createAttemptFile() error = %v, want ErrEscapedPath", err)
+	}
+	got, err := os.ReadFile(sentinel)
+	if err != nil || string(got) != "keep" {
+		t.Fatalf("sentinel got %q, want keep", got)
+	}
+}
+
 func TestProcessSubmitRefusesEscapingLogSymlink(t *testing.T) {
 	outside := t.TempDir()
 	sentinel := filepath.Join(outside, "secret.log")
