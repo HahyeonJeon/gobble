@@ -1080,7 +1080,7 @@ func (s *sched) assignBlockedUpstream() {
 		if !s.resumeSkipAdmit(ident, st) {
 			continue
 		}
-		if st.Status == StatusSkipped || st.Status == StatusSucceeded {
+		if st.Status == StatusSkipped || st.Status == StatusSucceeded || st.Status == StatusUnknown {
 			continue
 		}
 		if s.cascadeSkip(task) || s.scatterParentSkipped(st) {
@@ -2209,7 +2209,7 @@ func (s *sched) freshenWhenBranchAfterReap() {
 			continue
 		}
 		switch st.Status {
-		case StatusSucceeded, StatusSkipped, StatusNotStarted:
+		case StatusSucceeded, StatusSkipped, StatusNotStarted, StatusUnknown:
 			continue
 		case StatusRunning:
 			if _, ok := backendHandle(s.workspace, ident, st); ok {

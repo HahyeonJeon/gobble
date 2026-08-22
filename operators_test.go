@@ -830,7 +830,7 @@ func TestResumeTrueToFalseWhenSkipsPreviouslyFailedDownstream(t *testing.T) {
 	}
 }
 
-func TestResumeTrueToFalseWhenSkipsPreviouslyIncompleteDownstream(t *testing.T) {
+func TestResumeTrueToFalseWhenKeepsUnknownCanceledDescendant(t *testing.T) {
 	dir := t.TempDir()
 	writeRunFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	g1 := mustCompose(func() *gobble.Pipeline {
@@ -841,7 +841,7 @@ func TestResumeTrueToFalseWhenSkipsPreviouslyIncompleteDownstream(t *testing.T) 
 	go func() {
 		done <- gobble.Run(ctx, g1, dir, 0)
 	}()
-	waitTaskStatus(t, dir, "after", engine.StatusRunning, engine.StatusUnknown)
+	waitTaskStatus(t, dir, "after", engine.StatusRunning)
 	cancel()
 	select {
 	case err := <-done:
@@ -858,9 +858,8 @@ func TestResumeTrueToFalseWhenSkipsPreviouslyIncompleteDownstream(t *testing.T) 
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	if err := gobble.Resume(t.Context(), g2, dir, 0); err != nil {
-		t.Fatalf("Resume() error = %v, want skipped incomplete downstream", err)
-	}
+	err = gobble.Resume(t.Context(), g2, dir, 0)
+	requireResumeError(t, "resume after canceled descendant", err, gobble.DefectUnknownBackend, "after")
 	rawInst, err := gobble.Inspect(dir, gobble.ViewInstances, "")
 	if err != nil {
 		t.Fatalf("Inspect: %v", err)
@@ -869,15 +868,8 @@ func TestResumeTrueToFalseWhenSkipsPreviouslyIncompleteDownstream(t *testing.T) 
 	if got["opt.copy"].Status != engine.StatusSkipped || got["opt.copy"].Condition != "false-param" {
 		t.Fatalf("true-to-false When did not skip: %s", rawInst)
 	}
-	if got["after"].Status != engine.StatusSkipped {
-		t.Fatalf("incomplete downstream of skip stayed %q, want skipped: %s", got["after"].Status, rawInst)
-	}
-	rawRem, err := gobble.Inspect(dir, gobble.ViewRemaining, "")
-	if err != nil {
-		t.Fatalf("Inspect remaining: %v", err)
-	}
-	if bytes.Contains(rawRem, []byte(`"after"`)) {
-		t.Fatalf("remaining listed skipped incomplete downstream: %s", rawRem)
+	if got["after"].Status != engine.StatusUnknown {
+		t.Fatalf("unproved canceled descendant stayed %q, want unknown: %s", got["after"].Status, rawInst)
 	}
 }
 
