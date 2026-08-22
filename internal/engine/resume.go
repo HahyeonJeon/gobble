@@ -298,6 +298,15 @@ func occupyResume(req Request) (*sched, []Defect) {
 			parentDec := class.Decision[parentIdent]
 			if parentDec.Change == changeUnchanged {
 				s.tasks[ident] = &cp
+				if cp.Status != StatusSucceeded && cp.Status != StatusSkipped &&
+					cp.Status != StatusRunning && cp.Status != StatusUnknown {
+					s.resume[ident] = reuseDecision{
+						Identity: ident,
+						Decision: reuseRerun,
+						Change:   changeUnchanged,
+						Reason:   reasonPreviousUnsuccessful,
+					}
+				}
 				continue
 			}
 			if parentDec.Decision == reuseRerun {

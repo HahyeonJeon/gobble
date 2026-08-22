@@ -697,6 +697,7 @@ func decodeTask(t jsonTask) TaskPlan {
 		ScatterFromKind:    t.ScatterFromKind,
 		ScatterFromTask:    t.ScatterFromTask,
 		ScatterFromPort:    t.ScatterFromPort,
+		ScatterFromPath:    t.ScatterFromPath,
 		ScatterMembers:     append([]string(nil), t.ScatterMembers...),
 		ScatterMemberPaths: append([]string(nil), t.ScatterMemberPaths...),
 		SkipIfMissingTask:  t.SkipIfMissingTask,

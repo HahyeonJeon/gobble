@@ -38,6 +38,7 @@ type TaskPlan struct {
 	ScatterFromKind    string
 	ScatterFromTask    string
 	ScatterFromPort    string
+	ScatterFromPath    string
 	ScatterMembers     []string
 	ScatterMemberPaths []string
 	SkipIfMissingTask  string
@@ -141,6 +142,7 @@ type jsonTask struct {
 	ScatterFromKind    string        `json:"scatter_from_kind,omitempty"`
 	ScatterFromTask    string        `json:"scatter_from_task,omitempty"`
 	ScatterFromPort    string        `json:"scatter_from_port,omitempty"`
+	ScatterFromPath    string        `json:"scatter_from_path,omitempty"`
 	ScatterMembers     []string      `json:"scatter_members,omitempty"`
 	ScatterMemberPaths []string      `json:"scatter_member_paths,omitempty"`
 	SkipIfMissingTask  string        `json:"skip_if_missing_task,omitempty"`
@@ -308,6 +310,7 @@ func encodeTask(t TaskPlan) jsonTask {
 		ScatterFromKind:    t.ScatterFromKind,
 		ScatterFromTask:    t.ScatterFromTask,
 		ScatterFromPort:    t.ScatterFromPort,
+		ScatterFromPath:    t.ScatterFromPath,
 		ScatterMembers:     jsonOmitEmpty(t.ScatterMembers),
 		ScatterMemberPaths: jsonOmitEmpty(t.ScatterMemberPaths),
 		SkipIfMissingTask:  t.SkipIfMissingTask,

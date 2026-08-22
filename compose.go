@@ -139,6 +139,7 @@ func (r *resolver) copyOperatorFacts(t *Task, gt *graphTask) {
 		if sc.from.task != nil {
 			gt.scatterFromTask = sc.from.task.id()
 		}
+		gt.scatterFromPath = staticScatterFromPath(r.p, sc.from)
 		gt.scatterMembers, gt.scatterMemberPaths = staticScatterMembers(r.p, sc.from)
 	}
 	if w := t.whenOp(); w != nil {
@@ -186,6 +187,29 @@ func staticScatterMembers(p *Pipeline, h Handle) ([]string, []string) {
 		return []string{path}, []string{path}
 	}
 	return nil, nil
+}
+
+func staticScatterFromPath(p *Pipeline, h Handle) string {
+	if h.kind != handleInput {
+		return ""
+	}
+	for _, in := range p.inputs {
+		if in.name != h.name {
+			continue
+		}
+		if !in.tree.IsZero() {
+			return in.tree.Dir.String()
+		}
+		if in.members != nil {
+			return ""
+		}
+		path, err := in.spec.Render()
+		if err != nil {
+			return ""
+		}
+		return path
+	}
+	return ""
 }
 
 func skipMissingPath(p *Pipeline, h Handle) string {

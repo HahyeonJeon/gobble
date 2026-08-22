@@ -45,6 +45,7 @@ type graphTask struct {
 	scatterFromKind    handleKind
 	scatterFromName    string
 	scatterFromTask    string
+	scatterFromPath    string
 	scatterMembers     []string
 	scatterMemberPaths []string
 	skipMissingKind    handleKind

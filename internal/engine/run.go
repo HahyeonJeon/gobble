@@ -632,7 +632,7 @@ func (s *sched) nextReady() (string, *Defect) {
 		if !ok {
 			continue
 		}
-		ready, d := s.upstreamReady(task.ID)
+		ready, d := s.upstreamReady(task, ident)
 		if d != nil {
 			return "", d
 		}
@@ -649,6 +649,9 @@ func (s *sched) nextReady() (string, *Defect) {
 
 func (s *sched) resumeAdmit(ident string, st *jsonTaskState) bool {
 	if s.launched[ident] {
+		return false
+	}
+	if st != nil && (st.Status == StatusRunning || st.Status == StatusUnknown) {
 		return false
 	}
 	if dec, ok := s.resume[ident]; ok {
@@ -729,13 +732,24 @@ func (s *sched) taskByIdent(ident string) (TaskPlan, bool) {
 	return member, true
 }
 
-func (s *sched) upstreamReady(id string) (bool, *Defect) {
+func (s *sched) upstreamReady(task TaskPlan, ident string) (bool, *Defect) {
+	id := task.ID
+	inst := ""
+	if st := s.tasks[ident]; st != nil {
+		inst = st.Instance
+	}
 	for _, e := range s.doc.Edges {
 		if e.ToTask != id {
 			continue
 		}
 		if e.FromTask != "" {
 			if s.isScatterTaskID(e.FromTask) {
+				if inst != "" && s.sameScatterID(id, e.FromTask) {
+					if !s.scatterMemberReady(e.FromTask, inst) {
+						return false, nil
+					}
+					continue
+				}
 				ready, d := s.scatterMembersReady(e.FromTask)
 				if d != nil || !ready {
 					return ready, d
@@ -1582,6 +1596,30 @@ func (s *sched) scatterTemplateState(id string) *jsonTaskState {
 	return s.tasks[reservedIdentity(t)]
 }
 
+func (s *sched) sameScatterID(a, b string) bool {
+	ta, oka := s.taskByID(a)
+	tb, okb := s.taskByID(b)
+	return oka && okb && sameScatter(ta, tb)
+}
+
+func sameScatter(a, b TaskPlan) bool {
+	return a.Scatter != "" && a.Scatter == b.Scatter &&
+		a.ScatterFromTask == b.ScatterFromTask &&
+		a.ScatterFromPort == b.ScatterFromPort
+}
+
+func (s *sched) scatterMemberReady(id, key string) bool {
+	t, ok := s.taskByID(id)
+	if !ok {
+		return false
+	}
+	t.Instance = key
+	t.ShardIndex = DefaultShardIndex
+	applyReservedDefaults(&t)
+	ms := s.tasks[reservedIdentity(t)]
+	return ms != nil && ms.Status == StatusSucceeded
+}
+
 func (s *sched) scatterMembersReady(id string) (bool, *Defect) {
 	st := s.scatterTemplateState(id)
 	if st == nil || st.Expansion == nil {
@@ -1733,17 +1771,7 @@ func (s *sched) producerMemberKeys(t TaskPlan) ([]string, *Defect) {
 		}
 		return keys, nil
 	case ArtifactTree:
-		files := treeDestMemberPaths(s.workspace, io)
-		keys := make([]string, 0, len(files))
-		seen := make(map[string]bool, len(files))
-		for _, f := range files {
-			if seen[f.name] {
-				return nil, &Defect{Code: DefectInvalidValue, Unit: t.ID, Message: "invalid-value"}
-			}
-			seen[f.name] = true
-			keys = append(keys, f.name)
-		}
-		return keys, nil
+		return treeMemberKeys(s.workspace, io, t.ID)
 	default:
 		path := io.Path
 		if path == "" {
@@ -1754,6 +1782,10 @@ func (s *sched) producerMemberKeys(t TaskPlan) ([]string, *Defect) {
 }
 
 func (s *sched) staticTreeKeys(t TaskPlan) ([]string, *Defect) {
+	if t.ScatterFromPath != "" {
+		io := IO{Kind: ArtifactTree, Path: t.ScatterFromPath, Source: t.ScatterFromPath}
+		return treeMemberKeys(s.workspace, io, t.ID)
+	}
 	var io IO
 	found := false
 	for _, in := range t.Inputs {
@@ -1766,12 +1798,16 @@ func (s *sched) staticTreeKeys(t TaskPlan) ([]string, *Defect) {
 	if !found {
 		return []string{}, nil
 	}
-	files := treeDestMemberPaths(s.workspace, io)
+	return treeMemberKeys(s.workspace, io, t.ID)
+}
+
+func treeMemberKeys(workspace string, io IO, unit string) ([]string, *Defect) {
+	files := treeSourceMemberPaths(workspace, io)
 	keys := make([]string, 0, len(files))
 	seen := make(map[string]bool, len(files))
 	for _, f := range files {
 		if seen[f.name] {
-			return nil, &Defect{Code: DefectInvalidValue, Unit: t.ID, Message: "invalid-value"}
+			return nil, &Defect{Code: DefectInvalidValue, Unit: unit, Message: "invalid-value"}
 		}
 		seen[f.name] = true
 		keys = append(keys, f.name)
@@ -1845,20 +1881,69 @@ func (s *sched) edgeFrom(toTask, toPort string) (string, string) {
 
 func (s *sched) specializeMemberIO(t *TaskPlan, key string) {
 	memberPath, memberSpec := s.memberSource(t, key)
+	if memberPath != "" || !isZeroPath(memberSpec) {
+		for i := range t.Inputs {
+			if s.ioFromScatterProducer(*t, t.Inputs[i].Name) {
+				s.applyMemberIO(&t.Inputs[i], memberPath, memberSpec, true)
+			}
+		}
+		for i := range t.Outputs {
+			if s.ioFromScatterProducer(*t, t.Outputs[i].Name) {
+				s.applyMemberIO(&t.Outputs[i], memberPath, memberSpec, false)
+			}
+		}
+	}
+	s.specializeSiblingIO(t, key, true)
+	s.specializeSiblingIO(t, key, false)
+}
+
+func (s *sched) specializeSiblingIO(t *TaskPlan, key string, inputs bool) {
+	ports := t.Outputs
+	if inputs {
+		ports = t.Inputs
+	}
+	for i := range ports {
+		fromTask, fromPort := s.edgeFrom(t.ID, ports[i].Name)
+		if fromTask == "" || fromTask == t.ID {
+			continue
+		}
+		src, ok := s.taskByID(fromTask)
+		if !ok || !sameScatter(*t, src) {
+			continue
+		}
+		sibling := cloneTaskPlan(src)
+		sibling.Instance = key
+		sibling.ShardIndex = DefaultShardIndex
+		applyReservedDefaults(&sibling)
+		s.specializeProducerIO(&sibling, key)
+		io, ok := findProducerIO(sibling, fromPort)
+		if !ok || io.Path == "" {
+			continue
+		}
+		path := io.Path
+		spec := io.Spec
+		if inputs {
+			s.applyMemberIO(&t.Inputs[i], path, spec, true)
+			continue
+		}
+		s.applyMemberIO(&t.Outputs[i], path, spec, false)
+	}
+}
+
+func (s *sched) specializeProducerIO(t *TaskPlan, key string) {
+	memberPath, memberSpec := s.memberSource(t, key)
 	if memberPath == "" && isZeroPath(memberSpec) {
 		return
 	}
 	for i := range t.Inputs {
-		if !s.ioFromScatterProducer(*t, t.Inputs[i].Name) {
-			continue
+		if s.ioFromScatterProducer(*t, t.Inputs[i].Name) {
+			s.applyMemberIO(&t.Inputs[i], memberPath, memberSpec, true)
 		}
-		s.applyMemberIO(&t.Inputs[i], memberPath, memberSpec, true)
 	}
 	for i := range t.Outputs {
-		if !s.ioFromScatterProducer(*t, t.Outputs[i].Name) {
-			continue
+		if s.ioFromScatterProducer(*t, t.Outputs[i].Name) {
+			s.applyMemberIO(&t.Outputs[i], memberPath, memberSpec, false)
 		}
-		s.applyMemberIO(&t.Outputs[i], memberPath, memberSpec, false)
 	}
 }
 
@@ -1899,7 +1984,7 @@ func (s *sched) memberSource(t *TaskPlan, key string) (string, Path) {
 				}
 			}
 		case ArtifactTree:
-			dir := treeDir(io)
+			dir := treeSourceDir(io)
 			path := key
 			if dir != "" {
 				path = strings.TrimSuffix(strings.ReplaceAll(dir, `\`, "/"), "/") + "/" + key
@@ -1943,13 +2028,24 @@ func (s *sched) memberSource(t *TaskPlan, key string) (string, Path) {
 			}
 		}
 		if t.ScatterFromKind == ArtifactTree {
-			dir := treeDir(in)
+			dir := treeSourceDir(in)
+			if dir == "" {
+				dir = t.ScatterFromPath
+			}
 			path := key
 			if dir != "" {
 				path = strings.TrimSuffix(strings.ReplaceAll(dir, `\`, "/"), "/") + "/" + key
 			}
 			return path, literalPath(path)
 		}
+	}
+	if t.ScatterFromKind == ArtifactTree && t.ScatterFromPath != "" {
+		dir := strings.TrimSuffix(strings.ReplaceAll(t.ScatterFromPath, `\`, "/"), "/")
+		path := key
+		if dir != "" {
+			path = dir + "/" + key
+		}
+		return path, literalPath(path)
 	}
 	return key, literalPath(key)
 }

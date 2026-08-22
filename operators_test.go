@@ -472,6 +472,166 @@ func TestResumeIdentityChangedReexpands(t *testing.T) {
 	}
 }
 
+func TestRunScatterRestagedTreeExpandsProducer(t *testing.T) {
+	dir := t.TempDir()
+	writeRunFile(t, filepath.Join(dir, "tree", "s1.txt"), "one")
+	writeRunFile(t, filepath.Join(dir, "tree", "s2.txt"), "two")
+	p := gobble.NewPipeline("tree-restage")
+	tree := p.AddInputTree("items", gobble.DeclareTree(gobble.Dir("tree")))
+	p.Scatter("each").From(tree).AddTask(gobble.TaskSpec{
+		Name:   "copy",
+		Script: `f=$(find . -type f ! -name '*.out' ! -name '.gobble-tree.json' | head -1); mkdir -p "$(dirname "$f")"; cp "$f" "$f.out"`,
+		Inputs: []gobble.Bind{{
+			Name: "in",
+			From: tree,
+			Tree: gobble.DeclareTree(gobble.Dir("work")),
+		}},
+		Outputs: []gobble.Bind{{Name: "out", From: tree, Spec: gobble.PathSpec{Ext: ".out"}}},
+	})
+	g, err := gobble.Compose(p)
+	if err != nil {
+		t.Fatalf("Compose() error = %v", err)
+	}
+	if err := gobble.Run(t.Context(), g, dir, 2); err != nil {
+		var ge *gobble.Error
+		if errors.As(err, &ge) {
+			for _, d := range ge.Defects {
+				if d.Code == gobble.DefectNeverReady {
+					t.Fatalf("restaged Tree From never-ready: %#v", ge.Defects)
+				}
+			}
+		}
+	}
+	raw := mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile))
+	if !bytes.Contains(raw, []byte(`"s1.txt"`)) || !bytes.Contains(raw, []byte(`"s2.txt"`)) {
+		t.Fatalf("restaged Tree expansion missing producer members: %s", raw)
+	}
+	if bytes.Contains(raw, []byte(`"members": []`)) {
+		t.Fatalf("restaged Tree expansion empty: %s", raw)
+	}
+}
+
+func TestResumeUnchangedRetriesFailedMember(t *testing.T) {
+	dir := t.TempDir()
+	writeRunFile(t, filepath.Join(dir, "in", "s1.txt"), "one")
+	writeRunFile(t, filepath.Join(dir, "in", "s2.txt"), "two")
+	g := mustCompose(func() *gobble.Pipeline {
+		return scatterGroupPipeline("false")
+	})(t)
+	if err := gobble.Run(t.Context(), g, dir, 2); err == nil {
+		t.Fatalf("Run() error = nil, want failed members")
+	}
+	if err := gobble.Release(dir); err != nil {
+		t.Fatalf("Release() error = %v", err)
+	}
+	rawRem, err := gobble.Inspect(dir, gobble.ViewRemaining, "")
+	if err != nil {
+		t.Fatalf("Inspect remaining: %v", err)
+	}
+	if !bytes.Contains(rawRem, []byte("each.copy/s1/0")) && !bytes.Contains(rawRem, []byte("each.copy/s2/0")) {
+		t.Fatalf("failed members not remaining: %s", rawRem)
+	}
+	_ = gobble.Resume(t.Context(), g, dir, 2)
+	raw := mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile))
+	if memberAttempt(raw, "s1") < 2 && memberAttempt(raw, "s2") < 2 {
+		t.Fatalf("Unchanged resume did not retry failed members: %s", raw)
+	}
+}
+
+func TestResumePredicateChangeReevaluates(t *testing.T) {
+	dir := t.TempDir()
+	writeRunFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	first := func() *gobble.Pipeline {
+		p := gobble.NewPipeline("when-pred")
+		in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "sample", Ext: ".txt"})
+		p.When("opt").SkipIfFalse("keep").AddTask(gobble.TaskSpec{
+			Name:    "copy",
+			Command: []string{"cp", "in/sample.txt", "out/sample.txt"},
+			Inputs:  []gobble.Bind{{Name: "in", From: in}},
+			Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "sample", Ext: ".txt"}}},
+			Params: []gobble.Param{
+				{Name: "keep", Value: "false"},
+				{Name: "run", Value: "true"},
+			},
+		})
+		return p
+	}
+	g1 := mustCompose(first)(t)
+	if err := gobble.Run(t.Context(), g1, dir, 0); err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	if err := gobble.Release(dir); err != nil {
+		t.Fatalf("Release() error = %v", err)
+	}
+	p2 := gobble.NewPipeline("when-pred")
+	in := p2.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "sample", Ext: ".txt"})
+	p2.When("opt").SkipIfFalse("run").AddTask(gobble.TaskSpec{
+		Name:    "copy",
+		Command: []string{"cp", "in/sample.txt", "out/sample.txt"},
+		Inputs:  []gobble.Bind{{Name: "in", From: in}},
+		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "sample", Ext: ".txt"}}},
+		Params: []gobble.Param{
+			{Name: "keep", Value: "false"},
+			{Name: "run", Value: "true"},
+		},
+	})
+	g2, err := gobble.Compose(p2)
+	if err != nil {
+		t.Fatalf("Compose() error = %v", err)
+	}
+	if err := gobble.Resume(t.Context(), g2, dir, 0); err != nil {
+		t.Fatalf("Resume() error = %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "out", "sample.txt")); err != nil {
+		t.Fatalf("predicate change did not run: %v", err)
+	}
+}
+
+func TestRunScatterAddModuleSameMemberFlow(t *testing.T) {
+	dir := t.TempDir()
+	writeRunFile(t, filepath.Join(dir, "in", "s1.txt"), "one")
+	writeRunFile(t, filepath.Join(dir, "in", "s2.txt"), "two")
+	p := gobble.NewPipeline("mod-scatter")
+	samples := p.AddInputGroup("samples", gobble.Group{
+		{Name: "s1", Spec: gobble.PathSpec{Dir: gobble.Dir("in"), Base: "s1", Ext: ".txt"}},
+		{Name: "s2", Spec: gobble.PathSpec{Dir: gobble.Dir("in"), Base: "s2", Ext: ".txt"}},
+	})
+	mod := p.Scatter("each").From(samples).AddModule("mod")
+	src := mod.AddTask(gobble.TaskSpec{
+		Name:    "copy",
+		Script:  `f=$(find . -type f ! -name '*.out' ! -name '*.done' | head -1); cp "$f" "$f.out"`,
+		Inputs:  []gobble.Bind{{Name: "in", From: samples}},
+		Outputs: []gobble.Bind{{Name: "out", From: samples, Spec: gobble.PathSpec{Ext: ".out"}}},
+	})
+	mod.AddTask(gobble.TaskSpec{
+		Name:    "mark",
+		Script:  `f=$(find . -type f -name '*.out' | head -1); cp "$f" "$f.done"`,
+		Inputs:  []gobble.Bind{{Name: "in", From: src.Out("out")}},
+		Outputs: []gobble.Bind{{Name: "out", From: src.Out("out"), Spec: gobble.PathSpec{Ext: ".done"}}},
+	})
+	g, err := gobble.Compose(p)
+	if err != nil {
+		t.Fatalf("Compose() error = %v", err)
+	}
+	if err := gobble.Run(t.Context(), g, dir, 2); err != nil {
+		var ge *gobble.Error
+		if errors.As(err, &ge) {
+			t.Fatalf("Run() defects %#v", ge.Defects)
+		}
+		t.Fatalf("Run() error = %v", err)
+	}
+	raw := mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile))
+	if !bytes.Contains(raw, []byte("each.mod.copy/s1/0")) || !bytes.Contains(raw, []byte("each.mod.mark/s1/0")) {
+		t.Fatalf("AddModule members missing shared instanceSeg: %s", raw)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "in", "s1.txt.out.done")); err != nil {
+		t.Fatalf("same-member dest s1: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "in", "s2.txt.out.done")); err != nil {
+		t.Fatalf("same-member dest s2: %v", err)
+	}
+}
+
 func memberAttempt(raw []byte, key string) int {
 	var file struct {
 		Tasks []struct {

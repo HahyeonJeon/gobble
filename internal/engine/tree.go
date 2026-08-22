@@ -364,9 +364,21 @@ func readTreeManifestMembersStrict(path string) ([]string, error) {
 }
 
 func treeDestMemberPaths(workspace string, io IO) []namedFile {
-	dir := treeDir(io)
+	return treeMemberPaths(workspace, treeDir(io), treeManifestPath(io))
+}
+
+func treeSourceMemberPaths(workspace string, io IO) []namedFile {
+	src := treeSourceDir(io)
+	man := treeManifestName
+	if src != "" {
+		man = strings.TrimSuffix(strings.ReplaceAll(src, `\`, "/"), "/") + "/" + treeManifestName
+	}
+	return treeMemberPaths(workspace, src, man)
+}
+
+func treeMemberPaths(workspace, dir, manifest string) []namedFile {
 	root := workspaceFile(workspace, dir)
-	rels := readTreeManifestMembers(workspaceFile(workspace, treeManifestPath(io)))
+	rels := readTreeManifestMembers(workspaceFile(workspace, manifest))
 	if len(rels) == 0 {
 		walked, err := walkTreeMembers(root)
 		if err != nil {

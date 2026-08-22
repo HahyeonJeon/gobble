@@ -488,6 +488,13 @@ func classifyResume(workspace string, recorded, supplied Document, tasks []jsonT
 			}
 			dec.Decision = reuseRerun
 			dec.Change = changeRepathed
+		case operatorFieldsDiffer(rec, t):
+			if dec.Decision == reuseReused {
+				dec.Reason = ""
+				dec.Differing = nil
+			}
+			dec.Decision = reuseRerun
+			dec.Change = changeIdentityChanged
 		case dec.Decision == reuseReused:
 			dec.Change = changeUnchanged
 		default:
@@ -535,6 +542,22 @@ func waitOrDestDiffer(recorded, supplied Document, rec, cur TaskPlan) bool {
 		return true
 	}
 	return !sameStringSet(destPathSet(rec), destPathSet(cur))
+}
+
+func operatorFieldsDiffer(rec, cur TaskPlan) bool {
+	return rec.Scatter != cur.Scatter ||
+		rec.Gather != cur.Gather ||
+		rec.When != cur.When ||
+		rec.ScatterFromKind != cur.ScatterFromKind ||
+		rec.ScatterFromTask != cur.ScatterFromTask ||
+		rec.ScatterFromPort != cur.ScatterFromPort ||
+		rec.ScatterFromPath != cur.ScatterFromPath ||
+		!sameStrings(rec.ScatterMembers, cur.ScatterMembers) ||
+		!sameStrings(rec.ScatterMemberPaths, cur.ScatterMemberPaths) ||
+		rec.SkipIfMissingTask != cur.SkipIfMissingTask ||
+		rec.SkipIfMissingPort != cur.SkipIfMissingPort ||
+		rec.SkipIfMissingPath != cur.SkipIfMissingPath ||
+		rec.SkipIfFalse != cur.SkipIfFalse
 }
 
 func incomingEndpointSet(doc Document, taskID string) map[string]bool {

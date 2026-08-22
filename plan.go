@@ -317,6 +317,7 @@ func planDocument(g *Graph) (engine.Document, error) {
 			ScatterFromKind:    scatterFromArtifact(g, t),
 			ScatterFromTask:    t.scatterFromTask,
 			ScatterFromPort:    t.scatterFromName,
+			ScatterFromPath:    t.scatterFromPath,
 			ScatterMembers:     copyStrings(t.scatterMembers),
 			ScatterMemberPaths: copyStrings(t.scatterMemberPaths),
 			SkipIfMissingTask:  t.skipMissingTask,
@@ -734,8 +735,13 @@ func scatterRelatedWait(to *engine.TaskPlan, e graphEdge, byID map[string]*engin
 	if to == nil {
 		return false
 	}
-	if to.Scatter != "" && e.fromTask == to.ScatterFromTask && e.fromPort == to.ScatterFromPort {
-		return true
+	if to.Scatter != "" {
+		if e.fromTask == to.ScatterFromTask && e.fromPort == to.ScatterFromPort {
+			return true
+		}
+		if from, ok := byID[e.fromTask]; ok && from.Scatter != "" && from.Scatter == to.Scatter {
+			return true
+		}
 	}
 	if to.Gather == "" || e.fromTask == "" {
 		return false
