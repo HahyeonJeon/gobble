@@ -632,6 +632,161 @@ func TestRunScatterAddModuleSameMemberFlow(t *testing.T) {
 	}
 }
 
+func TestRunScatterAddModuleThreeTaskChain(t *testing.T) {
+	dir := t.TempDir()
+	writeRunFile(t, filepath.Join(dir, "in", "s1.txt"), "one")
+	writeRunFile(t, filepath.Join(dir, "in", "s2.txt"), "two")
+	p := gobble.NewPipeline("mod-chain")
+	samples := p.AddInputGroup("samples", gobble.Group{
+		{Name: "s1", Spec: gobble.PathSpec{Dir: gobble.Dir("in"), Base: "s1", Ext: ".txt"}},
+		{Name: "s2", Spec: gobble.PathSpec{Dir: gobble.Dir("in"), Base: "s2", Ext: ".txt"}},
+	})
+	mod := p.Scatter("each").From(samples).AddModule("mod")
+	copyTask := mod.AddTask(gobble.TaskSpec{
+		Name:    "copy",
+		Script:  `f=$(find . -type f ! -name '*.out' ! -name '*.done' ! -name '*.ok' | head -1); cp "$f" "$f.out"`,
+		Inputs:  []gobble.Bind{{Name: "in", From: samples}},
+		Outputs: []gobble.Bind{{Name: "out", From: samples, Spec: gobble.PathSpec{Ext: ".out"}}},
+	})
+	mark := mod.AddTask(gobble.TaskSpec{
+		Name:    "mark",
+		Script:  `f=$(find . -type f -name '*.out' ! -name '*.done' | head -1); cp "$f" "$f.done"`,
+		Inputs:  []gobble.Bind{{Name: "in", From: copyTask.Out("out")}},
+		Outputs: []gobble.Bind{{Name: "out", From: copyTask.Out("out"), Spec: gobble.PathSpec{Ext: ".done"}}},
+	})
+	mod.AddTask(gobble.TaskSpec{
+		Name:    "check",
+		Script:  `f=$(find . -type f -name '*.done' | head -1); cp "$f" "$f.ok"`,
+		Inputs:  []gobble.Bind{{Name: "in", From: mark.Out("out")}},
+		Outputs: []gobble.Bind{{Name: "out", From: mark.Out("out"), Spec: gobble.PathSpec{Ext: ".ok"}}},
+	})
+	g, err := gobble.Compose(p)
+	if err != nil {
+		t.Fatalf("Compose() error = %v", err)
+	}
+	if err := gobble.Run(t.Context(), g, dir, 2); err != nil {
+		var ge *gobble.Error
+		if errors.As(err, &ge) {
+			t.Fatalf("Run() defects %#v", ge.Defects)
+		}
+		t.Fatalf("Run() error = %v", err)
+	}
+	raw := mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile))
+	if !bytes.Contains(raw, []byte("each.mod.check/s1/0")) || !bytes.Contains(raw, []byte("each.mod.check/s2/0")) {
+		t.Fatalf("three-task AddModule missing check members: %s", raw)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "in", "s1.txt.out.done.ok")); err != nil {
+		t.Fatalf("third-hop dest s1: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "in", "s2.txt.out.done.ok")); err != nil {
+		t.Fatalf("third-hop dest s2: %v", err)
+	}
+}
+
+func TestResumeFromChangeDoesNotSubmitLeftoverMembers(t *testing.T) {
+	dir := t.TempDir()
+	writeRunFile(t, filepath.Join(dir, "in", "s1.txt"), "one")
+	writeRunFile(t, filepath.Join(dir, "in", "s2.txt"), "two")
+	writeRunFile(t, filepath.Join(dir, "in", "s3.txt"), "three")
+	g1 := mustCompose(func() *gobble.Pipeline {
+		return scatterNamedGroupPipeline(
+			`f=$(find . -type f ! -name '*.out' | head -1); cp "$f" "$f.out"`,
+			gobble.Group{
+				{Name: "s1", Spec: gobble.PathSpec{Dir: gobble.Dir("in"), Base: "s1", Ext: ".txt"}},
+				{Name: "s2", Spec: gobble.PathSpec{Dir: gobble.Dir("in"), Base: "s2", Ext: ".txt"}},
+			},
+		)
+	})(t)
+	if err := gobble.Run(t.Context(), g1, dir, 2); err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	if err := gobble.Release(dir); err != nil {
+		t.Fatalf("Release() error = %v", err)
+	}
+	g2 := mustCompose(func() *gobble.Pipeline {
+		return scatterNamedGroupPipeline(
+			`f=$(find . -type f ! -name '*.out' | head -1); cp "$f" "$f.out"`,
+			gobble.Group{
+				{Name: "s1", Spec: gobble.PathSpec{Dir: gobble.Dir("in"), Base: "s1", Ext: ".txt"}},
+				{Name: "s3", Spec: gobble.PathSpec{Dir: gobble.Dir("in"), Base: "s3", Ext: ".txt"}},
+			},
+		)
+	})(t)
+	if err := gobble.Resume(t.Context(), g2, dir, 2); err != nil {
+		var ge *gobble.Error
+		if errors.As(err, &ge) {
+			t.Fatalf("Resume() defects %#v", ge.Defects)
+		}
+		t.Fatalf("Resume() error = %v", err)
+	}
+	raw := mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile))
+	if !bytes.Contains(raw, []byte(`"s1"`)) || !bytes.Contains(raw, []byte(`"s3"`)) {
+		t.Fatalf("From Change missing new expansion: %s", raw)
+	}
+	if memberAttempt(raw, "s2") > 1 {
+		t.Fatalf("From Change submitted leftover s2: %s", raw)
+	}
+	if memberAttempt(raw, "s3") < 1 {
+		t.Fatalf("From Change did not run s3: %s", raw)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "in", "s3.txt.out")); err != nil {
+		t.Fatalf("new member dest: %v", err)
+	}
+}
+
+func TestResumeTrueToFalseWhenSkips(t *testing.T) {
+	dir := t.TempDir()
+	writeRunFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	first := func() *gobble.Pipeline {
+		p := gobble.NewPipeline("when-pred")
+		in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "sample", Ext: ".txt"})
+		p.When("opt").SkipIfFalse("run").AddTask(gobble.TaskSpec{
+			Name:    "copy",
+			Command: []string{"cp", "in/sample.txt", "out/sample.txt"},
+			Inputs:  []gobble.Bind{{Name: "in", From: in}},
+			Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "sample", Ext: ".txt"}}},
+			Params: []gobble.Param{
+				{Name: "keep", Value: "false"},
+				{Name: "run", Value: "true"},
+			},
+		})
+		return p
+	}
+	g1 := mustCompose(first)(t)
+	if err := gobble.Run(t.Context(), g1, dir, 0); err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	if err := gobble.Release(dir); err != nil {
+		t.Fatalf("Release() error = %v", err)
+	}
+	p2 := gobble.NewPipeline("when-pred")
+	in := p2.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "sample", Ext: ".txt"})
+	p2.When("opt").SkipIfFalse("keep").AddTask(gobble.TaskSpec{
+		Name:    "copy",
+		Command: []string{"cp", "in/sample.txt", "out/sample.txt"},
+		Inputs:  []gobble.Bind{{Name: "in", From: in}},
+		Outputs: []gobble.Bind{{Name: "out", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "sample", Ext: ".txt"}}},
+		Params: []gobble.Param{
+			{Name: "keep", Value: "false"},
+			{Name: "run", Value: "true"},
+		},
+	})
+	g2, err := gobble.Compose(p2)
+	if err != nil {
+		t.Fatalf("Compose() error = %v", err)
+	}
+	if err := gobble.Resume(t.Context(), g2, dir, 0); err != nil {
+		t.Fatalf("Resume() error = %v", err)
+	}
+	rawInst, err := gobble.Inspect(dir, gobble.ViewInstances, "")
+	if err != nil {
+		t.Fatalf("Inspect: %v", err)
+	}
+	if !bytes.Contains(rawInst, []byte(`"skipped"`)) || !bytes.Contains(rawInst, []byte("false-param")) {
+		t.Fatalf("true-to-false When did not skip: %s", rawInst)
+	}
+}
+
 func memberAttempt(raw []byte, key string) int {
 	var file struct {
 		Tasks []struct {
@@ -652,11 +807,15 @@ func memberAttempt(raw []byte, key string) int {
 }
 
 func scatterGroupPipeline(script string) *gobble.Pipeline {
-	p := gobble.NewPipeline("scatter")
-	samples := p.AddInputGroup("samples", gobble.Group{
+	return scatterNamedGroupPipeline(script, gobble.Group{
 		{Name: "s1", Spec: gobble.PathSpec{Dir: gobble.Dir("in"), Base: "s1", Ext: ".txt"}},
 		{Name: "s2", Spec: gobble.PathSpec{Dir: gobble.Dir("in"), Base: "s2", Ext: ".txt"}},
 	})
+}
+
+func scatterNamedGroupPipeline(script string, members gobble.Group) *gobble.Pipeline {
+	p := gobble.NewPipeline("scatter")
+	samples := p.AddInputGroup("samples", members)
 	item := p.Scatter("each").From(samples).AddTask(gobble.TaskSpec{
 		Name:    "copy",
 		Script:  script,

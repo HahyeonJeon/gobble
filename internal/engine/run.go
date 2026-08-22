@@ -621,6 +621,9 @@ func (s *sched) nextReady() (string, *Defect) {
 		if isScatterTemplateState(st) {
 			continue
 		}
+		if st.Status == StatusSkipped {
+			continue
+		}
 		if s.resume != nil {
 			if !s.resumeAdmit(ident, st) {
 				continue
@@ -651,7 +654,7 @@ func (s *sched) resumeAdmit(ident string, st *jsonTaskState) bool {
 	if s.launched[ident] {
 		return false
 	}
-	if st != nil && (st.Status == StatusRunning || st.Status == StatusUnknown) {
+	if st != nil && (st.Status == StatusRunning || st.Status == StatusUnknown || st.Status == StatusSkipped) {
 		return false
 	}
 	if dec, ok := s.resume[ident]; ok {
@@ -1070,6 +1073,9 @@ func (s *sched) assignBlockedUpstream() {
 		}
 		st := s.tasks[ident]
 		if st == nil {
+			continue
+		}
+		if st.Status == StatusSkipped || st.Status == StatusSucceeded {
 			continue
 		}
 		if s.waitProducerFailedThisResume(t.ID) {
@@ -1713,6 +1719,9 @@ func (s *sched) seedMembers(t TaskPlan, keys []string) *Defect {
 			continue
 		}
 		st := initialTask(member)
+		if prev := s.latestHistoryAttempt(ident); prev > 0 {
+			st.Attempt = prev + 1
+		}
 		s.tasks[ident] = &st
 	}
 	return nil
@@ -1880,6 +1889,15 @@ func (s *sched) edgeFrom(toTask, toPort string) (string, string) {
 }
 
 func (s *sched) specializeMemberIO(t *TaskPlan, key string) {
+	s.specializeMemberChain(t, key, make(map[string]bool))
+}
+
+func (s *sched) specializeMemberChain(t *TaskPlan, key string, seen map[string]bool) {
+	if seen[t.ID] {
+		return
+	}
+	seen[t.ID] = true
+	defer delete(seen, t.ID)
 	memberPath, memberSpec := s.memberSource(t, key)
 	if memberPath != "" || !isZeroPath(memberSpec) {
 		for i := range t.Inputs {
@@ -1893,11 +1911,11 @@ func (s *sched) specializeMemberIO(t *TaskPlan, key string) {
 			}
 		}
 	}
-	s.specializeSiblingIO(t, key, true)
-	s.specializeSiblingIO(t, key, false)
+	s.specializeSiblingChain(t, key, true, seen)
+	s.specializeSiblingChain(t, key, false, seen)
 }
 
-func (s *sched) specializeSiblingIO(t *TaskPlan, key string, inputs bool) {
+func (s *sched) specializeSiblingChain(t *TaskPlan, key string, inputs bool, seen map[string]bool) {
 	ports := t.Outputs
 	if inputs {
 		ports = t.Inputs
@@ -1915,7 +1933,7 @@ func (s *sched) specializeSiblingIO(t *TaskPlan, key string, inputs bool) {
 		sibling.Instance = key
 		sibling.ShardIndex = DefaultShardIndex
 		applyReservedDefaults(&sibling)
-		s.specializeProducerIO(&sibling, key)
+		s.specializeMemberChain(&sibling, key, seen)
 		io, ok := findProducerIO(sibling, fromPort)
 		if !ok || io.Path == "" {
 			continue
@@ -1927,23 +1945,6 @@ func (s *sched) specializeSiblingIO(t *TaskPlan, key string, inputs bool) {
 			continue
 		}
 		s.applyMemberIO(&t.Outputs[i], path, spec, false)
-	}
-}
-
-func (s *sched) specializeProducerIO(t *TaskPlan, key string) {
-	memberPath, memberSpec := s.memberSource(t, key)
-	if memberPath == "" && isZeroPath(memberSpec) {
-		return
-	}
-	for i := range t.Inputs {
-		if s.ioFromScatterProducer(*t, t.Inputs[i].Name) {
-			s.applyMemberIO(&t.Inputs[i], memberPath, memberSpec, true)
-		}
-	}
-	for i := range t.Outputs {
-		if s.ioFromScatterProducer(*t, t.Outputs[i].Name) {
-			s.applyMemberIO(&t.Outputs[i], memberPath, memberSpec, false)
-		}
 	}
 }
 
@@ -2079,6 +2080,17 @@ func (s *sched) applyMemberIO(io *IO, memberPath string, memberSpec Path, asInpu
 
 func literalPath(path string) Path {
 	return Path{Literal: true, Opaque: path}
+}
+
+func (s *sched) latestHistoryAttempt(ident string) int {
+	best := 0
+	for _, st := range s.history {
+		h := reservedIdentity(taskPlanFromState(st))
+		if h == ident && st.Attempt > best {
+			best = st.Attempt
+		}
+	}
+	return best
 }
 
 func (s *sched) maybeSkip() *Defect {

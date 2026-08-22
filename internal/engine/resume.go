@@ -267,6 +267,17 @@ func occupyResume(req Request) (*sched, []Defect) {
 			if dec.Change != changeUnchanged && dec.Change != "" {
 				cp.Expansion = nil
 				cp.Condition = ""
+				if t.When != "" && dec.Decision == reuseRerun {
+					s.history = append(s.history, cp)
+					fresh := initialTask(t)
+					fresh.Attempt = st.Attempt + 1
+					fresh.Change = dec.Change
+					fresh.Decision = reuseRerun
+					fresh.ReuseReason = dec.Reason
+					fresh.Differing = append([]string(nil), dec.Differing...)
+					s.tasks[ident] = &fresh
+					continue
+				}
 				if cp.Status == StatusSkipped {
 					cp.Status = StatusNotStarted
 					cp.Reason = ""
@@ -311,16 +322,6 @@ func occupyResume(req Request) (*sched, []Defect) {
 			}
 			if parentDec.Decision == reuseRerun {
 				s.history = append(s.history, cp)
-				member := cloneTaskPlan(parent)
-				member.Instance = st.Instance
-				member.ShardIndex = st.ShardIndex
-				applyReservedDefaults(&member)
-				fresh := initialTask(member)
-				fresh.Attempt = st.Attempt + 1
-				fresh.Change = parentDec.Change
-				fresh.Decision = reuseRerun
-				s.tasks[ident] = &fresh
-				s.resume[ident] = reuseDecision{Identity: ident, Decision: reuseRerun, Change: parentDec.Change}
 				continue
 			}
 		}
