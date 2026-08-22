@@ -326,23 +326,25 @@ func inspectRunView(workspace string, run jsonRun, tasks []jsonTaskState) inspec
 }
 
 type inspectInstanceDoc struct {
-	SchemaVersion int           `json:"schema_version"`
-	Identity      string        `json:"identity"`
-	Status        string        `json:"status"`
-	Executor      string        `json:"executor"`
-	Image         string        `json:"image"`
-	Command       []string      `json:"command"`
-	Script        string        `json:"script,omitempty"`
-	Params        []jsonParam   `json:"params"`
-	Resources     jsonResources `json:"resources"`
-	Instance      string        `json:"instance"`
-	ShardIndex    int           `json:"shard_index"`
-	ShardCount    int           `json:"shard_count"`
-	Attempt       int           `json:"attempt"`
-	Stdout        string        `json:"stdout,omitempty"`
-	Stderr        string        `json:"stderr,omitempty"`
-	Decision      string        `json:"decision,omitempty"`
-	Reason        string        `json:"reuse_reason,omitempty"`
+	SchemaVersion int            `json:"schema_version"`
+	Identity      string         `json:"identity"`
+	Status        string         `json:"status"`
+	Executor      string         `json:"executor"`
+	Image         string         `json:"image"`
+	Command       []string       `json:"command"`
+	Script        string         `json:"script,omitempty"`
+	Params        []jsonParam    `json:"params"`
+	Resources     jsonResources  `json:"resources"`
+	Instance      string         `json:"instance"`
+	ShardIndex    int            `json:"shard_index"`
+	ShardCount    int            `json:"shard_count"`
+	Attempt       int            `json:"attempt"`
+	Stdout        string         `json:"stdout,omitempty"`
+	Stderr        string         `json:"stderr,omitempty"`
+	Decision      string         `json:"decision,omitempty"`
+	Reason        string         `json:"reuse_reason,omitempty"`
+	Condition     string         `json:"condition,omitempty"`
+	Expansion     *jsonExpansion `json:"expansion,omitempty"`
 }
 
 func inspectInstanceRecords(tasks []jsonTaskState, doc Document, schema int) []inspectInstanceDoc {
@@ -366,6 +368,8 @@ func inspectInstanceRecords(tasks []jsonTaskState, doc Document, schema int) []i
 			Stderr:        st.Stderr,
 			Decision:      st.Decision,
 			Reason:        reuseReasonOf(st),
+			Condition:     st.Condition,
+			Expansion:     st.Expansion,
 		}
 		if t, ok := planTaskByID(doc, st.ID); ok {
 			rec.Script = t.Script
@@ -406,7 +410,10 @@ type inspectError struct {
 func inspectErrorsView(tasks []jsonTaskState, schema int) inspectErrorsDoc {
 	out := inspectErrorsDoc{SchemaVersion: schema, Errors: []inspectError{}}
 	for _, st := range tasks {
-		if st.Status == StatusSucceeded {
+		if st.Status == StatusSucceeded || st.Status == StatusSkipped {
+			continue
+		}
+		if st.Scatter != "" && st.Instance == "" {
 			continue
 		}
 		msg := st.Reason
@@ -675,19 +682,31 @@ func documentFromPlan(plan jsonPlan) Document {
 
 func decodeTask(t jsonTask) TaskPlan {
 	return TaskPlan{
-		ID:         t.ID,
-		Name:       t.Name,
-		Instance:   t.Instance,
-		ShardIndex: t.ShardIndex,
-		ShardCount: t.ShardCount,
-		Attempt:    t.Attempt,
-		Module:     t.Module,
-		Branch:     t.Branch,
-		Merge:      t.Merge,
-		Command:    t.Command,
-		Script:     t.Script,
-		Image:      t.Image,
-		Backend:    t.Backend,
+		ID:                 t.ID,
+		Name:               t.Name,
+		Instance:           t.Instance,
+		ShardIndex:         t.ShardIndex,
+		ShardCount:         t.ShardCount,
+		Attempt:            t.Attempt,
+		Module:             t.Module,
+		Branch:             t.Branch,
+		Merge:              t.Merge,
+		Scatter:            t.Scatter,
+		Gather:             t.Gather,
+		When:               t.When,
+		ScatterFromKind:    t.ScatterFromKind,
+		ScatterFromTask:    t.ScatterFromTask,
+		ScatterFromPort:    t.ScatterFromPort,
+		ScatterMembers:     append([]string(nil), t.ScatterMembers...),
+		ScatterMemberPaths: append([]string(nil), t.ScatterMemberPaths...),
+		SkipIfMissingTask:  t.SkipIfMissingTask,
+		SkipIfMissingPort:  t.SkipIfMissingPort,
+		SkipIfMissingPath:  t.SkipIfMissingPath,
+		SkipIfFalse:        t.SkipIfFalse,
+		Command:            t.Command,
+		Script:             t.Script,
+		Image:              t.Image,
+		Backend:            t.Backend,
 		Resources: ResourcePlan{
 			CPU:    t.Resources.CPU,
 			Memory: t.Resources.Memory,

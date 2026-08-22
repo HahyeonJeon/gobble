@@ -28,20 +28,29 @@ const (
 	nodeBranch
 	nodeMerge
 	nodeTask
+	nodeScatter
+	nodeGather
+	nodeWhen
 )
 
 type ancestor struct {
-	kind nodeKind
-	name string
+	kind    nodeKind
+	name    string
+	scatter *Scatter
+	gather  *Gather
+	when    *When
 }
 
 type node struct {
-	kind   nodeKind
-	name   string
-	module *Module
-	branch *Branch
-	merge  *Merge
-	task   *Task
+	kind    nodeKind
+	name    string
+	module  *Module
+	branch  *Branch
+	merge   *Merge
+	scatter *Scatter
+	gather  *Gather
+	when    *When
+	task    *Task
 }
 
 // Module is a named group of tasks, branches, and merges.
@@ -66,6 +75,36 @@ type Merge struct {
 	anc      []ancestor
 	name     string
 	children []node
+}
+
+// Scatter is a named membership fan-out. Membership is From a Group,
+// Tree, or File Handle. Child tasks stay the authored task list.
+type Scatter struct {
+	pipe     *Pipeline
+	anc      []ancestor
+	name     string
+	from     Handle
+	children []node
+}
+
+// Gather is a named fan-in of scatter members. Edges come from
+// Bind.From wiring, like Merge.
+type Gather struct {
+	pipe     *Pipeline
+	anc      []ancestor
+	name     string
+	children []node
+}
+
+// When is a named conditional. SkipIfMissing and SkipIfFalse are the
+// only predicates. A When with no predicate never skips.
+type When struct {
+	pipe        *Pipeline
+	anc         []ancestor
+	name        string
+	skipMissing Handle
+	skipFalse   string
+	children    []node
 }
 
 // Task is a recorded task builder.
@@ -199,6 +238,28 @@ func (p *Pipeline) Merge(name string) *Merge {
 	return mg
 }
 
+// Scatter records a child scatter and returns it.
+func (p *Pipeline) Scatter(name string) *Scatter {
+	s := &Scatter{pipe: p, name: name}
+	p.children = append(p.children, node{kind: nodeScatter, name: name, scatter: s})
+	return s
+}
+
+// Gather records a child gather and returns it. Edges come from
+// Bind.From wiring, not from a scatter list.
+func (p *Pipeline) Gather(name string) *Gather {
+	g := &Gather{pipe: p, name: name}
+	p.children = append(p.children, node{kind: nodeGather, name: name, gather: g})
+	return g
+}
+
+// When records a child conditional and returns it.
+func (p *Pipeline) When(name string) *When {
+	w := &When{pipe: p, name: name}
+	p.children = append(p.children, node{kind: nodeWhen, name: name, when: w})
+	return w
+}
+
 // AddModule records a child module and returns it.
 func (m *Module) AddModule(name string) *Module {
 	child := &Module{pipe: m.pipe, anc: childAnc(m.anc, nodeModule, m.name), name: name}
@@ -232,6 +293,28 @@ func (m *Module) Merge(name string) *Merge {
 	return mg
 }
 
+// Scatter records a child scatter and returns it.
+func (m *Module) Scatter(name string) *Scatter {
+	s := &Scatter{pipe: m.pipe, anc: childAnc(m.anc, nodeModule, m.name), name: name}
+	m.children = append(m.children, node{kind: nodeScatter, name: name, scatter: s})
+	return s
+}
+
+// Gather records a child gather and returns it. Edges come from
+// Bind.From wiring, not from a scatter list.
+func (m *Module) Gather(name string) *Gather {
+	g := &Gather{pipe: m.pipe, anc: childAnc(m.anc, nodeModule, m.name), name: name}
+	m.children = append(m.children, node{kind: nodeGather, name: name, gather: g})
+	return g
+}
+
+// When records a child conditional and returns it.
+func (m *Module) When(name string) *When {
+	w := &When{pipe: m.pipe, anc: childAnc(m.anc, nodeModule, m.name), name: name}
+	m.children = append(m.children, node{kind: nodeWhen, name: name, when: w})
+	return w
+}
+
 // AddTask records a child task and returns it.
 func (b *Branch) AddTask(spec TaskSpec) *Task {
 	t := b.pipe.newTask(childAnc(b.anc, nodeBranch, b.name), spec)
@@ -251,6 +334,66 @@ func (mg *Merge) AddTask(spec TaskSpec) *Task {
 	t := mg.pipe.newTask(childAnc(mg.anc, nodeMerge, mg.name), spec)
 	mg.children = append(mg.children, node{kind: nodeTask, name: spec.Name, task: t})
 	return t
+}
+
+// From records the Group, Tree, or File membership source.
+func (s *Scatter) From(h Handle) *Scatter {
+	s.from = h
+	return s
+}
+
+// AddTask records a child task and returns it.
+func (s *Scatter) AddTask(spec TaskSpec) *Task {
+	t := s.pipe.newTask(childAncOp(s.anc, nodeScatter, s.name, s, nil, nil), spec)
+	s.children = append(s.children, node{kind: nodeTask, name: spec.Name, task: t})
+	return t
+}
+
+// AddModule records a child module and returns it.
+func (s *Scatter) AddModule(name string) *Module {
+	m := &Module{pipe: s.pipe, anc: childAncOp(s.anc, nodeScatter, s.name, s, nil, nil), name: name}
+	s.children = append(s.children, node{kind: nodeModule, name: name, module: m})
+	return m
+}
+
+// AddTask records a child task and returns it.
+func (g *Gather) AddTask(spec TaskSpec) *Task {
+	t := g.pipe.newTask(childAncOp(g.anc, nodeGather, g.name, nil, g, nil), spec)
+	g.children = append(g.children, node{kind: nodeTask, name: spec.Name, task: t})
+	return t
+}
+
+// AddModule records a child module and returns it.
+func (g *Gather) AddModule(name string) *Module {
+	m := &Module{pipe: g.pipe, anc: childAncOp(g.anc, nodeGather, g.name, nil, g, nil), name: name}
+	g.children = append(g.children, node{kind: nodeModule, name: name, module: m})
+	return m
+}
+
+// SkipIfMissing records a File Handle skip predicate.
+func (w *When) SkipIfMissing(h Handle) *When {
+	w.skipMissing = h
+	return w
+}
+
+// SkipIfFalse records a declared boolean param skip predicate.
+func (w *When) SkipIfFalse(param string) *When {
+	w.skipFalse = param
+	return w
+}
+
+// AddTask records a child task and returns it.
+func (w *When) AddTask(spec TaskSpec) *Task {
+	t := w.pipe.newTask(childAncOp(w.anc, nodeWhen, w.name, nil, nil, w), spec)
+	w.children = append(w.children, node{kind: nodeTask, name: spec.Name, task: t})
+	return t
+}
+
+// AddModule records a child module and returns it.
+func (w *When) AddModule(name string) *Module {
+	m := &Module{pipe: w.pipe, anc: childAncOp(w.anc, nodeWhen, w.name, nil, nil, w), name: name}
+	w.children = append(w.children, node{kind: nodeModule, name: name, module: m})
+	return m
 }
 
 // Out returns a non-zero Handle that records a request for output port name.
@@ -307,9 +450,13 @@ func (p *Pipeline) newTask(anc []ancestor, spec TaskSpec) *Task {
 }
 
 func childAnc(anc []ancestor, kind nodeKind, name string) []ancestor {
+	return childAncOp(anc, kind, name, nil, nil, nil)
+}
+
+func childAncOp(anc []ancestor, kind nodeKind, name string, sc *Scatter, g *Gather, w *When) []ancestor {
 	out := make([]ancestor, len(anc)+1)
 	copy(out, anc)
-	out[len(anc)] = ancestor{kind: kind, name: name}
+	out[len(anc)] = ancestor{kind: kind, name: name, scatter: sc, gather: g, when: w}
 	return out
 }
 
@@ -337,6 +484,47 @@ func (t *Task) nearest(kind nodeKind) string {
 		}
 	}
 	return ""
+}
+
+func (t *Task) scatterOp() *Scatter {
+	for i := len(t.anc) - 1; i >= 0; i-- {
+		if t.anc[i].kind == nodeScatter {
+			return t.anc[i].scatter
+		}
+	}
+	return nil
+}
+
+func (t *Task) gatherOp() *Gather {
+	for i := len(t.anc) - 1; i >= 0; i-- {
+		if t.anc[i].kind == nodeGather {
+			return t.anc[i].gather
+		}
+	}
+	return nil
+}
+
+func (t *Task) whenOp() *When {
+	for i := len(t.anc) - 1; i >= 0; i-- {
+		if t.anc[i].kind == nodeWhen {
+			return t.anc[i].when
+		}
+	}
+	return nil
+}
+
+func sameHandle(a, b Handle) bool {
+	if a.kind != b.kind || a.name != b.name {
+		return false
+	}
+	switch a.kind {
+	case handleInput:
+		return a.pipe == b.pipe
+	case handleOut, handleIn:
+		return a.task == b.task
+	default:
+		return a.kind == handleZero && b.kind == handleZero
+	}
 }
 
 func bindUnit(taskID, port string) string {

@@ -306,15 +306,27 @@ func planDocument(g *Graph) (engine.Document, error) {
 			command = scriptArgv(t.script)
 		}
 		pt := engine.TaskPlan{
-			ID:      t.id,
-			Name:    t.name,
-			Module:  t.module,
-			Branch:  t.branch,
-			Merge:   t.merge,
-			Command: command,
-			Script:  t.script,
-			Image:   t.image,
-			Backend: t.backend,
+			ID:                 t.id,
+			Name:               t.name,
+			Module:             t.module,
+			Branch:             t.branch,
+			Merge:              t.merge,
+			Scatter:            t.scatter,
+			Gather:             t.gather,
+			When:               t.when,
+			ScatterFromKind:    scatterFromArtifact(g, t),
+			ScatterFromTask:    t.scatterFromTask,
+			ScatterFromPort:    t.scatterFromName,
+			ScatterMembers:     copyStrings(t.scatterMembers),
+			ScatterMemberPaths: copyStrings(t.scatterMemberPaths),
+			SkipIfMissingTask:  t.skipMissingTask,
+			SkipIfMissingPort:  t.skipMissingName,
+			SkipIfMissingPath:  t.skipMissingPath,
+			SkipIfFalse:        t.skipFalse,
+			Command:            command,
+			Script:             t.script,
+			Image:              t.image,
+			Backend:            t.backend,
 			Resources: engine.ResourcePlan{
 				CPU:    t.resources.CPU,
 				Memory: t.resources.Memory,
@@ -325,14 +337,14 @@ func planDocument(g *Graph) (engine.Document, error) {
 			pt.Params = append(pt.Params, engine.ParamPlan{Name: p.Name, Value: p.Value})
 		}
 		for _, b := range t.inputs {
-			io, err := planIO(g, b, true)
+			io, err := planIO(g, t, b, true)
 			if err != nil {
 				return engine.Document{}, planPathError(bindUnit(t.id, b.name), err)
 			}
 			pt.Inputs = append(pt.Inputs, io)
 		}
 		for _, b := range t.outputs {
-			io, err := planIO(g, b, false)
+			io, err := planIO(g, t, b, false)
 			if err != nil {
 				return engine.Document{}, planPathError(bindUnit(t.id, b.name), err)
 			}
@@ -363,7 +375,50 @@ func scriptArgv(script string) []string {
 	return []string{"sh", "-c", "set -eu\n" + script}
 }
 
-func planIO(g *Graph, b graphBind, asInput bool) (engine.IO, error) {
+func scatterFromArtifact(g *Graph, t *graphTask) string {
+	if t.scatter == "" || t.scatterFromKind == handleZero {
+		return ""
+	}
+	switch t.scatterFromKind {
+	case handleInput:
+		for _, in := range g.inputs {
+			if in.name != t.scatterFromName {
+				continue
+			}
+			if !in.tree.IsZero() {
+				return ArtifactTree
+			}
+			if in.members != nil {
+				return ArtifactGroup
+			}
+			return ArtifactFile
+		}
+	case handleOut, handleIn:
+		src, ok := g.lookupTask(t.scatterFromTask)
+		if !ok {
+			return ""
+		}
+		binds := src.outputs
+		if t.scatterFromKind == handleIn {
+			binds = src.inputs
+		}
+		for _, b := range binds {
+			if b.name != t.scatterFromName {
+				continue
+			}
+			if !b.tree.IsZero() {
+				return ArtifactTree
+			}
+			if b.members != nil {
+				return ArtifactGroup
+			}
+			return ArtifactFile
+		}
+	}
+	return ""
+}
+
+func planIO(g *Graph, t *graphTask, b graphBind, asInput bool) (engine.IO, error) {
 	if !b.tree.IsZero() {
 		dir := b.tree.Dir.String()
 		io := engine.IO{
@@ -410,6 +465,22 @@ func planIO(g *Graph, b graphBind, asInput bool) (engine.IO, error) {
 			io.Members = append(io.Members, member)
 		}
 		return io, nil
+	}
+	if graphScatterFileFromProducer(t, b) || graphFromScatterChild(g, t, b) {
+		path, err := b.spec.Render()
+		if err != nil {
+			return engine.IO{
+				Name: b.name,
+				Kind: engine.ArtifactFile,
+				Spec: snapshotPath(b.spec),
+			}, nil
+		}
+		return engine.IO{
+			Name: b.name,
+			Kind: engine.ArtifactFile,
+			Path: path,
+			Spec: snapshotPath(b.spec),
+		}, nil
 	}
 	path, err := b.spec.Render()
 	if err != nil {
@@ -578,6 +649,9 @@ func planWait(byID map[string]*engine.TaskPlan, e graphEdge) ([]string, error) {
 	if !ok {
 		return nil, neverReadyError(bindUnit(e.toTask, e.toPort))
 	}
+	if scatterRelatedWait(to, e, byID) {
+		return nil, nil
+	}
 	if e.fromTask == "" || toIsInput {
 		return waitPaths(toIO, bindUnit(e.toTask, e.toPort))
 	}
@@ -646,6 +720,28 @@ func waitPaths(io engine.IO, unit string) ([]string, error) {
 		return nil, neverReadyError(unit)
 	}
 	return []string{p}, nil
+}
+
+func graphFromScatterChild(g *Graph, t *graphTask, b graphBind) bool {
+	if b.fromTask == "" {
+		return false
+	}
+	src, ok := g.lookupTask(b.fromTask)
+	return ok && src.scatter != ""
+}
+
+func scatterRelatedWait(to *engine.TaskPlan, e graphEdge, byID map[string]*engine.TaskPlan) bool {
+	if to == nil {
+		return false
+	}
+	if to.Scatter != "" && e.fromTask == to.ScatterFromTask && e.fromPort == to.ScatterFromPort {
+		return true
+	}
+	if to.Gather == "" || e.fromTask == "" {
+		return false
+	}
+	from, ok := byID[e.fromTask]
+	return ok && from.Scatter != ""
 }
 
 func neverReadyError(unit string) error {

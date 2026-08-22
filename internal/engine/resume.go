@@ -264,6 +264,15 @@ func occupyResume(req Request) (*sched, []Defect) {
 		if st, ok := byIdent[ident]; ok {
 			cp := st
 			cp.Change = dec.Change
+			if dec.Change != changeUnchanged && dec.Change != "" {
+				cp.Expansion = nil
+				cp.Condition = ""
+				if cp.Status == StatusSkipped {
+					cp.Status = StatusNotStarted
+					cp.Reason = ""
+					cp.Ended = ""
+				}
+			}
 			if dec.Decision == reuseReused {
 				cp.Decision = dec.Decision
 				cp.ReuseReason = dec.Reason
@@ -284,6 +293,28 @@ func occupyResume(req Request) (*sched, []Defect) {
 			continue
 		}
 		cp := st
+		if parent, ok := planTaskByID(doc, st.ID); ok && parent.Scatter != "" && st.Instance != "" {
+			parentIdent := reservedIdentity(parent)
+			parentDec := class.Decision[parentIdent]
+			if parentDec.Change == changeUnchanged {
+				s.tasks[ident] = &cp
+				continue
+			}
+			if parentDec.Decision == reuseRerun {
+				s.history = append(s.history, cp)
+				member := cloneTaskPlan(parent)
+				member.Instance = st.Instance
+				member.ShardIndex = st.ShardIndex
+				applyReservedDefaults(&member)
+				fresh := initialTask(member)
+				fresh.Attempt = st.Attempt + 1
+				fresh.Change = parentDec.Change
+				fresh.Decision = reuseRerun
+				s.tasks[ident] = &fresh
+				s.resume[ident] = reuseDecision{Identity: ident, Decision: reuseRerun, Change: parentDec.Change}
+				continue
+			}
+		}
 		if dec := class.Decision[ident]; dec.Change == changeRemoved {
 			cp.Change = changeRemoved
 		}

@@ -1,7 +1,8 @@
 // Package gobble is the Go library for composing, validating, planning,
 // and running bioinformatics pipelines.
 //
-// Authors build a [Pipeline] with modules, branches, merges, and tasks, then
+// Authors build a [Pipeline] with modules, branches, merges, scatters,
+// gathers, whens, and tasks, then
 // call [Compose] to obtain an immutable [Graph]. [Validate] re-checks compose
 // defects and rejects rendered-path conflicts, unsupported backends, and
 // non-finite CPU. [BuildPlan] validates first and returns an inspectable
@@ -30,7 +31,7 @@
 //
 // Shipped types and functions include PathSpec, Directory, Literal, Dir,
 // DeriveRule, DeriveAppend, DeriveReplaceExt, Pipeline, NewPipeline,
-// Module, Branch, Merge, Task, Handle, TaskSpec, Bind, Group, Member,
+// Module, Branch, Merge, Scatter, Gather, When, Task, Handle, TaskSpec, Bind, Group, Member,
 // Tree, DeclareTree, Param, Resources, Graph, Edge, Compose, Validate,
 // BuildPlan, WriteTo, PlanOption, Plan, Run, Inspect, View, Resume,
 // Release, Error, Defect, DefectCode, and the Defect* constants.

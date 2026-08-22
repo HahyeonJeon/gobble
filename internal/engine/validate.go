@@ -63,6 +63,7 @@ func Validate(doc Document) []Defect {
 		}
 		defects = append(defects, checkEnv(id, t.Env)...)
 		defects = append(defects, checkParams(id, t.Params)...)
+		defects = append(defects, checkSkipIfFalse(id, t)...)
 		for _, b := range t.Inputs {
 			defects = append(defects, checkArtifactXOR(bindUnit(id, b.Name), b)...)
 			paths = append(paths, recordIOPaths(id, b, false)...)
@@ -74,6 +75,30 @@ func Validate(doc Document) []Defect {
 	}
 	defects = append(defects, checkConflicts(paths)...)
 	return defects
+}
+
+func checkSkipIfFalse(id string, t *TaskPlan) []Defect {
+	if t.SkipIfFalse == "" {
+		return nil
+	}
+	for _, p := range t.Params {
+		if p.Name != t.SkipIfFalse {
+			continue
+		}
+		if p.Value != "true" && p.Value != "false" {
+			return []Defect{{
+				Code:    DefectInvalidValue,
+				Unit:    id,
+				Message: "invalid-value",
+			}}
+		}
+		return nil
+	}
+	return []Defect{{
+		Code:    DefectInvalidValue,
+		Unit:    id,
+		Message: "invalid-value",
+	}}
 }
 
 func checkParams(id string, params []ParamPlan) []Defect {

@@ -207,16 +207,46 @@ func checkCap(cap int) []Defect {
 }
 
 func checkPlanPaths(doc Document) []Defect {
+	scatterIDs := make(map[string]bool, len(doc.Tasks))
+	for _, t := range doc.Tasks {
+		if t.Scatter != "" {
+			scatterIDs[t.ID] = true
+		}
+	}
 	var defects []Defect
 	for _, t := range doc.Tasks {
 		for _, in := range t.Inputs {
+			if scatterRelatedEmptyIO(doc, t, in.Name, in.Path, scatterIDs) {
+				continue
+			}
 			defects = append(defects, checkIOPaths(bindUnit(t.ID, in.Name), in)...)
 		}
 		for _, out := range t.Outputs {
+			if scatterRelatedEmptyIO(doc, t, out.Name, out.Path, scatterIDs) {
+				continue
+			}
 			defects = append(defects, checkIOPaths(bindUnit(t.ID, out.Name), out)...)
 		}
 	}
 	return defects
+}
+
+func scatterRelatedEmptyIO(doc Document, t TaskPlan, port, path string, scatterIDs map[string]bool) bool {
+	if path != "" {
+		return false
+	}
+	for _, e := range doc.Edges {
+		if e.ToTask != t.ID || e.ToPort != port {
+			continue
+		}
+		if t.Scatter != "" && e.FromTask == t.ScatterFromTask && e.FromPort == t.ScatterFromPort {
+			return true
+		}
+		if scatterIDs[e.FromTask] {
+			return true
+		}
+	}
+	return false
 }
 
 func checkIOPaths(unit string, io IO) []Defect {
@@ -355,14 +385,42 @@ func invalidImage(image string) string {
 	return ""
 }
 
+func skipIfMissingExempt(t TaskPlan, in IO) bool {
+	if t.SkipIfMissingPath == "" && t.SkipIfMissingPort == "" {
+		return false
+	}
+	src := in.Path
+	if in.Source != "" {
+		src = in.Source
+	}
+	if t.SkipIfMissingPath != "" && src == t.SkipIfMissingPath {
+		return true
+	}
+	return t.SkipIfMissingTask == "" && in.Name == t.SkipIfMissingPort
+}
+
 func checkInputs(workspace string, doc Document) []Defect {
+	scatterIDs := make(map[string]bool, len(doc.Tasks))
+	for _, t := range doc.Tasks {
+		if t.Scatter != "" {
+			scatterIDs[t.ID] = true
+		}
+	}
 	var defects []Defect
 	for _, t := range doc.Tasks {
 		for _, in := range t.Inputs {
 			if hasUpstreamTask(doc, t.ID, in.Name) {
 				continue
 			}
+			src := in.Path
+			if in.Source != "" {
+				src = in.Source
+			}
+			if scatterRelatedEmptyIO(doc, t, in.Name, src, scatterIDs) {
+				continue
+			}
 			unit := bindUnit(t.ID, in.Name)
+			exempt := skipIfMissingExempt(t, in)
 			if isTreeIO(in) {
 				src := treeSourceDir(in)
 				abs, present, err := containedRel(workspace, src, false)
@@ -401,7 +459,7 @@ func checkInputs(workspace string, doc Document) []Defect {
 				}
 				continue
 			}
-			src := in.Path
+			src = in.Path
 			if in.Source != "" {
 				src = in.Source
 			}
@@ -411,6 +469,9 @@ func checkInputs(workspace string, doc Document) []Defect {
 				continue
 			}
 			if present && regularFile(abs) {
+				continue
+			}
+			if exempt {
 				continue
 			}
 			defects = append(defects, Defect{
@@ -429,6 +490,9 @@ func checkOutputs(workspace string, doc Document) []Defect {
 	for _, t := range doc.Tasks {
 		for _, out := range t.Outputs {
 			unit := bindUnit(t.ID, out.Name)
+			if !isTreeIO(out) && out.Members == nil && out.Path == "" {
+				continue
+			}
 			if isTreeIO(out) {
 				_, present, err := containedRel(workspace, out.Path, true)
 				if err != nil {

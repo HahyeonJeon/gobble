@@ -323,6 +323,8 @@ func cloneTaskPlan(t TaskPlan) TaskPlan {
 	if t.Params != nil {
 		t.Params = append([]ParamPlan(nil), t.Params...)
 	}
+	t.ScatterMembers = copyStrings(t.ScatterMembers)
+	t.ScatterMemberPaths = copyStrings(t.ScatterMemberPaths)
 	t.Env = copyStringMap(t.Env)
 	t.Inputs = cloneIOs(t.Inputs)
 	t.Outputs = cloneIOs(t.Outputs)

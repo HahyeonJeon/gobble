@@ -51,6 +51,7 @@ func composeCheckPipeline(p *Pipeline) []Defect {
 	}
 	c.checkPipeCycles(p)
 	c.checkPipePaths(p)
+	c.checkGatherScatters(p)
 	return c.defects
 }
 
@@ -82,6 +83,8 @@ func graphCheck(g *Graph) []Defect {
 	}
 	c.checkCycles()
 	c.checkPaths()
+	c.checkGatherScatters()
+	c.checkScatterFrom()
 	defects = c.defects
 	return defects
 }
@@ -189,6 +192,20 @@ func (c *composeChecker) walkNodes(prefix string, nodes []node) {
 		case nodeMerge:
 			if n.merge != nil {
 				c.walkNodes(id, n.merge.children)
+			}
+		case nodeScatter:
+			if n.scatter != nil {
+				c.checkScatterFrom(id, n.scatter)
+				c.walkNodes(id, n.scatter.children)
+			}
+		case nodeGather:
+			if n.gather != nil {
+				c.walkNodes(id, n.gather.children)
+			}
+		case nodeWhen:
+			if n.when != nil {
+				c.checkWhenPreds(id, n.when)
+				c.walkNodes(id, n.when.children)
 			}
 		case nodeTask:
 			if n.task != nil {
@@ -306,7 +323,7 @@ func (c *graphChecker) checkTask(t *graphTask) {
 			c.add(DefectMissingInput, bindUnit(id, b.name), "missing input")
 			continue
 		}
-		if !c.groupFromOK(b) {
+		if !c.groupFromOK(t, b) {
 			c.add(DefectMissingInput, bindUnit(id, b.name), "missing input")
 		}
 	}
@@ -316,7 +333,7 @@ func (c *graphChecker) checkTask(t *graphTask) {
 			c.add(DefectMissingInput, bindUnit(id, b.name), "missing input")
 			continue
 		}
-		if b.fromKind != handleZero && c.fromInGraph(b) && !c.groupFromOK(b) {
+		if b.fromKind != handleZero && c.fromInGraph(b) && !c.groupFromOK(t, b) {
 			c.add(DefectMissingInput, bindUnit(id, b.name), "missing input")
 		}
 	}
@@ -471,10 +488,13 @@ func (c *composeChecker) groupFromOK(t *Task, b Bind) bool {
 	if b.Group != nil {
 		return srcGroup && !srcTree && sameMemberNames(b.Group, srcMembers)
 	}
+	if scatterFileFromProducer(t, b) {
+		return true
+	}
 	return !srcGroup && !srcTree
 }
 
-func (c *graphChecker) groupFromOK(b graphBind) bool {
+func (c *graphChecker) groupFromOK(t *graphTask, b graphBind) bool {
 	srcGroup, srcMembers, srcTree, ok := c.sourceKind(b)
 	if !ok {
 		return false
@@ -485,7 +505,155 @@ func (c *graphChecker) groupFromOK(b graphBind) bool {
 	if b.members != nil {
 		return srcGroup && !srcTree && sameGraphMemberNames(b.members, srcMembers)
 	}
+	if graphScatterFileFromProducer(t, b) {
+		return true
+	}
 	return !srcGroup && !srcTree
+}
+
+func graphScatterFileFromProducer(t *graphTask, b graphBind) bool {
+	if t == nil || t.scatter == "" || b.members != nil || !b.tree.IsZero() {
+		return false
+	}
+	if t.scatterFromKind == handleZero {
+		return false
+	}
+	return b.fromKind == t.scatterFromKind && b.fromName == t.scatterFromName && b.fromTask == t.scatterFromTask
+}
+
+func (c *graphChecker) fromScatterChild(b graphBind) bool {
+	if b.fromTask == "" {
+		return false
+	}
+	src, ok := c.tasks[b.fromTask]
+	return ok && src.scatter != ""
+}
+
+func (c *composeChecker) checkScatterFrom(unit string, s *Scatter) {
+	if s == nil {
+		return
+	}
+	if s.from.IsZero() || foreignFrom(s.from, s.pipe) {
+		c.add(DefectMissingInput, unit, "missing input")
+		return
+	}
+	if !c.scatterFromOK(s) {
+		c.add(DefectMissingInput, unit, "missing input")
+	}
+}
+
+func (c *composeChecker) scatterFromOK(s *Scatter) bool {
+	switch s.from.kind {
+	case handleInput:
+		_, ok := c.inputs[s.from.name]
+		return ok && s.from.pipe == s.pipe
+	case handleOut, handleIn:
+		return s.from.task != nil && c.tasks[s.from.task.id()] != nil
+	default:
+		return false
+	}
+}
+
+func (c *graphChecker) checkScatterFrom() {
+	seen := make(map[string]bool)
+	for i := range c.g.tasks {
+		t := &c.g.tasks[i]
+		if t.scatter == "" || seen[t.scatter] {
+			continue
+		}
+		seen[t.scatter] = true
+		if t.scatterFromKind == handleZero {
+			c.add(DefectMissingInput, t.scatter, "missing input")
+		}
+	}
+}
+
+func (c *composeChecker) checkWhenPreds(unit string, w *When) {
+	if w == nil || w.skipMissing.IsZero() {
+		return
+	}
+	if foreignFrom(w.skipMissing, w.pipe) || !c.skipMissingFileOK(w.skipMissing) {
+		c.add(DefectInvalidValue, unit, "skip-if-missing is not a file")
+	}
+}
+
+func (c *composeChecker) skipMissingFileOK(h Handle) bool {
+	switch h.kind {
+	case handleInput:
+		in, ok := c.inputs[h.name]
+		return ok && in.members == nil && in.tree.IsZero()
+	case handleOut:
+		if h.task == nil {
+			return false
+		}
+		b, ok := findBind(h.task.spec.Outputs, h.name)
+		return ok && b.Group == nil && b.Tree.IsZero()
+	case handleIn:
+		if h.task == nil {
+			return false
+		}
+		b, ok := findBind(h.task.spec.Inputs, h.name)
+		return ok && b.Group == nil && b.Tree.IsZero()
+	default:
+		return false
+	}
+}
+
+func (c *composeChecker) checkGatherScatters(p *Pipeline) {
+	for _, t := range p.tasks {
+		if t.gatherOp() == nil {
+			continue
+		}
+		names := make(map[string]bool)
+		add := func(b Bind) {
+			if b.From.IsZero() || foreignFrom(b.From, t.pipe) || b.From.task == nil {
+				return
+			}
+			src := b.From.task
+			if sc := src.scatterOp(); sc != nil {
+				names[sc.name] = true
+			}
+		}
+		for _, b := range t.spec.Inputs {
+			add(b)
+		}
+		for _, b := range t.spec.Outputs {
+			add(b)
+		}
+		if len(names) > 1 {
+			c.add(DefectInvalidValue, t.id(), "ambiguous gather scatter")
+		}
+	}
+}
+
+func (c *graphChecker) checkGatherScatters() {
+	byID := c.tasks
+	for i := range c.g.tasks {
+		t := &c.g.tasks[i]
+		if t.gather == "" {
+			continue
+		}
+		names := make(map[string]bool)
+		add := func(b graphBind) {
+			if b.fromTask == "" {
+				return
+			}
+			src, ok := byID[b.fromTask]
+			if !ok || src.scatter == "" {
+				return
+			}
+			names[src.scatter] = true
+		}
+		for _, b := range t.inputs {
+			add(b)
+		}
+		for _, b := range t.outputs {
+			add(b)
+		}
+		if len(names) > 1 {
+			c.add(DefectInvalidValue, t.id, "ambiguous gather scatter")
+		}
+	}
 }
 
 func (c *composeChecker) sourceKind(t *Task, b Bind) (bool, Group, bool, bool) {
@@ -711,6 +879,9 @@ func (c *graphChecker) checkPaths() {
 
 func (c *composeChecker) recordBindPaths(t *Task, b Bind, id string, out bool) {
 	unit := bindUnit(id, b.Name)
+	if scatterFileFromProducer(t, b) || fromScatterChild(t, b) {
+		return
+	}
 	if !b.Tree.IsZero() {
 		dir, ok := c.resolveTree(t, b, out)
 		if !ok {
@@ -738,6 +909,9 @@ func (c *composeChecker) recordBindPaths(t *Task, b Bind, id string, out bool) {
 
 func (c *graphChecker) recordBindPaths(t *graphTask, b graphBind, out bool) {
 	unit := bindUnit(t.id, b.name)
+	if graphScatterFileFromProducer(t, b) || c.fromScatterChild(b) {
+		return
+	}
 	if !b.tree.IsZero() {
 		c.renderTreeDir(b.tree.Dir, unit)
 		return
@@ -906,7 +1080,7 @@ func (c *composeChecker) resolveBind(t *Task, b Bind, out bool) (PathSpec, bool)
 	if c.walking[key] {
 		return PathSpec{}, false
 	}
-	if b.From.IsZero() || foreignFrom(b.From, t.pipe) {
+	if b.From.IsZero() || foreignFrom(b.From, t.pipe) || scatterFileFromProducer(t, b) || fromScatterChild(t, b) {
 		spec := b.Spec.clone()
 		c.memo[key] = spec
 		return spec, true

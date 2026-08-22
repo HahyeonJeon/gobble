@@ -72,6 +72,34 @@ func classifyReuseMode(workspace string, latest jsonTaskState, recorded, current
 		dec.Reason = reasonPreviousIncomplete
 		return dec
 	case StatusSucceeded:
+	case StatusSkipped:
+		if !sameStrings(latest.Command, current.Command) || latest.Script != current.Script || recorded.Script != current.Script {
+			dec.Reason = reasonCommandOrScriptChanged
+			return dec
+		}
+		if !sameParams(decodeParams(latest.Params), current.Params) {
+			dec.Reason = reasonParamsChanged
+			return dec
+		}
+		if envIdentityChanged(latest, current) {
+			dec.Reason = reasonEnvChanged
+			return dec
+		}
+		dec.Decision = reuseReused
+		dec.Reason = reasonReusedIdentityMatched
+		return dec
+	case StatusNotStarted:
+		if current.Scatter != "" && current.Instance == "" {
+			if !sameStrings(latest.Command, current.Command) || latest.Script != current.Script || recorded.Script != current.Script {
+				dec.Reason = reasonCommandOrScriptChanged
+				return dec
+			}
+			dec.Decision = reuseReused
+			dec.Reason = reasonReusedIdentityMatched
+			return dec
+		}
+		dec.Reason = reasonPreviousUnsuccessful
+		return dec
 	default:
 		dec.Reason = reasonPreviousUnsuccessful
 		return dec
@@ -89,6 +117,25 @@ func classifyReuseMode(workspace string, latest jsonTaskState, recorded, current
 	}
 	if execEnvChanged(workspace, latest, current, hashContent) {
 		differ = append(differ, "image")
+	}
+	if current.Gather != "" {
+		if len(differ) > 1 {
+			dec.Reason = reasonIdentityChanged
+			dec.Differing = differ
+			return dec
+		}
+		if len(differ) == 1 {
+			dec.Differing = differ
+			dec.Reason = reuseReasonFor(differ[0])
+			return dec
+		}
+		if destReuseMiss(workspace, latest, current, hashContent) {
+			dec.Reason = reasonOutputMissing
+			return dec
+		}
+		dec.Decision = reuseReused
+		dec.Reason = reasonReusedIdentityMatched
+		return dec
 	}
 	if inputReason, extra := compareInputIdentity(workspace, latest, current, hashContent); inputReason != "" {
 		if inputReason == reasonIdentityChanged {
@@ -329,6 +376,20 @@ func classifyRemaining(workspace string, doc Document, tasks []jsonTaskState) re
 	return classifyRemainingMode(workspace, doc, tasks, true)
 }
 
+func remainingAttempt(doc Document, st jsonTaskState, ident string) bool {
+	if st.Status == StatusSucceeded || st.Status == StatusSkipped {
+		return false
+	}
+	if st.Scatter != "" && st.Instance == "" {
+		return false
+	}
+	if t, ok := planTaskByID(doc, st.ID); ok && t.Scatter != "" && st.Instance == "" {
+		return false
+	}
+	_ = ident
+	return true
+}
+
 func classifyRemainingView(workspace string, doc Document, tasks []jsonTaskState) remainingClass {
 	return classifyRemainingMode(workspace, doc, tasks, false)
 }
@@ -348,7 +409,7 @@ func classifyRemainingMode(workspace string, doc Document, tasks []jsonTaskState
 		byIdent[ident] = st
 		taskIDOf[ident] = st.ID
 		identsOfTask[st.ID] = append(identsOfTask[st.ID], ident)
-		if st.Status != StatusSucceeded {
+		if remainingAttempt(doc, st, ident) {
 			out.Remaining[ident] = true
 		}
 		recorded, current := reusePlans(doc, st)
@@ -434,7 +495,7 @@ func classifyResume(workspace string, recorded, supplied Document, tasks []jsonT
 		}
 		dec.Identity = ident
 		out.Decision[ident] = dec
-		if st.Status != StatusSucceeded {
+		if remainingAttempt(supplied, st, ident) {
 			out.Remaining[ident] = true
 		}
 		if dec.Decision != reuseReused {

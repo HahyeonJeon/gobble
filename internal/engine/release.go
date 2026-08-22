@@ -320,9 +320,13 @@ func runStatusFromTasks(tasks []jsonTaskState) string {
 		}
 	}
 	for _, st := range tasks {
-		if st.Status != StatusSucceeded {
-			return StatusFailed
+		if st.Status == StatusSucceeded || st.Status == StatusSkipped {
+			continue
 		}
+		if st.Scatter != "" && st.Instance == "" {
+			continue
+		}
+		return StatusFailed
 	}
 	return StatusSucceeded
 }

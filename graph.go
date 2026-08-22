@@ -34,20 +34,33 @@ type graphInput struct {
 }
 
 type graphTask struct {
-	id        string
-	name      string
-	module    string
-	branch    string
-	merge     string
-	command   []string
-	script    string
-	image     string
-	backend   string
-	resources Resources
-	params    []Param
-	env       map[string]string
-	inputs    []graphBind
-	outputs   []graphBind
+	id                 string
+	name               string
+	module             string
+	branch             string
+	merge              string
+	scatter            string
+	gather             string
+	when               string
+	scatterFromKind    handleKind
+	scatterFromName    string
+	scatterFromTask    string
+	scatterMembers     []string
+	scatterMemberPaths []string
+	skipMissingKind    handleKind
+	skipMissingName    string
+	skipMissingTask    string
+	skipMissingPath    string
+	skipFalse          string
+	command            []string
+	script             string
+	image              string
+	backend            string
+	resources          Resources
+	params             []Param
+	env                map[string]string
+	inputs             []graphBind
+	outputs            []graphBind
 }
 
 type graphBind struct {

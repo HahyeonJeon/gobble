@@ -108,6 +108,9 @@ func (r *resolver) buildGraph() *Graph {
 			module:    t.nearest(nodeModule),
 			branch:    t.nearest(nodeBranch),
 			merge:     t.nearest(nodeMerge),
+			scatter:   t.nearest(nodeScatter),
+			gather:    t.nearest(nodeGather),
+			when:      t.nearest(nodeWhen),
 			command:   copyStrings(t.spec.Command),
 			script:    t.spec.Script,
 			image:     t.spec.Image,
@@ -116,6 +119,7 @@ func (r *resolver) buildGraph() *Graph {
 			params:    copyParams(t.spec.Params),
 			env:       copyEnv(t.spec.Env),
 		}
+		r.copyOperatorFacts(t, &gt)
 		for _, b := range t.spec.Inputs {
 			gt.inputs = append(gt.inputs, r.graphBind(t, b, false))
 		}
@@ -126,6 +130,113 @@ func (r *resolver) buildGraph() *Graph {
 		g.edges = append(g.edges, fromEdges(t)...)
 	}
 	return g
+}
+
+func (r *resolver) copyOperatorFacts(t *Task, gt *graphTask) {
+	if sc := t.scatterOp(); sc != nil && !sc.from.IsZero() && !foreignFrom(sc.from, r.p) {
+		gt.scatterFromKind = sc.from.kind
+		gt.scatterFromName = sc.from.name
+		if sc.from.task != nil {
+			gt.scatterFromTask = sc.from.task.id()
+		}
+		gt.scatterMembers, gt.scatterMemberPaths = staticScatterMembers(r.p, sc.from)
+	}
+	if w := t.whenOp(); w != nil {
+		gt.skipFalse = w.skipFalse
+		if !w.skipMissing.IsZero() && !foreignFrom(w.skipMissing, r.p) {
+			gt.skipMissingKind = w.skipMissing.kind
+			gt.skipMissingName = w.skipMissing.name
+			if w.skipMissing.task != nil {
+				gt.skipMissingTask = w.skipMissing.task.id()
+			}
+			gt.skipMissingPath = skipMissingPath(r.p, w.skipMissing)
+		}
+	}
+}
+
+func staticScatterMembers(p *Pipeline, h Handle) ([]string, []string) {
+	if h.kind != handleInput {
+		return nil, nil
+	}
+	for _, in := range p.inputs {
+		if in.name != h.name {
+			continue
+		}
+		if in.members != nil {
+			names := make([]string, 0, len(in.members))
+			paths := make([]string, 0, len(in.members))
+			for _, m := range in.members {
+				names = append(names, m.Name)
+				path, err := m.Spec.Render()
+				if err != nil {
+					paths = append(paths, "")
+					continue
+				}
+				paths = append(paths, path)
+			}
+			return names, paths
+		}
+		if !in.tree.IsZero() {
+			return nil, nil
+		}
+		path, err := in.spec.Render()
+		if err != nil || path == "" {
+			return nil, nil
+		}
+		return []string{path}, []string{path}
+	}
+	return nil, nil
+}
+
+func skipMissingPath(p *Pipeline, h Handle) string {
+	switch h.kind {
+	case handleInput:
+		for _, in := range p.inputs {
+			if in.name != h.name {
+				continue
+			}
+			if in.members != nil || !in.tree.IsZero() {
+				return ""
+			}
+			path, err := in.spec.Render()
+			if err != nil {
+				return ""
+			}
+			return path
+		}
+	case handleOut:
+		if h.task == nil {
+			return ""
+		}
+		b, ok := findBind(h.task.spec.Outputs, h.name)
+		if !ok || b.Group != nil || !b.Tree.IsZero() {
+			return ""
+		}
+		path, err := b.Spec.Render()
+		if err != nil {
+			return ""
+		}
+		return path
+	}
+	return ""
+}
+
+func scatterFileFromProducer(t *Task, b Bind) bool {
+	if t == nil || b.Group != nil || !b.Tree.IsZero() {
+		return false
+	}
+	sc := t.scatterOp()
+	if sc == nil || sc.from.IsZero() {
+		return false
+	}
+	return sameHandle(b.From, sc.from)
+}
+
+func fromScatterChild(t *Task, b Bind) bool {
+	if t == nil || b.From.task == nil {
+		return false
+	}
+	return b.From.task.scatterOp() != nil
 }
 
 func (r *resolver) graphBind(t *Task, b Bind, out bool) graphBind {
@@ -170,7 +281,7 @@ func (r *resolver) resolveBind(t *Task, b Bind, out bool) (PathSpec, bool) {
 	if r.walking[key] {
 		return PathSpec{}, false
 	}
-	if b.From.IsZero() {
+	if b.From.IsZero() || scatterFileFromProducer(t, b) || fromScatterChild(t, b) {
 		spec := b.Spec.clone()
 		r.memo[key] = spec
 		return spec, true

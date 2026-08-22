@@ -23,27 +23,39 @@ type Request struct {
 
 // TaskPlan is one task in a plan Document.
 type TaskPlan struct {
-	ID               string
-	Name             string
-	Instance         string
-	ShardIndex       int
-	ShardCount       int
-	Attempt          int
-	Module           string
-	Branch           string
-	Merge            string
-	Command          []string
-	Script           string
-	Image            string
-	Backend          string
-	Resources        ResourcePlan
-	Params           []ParamPlan
-	Env              map[string]string
-	EnvDigest        string
-	ExecutablePath   string
-	ExecutableSHA256 string
-	Inputs           []IO
-	Outputs          []IO
+	ID                 string
+	Name               string
+	Instance           string
+	ShardIndex         int
+	ShardCount         int
+	Attempt            int
+	Module             string
+	Branch             string
+	Merge              string
+	Scatter            string
+	Gather             string
+	When               string
+	ScatterFromKind    string
+	ScatterFromTask    string
+	ScatterFromPort    string
+	ScatterMembers     []string
+	ScatterMemberPaths []string
+	SkipIfMissingTask  string
+	SkipIfMissingPort  string
+	SkipIfMissingPath  string
+	SkipIfFalse        string
+	Command            []string
+	Script             string
+	Image              string
+	Backend            string
+	Resources          ResourcePlan
+	Params             []ParamPlan
+	Env                map[string]string
+	EnvDigest          string
+	ExecutablePath     string
+	ExecutableSHA256   string
+	Inputs             []IO
+	Outputs            []IO
 	// Replace selects authorized staged replace after isolate outputs.
 	// Run publish ignores it and stays exclusive-create.
 	Replace bool
@@ -114,24 +126,36 @@ type jsonPlan struct {
 }
 
 type jsonTask struct {
-	ID         string        `json:"id"`
-	Name       string        `json:"name"`
-	Instance   string        `json:"instance"`
-	ShardIndex int           `json:"shard_index"`
-	ShardCount int           `json:"shard_count"`
-	Attempt    int           `json:"attempt"`
-	Module     string        `json:"module"`
-	Branch     string        `json:"branch"`
-	Merge      string        `json:"merge"`
-	Command    []string      `json:"command"`
-	Script     string        `json:"script,omitempty"`
-	Image      string        `json:"image"`
-	Backend    string        `json:"backend"`
-	Resources  jsonResources `json:"resources"`
-	Params     []jsonParam   `json:"params"`
-	EnvDigest  string        `json:"env_digest,omitempty"`
-	Inputs     []jsonIO      `json:"inputs"`
-	Outputs    []jsonIO      `json:"outputs"`
+	ID                 string        `json:"id"`
+	Name               string        `json:"name"`
+	Instance           string        `json:"instance"`
+	ShardIndex         int           `json:"shard_index"`
+	ShardCount         int           `json:"shard_count"`
+	Attempt            int           `json:"attempt"`
+	Module             string        `json:"module"`
+	Branch             string        `json:"branch"`
+	Merge              string        `json:"merge"`
+	Scatter            string        `json:"scatter,omitempty"`
+	Gather             string        `json:"gather,omitempty"`
+	When               string        `json:"when,omitempty"`
+	ScatterFromKind    string        `json:"scatter_from_kind,omitempty"`
+	ScatterFromTask    string        `json:"scatter_from_task,omitempty"`
+	ScatterFromPort    string        `json:"scatter_from_port,omitempty"`
+	ScatterMembers     []string      `json:"scatter_members,omitempty"`
+	ScatterMemberPaths []string      `json:"scatter_member_paths,omitempty"`
+	SkipIfMissingTask  string        `json:"skip_if_missing_task,omitempty"`
+	SkipIfMissingPort  string        `json:"skip_if_missing_port,omitempty"`
+	SkipIfMissingPath  string        `json:"skip_if_missing_path,omitempty"`
+	SkipIfFalse        string        `json:"skip_if_false,omitempty"`
+	Command            []string      `json:"command"`
+	Script             string        `json:"script,omitempty"`
+	Image              string        `json:"image"`
+	Backend            string        `json:"backend"`
+	Resources          jsonResources `json:"resources"`
+	Params             []jsonParam   `json:"params"`
+	EnvDigest          string        `json:"env_digest,omitempty"`
+	Inputs             []jsonIO      `json:"inputs"`
+	Outputs            []jsonIO      `json:"outputs"`
 }
 
 type jsonResources struct {
@@ -269,19 +293,31 @@ func encodeTask(t TaskPlan) jsonTask {
 	}
 	applyReservedDefaults(&t)
 	return jsonTask{
-		ID:         t.ID,
-		Name:       t.Name,
-		Instance:   t.Instance,
-		ShardIndex: t.ShardIndex,
-		ShardCount: t.ShardCount,
-		Attempt:    t.Attempt,
-		Module:     t.Module,
-		Branch:     t.Branch,
-		Merge:      t.Merge,
-		Command:    jsonStrings(t.Command),
-		Script:     t.Script,
-		Image:      t.Image,
-		Backend:    backend,
+		ID:                 t.ID,
+		Name:               t.Name,
+		Instance:           t.Instance,
+		ShardIndex:         t.ShardIndex,
+		ShardCount:         t.ShardCount,
+		Attempt:            t.Attempt,
+		Module:             t.Module,
+		Branch:             t.Branch,
+		Merge:              t.Merge,
+		Scatter:            t.Scatter,
+		Gather:             t.Gather,
+		When:               t.When,
+		ScatterFromKind:    t.ScatterFromKind,
+		ScatterFromTask:    t.ScatterFromTask,
+		ScatterFromPort:    t.ScatterFromPort,
+		ScatterMembers:     jsonOmitEmpty(t.ScatterMembers),
+		ScatterMemberPaths: jsonOmitEmpty(t.ScatterMemberPaths),
+		SkipIfMissingTask:  t.SkipIfMissingTask,
+		SkipIfMissingPort:  t.SkipIfMissingPort,
+		SkipIfMissingPath:  t.SkipIfMissingPath,
+		SkipIfFalse:        t.SkipIfFalse,
+		Command:            jsonStrings(t.Command),
+		Script:             t.Script,
+		Image:              t.Image,
+		Backend:            backend,
 		Resources: jsonResources{
 			CPU:    t.Resources.CPU,
 			Memory: t.Resources.Memory,
@@ -371,4 +407,11 @@ func jsonStrings(in []string) []string {
 	out := make([]string, len(in))
 	copy(out, in)
 	return out
+}
+
+func jsonOmitEmpty(in []string) []string {
+	if len(in) == 0 {
+		return nil
+	}
+	return jsonStrings(in)
 }

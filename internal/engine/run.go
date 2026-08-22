@@ -8,10 +8,12 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
+	"strings"
 	"sync/atomic"
 	"time"
 
 	"github.com/HahyeonJeon/gobble/internal/engine/exec"
+	intpath "github.com/HahyeonJeon/gobble/internal/path"
 )
 
 // Control-plane document names under ControlDir.
@@ -29,6 +31,12 @@ const (
 	StatusBlocked    = "blocked"
 	StatusIncomplete = "incomplete"
 	StatusUnknown    = "unknown"
+	StatusSkipped    = "skipped"
+)
+
+const (
+	conditionMissingFile = "missing-file"
+	conditionFalseParam  = "false-param"
 )
 
 const (
@@ -192,6 +200,16 @@ type jsonTaskState struct {
 	ReuseReason      string         `json:"reuse_reason,omitempty"`
 	Differing        []string       `json:"differing,omitempty"`
 	Change           string         `json:"change,omitempty"`
+	Scatter          string         `json:"scatter,omitempty"`
+	Gather           string         `json:"gather,omitempty"`
+	When             string         `json:"when,omitempty"`
+	Condition        string         `json:"condition,omitempty"`
+	Expansion        *jsonExpansion `json:"expansion,omitempty"`
+}
+
+type jsonExpansion struct {
+	Producer string   `json:"producer,omitempty"`
+	Members  []string `json:"members"`
 }
 
 type jsonTaskErr struct {
@@ -301,6 +319,9 @@ func initialTask(t TaskPlan) jsonTaskState {
 		},
 		Params:    encodeParams(t.Params),
 		EnvDigest: envDigest(t.Env),
+		Scatter:   t.Scatter,
+		Gather:    t.Gather,
+		When:      t.When,
 	}
 }
 
@@ -586,32 +607,94 @@ func boundedReconcile(ex exec.Executor, h exec.Handle) (exec.Report, error) {
 }
 
 func (s *sched) nextReady() (string, *Defect) {
-	for _, t := range s.doc.Tasks {
-		ident := reservedIdentity(t)
+	if d := s.maybeSkip(); d != nil {
+		return "", d
+	}
+	if d := s.maybeExpand(); d != nil {
+		return "", d
+	}
+	for _, ident := range s.readyCandidates() {
 		st := s.tasks[ident]
 		if st == nil {
 			continue
 		}
+		if isScatterTemplateState(st) {
+			continue
+		}
 		if s.resume != nil {
-			if s.resume[ident].Decision != reuseRerun || s.launched[ident] {
+			if !s.resumeAdmit(ident, st) {
 				continue
 			}
 		} else if st.Status != StatusNotStarted {
 			continue
 		}
-		ready, d := s.upstreamReady(t.ID)
+		task, ok := s.taskByIdent(ident)
+		if !ok {
+			continue
+		}
+		ready, d := s.upstreamReady(task.ID)
 		if d != nil {
 			return "", d
 		}
 		if !ready {
 			continue
 		}
-		if !s.budget.fits(t) {
+		if !s.budget.fits(task) {
 			continue
 		}
 		return ident, nil
 	}
 	return "", nil
+}
+
+func (s *sched) resumeAdmit(ident string, st *jsonTaskState) bool {
+	if s.launched[ident] {
+		return false
+	}
+	if dec, ok := s.resume[ident]; ok {
+		return dec.Decision == reuseRerun
+	}
+	if st == nil || st.Instance == "" {
+		return false
+	}
+	parent, ok := s.taskByID(st.ID)
+	if !ok {
+		return false
+	}
+	parentIdent := reservedIdentity(parent)
+	return s.resume[parentIdent].Decision == reuseRerun
+}
+
+func (s *sched) readyCandidates() []string {
+	seen := make(map[string]bool, len(s.tasks))
+	var out []string
+	for _, t := range s.doc.Tasks {
+		ident := reservedIdentity(t)
+		if s.tasks[ident] != nil {
+			out = append(out, ident)
+			seen[ident] = true
+		}
+		var members []string
+		for ident, st := range s.tasks {
+			if st == nil || st.ID != t.ID || st.Instance == "" || seen[ident] {
+				continue
+			}
+			members = append(members, ident)
+		}
+		sort.Strings(members)
+		out = append(out, members...)
+		for _, ident := range members {
+			seen[ident] = true
+		}
+	}
+	var extra []string
+	for ident := range s.tasks {
+		if !seen[ident] {
+			extra = append(extra, ident)
+		}
+	}
+	sort.Strings(extra)
+	return append(out, extra...)
 }
 
 func (s *sched) stateByTaskID(id string) *jsonTaskState {
@@ -624,10 +707,26 @@ func (s *sched) stateByTaskID(id string) *jsonTaskState {
 func (s *sched) taskByIdent(ident string) (TaskPlan, bool) {
 	for _, t := range s.doc.Tasks {
 		if reservedIdentity(t) == ident {
-			return t, true
+			out := cloneTaskPlan(t)
+			s.specializeGatherIO(&out)
+			return out, true
 		}
 	}
-	return TaskPlan{}, false
+	st := s.tasks[ident]
+	if st == nil || st.Instance == "" {
+		return TaskPlan{}, false
+	}
+	t, ok := s.taskByID(st.ID)
+	if !ok {
+		return TaskPlan{}, false
+	}
+	member := cloneTaskPlan(t)
+	member.Instance = st.Instance
+	member.ShardIndex = st.ShardIndex
+	member.ShardCount = st.ShardCount
+	member.Attempt = st.Attempt
+	s.specializeMemberIO(&member, st.Instance)
+	return member, true
 }
 
 func (s *sched) upstreamReady(id string) (bool, *Defect) {
@@ -636,6 +735,13 @@ func (s *sched) upstreamReady(id string) (bool, *Defect) {
 			continue
 		}
 		if e.FromTask != "" {
+			if s.isScatterTaskID(e.FromTask) {
+				ready, d := s.scatterMembersReady(e.FromTask)
+				if d != nil || !ready {
+					return ready, d
+				}
+				continue
+			}
 			up := s.stateByTaskID(e.FromTask)
 			if up == nil || up.Status != StatusSucceeded {
 				return false, nil
@@ -699,14 +805,8 @@ func (s *sched) succeededThisResume(ident string) bool {
 	if s.launched == nil || !s.launched[ident] {
 		return false
 	}
-	for _, t := range s.doc.Tasks {
-		if reservedIdentity(t) != ident {
-			continue
-		}
-		st := s.tasks[ident]
-		return st != nil && st.Status == StatusSucceeded
-	}
-	return false
+	st := s.tasks[ident]
+	return st != nil && st.Status == StatusSucceeded
 }
 
 func (s *sched) waitPathPendingRerun(path string) bool {
@@ -908,7 +1008,7 @@ func (s *sched) beginResumeAttempt(ident string) {
 	old := s.tasks[ident]
 	task, _ := s.taskByIdent(ident)
 	dec, hasDec := s.resume[ident]
-	if old != nil && dec.Change == changeAdded && old.Status == StatusNotStarted {
+	if old != nil && old.Status == StatusNotStarted && (dec.Change == changeAdded || dec.Decision == reuseRerun) {
 		applyResumeDecision(old, dec, hasDec)
 		if s.launched != nil {
 			s.launched[ident] = true
@@ -948,6 +1048,9 @@ func (s *sched) assignBlockedUpstream() {
 	now := time.Now().UTC().Format(time.RFC3339Nano)
 	for _, t := range s.doc.Tasks {
 		ident := reservedIdentity(t)
+		if isScatterTemplate(t) {
+			continue
+		}
 		if s.resume[ident].Decision != reuseRerun || s.launched[ident] {
 			continue
 		}
@@ -1162,11 +1265,11 @@ func (s *sched) finish() {
 	}
 	s.run.Ended = time.Now().UTC().Format(time.RFC3339Nano)
 	s.run.Status = StatusSucceeded
-	for _, t := range s.doc.Tasks {
-		st := s.tasks[reservedIdentity(t)]
-		if st == nil || st.Status == StatusSucceeded {
+	for ident, st := range s.tasks {
+		if st == nil || isNonFailureState(st) {
 			continue
 		}
+		_ = ident
 		s.run.Status = StatusFailed
 		break
 	}
@@ -1181,8 +1284,14 @@ func (s *sched) notePersist(err error) {
 
 func (s *sched) failures() []Defect {
 	var out []Defect
+	seen := make(map[string]bool)
 	for _, t := range s.doc.Tasks {
-		st := s.tasks[reservedIdentity(t)]
+		ident := reservedIdentity(t)
+		st := s.tasks[ident]
+		if isScatterTemplate(t) {
+			seen[ident] = true
+			continue
+		}
 		if st == nil {
 			out = append(out, Defect{
 				Code:    DefectFailed,
@@ -1191,36 +1300,20 @@ func (s *sched) failures() []Defect {
 			})
 			continue
 		}
-		switch st.Status {
-		case StatusSucceeded, StatusBlocked:
+		seen[ident] = true
+		out = append(out, s.failureOf(ident, t.ID, st)...)
+	}
+	var extra []string
+	for ident, st := range s.tasks {
+		if seen[ident] || st == nil || isScatterTemplateState(st) {
 			continue
-		case StatusUnknown:
-			out = append(out, Defect{
-				Code:    DefectUnknownBackend,
-				Unit:    reservedIdentity(t),
-				Message: "unknown backend",
-			})
-		case StatusNotStarted:
-			out = append(out, Defect{
-				Code:    DefectFailed,
-				Unit:    t.ID,
-				Message: "not started",
-			})
-		default:
-			msg := "task failed"
-			if st.Error != nil && st.Error.Message != "" {
-				msg = st.Error.Message
-			}
-			code := DefectFailed
-			if st.Reason == "path escapes directory" || msg == "path escapes directory" {
-				code = DefectInvalidPath
-			}
-			out = append(out, Defect{
-				Code:    code,
-				Unit:    t.ID,
-				Message: msg,
-			})
 		}
+		extra = append(extra, ident)
+	}
+	sort.Strings(extra)
+	for _, ident := range extra {
+		st := s.tasks[ident]
+		out = append(out, s.failureOf(ident, st.ID, st)...)
 	}
 	if s.persist != nil {
 		out = append(out, Defect{
@@ -1276,11 +1369,26 @@ func (s *sched) writeTasks() error {
 	doc := jsonTasksFile{
 		SchemaVersion: SchemaVersion,
 		Snapshot:      s.snapshot,
-		Tasks:         make([]jsonTaskState, 0, len(s.history)+len(s.doc.Tasks)),
+		Tasks:         make([]jsonTaskState, 0, len(s.history)+len(s.tasks)),
 	}
 	doc.Tasks = append(doc.Tasks, s.history...)
+	seen := make(map[string]bool, len(s.tasks))
 	for _, t := range s.doc.Tasks {
-		if st := s.tasks[reservedIdentity(t)]; st != nil {
+		ident := reservedIdentity(t)
+		if st := s.tasks[ident]; st != nil {
+			doc.Tasks = append(doc.Tasks, *st)
+			seen[ident] = true
+		}
+	}
+	var extra []string
+	for ident := range s.tasks {
+		if !seen[ident] {
+			extra = append(extra, ident)
+		}
+	}
+	sort.Strings(extra)
+	for _, ident := range extra {
+		if st := s.tasks[ident]; st != nil {
 			doc.Tasks = append(doc.Tasks, *st)
 		}
 	}
@@ -1302,9 +1410,7 @@ func (s *sched) syncUnknown() {
 func (s *sched) unknownUnits() []string {
 	var units []string
 	seen := map[string]bool{}
-	for _, t := range s.doc.Tasks {
-		ident := reservedIdentity(t)
-		st := s.tasks[ident]
+	for ident, st := range s.tasks {
 		if st != nil && st.Status == StatusUnknown && !seen[ident] {
 			units = append(units, ident)
 			seen[ident] = true
@@ -1388,4 +1494,626 @@ func writeAtomic(path string, data []byte) error {
 		return err
 	}
 	return nil
+}
+
+func isScatterTemplate(t TaskPlan) bool {
+	return t.Scatter != "" && t.Instance == ""
+}
+
+func isScatterTemplateState(st *jsonTaskState) bool {
+	return st != nil && st.Scatter != "" && st.Instance == ""
+}
+
+func isNonFailureState(st *jsonTaskState) bool {
+	if st == nil {
+		return false
+	}
+	switch st.Status {
+	case StatusSucceeded, StatusSkipped, StatusBlocked:
+		return true
+	case StatusNotStarted:
+		return isScatterTemplateState(st)
+	default:
+		return isScatterTemplateState(st)
+	}
+}
+
+func isKnownTerminal(status string) bool {
+	switch status {
+	case StatusSucceeded, StatusFailed, StatusSkipped, StatusBlocked, StatusIncomplete:
+		return true
+	default:
+		return false
+	}
+}
+
+func (s *sched) failureOf(ident, unit string, st *jsonTaskState) []Defect {
+	if st == nil {
+		return []Defect{{Code: DefectFailed, Unit: unit, Message: "task failed"}}
+	}
+	switch st.Status {
+	case StatusSucceeded, StatusBlocked, StatusSkipped:
+		return nil
+	case StatusUnknown:
+		return []Defect{{
+			Code:    DefectUnknownBackend,
+			Unit:    ident,
+			Message: "unknown backend",
+		}}
+	case StatusNotStarted:
+		if isScatterTemplateState(st) {
+			return nil
+		}
+		return []Defect{{
+			Code:    DefectFailed,
+			Unit:    unit,
+			Message: "not started",
+		}}
+	default:
+		msg := "task failed"
+		if st.Error != nil && st.Error.Message != "" {
+			msg = st.Error.Message
+		}
+		code := DefectFailed
+		if st.Reason == "path escapes directory" || msg == "path escapes directory" {
+			code = DefectInvalidPath
+		}
+		if st.Reason == "never-ready" || msg == "never-ready" {
+			code = DefectNeverReady
+		}
+		return []Defect{{
+			Code:    code,
+			Unit:    unit,
+			Message: msg,
+		}}
+	}
+}
+
+func (s *sched) isScatterTaskID(id string) bool {
+	t, ok := s.taskByID(id)
+	return ok && isScatterTemplate(t)
+}
+
+func (s *sched) scatterTemplateState(id string) *jsonTaskState {
+	t, ok := s.taskByID(id)
+	if !ok {
+		return nil
+	}
+	return s.tasks[reservedIdentity(t)]
+}
+
+func (s *sched) scatterMembersReady(id string) (bool, *Defect) {
+	st := s.scatterTemplateState(id)
+	if st == nil || st.Expansion == nil {
+		return false, nil
+	}
+	if len(st.Expansion.Members) == 0 {
+		d := Defect{Code: DefectNeverReady, Unit: id, Message: "never-ready"}
+		return false, &d
+	}
+	allSucceeded := true
+	for _, key := range st.Expansion.Members {
+		member, ok := s.taskByID(id)
+		if !ok {
+			return false, nil
+		}
+		member.Instance = key
+		member.ShardIndex = DefaultShardIndex
+		applyReservedDefaults(&member)
+		ident := reservedIdentity(member)
+		ms := s.tasks[ident]
+		if ms == nil {
+			return false, nil
+		}
+		if ms.Status == StatusRunning || ms.Status == StatusUnknown || ms.Status == StatusNotStarted {
+			return false, nil
+		}
+		if !isKnownTerminal(ms.Status) {
+			return false, nil
+		}
+		if ms.Status != StatusSucceeded {
+			allSucceeded = false
+		}
+	}
+	if !allSucceeded {
+		return false, nil
+	}
+	return true, nil
+}
+
+func (s *sched) maybeExpand() *Defect {
+	for _, t := range s.doc.Tasks {
+		if !isScatterTemplate(t) {
+			continue
+		}
+		st := s.tasks[reservedIdentity(t)]
+		if st == nil || st.Status == StatusSkipped {
+			continue
+		}
+		if st.Expansion != nil {
+			if d := s.seedMembers(t, st.Expansion.Members); d != nil {
+				return d
+			}
+			continue
+		}
+		keys, producer, ready, d := s.expansionKeys(t)
+		if d != nil {
+			return d
+		}
+		if !ready {
+			continue
+		}
+		st.Expansion = &jsonExpansion{Producer: producer, Members: keys}
+		if st.Expansion.Members == nil {
+			st.Expansion.Members = []string{}
+		}
+		s.notePersist(s.persistControl())
+		if d := s.seedMembers(t, st.Expansion.Members); d != nil {
+			return d
+		}
+	}
+	return nil
+}
+
+func (s *sched) seedMembers(t TaskPlan, keys []string) *Defect {
+	seen := make(map[string]bool, len(keys))
+	for _, key := range keys {
+		if seen[key] {
+			return &Defect{Code: DefectInvalidValue, Unit: t.ID, Message: "invalid-value"}
+		}
+		seen[key] = true
+		member := cloneTaskPlan(t)
+		member.Instance = key
+		member.ShardIndex = DefaultShardIndex
+		applyReservedDefaults(&member)
+		ident := reservedIdentity(member)
+		if _, _, err := containedRel(s.workspace, isolateRel(member), false); err != nil {
+			d := escapeDefect(t.ID, key)
+			return &d
+		}
+		if s.tasks[ident] != nil {
+			continue
+		}
+		st := initialTask(member)
+		s.tasks[ident] = &st
+	}
+	return nil
+}
+
+func (s *sched) expansionKeys(t TaskPlan) ([]string, string, bool, *Defect) {
+	producer := t.ScatterFromTask
+	if producer == "" {
+		producer = t.ScatterFromPort
+	}
+	if t.ScatterFromTask != "" {
+		up := s.stateByTaskID(t.ScatterFromTask)
+		if up == nil || up.Status != StatusSucceeded {
+			return nil, producer, false, nil
+		}
+		if s.resume != nil {
+			upTask, ok := s.taskByID(t.ScatterFromTask)
+			if !ok {
+				return nil, producer, false, nil
+			}
+			ident := reservedIdentity(upTask)
+			if s.resume[ident].Decision == reuseRerun && !s.succeededThisResume(ident) {
+				return nil, producer, false, nil
+			}
+		}
+		keys, d := s.producerMemberKeys(t)
+		return keys, producer, d == nil, d
+	}
+	if t.ScatterFromKind == ArtifactTree {
+		keys, d := s.staticTreeKeys(t)
+		return keys, producer, d == nil, d
+	}
+	if t.ScatterMembers != nil {
+		return append([]string(nil), t.ScatterMembers...), producer, true, nil
+	}
+	return []string{}, producer, true, nil
+}
+
+func (s *sched) producerMemberKeys(t TaskPlan) ([]string, *Defect) {
+	src, ok := s.taskByID(t.ScatterFromTask)
+	if !ok {
+		return nil, &Defect{Code: DefectMissingInput, Unit: t.ID, Message: "missing input"}
+	}
+	io, ok := findProducerIO(src, t.ScatterFromPort)
+	if !ok {
+		return nil, &Defect{Code: DefectMissingInput, Unit: t.ID, Message: "missing input"}
+	}
+	switch t.ScatterFromKind {
+	case ArtifactGroup:
+		if io.Members == nil {
+			return []string{}, nil
+		}
+		keys := make([]string, 0, len(io.Members))
+		for _, m := range io.Members {
+			keys = append(keys, m.Name)
+		}
+		return keys, nil
+	case ArtifactTree:
+		files := treeDestMemberPaths(s.workspace, io)
+		keys := make([]string, 0, len(files))
+		seen := make(map[string]bool, len(files))
+		for _, f := range files {
+			if seen[f.name] {
+				return nil, &Defect{Code: DefectInvalidValue, Unit: t.ID, Message: "invalid-value"}
+			}
+			seen[f.name] = true
+			keys = append(keys, f.name)
+		}
+		return keys, nil
+	default:
+		path := io.Path
+		if path == "" {
+			return []string{}, nil
+		}
+		return []string{path}, nil
+	}
+}
+
+func (s *sched) staticTreeKeys(t TaskPlan) ([]string, *Defect) {
+	var io IO
+	found := false
+	for _, in := range t.Inputs {
+		if s.ioFromScatterProducer(t, in.Name) || in.Name == t.ScatterFromPort {
+			io = in
+			found = true
+			break
+		}
+	}
+	if !found {
+		return []string{}, nil
+	}
+	files := treeDestMemberPaths(s.workspace, io)
+	keys := make([]string, 0, len(files))
+	seen := make(map[string]bool, len(files))
+	for _, f := range files {
+		if seen[f.name] {
+			return nil, &Defect{Code: DefectInvalidValue, Unit: t.ID, Message: "invalid-value"}
+		}
+		seen[f.name] = true
+		keys = append(keys, f.name)
+	}
+	return keys, nil
+}
+
+func findProducerIO(t TaskPlan, port string) (IO, bool) {
+	for _, out := range t.Outputs {
+		if out.Name == port {
+			return out, true
+		}
+	}
+	for _, in := range t.Inputs {
+		if in.Name == port {
+			return in, true
+		}
+	}
+	return IO{}, false
+}
+
+func (s *sched) specializeGatherIO(t *TaskPlan) {
+	if t.Gather == "" {
+		return
+	}
+	for i := range t.Inputs {
+		fromTask, fromPort := s.edgeFrom(t.ID, t.Inputs[i].Name)
+		if fromTask == "" || !s.isScatterTaskID(fromTask) {
+			continue
+		}
+		st := s.scatterTemplateState(fromTask)
+		if st == nil || st.Expansion == nil {
+			continue
+		}
+		src, ok := s.taskByID(fromTask)
+		if !ok {
+			continue
+		}
+		members := make([]IOMember, 0, len(st.Expansion.Members))
+		for _, key := range st.Expansion.Members {
+			member := cloneTaskPlan(src)
+			member.Instance = key
+			member.ShardIndex = DefaultShardIndex
+			applyReservedDefaults(&member)
+			s.specializeMemberIO(&member, key)
+			io, ok := findProducerIO(member, fromPort)
+			if !ok || io.Path == "" {
+				continue
+			}
+			members = append(members, IOMember{Name: key, Path: io.Path, Source: io.Path, Spec: io.Spec})
+		}
+		if len(members) == 0 {
+			continue
+		}
+		t.Inputs[i].Kind = ArtifactGroup
+		t.Inputs[i].Path = ""
+		t.Inputs[i].Source = ""
+		t.Inputs[i].Members = members
+		t.Inputs[i].Manifest = ""
+	}
+}
+
+func (s *sched) edgeFrom(toTask, toPort string) (string, string) {
+	for _, e := range s.doc.Edges {
+		if e.ToTask == toTask && e.ToPort == toPort {
+			return e.FromTask, e.FromPort
+		}
+	}
+	return "", ""
+}
+
+func (s *sched) specializeMemberIO(t *TaskPlan, key string) {
+	memberPath, memberSpec := s.memberSource(t, key)
+	if memberPath == "" && isZeroPath(memberSpec) {
+		return
+	}
+	for i := range t.Inputs {
+		if !s.ioFromScatterProducer(*t, t.Inputs[i].Name) {
+			continue
+		}
+		s.applyMemberIO(&t.Inputs[i], memberPath, memberSpec, true)
+	}
+	for i := range t.Outputs {
+		if !s.ioFromScatterProducer(*t, t.Outputs[i].Name) {
+			continue
+		}
+		s.applyMemberIO(&t.Outputs[i], memberPath, memberSpec, false)
+	}
+}
+
+func (s *sched) ioFromScatterProducer(t TaskPlan, port string) bool {
+	if t.Scatter == "" {
+		return false
+	}
+	for _, e := range s.doc.Edges {
+		if e.ToTask != t.ID || e.ToPort != port {
+			continue
+		}
+		if e.FromTask == t.ScatterFromTask && e.FromPort == t.ScatterFromPort {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *sched) memberSource(t *TaskPlan, key string) (string, Path) {
+	if t.ScatterFromTask != "" {
+		src, ok := s.taskByID(t.ScatterFromTask)
+		if !ok {
+			return key, literalPath(key)
+		}
+		io, ok := findProducerIO(src, t.ScatterFromPort)
+		if !ok {
+			return key, literalPath(key)
+		}
+		switch t.ScatterFromKind {
+		case ArtifactGroup:
+			for _, m := range io.Members {
+				if m.Name == key {
+					path := m.Path
+					if m.Source != "" {
+						path = m.Source
+					}
+					return path, m.Spec
+				}
+			}
+		case ArtifactTree:
+			dir := treeDir(io)
+			path := key
+			if dir != "" {
+				path = strings.TrimSuffix(strings.ReplaceAll(dir, `\`, "/"), "/") + "/" + key
+			}
+			return path, literalPath(path)
+		default:
+			path := io.Path
+			if path == "" {
+				path = key
+			}
+			return path, io.Spec
+		}
+		return key, literalPath(key)
+	}
+	for i, name := range t.ScatterMembers {
+		if name != key {
+			continue
+		}
+		path := key
+		if i < len(t.ScatterMemberPaths) && t.ScatterMemberPaths[i] != "" {
+			path = t.ScatterMemberPaths[i]
+		}
+		return path, literalPath(path)
+	}
+	if t.ScatterFromKind == ArtifactFile && len(t.ScatterMembers) == 1 {
+		return t.ScatterMembers[0], literalPath(t.ScatterMembers[0])
+	}
+	for _, in := range t.Inputs {
+		if !s.ioFromScatterProducer(*t, in.Name) {
+			continue
+		}
+		if in.Members != nil {
+			for _, m := range in.Members {
+				if m.Name == key {
+					path := m.Path
+					if m.Source != "" {
+						path = m.Source
+					}
+					return path, m.Spec
+				}
+			}
+		}
+		if t.ScatterFromKind == ArtifactTree {
+			dir := treeDir(in)
+			path := key
+			if dir != "" {
+				path = strings.TrimSuffix(strings.ReplaceAll(dir, `\`, "/"), "/") + "/" + key
+			}
+			return path, literalPath(path)
+		}
+	}
+	return key, literalPath(key)
+}
+
+func (s *sched) applyMemberIO(io *IO, memberPath string, memberSpec Path, asInput bool) {
+	from := memberSpec
+	if isZeroPath(from) {
+		from = literalPath(memberPath)
+	}
+	classified := pathFromSpec(intpath.Classify(io.Spec.spec(), from.spec(), intpath.DeriveAppend))
+	path, d := classified.Render()
+	if d != nil || path == "" {
+		path = memberPath
+		classified = from
+	}
+	io.Kind = ArtifactFile
+	io.Members = nil
+	io.Manifest = ""
+	io.Spec = classified
+	if asInput {
+		io.Source = memberPath
+		io.Path = path
+		if io.Path == io.Source {
+			io.Source = ""
+		}
+		return
+	}
+	io.Path = path
+	io.Source = ""
+}
+
+func literalPath(path string) Path {
+	return Path{Literal: true, Opaque: path}
+}
+
+func (s *sched) maybeSkip() *Defect {
+	now := time.Now().UTC().Format(time.RFC3339Nano)
+	for _, t := range s.doc.Tasks {
+		ident := reservedIdentity(t)
+		st := s.tasks[ident]
+		if st == nil || st.Status != StatusNotStarted {
+			continue
+		}
+		if s.resume != nil && (s.resume[ident].Decision != reuseRerun || s.launched[ident]) {
+			continue
+		}
+		if s.cascadeSkip(t) {
+			st.Status = StatusSkipped
+			st.Reason = "skipped"
+			if st.Ended == "" {
+				st.Ended = now
+			}
+			s.notePersist(s.persistControl())
+			continue
+		}
+		if t.When == "" {
+			continue
+		}
+		skip, reason, ready, d := s.evalWhen(t)
+		if d != nil {
+			return d
+		}
+		if !ready || !skip {
+			continue
+		}
+		st.Status = StatusSkipped
+		st.Reason = "skipped"
+		st.Condition = reason
+		if st.Ended == "" {
+			st.Ended = now
+		}
+		s.notePersist(s.persistControl())
+	}
+	return nil
+}
+
+func (s *sched) cascadeSkip(t TaskPlan) bool {
+	for _, e := range s.doc.Edges {
+		if e.ToTask != t.ID || e.FromTask == "" {
+			continue
+		}
+		if s.isScatterTaskID(e.FromTask) {
+			up := s.scatterTemplateState(e.FromTask)
+			if up != nil && up.Status == StatusSkipped {
+				return true
+			}
+			continue
+		}
+		up := s.stateByTaskID(e.FromTask)
+		if up != nil && up.Status == StatusSkipped {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *sched) evalWhen(t TaskPlan) (skip bool, reason string, ready bool, d *Defect) {
+	if t.SkipIfFalse != "" {
+		val, ok := paramValue(t, t.SkipIfFalse)
+		if !ok || (val != "true" && val != "false") {
+			return false, "", true, &Defect{Code: DefectInvalidValue, Unit: t.ID, Message: "invalid-value"}
+		}
+		if val == "false" {
+			skip = true
+			reason = conditionFalseParam
+		}
+	}
+	if t.SkipIfMissingPort == "" && t.SkipIfMissingPath == "" {
+		return skip, reason, true, nil
+	}
+	if t.SkipIfMissingTask != "" {
+		up := s.stateByTaskID(t.SkipIfMissingTask)
+		if up == nil {
+			return false, "", false, nil
+		}
+		if up.Status == StatusUnknown || up.Status == StatusRunning || up.Status == StatusNotStarted {
+			return false, "", false, nil
+		}
+		if up.Status != StatusSucceeded {
+			return skip, reason, true, nil
+		}
+	}
+	path := t.SkipIfMissingPath
+	if path == "" {
+		path = s.skipMissingDest(t)
+	}
+	if path == "" {
+		return skip, reason, true, nil
+	}
+	abs, present, err := containedRel(s.workspace, path, false)
+	if err != nil {
+		esc := escapeDefect(t.ID, path)
+		return false, "", true, &esc
+	}
+	if !present || !regularFile(abs) {
+		return true, conditionMissingFile, true, nil
+	}
+	info, err := os.Lstat(abs)
+	if err != nil || info.Size() == 0 {
+		return true, conditionMissingFile, true, nil
+	}
+	return skip, reason, true, nil
+}
+
+func paramValue(t TaskPlan, name string) (string, bool) {
+	for _, p := range t.Params {
+		if p.Name == name {
+			return p.Value, true
+		}
+	}
+	return "", false
+}
+
+func (s *sched) skipMissingDest(t TaskPlan) string {
+	if t.SkipIfMissingTask == "" {
+		return t.SkipIfMissingPath
+	}
+	src, ok := s.taskByID(t.SkipIfMissingTask)
+	if !ok {
+		return t.SkipIfMissingPath
+	}
+	io, ok := findProducerIO(src, t.SkipIfMissingPort)
+	if !ok {
+		return t.SkipIfMissingPath
+	}
+	return io.Path
 }
