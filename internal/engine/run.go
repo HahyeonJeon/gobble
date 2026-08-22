@@ -161,34 +161,36 @@ type jsonRun struct {
 }
 
 type jsonTaskState struct {
-	ID           string            `json:"id"`
-	Instance     string            `json:"instance"`
-	ShardIndex   int               `json:"shard_index"`
-	ShardCount   int               `json:"shard_count"`
-	Attempt      int               `json:"attempt"`
-	Status       string            `json:"status"`
-	Executor     string            `json:"executor"`
-	Image        string            `json:"image"`
-	Command      []string          `json:"command"`
-	Script       string            `json:"script,omitempty"`
-	Resources    jsonResources     `json:"resources"`
-	Params       []jsonParam       `json:"params"`
-	Env          map[string]string `json:"env,omitempty"`
-	RuntimeID    string            `json:"runtime_id,omitempty"`
-	ImageDigest  string            `json:"image_digest,omitempty"`
-	Reason       string            `json:"reason"`
-	Error        *jsonTaskErr      `json:"error,omitempty"`
-	Stdout       string            `json:"stdout,omitempty"`
-	Stderr       string            `json:"stderr,omitempty"`
-	Started      string            `json:"started,omitempty"`
-	Ended        string            `json:"ended,omitempty"`
-	Fingerprints []jsonFileHash    `json:"fingerprints,omitempty"`
-	Checksums    []jsonFileHash    `json:"checksums,omitempty"`
-	Lineage      []jsonLineage     `json:"lineage,omitempty"`
-	Decision     string            `json:"decision,omitempty"`
-	ReuseReason  string            `json:"reuse_reason,omitempty"`
-	Differing    []string          `json:"differing,omitempty"`
-	Change       string            `json:"change,omitempty"`
+	ID               string         `json:"id"`
+	Instance         string         `json:"instance"`
+	ShardIndex       int            `json:"shard_index"`
+	ShardCount       int            `json:"shard_count"`
+	Attempt          int            `json:"attempt"`
+	Status           string         `json:"status"`
+	Executor         string         `json:"executor"`
+	Image            string         `json:"image"`
+	Command          []string       `json:"command"`
+	Script           string         `json:"script,omitempty"`
+	Resources        jsonResources  `json:"resources"`
+	Params           []jsonParam    `json:"params"`
+	EnvDigest        string         `json:"env_digest,omitempty"`
+	RuntimeID        string         `json:"runtime_id,omitempty"`
+	ImageDigest      string         `json:"image_digest,omitempty"`
+	ExecutablePath   string         `json:"executable_path,omitempty"`
+	ExecutableSHA256 string         `json:"executable_sha256,omitempty"`
+	Reason           string         `json:"reason"`
+	Error            *jsonTaskErr   `json:"error,omitempty"`
+	Stdout           string         `json:"stdout,omitempty"`
+	Stderr           string         `json:"stderr,omitempty"`
+	Started          string         `json:"started,omitempty"`
+	Ended            string         `json:"ended,omitempty"`
+	Fingerprints     []jsonFileHash `json:"fingerprints,omitempty"`
+	Checksums        []jsonFileHash `json:"checksums,omitempty"`
+	Lineage          []jsonLineage  `json:"lineage,omitempty"`
+	Decision         string         `json:"decision,omitempty"`
+	ReuseReason      string         `json:"reuse_reason,omitempty"`
+	Differing        []string       `json:"differing,omitempty"`
+	Change           string         `json:"change,omitempty"`
 }
 
 type jsonTaskErr struct {
@@ -296,21 +298,23 @@ func initialTask(t TaskPlan) jsonTaskState {
 			CPU:    t.Resources.CPU,
 			Memory: t.Resources.Memory,
 		},
-		Params: encodeParams(t.Params),
-		Env:    copyStringMap(t.Env),
+		Params:    encodeParams(t.Params),
+		EnvDigest: envDigest(t.Env),
 	}
 }
 
 type report struct {
-	ID          string
-	Exit        int
-	Message     string
-	Stdout      string
-	Stderr      string
-	Published   bool
-	RuntimeID   string
-	ImageDigest string
-	Unknown     bool
+	ID               string
+	Exit             int
+	Message          string
+	Stdout           string
+	Stderr           string
+	Published        bool
+	RuntimeID        string
+	ImageDigest      string
+	ExecutablePath   string
+	ExecutableSHA256 string
+	Unknown          bool
 }
 
 type startEvent struct {
@@ -755,14 +759,34 @@ func (s *sched) runJob(workspace string, task TaskPlan, ex exec.Executor, starts
 		reports <- r
 		return
 	}
+	memBytes, _ := parseMemory(task.Resources.Memory)
+	argv := append([]string(nil), executeArgv(task)...)
 	job := exec.Job{
-		Identity: ident,
-		Isolate:  isolate,
-		Argv:     executeArgv(task),
-		Env:      copyStringMap(task.Env),
-		Image:    task.Image,
-		CPU:      task.Resources.CPU,
-		Memory:   task.Resources.Memory,
+		Identity:    ident,
+		Isolate:     isolate,
+		Argv:        argv,
+		Env:         copyStringMap(task.Env),
+		Image:       task.Image,
+		CPU:         task.Resources.CPU,
+		Memory:      task.Resources.Memory,
+		MemoryBytes: memBytes,
+	}
+	if task.Image == "" && len(argv) > 0 {
+		resolved, err := exec.ResolveArgv0(argv[0], task.Env)
+		if err != nil {
+			r.Message = err.Error()
+			reports <- r
+			return
+		}
+		job.Argv[0] = resolved
+		sum, err := sha256File(resolved)
+		if err != nil {
+			r.Message = err.Error()
+			reports <- r
+			return
+		}
+		r.ExecutablePath = resolved
+		r.ExecutableSHA256 = sum
 	}
 	h, sub, err := boundedSubmit(workspace, ex, job)
 	if err != nil {
@@ -968,7 +992,7 @@ func (s *sched) apply(r report) {
 	if task, ok := s.taskByIdent(r.ID); ok {
 		s.budget.release(task)
 		st.Script = task.Script
-		st.Env = copyStringMap(task.Env)
+		st.EnvDigest = envDigest(task.Env)
 	}
 	st.Stdout = r.Stdout
 	st.Stderr = r.Stderr
@@ -977,6 +1001,12 @@ func (s *sched) apply(r report) {
 	}
 	if r.ImageDigest != "" {
 		st.ImageDigest = r.ImageDigest
+	}
+	if r.ExecutablePath != "" {
+		st.ExecutablePath = r.ExecutablePath
+	}
+	if r.ExecutableSHA256 != "" {
+		st.ExecutableSHA256 = r.ExecutableSHA256
 	}
 	st.Ended = time.Now().UTC().Format(time.RFC3339Nano)
 	if r.Unknown {

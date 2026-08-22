@@ -3,6 +3,7 @@ package exec
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	osexec "os/exec"
 	"path/filepath"
@@ -40,7 +41,12 @@ func (p *Process) Submit(ctx context.Context, job Job) (Handle, Report, error) {
 	if len(job.Argv) == 0 {
 		return Handle{}, Report{}, errors.New("empty command")
 	}
-	cmd := osexec.Command(job.Argv[0], job.Argv[1:]...)
+	resolved, err := ResolveArgv0(job.Argv[0], job.Env)
+	if err != nil {
+		return Handle{}, Report{}, err
+	}
+	cmd := osexec.Command(resolved, job.Argv[1:]...)
+	cmd.Path = resolved
 	cmd.Dir = job.Isolate
 	cmd.Env = processEnv(job.Env)
 	stdoutPath := filepath.Join(filepath.Dir(job.Isolate), "stdout")
@@ -165,11 +171,64 @@ func (p *Process) Reconcile(ctx context.Context, h Handle) (Report, error) {
 	return p.Poll(ctx, h)
 }
 
+const defaultProcessPATH = "/usr/bin:/bin"
+
+// ResolveArgv0 returns the absolute regular file for argv0. Search uses
+// declared PATH or /usr/bin:/bin. It never reads the parent process PATH.
+func ResolveArgv0(name string, env map[string]string) (string, error) {
+	if name == "" {
+		return "", errors.New("empty command")
+	}
+	if filepath.IsAbs(name) {
+		return regularExecutable(name)
+	}
+	search := defaultProcessPATH
+	if env != nil {
+		if p, ok := env["PATH"]; ok && p != "" {
+			search = p
+		}
+	}
+	for _, dir := range filepath.SplitList(search) {
+		if dir == "" {
+			continue
+		}
+		cand := filepath.Join(dir, name)
+		resolved, err := regularExecutable(cand)
+		if err != nil {
+			continue
+		}
+		return resolved, nil
+	}
+	return "", fmt.Errorf("%s: not found", name)
+}
+
+func regularExecutable(path string) (string, error) {
+	info, err := os.Lstat(path)
+	if err != nil {
+		return "", err
+	}
+	if info.Mode()&os.ModeSymlink != 0 {
+		resolved, err := filepath.EvalSymlinks(path)
+		if err != nil {
+			return "", err
+		}
+		path = resolved
+		info, err = os.Lstat(path)
+		if err != nil {
+			return "", err
+		}
+	}
+	if !info.Mode().IsRegular() {
+		return "", ErrNotRegular
+	}
+	return path, nil
+}
+
 func processEnv(env map[string]string) []string {
 	env = copyEnv(env)
 	out := make([]string, 0, 1+len(env))
 	if _, ok := env["PATH"]; !ok {
-		out = append(out, "PATH=/usr/bin:/bin")
+		out = append(out, "PATH="+defaultProcessPATH)
 	}
 	for k, v := range env {
 		if k == "" || v == "" {

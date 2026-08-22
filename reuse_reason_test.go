@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	"time"
 
 	"github.com/HahyeonJeon/gobble"
 	"github.com/HahyeonJeon/gobble/internal/engine"
@@ -118,7 +117,14 @@ func TestReuseReasonTable(t *testing.T) {
 			setup: func(t *testing.T) string {
 				dir := readyReleasedRun(t, processCopyPipeline)
 				in := filepath.Join(dir, "in", "sample.txt")
-				if err := os.Chtimes(in, time.Now().Add(time.Hour), time.Now().Add(time.Hour)); err != nil {
+				info, err := os.Stat(in)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(in, []byte("READS"), info.Mode()); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.Chtimes(in, info.ModTime(), info.ModTime()); err != nil {
 					t.Fatal(err)
 				}
 				return dir

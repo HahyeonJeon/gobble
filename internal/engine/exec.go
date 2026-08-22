@@ -41,18 +41,20 @@ func prepareIsolate(workspace, isolate string, task TaskPlan) error {
 			}
 		}
 	}
-	allowSymlink := task.Image == ""
 	for _, in := range task.Inputs {
 		if isTreeIO(in) {
-			if err := stageTree(workspace, isolate, in, allowSymlink); err != nil {
+			if err := stageTree(workspace, isolate, in); err != nil {
 				return err
 			}
 			continue
 		}
 		for _, f := range namedIOFiles(in) {
-			src := workspaceFile(workspace, fileSource(f))
+			src, err := containedFile(workspace, fileSource(f))
+			if err != nil {
+				return err
+			}
 			dst := workspaceFile(isolate, f.path)
-			if err := exec.StageFile(src, dst, allowSymlink); err != nil {
+			if err := exec.StageFile(src, dst); err != nil {
 				return err
 			}
 		}
@@ -86,10 +88,19 @@ func inspectOutputs(isolate string, task TaskPlan) error {
 }
 
 func publishAll(workspace, isolate string, task TaskPlan) error {
-	var wrote []string
+	type prepared struct {
+		tmp string
+		dst string
+	}
+	var files []prepared
+	var trees []string
 	rollback := func() {
-		for _, p := range wrote {
-			os.Remove(p)
+		for _, p := range files {
+			os.Remove(p.tmp)
+			os.Remove(p.dst)
+		}
+		for _, p := range trees {
+			os.RemoveAll(p)
 		}
 	}
 	for _, out := range task.Outputs {
@@ -98,22 +109,39 @@ func publishAll(workspace, isolate string, task TaskPlan) error {
 			if err != nil {
 				rollback()
 				for _, p := range added {
-					os.Remove(p)
+					os.RemoveAll(p)
 				}
 				return err
 			}
-			wrote = append(wrote, added...)
+			trees = append(trees, added...)
 			continue
 		}
 		for _, f := range namedIOFiles(out) {
 			src := workspaceFile(isolate, f.path)
-			dst := workspaceFile(workspace, f.path)
-			if err := exec.PublishFile(src, dst); err != nil {
+			dstAbs, present, err := containedRel(workspace, f.path, true)
+			if err != nil {
 				rollback()
 				return err
 			}
-			wrote = append(wrote, dst)
+			if present {
+				rollback()
+				return os.ErrExist
+			}
+			tmp, err := exec.CopyToTemp(src, filepath.Dir(dstAbs))
+			if err != nil {
+				rollback()
+				return err
+			}
+			files = append(files, prepared{tmp: tmp, dst: dstAbs})
 		}
+	}
+	for _, p := range files {
+		if err := exec.InstallExclusive(p.tmp, p.dst); err != nil {
+			os.Remove(p.tmp)
+			rollback()
+			return err
+		}
+		p.tmp = ""
 	}
 	return nil
 }
@@ -128,14 +156,17 @@ func publishReplace(workspace, isolate string, task TaskPlan) error {
 		}
 		for _, f := range namedIOFiles(out) {
 			src := workspaceFile(isolate, f.path)
-			dst := workspaceFile(workspace, f.path)
-			if !pathPresent(dst) {
-				if err := exec.PublishFile(src, dst); err != nil {
+			dstAbs, present, err := containedRel(workspace, f.path, true)
+			if err != nil {
+				return err
+			}
+			if !present {
+				if err := exec.PublishFile(src, dstAbs); err != nil {
 					return err
 				}
 				continue
 			}
-			if err := exec.StagedReplace(src, dst); err != nil {
+			if err := exec.StagedReplace(src, dstAbs); err != nil {
 				return err
 			}
 		}

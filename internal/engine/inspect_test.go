@@ -380,8 +380,9 @@ func TestClassifyReuseReasons(t *testing.T) {
 		Status:       StatusSucceeded,
 		Command:      []string{"cp", "in/a.txt", "out/a.txt"},
 		Image:        "alpine:3.19.1",
+		ImageDigest:  "sha256:deadbeef",
 		Params:       []jsonParam{{Name: "mode", Value: "fast"}},
-		Env:          map[string]string{"HOME": "/tmp"},
+		EnvDigest:    envDigest(map[string]string{"HOME": "/tmp"}),
 		Fingerprints: []jsonFileHash{inRec},
 		Checksums:    []jsonFileHash{outRec},
 		Lineage:      []jsonLineage{{Producer: "copy", Path: "out/a.txt", Checksum: outRec.SHA256}},
@@ -395,6 +396,7 @@ func TestClassifyReuseReasons(t *testing.T) {
 		Inputs:  []IO{{Name: "in", Path: "in/a.txt"}},
 		Outputs: []IO{{Name: "out", Path: "out/a.txt"}},
 	}
+	stubImageID(t, "sha256:deadbeef")
 	got := classifyReuse(dir, base, plan, plan)
 	if got.Decision != reuseReused || got.Reason != reasonReusedIdentityMatched {
 		t.Fatalf("match got %#v", got)

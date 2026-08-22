@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/HahyeonJeon/gobble/internal/engine/exec"
+	intpath "github.com/HahyeonJeon/gobble/internal/path"
 )
 
 var (
@@ -118,8 +119,15 @@ func checkTreeOutput(isolate string, out IO) error {
 	return nil
 }
 
-func stageTree(workspace, isolate string, in IO, allowSymlink bool) error {
-	srcRoot := workspaceFile(workspace, treeSourceDir(in))
+func stageTree(workspace, isolate string, in IO) error {
+	srcRel := treeSourceDir(in)
+	srcRoot, err := containedFile(workspace, srcRel)
+	if err != nil {
+		return err
+	}
+	if !isDir(srcRoot) {
+		return errTreeMissing
+	}
 	dstRoot := workspaceFile(isolate, treeDir(in))
 	members, err := walkTreeMembers(srcRoot)
 	if err != nil {
@@ -129,9 +137,15 @@ func stageTree(workspace, isolate string, in IO, allowSymlink bool) error {
 		return err
 	}
 	for _, rel := range members {
+		if err := validateTreeMember(rel); err != nil {
+			return err
+		}
 		src := filepath.Join(srcRoot, filepath.FromSlash(rel))
+		if err := proveInside(srcRoot, src); err != nil {
+			return errTreeInvalid
+		}
 		dst := filepath.Join(dstRoot, filepath.FromSlash(rel))
-		if err := exec.StageFile(src, dst, allowSymlink); err != nil {
+		if err := exec.StageFile(src, dst); err != nil {
 			return err
 		}
 	}
@@ -140,7 +154,6 @@ func stageTree(workspace, isolate string, in IO, allowSymlink bool) error {
 
 func publishTree(workspace, isolate string, out IO, replace bool) (wrote []string, err error) {
 	srcRoot := workspaceFile(isolate, treeDir(out))
-	dstRoot := workspaceFile(workspace, treeDir(out))
 	members, err := walkTreeMembers(srcRoot)
 	if err != nil {
 		return nil, err
@@ -148,58 +161,107 @@ func publishTree(workspace, isolate string, out IO, replace bool) (wrote []strin
 	if len(members) == 0 {
 		return nil, errTreeMissing
 	}
-	created := false
-	if !pathPresent(dstRoot) {
-		if err := os.MkdirAll(dstRoot, 0o755); err != nil {
+	for _, rel := range members {
+		if err := validateTreeMember(rel); err != nil {
 			return nil, err
 		}
-		created = true
 	}
-	old := map[string]bool{}
-	if replace {
-		for _, rel := range readTreeManifestMembers(workspaceFile(workspace, treeManifestPath(out))) {
-			old[rel] = true
-		}
-	}
-	rollback := func() {
-		for _, p := range wrote {
-			os.Remove(p)
-		}
-		if created {
-			os.RemoveAll(dstRoot)
-		}
-	}
-	for _, rel := range members {
-		src := filepath.Join(srcRoot, filepath.FromSlash(rel))
-		dst := filepath.Join(dstRoot, filepath.FromSlash(rel))
-		if replace && pathPresent(dst) {
-			if err := exec.StagedReplace(src, dst); err != nil {
-				rollback()
-				return nil, err
-			}
-		} else {
-			if err := exec.PublishFile(src, dst); err != nil {
-				rollback()
-				return nil, err
-			}
-			wrote = append(wrote, dst)
-		}
-		delete(old, rel)
-	}
-	manPath := workspaceFile(workspace, treeManifestPath(out))
-	if err := writeTreeManifest(manPath, dstRoot, members, replace); err != nil {
-		rollback()
+	dstRel := treeDir(out)
+	dstRoot, present, err := containedRel(workspace, dstRel, true)
+	if err != nil {
 		return nil, err
 	}
-	if !replace || !containsString(wrote, manPath) {
-		wrote = append(wrote, manPath)
+	if !replace && present {
+		return nil, os.ErrExist
 	}
-	if replace {
-		for rel := range old {
-			os.Remove(filepath.Join(dstRoot, filepath.FromSlash(rel)))
+	parent := filepath.Dir(dstRoot)
+	if err := os.MkdirAll(parent, 0o755); err != nil {
+		return nil, err
+	}
+	gen, err := os.MkdirTemp(parent, ".gobble-tree-")
+	if err != nil {
+		return nil, err
+	}
+	cleanupGen := true
+	defer func() {
+		if cleanupGen {
+			os.RemoveAll(gen)
+		}
+	}()
+	for _, rel := range members {
+		src := filepath.Join(srcRoot, filepath.FromSlash(rel))
+		if err := proveInside(srcRoot, src); err != nil {
+			return nil, errTreeInvalid
+		}
+		dst := filepath.Join(gen, filepath.FromSlash(rel))
+		if err := proveInside(gen, dst); err != nil {
+			return nil, errTreeInvalid
+		}
+		if err := exec.PublishFile(src, dst); err != nil {
+			return nil, err
 		}
 	}
-	return wrote, nil
+	manRel := treeManifestName
+	if out.Manifest != "" {
+		manAbs, _, manErr := containedRel(workspace, out.Manifest, true)
+		if manErr != nil {
+			return nil, manErr
+		}
+		rel, relErr := filepath.Rel(dstRoot, manAbs)
+		if relErr != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+			return nil, errTreeInvalid
+		}
+		manRel = filepath.ToSlash(rel)
+	}
+	manPath := filepath.Join(gen, filepath.FromSlash(manRel))
+	if err := writeTreeManifest(manPath, gen, members, false); err != nil {
+		return nil, err
+	}
+	if !replace || !present {
+		if err := os.Rename(gen, dstRoot); err != nil {
+			return nil, err
+		}
+		cleanupGen = false
+		return []string{dstRoot}, nil
+	}
+	backup, err := os.MkdirTemp(parent, ".gobble-tree-old-")
+	if err != nil {
+		return nil, err
+	}
+	os.Remove(backup)
+	if err := os.Rename(dstRoot, backup); err != nil {
+		os.RemoveAll(backup)
+		return nil, err
+	}
+	if err := os.Rename(gen, dstRoot); err != nil {
+		if restoreErr := os.Rename(backup, dstRoot); restoreErr != nil {
+			return nil, err
+		}
+		return nil, err
+	}
+	cleanupGen = false
+	os.RemoveAll(backup)
+	return []string{dstRoot}, nil
+}
+
+func validateTreeMember(rel string) error {
+	if rel == "" || rel == treeManifestName || strings.Contains(rel, "\x00") {
+		return errTreeInvalid
+	}
+	normalized := strings.ReplaceAll(rel, `\`, "/")
+	if filepath.IsAbs(rel) || strings.HasPrefix(normalized, "/") {
+		return errTreeInvalid
+	}
+	cleaned, escaped := intpath.Clean(normalized)
+	if escaped || cleaned == "" || cleaned == "." || cleaned == treeManifestName {
+		return errTreeInvalid
+	}
+	for _, part := range strings.Split(cleaned, "/") {
+		if part == "" || part == "." || part == ".." || part == treeManifestName {
+			return errTreeInvalid
+		}
+	}
+	return nil
 }
 
 func writeTreeManifest(path, destRoot string, members []string, replace bool) error {
@@ -270,21 +332,35 @@ func treeManifestDigest(digests []string) string {
 }
 
 func readTreeManifestMembers(path string) []string {
-	data, err := os.ReadFile(path)
+	rels, err := readTreeManifestMembersStrict(path)
 	if err != nil {
 		return nil
 	}
+	return rels
+}
+
+func readTreeManifestMembersStrict(path string) ([]string, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
 	var body treeManifest
 	if err := json.Unmarshal(data, &body); err != nil {
-		return nil
+		return nil, err
 	}
+	seen := make(map[string]bool, len(body.Members))
 	out := make([]string, 0, len(body.Members))
 	for _, m := range body.Members {
-		if m.Path != "" {
-			out = append(out, m.Path)
+		if err := validateTreeMember(m.Path); err != nil {
+			return nil, err
 		}
+		if seen[m.Path] {
+			return nil, errTreeInvalid
+		}
+		seen[m.Path] = true
+		out = append(out, m.Path)
 	}
-	return out
+	return out, nil
 }
 
 func treeDestMemberPaths(workspace string, io IO) []namedFile {

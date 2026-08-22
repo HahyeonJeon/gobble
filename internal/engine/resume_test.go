@@ -38,6 +38,7 @@ func TestClassifyResumeChangeClasses(t *testing.T) {
 		Checksums:    []jsonFileHash{outA},
 		Lineage:      []jsonLineage{{Producer: "copy", Path: "out/a.txt", Checksum: outA.SHA256}},
 	}
+	mustAttachExec(t, &copyState, "cp")
 	extraPlan := Document{
 		Tasks: append(append([]TaskPlan(nil), copyPlan.Tasks...), TaskPlan{
 			ID:      "extra",
@@ -80,7 +81,7 @@ func TestClassifyResumeChangeClasses(t *testing.T) {
 		},
 	}
 	chainStates := []jsonTaskState{
-		{
+		mustExecState(t, jsonTaskState{
 			ID:           "a",
 			Status:       StatusSucceeded,
 			Command:      []string{"cp", "in/a.txt", "out/a.txt"},
@@ -88,8 +89,8 @@ func TestClassifyResumeChangeClasses(t *testing.T) {
 			Fingerprints: []jsonFileHash{inRec},
 			Checksums:    []jsonFileHash{outA},
 			Lineage:      []jsonLineage{{Producer: "a", Path: "out/a.txt", Checksum: outA.SHA256}},
-		},
-		{
+		}, "cp"),
+		mustExecState(t, jsonTaskState{
 			ID:           "b",
 			Status:       StatusSucceeded,
 			Command:      []string{"cp", "out/a.txt", "out/b.txt"},
@@ -97,7 +98,7 @@ func TestClassifyResumeChangeClasses(t *testing.T) {
 			Fingerprints: []jsonFileHash{outA},
 			Checksums:    []jsonFileHash{outB},
 			Lineage:      []jsonLineage{{Producer: "b", Path: "out/b.txt", Checksum: outB.SHA256}},
-		},
+		}, "cp"),
 	}
 	waitChanged := copyPlan
 	waitChanged.Edges = []Edge{{FromPort: "reads", ToTask: "copy", ToPort: "in", Wait: []string{"in/other.txt"}}}
@@ -317,8 +318,11 @@ func TestResumeRerunsWhenEnvChanges(t *testing.T) {
 		t.Fatalf("Run() defects %v", defects)
 	}
 	st := taskStates(t, dir)["copy"]
-	if st.Env["HOME"] != "/tmp/gobble-home" {
-		t.Fatalf("persisted env got %#v", st.Env)
+	if st.EnvDigest == "" {
+		t.Fatal("persisted env digest empty")
+	}
+	if st.EnvDigest != envDigest(map[string]string{"HOME": "/tmp/gobble-home"}) {
+		t.Fatalf("persisted env digest got %s", st.EnvDigest)
 	}
 	forceDeadOwner(t, dir)
 	if defects := Release(dir); len(defects) != 0 {

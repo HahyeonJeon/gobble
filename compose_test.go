@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
@@ -778,7 +779,8 @@ func TestComposeEnvPlan(t *testing.T) {
 	}))
 	var decoded struct {
 		Tasks []struct {
-			Env map[string]string `json:"env"`
+			Env       map[string]string `json:"env"`
+			EnvDigest string            `json:"env_digest"`
 		} `json:"tasks"`
 	}
 	if err := json.Unmarshal(raw, &decoded); err != nil {
@@ -787,8 +789,14 @@ func TestComposeEnvPlan(t *testing.T) {
 	if len(decoded.Tasks) != 1 {
 		t.Fatalf("case env-plan: tasks got %d, want 1", len(decoded.Tasks))
 	}
-	if decoded.Tasks[0].Env["HOME"] != "/tmp" {
-		t.Fatalf("case env-plan: env got %#v, want HOME=/tmp", decoded.Tasks[0].Env)
+	if decoded.Tasks[0].Env != nil {
+		t.Fatalf("case env-plan: env got %#v, want omitted", decoded.Tasks[0].Env)
+	}
+	if decoded.Tasks[0].EnvDigest == "" {
+		t.Fatal("case env-plan: env_digest empty")
+	}
+	if strings.Contains(string(raw), "/tmp") {
+		t.Fatalf("case env-plan: plan JSON contains env value: %s", raw)
 	}
 
 	raw = mustBuildPlanJSON(t, oneTask("no-env", gobble.TaskSpec{

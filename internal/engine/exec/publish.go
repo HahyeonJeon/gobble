@@ -11,10 +11,10 @@ import (
 // ErrNotRegular means the path exists but is not a regular file.
 var ErrNotRegular = errors.New("not a regular file")
 
-// LinkFn is os.Link. Tests replace it to force copy fallback.
+// LinkFn is os.Link. Tests may replace it.
 var LinkFn = os.Link
 
-// SymlinkFn is os.Symlink. Tests replace it.
+// SymlinkFn is os.Symlink. Tests may replace it.
 var SymlinkFn = os.Symlink
 
 // OpenReadFile opens a regular file without following symlinks.
@@ -25,74 +25,63 @@ func OpenReadFile(path string) (*os.File, error) {
 	return os.OpenFile(path, os.O_RDONLY|syscall.O_NOFOLLOW, 0)
 }
 
-// StageFile stages src into isolate dest: hardlink, then optional
-// symlink, then copy and chmod 0444. It does not chmod a dest that
-// shares an inode with src.
-func StageFile(src, dst string, allowSymlink bool) error {
+// StageFile copies src into isolate dest as an independent regular file
+// with mode 0444. It does not hardlink or symlink.
+func StageFile(src, dst string) error {
 	if err := requireRegular(src); err != nil {
 		return err
 	}
-	if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
+	dir := filepath.Dir(dst)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err
 	}
-	if err := LinkFn(src, dst); err == nil {
-		return nil
-	}
-	if allowSymlink {
-		if err := SymlinkFn(src, dst); err == nil {
-			return nil
-		}
-	}
-	if err := CopyFile(src, dst); err != nil {
+	tmp, err := copyToTemp(src, dir)
+	if err != nil {
 		return err
 	}
-	return chmodUnshared(src, dst, 0o444)
+	if _, err := os.Lstat(dst); err == nil {
+		os.Remove(tmp)
+		return os.ErrExist
+	}
+	if err := os.Rename(tmp, dst); err != nil {
+		os.Remove(tmp)
+		return err
+	}
+	if sameInode(src, dst) {
+		os.Remove(dst)
+		return errors.New("staged dest shares source inode")
+	}
+	return os.Chmod(dst, 0o444)
 }
 
-// PublishFile publishes src to dest: hardlink then copy. Never symlink.
+// PublishFile copies src to dest through a complete temporary, then
+// installs exclusively. Dest must not already exist.
 func PublishFile(src, dst string) error {
 	if err := requireRegular(src); err != nil {
 		return err
 	}
-	if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
+	dir := filepath.Dir(dst)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err
 	}
-	if err := LinkFn(src, dst); err == nil {
-		return nil
-	}
-	return CopyFile(src, dst)
-}
-
-// CopyFile copies src to dst using exclusive create.
-func CopyFile(src, dst string) error {
-	in, err := OpenReadFile(src)
+	tmp, err := copyToTemp(src, dir)
 	if err != nil {
 		return err
 	}
-	defer in.Close()
-	if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
+	if err := InstallExclusive(tmp, dst); err != nil {
+		os.Remove(tmp)
 		return err
-	}
-	out, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY|os.O_EXCL, 0o644)
-	if err != nil {
-		return err
-	}
-	_, copyErr := io.Copy(out, in)
-	closeErr := out.Close()
-	if copyErr != nil {
-		os.Remove(dst)
-		return copyErr
-	}
-	if closeErr != nil {
-		os.Remove(dst)
-		return closeErr
 	}
 	return nil
 }
 
-// StagedReplace publishes src over dst through a same-directory temp
-// file: hardlink then copy. It does not chmod a dest that shares an
-// inode with src.
+// CopyFile copies src to dst using exclusive create.
+func CopyFile(src, dst string) error {
+	return PublishFile(src, dst)
+}
+
+// StagedReplace publishes src over dst through a complete same-directory
+// temporary, then renames onto dest.
 func StagedReplace(src, dst string) error {
 	if err := requireRegular(src); err != nil {
 		return err
@@ -101,33 +90,8 @@ func StagedReplace(src, dst string) error {
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err
 	}
-	f, err := os.CreateTemp(dir, ".gobble-replace-*")
+	tmp, err := copyToTemp(src, dir)
 	if err != nil {
-		return err
-	}
-	tmp := f.Name()
-	if err := f.Close(); err != nil {
-		os.Remove(tmp)
-		return err
-	}
-	os.Remove(tmp)
-	if err := LinkFn(src, tmp); err == nil {
-		if err := os.Rename(tmp, dst); err != nil {
-			os.Remove(tmp)
-			return err
-		}
-		return nil
-	}
-	if err := copyOver(src, tmp); err != nil {
-		os.Remove(tmp)
-		return err
-	}
-	mode := os.FileMode(0o644)
-	if info, err := os.Lstat(dst); err == nil && info.Mode().IsRegular() {
-		mode = info.Mode().Perm()
-	}
-	if err := chmodUnshared(src, tmp, mode); err != nil {
-		os.Remove(tmp)
 		return err
 	}
 	if err := os.Rename(tmp, dst); err != nil {
@@ -137,27 +101,49 @@ func StagedReplace(src, dst string) error {
 	return nil
 }
 
-func copyOver(src, dst string) error {
+// CopyToTemp copies src into a new exclusive regular file in dir.
+func CopyToTemp(src, dir string) (string, error) {
+	if err := requireRegular(src); err != nil {
+		return "", err
+	}
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return "", err
+	}
+	return copyToTemp(src, dir)
+}
+
+// InstallExclusive installs a complete temporary onto dst only when dst
+// does not exist. tmp is removed after a successful install.
+func InstallExclusive(tmp, dst string) error {
+	if err := os.Link(tmp, dst); err != nil {
+		return err
+	}
+	os.Remove(tmp)
+	return nil
+}
+
+func copyToTemp(src, dir string) (string, error) {
 	in, err := OpenReadFile(src)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer in.Close()
-	out, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY|os.O_EXCL, 0o644)
+	out, err := os.CreateTemp(dir, ".gobble-pub-*")
 	if err != nil {
-		return err
+		return "", err
 	}
+	tmp := out.Name()
 	_, copyErr := io.Copy(out, in)
 	closeErr := out.Close()
 	if copyErr != nil {
-		os.Remove(dst)
-		return copyErr
+		os.Remove(tmp)
+		return "", copyErr
 	}
 	if closeErr != nil {
-		os.Remove(dst)
-		return closeErr
+		os.Remove(tmp)
+		return "", closeErr
 	}
-	return nil
+	return tmp, nil
 }
 
 func requireRegular(path string) error {
@@ -169,13 +155,6 @@ func requireRegular(path string) error {
 		return ErrNotRegular
 	}
 	return nil
-}
-
-func chmodUnshared(src, dst string, mode os.FileMode) error {
-	if sameInode(src, dst) {
-		return nil
-	}
-	return os.Chmod(dst, mode)
 }
 
 func sameInode(a, b string) bool {

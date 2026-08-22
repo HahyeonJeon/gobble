@@ -48,27 +48,46 @@ func TestDockerRunArgs(t *testing.T) {
 
 func TestDockerRunArgsNonZeroResources(t *testing.T) {
 	job := Job{
-		Image:   pinnedAlpine,
-		Argv:    []string{"true"},
-		CPU:     1.5,
-		Memory:  "512m",
-		Env:     map[string]string{"HOME": "/tmp", "FOO": "bar"},
-		Isolate: "/iso",
+		Image:       pinnedAlpine,
+		Argv:        []string{"true"},
+		CPU:         1.5,
+		MemoryBytes: 512 << 20,
+		Env:         map[string]string{"HOME": "/tmp", "FOO": "bar"},
+		Isolate:     "/iso",
 	}
 	args := dockerRunArgs(job)
 	if !hasArgPair(args, "--cpus", "1.5") {
 		t.Fatalf("non-zero docker argv %v, want --cpus 1.5", args)
 	}
-	if !hasArgPair(args, "--memory", "512m") {
-		t.Fatalf("non-zero docker argv %v, want --memory 512m", args)
+	if !hasArgPair(args, "--memory", "536870912") {
+		t.Fatalf("non-zero docker argv %v, want --memory 536870912", args)
 	}
-	if !hasArgPair(args, "-e", "HOME=/tmp") || !hasArgPair(args, "-e", "FOO=bar") {
-		t.Fatalf("non-zero docker argv %v, want -e HOME=/tmp and -e FOO=bar", args)
+	if !hasArgPair(args, "-e", "FOO") || !hasArgPair(args, "-e", "HOME") {
+		t.Fatalf("non-zero docker argv %v, want sorted -e KEY", args)
 	}
-	for i, arg := range args {
-		if arg == "-e" && i+1 < len(args) && !strings.Contains(args[i+1], "=") {
-			t.Fatalf("value-less -e in %v", args)
-		}
+	if hasArgPair(args, "-e", "HOME=/tmp") || hasArgPair(args, "-e", "FOO=bar") {
+		t.Fatalf("docker argv %v contains env values", args)
+	}
+	joined := strings.Join(args, " ")
+	if strings.Contains(joined, "/tmp") || strings.Contains(joined, "bar") {
+		t.Fatalf("docker argv %v contains env values", args)
+	}
+	env := dockerClientEnv(job.Env)
+	if !contains(env, "HOME=/tmp") || !contains(env, "FOO=bar") {
+		t.Fatalf("docker client env got %v, want values", env)
+	}
+}
+
+func TestDockerRunArgsMemory15g(t *testing.T) {
+	job := Job{
+		Image:       pinnedAlpine,
+		Argv:        []string{"true"},
+		MemoryBytes: 1610612736,
+		Isolate:     "/iso",
+	}
+	args := dockerRunArgs(job)
+	if !hasArgPair(args, "--memory", "1610612736") {
+		t.Fatalf("1.5g docker argv %v, want --memory 1610612736", args)
 	}
 }
 
@@ -83,6 +102,7 @@ func TestDockerRunArgsZeroResourcesOmitFlags(t *testing.T) {
 	if strings.Contains(joined, "--cpus") || strings.Contains(joined, "--memory") {
 		t.Fatalf("zero docker argv %v contains resource flags", args)
 	}
+	job.MemoryBytes = 0
 	job.Memory = "0m"
 	args = dockerRunArgs(job)
 	if strings.Contains(strings.Join(args, " "), "--memory") {

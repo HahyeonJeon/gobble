@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -10,6 +11,8 @@ import (
 
 	intpath "github.com/HahyeonJeon/gobble/internal/path"
 )
+
+var errInvalidPath = errors.New("invalid-path")
 
 // ControlDir is the reserved workspace subtree for run identity.
 // Authored plan paths must not start with this name.
@@ -63,6 +66,9 @@ func CheckResumeStart(workspace string, cap int) []Defect {
 	if d := checkWorkspace(workspace); len(d) > 0 {
 		return d
 	}
+	if d := checkControlContainment(workspace); len(d) > 0 {
+		return d
+	}
 	return checkCap(cap)
 }
 
@@ -70,6 +76,9 @@ func CheckResumeStart(workspace string, cap int) []Defect {
 // workspace, create directories, or start a task.
 func Check(req Request) []Defect {
 	if d := checkWorkspace(req.Workspace); len(d) > 0 {
+		return d
+	}
+	if d := checkControlContainment(req.Workspace); len(d) > 0 {
 		return d
 	}
 	if d := checkControlSchema(req.Workspace); len(d) > 0 {
@@ -209,10 +218,21 @@ func checkPlanPaths(doc Document) []Defect {
 
 func checkIOPaths(unit string, io IO) []Defect {
 	if isTreeIO(io) {
+		var defects []Defect
 		if d := checkPlanPath(unit, io.Path); d != nil {
-			return []Defect{*d}
+			defects = append(defects, *d)
 		}
-		return nil
+		if io.Source != "" {
+			if d := checkPlanPath(unit, io.Source); d != nil {
+				defects = append(defects, *d)
+			}
+		}
+		if io.Manifest != "" {
+			if d := checkPlanPath(unit, io.Manifest); d != nil {
+				defects = append(defects, *d)
+			}
+		}
+		return defects
 	}
 	if io.Members != nil {
 		var defects []Defect
@@ -221,16 +241,28 @@ func checkIOPaths(unit string, io IO) []Defect {
 			if !ok {
 				continue
 			}
-			if d := checkPlanPath(bindUnit(unit, found.Name), found.Path); d != nil {
+			memberUnit := bindUnit(unit, found.Name)
+			if d := checkPlanPath(memberUnit, found.Path); d != nil {
 				defects = append(defects, *d)
+			}
+			if found.Source != "" {
+				if d := checkPlanPath(memberUnit, found.Source); d != nil {
+					defects = append(defects, *d)
+				}
 			}
 		}
 		return defects
 	}
+	var defects []Defect
 	if d := checkPlanPath(unit, io.Path); d != nil {
-		return []Defect{*d}
+		defects = append(defects, *d)
 	}
-	return nil
+	if io.Source != "" {
+		if d := checkPlanPath(unit, io.Source); d != nil {
+			defects = append(defects, *d)
+		}
+	}
+	return defects
 }
 
 func checkPlanPath(unit, path string) *Defect {
@@ -330,7 +362,12 @@ func checkInputs(workspace string, doc Document) []Defect {
 			unit := bindUnit(t.ID, in.Name)
 			if isTreeIO(in) {
 				src := treeSourceDir(in)
-				if isDir(workspaceFile(workspace, src)) {
+				abs, present, err := containedRel(workspace, src, false)
+				if err != nil {
+					defects = append(defects, escapeDefect(unit, src))
+					continue
+				}
+				if present && isDir(abs) {
 					continue
 				}
 				defects = append(defects, Defect{
@@ -344,7 +381,12 @@ func checkInputs(workspace string, doc Document) []Defect {
 			if in.Members != nil {
 				for _, f := range namedIOFiles(in) {
 					src := fileSource(f)
-					if regularFile(workspaceFile(workspace, src)) {
+					abs, present, err := containedRel(workspace, src, false)
+					if err != nil {
+						defects = append(defects, escapeDefect(bindUnit(unit, f.name), src))
+						continue
+					}
+					if present && regularFile(abs) {
 						continue
 					}
 					defects = append(defects, Defect{
@@ -360,7 +402,12 @@ func checkInputs(workspace string, doc Document) []Defect {
 			if in.Source != "" {
 				src = in.Source
 			}
-			if regularFile(workspaceFile(workspace, src)) {
+			abs, present, err := containedRel(workspace, src, false)
+			if err != nil {
+				defects = append(defects, escapeDefect(unit, src))
+				continue
+			}
+			if present && regularFile(abs) {
 				continue
 			}
 			defects = append(defects, Defect{
@@ -380,7 +427,12 @@ func checkOutputs(workspace string, doc Document) []Defect {
 		for _, out := range t.Outputs {
 			unit := bindUnit(t.ID, out.Name)
 			if isTreeIO(out) {
-				if !pathPresent(workspaceFile(workspace, out.Path)) {
+				_, present, err := containedRel(workspace, out.Path, true)
+				if err != nil {
+					defects = append(defects, escapeDefect(unit, out.Path))
+					continue
+				}
+				if !present {
 					continue
 				}
 				defects = append(defects, Defect{
@@ -393,7 +445,12 @@ func checkOutputs(workspace string, doc Document) []Defect {
 			}
 			if out.Members != nil {
 				for _, f := range namedIOFiles(out) {
-					if !pathPresent(workspaceFile(workspace, f.path)) {
+					_, present, err := containedRel(workspace, f.path, true)
+					if err != nil {
+						defects = append(defects, escapeDefect(bindUnit(unit, f.name), f.path))
+						continue
+					}
+					if !present {
 						continue
 					}
 					defects = append(defects, Defect{
@@ -405,7 +462,12 @@ func checkOutputs(workspace string, doc Document) []Defect {
 				}
 				continue
 			}
-			if !pathPresent(workspaceFile(workspace, out.Path)) {
+			_, present, err := containedRel(workspace, out.Path, true)
+			if err != nil {
+				defects = append(defects, escapeDefect(unit, out.Path))
+				continue
+			}
+			if !present {
 				continue
 			}
 			defects = append(defects, Defect{
@@ -470,4 +532,169 @@ func regularFile(path string) bool {
 func pathPresent(path string) bool {
 	_, err := os.Lstat(path)
 	return err == nil
+}
+
+func escapeDefect(unit, path string) Defect {
+	return Defect{
+		Code:    DefectInvalidPath,
+		Unit:    unit,
+		Message: "path escapes directory",
+		Paths:   []string{path},
+	}
+}
+
+func checkControlContainment(workspace string) []Defect {
+	abs, present, err := containedRel(workspace, ControlDir, false)
+	if err != nil {
+		return []Defect{{
+			Code:    DefectInvalidPath,
+			Message: "path escapes directory",
+			Paths:   []string{ControlDir},
+		}}
+	}
+	if !present {
+		return nil
+	}
+	info, err := os.Lstat(abs)
+	if err != nil {
+		return []Defect{{
+			Code:    DefectInvalidPath,
+			Message: "workspace occupancy is not usable",
+			Paths:   []string{ControlDir},
+		}}
+	}
+	if !info.IsDir() {
+		return []Defect{{
+			Code:    DefectInvalidPath,
+			Message: "path escapes directory",
+			Paths:   []string{ControlDir},
+		}}
+	}
+	return nil
+}
+
+func workspaceRoot(workspace string) (string, error) {
+	if workspace == "" {
+		return "", errInvalidPath
+	}
+	abs, err := filepath.Abs(workspace)
+	if err != nil {
+		return "", err
+	}
+	info, err := os.Lstat(abs)
+	if err != nil {
+		return "", err
+	}
+	if info.Mode()&os.ModeSymlink != 0 {
+		resolved, err := filepath.EvalSymlinks(abs)
+		if err != nil {
+			return "", err
+		}
+		abs = resolved
+		info, err = os.Lstat(abs)
+		if err != nil {
+			return "", err
+		}
+	}
+	if !info.IsDir() {
+		return "", errInvalidPath
+	}
+	return abs, nil
+}
+
+func proveInside(root, candidate string) error {
+	rel, err := filepath.Rel(root, candidate)
+	if err != nil {
+		return errInvalidPath
+	}
+	if rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return errInvalidPath
+	}
+	return nil
+}
+
+// containedRel walks rel from the real workspace root with Lstat.
+// Symlink components are rejected except a final dest leaf when probe
+// is true (dangling dest stays output-exists). Missing suffix is
+// allowed only after the deepest existing ancestor is contained.
+func containedRel(workspace, rel string, probe bool) (string, bool, error) {
+	if rel == "" || strings.IndexByte(rel, 0) >= 0 {
+		return "", false, errInvalidPath
+	}
+	root, err := workspaceRoot(workspace)
+	if err != nil {
+		return "", false, err
+	}
+	normalized := strings.ReplaceAll(rel, `\`, "/")
+	if filepath.IsAbs(rel) || filepath.IsAbs(normalized) || strings.HasPrefix(normalized, "/") {
+		return "", false, errInvalidPath
+	}
+	cleaned, escaped := intpath.Clean(normalized)
+	if escaped || cleaned == "" || cleaned == "." {
+		return "", false, errInvalidPath
+	}
+	parts := strings.Split(cleaned, "/")
+	cur := root
+	for i, part := range parts {
+		if part == "" || part == "." || part == ".." {
+			return "", false, errInvalidPath
+		}
+		next := filepath.Join(cur, part)
+		info, err := os.Lstat(next)
+		if err != nil {
+			if !os.IsNotExist(err) {
+				return "", false, err
+			}
+			cand := cur
+			for _, p := range parts[i:] {
+				cand = filepath.Join(cand, p)
+			}
+			if err := proveInside(root, cur); err != nil {
+				return "", false, err
+			}
+			if err := proveInside(root, cand); err != nil {
+				return "", false, err
+			}
+			return cand, false, nil
+		}
+		last := i == len(parts)-1
+		if info.Mode()&os.ModeSymlink != 0 {
+			if last && probe {
+				if err := proveInside(root, next); err != nil {
+					return "", false, err
+				}
+				return next, true, nil
+			}
+			return "", false, errInvalidPath
+		}
+		if !last && !info.IsDir() {
+			if probe {
+				cand := next
+				for _, p := range parts[i+1:] {
+					cand = filepath.Join(cand, p)
+				}
+				if err := proveInside(root, cand); err != nil {
+					return "", false, err
+				}
+				return cand, false, nil
+			}
+			return "", false, errInvalidPath
+		}
+		cur = next
+	}
+	if err := proveInside(root, cur); err != nil {
+		return "", false, err
+	}
+	return cur, true, nil
+}
+
+func containedFile(workspace, rel string) (string, error) {
+	abs, present, err := containedRel(workspace, rel, false)
+	if err != nil {
+		return "", err
+	}
+	if !present {
+		return "", os.ErrNotExist
+	}
+	return abs, nil
 }

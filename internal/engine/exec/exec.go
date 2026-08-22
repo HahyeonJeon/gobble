@@ -17,13 +17,14 @@ const (
 
 // Job is one task invocation. Isolate is an absolute work directory.
 type Job struct {
-	Identity string
-	Isolate  string
-	Argv     []string
-	Env      map[string]string
-	Image    string
-	CPU      float64
-	Memory   string
+	Identity    string
+	Isolate     string
+	Argv        []string
+	Env         map[string]string
+	Image       string
+	CPU         float64
+	Memory      string
+	MemoryBytes int64
 }
 
 // Handle identifies a submitted backend job.

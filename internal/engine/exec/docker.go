@@ -13,12 +13,18 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 const containerWorkDir = "/work"
 
 // DockerCLI runs docker argv without the docker token. Tests replace it.
 var DockerCLI = runDockerCLI
+
+var (
+	dockerJobEnvMu sync.Mutex
+	dockerJobEnv   []string
+)
 
 // Docker runs each job as a container.
 type Docker struct {
@@ -47,7 +53,7 @@ func (d *Docker) Submit(ctx context.Context, job Job) (Handle, Report, error) {
 	}
 	var idBuf, errBuf bytes.Buffer
 	args := dockerRunArgs(job)
-	exit, err := DockerCLI(ctx, args, &idBuf, &errBuf)
+	exit, err := dockerRunCLI(ctx, args, dockerClientEnv(job.Env), &idBuf, &errBuf)
 	if err != nil {
 		return Handle{}, Report{}, dockerErr(ctx, "docker", err)
 	}
@@ -159,19 +165,11 @@ func dockerRunArgs(job Job) []string {
 	if job.CPU != 0 {
 		args = append(args, "--cpus", strconv.FormatFloat(job.CPU, 'f', -1, 64))
 	}
-	if n, ok := parseMemory(job.Memory); ok && n > 0 {
-		args = append(args, "--memory", job.Memory)
+	if job.MemoryBytes > 0 {
+		args = append(args, "--memory", strconv.FormatInt(job.MemoryBytes, 10))
 	}
-	keys := make([]string, 0, len(job.Env))
-	for k, v := range job.Env {
-		if k == "" || v == "" {
-			continue
-		}
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	for _, k := range keys {
-		args = append(args, "-e", k+"="+job.Env[k])
+	for _, k := range envKeys(job.Env) {
+		args = append(args, "-e", k)
 	}
 	args = append(args, job.Image)
 	return append(args, job.Argv[1:]...)
@@ -205,18 +203,40 @@ func ensureImage(ctx context.Context, image string) error {
 
 func imageDigest(ctx context.Context, image string) string {
 	var buf bytes.Buffer
-	if exit, err := DockerCLI(ctx, []string{"image", "inspect", "--format", "{{with .RepoDigests}}{{index . 0}}{{end}}", image}, &buf, discard()); err != nil || exit != 0 {
-		return ""
-	}
-	s := strings.TrimSpace(buf.String())
-	if s != "" {
-		return s
-	}
-	buf.Reset()
 	if exit, err := DockerCLI(ctx, []string{"image", "inspect", "--format", "{{.Id}}", image}, &buf, discard()); err != nil || exit != 0 {
 		return ""
 	}
 	return strings.TrimSpace(buf.String())
+}
+
+// LookupImageID returns the local image .Id without pulling. Empty means miss.
+func LookupImageID(image string) string {
+	if image == "" {
+		return ""
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	return imageDigest(ctx, image)
+}
+
+func envKeys(env map[string]string) []string {
+	keys := make([]string, 0, len(env))
+	for k, v := range env {
+		if k == "" || v == "" {
+			continue
+		}
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+func dockerClientEnv(env map[string]string) []string {
+	out := []string{"PATH=/usr/bin:/bin"}
+	for _, k := range envKeys(env) {
+		out = append(out, k+"="+env[k])
+	}
+	return out
 }
 
 func inspectContainer(ctx context.Context, id string) (running bool, exit int, err error) {
@@ -269,42 +289,38 @@ func writeDockerLogs(ctx context.Context, h Handle) {
 	errf.Close()
 }
 
-func parseMemory(s string) (int64, bool) {
-	if s == "" {
-		return 0, true
-	}
-	if n, err := strconv.ParseUint(s, 10, 63); err == nil {
-		return int64(n), true
-	}
-	if len(s) < 2 {
-		return 0, false
-	}
-	var mul int64
-	switch s[len(s)-1] {
-	case 'b', 'B':
-		mul = 1
-	case 'k', 'K':
-		mul = 1024
-	case 'm', 'M':
-		mul = 1024 * 1024
-	case 'g', 'G':
-		mul = 1024 * 1024 * 1024
-	default:
-		return 0, false
-	}
-	num := s[:len(s)-1]
-	if n, err := strconv.ParseUint(num, 10, 63); err == nil {
-		return int64(n) * mul, true
-	}
-	return 0, false
+func dockerRunCLI(ctx context.Context, args, env []string, stdout, stderr io.Writer) (int, error) {
+	dockerJobEnvMu.Lock()
+	prev := dockerJobEnv
+	dockerJobEnv = env
+	dockerJobEnvMu.Unlock()
+	defer func() {
+		dockerJobEnvMu.Lock()
+		dockerJobEnv = prev
+		dockerJobEnvMu.Unlock()
+	}()
+	return DockerCLI(ctx, args, stdout, stderr)
 }
 
 func runDockerCLI(ctx context.Context, args []string, stdout, stderr io.Writer) (int, error) {
+	env := []string{"PATH=/usr/bin:/bin"}
+	dockerJobEnvMu.Lock()
+	if dockerJobEnv != nil {
+		env = append([]string(nil), dockerJobEnv...)
+	}
+	dockerJobEnvMu.Unlock()
+	return runDockerCLIEnv(ctx, args, env, stdout, stderr)
+}
+
+func runDockerCLIEnv(ctx context.Context, args, env []string, stdout, stderr io.Writer) (int, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
+	if len(env) == 0 {
+		env = []string{"PATH=/usr/bin:/bin"}
+	}
 	cmd := osexec.CommandContext(ctx, "docker", args...)
-	cmd.Env = []string{"PATH=/usr/bin:/bin"}
+	cmd.Env = env
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 	err := cmd.Run()

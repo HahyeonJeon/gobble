@@ -1,6 +1,12 @@
 package engine
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/HahyeonJeon/gobble/internal/engine/exec"
+)
+
+var lookupImageID = exec.LookupImageID
 
 // Pre-execute reuse classification. Resume writes these; Inspect only reads.
 const (
@@ -54,6 +60,10 @@ type remainingClass struct {
 }
 
 func classifyReuse(workspace string, latest jsonTaskState, recorded, current TaskPlan) reuseDecision {
+	return classifyReuseMode(workspace, latest, recorded, current, true)
+}
+
+func classifyReuseMode(workspace string, latest jsonTaskState, recorded, current TaskPlan, hashContent bool) reuseDecision {
 	applyTaskStateDefaults(&latest)
 	ident := reservedIdentity(taskPlanFromState(latest))
 	dec := reuseDecision{Identity: ident, Decision: reuseRerun}
@@ -74,13 +84,13 @@ func classifyReuse(workspace string, latest jsonTaskState, recorded, current Tas
 	if !sameParams(decodeParams(latest.Params), current.Params) {
 		differ = append(differ, "params")
 	}
-	if !sameEnv(latest.Env, current.Env) || !sameEnv(recorded.Env, current.Env) {
+	if envIdentityChanged(latest, current) {
 		differ = append(differ, "env")
 	}
-	if latest.Image != current.Image {
+	if execEnvChanged(workspace, latest, current, hashContent) {
 		differ = append(differ, "image")
 	}
-	if inputReason, extra := compareInputIdentity(workspace, latest, current); inputReason != "" {
+	if inputReason, extra := compareInputIdentity(workspace, latest, current, hashContent); inputReason != "" {
 		if inputReason == reasonIdentityChanged {
 			differ = append(differ, extra...)
 		} else {
@@ -98,13 +108,61 @@ func classifyReuse(workspace string, latest jsonTaskState, recorded, current Tas
 		dec.Reason = reuseReasonFor(differ[0])
 		return dec
 	}
-	if destReuseMiss(workspace, latest, current) {
+	if destReuseMiss(workspace, latest, current, hashContent) {
 		dec.Reason = reasonOutputMissing
 		return dec
 	}
 	dec.Decision = reuseReused
 	dec.Reason = reasonReusedIdentityMatched
 	return dec
+}
+
+func envIdentityChanged(latest jsonTaskState, current TaskPlan) bool {
+	stored := latest.EnvDigest
+	cur := planEnvDigest(current)
+	if stored == "" {
+		stored = envDigest(nil)
+	}
+	return stored != cur
+}
+
+func execEnvChanged(_ string, latest jsonTaskState, current TaskPlan, hashContent bool) bool {
+	if current.Image != "" || latest.Image != "" {
+		if latest.Image != current.Image {
+			return true
+		}
+		if !hashContent && latest.ImageDigest == "" {
+			return false
+		}
+		stored := latest.ImageDigest
+		looked := lookupImageID(current.Image)
+		if stored == "" || looked == "" || stored != looked {
+			return true
+		}
+		return false
+	}
+	if !hashContent && latest.ExecutableSHA256 == "" {
+		return false
+	}
+	argv := current.Command
+	if current.Script != "" {
+		argv = executeArgv(current)
+	}
+	if len(argv) == 0 {
+		return latest.ExecutableSHA256 != ""
+	}
+	resolved, err := exec.ResolveArgv0(argv[0], current.Env)
+	if err != nil {
+		return true
+	}
+	sum, err := sha256File(resolved)
+	if err != nil {
+		return true
+	}
+	if latest.ExecutableSHA256 == "" {
+		return true
+	}
+	return latest.ExecutableSHA256 != sum
 }
 
 func reuseReasonFor(component string) string {
@@ -128,7 +186,7 @@ func reuseReasonFor(component string) string {
 	}
 }
 
-func compareInputIdentity(workspace string, latest jsonTaskState, current TaskPlan) (string, []string) {
+func compareInputIdentity(workspace string, latest jsonTaskState, current TaskPlan, hashContent bool) (string, []string) {
 	files := identityFiles(workspace, current.Inputs)
 	if len(latest.Fingerprints) == 0 {
 		if len(files) == 0 {
@@ -147,9 +205,17 @@ func compareInputIdentity(workspace string, latest jsonTaskState, current TaskPl
 			missing = true
 			continue
 		}
-		cur, err := cheapKey(path)
 		rec := recorded[f.path]
-		if err != nil || !hasCheap(rec) || !sameCheap(rec, cur) {
+		if rec.SHA256 == "" {
+			changed = true
+			continue
+		}
+		curCheap, cheapErr := cheapKey(path)
+		if !hashContent && cheapErr == nil && hasCheap(rec) && sameCheap(rec, curCheap) {
+			continue
+		}
+		sum, err := sha256File(path)
+		if err != nil || sum != rec.SHA256 {
 			changed = true
 		}
 	}
@@ -195,7 +261,7 @@ func publishedMissing(workspace string, outputs []IO) bool {
 	return false
 }
 
-func destReuseMiss(workspace string, latest jsonTaskState, current TaskPlan) bool {
+func destReuseMiss(workspace string, latest jsonTaskState, current TaskPlan, hashContent bool) bool {
 	if len(latest.Checksums) == 0 {
 		return publishedMissing(workspace, current.Outputs)
 	}
@@ -207,11 +273,15 @@ func destReuseMiss(workspace string, latest jsonTaskState, current TaskPlan) boo
 		if !regularFile(path) {
 			return true
 		}
-		if !hasCheap(h) {
+		if h.SHA256 == "" {
+			return true
+		}
+		curCheap, cheapErr := cheapKey(path)
+		if !hashContent && cheapErr == nil && hasCheap(h) && sameCheap(h, curCheap) {
 			continue
 		}
-		cur, err := cheapKey(path)
-		if err != nil || !sameCheap(h, cur) {
+		sum, err := sha256File(path)
+		if err != nil || sum != h.SHA256 {
 			return true
 		}
 	}
@@ -262,6 +332,14 @@ func declaredIOFiles(ios []IO) []namedFile {
 }
 
 func classifyRemaining(workspace string, doc Document, tasks []jsonTaskState) remainingClass {
+	return classifyRemainingMode(workspace, doc, tasks, true)
+}
+
+func classifyRemainingView(workspace string, doc Document, tasks []jsonTaskState) remainingClass {
+	return classifyRemainingMode(workspace, doc, tasks, false)
+}
+
+func classifyRemainingMode(workspace string, doc Document, tasks []jsonTaskState, hashContent bool) remainingClass {
 	latest := latestAttempts(tasks)
 	out := remainingClass{
 		Remaining: make(map[string]bool, len(latest)),
@@ -280,7 +358,7 @@ func classifyRemaining(workspace string, doc Document, tasks []jsonTaskState) re
 			out.Remaining[ident] = true
 		}
 		recorded, current := reusePlans(doc, st)
-		dec := classifyReuse(workspace, st, recorded, current)
+		dec := classifyReuseMode(workspace, st, recorded, current, hashContent)
 		out.Decision[ident] = dec
 		if dec.Decision != reuseReused {
 			out.Affected[ident] = true
@@ -336,7 +414,7 @@ func classifyResume(workspace string, recorded, supplied Document, tasks []jsonT
 				Script:     t.Script,
 				Image:      t.Image,
 				Params:     encodeParams(t.Params),
-				Env:        copyStringMap(t.Env),
+				EnvDigest:  envDigest(t.Env),
 			}
 		}
 		dec := classifyReuse(workspace, st, rec, t)
@@ -554,16 +632,18 @@ func latestAttempts(tasks []jsonTaskState) []jsonTaskState {
 func taskPlanFromState(st jsonTaskState) TaskPlan {
 	applyTaskStateDefaults(&st)
 	return TaskPlan{
-		ID:         st.ID,
-		Instance:   st.Instance,
-		ShardIndex: st.ShardIndex,
-		ShardCount: st.ShardCount,
-		Attempt:    st.Attempt,
-		Command:    st.Command,
-		Script:     st.Script,
-		Image:      st.Image,
-		Params:     decodeParams(st.Params),
-		Env:        copyStringMap(st.Env),
+		ID:               st.ID,
+		Instance:         st.Instance,
+		ShardIndex:       st.ShardIndex,
+		ShardCount:       st.ShardCount,
+		Attempt:          st.Attempt,
+		Command:          st.Command,
+		Script:           st.Script,
+		Image:            st.Image,
+		Params:           decodeParams(st.Params),
+		EnvDigest:        st.EnvDigest,
+		ExecutablePath:   st.ExecutablePath,
+		ExecutableSHA256: st.ExecutableSHA256,
 		Resources: ResourcePlan{
 			CPU:    st.Resources.CPU,
 			Memory: st.Resources.Memory,
@@ -596,6 +676,9 @@ func sameParams(a, b []ParamPlan) bool {
 	if len(a) != len(b) {
 		return false
 	}
+	if duplicateParamNames(a) || duplicateParamNames(b) {
+		return false
+	}
 	left := make(map[string]string, len(a))
 	for _, p := range a {
 		left[p.Name] = p.Value
@@ -609,16 +692,15 @@ func sameParams(a, b []ParamPlan) bool {
 	return len(left) == 0
 }
 
-func sameEnv(a, b map[string]string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for k, v := range a {
-		if b[k] != v {
-			return false
+func duplicateParamNames(params []ParamPlan) bool {
+	seen := make(map[string]bool, len(params))
+	for _, p := range params {
+		if seen[p.Name] {
+			return true
 		}
+		seen[p.Name] = true
 	}
-	return true
+	return false
 }
 
 func copyStringMap(in map[string]string) map[string]string {

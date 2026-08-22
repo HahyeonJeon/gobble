@@ -2,10 +2,12 @@ package engine
 
 import (
 	"crypto/sha256"
+	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"io"
 	"os"
+	"sort"
 	"strconv"
 	"syscall"
 
@@ -75,6 +77,36 @@ func isolateRel(t TaskPlan) string {
 	applyReservedDefaults(&t)
 	return ControlDir + "/tasks/" + t.ID + "/" + instanceSeg(t.Instance) + "/" +
 		strconv.Itoa(t.ShardIndex) + "/" + strconv.Itoa(t.Attempt)
+}
+
+func envDigest(env map[string]string) string {
+	keys := make([]string, 0, len(env))
+	for k := range env {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	h := sha256.New()
+	var lenBuf [8]byte
+	for _, k := range keys {
+		v := env[k]
+		binary.BigEndian.PutUint64(lenBuf[:], uint64(len(k)))
+		h.Write(lenBuf[:])
+		h.Write([]byte(k))
+		binary.BigEndian.PutUint64(lenBuf[:], uint64(len(v)))
+		h.Write(lenBuf[:])
+		h.Write([]byte(v))
+	}
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+func planEnvDigest(t TaskPlan) string {
+	if t.Env != nil {
+		return envDigest(t.Env)
+	}
+	if t.EnvDigest != "" {
+		return t.EnvDigest
+	}
+	return envDigest(nil)
 }
 
 func sha256File(path string) (string, error) {

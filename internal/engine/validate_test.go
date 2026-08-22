@@ -74,6 +74,21 @@ func TestValidateDocumentPlanDefects(t *testing.T) {
 			unit: "copy",
 		},
 		{
+			name: "duplicate param names",
+			doc: Document{
+				Name: "dup-param",
+				Tasks: []TaskPlan{{
+					ID:      "copy",
+					Name:    "copy",
+					Command: []string{"cp"},
+					Params:  []ParamPlan{{Name: "mode", Value: "fast"}, {Name: "mode", Value: "slow"}},
+					Outputs: []IO{file},
+				}},
+			},
+			code: DefectInvalidValue,
+			unit: "copy",
+		},
+		{
 			name: "empty env key",
 			doc: Document{
 				Name: "env",
@@ -151,6 +166,43 @@ func TestValidateDocumentPlanDefects(t *testing.T) {
 				t.Fatalf("case %s: Validate() defects %v, want code %s unit %q", tt.name, formatDefects(got), tt.code, tt.unit)
 			}
 		})
+	}
+}
+
+func TestParseMemoryGrammar(t *testing.T) {
+	tests := []struct {
+		in   string
+		want int64
+		ok   bool
+	}{
+		{"", 0, true},
+		{"0", 0, true},
+		{"0m", 0, true},
+		{"512m", 512 << 20, true},
+		{"1g", 1 << 30, true},
+		{"1.5g", 1610612736, true},
+		{"1K", 1024, true},
+		{"not-a-size", 0, false},
+		{"-1g", 0, false},
+	}
+	for _, tt := range tests {
+		got, ok := parseMemory(tt.in)
+		if ok != tt.ok || (ok && got != tt.want) {
+			t.Fatalf("parseMemory(%q) = %d, %v, want %d, %v", tt.in, got, ok, tt.want, tt.ok)
+		}
+	}
+	got := Validate(Document{
+		Name: "mem-15g",
+		Tasks: []TaskPlan{{
+			ID:        "copy",
+			Name:      "copy",
+			Command:   []string{"cp"},
+			Resources: ResourcePlan{Memory: "1.5g"},
+			Outputs:   []IO{{Name: "out", Kind: ArtifactFile, Path: "out.txt", Spec: Path{Base: "out", Ext: ".txt"}}},
+		}},
+	})
+	if hasDefect(got, DefectInvalidMemory, "copy") {
+		t.Fatalf("1.5g: Validate() defects %v, want accepted", formatDefects(got))
 	}
 }
 

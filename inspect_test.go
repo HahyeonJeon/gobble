@@ -145,9 +145,8 @@ func TestInspectViewsAfterSuccessfulRun(t *testing.T) {
 	if instances[0]["identity"] != "copy" || instances[0]["status"] != engine.StatusSucceeded {
 		t.Fatalf("instance record got %#v", instances[0])
 	}
-	env, _ := instances[0]["env"].(map[string]any)
-	if env["HOME"] != "/tmp/gobble-home" {
-		t.Fatalf("instance env got %#v, want HOME=/tmp/gobble-home", instances[0]["env"])
+	if _, ok := instances[0]["env"]; ok {
+		t.Fatalf("instance env got %#v, want omitted", instances[0]["env"])
 	}
 	if instances[0]["shard_index"] != float64(0) || instances[0]["attempt"] != float64(1) {
 		t.Fatalf("instance slots got %#v", instances[0])

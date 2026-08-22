@@ -116,6 +116,9 @@ func inspectWorkspace(workspace string) []Defect {
 			Paths:   []string{workspace},
 		}}
 	}
+	if d := checkControlContainment(workspace); len(d) > 0 {
+		return d
+	}
 	return nil
 }
 
@@ -286,24 +289,23 @@ func inspectRunView(workspace string, run jsonRun, tasks []jsonTaskState) inspec
 }
 
 type inspectInstanceDoc struct {
-	SchemaVersion int               `json:"schema_version"`
-	Identity      string            `json:"identity"`
-	Status        string            `json:"status"`
-	Executor      string            `json:"executor"`
-	Image         string            `json:"image"`
-	Command       []string          `json:"command"`
-	Script        string            `json:"script,omitempty"`
-	Params        []jsonParam       `json:"params"`
-	Env           map[string]string `json:"env,omitempty"`
-	Resources     jsonResources     `json:"resources"`
-	Instance      string            `json:"instance"`
-	ShardIndex    int               `json:"shard_index"`
-	ShardCount    int               `json:"shard_count"`
-	Attempt       int               `json:"attempt"`
-	Stdout        string            `json:"stdout,omitempty"`
-	Stderr        string            `json:"stderr,omitempty"`
-	Decision      string            `json:"decision,omitempty"`
-	Reason        string            `json:"reuse_reason,omitempty"`
+	SchemaVersion int           `json:"schema_version"`
+	Identity      string        `json:"identity"`
+	Status        string        `json:"status"`
+	Executor      string        `json:"executor"`
+	Image         string        `json:"image"`
+	Command       []string      `json:"command"`
+	Script        string        `json:"script,omitempty"`
+	Params        []jsonParam   `json:"params"`
+	Resources     jsonResources `json:"resources"`
+	Instance      string        `json:"instance"`
+	ShardIndex    int           `json:"shard_index"`
+	ShardCount    int           `json:"shard_count"`
+	Attempt       int           `json:"attempt"`
+	Stdout        string        `json:"stdout,omitempty"`
+	Stderr        string        `json:"stderr,omitempty"`
+	Decision      string        `json:"decision,omitempty"`
+	Reason        string        `json:"reuse_reason,omitempty"`
 }
 
 func inspectInstanceRecords(tasks []jsonTaskState, doc Document, schema int) []inspectInstanceDoc {
@@ -330,7 +332,6 @@ func inspectInstanceRecords(tasks []jsonTaskState, doc Document, schema int) []i
 		}
 		if t, ok := planTaskByID(doc, st.ID); ok {
 			rec.Script = t.Script
-			rec.Env = t.Env
 			if rec.Image == "" {
 				rec.Image = t.Image
 			}
@@ -543,7 +544,7 @@ type inspectRemainingDoc struct {
 }
 
 func inspectRemainingRecords(workspace string, doc Document, latest []jsonTaskState, instance string, schema int) []inspectRemainingDoc {
-	class := classifyRemaining(workspace, doc, latest)
+	class := classifyRemainingView(workspace, doc, latest)
 	out := make([]inspectRemainingDoc, 0)
 	for _, st := range latest {
 		ident := reservedIdentity(taskPlanFromState(st))
@@ -637,10 +638,10 @@ func decodeTask(t jsonTask) TaskPlan {
 			CPU:    t.Resources.CPU,
 			Memory: t.Resources.Memory,
 		},
-		Params:  decodeParams(t.Params),
-		Env:     t.Env,
-		Inputs:  decodeIOs(t.Inputs),
-		Outputs: decodeIOs(t.Outputs),
+		Params:    decodeParams(t.Params),
+		EnvDigest: t.EnvDigest,
+		Inputs:    decodeIOs(t.Inputs),
+		Outputs:   decodeIOs(t.Outputs),
 	}
 }
 

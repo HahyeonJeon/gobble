@@ -62,6 +62,7 @@ func Validate(doc Document) []Defect {
 			})
 		}
 		defects = append(defects, checkEnv(id, t.Env)...)
+		defects = append(defects, checkParams(id, t.Params)...)
 		for _, b := range t.Inputs {
 			defects = append(defects, checkArtifactXOR(bindUnit(id, b.Name), b)...)
 			paths = append(paths, recordIOPaths(id, b, false)...)
@@ -72,6 +73,23 @@ func Validate(doc Document) []Defect {
 		}
 	}
 	defects = append(defects, checkConflicts(paths)...)
+	return defects
+}
+
+func checkParams(id string, params []ParamPlan) []Defect {
+	seen := make(map[string]bool, len(params))
+	var defects []Defect
+	for _, p := range params {
+		if seen[p.Name] {
+			defects = append(defects, Defect{
+				Code:    DefectInvalidValue,
+				Unit:    id,
+				Message: "duplicate param name",
+			})
+			continue
+		}
+		seen[p.Name] = true
+	}
 	return defects
 }
 

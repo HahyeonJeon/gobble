@@ -539,3 +539,68 @@ func snapshotDir(t *testing.T, root string) string {
 	}
 	return string(out)
 }
+
+func TestCheckAncestorSymlinkInvalidPath(t *testing.T) {
+	outside := t.TempDir()
+	sentinel := filepath.Join(outside, "sentinel")
+	if err := os.WriteFile(sentinel, []byte("outside"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	dir := t.TempDir()
+	if err := os.Mkdir(filepath.Join(dir, "in"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(outside, filepath.Join(dir, "out")); err != nil {
+		t.Fatal(err)
+	}
+	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	defects := Check(Request{
+		Workspace: dir,
+		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
+	})
+	if !hasDefect(defects, DefectInvalidPath, "copy.out") {
+		t.Fatalf("ancestor symlink Check() defects %v, want invalid-path", defects)
+	}
+	got, err := os.ReadFile(sentinel)
+	if err != nil || string(got) != "outside" {
+		t.Fatalf("sentinel got %q, want outside", got)
+	}
+	if _, err := os.Stat(filepath.Join(dir, ControlDir)); !os.IsNotExist(err) {
+		t.Fatalf("Check created %s", ControlDir)
+	}
+}
+
+func TestCheckControlSymlinkInvalidPath(t *testing.T) {
+	outside := t.TempDir()
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	if err := os.Symlink(outside, filepath.Join(dir, ControlDir)); err != nil {
+		t.Fatal(err)
+	}
+	defects := Check(Request{
+		Workspace: dir,
+		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
+	})
+	if !hasDefect(defects, DefectInvalidPath, "") && !hasDefect(defects, DefectInvalidPath, ControlDir) {
+		found := false
+		for _, d := range defects {
+			if d.Code == DefectInvalidPath {
+				found = true
+			}
+		}
+		if !found {
+			t.Fatalf("control symlink Check() defects %v, want invalid-path", defects)
+		}
+	}
+}
+
+func TestCheckMissingDestContainedAncestorOK(t *testing.T) {
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	if defects := Check(Request{
+		Workspace: dir,
+		Document:  sampleDoc("", "", "in/sample.txt", "out/nested/sample.txt"),
+	}); len(defects) != 0 {
+		t.Fatalf("missing nested dest Check() defects %v, want none", defects)
+	}
+}

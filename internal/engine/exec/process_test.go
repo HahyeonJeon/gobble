@@ -2,7 +2,9 @@ package exec
 
 import (
 	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"syscall"
 	"testing"
 	"time"
@@ -58,6 +60,40 @@ func TestProcessUnprovedPIDUnknown(t *testing.T) {
 	}
 	if _, err := p.Reconcile(t.Context(), h); err == nil {
 		t.Fatal("Reconcile unproved PID error = nil, want unproved")
+	}
+}
+
+func TestResolveArgv0IgnoresParentPATH(t *testing.T) {
+	dir := t.TempDir()
+	poison := filepath.Join(dir, "sh")
+	if err := os.WriteFile(poison, []byte("#!/bin/sh\nexit 42\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", dir+":/usr/bin:/bin")
+	got, err := ResolveArgv0("sh", nil)
+	if err != nil {
+		t.Fatalf("ResolveArgv0() error = %v", err)
+	}
+	if got == poison {
+		t.Fatalf("ResolveArgv0 used parent PATH binary %q", got)
+	}
+	if !strings.HasPrefix(got, "/usr/bin/") && !strings.HasPrefix(got, "/bin/") {
+		t.Fatalf("ResolveArgv0 got %q, want a /usr/bin or /bin path", got)
+	}
+	declared := filepath.Join(dir, "bin")
+	if err := os.Mkdir(declared, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	want := filepath.Join(declared, "sh")
+	if err := os.WriteFile(want, []byte("#!/bin/sh\nexit 0\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	got, err = ResolveArgv0("sh", map[string]string{"PATH": declared})
+	if err != nil {
+		t.Fatalf("declared PATH ResolveArgv0() error = %v", err)
+	}
+	if got != want {
+		t.Fatalf("declared PATH got %q, want %q", got, want)
 	}
 }
 

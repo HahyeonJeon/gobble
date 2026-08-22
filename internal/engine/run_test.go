@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"bytes"
 	"encoding/json"
 	"go/parser"
 	"go/token"
@@ -898,11 +899,11 @@ func TestRunGroupStagePublishByName(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if srcKey.Inode != dstKey.Inode || srcKey.Dev != dstKey.Dev {
-			t.Fatalf("staged %s is not a hardlink", name)
+		if srcKey.Inode == dstKey.Inode && srcKey.Dev == dstKey.Dev {
+			t.Fatalf("staged %s shares source inode", name)
 		}
 		if got := filePerm(t, src); got != wantPerm[name] {
-			t.Fatalf("hardlink stage chmod source %s from %o to %o", name, wantPerm[name], got)
+			t.Fatalf("stage chmod source %s from %o to %o", name, wantPerm[name], got)
 		}
 	}
 
@@ -1020,6 +1021,71 @@ func TestRunProcessEnvIsFixed(t *testing.T) {
 	}
 	if !strings.Contains(body, "PATH=/usr/bin:/bin") {
 		t.Fatalf("process env got %q, want PATH=/usr/bin:/bin", body)
+	}
+}
+
+const envCanary = "s3cret-canary-9f3c-gobble"
+
+func TestSecretFreePlanTasksInspect(t *testing.T) {
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
+	doc.Tasks[0].Env = map[string]string{"GOBBLE_CANARY": envCanary}
+	if defects := Run(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+		t.Fatalf("canary Run() defects %v", defects)
+	}
+	for _, name := range []string{PlanFile, TasksFile} {
+		raw, err := os.ReadFile(filepath.Join(dir, ControlDir, name))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if bytes.Contains(raw, []byte(envCanary)) {
+			t.Fatalf("%s contains env canary: %s", name, raw)
+		}
+		if !bytes.Contains(raw, []byte("env_digest")) {
+			t.Fatalf("%s missing env_digest", name)
+		}
+	}
+	raw, defects := Inspect(dir, viewInstances, "")
+	if len(defects) != 0 {
+		t.Fatalf("Inspect(instances) defects %v", defects)
+	}
+	if bytes.Contains(raw, []byte(envCanary)) {
+		t.Fatalf("inspect instances contains env canary: %s", raw)
+	}
+	st := taskStates(t, dir)["copy"]
+	if st.EnvDigest != envDigest(map[string]string{"GOBBLE_CANARY": envCanary}) {
+		t.Fatalf("env digest got %s", st.EnvDigest)
+	}
+}
+
+func TestRunProcessIgnoresParentPATH(t *testing.T) {
+	poisonDir := t.TempDir()
+	poison := filepath.Join(poisonDir, "sh")
+	if err := os.WriteFile(poison, []byte("#!/bin/sh\necho poisoned > out/sample.txt\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", poisonDir)
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
+	doc.Tasks[0].Command = []string{"sh", "-c", "cp in/sample.txt out/sample.txt"}
+	if defects := Run(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+		t.Fatalf("parent PATH poison Run() defects %v", defects)
+	}
+	got, err := os.ReadFile(filepath.Join(dir, "out", "sample.txt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != "reads" {
+		t.Fatalf("parent PATH poison published %q, want reads", got)
+	}
+	st := taskStates(t, dir)["copy"]
+	if st.ExecutablePath == poison {
+		t.Fatalf("recorded executable used parent PATH %q", st.ExecutablePath)
+	}
+	if st.ExecutableSHA256 == "" {
+		t.Fatal("missing executable sha256")
 	}
 }
 

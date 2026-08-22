@@ -3,7 +3,6 @@ package exec
 import (
 	"os"
 	"path/filepath"
-	"syscall"
 	"testing"
 )
 
@@ -26,7 +25,7 @@ func TestCopyFileRefusesSymlink(t *testing.T) {
 	}
 }
 
-func TestStageHardlinkDoesNotChmodSource(t *testing.T) {
+func TestStageCopyIndependentInode(t *testing.T) {
 	dir := t.TempDir()
 	src := filepath.Join(dir, "src.txt")
 	if err := os.WriteFile(src, []byte("data"), 0o644); err != nil {
@@ -34,11 +33,11 @@ func TestStageHardlinkDoesNotChmodSource(t *testing.T) {
 	}
 	wantPerm := filePerm(t, src)
 	dst := filepath.Join(dir, "iso", "src.txt")
-	if err := StageFile(src, dst, true); err != nil {
+	if err := StageFile(src, dst); err != nil {
 		t.Fatalf("StageFile() error = %v", err)
 	}
-	if !sameInode(src, dst) {
-		t.Fatal("same-device stage did not hardlink")
+	if sameInode(src, dst) {
+		t.Fatal("staged dest inode equals source")
 	}
 	if got := filePerm(t, src); got != wantPerm {
 		t.Fatalf("source mode got %o, want %o", got, wantPerm)
@@ -48,71 +47,40 @@ func TestStageHardlinkDoesNotChmodSource(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !dstInfo.Mode().IsRegular() {
-		t.Fatal("hardlink dest is not regular")
-	}
-}
-
-func TestStageCopyFallbackDestInodeAndChmod(t *testing.T) {
-	orig := LinkFn
-	t.Cleanup(func() { LinkFn = orig })
-	LinkFn = func(string, string) error { return syscall.EXDEV }
-
-	dir := t.TempDir()
-	src := filepath.Join(dir, "src.txt")
-	if err := os.WriteFile(src, []byte("data"), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	wantPerm := filePerm(t, src)
-	dst := filepath.Join(dir, "iso", "src.txt")
-	if err := StageFile(src, dst, false); err != nil {
-		t.Fatalf("StageFile() error = %v", err)
-	}
-	if sameInode(src, dst) {
-		t.Fatal("copy fallback dest inode equals source")
-	}
-	if got := filePerm(t, src); got != wantPerm {
-		t.Fatalf("source mode after copy got %o, want %o", got, wantPerm)
-	}
-	dstInfo, err := os.Lstat(dst)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !dstInfo.Mode().IsRegular() {
-		t.Fatal("copy dest is not regular")
+		t.Fatal("staged dest is not regular")
 	}
 	if dstInfo.Mode().Perm() != 0o444 {
-		t.Fatalf("copy dest mode got %o, want 0444", dstInfo.Mode().Perm())
+		t.Fatalf("staged dest mode got %o, want 0444", dstInfo.Mode().Perm())
+	}
+	if err := os.Chmod(dst, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(dst, []byte("mutated"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	got, err := os.ReadFile(src)
+	if err != nil || string(got) != "data" {
+		t.Fatalf("source bytes got %q, want data", got)
 	}
 }
 
-func TestStageProcessSymlinkFallback(t *testing.T) {
-	orig := LinkFn
-	t.Cleanup(func() { LinkFn = orig })
-	LinkFn = func(string, string) error { return syscall.EXDEV }
-
+func TestStageRefusesSymlinkSource(t *testing.T) {
 	dir := t.TempDir()
-	src := filepath.Join(dir, "src.txt")
-	if err := os.WriteFile(src, []byte("data"), 0o644); err != nil {
+	target := filepath.Join(dir, "src.txt")
+	if err := os.WriteFile(target, []byte("data"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	src := filepath.Join(dir, "link")
+	if err := os.Symlink(target, src); err != nil {
 		t.Fatal(err)
 	}
 	dst := filepath.Join(dir, "iso", "src.txt")
-	if err := StageFile(src, dst, true); err != nil {
-		t.Fatalf("StageFile() error = %v", err)
-	}
-	info, err := os.Lstat(dst)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if info.Mode()&os.ModeSymlink == 0 {
-		t.Fatal("process stage fallback is not a symlink")
+	if err := StageFile(src, dst); err == nil {
+		t.Fatal("StageFile followed symlink")
 	}
 }
 
-func TestPublishCopyFallbackDestInodeDiffers(t *testing.T) {
-	orig := LinkFn
-	t.Cleanup(func() { LinkFn = orig })
-	LinkFn = func(string, string) error { return syscall.EXDEV }
-
+func TestPublishCopyDestInodeDiffers(t *testing.T) {
 	dir := t.TempDir()
 	src := filepath.Join(dir, "iso", "out.txt")
 	if err := os.MkdirAll(filepath.Dir(src), 0o755); err != nil {
@@ -126,7 +94,7 @@ func TestPublishCopyFallbackDestInodeDiffers(t *testing.T) {
 		t.Fatalf("PublishFile() error = %v", err)
 	}
 	if sameInode(src, dst) {
-		t.Fatal("copy fallback dest inode equals isolate inode")
+		t.Fatal("published dest inode equals isolate inode")
 	}
 	info, err := os.Lstat(dst)
 	if err != nil {
@@ -143,7 +111,10 @@ func TestPublishNeverSymlink(t *testing.T) {
 		LinkFn = origLink
 		SymlinkFn = origSym
 	})
-	LinkFn = func(string, string) error { return syscall.EXDEV }
+	LinkFn = func(string, string) error {
+		t.Fatal("PublishFile called LinkFn on source")
+		return nil
+	}
 	SymlinkFn = func(string, string) error {
 		t.Fatal("PublishFile called symlink")
 		return nil
@@ -182,7 +153,7 @@ func TestCopyFileDestInodeDiffersFromSource(t *testing.T) {
 	}
 }
 
-func TestStagedReplaceHardlinkDoesNotChmodSource(t *testing.T) {
+func TestStagedReplaceIndependentInode(t *testing.T) {
 	dir := t.TempDir()
 	dst := filepath.Join(dir, "out", "sample.txt")
 	if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
@@ -206,11 +177,30 @@ func TestStagedReplaceHardlinkDoesNotChmodSource(t *testing.T) {
 	if err != nil || string(got) != "next" {
 		t.Fatalf("dest got %q, want next", got)
 	}
-	if !sameInode(src, dst) {
-		t.Fatal("StagedReplace did not hardlink")
+	if sameInode(src, dst) {
+		t.Fatal("StagedReplace dest inode equals source")
 	}
 	if srcPerm := filePerm(t, src); srcPerm != wantPerm {
 		t.Fatalf("source mode got %o, want %o", srcPerm, wantPerm)
+	}
+}
+
+func TestPublishExclusiveLeavesNoPartialDest(t *testing.T) {
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src.txt")
+	if err := os.WriteFile(src, []byte("complete"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	dst := filepath.Join(dir, "dst.txt")
+	if err := os.WriteFile(dst, []byte("old"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := PublishFile(src, dst); err == nil {
+		t.Fatal("PublishFile replaced existing dest")
+	}
+	got, err := os.ReadFile(dst)
+	if err != nil || string(got) != "old" {
+		t.Fatalf("existing dest got %q, want old", got)
 	}
 }
 

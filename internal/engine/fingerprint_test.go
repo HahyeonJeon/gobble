@@ -87,6 +87,7 @@ func TestClassifyReuseCheapKeysAndImageDigest(t *testing.T) {
 	writeCheckFile(t, filepath.Join(dir, "out", "a.txt"), "reads")
 	inRec := mustFileRecord(t, filepath.Join(dir, "in", "a.txt"), "in/a.txt")
 	outRec := mustFileRecord(t, filepath.Join(dir, "out", "a.txt"), "out/a.txt")
+	stubImageID(t, "sha256:deadbeef")
 	base := jsonTaskState{
 		ID:           "copy",
 		Status:       StatusSucceeded,
@@ -94,7 +95,7 @@ func TestClassifyReuseCheapKeysAndImageDigest(t *testing.T) {
 		Image:        "alpine:3.19.1",
 		ImageDigest:  "sha256:deadbeef",
 		Params:       []jsonParam{{Name: "mode", Value: "fast"}},
-		Env:          map[string]string{"HOME": "/tmp"},
+		EnvDigest:    envDigest(map[string]string{"HOME": "/tmp"}),
 		Fingerprints: []jsonFileHash{inRec},
 		Checksums:    []jsonFileHash{outRec},
 		Lineage:      []jsonLineage{{Producer: "copy", Path: "out/a.txt", Checksum: outRec.SHA256}},
@@ -110,17 +111,41 @@ func TestClassifyReuseCheapKeysAndImageDigest(t *testing.T) {
 	}
 	got := classifyReuse(dir, base, plan, plan)
 	if got.Decision != reuseReused || got.Reason != reasonReusedIdentityMatched {
-		t.Fatalf("digest-only image change must reuse, got %#v", got)
+		t.Fatalf("matching digest must reuse, got %#v", got)
 	}
 
 	if err := os.Chtimes(filepath.Join(dir, "in", "a.txt"), time.Now().Add(time.Hour), time.Now().Add(time.Hour)); err != nil {
 		t.Fatal(err)
 	}
 	got = classifyReuse(dir, base, plan, plan)
-	if got.Reason != reasonInputFingerprintChanged {
-		t.Fatalf("mtime change got %#v, want input-fingerprint-changed", got)
+	if got.Decision != reuseReused {
+		t.Fatalf("mtime-only change got %#v, want reuse", got)
 	}
 
+	writeCheckFile(t, filepath.Join(dir, "in", "a.txt"), "READS")
+	if err := os.Chtimes(filepath.Join(dir, "in", "a.txt"), time.Unix(inRec.Mtime/1e9, inRec.Mtime%1e9), time.Unix(inRec.Mtime/1e9, inRec.Mtime%1e9)); err != nil {
+		t.Fatal(err)
+	}
+	got = classifyReuse(dir, base, plan, plan)
+	if got.Reason != reasonInputFingerprintChanged {
+		t.Fatalf("content mismatch got %#v, want input-fingerprint-changed", got)
+	}
+
+	stubImageID(t, "sha256:other")
+	writeCheckFile(t, filepath.Join(dir, "in", "a.txt"), "reads")
+	got = classifyReuse(dir, base, plan, plan)
+	if got.Reason != reasonImageChanged {
+		t.Fatalf("digest mismatch got %#v, want image-changed", got)
+	}
+
+	stubImageID(t, "")
+	got = classifyReuse(dir, base, plan, plan)
+	if got.Reason != reasonImageChanged {
+		t.Fatalf("missing digest got %#v, want image-changed", got)
+	}
+
+	writeCheckFile(t, filepath.Join(dir, "in", "a.txt"), "reads")
+	stubImageID(t, "sha256:deadbeef")
 	if err := os.Remove(filepath.Join(dir, "in", "a.txt")); err != nil {
 		t.Fatal(err)
 	}
@@ -128,6 +153,13 @@ func TestClassifyReuseCheapKeysAndImageDigest(t *testing.T) {
 	if got.Reason != reasonInputMissing {
 		t.Fatalf("missing input got %#v, want input-missing", got)
 	}
+}
+
+func stubImageID(t *testing.T, id string) {
+	t.Helper()
+	orig := lookupImageID
+	t.Cleanup(func() { lookupImageID = orig })
+	lookupImageID = func(string) string { return id }
 }
 
 func TestPublishTreeManifestDestCheapKeys(t *testing.T) {
@@ -220,12 +252,23 @@ func TestPrepareIsolateDockerSkipsSymlink(t *testing.T) {
 	if !info.Mode().IsRegular() {
 		t.Fatal("docker stage used symlink")
 	}
+	srcKey, err := cheapKey(src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	dstKey, err := cheapKey(dst)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if srcKey.Inode == dstKey.Inode && srcKey.Dev == dstKey.Dev {
+		t.Fatal("docker stage dest inode equals source")
+	}
 	if got := filePerm(t, src); got != wantPerm {
 		t.Fatalf("source mode got %o, want %o", got, wantPerm)
 	}
 }
 
-func TestHardlinkStageDoesNotChmodSource(t *testing.T) {
+func TestStageCopyIndependentFromSource(t *testing.T) {
 	dir := t.TempDir()
 	src := filepath.Join(dir, "in", "sample.txt")
 	writeCheckFile(t, src, "reads")
@@ -247,12 +290,42 @@ func TestHardlinkStageDoesNotChmodSource(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if srcKey.Inode != dstKey.Inode || srcKey.Dev != dstKey.Dev {
-		t.Fatal("same-device stage did not hardlink")
+	if srcKey.Inode == dstKey.Inode && srcKey.Dev == dstKey.Dev {
+		t.Fatal("staged dest inode equals source")
 	}
 	if got := filePerm(t, src); got != wantPerm {
-		t.Fatalf("hardlink stage chmod source from %o to %o", wantPerm, got)
+		t.Fatalf("stage chmod source from %o to %o", wantPerm, got)
 	}
+	if err := os.Chmod(dst, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(dst, []byte("mutated"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	got, err := os.ReadFile(src)
+	if err != nil || string(got) != "reads" {
+		t.Fatalf("source bytes got %q, want reads", got)
+	}
+}
+
+func mustAttachExec(t *testing.T, st *jsonTaskState, argv0 string) {
+	t.Helper()
+	path, err := exec.ResolveArgv0(argv0, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sum, err := sha256File(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	st.ExecutablePath = path
+	st.ExecutableSHA256 = sum
+}
+
+func mustExecState(t *testing.T, st jsonTaskState, argv0 string) jsonTaskState {
+	t.Helper()
+	mustAttachExec(t, &st, argv0)
+	return st
 }
 
 func mustFileRecord(t *testing.T, abs, plan string) jsonFileHash {
