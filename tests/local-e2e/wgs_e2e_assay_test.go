@@ -60,7 +60,6 @@ func TestThinFailFixtureInspectReleaseResume(t *testing.T) {
 		t.Fatalf("fail remaining got %#v", remaining["fail"])
 	}
 
-	forceDeadOwner(t, dir)
 	if err := gobble.Release(dir); err != nil {
 		t.Fatalf("Release() error = %v", err)
 	}

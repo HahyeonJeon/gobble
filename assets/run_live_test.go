@@ -49,7 +49,6 @@ func TestFastQCExtraArgsResume(t *testing.T) {
 	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
-	forceDeadOwner(t, dir)
 	if err := gobble.Release(dir); err != nil {
 		t.Fatalf("Release() error = %v", err)
 	}

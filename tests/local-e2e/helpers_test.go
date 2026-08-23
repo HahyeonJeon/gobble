@@ -12,7 +12,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"syscall"
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
@@ -309,49 +308,6 @@ func assertOccupied(t *testing.T, dir string) {
 	}
 }
 
-func forceDeadOwner(t *testing.T, workspace string) {
-	t.Helper()
-	path := filepath.Join(workspace, engine.ControlDir, engine.RunIdentityFile)
-	data, err := os.ReadFile(path)
-	if err != nil {
-		t.Fatalf("ReadFile(%s) error = %v", path, err)
-	}
-	var run map[string]any
-	if err := json.Unmarshal(data, &run); err != nil {
-		t.Fatalf("Unmarshal run.json: %v", err)
-	}
-	occ, _ := run["occupancy"].(map[string]any)
-	if occ == nil {
-		occ = map[string]any{"active": true}
-		run["occupancy"] = occ
-	}
-	host, err := os.Hostname()
-	if err != nil {
-		t.Fatalf("Hostname() error = %v", err)
-	}
-	occ["active"] = true
-	occ["host"] = host
-	occ["pid"] = deadPID(t)
-	out, err := json.MarshalIndent(run, "", "  ")
-	if err != nil {
-		t.Fatalf("MarshalIndent: %v", err)
-	}
-	if err := os.WriteFile(path, append(out, '\n'), 0o644); err != nil {
-		t.Fatalf("WriteFile(%s) error = %v", path, err)
-	}
-}
-
-func deadPID(t *testing.T) int {
-	t.Helper()
-	for pid := 1 << 22; pid > 2; pid-- {
-		if err := syscall.Kill(pid, 0); err != nil && err != syscall.EPERM {
-			return pid
-		}
-	}
-	t.Fatal("no dead pid")
-	return 0
-}
-
 func recoverAfterSuccessAPI(t *testing.T, g *gobble.Graph, dir string, cap int) {
 	t.Helper()
 	if remaining := inspectJSONL(t, dir, gobble.ViewRemaining); len(remaining) != 0 {
@@ -360,7 +316,6 @@ func recoverAfterSuccessAPI(t *testing.T, g *gobble.Graph, dir string, cap int) 
 	err := gobble.Run(t.Context(), g, dir, 0)
 	requireRunError(t, "second Run", err, gobble.DefectOccupiedWorkspace, "")
 
-	forceDeadOwner(t, dir)
 	if err := gobble.Release(dir); err != nil {
 		t.Fatalf("Release() error = %v", err)
 	}

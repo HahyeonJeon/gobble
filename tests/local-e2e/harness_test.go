@@ -156,33 +156,9 @@ func decodeCLIError(t *testing.T, res gobbleResult) gobble.Error {
 	return ge
 }
 
-func hasDefect(ge gobble.Error, code gobble.DefectCode) bool {
-	for _, d := range ge.Defects {
-		if d.Code == code {
-			return true
-		}
-	}
-	return false
-}
-
 func releaseWorkspace(t *testing.T, bin, workspace string) {
 	t.Helper()
 	res := runGobble(t, bin, "release", "--workspace", workspace)
-	if res.code == 0 {
-		if len(res.stderr) != 0 {
-			t.Fatalf("release stderr = %q, want empty", res.stderr)
-		}
-		if string(res.stdout) != "{\"op\":\"release\"}\n" {
-			t.Fatalf("release stdout = %q, want {\"op\":\"release\"}\\n", res.stdout)
-		}
-		return
-	}
-	ge := decodeCLIError(t, res)
-	if !hasDefect(ge, gobble.DefectLiveOccupancy) {
-		t.Fatalf("release exit = %d, want 0\nstderr: %s", res.code, res.stderr)
-	}
-	forceDeadOwner(t, workspace)
-	res = runGobble(t, bin, "release", "--workspace", workspace)
 	requireSuccess(t, res)
 	if string(res.stdout) != "{\"op\":\"release\"}\n" {
 		t.Fatalf("release stdout = %q, want {\"op\":\"release\"}\\n", res.stdout)
