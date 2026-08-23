@@ -4,6 +4,7 @@ Recursive navigation across reports, grouped by category, newest first.
 
 ## Note
 
+- [Honest local preview](note/2026-08-23-honest-local-preview.md)
 - [Gobble Engine](note/2026-08-23-gobble-engine.md)
 - [Local samplesheet e2e pack](note/2026-08-21-local-e2e.md)
 - [CLI live validation](note/2026-08-20-cli-valid.md)

@@ -79,3 +79,19 @@
 **Mistake:** Treating PID existence as occupancy liveness, closing occupancy while identities remain unknown, treating skip as remaining work, or faking a dead PID in tests as recovery proof.
 
 **Correction:** Occupancy owner is the occupying process. Private liveness is a held occupancy flock and lease. PID and host are diagnostic Inspect fields. Occupancy does not close and Resume does not occupy while any identity remains unknown. Skip is a known terminal status and is not remaining. Live tests must not fake a dead PID as recovery.
+
+## Treating incomplete plus RuntimeID as live Resume state
+
+**Context:** Later-process Resume of a released incomplete process leftover that still stores a RuntimeID.
+
+**Mistake:** Treating `StatusIncomplete` plus a non-empty RuntimeID as live Resume state. Empty-executor Reconcile then becomes `unknown-backend` instead of remaining work.
+
+**Correction:** A RuntimeID on incomplete is historical identity, not proof that this Resume owns that process. Incomplete leftovers rerun. Occupying-process running or unknown remains live.
+
+## Publishing Wait completion after cleanup so Cancel can SIGKILL
+
+**Context:** Process adapter Wait and Cancel share one handle. Wait closes logs and records exit under a mutex, then closes done.
+
+**Mistake:** Publishing Wait completion only after file closes and mutex, so Cancel can still SIGKILL a reaped PID while done is open.
+
+**Correction:** Publish Wait return before cleanup. Cancel checks that signal before and after the mutex. After Wait returns, Cancel is a no-op.
