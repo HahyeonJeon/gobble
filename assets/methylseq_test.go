@@ -114,6 +114,35 @@ func TestMethylSeqCPUFlagsCompose(t *testing.T) {
 	}
 }
 
+func TestMethylSeqEmptyRead2IsSampleSheetError(t *testing.T) {
+	tests := []struct {
+		name string
+		csv  string
+	}{
+		{
+			name: "empty read2",
+			csv: "sample,read1,read2\n" +
+				"sample1,in/Ecoli_10K_methylated_R1.fastq.gz,\n" +
+				"sample2,in/Ecoli_10K_methylated_R1.fastq.gz,in/Ecoli_10K_methylated_R2.fastq.gz\n",
+		},
+		{
+			name: "omitted read2 header",
+			csv: "sample,read1\n" +
+				"sample1,in/Ecoli_10K_methylated_R1.fastq.gz\n" +
+				"sample2,in/Ecoli_10K_methylated_R2.fastq.gz\n",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			withSampleSheet(t, writeTempSheet(t, tt.csv))
+			ge := mustComposeSheetError(t, MethylSeq())
+			if !hasSheetMessage(ge, methylMateRuleMessage) {
+				t.Fatalf("defects = %+v, want message %q", ge.Defects, methylMateRuleMessage)
+			}
+		})
+	}
+}
+
 func TestMethylSeqTwoRowRule(t *testing.T) {
 	csv := "sample,read1,read2\n" +
 		"sample1,in/Ecoli_10K_methylated_R1.fastq.gz,in/Ecoli_10K_methylated_R2.fastq.gz\n"

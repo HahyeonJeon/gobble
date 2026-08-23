@@ -2,7 +2,8 @@ package assets
 
 import "github.com/HahyeonJeon/gobble"
 
-// Parent can record a task. Pipeline, Module, Branch, and Merge implement it.
+// Parent can record a task. Pipeline, Module, Branch, Merge, Scatter,
+// Gather, and When implement it.
 type Parent interface {
 	AddTask(spec gobble.TaskSpec) *gobble.Task
 }
@@ -19,6 +20,9 @@ var (
 	_ Parent       = (*gobble.Module)(nil)
 	_ Parent       = (*gobble.Branch)(nil)
 	_ Parent       = (*gobble.Merge)(nil)
+	_ Parent       = (*gobble.Scatter)(nil)
+	_ Parent       = (*gobble.Gather)(nil)
+	_ Parent       = (*gobble.When)(nil)
 	_ ModuleParent = (*gobble.Pipeline)(nil)
 	_ ModuleParent = (*gobble.Module)(nil)
 	_ ModuleParent = (*gobble.Branch)(nil)

@@ -159,6 +159,20 @@ func TestRNASeqTwoGroupRule(t *testing.T) {
 				"treat1,in/SRR6357072_1.fastq.gz,in/SRR6357072_2.fastq.gz,treat,reverse\n",
 			msg: rnaStrandednessRuleMessage,
 		},
+		{
+			name: "empty read2",
+			csv: "sample,read1,read2,group\n" +
+				"ctrl1,in/SRR6357072_1.fastq.gz,,ctrl\n" +
+				"treat1,in/SRR6357072_1.fastq.gz,in/SRR6357072_2.fastq.gz,treat\n",
+			msg: rnaMateRuleMessage,
+		},
+		{
+			name: "omitted read2 header",
+			csv: "sample,read1,group\n" +
+				"ctrl1,in/SRR6357072_1.fastq.gz,ctrl\n" +
+				"treat1,in/SRR6357072_1.fastq.gz,treat\n",
+			msg: rnaMateRuleMessage,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

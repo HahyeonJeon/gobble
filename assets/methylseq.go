@@ -17,6 +17,10 @@ func MethylSeq() *gobble.Pipeline {
 		p.RecordComposeError(sheetRuleError(sheet.Path, methylTwoRowRuleMessage))
 		return p
 	}
+	if err := requireMateRows(sheet, methylMateRuleMessage); err != nil {
+		p.RecordComposeError(err)
+		return p
+	}
 
 	fastaSpec := pinnedMethylFASTA()
 	if ref, ok := firstNonEmpty(sheet.Rows, func(r gobble.SampleRow) string { return r.Reference }); ok {

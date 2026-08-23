@@ -9,7 +9,9 @@ import (
 const (
 	rnaGroupRuleMessage        = "RNA samplesheet requires group on every row and exactly two groups"
 	rnaStrandednessRuleMessage = "RNA samplesheet strandedness must be unstranded, forward, or reverse"
+	rnaMateRuleMessage         = "RNA samplesheet requires read2 on every row"
 	methylTwoRowRuleMessage    = "Methyl samplesheet requires at least two samples"
+	methylMateRuleMessage      = "Methyl samplesheet requires read2 on every row"
 )
 
 // RNASeq returns an RNA-seq proof pipeline. It loads SampleSheetPath,
@@ -81,6 +83,9 @@ func RNASeq() *gobble.Pipeline {
 }
 
 func rnaSheetRules(sheet *gobble.SampleSheet) error {
+	if err := requireMateRows(sheet, rnaMateRuleMessage); err != nil {
+		return err
+	}
 	groups := make(map[string]struct{})
 	for _, row := range sheet.Rows {
 		if row.Group == "" {
@@ -95,6 +100,15 @@ func rnaSheetRules(sheet *gobble.SampleSheet) error {
 	}
 	if len(groups) != 2 {
 		return sheetRuleError(sheet.Path, rnaGroupRuleMessage)
+	}
+	return nil
+}
+
+func requireMateRows(sheet *gobble.SampleSheet, message string) error {
+	for _, row := range sheet.Rows {
+		if row.Read2 == "" {
+			return sheetRuleError(sheet.Path, message)
+		}
 	}
 	return nil
 }
