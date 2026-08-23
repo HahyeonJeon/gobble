@@ -40,10 +40,11 @@ type lateSubmit struct {
 }
 
 type heldLease struct {
-	file *os.File
-	exec exec.Executor
-	mu   sync.Mutex
-	late map[string]*lateSubmit
+	file    *os.File
+	exec    exec.Executor
+	mutator sync.Mutex
+	mu      sync.Mutex
+	late    map[string]*lateSubmit
 }
 
 var (
@@ -162,14 +163,26 @@ func occupancyKey(workspace string) string {
 	return abs
 }
 
-func retainLease(workspace string, f *os.File, ex exec.Executor) {
+func retainLease(workspace string, f *os.File, ex exec.Executor) *heldLease {
 	key := occupancyKey(workspace)
+	h := &heldLease{file: f, exec: ex, late: map[string]*lateSubmit{}}
+	// The scheduler owns mutation from first control write through loop exit.
+	// Same-process Release waits on this lock instead of bypassing the flock.
+	h.mutator.Lock()
 	leaseMu.Lock()
 	defer leaseMu.Unlock()
 	if old := heldLeases[key]; old != nil && old.file != nil && old.file != f {
 		old.file.Close()
 	}
-	heldLeases[key] = &heldLease{file: f, exec: ex, late: map[string]*lateSubmit{}}
+	heldLeases[key] = h
+	return h
+}
+
+func heldLeaseFor(workspace string) *heldLease {
+	key := occupancyKey(workspace)
+	leaseMu.Lock()
+	defer leaseMu.Unlock()
+	return heldLeases[key]
 }
 
 func registerLateSubmit(workspace, ident string) *lateSubmit {
@@ -222,7 +235,7 @@ func awaitLateSubmit(workspace, ident string) (exec.Handle, exec.Report, bool) {
 			return exec.Handle{}, exec.Report{}, false
 		}
 		return ls.h, ls.sub, true
-	case <-time.After(currentBound()):
+	case <-time.After(currentSettlementBound()):
 		return exec.Handle{}, exec.Report{}, false
 	}
 }

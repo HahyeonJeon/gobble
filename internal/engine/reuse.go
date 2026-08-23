@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"os"
 	"strings"
 
 	"github.com/HahyeonJeon/gobble/internal/engine/exec"
@@ -277,34 +278,9 @@ func compareInputIdentity(workspace string, latest jsonTaskState, current TaskPl
 	return "", nil
 }
 
-func publishedMissing(workspace string, outputs []IO) bool {
-	for _, out := range outputs {
-		if isTreeIO(out) {
-			if !isDir(workspaceFile(workspace, treeDir(out))) {
-				return true
-			}
-			if !regularFile(workspaceFile(workspace, treeManifestPath(out))) {
-				return true
-			}
-			for _, f := range treeDestMemberPaths(workspace, out) {
-				if !regularFile(workspaceFile(workspace, f.path)) {
-					return true
-				}
-			}
-			continue
-		}
-		for _, f := range namedIOFiles(out) {
-			if !regularFile(workspaceFile(workspace, f.path)) {
-				return true
-			}
-		}
-	}
-	return false
-}
-
 func destReuseMiss(workspace string, latest jsonTaskState, current TaskPlan, hashContent bool) bool {
 	if len(latest.Checksums) == 0 {
-		return publishedMissing(workspace, current.Outputs)
+		return true
 	}
 	for _, h := range latest.Checksums {
 		if h.Path == "" {
@@ -377,7 +353,7 @@ func classifyRemaining(workspace string, doc Document, tasks []jsonTaskState) re
 }
 
 func remainingAttempt(doc Document, st jsonTaskState, ident string) bool {
-	if st.Status == StatusSucceeded || st.Status == StatusSkipped {
+	if st.Status == StatusSucceeded || st.Status == StatusSkipped || st.Status == StatusPublishedUnfinalized {
 		return false
 	}
 	if st.Scatter != "" && st.Instance == "" {
@@ -411,6 +387,9 @@ func classifyRemainingMode(workspace string, doc Document, tasks []jsonTaskState
 		identsOfTask[st.ID] = append(identsOfTask[st.ID], ident)
 		if remainingAttempt(doc, st, ident) {
 			out.Remaining[ident] = true
+		}
+		if st.Status == StatusPublishedUnfinalized {
+			continue
 		}
 		recorded, current := reusePlans(doc, st)
 		dec := classifyReuseMode(workspace, st, recorded, current, hashContent)
@@ -472,7 +451,16 @@ func classifyResume(workspace string, recorded, supplied Document, tasks []jsonT
 				EnvDigest:  envDigest(t.Env),
 			}
 		}
+		if st.Status == StatusPublishedUnfinalized {
+			out.Decision[ident] = reuseDecision{Identity: ident, Change: changeUnchanged}
+			continue
+		}
 		dec := classifyReuse(workspace, st, rec, t)
+		if st.Status == StatusSkipped && t.When != "" && !whenStillSkips(workspace, supplied, t) {
+			dec.Decision = reuseRerun
+			dec.Reason = reasonPreviousUnsuccessful
+			dec.Differing = nil
+		}
 		switch {
 		case incomingEndpointsDiffer(recorded, supplied, t.ID):
 			if dec.Decision == reuseReused {
@@ -522,6 +510,34 @@ func classifyResume(workspace string, recorded, supplied Document, tasks []jsonT
 		markDownstreamAffected(out.Affected, out.Decision, supplied, taskIDOf[ident], identsOfTask)
 	}
 	return out
+}
+
+func whenStillSkips(workspace string, doc Document, task TaskPlan) bool {
+	if task.SkipIfFalse != "" {
+		if value, ok := paramValue(task, task.SkipIfFalse); ok && value == "false" {
+			return true
+		}
+	}
+	if task.SkipIfMissingPort == "" && task.SkipIfMissingPath == "" {
+		return false
+	}
+	path := task.SkipIfMissingPath
+	if path == "" && task.SkipIfMissingTask != "" {
+		if producer, ok := planTaskByID(doc, task.SkipIfMissingTask); ok {
+			if out, ok := findProducerIO(producer, task.SkipIfMissingPort); ok {
+				path = out.Path
+			}
+		}
+	}
+	if path == "" {
+		return false
+	}
+	abs, present, err := containedRel(workspace, path, false)
+	if err != nil || !present || !regularFile(abs) {
+		return true
+	}
+	info, err := os.Lstat(abs)
+	return err != nil || info.Size() == 0
 }
 
 func taskPlanByIdentity(doc Document) map[string]TaskPlan {

@@ -2,6 +2,7 @@ package engine
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -330,6 +331,84 @@ func TestStageCopyIndependentFromSource(t *testing.T) {
 	got, err := os.ReadFile(src)
 	if err != nil || string(got) != "reads" {
 		t.Fatalf("source bytes got %q, want reads", got)
+	}
+}
+
+func TestRunFingerprintsStagedBytesBeforeSubmit(t *testing.T) {
+	enteredSubmit := make(chan struct{})
+	continueSubmit := make(chan struct{})
+	var writeErr error
+	useExec(t, &fnExec{
+		submit: func(ctx context.Context, job exec.Job) (exec.Handle, exec.Report, error) {
+			close(enteredSubmit)
+			<-continueSubmit
+			if err := os.MkdirAll(filepath.Join(job.Isolate, "out"), 0o755); err != nil {
+				writeErr = err
+			} else {
+				writeErr = os.WriteFile(filepath.Join(job.Isolate, "out", "sample.txt"), []byte("result"), 0o644)
+			}
+			h := exec.Handle{Identity: job.Identity, Backend: exec.BackendProcess, RuntimeID: "1"}
+			return h, exec.Report{Identity: job.Identity, RuntimeID: "1", Running: true}, nil
+		},
+		poll: func(ctx context.Context, h exec.Handle) (exec.Report, error) {
+			return exec.Report{Identity: h.Identity, RuntimeID: h.RuntimeID, Running: false}, nil
+		},
+	})
+	dir := t.TempDir()
+	source := filepath.Join(dir, "in", "sample.txt")
+	writeCheckFile(t, source, "staged")
+	done := make(chan []Defect, 1)
+	go func() {
+		done <- Run(t.Context(), Request{
+			Workspace: dir,
+			Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
+		})
+	}()
+	select {
+	case <-enteredSubmit:
+	case <-time.After(2 * time.Second):
+		t.Fatal("timeout waiting for staged Submit")
+	}
+	if err := os.WriteFile(source, []byte("mutated"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	close(continueSubmit)
+	if defects := <-done; len(defects) != 0 {
+		t.Fatalf("Run() defects %v", defects)
+	}
+	if writeErr != nil {
+		t.Fatalf("write isolate output: %v", writeErr)
+	}
+	state := taskStates(t, dir)["copy"]
+	if len(state.Fingerprints) != 1 {
+		t.Fatalf("fingerprints got %#v, want one", state.Fingerprints)
+	}
+	stagedPath := filepath.Join(dir, ControlDir, "tasks", "copy", emptyInstanceSeg, "0", "1", "work", "in", "sample.txt")
+	stagedSHA, err := sha256File(stagedPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	mutatedSHA, err := sha256File(source)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := state.Fingerprints[0].SHA256; got != stagedSHA || got == mutatedSHA {
+		t.Fatalf("fingerprint got %q, staged %q mutated %q", got, stagedSHA, mutatedSHA)
+	}
+}
+
+func TestStatusSucceededEmptyChecksumsIsReuseMiss(t *testing.T) {
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
+	if defects := Run(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+		t.Fatalf("Run() defects %v", defects)
+	}
+	state := taskStates(t, dir)["copy"]
+	state.Checksums = nil
+	decision := classifyReuse(dir, state, doc.Tasks[0], doc.Tasks[0])
+	if decision.Decision != reuseRerun || decision.Reason != reasonOutputMissing {
+		t.Fatalf("empty checksums decision got %#v, want rerun output-missing", decision)
 	}
 }
 

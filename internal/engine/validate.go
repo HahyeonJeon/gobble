@@ -15,11 +15,11 @@ type rendered struct {
 	out  bool
 }
 
-// Validate reports Document defects: rendered-path conflicts,
-// unsupported backends, non-finite or negative CPU, unparseable Memory,
-// malformed image, env literals, and artifact XOR.
+// Validate reports Document defects: an empty task graph, rendered-path
+// conflicts, unsupported backends, non-finite or negative CPU, unparseable
+// Memory, malformed image, env literals, and artifact XOR.
 func Validate(doc Document) []Defect {
-	var defects []Defect
+	defects := emptyGraphDefects(doc)
 	var paths []rendered
 	for i := range doc.Tasks {
 		t := &doc.Tasks[i]
@@ -75,6 +75,16 @@ func Validate(doc Document) []Defect {
 	}
 	defects = append(defects, checkConflicts(paths)...)
 	return defects
+}
+
+func emptyGraphDefects(doc Document) []Defect {
+	if len(doc.Tasks) != 0 {
+		return nil
+	}
+	return []Defect{{
+		Code:    DefectInvalidValue,
+		Message: "empty graph",
+	}}
 }
 
 func checkSkipIfFalse(id string, t *TaskPlan) []Defect {

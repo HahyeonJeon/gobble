@@ -32,6 +32,9 @@ const (
 	StatusIncomplete = "incomplete"
 	StatusUnknown    = "unknown"
 	StatusSkipped    = "skipped"
+	// StatusPublishedUnfinalized means a later-process Release found every
+	// declared destination complete without proof that the process finished.
+	StatusPublishedUnfinalized = "published-unfinalized"
 )
 
 const (
@@ -46,27 +49,27 @@ const (
 
 const pollInterval = 20 * time.Millisecond
 
-const defaultCompletionBound = 30 * time.Second
+const settlementBound = 30 * time.Second
 
 var errEngineBound = errors.New("engine bound")
 
-// completionBoundNanos is the Engine ceiling on each Submit/Poll/Cancel/Reconcile
-// call that has not returned a known disposition. Tests may shorten it.
-// It is not a public timeout API.
-var completionBoundNanos atomic.Int64
+// settlementBoundNanos bounds proof after stop or cancellation begins and
+// Release reconciliation starts. Ordinary execution uses only caller ctx.
+// Tests may shorten it. It is not a public timeout API.
+var settlementBoundNanos atomic.Int64
 
 func init() {
-	setCompletionBound(defaultCompletionBound)
+	setSettlementBound(settlementBound)
 }
 
-func setCompletionBound(d time.Duration) {
-	completionBoundNanos.Store(int64(d))
+func setSettlementBound(d time.Duration) {
+	settlementBoundNanos.Store(int64(d))
 }
 
-func currentBound() time.Duration {
-	n := completionBoundNanos.Load()
+func currentSettlementBound() time.Duration {
+	n := settlementBoundNanos.Load()
 	if n <= 0 {
-		return defaultCompletionBound
+		return settlementBound
 	}
 	return time.Duration(n)
 }
@@ -119,6 +122,7 @@ type sched struct {
 	escape    *Defect
 	budget    resourceBudget
 	exec      exec.Executor
+	lease     *heldLease
 }
 
 type resourceBudget struct {
@@ -279,7 +283,7 @@ func occupy(req Request) (*sched, []Defect) {
 		lock.Close()
 		return nil, pathDefects(err)
 	}
-	retainLease(req.Workspace, lock, ex)
+	s.lease = retainLease(req.Workspace, lock, ex)
 	return s, nil
 }
 
@@ -337,7 +341,9 @@ type report struct {
 	ImageDigest      string
 	ExecutablePath   string
 	ExecutableSHA256 string
+	Fingerprints     []jsonFileHash
 	Unknown          bool
+	Canceled         bool
 	InvalidPath      bool
 }
 
@@ -345,6 +351,12 @@ type startEvent struct {
 	ident  string
 	handle exec.Handle
 	sub    exec.Report
+}
+
+type settlementResult struct {
+	ident   string
+	unknown bool
+	message string
 }
 
 func (s *sched) executor() exec.Executor {
@@ -355,36 +367,86 @@ func (s *sched) executor() exec.Executor {
 }
 
 func (s *sched) loop(ctx context.Context, n int) []Defect {
+	if s.lease != nil {
+		defer s.lease.mutator.Unlock()
+	}
 	if s.resume != nil {
 		s.reapLive()
 		s.freshenWhenBranchAfterReap()
 	}
 	reports := make(chan report, n)
 	starts := make(chan startEvent, n)
+	settled := make(chan settlementResult, n)
 	running := 0
 	handles := make(map[string]exec.Handle)
 	inflight := make(map[string]bool)
+	settling := make(map[string]bool)
 	canceled := false
+	var settle *settlement
+	var settlementDone <-chan struct{}
 	finishIdent := func(ident string) {
 		if !inflight[ident] {
 			return
 		}
 		delete(inflight, ident)
 		delete(handles, ident)
+		delete(settling, ident)
 		running--
 	}
-	cancelInFlight := func() {
+	settleHandle := func(ident string, h exec.Handle) {
+		if settling[ident] {
+			return
+		}
+		settling[ident] = true
+		go settleBackend(s.executor(), settle, ident, h, settled)
+	}
+	startSettlement := func() {
+		if canceled {
+			return
+		}
 		canceled = true
+		settle = newSettlement()
+		settlementDone = settle.ctx.Done()
 		for ident, h := range handles {
-			if err := boundedCancel(s.executor(), h); err != nil {
-				s.markUnknown(ident, err.Error())
-				finishIdent(ident)
+			settleHandle(ident, h)
+		}
+	}
+	handleCanceledReport := func(r report) {
+		if !inflight[r.ID] {
+			return
+		}
+		if _, ok := handles[r.ID]; !ok && r.RuntimeID != "" {
+			backend := executorProcess
+			if st := s.tasks[r.ID]; st != nil && (st.Executor == executorDocker || st.Image != "") {
+				backend = executorDocker
+			}
+			h := exec.Handle{Identity: r.ID, Backend: backend, RuntimeID: r.RuntimeID}
+			handles[r.ID] = h
+			if st := s.tasks[r.ID]; st != nil {
+				st.RuntimeID = r.RuntimeID
+				st.Status = StatusRunning
+				s.notePersist(s.persistControl())
 			}
 		}
+		if r.Canceled {
+			if h, ok := handles[r.ID]; ok {
+				settleHandle(r.ID, h)
+				return
+			}
+			s.markIncomplete(r.ID)
+			finishIdent(r.ID)
+			return
+		}
+		if r.Unknown {
+			s.markUnknown(r.ID, r.Message)
+		} else {
+			s.markIncomplete(r.ID)
+		}
+		finishIdent(r.ID)
 	}
 	for {
 		if ctx.Err() != nil && !canceled {
-			cancelInFlight()
+			startSettlement()
 		}
 		for !canceled && s.persist == nil && s.escape == nil && running < n {
 			id, d := s.nextReady()
@@ -395,7 +457,7 @@ func (s *sched) loop(ctx context.Context, n int) []Defect {
 			if id == "" {
 				break
 			}
-			s.launch(id, starts, reports)
+			s.launch(ctx, id, starts, reports)
 			inflight[id] = true
 			running++
 		}
@@ -410,19 +472,23 @@ func (s *sched) loop(ctx context.Context, n int) []Defect {
 				}
 				handles[st.ident] = st.handle
 				s.persistStart(st)
-				if err := boundedCancel(s.executor(), st.handle); err != nil {
-					s.markUnknown(st.ident, err.Error())
-					finishIdent(st.ident)
-				}
+				settleHandle(st.ident, st.handle)
 			case r := <-reports:
-				if !inflight[r.ID] {
+				handleCanceledReport(r)
+			case result := <-settled:
+				if !inflight[result.ident] {
 					continue
 				}
-				finishIdent(r.ID)
-				if r.Unknown {
-					s.markUnknown(r.ID, r.Message)
+				if result.unknown {
+					s.markUnknown(result.ident, result.message)
 				} else {
-					s.markIncomplete(r.ID)
+					s.markIncomplete(result.ident)
+				}
+				finishIdent(result.ident)
+			case <-settlementDone:
+				for ident := range inflight {
+					s.markUnknown(ident, "settlement bound exceeded")
+					finishIdent(ident)
 				}
 			}
 			continue
@@ -438,13 +504,19 @@ func (s *sched) loop(ctx context.Context, n int) []Defect {
 			if !inflight[r.ID] {
 				continue
 			}
+			if ctx.Err() != nil || r.Canceled {
+				startSettlement()
+				handleCanceledReport(r)
+				continue
+			}
 			finishIdent(r.ID)
 			s.apply(r)
 		case <-ctx.Done():
-			cancelInFlight()
+			startSettlement()
 		}
 	}
 	if canceled {
+		settle.close()
 		s.syncUnknown()
 		s.notePersist(s.persistControl())
 		out := s.cancelDefects()
@@ -519,6 +591,8 @@ func (s *sched) markUnknown(ident, message string) {
 
 func (s *sched) reapLive() {
 	ex := s.executor()
+	settle := newSettlement()
+	defer settle.close()
 	for ident, st := range s.tasks {
 		if st == nil {
 			continue
@@ -533,19 +607,19 @@ func (s *sched) reapLive() {
 			}
 			continue
 		}
-		r, err := boundedReconcile(ex, h)
+		r, err := settle.reconcile(ex, h)
 		if err != nil {
 			s.markUnknown(ident, err.Error())
 			continue
 		}
 		if r.Running {
-			if err := boundedCancel(ex, h); err != nil {
+			if err := settle.cancelHandle(ex, h); err != nil {
 				s.markUnknown(ident, err.Error())
 				continue
 			}
 			stopped := false
 			for {
-				pr, perr := boundedPoll(ex, h)
+				pr, perr := settle.poll(ex, h)
 				if perr != nil {
 					s.markUnknown(ident, perr.Error())
 					stopped = true
@@ -555,7 +629,11 @@ func (s *sched) reapLive() {
 					stopped = true
 					break
 				}
-				time.Sleep(pollInterval)
+				if err := settle.pause(); err != nil {
+					s.markUnknown(ident, err.Error())
+					stopped = true
+					break
+				}
 			}
 			if !stopped || (s.tasks[ident] != nil && s.tasks[ident].Status == StatusUnknown) {
 				continue
@@ -601,11 +679,98 @@ func backendHandle(workspace, ident string, st *jsonTaskState) (exec.Handle, boo
 	return h, true
 }
 
-func boundedReconcile(ex exec.Executor, h exec.Handle) (exec.Report, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), currentBound())
-	defer cancel()
-	r, err := ex.Reconcile(ctx, h)
-	return r, boundCallErrAfter(ctx, err)
+type settlement struct {
+	ctx    context.Context
+	cancel context.CancelFunc
+}
+
+func newSettlement() *settlement {
+	ctx, cancel := context.WithTimeout(context.Background(), currentSettlementBound())
+	return &settlement{ctx: ctx, cancel: cancel}
+}
+
+func (s *settlement) close() {
+	s.cancel()
+}
+
+func (s *settlement) reconcile(ex exec.Executor, h exec.Handle) (exec.Report, error) {
+	type result struct {
+		report exec.Report
+		err    error
+	}
+	done := make(chan result, 1)
+	go func() {
+		r, err := ex.Reconcile(s.ctx, h)
+		done <- result{report: r, err: err}
+	}()
+	select {
+	case got := <-done:
+		return got.report, boundCallErrAfter(s.ctx, got.err)
+	case <-s.ctx.Done():
+		return exec.Report{}, errEngineBound
+	}
+}
+
+func (s *settlement) cancelHandle(ex exec.Executor, h exec.Handle) error {
+	done := make(chan error, 1)
+	go func() { done <- ex.Cancel(s.ctx, h) }()
+	select {
+	case err := <-done:
+		return boundCallErrAfter(s.ctx, err)
+	case <-s.ctx.Done():
+		return errEngineBound
+	}
+}
+
+func (s *settlement) poll(ex exec.Executor, h exec.Handle) (exec.Report, error) {
+	type result struct {
+		report exec.Report
+		err    error
+	}
+	done := make(chan result, 1)
+	go func() {
+		r, err := ex.Poll(s.ctx, h)
+		done <- result{report: r, err: err}
+	}()
+	select {
+	case got := <-done:
+		return got.report, boundCallErrAfter(s.ctx, got.err)
+	case <-s.ctx.Done():
+		return exec.Report{}, errEngineBound
+	}
+}
+
+func (s *settlement) pause() error {
+	timer := time.NewTimer(pollInterval)
+	defer timer.Stop()
+	select {
+	case <-timer.C:
+		return nil
+	case <-s.ctx.Done():
+		return errEngineBound
+	}
+}
+
+func settleBackend(ex exec.Executor, settle *settlement, ident string, h exec.Handle, out chan<- settlementResult) {
+	if err := settle.cancelHandle(ex, h); err != nil {
+		out <- settlementResult{ident: ident, unknown: true, message: err.Error()}
+		return
+	}
+	for {
+		report, err := settle.poll(ex, h)
+		if err != nil {
+			out <- settlementResult{ident: ident, unknown: true, message: err.Error()}
+			return
+		}
+		if !report.Running {
+			out <- settlementResult{ident: ident}
+			return
+		}
+		if err := settle.pause(); err != nil {
+			out <- settlementResult{ident: ident, unknown: true, message: err.Error()}
+			return
+		}
+	}
 }
 
 func (s *sched) nextReady() (string, *Defect) {
@@ -762,7 +927,7 @@ func (s *sched) upstreamReady(task TaskPlan, ident string) (bool, *Defect) {
 				continue
 			}
 			up := s.stateByTaskID(e.FromTask)
-			if up == nil || up.Status != StatusSucceeded {
+			if up == nil || (up.Status != StatusSucceeded && up.Status != StatusPublishedUnfinalized) {
 				return false, nil
 			}
 			if s.resume != nil {
@@ -865,7 +1030,7 @@ func (s *sched) taskByID(id string) (TaskPlan, bool) {
 	return TaskPlan{}, false
 }
 
-func (s *sched) launch(ident string, starts chan startEvent, reports chan report) {
+func (s *sched) launch(ctx context.Context, ident string, starts chan startEvent, reports chan report) {
 	if s.resume != nil {
 		s.beginResumeAttempt(ident)
 	}
@@ -889,11 +1054,11 @@ func (s *sched) launch(ident string, starts chan startEvent, reports chan report
 	ws := s.workspace
 	ex := s.executor()
 	go func() {
-		s.runJob(ws, task, ex, starts, reports)
+		s.runJob(ctx, ws, task, ex, starts, reports)
 	}()
 }
 
-func (s *sched) runJob(workspace string, task TaskPlan, ex exec.Executor, starts chan startEvent, reports chan report) {
+func (s *sched) runJob(ctx context.Context, workspace string, task TaskPlan, ex exec.Executor, starts chan startEvent, reports chan report) {
 	applyReservedDefaults(&task)
 	ident := reservedIdentity(task)
 	rel := isolateRel(task)
@@ -924,6 +1089,13 @@ func (s *sched) runJob(workspace string, task TaskPlan, ex exec.Executor, starts
 		reports <- r
 		return
 	}
+	fingerprints, err := stagedInputRecords(workspace, isolate, task.Inputs)
+	if err != nil {
+		r.Message = err.Error()
+		reports <- r
+		return
+	}
+	r.Fingerprints = fingerprints
 	memBytes, _ := parseMemory(task.Resources.Memory)
 	argv := append([]string(nil), executeArgv(task)...)
 	job := exec.Job{
@@ -953,15 +1125,15 @@ func (s *sched) runJob(workspace string, task TaskPlan, ex exec.Executor, starts
 		r.ExecutablePath = resolved
 		r.ExecutableSHA256 = sum
 	}
-	h, sub, err := boundedSubmit(workspace, ex, job)
+	h, sub, err := submitJob(ctx, workspace, ex, job)
 	if err != nil {
 		r.Message = err.Error()
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+			r.Canceled = true
+		}
 		if errors.Is(err, exec.ErrEscapedPath) {
 			r.Message = "path escapes directory"
 			r.InvalidPath = true
-		}
-		if errors.Is(err, errEngineBound) {
-			r.Unknown = true
 		}
 		reports <- r
 		return
@@ -976,12 +1148,14 @@ func (s *sched) runJob(workspace string, task TaskPlan, ex exec.Executor, starts
 	r.ImageDigest = sub.ImageDigest
 	starts <- startEvent{ident: ident, handle: h, sub: sub}
 	for {
-		pr, perr := boundedPoll(ex, h)
+		pr, perr := ex.Poll(ctx, h)
 		if perr != nil {
 			r.Message = perr.Error()
 			if errors.Is(perr, exec.ErrEscapedPath) {
 				r.Message = "path escapes directory"
 				r.InvalidPath = true
+			} else if errors.Is(perr, context.Canceled) || errors.Is(perr, context.DeadlineExceeded) {
+				r.Canceled = true
 			} else {
 				r.Unknown = true
 			}
@@ -989,7 +1163,16 @@ func (s *sched) runJob(workspace string, task TaskPlan, ex exec.Executor, starts
 			return
 		}
 		if pr.Running {
-			time.Sleep(pollInterval)
+			timer := time.NewTimer(pollInterval)
+			select {
+			case <-timer.C:
+			case <-ctx.Done():
+				timer.Stop()
+				r.Canceled = true
+				r.Message = ctx.Err().Error()
+				reports <- r
+				return
+			}
 			continue
 		}
 		r.Exit = pr.Exit
@@ -1225,7 +1408,7 @@ func (s *sched) apply(r report) {
 		st.Reason = "ready"
 		st.Error = nil
 		if task, ok := s.taskByIdent(r.ID); ok {
-			s.notePersist(s.recordSuccess(st, task))
+			s.notePersist(s.recordSuccess(st, task, r.Fingerprints))
 		}
 	} else {
 		st.Status = StatusFailed
@@ -1244,11 +1427,7 @@ func (s *sched) apply(r report) {
 	s.notePersist(s.persistControl())
 }
 
-func (s *sched) recordSuccess(st *jsonTaskState, task TaskPlan) error {
-	inputs, err := inputRecords(s.workspace, task.Inputs)
-	if err != nil {
-		return err
-	}
+func (s *sched) recordSuccess(st *jsonTaskState, task TaskPlan, inputs []jsonFileHash) error {
 	outputs, err := destRecords(s.workspace, task.Outputs)
 	if err != nil {
 		return err
@@ -1480,26 +1659,11 @@ func boundCallErrAfter(ctx context.Context, err error) error {
 	return boundCallErr(err)
 }
 
-func boundedSubmit(workspace string, ex exec.Executor, job exec.Job) (exec.Handle, exec.Report, error) {
+func submitJob(ctx context.Context, workspace string, ex exec.Executor, job exec.Job) (exec.Handle, exec.Report, error) {
 	ls := registerLateSubmit(workspace, job.Identity)
-	ctx, cancel := context.WithTimeout(context.Background(), currentBound())
-	defer cancel()
 	h, r, err := ex.Submit(ctx, job)
 	finishLateSubmit(ls, h, r, err)
-	return h, r, boundCallErrAfter(ctx, err)
-}
-
-func boundedPoll(ex exec.Executor, h exec.Handle) (exec.Report, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), currentBound())
-	defer cancel()
-	r, err := ex.Poll(ctx, h)
-	return r, boundCallErrAfter(ctx, err)
-}
-
-func boundedCancel(ex exec.Executor, h exec.Handle) error {
-	ctx, cancel := context.WithTimeout(context.Background(), currentBound())
-	defer cancel()
-	return boundCallErrAfter(ctx, ex.Cancel(ctx, h))
+	return h, r, err
 }
 
 func writeAtomic(path string, data []byte) error {
@@ -1542,7 +1706,7 @@ func isNonFailureState(st *jsonTaskState) bool {
 		return false
 	}
 	switch st.Status {
-	case StatusSucceeded, StatusSkipped, StatusBlocked:
+	case StatusSucceeded, StatusSkipped, StatusBlocked, StatusPublishedUnfinalized:
 		return true
 	case StatusNotStarted:
 		return isScatterTemplateState(st)
@@ -1553,7 +1717,7 @@ func isNonFailureState(st *jsonTaskState) bool {
 
 func isKnownTerminal(status string) bool {
 	switch status {
-	case StatusSucceeded, StatusFailed, StatusSkipped, StatusBlocked, StatusIncomplete:
+	case StatusSucceeded, StatusFailed, StatusSkipped, StatusBlocked, StatusIncomplete, StatusPublishedUnfinalized:
 		return true
 	default:
 		return false
@@ -1565,7 +1729,7 @@ func (s *sched) failureOf(ident, unit string, st *jsonTaskState) []Defect {
 		return []Defect{{Code: DefectFailed, Unit: unit, Message: "task failed"}}
 	}
 	switch st.Status {
-	case StatusSucceeded, StatusBlocked, StatusSkipped:
+	case StatusSucceeded, StatusBlocked, StatusSkipped, StatusPublishedUnfinalized:
 		return nil
 	case StatusUnknown:
 		return []Defect{{

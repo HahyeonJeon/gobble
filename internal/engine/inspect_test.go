@@ -15,6 +15,7 @@ func TestInspectNoFingerprintsAffectsDownstream(t *testing.T) {
 	writeCheckFile(t, filepath.Join(dir, "out", "a.txt"), "a")
 	writeCheckFile(t, filepath.Join(dir, "out", "b.txt"), "b")
 	depRec := mustFileRecord(t, filepath.Join(dir, "out", "a.txt"), "out/a.txt")
+	depOut := mustFileRecord(t, filepath.Join(dir, "out", "b.txt"), "out/b.txt")
 	doc := Document{
 		Name: "pipe",
 		Tasks: []TaskPlan{
@@ -66,6 +67,7 @@ func TestInspectNoFingerprintsAffectsDownstream(t *testing.T) {
 				Attempt:      1,
 				Params:       []jsonParam{},
 				Fingerprints: []jsonFileHash{depRec},
+				Checksums:    []jsonFileHash{depOut},
 			}, "true"),
 		},
 	}
@@ -111,6 +113,7 @@ func TestInspectRemainingInstanceUsesFullSet(t *testing.T) {
 	writeCheckFile(t, filepath.Join(dir, "in", "a.txt"), "a")
 	writeCheckFile(t, filepath.Join(dir, "out", "b.txt"), "b")
 	inRec := mustFileRecord(t, filepath.Join(dir, "in", "a.txt"), "in/a.txt")
+	outRec := mustFileRecord(t, filepath.Join(dir, "out", "b.txt"), "out/b.txt")
 	doc := Document{
 		Name: "pipe",
 		Tasks: []TaskPlan{
@@ -162,6 +165,7 @@ func TestInspectRemainingInstanceUsesFullSet(t *testing.T) {
 				Attempt:      1,
 				Params:       []jsonParam{},
 				Fingerprints: []jsonFileHash{inRec},
+				Checksums:    []jsonFileHash{outRec},
 			}, "true"),
 		},
 	}

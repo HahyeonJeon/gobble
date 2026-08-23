@@ -10,10 +10,11 @@ import (
 	"github.com/HahyeonJeon/gobble/internal/engine/exec"
 )
 
-// Release closes occupancy on workspace after Reconcile. The occupying
-// process may Release after Run returns. A later process while the
-// occupying process is live is live-occupancy. Occupancy does not close
-// while any identity remains unknown.
+// Release closes occupancy on workspace after bounded settlement. The
+// occupying process may Release after Run returns. A later process while the
+// occupying process is live is live-occupancy. Later-process unproved process
+// identities become incomplete or published-unfinalized; Docker unknowns keep
+// occupancy active.
 func Release(workspace string) []Defect {
 	if d := checkWorkspace(workspace); len(d) > 0 {
 		return d
@@ -50,9 +51,17 @@ func Release(workspace string) []Defect {
 			Paths:   []string{ControlDir + "/" + RunIdentityFile},
 		}}
 	}
-	owner := holdsLease(workspace)
+	held := heldLeaseFor(workspace)
+	owner := held != nil
 	var lock *os.File
-	if !owner {
+	if owner {
+		held.mutator.Lock()
+		if heldLeaseFor(workspace) != held {
+			held.mutator.Unlock()
+			return liveOccupancyDefect()
+		}
+		defer held.mutator.Unlock()
+	} else {
 		claimed, d := claimOccupy(filepath.Join(workspace, ControlDir))
 		if len(d) > 0 {
 			if hasDefectCode(d, DefectOccupiedWorkspace) {
@@ -63,19 +72,13 @@ func Release(workspace string) []Defect {
 		lock = claimed
 		defer lock.Close()
 	}
-	run, exists, err = readRunIdentity(workspace)
-	if err != nil {
-		return pathDefects(err)
-	}
-	if !exists {
-		return []Defect{{
-			Code:    DefectNotFound,
-			Message: "run not found",
-			Paths:   []string{ControlDir + "/" + RunIdentityFile},
-		}}
-	}
-	if d := unsupportedControlSchema(workspace, run); len(d) > 0 {
+	run, plan, hasPlan, taskFile, _, d := readCoherentControl(workspace)
+	if len(d) > 0 {
 		return d
+	}
+	tasks := taskFile.Tasks
+	if len(latestAttempts(tasks)) == 0 {
+		return emptyTaskStateDefects()
 	}
 	if !occupancyIsActive(run) {
 		return []Defect{{
@@ -96,11 +99,14 @@ func Release(workspace string) []Defect {
 	if ex == nil {
 		ex = schedulerExecutor()
 	}
-	now := time.Now().UTC().Format(time.RFC3339Nano)
-	tasks, marked, unknown, found, err := reconcileRelease(workspace, ex, now)
-	if err != nil {
-		return pathDefects(err)
+	recorded := Document{}
+	if hasPlan {
+		recorded = documentFromPlan(plan)
 	}
+	now := time.Now().UTC().Format(time.RFC3339Nano)
+	settle := newSettlement()
+	defer settle.close()
+	tasks, marked, unknown := reconcileRelease(workspace, ex, settle, recorded, tasks, owner, now)
 	if occ == nil {
 		occ = &jsonOccupancy{}
 	}
@@ -115,10 +121,8 @@ func Release(workspace string) []Defect {
 		if err := rewritePlanSnapshot(workspace, snapshot); err != nil {
 			return pathDefects(err)
 		}
-		if found {
-			if err := s.writeTasks(); err != nil {
-				return pathDefects(err)
-			}
+		if err := s.writeTasks(); err != nil {
+			return pathDefects(err)
 		}
 		if err := s.writeRun(); err != nil {
 			return pathDefects(err)
@@ -142,10 +146,8 @@ func Release(workspace string) []Defect {
 	if err := rewritePlanSnapshot(workspace, snapshot); err != nil {
 		return pathDefects(err)
 	}
-	if found {
-		if err := s.writeTasks(); err != nil {
-			return pathDefects(err)
-		}
+	if err := s.writeTasks(); err != nil {
+		return pathDefects(err)
 	}
 	if err := s.writeRun(); err != nil {
 		return pathDefects(err)
@@ -218,29 +220,35 @@ func schemaDefect(path string) []Defect {
 	}}
 }
 
-func reconcileRelease(workspace string, ex exec.Executor, now string) ([]jsonTaskState, []string, []string, bool, error) {
-	path := filepath.Join(workspace, ControlDir, TasksFile)
-	data, err := os.ReadFile(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, nil, nil, false, nil
-		}
-		return nil, nil, nil, false, err
-	}
-	var doc jsonTasksFile
-	if err := json.Unmarshal(data, &doc); err != nil {
-		return nil, nil, nil, false, err
-	}
-	var marked []string
-	var unknown []string
-	for i := range doc.Tasks {
-		st := &doc.Tasks[i]
+func reconcileRelease(workspace string, ex exec.Executor, settle *settlement, recorded Document, tasks []jsonTaskState, owner bool, now string) ([]jsonTaskState, []string, []string) {
+	latest := latestAttempts(tasks)
+	latestAttempt := make(map[string]int, len(latest))
+	stateByIdentity := make(map[string]*jsonTaskState, len(latest))
+	for i := range latest {
+		st := &latest[i]
 		applyTaskStateDefaults(st)
 		ident := reservedIdentity(taskPlanFromState(*st))
+		latestAttempt[ident] = st.Attempt
+		stateByIdentity[ident] = st
+	}
+	releaseState := &sched{workspace: workspace, doc: recorded, tasks: stateByIdentity}
+	var marked []string
+	var unknown []string
+	for i := range tasks {
+		st := &tasks[i]
+		applyTaskStateDefaults(st)
+		ident := reservedIdentity(taskPlanFromState(*st))
+		if latestAttempt[ident] != st.Attempt {
+			continue
+		}
 		switch st.Status {
 		case StatusUnknown:
-			if !reconcileIdentity(workspace, ex, st) {
+			if !reconcileIdentity(workspace, ex, settle, releaseState, st, owner, now) {
 				unknown = append(unknown, ident)
+				continue
+			}
+			if st.Status == StatusIncomplete {
+				marked = append(marked, ident)
 				continue
 			}
 			if st.Status == StatusRunning || st.Status == StatusUnknown {
@@ -250,10 +258,14 @@ func reconcileRelease(workspace string, ex exec.Executor, now string) ([]jsonTas
 				marked = append(marked, ident)
 			}
 		case StatusRunning:
-			if !reconcileIdentity(workspace, ex, st) {
+			if !reconcileIdentity(workspace, ex, settle, releaseState, st, owner, now) {
 				st.Status = StatusUnknown
 				st.Reason = "unknown-backend"
 				unknown = append(unknown, ident)
+				continue
+			}
+			if st.Status == StatusIncomplete {
+				marked = append(marked, ident)
 				continue
 			}
 			if st.Status == StatusRunning {
@@ -265,11 +277,37 @@ func reconcileRelease(workspace string, ex exec.Executor, now string) ([]jsonTas
 		}
 	}
 	sort.Strings(unknown)
-	return doc.Tasks, marked, unknown, true, nil
+	return tasks, marked, unknown
 }
 
-func reconcileIdentity(workspace string, ex exec.Executor, st *jsonTaskState) bool {
+func reconcileIdentity(workspace string, ex exec.Executor, settle *settlement, releaseState *sched, st *jsonTaskState, owner bool, now string) bool {
 	ident := reservedIdentity(taskPlanFromState(*st))
+	backend := st.Executor
+	if backend == "" {
+		if st.Image != "" {
+			backend = executorDocker
+		} else {
+			backend = executorProcess
+		}
+	}
+	if !owner && backend == executorProcess {
+		if h, ok := backendHandle(workspace, ident, st); ok {
+			_, _ = settle.reconcile(ex, h)
+		}
+		task, ok := releaseState.taskByIdent(ident)
+		if ok && destComplete(workspace, task.Outputs) {
+			st.Status = StatusPublishedUnfinalized
+			st.Reason = StatusPublishedUnfinalized
+			st.Error = nil
+		} else {
+			st.Status = StatusIncomplete
+			st.Reason = "released"
+		}
+		if st.Ended == "" {
+			st.Ended = now
+		}
+		return true
+	}
 	h, ok := backendHandle(workspace, ident, st)
 	if !ok {
 		if st.Status == StatusUnknown || st.Status == StatusRunning {
@@ -279,7 +317,7 @@ func reconcileIdentity(workspace string, ex exec.Executor, st *jsonTaskState) bo
 		}
 		return true
 	}
-	r, err := boundedReconcile(ex, h)
+	r, err := settle.reconcile(ex, h)
 	if err != nil {
 		st.Status = StatusUnknown
 		st.Reason = "unknown-backend"
@@ -287,14 +325,14 @@ func reconcileIdentity(workspace string, ex exec.Executor, st *jsonTaskState) bo
 		return false
 	}
 	if r.Running {
-		if err := boundedCancel(ex, h); err != nil {
+		if err := settle.cancelHandle(ex, h); err != nil {
 			st.Status = StatusUnknown
 			st.Reason = "unknown-backend"
 			st.Error = &jsonTaskErr{Unit: ident, Message: err.Error()}
 			return false
 		}
 		for {
-			pr, perr := boundedPoll(ex, h)
+			pr, perr := settle.poll(ex, h)
 			if perr != nil {
 				st.Status = StatusUnknown
 				st.Reason = "unknown-backend"
@@ -304,10 +342,50 @@ func reconcileIdentity(workspace string, ex exec.Executor, st *jsonTaskState) bo
 			if !pr.Running {
 				return true
 			}
-			time.Sleep(pollInterval)
+			if err := settle.pause(); err != nil {
+				st.Status = StatusUnknown
+				st.Reason = "unknown-backend"
+				st.Error = &jsonTaskErr{Unit: ident, Message: err.Error()}
+				return false
+			}
 		}
 	}
 	return true
+}
+
+func destComplete(workspace string, outputs []IO) bool {
+	if len(outputs) == 0 {
+		return false
+	}
+	for _, out := range outputs {
+		if isTreeIO(out) {
+			if !completeDirectory(workspace, treeDir(out)) ||
+				!completeRegularFile(workspace, treeManifestPath(out)) {
+				return false
+			}
+			continue
+		}
+		files := namedIOFiles(out)
+		if len(files) == 0 {
+			return false
+		}
+		for _, file := range files {
+			if !completeRegularFile(workspace, file.path) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func completeRegularFile(workspace, path string) bool {
+	abs, present, err := containedRel(workspace, path, false)
+	return err == nil && present && regularFile(abs)
+}
+
+func completeDirectory(workspace, path string) bool {
+	abs, present, err := containedRel(workspace, path, false)
+	return err == nil && present && isDir(abs)
 }
 
 func runStatusFromTasks(tasks []jsonTaskState) string {

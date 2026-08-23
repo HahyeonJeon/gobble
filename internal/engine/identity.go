@@ -164,8 +164,44 @@ func fileRecord(abs, planPath string) (jsonFileHash, error) {
 	return rec, nil
 }
 
-func inputRecords(workspace string, ios []IO) ([]jsonFileHash, error) {
-	return fileRecords(workspace, ios, false)
+func stagedInputRecords(workspace, isolate string, ios []IO) ([]jsonFileHash, error) {
+	var out []jsonFileHash
+	for _, io := range ios {
+		files := namedIOFiles(io)
+		sources := namedIOFiles(io)
+		if isTreeIO(io) {
+			files = treeDestMemberPaths(isolate, io)
+			sources = treeSourceMemberPaths(workspace, io)
+		}
+		sourceByName := make(map[string]namedFile, len(sources))
+		for _, source := range sources {
+			sourceByName[source.name] = source
+		}
+		for _, f := range files {
+			path := workspaceFile(isolate, f.path)
+			if !regularFile(path) {
+				out = append(out, jsonFileHash{Path: f.path})
+				continue
+			}
+			rec, err := fileRecord(path, f.path)
+			if err != nil {
+				return nil, err
+			}
+			// SHA256 identifies the staged bytes. Cheap fields describe the
+			// corresponding workspace source only as an Inspect optimization;
+			// Resume always verifies content.
+			if source, ok := sourceByName[f.name]; ok {
+				if cheap, err := cheapKey(workspaceFile(workspace, fileSource(source))); err == nil {
+					rec.Size = cheap.Size
+					rec.Mtime = cheap.Mtime
+					rec.Dev = cheap.Dev
+					rec.Inode = cheap.Inode
+				}
+			}
+			out = append(out, rec)
+		}
+	}
+	return out, nil
 }
 
 func destRecords(workspace string, ios []IO) ([]jsonFileHash, error) {

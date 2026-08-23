@@ -16,9 +16,9 @@ import (
 
 func useBound(t *testing.T, d time.Duration) {
 	t.Helper()
-	orig := currentBound()
-	setCompletionBound(d)
-	t.Cleanup(func() { setCompletionBound(orig) })
+	orig := currentSettlementBound()
+	setSettlementBound(d)
+	t.Cleanup(func() { setSettlementBound(orig) })
 }
 
 func waitCtx(ctx context.Context) error {
@@ -38,23 +38,53 @@ func TestReleaseEmptyWorkspaceInvalidPath(t *testing.T) {
 	}
 }
 
-func TestNoncooperatingPollRecordsUnknown(t *testing.T) {
+func TestCanceledPollAlwaysRunningStopsAtSettlementBound(t *testing.T) {
 	useBound(t, 40*time.Millisecond)
+	submitted := make(chan struct{})
+	var once syncClose
 	useExec(t, &fnExec{
 		submit: func(ctx context.Context, job exec.Job) (exec.Handle, exec.Report, error) {
+			once.do(submitted)
 			h := exec.Handle{Identity: job.Identity, Backend: exec.BackendProcess, RuntimeID: "1"}
 			return h, exec.Report{Identity: job.Identity, RuntimeID: "1", Running: true}, nil
 		},
 		poll: func(ctx context.Context, h exec.Handle) (exec.Report, error) {
-			return exec.Report{}, waitCtx(ctx)
+			return exec.Report{Identity: h.Identity, RuntimeID: h.RuntimeID, Running: true}, nil
+		},
+		cancel: func(ctx context.Context, h exec.Handle) error {
+			return nil
 		},
 	})
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
-	defects := Run(t.Context(), Request{
-		Workspace: dir,
-		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
-	})
+	ctx, cancel := context.WithCancel(t.Context())
+	done := make(chan []Defect, 1)
+	go func() {
+		done <- Run(ctx, Request{
+			Workspace: dir,
+			Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
+		})
+	}()
+	select {
+	case <-submitted:
+	case <-time.After(2 * time.Second):
+		t.Fatal("timeout waiting for Submit")
+	}
+	waitRuntimeID(t, dir, "copy")
+	started := time.Now()
+	cancel()
+	var defects []Defect
+	select {
+	case defects = <-done:
+	case <-time.After(time.Second):
+		t.Fatal("Run did not return after settlement bound")
+	}
+	if elapsed := time.Since(started); elapsed > 200*time.Millisecond {
+		t.Fatalf("canceled Run settled in %v, want near %v", elapsed, currentSettlementBound())
+	}
+	if !hasDefect(defects, DefectCanceled, "") {
+		t.Fatalf("Run() defects %v, want canceled", defects)
+	}
 	if !hasDefect(defects, DefectUnknownBackend, "copy") {
 		t.Fatalf("Run() defects %v, want unknown-backend copy", defects)
 	}
@@ -78,37 +108,54 @@ func TestNoncooperatingPollRecordsUnknown(t *testing.T) {
 	}
 }
 
-func TestLaterProcessReleaseUnknownBackend(t *testing.T) {
+func TestLaterProcessReleaseUnprovedProcessIncomplete(t *testing.T) {
 	useBound(t, 40*time.Millisecond)
+	submitted := make(chan struct{})
+	var once syncClose
 	useExec(t, &fnExec{
 		submit: func(ctx context.Context, job exec.Job) (exec.Handle, exec.Report, error) {
+			once.do(submitted)
 			h := exec.Handle{Identity: job.Identity, Backend: exec.BackendProcess, RuntimeID: "9"}
 			return h, exec.Report{Identity: job.Identity, RuntimeID: "9", Running: true}, nil
 		},
 		poll: func(ctx context.Context, h exec.Handle) (exec.Report, error) {
-			return exec.Report{}, waitCtx(ctx)
+			return exec.Report{Identity: h.Identity, RuntimeID: h.RuntimeID, Running: true}, nil
+		},
+		cancel: func(ctx context.Context, h exec.Handle) error {
+			return nil
 		},
 	})
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
-	if defects := Run(t.Context(), Request{
-		Workspace: dir,
-		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
-	}); !hasDefect(defects, DefectUnknownBackend, "copy") {
+	ctx, cancel := context.WithCancel(t.Context())
+	done := make(chan []Defect, 1)
+	go func() {
+		done <- Run(ctx, Request{
+			Workspace: dir,
+			Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
+		})
+	}()
+	<-submitted
+	waitRuntimeID(t, dir, "copy")
+	cancel()
+	if defects := <-done; !hasDefect(defects, DefectUnknownBackend, "copy") {
 		t.Fatalf("Run() defects %v, want unknown-backend", defects)
 	}
 	runExecutor = nil
 	DropHeldLease(dir)
 	defects := Release(dir)
-	if !hasDefect(defects, DefectUnknownBackend, "copy") {
-		t.Fatalf("later-process Release() defects %v, want unknown-backend", defects)
+	if len(defects) != 0 {
+		t.Fatalf("later-process Release() defects %v, want none", defects)
 	}
 	run, exists, err := readRunIdentity(dir)
 	if err != nil || !exists {
 		t.Fatalf("run.json exists=%v err=%v", exists, err)
 	}
-	if !occupancyIsActive(run) {
-		t.Fatal("later-process Release closed occupancy while unknown")
+	if occupancyIsActive(run) {
+		t.Fatal("later-process Release kept occupancy for unproved process")
+	}
+	if st := taskStates(t, dir)["copy"]; st.Status != StatusIncomplete {
+		t.Fatalf("later-process process status got %q, want incomplete", st.Status)
 	}
 }
 
@@ -163,7 +210,7 @@ func TestBlockingCancelRecordsUnknown(t *testing.T) {
 	}
 }
 
-func TestCooperativeJobExceedsPerCallBound(t *testing.T) {
+func TestUncancelledLongTaskExceedsSettlementBound(t *testing.T) {
 	useBound(t, 40*time.Millisecond)
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
@@ -174,15 +221,15 @@ func TestCooperativeJobExceedsPerCallBound(t *testing.T) {
 	if len(defects) != 0 {
 		t.Fatalf("cooperative Run() defects %v, want none", defects)
 	}
-	if time.Since(start) < currentBound() {
-		t.Fatalf("cooperative job finished in %v, want longer than per-call bound %v", time.Since(start), currentBound())
+	if time.Since(start) < currentSettlementBound() {
+		t.Fatalf("cooperative job finished in %v, want longer than settlement bound %v", time.Since(start), currentSettlementBound())
 	}
 	if taskStates(t, dir)["copy"].Status != StatusSucceeded {
 		t.Fatalf("cooperative job status got %q, want succeeded", taskStates(t, dir)["copy"].Status)
 	}
 }
 
-func TestSubmitTimeoutKeepsUnknownOccupancy(t *testing.T) {
+func TestCallerDeadlineDuringSubmitPersistsIncomplete(t *testing.T) {
 	useBound(t, 40*time.Millisecond)
 	useExec(t, &fnExec{
 		submit: func(ctx context.Context, job exec.Job) (exec.Handle, exec.Report, error) {
@@ -191,26 +238,28 @@ func TestSubmitTimeoutKeepsUnknownOccupancy(t *testing.T) {
 	})
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
-	defects := Run(t.Context(), Request{
+	ctx, cancel := context.WithTimeout(t.Context(), 40*time.Millisecond)
+	defer cancel()
+	defects := Run(ctx, Request{
 		Workspace: dir,
 		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 	})
-	if !hasDefect(defects, DefectUnknownBackend, "copy") {
-		t.Fatalf("timed-out Submit Run() defects %v, want unknown-backend", defects)
+	if !hasDefect(defects, DefectCanceled, "") {
+		t.Fatalf("deadline Submit Run() defects %v, want canceled", defects)
 	}
 	st := taskStates(t, dir)["copy"]
-	if st.Status != StatusUnknown || st.RuntimeID != "" {
+	if st.Status != StatusIncomplete || st.RuntimeID != "" {
 		t.Fatalf("timed-out Submit state got status=%q runtime_id=%q", st.Status, st.RuntimeID)
 	}
-	if defects := Release(dir); !hasDefect(defects, DefectUnknownBackend, "copy") {
-		t.Fatalf("occupying Release of empty-id unknown defects %v, want unknown-backend", defects)
+	if defects := Release(dir); len(defects) != 0 {
+		t.Fatalf("occupying Release after deadline defects %v, want none", defects)
 	}
-	if run, exists, err := readRunIdentity(dir); err != nil || !exists || !occupancyIsActive(run) {
-		t.Fatal("Release closed occupancy on empty-id unknown")
+	if run, exists, err := readRunIdentity(dir); err != nil || !exists || occupancyIsActive(run) {
+		t.Fatal("Release did not close occupancy after deadline before handle")
 	}
 }
 
-func TestWrappedSubmitDeadlineRecordsUnknown(t *testing.T) {
+func TestWrappedCallerDeadlineDuringSubmitPersistsIncomplete(t *testing.T) {
 	useBound(t, 40*time.Millisecond)
 	useExec(t, &fnExec{
 		submit: func(ctx context.Context, job exec.Job) (exec.Handle, exec.Report, error) {
@@ -219,19 +268,21 @@ func TestWrappedSubmitDeadlineRecordsUnknown(t *testing.T) {
 	})
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
-	defects := Run(t.Context(), Request{
+	ctx, cancel := context.WithTimeout(t.Context(), 40*time.Millisecond)
+	defer cancel()
+	defects := Run(ctx, Request{
 		Workspace: dir,
 		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 	})
-	if !hasDefect(defects, DefectUnknownBackend, "copy") {
-		t.Fatalf("wrapped deadline Submit Run() defects %v, want unknown-backend", defects)
+	if !hasDefect(defects, DefectCanceled, "") {
+		t.Fatalf("wrapped deadline Submit Run() defects %v, want canceled", defects)
 	}
 	st := taskStates(t, dir)["copy"]
-	if st.Status != StatusUnknown || st.RuntimeID != "" {
+	if st.Status != StatusIncomplete || st.RuntimeID != "" {
 		t.Fatalf("wrapped deadline Submit state got status=%q runtime_id=%q", st.Status, st.RuntimeID)
 	}
 	if run, exists, err := readRunIdentity(dir); err != nil || !exists || !occupancyIsActive(run) {
-		t.Fatal("wrapped deadline Submit closed occupancy")
+		t.Fatal("wrapped deadline Submit did not retain occupancy")
 	}
 }
 
@@ -266,11 +317,14 @@ func TestEvaluatorSuccessfulSubmitWithoutRuntimeID(t *testing.T) {
 	}
 	runExecutor = nil
 	DropHeldLease(dir)
-	if defects := Release(dir); !hasDefect(defects, DefectUnknownBackend, "copy") {
-		t.Fatalf("later-process Release() defects %v, want unknown-backend", defects)
+	if defects := Release(dir); len(defects) != 0 {
+		t.Fatalf("later-process Release() defects %v, want none", defects)
 	}
-	if run, exists, err := readRunIdentity(dir); err != nil || !exists || !occupancyIsActive(run) {
-		t.Fatal("later-process Release closed occupancy for empty-id unknown")
+	if run, exists, err := readRunIdentity(dir); err != nil || !exists || occupancyIsActive(run) {
+		t.Fatal("later-process Release kept occupancy for empty-id process")
+	}
+	if st := taskStates(t, dir)["copy"]; st.Status != StatusIncomplete {
+		t.Fatalf("empty-id process status got %q, want incomplete", st.Status)
 	}
 }
 
@@ -302,15 +356,15 @@ func TestLaterProcessCrashBeforeHandle(t *testing.T) {
 }
 `)
 	defects := Release(dir)
-	if !hasDefect(defects, DefectUnknownBackend, "copy") {
-		t.Fatalf("later-process crash-before-handle Release() defects %v, want unknown-backend", defects)
+	if len(defects) != 0 {
+		t.Fatalf("later-process crash-before-handle Release() defects %v, want none", defects)
 	}
 	run, exists, err := readRunIdentity(dir)
-	if err != nil || !exists || !occupancyIsActive(run) {
-		t.Fatal("later-process crash-before-handle closed occupancy")
+	if err != nil || !exists || occupancyIsActive(run) {
+		t.Fatal("later-process crash-before-handle kept occupancy")
 	}
-	if taskStates(t, dir)["copy"].Status != StatusUnknown {
-		t.Fatalf("copy status got %q, want unknown", taskStates(t, dir)["copy"].Status)
+	if taskStates(t, dir)["copy"].Status != StatusIncomplete {
+		t.Fatalf("copy status got %q, want incomplete", taskStates(t, dir)["copy"].Status)
 	}
 }
 

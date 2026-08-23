@@ -34,6 +34,9 @@ func checkResume(req Request) []Defect {
 	if d := CheckResumeStart(req.Workspace, req.Cap); len(d) > 0 {
 		return d
 	}
+	if d := emptyGraphDefects(req.Document); len(d) > 0 {
+		return d
+	}
 	if d := checkOccupied(req.Workspace); len(d) > 0 {
 		return d
 	}
@@ -52,31 +55,24 @@ func checkResume(req Request) []Defect {
 	if d := checkCapacity(req.Document, readHostCapacity()); len(d) > 0 {
 		return d
 	}
-	run, exists, err := readRunIdentity(req.Workspace)
-	if err != nil {
-		return pathDefects(err)
-	}
-	if !exists {
-		return []Defect{{
-			Code:    DefectNothingToResume,
-			Message: "nothing to resume",
-			Paths:   []string{ControlDir + "/" + RunIdentityFile},
-		}}
-	}
-	if d := unsupportedControlSchema(req.Workspace, run); len(d) > 0 {
-		return d
-	}
-	recorded, hasPlan, d := readInspectPlan(req.Workspace)
+	_, recorded, hasPlan, taskFile, _, d := readCoherentControl(req.Workspace)
 	if len(d) > 0 {
+		if hasDefectCode(d, DefectNotFound) {
+			return []Defect{{
+				Code:    DefectNothingToResume,
+				Message: "nothing to resume",
+				Paths:   []string{ControlDir + "/" + RunIdentityFile},
+			}}
+		}
 		return d
 	}
 	var recordedDoc Document
 	if hasPlan {
 		recordedDoc = documentFromPlan(recorded)
 	}
-	tasks, d := readInspectTasks(req.Workspace)
-	if len(d) > 0 {
-		return d
+	tasks := taskFile.Tasks
+	if len(latestAttempts(tasks)) == 0 {
+		return emptyTaskStateDefects()
 	}
 	if unknown := unknownTaskUnits(tasks); len(unknown) > 0 {
 		return unknownBackendDefects(unknown)
@@ -176,43 +172,39 @@ func occupyResume(req Request) (*sched, []Defect) {
 	if err != nil {
 		return nil, pathDefects(err)
 	}
-	existing, exists, err := readRunIdentity(req.Workspace)
-	if err != nil {
-		return nil, pathDefects(err)
-	}
-	if !exists {
-		return nil, []Defect{{
-			Code:    DefectNothingToResume,
-			Message: "nothing to resume",
-			Paths:   []string{ControlDir + "/" + RunIdentityFile},
-		}}
-	}
-	recorded, hasPlan, d := readInspectPlan(req.Workspace)
-	if len(d) > 0 {
-		return nil, d
-	}
-	var recordedDoc Document
-	if hasPlan {
-		recordedDoc = documentFromPlan(recorded)
-	}
-	tasks, d := readInspectTasks(req.Workspace)
-	if len(d) > 0 {
-		return nil, d
-	}
-	if unknown := unknownTaskUnits(tasks); len(unknown) > 0 {
-		return nil, unknownBackendDefects(unknown)
-	}
 	root := workspaceFile(req.Workspace, ControlDir)
 	lock, defects := claimOccupy(root)
 	if len(defects) > 0 {
 		return nil, defects
 	}
-	if current, found, err := readRunIdentity(req.Workspace); err != nil {
+	existing, recorded, hasPlan, taskFile, _, d := readCoherentControl(req.Workspace)
+	if len(d) > 0 {
 		lock.Close()
-		return nil, pathDefects(err)
-	} else if found && occupancyIsActive(current) {
+		if hasDefectCode(d, DefectNotFound) {
+			return nil, []Defect{{
+				Code:    DefectNothingToResume,
+				Message: "nothing to resume",
+				Paths:   []string{ControlDir + "/" + RunIdentityFile},
+			}}
+		}
+		return nil, d
+	}
+	if occupancyIsActive(existing) {
 		lock.Close()
 		return nil, occupiedDefect()
+	}
+	tasks := taskFile.Tasks
+	if len(latestAttempts(tasks)) == 0 {
+		lock.Close()
+		return nil, emptyTaskStateDefects()
+	}
+	if unknown := unknownTaskUnits(tasks); len(unknown) > 0 {
+		lock.Close()
+		return nil, unknownBackendDefects(unknown)
+	}
+	var recordedDoc Document
+	if hasPlan {
+		recordedDoc = documentFromPlan(recorded)
 	}
 	doc := cloneDocument(req.Document)
 	for i := range doc.Tasks {
@@ -361,7 +353,7 @@ func occupyResume(req Request) (*sched, []Defect) {
 		lock.Close()
 		return nil, pathDefects(err)
 	}
-	retainLease(req.Workspace, lock, ex)
+	s.lease = retainLease(req.Workspace, lock, ex)
 	return s, nil
 }
 

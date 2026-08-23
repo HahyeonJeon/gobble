@@ -2,6 +2,8 @@ package engine
 
 import (
 	"math"
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -166,6 +168,26 @@ func TestValidateDocumentPlanDefects(t *testing.T) {
 				t.Fatalf("case %s: Validate() defects %v, want code %s unit %q", tt.name, formatDefects(got), tt.code, tt.unit)
 			}
 		})
+	}
+}
+
+func TestEmptyGraphInvalidValueEveryEngineEntry(t *testing.T) {
+	doc := Document{Name: "empty"}
+	if defects := Validate(doc); !hasDefect(defects, DefectInvalidValue, "") {
+		t.Fatalf("Validate(empty) defects %v, want invalid-value", defects)
+	}
+	if plan, defects := BuildPlan(doc); plan != nil || !hasDefect(defects, DefectInvalidValue, "") {
+		t.Fatalf("BuildPlan(empty) plan=%v defects=%v, want nil invalid-value", plan, defects)
+	}
+	dir := t.TempDir()
+	if defects := Run(t.Context(), Request{Workspace: dir, Document: doc}); !hasDefect(defects, DefectInvalidValue, "") {
+		t.Fatalf("Run(empty) defects %v, want invalid-value", defects)
+	}
+	if defects := Resume(t.Context(), Request{Workspace: dir, Document: doc}); !hasDefect(defects, DefectInvalidValue, "") {
+		t.Fatalf("Resume(empty) defects %v, want invalid-value", defects)
+	}
+	if _, err := os.Stat(filepath.Join(dir, ControlDir)); !os.IsNotExist(err) {
+		t.Fatalf("empty graph created control state: %v", err)
 	}
 }
 

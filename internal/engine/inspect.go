@@ -35,25 +35,14 @@ func Inspect(workspace, view, instance string) ([]byte, []Defect) {
 			Unit:    view,
 		}}
 	}
-	run, d := readInspectRun(workspace)
+	run, plan, hasPlan, taskFile, _, d := readCoherentControl(workspace)
 	if len(d) > 0 {
-		return nil, d
-	}
-	if d := unsupportedControlSchema(workspace, run); len(d) > 0 {
-		return nil, d
-	}
-	plan, hasPlan, d := readInspectPlan(workspace)
-	if len(d) > 0 {
-		return nil, d
-	}
-	taskFile, hasTasks, d := readInspectTasksFile(workspace)
-	if len(d) > 0 {
-		return nil, d
-	}
-	if d := coherentSnapshots(run, plan, hasPlan, taskFile, hasTasks); len(d) > 0 {
 		return nil, d
 	}
 	tasks := taskFile.Tasks
+	if len(latestAttempts(tasks)) == 0 {
+		return nil, emptyTaskStateDefects()
+	}
 	doc := Document{}
 	if hasPlan {
 		doc = documentFromPlan(plan)
@@ -226,6 +215,35 @@ func readInspectTasksFile(workspace string) (jsonTasksFile, bool, []Defect) {
 		}}
 	}
 	return file, true, nil
+}
+
+func readCoherentControl(workspace string) (jsonRun, jsonPlan, bool, jsonTasksFile, bool, []Defect) {
+	run, d := readInspectRun(workspace)
+	if len(d) > 0 {
+		return jsonRun{}, jsonPlan{}, false, jsonTasksFile{}, false, d
+	}
+	if d := unsupportedControlSchema(workspace, run); len(d) > 0 {
+		return jsonRun{}, jsonPlan{}, false, jsonTasksFile{}, false, d
+	}
+	plan, hasPlan, d := readInspectPlan(workspace)
+	if len(d) > 0 {
+		return jsonRun{}, jsonPlan{}, false, jsonTasksFile{}, false, d
+	}
+	tasks, hasTasks, d := readInspectTasksFile(workspace)
+	if len(d) > 0 {
+		return jsonRun{}, jsonPlan{}, false, jsonTasksFile{}, false, d
+	}
+	if d := coherentSnapshots(run, plan, hasPlan, tasks, hasTasks); len(d) > 0 {
+		return jsonRun{}, jsonPlan{}, false, jsonTasksFile{}, false, d
+	}
+	return run, plan, hasPlan, tasks, hasTasks, nil
+}
+
+func emptyTaskStateDefects() []Defect {
+	return []Defect{{
+		Code:    DefectInvalidValue,
+		Message: "empty graph",
+	}}
 }
 
 func coherentSnapshots(run jsonRun, plan jsonPlan, hasPlan bool, tasks jsonTasksFile, hasTasks bool) []Defect {

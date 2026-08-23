@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 )
 
@@ -120,7 +121,7 @@ func TestReleaseUnsupportedSchema(t *testing.T) {
 	}
 }
 
-func TestReleaseDeadOwnerEmptyRuntimeIDKeepsUnknown(t *testing.T) {
+func TestReleaseDeadOwnerEmptyRuntimeIDBecomesIncomplete(t *testing.T) {
 	dir := t.TempDir()
 	host, err := currentHost()
 	if err != nil {
@@ -149,8 +150,8 @@ func TestReleaseDeadOwnerEmptyRuntimeIDKeepsUnknown(t *testing.T) {
 }
 `)
 	defects := Release(dir)
-	if !hasDefect(defects, DefectUnknownBackend, "copy") {
-		t.Fatalf("Release() defects %v, want unknown-backend", defects)
+	if len(defects) != 0 {
+		t.Fatalf("Release() defects %v, want none", defects)
 	}
 	if _, err := os.ReadFile(filepath.Join(dir, "out", "keep.txt")); err != nil {
 		t.Fatalf("Release deleted artifact: %v", err)
@@ -159,12 +160,12 @@ func TestReleaseDeadOwnerEmptyRuntimeIDKeepsUnknown(t *testing.T) {
 	if err != nil || !exists {
 		t.Fatalf("run.json exists=%v err=%v", exists, err)
 	}
-	if !occupancyIsActive(run) {
-		t.Fatal("later-process Release closed occupancy for running with empty runtime_id")
+	if occupancyIsActive(run) {
+		t.Fatal("later-process Release kept occupancy for unproved process")
 	}
 	st := taskStates(t, dir)["copy"]
-	if st.Status != StatusUnknown {
-		t.Fatalf("copy status got %q, want unknown", st.Status)
+	if st.Status != StatusIncomplete {
+		t.Fatalf("copy status got %q, want incomplete", st.Status)
 	}
 }
 
@@ -234,8 +235,8 @@ func TestReleaseMarksIncompleteWithSlots(t *testing.T) {
 }
 `)
 	defects := Release(dir)
-	if !hasDefect(defects, DefectUnknownBackend, "copy") {
-		t.Fatalf("Release() defects %v, want unknown-backend for running without runtime_id", defects)
+	if len(defects) != 0 {
+		t.Fatalf("Release() defects %v, want none", defects)
 	}
 	raw := mustJSONFile(t, filepath.Join(dir, ControlDir, TasksFile))
 	var file jsonTasksFile
@@ -256,8 +257,8 @@ func TestReleaseMarksIncompleteWithSlots(t *testing.T) {
 				st.ID, st.Instance, st.ShardIndex, st.ShardCount, st.Attempt)
 		}
 	}
-	if byID["copy"].Status != StatusUnknown {
-		t.Fatalf("copy status got %q, want unknown", byID["copy"].Status)
+	if byID["copy"].Status != StatusIncomplete {
+		t.Fatalf("copy status got %q, want incomplete", byID["copy"].Status)
 	}
 	if byID["ok"].Status != StatusSucceeded {
 		t.Fatalf("ok status got %q, want succeeded", byID["ok"].Status)
@@ -290,6 +291,218 @@ func TestReleaseSucceededRunKeepsSucceeded(t *testing.T) {
 	if taskStates(t, dir)["copy"].Status != StatusSucceeded {
 		t.Fatalf("copy status got %q, want succeeded", taskStates(t, dir)["copy"].Status)
 	}
+}
+
+func TestLaterProcessFileDestCompletePublishedUnfinalized(t *testing.T) {
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
+	if defects := Run(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+		t.Fatalf("Run() defects %v", defects)
+	}
+	patchAttempt(t, dir, func(st *jsonTaskState) {
+		st.Status = StatusRunning
+		st.RuntimeID = "unproved-pid"
+		st.Reason = "ready"
+		st.Ended = ""
+		st.Fingerprints = nil
+		st.Checksums = nil
+		st.Lineage = nil
+	})
+	forceDeadOwner(t, dir)
+	if defects := Release(dir); len(defects) != 0 {
+		t.Fatalf("later-process Release() defects %v", defects)
+	}
+	state := taskStates(t, dir)["copy"]
+	if state.Status != StatusPublishedUnfinalized {
+		t.Fatalf("status got %q, want published-unfinalized", state.Status)
+	}
+	if len(state.Checksums) != 0 || len(state.Fingerprints) != 0 {
+		t.Fatalf("published-unfinalized invented identity: fingerprints=%#v checksums=%#v", state.Fingerprints, state.Checksums)
+	}
+	raw, defects := Inspect(dir, viewRemaining, "")
+	if len(defects) != 0 {
+		t.Fatalf("Inspect(remaining) defects %v", defects)
+	}
+	if len(raw) != 0 {
+		t.Fatalf("published-unfinalized remaining got %s, want empty", raw)
+	}
+}
+
+func TestLaterProcessTreeDirectoryOnlyIncomplete(t *testing.T) {
+	dir := t.TempDir()
+	doc := Document{
+		Name: "tree",
+		Tasks: []TaskPlan{{
+			ID:      "tree",
+			Name:    "tree",
+			Command: []string{"sh", "-c", "mkdir -p out/tree; printf member > out/tree/member.txt"},
+			Outputs: []IO{{Name: "tree", Kind: ArtifactTree, Path: "out/tree"}},
+		}},
+	}
+	if defects := Run(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+		t.Fatalf("Run() defects %v", defects)
+	}
+	if err := os.Remove(filepath.Join(dir, "out", "tree", treeManifestName)); err != nil {
+		t.Fatal(err)
+	}
+	patchAttempt(t, dir, func(st *jsonTaskState) {
+		st.Status = StatusRunning
+		st.RuntimeID = "unproved-pid"
+		st.Reason = "ready"
+		st.Ended = ""
+		st.Fingerprints = nil
+		st.Checksums = nil
+		st.Lineage = nil
+	})
+	forceDeadOwner(t, dir)
+	if defects := Release(dir); len(defects) != 0 {
+		t.Fatalf("later-process Release() defects %v", defects)
+	}
+	if state := taskStates(t, dir)["tree"]; state.Status != StatusIncomplete {
+		t.Fatalf("tree directory-only status got %q, want incomplete", state.Status)
+	}
+}
+
+func TestLaterProcessDockerUnknownKeepsOccupancy(t *testing.T) {
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
+	if defects := Run(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+		t.Fatalf("Run() defects %v", defects)
+	}
+	patchAttempt(t, dir, func(st *jsonTaskState) {
+		st.Status = StatusRunning
+		st.Executor = executorDocker
+		st.Image = "example.invalid/image:latest"
+		st.RuntimeID = ""
+		st.Reason = "ready"
+		st.Ended = ""
+	})
+	forceDeadOwner(t, dir)
+	defects := Release(dir)
+	if !hasDefect(defects, DefectUnknownBackend, "copy") {
+		t.Fatalf("later-process Docker Release() defects %v, want unknown-backend", defects)
+	}
+	run, exists, err := readRunIdentity(dir)
+	if err != nil || !exists || !occupancyIsActive(run) {
+		t.Fatalf("Docker unknown occupancy exists=%v err=%v run=%#v", exists, err, run.Occupancy)
+	}
+}
+
+func TestDestCompleteByBindKind(t *testing.T) {
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "file.txt"), "file")
+	writeCheckFile(t, filepath.Join(dir, "group", "a.txt"), "a")
+	if err := os.MkdirAll(filepath.Join(dir, "tree"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	writeCheckFile(t, filepath.Join(dir, "tree", treeManifestName), `{}`)
+	if !destComplete(dir, []IO{{Name: "file", Kind: ArtifactFile, Path: "file.txt"}}) {
+		t.Fatal("regular File dest not complete")
+	}
+	if !destComplete(dir, []IO{{Name: "group", Kind: ArtifactGroup, Members: []IOMember{{Name: "a", Path: "group/a.txt"}}}}) {
+		t.Fatal("complete Group not complete")
+	}
+	if destComplete(dir, []IO{{Name: "group", Kind: ArtifactGroup, Members: []IOMember{{Name: "a", Path: "group/a.txt"}, {Name: "b", Path: "group/b.txt"}}}}) {
+		t.Fatal("Group with missing member reported complete")
+	}
+	if !destComplete(dir, []IO{{Name: "tree", Kind: ArtifactTree, Path: "tree"}}) {
+		t.Fatal("Tree directory plus manifest not complete")
+	}
+	if err := os.Symlink("file.txt", filepath.Join(dir, "link.txt")); err != nil {
+		t.Fatal(err)
+	}
+	if destComplete(dir, []IO{{Name: "file", Kind: ArtifactFile, Path: "link.txt"}}) {
+		t.Fatal("File symlink reported complete")
+	}
+}
+
+func TestReleaseMixedSnapshotRefused(t *testing.T) {
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	if defects := Run(t.Context(), Request{Workspace: dir, Document: sampleDoc("", "", "in/sample.txt", "out/sample.txt")}); len(defects) != 0 {
+		t.Fatalf("Run() defects %v", defects)
+	}
+	tamperTasksSnapshot(t, dir, "mixed")
+	before := snapshotDir(t, dir)
+	if defects := Release(dir); !hasDefect(defects, DefectInvalidPath, "") {
+		t.Fatalf("Release mixed snapshot defects %v, want invalid-path", defects)
+	}
+	if after := snapshotDir(t, dir); after != before {
+		t.Fatal("Release mixed snapshot mutated workspace")
+	}
+}
+
+func TestConcurrentOccupyingProcessReleaseSerialized(t *testing.T) {
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	if defects := Run(t.Context(), Request{Workspace: dir, Document: sampleDoc("", "", "in/sample.txt", "out/sample.txt")}); len(defects) != 0 {
+		t.Fatalf("Run() defects %v", defects)
+	}
+	start := make(chan struct{})
+	results := make(chan []Defect, 2)
+	var wg sync.WaitGroup
+	for range 2 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			<-start
+			results <- Release(dir)
+		}()
+	}
+	close(start)
+	wg.Wait()
+	close(results)
+	succeeded := 0
+	rejected := 0
+	for defects := range results {
+		switch {
+		case len(defects) == 0:
+			succeeded++
+		case hasDefect(defects, DefectAlreadyReleased, "") || hasDefect(defects, DefectLiveOccupancy, ""):
+			rejected++
+		default:
+			t.Fatalf("concurrent Release defects %v", defects)
+		}
+	}
+	if succeeded != 1 || rejected != 1 {
+		t.Fatalf("concurrent Release got success=%d rejected=%d, want 1/1", succeeded, rejected)
+	}
+	if _, _, _, _, _, defects := readCoherentControl(dir); len(defects) != 0 {
+		t.Fatalf("final control snapshot defects %v", defects)
+	}
+}
+
+func TestInspectAndReleaseZeroAttemptsNotSuccess(t *testing.T) {
+	dir := t.TempDir()
+	host, err := currentHost()
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeOccupancy(t, dir, jsonOccupancy{Active: true, Host: host, PID: deadPID(t), Lease: "lease"})
+	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), `{"schema_version":2,"tasks":[]}`)
+	if _, defects := Inspect(dir, viewRun, ""); !hasDefect(defects, DefectInvalidValue, "") {
+		t.Fatalf("Inspect zero attempts defects %v, want invalid-value", defects)
+	}
+	if defects := Release(dir); !hasDefect(defects, DefectInvalidValue, "") {
+		t.Fatalf("Release zero attempts defects %v, want invalid-value", defects)
+	}
+}
+
+func tamperTasksSnapshot(t *testing.T, workspace, snapshot string) {
+	t.Helper()
+	path := filepath.Join(workspace, ControlDir, TasksFile)
+	var file jsonTasksFile
+	if err := json.Unmarshal(mustJSONFile(t, path), &file); err != nil {
+		t.Fatal(err)
+	}
+	file.Snapshot = snapshot
+	data, err := json.MarshalIndent(file, "", "  ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeCheckFile(t, path, string(append(data, '\n')))
 }
 
 func writeOccupancy(t *testing.T, workspace string, occ jsonOccupancy) {

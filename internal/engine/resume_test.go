@@ -408,6 +408,105 @@ func TestResumeDestRenameDoesNotReuse(t *testing.T) {
 	}
 }
 
+func TestResumeReevaluatesSkipIfMissing(t *testing.T) {
+	dir := t.TempDir()
+	doc := Document{
+		Name: "when-file",
+		Tasks: []TaskPlan{{
+			ID:                "conditional",
+			Name:              "conditional",
+			When:              "gate",
+			SkipIfMissingPath: "trigger.txt",
+			Command:           []string{"sh", "-c", "printf ran > out/result.txt"},
+			Outputs:           []IO{{Name: "out", Kind: ArtifactFile, Path: "out/result.txt"}},
+		}},
+	}
+	if defects := Run(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+		t.Fatalf("Run() defects %v", defects)
+	}
+	first := taskStates(t, dir)["conditional"]
+	if first.Status != StatusSkipped || first.Condition != conditionMissingFile {
+		t.Fatalf("first attempt got status=%q condition=%q, want skipped missing-file", first.Status, first.Condition)
+	}
+	if defects := Release(dir); len(defects) != 0 {
+		t.Fatalf("Release() defects %v", defects)
+	}
+	writeCheckFile(t, filepath.Join(dir, "trigger.txt"), "present")
+	if defects := Resume(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+		t.Fatalf("Resume() defects %v", defects)
+	}
+	state := taskStates(t, dir)["conditional"]
+	if state.Status != StatusSucceeded || state.Attempt != 2 {
+		t.Fatalf("resumed attempt got status=%q attempt=%d, want succeeded attempt 2", state.Status, state.Attempt)
+	}
+	data, err := os.ReadFile(filepath.Join(dir, "out", "result.txt"))
+	if err != nil || string(data) != "ran" {
+		t.Fatalf("result got %q err=%v, want ran", data, err)
+	}
+}
+
+func TestResumeReevaluatesSkipIfFalse(t *testing.T) {
+	dir := t.TempDir()
+	doc := Document{
+		Name: "when-param",
+		Tasks: []TaskPlan{{
+			ID:          "conditional",
+			Name:        "conditional",
+			When:        "gate",
+			SkipIfFalse: "off",
+			Params: []ParamPlan{
+				{Name: "off", Value: "false"},
+				{Name: "on", Value: "true"},
+			},
+			Command: []string{"sh", "-c", "printf ran > out/result.txt"},
+			Outputs: []IO{{Name: "out", Kind: ArtifactFile, Path: "out/result.txt"}},
+		}},
+	}
+	if defects := Run(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+		t.Fatalf("Run() defects %v", defects)
+	}
+	first := taskStates(t, dir)["conditional"]
+	if first.Status != StatusSkipped || first.Condition != conditionFalseParam {
+		t.Fatalf("first attempt got status=%q condition=%q, want skipped false-param", first.Status, first.Condition)
+	}
+	if defects := Release(dir); len(defects) != 0 {
+		t.Fatalf("Release() defects %v", defects)
+	}
+	next := cloneDocument(doc)
+	next.Tasks[0].SkipIfFalse = "on"
+	if defects := Resume(t.Context(), Request{Workspace: dir, Document: next}); len(defects) != 0 {
+		t.Fatalf("Resume() defects %v", defects)
+	}
+	state := taskStates(t, dir)["conditional"]
+	if state.Status != StatusSucceeded || state.Attempt != 2 {
+		t.Fatalf("resumed attempt got status=%q attempt=%d, want succeeded attempt 2", state.Status, state.Attempt)
+	}
+	data, err := os.ReadFile(filepath.Join(dir, "out", "result.txt"))
+	if err != nil || string(data) != "ran" {
+		t.Fatalf("result got %q err=%v, want ran", data, err)
+	}
+}
+
+func TestResumeMixedSnapshotRefused(t *testing.T) {
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
+	if defects := Run(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+		t.Fatalf("Run() defects %v", defects)
+	}
+	if defects := Release(dir); len(defects) != 0 {
+		t.Fatalf("Release() defects %v", defects)
+	}
+	tamperTasksSnapshot(t, dir, "mixed")
+	before := snapshotDir(t, dir)
+	if defects := Resume(t.Context(), Request{Workspace: dir, Document: doc}); !hasDefect(defects, DefectInvalidPath, "") {
+		t.Fatalf("Resume mixed snapshot defects %v, want invalid-path", defects)
+	}
+	if after := snapshotDir(t, dir); after != before {
+		t.Fatal("Resume mixed snapshot mutated workspace")
+	}
+}
+
 func sequentialCopyDoc(aCmd, bCmd []string) Document {
 	return Document{
 		Name: "chain",

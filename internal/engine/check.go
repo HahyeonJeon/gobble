@@ -78,6 +78,9 @@ func Check(req Request) []Defect {
 	if d := checkWorkspace(req.Workspace); len(d) > 0 {
 		return d
 	}
+	if d := emptyGraphDefects(req.Document); len(d) > 0 {
+		return d
+	}
 	if d := checkControlContainment(req.Workspace); len(d) > 0 {
 		return d
 	}
