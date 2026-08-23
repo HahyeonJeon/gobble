@@ -46,7 +46,7 @@ func TestRunCapRejected(t *testing.T) {
 		t.Fatalf("Compose() error = %v", err)
 	}
 	libErr := gobble.Run(t.Context(), g, dir, -1)
-	res := runCLI("run", "./testdata/hostpipe", "--workspace", dir, "--cap", "-1")
+	res := runCLI("run", "./testdata/hostpipe", "--workspace", dir, "--cap=-1")
 	requireDomainError(t, res, libErr)
 }
 

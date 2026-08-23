@@ -71,7 +71,7 @@ func collectArgs(args []string) rawArgs {
 				continue
 			}
 			if !hasVal {
-				if i+1 >= len(args) {
+				if i+1 >= len(args) || strings.HasPrefix(args[i+1], "-") {
 					raw.missingValue = name
 					return raw
 				}

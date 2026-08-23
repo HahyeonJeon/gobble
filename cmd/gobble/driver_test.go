@@ -7,7 +7,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"syscall"
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
@@ -33,6 +32,19 @@ func TestResolveImportIgnoresListStderr(t *testing.T) {
 	}
 }
 
+func TestResolveImportRejectsMultiplePackages(t *testing.T) {
+	dir := t.TempDir()
+	stub := filepath.Join(dir, "go")
+	script := "#!/bin/sh\necho 'example.com/pipe/a'\necho 'example.com/pipe/b'\n"
+	if err := os.WriteFile(stub, []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	_, err := resolveImport(stub, dir, "./...")
+	if err == nil || err.Error() != "go list matched multiple packages" {
+		t.Fatalf("resolveImport() error = %v, want multiple-package error", err)
+	}
+}
+
 func TestDriverWaitCodeSignaled(t *testing.T) {
 	cmd := exec.Command("sleep", "30")
 	if err := cmd.Start(); err != nil {
@@ -43,7 +55,7 @@ func TestDriverWaitCodeSignaled(t *testing.T) {
 	}
 	err := cmd.Wait()
 	code := driverWaitCode(err)
-	want := 128 + int(syscall.SIGKILL)
+	want := 1
 	if code != want {
 		t.Fatalf("wait code = %d, want %d", code, want)
 	}
@@ -110,6 +122,21 @@ func TestComposeSuccess(t *testing.T) {
 	}
 	if _, ok := raw["schema_version"]; ok {
 		t.Fatalf("compose JSON has schema_version: %#v", raw)
+	}
+}
+
+func TestComposeDiscardsUserStdoutBeforeProtocol(t *testing.T) {
+	watchDriverTemps(t)
+	res := runCLI("compose", "./testdata/printpipe")
+	if res.code != 0 {
+		t.Fatalf("exit = %d\nstderr: %s", res.code, res.stderr)
+	}
+	if len(res.stderr) != 0 {
+		t.Fatalf("stderr = %q, want empty", res.stderr)
+	}
+	want := "{\"op\":\"compose\",\"pipeline\":\"printed\"}\n"
+	if string(res.stdout) != want {
+		t.Fatalf("stdout = %q, want protocol-only %q", res.stdout, want)
 	}
 }
 
@@ -349,25 +376,16 @@ func requireCompileFailure(t *testing.T, res cliResult, wantOp string) {
 
 func watchDriverTemps(t *testing.T) {
 	t.Helper()
-	pattern := filepath.Join(os.TempDir(), driverTempPrefix+"*")
-	before, err := filepath.Glob(pattern)
-	if err != nil {
-		t.Fatal(err)
-	}
-	seen := make(map[string]struct{}, len(before))
-	for _, p := range before {
-		seen[p] = struct{}{}
-	}
+	root := t.TempDir()
+	t.Setenv("TMPDIR", root)
 	t.Cleanup(func() {
-		after, err := filepath.Glob(pattern)
+		leftovers, err := filepath.Glob(filepath.Join(root, driverTempPrefix+"*"))
 		if err != nil {
 			t.Errorf("glob driver temps: %v", err)
 			return
 		}
-		for _, p := range after {
-			if _, ok := seen[p]; !ok {
-				t.Errorf("leftover driver temp %s", p)
-			}
+		for _, path := range leftovers {
+			t.Errorf("leftover driver temp %s", path)
 		}
 	})
 }

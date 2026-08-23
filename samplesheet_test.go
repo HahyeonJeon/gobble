@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
@@ -321,6 +322,46 @@ func TestLoadSampleSheetFile(t *testing.T) {
 	}
 	if len(sheet.Rows) != 1 || sheet.Rows[0].Sample != "s1" {
 		t.Fatalf("LoadSampleSheetFile() rows got %+v", sheet.Rows)
+	}
+}
+
+func TestLoadSampleSheetFileConcurrentPaths(t *testing.T) {
+	paths := make([]string, 2)
+	for i, sample := range []string{"alpha", "beta"} {
+		path := filepath.Join(t.TempDir(), sample+".csv")
+		csv := "sample,read1\n" + sample + ",reads/" + sample + ".fq\n"
+		if err := os.WriteFile(path, []byte(csv), 0o644); err != nil {
+			t.Fatalf("WriteFile(%q) error = %v", path, err)
+		}
+		paths[i] = path
+	}
+
+	type result struct {
+		index int
+		sheet *gobble.SampleSheet
+		err   error
+	}
+	results := make(chan result, len(paths))
+	var wg sync.WaitGroup
+	for i, path := range paths {
+		wg.Add(1)
+		go func(index int, sheetPath string) {
+			defer wg.Done()
+			sheet, err := gobble.LoadSampleSheetFile(sheetPath)
+			results <- result{index: index, sheet: sheet, err: err}
+		}(i, path)
+	}
+	wg.Wait()
+	close(results)
+
+	for got := range results {
+		if got.err != nil {
+			t.Fatalf("LoadSampleSheetFile(%q) error = %v, want nil", paths[got.index], got.err)
+		}
+		wantSample := []string{"alpha", "beta"}[got.index]
+		if got.sheet.Path != paths[got.index] || len(got.sheet.Rows) != 1 || got.sheet.Rows[0].Sample != wantSample {
+			t.Fatalf("LoadSampleSheetFile(%q) got %+v, want path and sample %q", paths[got.index], got.sheet, wantSample)
+		}
 	}
 }
 

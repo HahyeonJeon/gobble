@@ -4,6 +4,9 @@ import "io"
 
 const rootHelp = `Usage: gobble <command> [arguments]
 
+Gobble is a pre-1.0 trusted-local Linux preview for an exclusive caller-owned
+workspace. Docker is an isolation convenience, not a sandbox.
+
 Commands:
   compose    compose a pipeline from a Go package
   validate   compose then validate a pipeline package
@@ -17,7 +20,20 @@ Commands:
 
 Use gobble help <command> for command help.
 
-Recovery after a contained failure or interrupt is inspect, then release, then resume.
+Supported Go contract: Compose, Validate, BuildPlan, Run, Inspect, Release,
+Resume; Module, Branch, Merge, Scatter, Gather, When; PathSpec and File, Group,
+Tree binds; explicit-path samplesheet parsing; structured Error, Defect, and
+DefectCode values. Other exports are provisional.
+
+Graph verbs require go on PATH. Consumer internal/ packages are unsupported.
+Success stdout is protocol JSON or JSONL only. Exits are 0 success, 1 domain or
+operational failure, and 2 invocation or input-shape failure. A spaced valued
+flag does not consume a following token that starts with '-'; use --flag=value.
+
+Recovery is inspect, then release, then resume remaining work. Later-process
+release never signals an unproved process PID. Docker unknown-backend keeps
+occupancy active. The license is unset; no redistribution license is granted.
+First-horizon exit is not claimed.
 `
 
 var commandHelp = map[string]string{
@@ -60,7 +76,9 @@ sheet use samplesheet.csv in the process current directory.
 `,
 	"release": `Usage: gobble release --workspace DIR
 
-Close occupancy on DIR. Documents and artifacts remain. --workspace is required.
+Reconcile and close occupancy on DIR. Documents and artifacts remain.
+A later process never signals an unproved process PID. Docker unknown-backend
+keeps occupancy active. --workspace is required.
 `,
 	"help": `Usage: gobble help [command]
 

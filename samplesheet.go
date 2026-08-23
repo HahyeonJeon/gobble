@@ -14,8 +14,8 @@ import (
 	intpath "github.com/HahyeonJeon/gobble/internal/path"
 )
 
-// DefaultSampleSheetPath is the process-cwd relative sheet used when
-// [SetSampleSheetPath] has not been called on this goroutine or was restored.
+// DefaultSampleSheetPath is the process-cwd relative path the CLI injects
+// when --sample is omitted.
 const DefaultSampleSheetPath = "samplesheet.csv"
 
 const (
@@ -72,10 +72,10 @@ type SampleSheet struct {
 	Rows []SampleRow
 }
 
-// SetSampleSheetPath stores path for the calling goroutine. Empty or
-// whitespace-only restores [DefaultSampleSheetPath]. The stored string
-// is copied. Concurrent goroutines isolate. Process-global string is
-// not the contract.
+// SetSampleSheetPath is a provisional compatibility helper for proof
+// pipelines that call [LoadSampleSheet]. Supported concurrent callers use
+// [LoadSampleSheetFile] with an explicit path. Empty or whitespace-only
+// restores [DefaultSampleSheetPath] for this helper.
 func SetSampleSheetPath(path string) {
 	id := goroutineID()
 	if strings.TrimSpace(path) == "" {
@@ -85,8 +85,8 @@ func SetSampleSheetPath(path string) {
 	sampleSheetByG.Store(id, strings.Clone(path))
 }
 
-// SampleSheetPath returns the path stored by [SetSampleSheetPath] on
-// this goroutine, or [DefaultSampleSheetPath] if never set or restored.
+// SampleSheetPath returns the provisional path used by [LoadSampleSheet].
+// Supported concurrent callers pass an explicit path to [LoadSampleSheetFile].
 func SampleSheetPath() string {
 	v, ok := sampleSheetByG.Load(goroutineID())
 	if !ok {
@@ -111,7 +111,8 @@ func goroutineID() uint64 {
 	return id
 }
 
-// LoadSampleSheet loads the sheet at [SampleSheetPath].
+// LoadSampleSheet loads the provisional path returned by [SampleSheetPath].
+// Supported concurrent callers use [LoadSampleSheetFile].
 func LoadSampleSheet() (*SampleSheet, error) {
 	return LoadSampleSheetFile(SampleSheetPath())
 }

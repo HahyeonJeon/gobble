@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -38,6 +40,11 @@ func runDriver(req *request, stdout, stderr io.Writer) int {
 	if err := os.WriteFile(src, []byte(driverSource(importPath, req)), 0o600); err != nil {
 		return writeErr(stderr, invalidRequest(req.command, err.Error()), 2)
 	}
+	protocol, err := os.OpenFile(filepath.Join(dir, "protocol"), os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0o600)
+	if err != nil {
+		return writeErr(stderr, invalidRequest(req.command, err.Error()), 2)
+	}
+	defer protocol.Close()
 	bin := filepath.Join(dir, "driver")
 	build := exec.Command(goBin, "build", "-o", bin, src)
 	build.Dir = cwd
@@ -46,8 +53,9 @@ func runDriver(req *request, stdout, stderr io.Writer) int {
 	}
 	cmd := exec.Command(bin)
 	cmd.Dir = cwd
-	cmd.Stdout = stdout
+	cmd.Stdout = io.Discard
 	cmd.Stderr = stderr
+	cmd.ExtraFiles = []*os.File{protocol}
 	if err := cmd.Start(); err != nil {
 		return writeErr(stderr, invalidRequest(req.command, err.Error()), 2)
 	}
@@ -61,6 +69,20 @@ func runDriver(req *request, stdout, stderr io.Writer) int {
 		}
 		return code
 	}
+	return copyDriverProtocol(protocol, stdout, stderr, req.command)
+}
+
+func copyDriverProtocol(protocol *os.File, stdout, stderr io.Writer, op string) int {
+	if _, err := protocol.Seek(0, io.SeekStart); err != nil {
+		return writeErr(stderr, invalidRequest(op, "child protocol read failed"), 1)
+	}
+	data, err := io.ReadAll(protocol)
+	if err != nil || !json.Valid(bytes.TrimSpace(data)) {
+		return writeErr(stderr, invalidRequest(op, "invalid child protocol"), 1)
+	}
+	if _, err := stdout.Write(data); err != nil {
+		return writeErr(stderr, invalidRequest(op, "stdout write failed"), 1)
+	}
 	return 0
 }
 
@@ -70,11 +92,14 @@ func driverWaitCode(err error) int {
 		return -1
 	}
 	code := ee.ExitCode()
+	if code == 2 {
+		return 2
+	}
 	if code >= 0 {
-		return code
+		return 1
 	}
 	if ws, ok := ee.Sys().(syscall.WaitStatus); ok && ws.Signaled() {
-		return 128 + int(ws.Signal())
+		return 1
 	}
 	return 1
 }
@@ -124,10 +149,16 @@ func resolveImport(goBin, cwd, pkg string) (string, error) {
 	if msg == "" {
 		return "", errors.New("empty import path")
 	}
-	if i := strings.IndexByte(msg, '\n'); i >= 0 {
-		msg = strings.TrimSpace(msg[:i])
+	paths := make([]string, 0, 1)
+	for _, line := range strings.Split(msg, "\n") {
+		if path := strings.TrimSpace(line); path != "" {
+			paths = append(paths, path)
+		}
 	}
-	return msg, nil
+	if len(paths) != 1 {
+		return "", errors.New("go list matched multiple packages")
+	}
+	return paths[0], nil
 }
 
 func compileMessage(out []byte, err error) string {
@@ -164,6 +195,8 @@ const (
 	sample    = %q
 )
 
+var protocol = os.NewFile(3, "gobble-protocol")
+
 func main() {
 	os.Exit(run())
 }
@@ -196,7 +229,7 @@ func run() int {
 		if err := p.WriteJSON(&buf); err != nil {
 			return writeLibErr(err)
 		}
-		if _, err := os.Stdout.Write(buf.Bytes()); err != nil {
+		if err := writeProtocol(buf.Bytes()); err != nil {
 			return writeFail("stdout write failed")
 		}
 		return 0
@@ -229,10 +262,18 @@ func writeJSON(v any) int {
 	if err != nil {
 		return writeFail(err.Error())
 	}
-	if _, err := os.Stdout.Write(append(data, '\n')); err != nil {
+	if err := writeProtocol(append(data, '\n')); err != nil {
 		return writeFail("stdout write failed")
 	}
 	return 0
+}
+
+func writeProtocol(data []byte) error {
+	if protocol == nil {
+		return errors.New("protocol unavailable")
+	}
+	_, err := protocol.Write(data)
+	return err
 }
 
 func writeLibErr(err error) int {

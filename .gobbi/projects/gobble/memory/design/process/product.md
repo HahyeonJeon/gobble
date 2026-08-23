@@ -16,7 +16,8 @@ product under the remaining product headings.
 
 ### Gobble
 
-- Statement: A consumer installs the Go module, writes a small pipeline in Go that uses modules, branch, and merge, validates and inspects the plan, runs it locally in containers, and can resume after a contained failure. Construction order is library, then engine, then CLI. First-horizon exit still requires the same loop on the CLI. Command names live in [system.md](../architecture/system.md) Interfaces Current. First useful outcome is that agent loop, not Nextflow- or Snakemake-class feature parity. Today consumers write Nextflow, Snakemake, Cromwell/WDL, or ad-hoc scripts and operate them as humans; the hypothesized switch is agent-native compose and recover without a Gobble DSL. No named external consumer is recorded.
+- Statement: A consumer uses the module from a trusted local source revision, writes a small Go pipeline with modules, branch, and merge, validates and inspects the plan, runs it locally, and recovers after a contained failure through Inspect, Release, and Resume. Construction order is library, then engine, then CLI. First-horizon exit still requires the complete API and CLI loop and remains unclaimed. Command names live in [system.md](../architecture/system.md) Interfaces Current. First useful outcome is that agent loop, not Nextflow- or Snakemake-class feature parity. No named external consumer is recorded.
+- Current: Gobble is a pre-1.0 trusted-local Linux source preview. The license is unset and grants no redistribution. There is no supported public-module or versioned-install route.
 - Source: `first-use`, `current-alternative`
 
 ## Refused uses
@@ -40,6 +41,7 @@ product under the remaining product headings.
 
 - Access: First horizon uses local file permissions only. There is no Gobble identity, account, or entitlement system.
 - Data promise: Gobble holds pipeline code references, run state, artifacts, and logs. Artifacts may be valuable and may include sequence or clinical files the consumer supplies. Gobble does not collect user profiles. Credentials and secrets must not be written to logs or persisted metadata. Inspect omits Env. The consumer owns the run workspace. Deletion is not a shipped Engine verb. Consumers may delete their own files. Guarded clean stays designed and not shipped.
+- Current trust boundary: One trusted author and OS user owns one exclusive workspace and trusted pipeline code. Docker `--network=none` and UID/GID are isolation conveniences, not a sandbox. Untrusted, multi-user, regulated, and clinical deployment are unsupported.
 - Source: `access`, `data-promise`
 
 ## Failure and recovery
@@ -47,7 +49,7 @@ product under the remaining product headings.
 ### Gobble
 
 - Statement: The consumer sees structured task and run state, an error that names the failed unit, and which outputs remain reusable. Recovery is inspect, release occupancy, resume remaining work, or inspect-then-modify the Go pipeline and resume. Human translation of raw logs is not the recovery path.
-- Current: After a contained `Run` failure or `ctx` cancel, recovery is `Inspect`, then occupying-process or later-process `Release` to close occupancy, then dest-scope `Resume`. Cancel is context on `Run` and `Resume`; occupancy stays until `Release`. Occupancy does not close and Resume does not occupy while any identity remains unknown. A dead-PID helper is not recovery authority. `output-exists` applies only to dests this Resume would publish that are not authorized replace dests. Topology edits classify as Change. There is no public Cancel. Named retry and guarded clean are not shipped.
+- Current: After a contained failure, cancellation, or controller death, recovery is `Inspect`, then occupying-process or later-process `Release`, then `Resume` remaining work. Later-process Release never signals an unproved process PID. Dest-complete process work persists `published-unfinalized` and is omitted from remaining; other unproved process work persists `incomplete` and reruns. Later-process Docker `unknown-backend` keeps occupancy active and blocks Resume. Ordinary Run and Resume lifetime is bounded only by caller context; settlement begins after stop or during Release reconciliation. There is no public Cancel, named retry, repair verb, PID adoption, or guarded Clean.
 - Source: `failure-recovery`
 
 ## Support and updates
@@ -55,6 +57,7 @@ product under the remaining product headings.
 ### Gobble
 
 - Statement: Assumption — help and updates come from the GitHub repository. There is no support SLA. Versioning will follow Go modules once the library is published.
+- Current: This source preview is not published or licensed for redistribution. Public-module versioning and updates remain future work.
 - Source: `support-update`
 
 ## End of life

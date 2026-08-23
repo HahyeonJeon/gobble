@@ -17,7 +17,7 @@ func Compose(p *Pipeline) (*Graph, error) {
 		}}}
 	}
 	if p.composeErr != nil {
-		return nil, p.composeErr
+		return nil, cloneError(p.composeErr)
 	}
 	if err := composeDefects("compose", composeCheckPipeline(p)); err != nil {
 		return nil, err

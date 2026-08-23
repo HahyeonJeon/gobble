@@ -27,6 +27,87 @@ func TestComposeWorkflowCase(t *testing.T) {
 	}
 }
 
+func TestAddTaskCopiesMutableSpecAtRegistration(t *testing.T) {
+	p := gobble.NewPipeline("copy-registration")
+	in := p.AddInput("source", gobble.PathSpec{Base: "source", Ext: ".txt"})
+	spec := mutableTaskSpec(in)
+	p.AddTask(spec)
+
+	spec.Command[1] = "mutated"
+	spec.Inputs[0].Name = "mutated-in"
+	spec.Inputs[0].Spec.Suffixes[0] = "mutated"
+	spec.Outputs[0].Name = "mutated-out"
+	spec.Outputs[0].Group[0].Name = "mutated-member"
+	spec.Outputs[0].Group[0].Spec.Suffixes[0] = "mutated"
+	spec.Params[0].Value = "mutated"
+	spec.Env["MODE"] = "mutated"
+
+	wantPipeline := gobble.NewPipeline("copy-registration")
+	wantIn := wantPipeline.AddInput("source", gobble.PathSpec{Base: "source", Ext: ".txt"})
+	wantPipeline.AddTask(mutableTaskSpec(wantIn))
+	got := mustBuildPlanJSON(t, p)
+	want := mustBuildPlanJSON(t, wantPipeline)
+	if !bytes.Equal(got, want) {
+		t.Fatalf("registered task changed after caller mutation:\ngot  %s\nwant %s", got, want)
+	}
+}
+
+func TestAddInputGroupCopiesMembersAtRegistration(t *testing.T) {
+	members := gobble.Group{{
+		Name: "amb",
+		Spec: gobble.PathSpec{Base: "ref", Suffixes: []string{"original"}, Ext: ".amb"},
+	}}
+	p := gobble.NewPipeline("copy-input-group")
+	in := p.AddInputGroup("idx", members)
+	members[0].Name = "mutated"
+	members[0].Spec.Suffixes[0] = "mutated"
+	p.AddTask(gobble.TaskSpec{
+		Name:    "use",
+		Command: []string{"true"},
+		Inputs: []gobble.Bind{{
+			Name:  "idx",
+			From:  in,
+			Group: gobble.Group{{Name: "amb"}},
+		}},
+		Outputs: []gobble.Bind{fileOut("out")},
+	})
+	if _, err := gobble.Compose(p); err != nil {
+		t.Fatalf("Compose() error = %v, want nil after caller Group mutation", err)
+	}
+}
+
+func TestComposeReturnsCallerOwnedRecordedError(t *testing.T) {
+	recorded := &gobble.Error{Op: "load", Defects: []gobble.Defect{{
+		Code:    gobble.DefectInvalidPath,
+		Unit:    "samplesheet",
+		Message: "unreadable",
+		Paths:   []string{"original.csv"},
+	}}}
+	p := gobble.NewPipeline("owned-error")
+	p.RecordComposeError(recorded)
+	recorded.Defects[0].Paths[0] = "mutated-before-return.csv"
+
+	_, err := gobble.Compose(p)
+	var first *gobble.Error
+	if !errors.As(err, &first) {
+		t.Fatalf("Compose() error = %v, want *Error", err)
+	}
+	if first.Op != "compose" || first.Defects[0].Paths[0] != "original.csv" {
+		t.Fatalf("first Compose() error = %+v, want owned original", first)
+	}
+	first.Defects[0].Code = gobble.DefectFailed
+	first.Defects[0].Paths[0] = "mutated-return.csv"
+
+	_, err = gobble.Compose(p)
+	var second *gobble.Error
+	if !errors.As(err, &second) {
+		t.Fatalf("second Compose() error = %v, want *Error", err)
+	}
+	if second.Defects[0].Code != gobble.DefectInvalidPath || second.Defects[0].Paths[0] != "original.csv" {
+		t.Fatalf("second Compose() error = %+v, want unchanged stored error", second)
+	}
+}
+
 func TestComposeHandles(t *testing.T) {
 	p := gobble.NewPipeline("handles")
 	in := p.AddInput("reads", gobble.PathSpec{Base: "sample", Ext: ".fastq.gz"})
@@ -82,12 +163,6 @@ func TestComposeReject(t *testing.T) {
 		code gobble.DefectCode
 		unit string
 	}{
-		{
-			name: "cycle",
-			pipe: cyclePipeline(),
-			code: gobble.DefectCycle,
-			unit: "loop",
-		},
 		{
 			name: "missing-input zero From",
 			pipe: missingInputPipeline(),
@@ -1180,21 +1255,29 @@ func oneTask(name string, spec gobble.TaskSpec) *gobble.Pipeline {
 	return p
 }
 
-func fileOut(name string) gobble.Bind {
-	return gobble.Bind{Name: name, Spec: gobble.PathSpec{Base: "out", Ext: ".txt"}}
+func mutableTaskSpec(from gobble.Handle) gobble.TaskSpec {
+	return gobble.TaskSpec{
+		Name:    "copy",
+		Command: []string{"echo", "original"},
+		Inputs: []gobble.Bind{{
+			Name: "in",
+			Spec: gobble.PathSpec{Base: "in", Suffixes: []string{"original"}, Ext: ".txt"},
+			From: from,
+		}},
+		Outputs: []gobble.Bind{{
+			Name: "index",
+			Group: gobble.Group{{
+				Name: "amb",
+				Spec: gobble.PathSpec{Base: "out", Suffixes: []string{"original"}, Ext: ".amb"},
+			}},
+		}},
+		Params: []gobble.Param{{Name: "mode", Value: "original"}},
+		Env:    map[string]string{"MODE": "original"},
+	}
 }
 
-func cyclePipeline() *gobble.Pipeline {
-	p := gobble.NewPipeline("cycle")
-	inputs := []gobble.Bind{{Name: "in"}}
-	t := p.AddTask(gobble.TaskSpec{
-		Name:    "loop",
-		Command: []string{"echo"},
-		Inputs:  inputs,
-		Outputs: []gobble.Bind{fileOut("out")},
-	})
-	inputs[0].From = t.Out("out")
-	return p
+func fileOut(name string) gobble.Bind {
+	return gobble.Bind{Name: name, Spec: gobble.PathSpec{Base: "out", Ext: ".txt"}}
 }
 
 func missingInputPipeline() *gobble.Pipeline {

@@ -147,9 +147,9 @@ func (p *Pipeline) Name() string {
 	return p.name
 }
 
-// RecordComposeError records err so Compose returns it and does not build
-// a graph. A nil receiver or nil err is a no-op. err is stored as [*Error]
-// with Op "compose". The first recorded error is kept.
+// RecordComposeError records a copy of err so Compose returns a caller-owned
+// copy and does not build a graph. A nil receiver or nil err is a no-op. err
+// is stored as [*Error] with Op "compose". The first recorded error is kept.
 func (p *Pipeline) RecordComposeError(err error) {
 	if p == nil || err == nil || p.composeErr != nil {
 		return
@@ -185,20 +185,20 @@ func normalizeComposeError(err error) *Error {
 	}
 }
 
-// AddInput records a pipeline input and returns a non-zero Handle for it.
+// AddInput records a copied pipeline input and returns a non-zero Handle.
 func (p *Pipeline) AddInput(name string, spec PathSpec) Handle {
-	p.inputs = append(p.inputs, pipeInput{name: name, spec: spec})
+	p.inputs = append(p.inputs, pipeInput{name: name, spec: spec.clone()})
 	return Handle{kind: handleInput, name: name, spec: spec.clone(), pipe: p}
 }
 
-// AddInputGroup records a Group pipeline input named name and returns a
-// non-zero Handle for it. Members must be a non-empty Group. A nil or
-// empty Group is invalid at compose time, matching other Group rules.
+// AddInputGroup records a copied Group pipeline input named name and returns
+// a non-zero Handle for it. Members must be a non-empty Group. A nil or empty
+// Group is invalid at compose time, matching other Group rules.
 func (p *Pipeline) AddInputGroup(name string, members Group) Handle {
 	if members == nil {
 		members = Group{}
 	}
-	p.inputs = append(p.inputs, pipeInput{name: name, members: members})
+	p.inputs = append(p.inputs, pipeInput{name: name, members: copyGroup(members)})
 	return Handle{kind: handleInput, name: name, pipe: p}
 }
 
@@ -216,7 +216,7 @@ func (p *Pipeline) AddModule(name string) *Module {
 	return m
 }
 
-// AddTask records a child task and returns it.
+// AddTask records a child task and returns it. Mutable fields are copied.
 func (p *Pipeline) AddTask(spec TaskSpec) *Task {
 	t := p.newTask(nil, spec)
 	p.children = append(p.children, node{kind: nodeTask, name: spec.Name, task: t})
@@ -267,7 +267,7 @@ func (m *Module) AddModule(name string) *Module {
 	return child
 }
 
-// AddTask records a child task and returns it.
+// AddTask records a child task and returns it. Mutable fields are copied.
 func (m *Module) AddTask(spec TaskSpec) *Task {
 	t := m.pipe.newTask(childAnc(m.anc, nodeModule, m.name), spec)
 	m.children = append(m.children, node{kind: nodeTask, name: spec.Name, task: t})
@@ -315,7 +315,7 @@ func (m *Module) When(name string) *When {
 	return w
 }
 
-// AddTask records a child task and returns it.
+// AddTask records a child task and returns it. Mutable fields are copied.
 func (b *Branch) AddTask(spec TaskSpec) *Task {
 	t := b.pipe.newTask(childAnc(b.anc, nodeBranch, b.name), spec)
 	b.children = append(b.children, node{kind: nodeTask, name: spec.Name, task: t})
@@ -329,7 +329,7 @@ func (b *Branch) AddModule(name string) *Module {
 	return m
 }
 
-// AddTask records a child task and returns it.
+// AddTask records a child task and returns it. Mutable fields are copied.
 func (mg *Merge) AddTask(spec TaskSpec) *Task {
 	t := mg.pipe.newTask(childAnc(mg.anc, nodeMerge, mg.name), spec)
 	mg.children = append(mg.children, node{kind: nodeTask, name: spec.Name, task: t})
@@ -342,7 +342,7 @@ func (s *Scatter) From(h Handle) *Scatter {
 	return s
 }
 
-// AddTask records a child task and returns it.
+// AddTask records a child task and returns it. Mutable fields are copied.
 func (s *Scatter) AddTask(spec TaskSpec) *Task {
 	t := s.pipe.newTask(childAncOp(s.anc, nodeScatter, s.name, s, nil, nil), spec)
 	s.children = append(s.children, node{kind: nodeTask, name: spec.Name, task: t})
@@ -356,7 +356,7 @@ func (s *Scatter) AddModule(name string) *Module {
 	return m
 }
 
-// AddTask records a child task and returns it.
+// AddTask records a child task and returns it. Mutable fields are copied.
 func (g *Gather) AddTask(spec TaskSpec) *Task {
 	t := g.pipe.newTask(childAncOp(g.anc, nodeGather, g.name, nil, g, nil), spec)
 	g.children = append(g.children, node{kind: nodeTask, name: spec.Name, task: t})
@@ -382,7 +382,7 @@ func (w *When) SkipIfFalse(param string) *When {
 	return w
 }
 
-// AddTask records a child task and returns it.
+// AddTask records a child task and returns it. Mutable fields are copied.
 func (w *When) AddTask(spec TaskSpec) *Task {
 	t := w.pipe.newTask(childAncOp(w.anc, nodeWhen, w.name, nil, nil, w), spec)
 	w.children = append(w.children, node{kind: nodeTask, name: spec.Name, task: t})
@@ -444,9 +444,44 @@ func (h Handle) IsZero() bool {
 }
 
 func (p *Pipeline) newTask(anc []ancestor, spec TaskSpec) *Task {
-	t := &Task{pipe: p, anc: append([]ancestor(nil), anc...), spec: spec}
+	t := &Task{pipe: p, anc: append([]ancestor(nil), anc...), spec: copyTaskSpec(spec)}
 	p.tasks = append(p.tasks, t)
 	return t
+}
+
+func copyTaskSpec(spec TaskSpec) TaskSpec {
+	out := spec
+	out.Command = copyStrings(spec.Command)
+	out.Inputs = copyBinds(spec.Inputs)
+	out.Outputs = copyBinds(spec.Outputs)
+	out.Params = copyParams(spec.Params)
+	out.Env = copyEnv(spec.Env)
+	return out
+}
+
+func copyBinds(in []Bind) []Bind {
+	if in == nil {
+		return nil
+	}
+	out := make([]Bind, len(in))
+	for i, bind := range in {
+		out[i] = bind
+		out[i].Spec = bind.Spec.clone()
+		out[i].Group = copyGroup(bind.Group)
+	}
+	return out
+}
+
+func copyGroup(in Group) Group {
+	if in == nil {
+		return nil
+	}
+	out := make(Group, len(in))
+	for i, member := range in {
+		out[i] = member
+		out[i].Spec = member.Spec.clone()
+	}
+	return out
 }
 
 func childAnc(anc []ancestor, kind nodeKind, name string) []ancestor {

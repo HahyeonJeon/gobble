@@ -82,8 +82,9 @@ type Defect struct {
 }
 
 // Error is a structured failure from compose, validate, plan, render, run,
-// resume, release, or inspect. Callers inspect it with errors.As. JSON keys
-// are op and defects.
+// resume, release, or inspect. Callers inspect it with errors.As. Returned
+// Error values, Defects slices, and Defect Paths are caller-owned copies.
+// JSON keys are op and defects.
 type Error struct {
 	// Op is the failing operation: compose, validate, plan, render, run,
 	// resume, release, or inspect.
@@ -119,6 +120,21 @@ func (e *Error) Error() string {
 		}
 		return e.Op + ": " + n + " defects"
 	}
+}
+
+func cloneError(e *Error) *Error {
+	if e == nil {
+		return nil
+	}
+	out := &Error{Op: e.Op}
+	if e.Defects != nil {
+		out.Defects = make([]Defect, len(e.Defects))
+		for i, defect := range e.Defects {
+			out.Defects[i] = defect
+			out.Defects[i].Paths = copyStrings(defect.Paths)
+		}
+	}
+	return out
 }
 
 func renderInvalid(message string, paths ...string) *Error {
