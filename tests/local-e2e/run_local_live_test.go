@@ -19,7 +19,7 @@ func TestRunLocalFixture(t *testing.T) {
 	copyRunLocalInput(t, dir)
 	g := mustCompose(runLocalFixturePipeline)(t)
 	if err := gobble.Run(t.Context(), g, dir, 2); err != nil {
-		t.Fatalf("Run() error = %v, want nil", err)
+		fatalAPIError(t, "Run()", err)
 	}
 	gotImage, err := os.ReadFile(filepath.Join(dir, "out", "docker", "sample.txt"))
 	if err != nil {

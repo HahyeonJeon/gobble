@@ -25,7 +25,7 @@ func TestFastQCStandaloneRun(t *testing.T) {
 		t.Fatalf("Compose() error = %v", err)
 	}
 	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
-		t.Fatalf("Run() error = %v", err)
+		fatalAPIError(t, "Run()", err)
 	}
 	for _, rel := range []string{"work/fastqc/test_1_fastqc.html", "work/fastqc/test_1_fastqc.zip"} {
 		info, err := os.Stat(filepath.Join(dir, filepath.FromSlash(rel)))
@@ -47,10 +47,10 @@ func TestFastQCExtraArgsResume(t *testing.T) {
 		t.Fatalf("Compose() error = %v", err)
 	}
 	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
-		t.Fatalf("Run() error = %v", err)
+		fatalAPIError(t, "Run()", err)
 	}
 	if err := gobble.Release(dir); err != nil {
-		t.Fatalf("Release() error = %v", err)
+		fatalAPIError(t, "Release()", err)
 	}
 	opts.ExtraArgs = []string{"--quiet", "--kmers", "7"}
 	g2, err := gobble.Compose(FastQCPipeline(reads, opts))
@@ -58,7 +58,7 @@ func TestFastQCExtraArgsResume(t *testing.T) {
 		t.Fatalf("Compose(changed extra-args) error = %v", err)
 	}
 	if err := gobble.Resume(t.Context(), g2, dir, 1); err != nil {
-		t.Fatalf("Resume() error = %v", err)
+		fatalAPIError(t, "Resume()", err)
 	}
 	instances := inspectJSONL(t, dir, "instances")
 	if len(instances) == 0 {
@@ -81,7 +81,7 @@ func TestBWAIndexStandaloneRun(t *testing.T) {
 		t.Fatalf("Compose() error = %v", err)
 	}
 	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
-		t.Fatalf("Run() error = %v", err)
+		fatalAPIError(t, "Run()", err)
 	}
 	for _, rel := range []string{
 		"in/genome.fasta.amb",
@@ -112,7 +112,7 @@ func TestFastpStandaloneRun(t *testing.T) {
 		t.Fatalf("Compose() error = %v", err)
 	}
 	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
-		t.Fatalf("Run() error = %v", err)
+		fatalAPIError(t, "Run()", err)
 	}
 	for _, rel := range []string{
 		"work/fastp/test_1.clean.fastq.gz",
@@ -139,7 +139,7 @@ func TestMultiQCStandaloneRun(t *testing.T) {
 		t.Fatalf("Compose() error = %v", err)
 	}
 	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
-		t.Fatalf("Run() error = %v", err)
+		fatalAPIError(t, "Run()", err)
 	}
 	for _, rel := range []string{"work/multiqc/multiqc_report.html", "work/multiqc/multiqc_data.zip"} {
 		info, err := os.Stat(filepath.Join(dir, filepath.FromSlash(rel)))
@@ -168,7 +168,7 @@ func TestSTARGenomeGenerateStandaloneRun(t *testing.T) {
 		t.Fatalf("Compose() error = %v", err)
 	}
 	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
-		t.Fatalf("Run() error = %v", err)
+		fatalAPIError(t, "Run()", err)
 	}
 	want := starGenomePublishedPaths("work/star-genome", true)
 	for _, rel := range want {
@@ -215,7 +215,7 @@ func TestSTARAlignNestedRun(t *testing.T) {
 		t.Fatalf("Compose() error = %v", err)
 	}
 	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
-		t.Fatalf("Run() error = %v", err)
+		fatalAPIError(t, "Run()", err)
 	}
 	bam := filepath.Join(dir, filepath.FromSlash("work/star-align/Aligned.out.bam"))
 	info, err := os.Stat(bam)
@@ -239,7 +239,7 @@ func TestBismarkGenomeStandaloneRun(t *testing.T) {
 		t.Fatalf("Compose() error = %v", err)
 	}
 	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
-		t.Fatalf("Run() error = %v", err)
+		fatalAPIError(t, "Run()", err)
 	}
 	if _, err := os.Stat(filepath.Join(dir, filepath.FromSlash("in/Bisulfite_Genome"))); !os.IsNotExist(err) {
 		t.Fatalf("Bisulfite_Genome written into in/: %v", err)
@@ -267,7 +267,7 @@ func TestBismarkAlignNestedRun(t *testing.T) {
 		t.Fatalf("Compose() error = %v", err)
 	}
 	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
-		t.Fatalf("Run() error = %v", err)
+		fatalAPIError(t, "Run()", err)
 	}
 	info, err := os.Stat(filepath.Join(dir, filepath.FromSlash("work/bismark-align/aligned_pe.bam")))
 	if err != nil || !info.Mode().IsRegular() {
@@ -294,7 +294,7 @@ func TestBismarkMethylationExtractorNestedRun(t *testing.T) {
 		t.Fatalf("Compose() error = %v", err)
 	}
 	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
-		t.Fatalf("Run() error = %v", err)
+		fatalAPIError(t, "Run()", err)
 	}
 	for _, rel := range []string{
 		"work/bismark-extractor/aligned_pe.bedGraph.gz",

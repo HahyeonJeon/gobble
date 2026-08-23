@@ -21,7 +21,7 @@ func TestMethylSeqRecover(t *testing.T) {
 		t.Fatalf("Compose(assets.MethylSeq()) error = %v", err)
 	}
 	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
-		t.Fatalf("Run(assets.MethylSeq()) error = %v", err)
+		fatalAPIError(t, "Run(assets.MethylSeq())", err)
 	}
 	assertOccupied(t, dir)
 	if _, err := os.Stat(filepath.Join(dir, filepath.FromSlash("in/Bisulfite_Genome"))); !os.IsNotExist(err) {

@@ -20,7 +20,7 @@ func TestWGSSuccessInspectReleaseResume(t *testing.T) {
 		t.Fatalf("Compose(assets.WGS()) error = %v", err)
 	}
 	if err := gobble.Run(t.Context(), g, dir, 2); err != nil {
-		t.Fatalf("Run(assets.WGS()) error = %v", err)
+		fatalAPIError(t, "Run(assets.WGS())", err)
 	}
 	assertOccupied(t, dir)
 	for _, rel := range []string{
@@ -61,7 +61,7 @@ func TestThinFailFixtureInspectReleaseResume(t *testing.T) {
 	}
 
 	if err := gobble.Release(dir); err != nil {
-		t.Fatalf("Release() error = %v", err)
+		fatalAPIError(t, "Release()", err)
 	}
 	err = gobble.Resume(t.Context(), g, dir, 2)
 	requireRunError(t, "resume remaining", err, gobble.DefectFailed, "fail")

@@ -232,6 +232,61 @@ func mustCompose(pipe func() *gobble.Pipeline) func(t *testing.T) *gobble.Graph 
 	}
 }
 
+func TestFormatAPIError(t *testing.T) {
+	err := &gobble.Error{
+		Op: "run",
+		Defects: []gobble.Defect{
+			{Code: gobble.DefectFailed, Unit: "a", Message: "boom", Paths: []string{"out/a"}},
+			{Code: gobble.DefectFailed, Unit: "b", Message: "bang", Paths: []string{"out/b", "work/b"}},
+		},
+	}
+	if err.Error() != "run: 2 defects" {
+		t.Fatalf("Error() = %q, want collapsed multi-defect text", err.Error())
+	}
+	got := formatAPIError("Run(assets.WGS())", err)
+	for _, want := range []string{
+		"Run(assets.WGS()) op=run",
+		"code=failed unit=a path=out/a message=boom",
+		"code=failed unit=b path=out/b,work/b message=bang",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("formatAPIError() = %q, want substring %q", got, want)
+		}
+	}
+}
+
+func fatalAPIError(t *testing.T, name string, err error) {
+	t.Helper()
+	if err == nil {
+		return
+	}
+	t.Fatal(formatAPIError(name, err))
+}
+
+func formatAPIError(name string, err error) string {
+	var ge *gobble.Error
+	if !errors.As(err, &ge) {
+		return name + " error = " + err.Error()
+	}
+	var b strings.Builder
+	b.WriteString(name)
+	b.WriteString(" op=")
+	b.WriteString(ge.Op)
+	b.WriteString(" error = ")
+	b.WriteString(err.Error())
+	for _, d := range ge.Defects {
+		b.WriteString("\n  code=")
+		b.WriteString(string(d.Code))
+		b.WriteString(" unit=")
+		b.WriteString(d.Unit)
+		b.WriteString(" path=")
+		b.WriteString(strings.Join(d.Paths, ","))
+		b.WriteString(" message=")
+		b.WriteString(d.Message)
+	}
+	return b.String()
+}
+
 func requireRunError(t *testing.T, name string, err error, code gobble.DefectCode, unit string) *gobble.Error {
 	t.Helper()
 	var ge *gobble.Error
@@ -317,7 +372,7 @@ func recoverAfterSuccessAPI(t *testing.T, g *gobble.Graph, dir string, cap int) 
 	requireRunError(t, "second Run", err, gobble.DefectOccupiedWorkspace, "")
 
 	if err := gobble.Release(dir); err != nil {
-		t.Fatalf("Release() error = %v", err)
+		fatalAPIError(t, "Release()", err)
 	}
 	run := inspectObject(t, dir, gobble.ViewRun)
 	occ, _ := run["occupancy"].(map[string]any)
@@ -326,7 +381,7 @@ func recoverAfterSuccessAPI(t *testing.T, g *gobble.Graph, dir string, cap int) 
 	}
 
 	if err := gobble.Resume(t.Context(), g, dir, cap); err != nil {
-		t.Fatalf("Resume() error = %v", err)
+		fatalAPIError(t, "Resume()", err)
 	}
 	assertOccupied(t, dir)
 	if remaining := inspectJSONL(t, dir, gobble.ViewRemaining); len(remaining) != 0 {

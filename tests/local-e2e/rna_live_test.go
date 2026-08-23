@@ -22,7 +22,7 @@ func TestRNASeqRecover(t *testing.T) {
 	assertMultiQCOmitsBAM(t, g)
 	if err := gobble.Run(t.Context(), g, dir, 2); err != nil {
 		dumpTaskLogs(t, dir, "deseq2", "merge_counts")
-		t.Fatalf("Run(assets.RNASeq()) error = %v", err)
+		fatalAPIError(t, "Run(assets.RNASeq())", err)
 	}
 	assertOccupied(t, dir)
 	assertDESeq2ResultsShape(t, dir)
