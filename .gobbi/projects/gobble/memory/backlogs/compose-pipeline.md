@@ -10,15 +10,15 @@
 
 **Context:** `--sample PATH` is the samplesheet CSV on compose, validate, plan, run, and resume. It is not a list of sample ids.
 
-## Engine scatter / reservedIdentity expansion
+## Plan-time reservedIdentity expansion
 
 **Backlogged at:** 2026-08-21T00:25:00Z
 
-**What:** Expand samples as engine scatter / plan-time Document expansion of `reservedIdentity` instead of a compose-time Go loop.
+**What:** Expand samples as plan-time Document expansion of `reservedIdentity` instead of a compose-time Go loop.
 
-**Why backlogged:** D1 locked compose-time CSV parse that emits one `AddModule` per sample. First-horizon compose stays modules, branch, and merge.
+**Why backlogged:** D1 locked compose-time CSV parse that emits one `AddModule` per sample. Authored Scatter, Gather, and When occupy runtime instance and shard slots. They are not plan-time Document expansion.
 
-**Context:** `WGS()`, `RNASeq()`, and `MethylSeq()` already expand named modules at compose. Roadmap stop condition still names scatter as a later breaking rewrite if attached as Document expansion.
+**Context:** `WGS()`, `RNASeq()`, and `MethylSeq()` already expand named modules at compose. Empty `read2` is allowed at parse. Mate-only constructors return `invalid-samplesheet`. Roadmap stop condition still names plan-time Document expansion as a later breaking rewrite.
 
 ## TSV auto-detect
 

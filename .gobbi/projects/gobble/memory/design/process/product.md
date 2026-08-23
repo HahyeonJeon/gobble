@@ -39,15 +39,15 @@ product under the remaining product headings.
 ### Gobble
 
 - Access: First horizon uses local file permissions only. There is no Gobble identity, account, or entitlement system.
-- Data promise: Gobble holds pipeline code references, run state, artifacts, and logs. Artifacts may be valuable and may include sequence or clinical files the consumer supplies. Gobble does not collect user profiles. Credentials and secrets must not be written to logs or persisted metadata. The consumer owns the run workspace. Deletion is only an explicit guarded clean or the consumer deleting their own files.
+- Data promise: Gobble holds pipeline code references, run state, artifacts, and logs. Artifacts may be valuable and may include sequence or clinical files the consumer supplies. Gobble does not collect user profiles. Credentials and secrets must not be written to logs or persisted metadata. Inspect omits Env. The consumer owns the run workspace. Deletion is not a shipped Engine verb. Consumers may delete their own files. Guarded clean stays designed and not shipped.
 - Source: `access`, `data-promise`
 
 ## Failure and recovery
 
 ### Gobble
 
-- Statement: The consumer sees structured task and run state, an error that names the failed unit, and which outputs remain reusable. Recovery is retry, resume of remaining work, or inspect-then-modify the Go pipeline and resume. Human translation of raw logs is not the recovery path.
-- Current: After a contained `Run` failure or `ctx` cancel, recovery is `Inspect`, then `Release` to close occupancy, then dest-scope `Resume`. Cancel is context on `Run` and `Resume`; occupancy stays until `Release`. `output-exists` applies only to dests this Resume would publish that are not authorized replace dests. Topology edits classify as Change. There is no public Cancel. Named retry and guarded clean are not shipped.
+- Statement: The consumer sees structured task and run state, an error that names the failed unit, and which outputs remain reusable. Recovery is inspect, release occupancy, resume remaining work, or inspect-then-modify the Go pipeline and resume. Human translation of raw logs is not the recovery path.
+- Current: After a contained `Run` failure or `ctx` cancel, recovery is `Inspect`, then occupying-process or later-process `Release` to close occupancy, then dest-scope `Resume`. Cancel is context on `Run` and `Resume`; occupancy stays until `Release`. Occupancy does not close and Resume does not occupy while any identity remains unknown. A dead-PID helper is not recovery authority. `output-exists` applies only to dests this Resume would publish that are not authorized replace dests. Topology edits classify as Change. There is no public Cancel. Named retry and guarded clean are not shipped.
 - Source: `failure-recovery`
 
 ## Support and updates

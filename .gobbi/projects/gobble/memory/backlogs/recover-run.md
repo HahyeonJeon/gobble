@@ -18,7 +18,7 @@
 
 **Why backlogged:** Session proofs were occupy-release, two-instance isolation, reuse decisions, graph-diff Change tables, and the WGS assay.
 
-**Context:** Group members already stage and publish by name on Run. Compose covers a branch-merge pipeline. There is no Group or branch-merge Resume e2e. `tests/local-e2e` proves occupy/remaining/release/resume on run-local, WGS, RNA, and Methyl through API and CLI. Those graphs use module fan-out, not Group or Branch/Merge (D11).
+**Context:** Group members already stage and publish by name on Run. Compose covers a branch-merge pipeline. There is no Group or branch-merge Resume e2e. `tests/local-e2e` passed occupy/remaining/release/resume on run-local, WGS, RNA, and Methyl through API and CLI. Those graphs use module fan-out, not Group or Branch/Merge (D11). Scatter/Gather/When Resume is hermetic, not that Group/branch-merge proof.
 
 ## Guarded clean and retention
 
@@ -38,7 +38,7 @@
 
 **Why backlogged:** This session shipped context cancel on Run and Resume. Occupancy stays until Release. A workspace Cancel without a live ctx was excluded.
 
-**Context:** `Run(ctx)` and `Resume(ctx)` cancel in-flight work, persist incomplete, return `canceled`, and leave occupancy active. Executor.Cancel is internal. Process-group kill and `docker kill` are the adapters. Hermetic cancel tests exist. There is no live Docker ctx-cancel assay and no public Cancel.
+**Context:** `Run(ctx)` and `Resume(ctx)` cancel in-flight work, persist incomplete when stop is known, return `canceled`, and leave occupancy active. Occupying-process Release is live-owner Release. A later process may invoke Release; while the occupying process is live that is `live-occupancy`. Occupancy does not close while any identity remains unknown. A dead-PID helper is not recovery authority. PID and host remain diagnostic Inspect fields. Executor.Cancel is internal. Process-group kill and `docker kill` are the adapters. Hermetic cancel tests exist. There is no live Docker ctx-cancel assay and no public Cancel.
 
 ## Named retry with backoff
 

@@ -38,4 +38,4 @@
 
 **Why backlogged:** D11 kept WGS as existing authored two-sample modules. A samplesheet conversion was allowed only as trivial reuse with no extra pins.
 
-**Context:** `RNASeq()` and `MethylSeq()` already load the sheet and emit one module per sample. `WGS()` still hard-codes two sample modules and shared FASTQ PathSpecs. The library samplesheet API already exists.
+**Context:** `RNASeq()` and `MethylSeq()` already load the sheet and emit one module per sample. Empty `read2` is allowed at parse. Those constructors still require a mate. `WGS()` still hard-codes two sample modules and shared FASTQ PathSpecs. The library samplesheet API already exists.

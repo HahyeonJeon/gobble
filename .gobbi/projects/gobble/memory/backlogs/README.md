@@ -12,7 +12,7 @@ Recursive index of deferred items, grouped alphabetically, without implied prior
 ## compose-pipeline
 
 - [CLI --samples](compose-pipeline.md#cli---samples)
-- [Engine scatter / reservedIdentity expansion](compose-pipeline.md#engine-scatter--reservedidentity-expansion)
+- [Plan-time reservedIdentity expansion](compose-pipeline.md#plan-time-reservedidentity-expansion)
 - [TSV auto-detect](compose-pipeline.md#tsv-auto-detect)
 
 ## project
@@ -28,6 +28,3 @@ Recursive index of deferred items, grouped alphabetically, without implied prior
 - [Named retry with backoff](recover-run.md#named-retry-with-backoff)
 - [Transitive blocked-upstream](recover-run.md#transitive-blocked-upstream)
 
-## run-local
-
-- [Control-plane image digest](run-local.md#control-plane-image-digest)
