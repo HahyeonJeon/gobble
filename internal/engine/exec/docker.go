@@ -18,9 +18,8 @@ import (
 
 const containerWorkDir = "/work"
 
-// DockerCLI runs docker argv without the docker token. env is the client
-// process environment for that one call; nil means PATH=/usr/bin:/bin only.
-// Tests replace it.
+// DockerCLI runs docker argv without the docker token. env is the
+// engine-owned client environment for that call. Tests replace it.
 var DockerCLI = runDockerCLI
 
 // Docker runs each job as a container.
@@ -50,7 +49,7 @@ func (d *Docker) Submit(ctx context.Context, job Job) (Handle, Report, error) {
 	}
 	var idBuf, errBuf bytes.Buffer
 	args := dockerRunArgs(job)
-	exit, err := DockerCLI(ctx, args, dockerClientEnv(job.Env), &idBuf, &errBuf)
+	exit, err := dockerCLI(ctx, args, &idBuf, &errBuf)
 	if err != nil {
 		return Handle{}, Report{}, dockerErr(ctx, "docker", err)
 	}
@@ -75,7 +74,8 @@ func (d *Docker) Submit(ctx context.Context, job Job) (Handle, Report, error) {
 	}, nil
 }
 
-// Poll uses docker inspect. After exit it copies logs and removes the container.
+// Poll uses docker inspect. After exit it copies logs and removes the
+// container. A cleanup failure is returned and is not cached as success.
 func (d *Docker) Poll(ctx context.Context, h Handle) (Report, error) {
 	if ctx == nil {
 		ctx = context.Background()
@@ -93,18 +93,7 @@ func (d *Docker) Poll(ctx context.Context, h Handle) (Report, error) {
 	if running {
 		return Report{Identity: h.Identity, RuntimeID: h.RuntimeID, Running: true}, nil
 	}
-	logErr := writeDockerLogs(ctx, h)
-	_, _ = dockerCLI(ctx, []string{"rm", "-f", h.RuntimeID}, discard(), discard())
-	if logErr != nil {
-		return Report{Identity: h.Identity, RuntimeID: h.RuntimeID, Exit: exit, Running: false}, logErr
-	}
-	msg := ""
-	if exit != 0 {
-		msg = "exit " + strconv.Itoa(exit)
-	}
-	r := Report{Identity: h.Identity, RuntimeID: h.RuntimeID, Exit: exit, Message: msg, Running: false}
-	d.store(h.RuntimeID, r)
-	return r, nil
+	return d.finishStopped(ctx, h, exit)
 }
 
 // Cancel runs docker kill.
@@ -122,7 +111,8 @@ func (d *Docker) Cancel(ctx context.Context, h Handle) error {
 	return nil
 }
 
-// Reconcile uses docker inspect. Inspect errors leave disposition unproved.
+// Reconcile uses docker inspect. Inspect or cleanup errors leave disposition
+// unproved.
 func (d *Docker) Reconcile(ctx context.Context, h Handle) (Report, error) {
 	if ctx == nil {
 		ctx = context.Background()
@@ -140,7 +130,22 @@ func (d *Docker) Reconcile(ctx context.Context, h Handle) (Report, error) {
 	if running {
 		return Report{Identity: h.Identity, RuntimeID: h.RuntimeID, Running: true}, nil
 	}
-	return Report{Identity: h.Identity, RuntimeID: h.RuntimeID, Exit: exit, Running: false}, nil
+	return d.finishStopped(ctx, h, exit)
+}
+
+func (d *Docker) finishStopped(ctx context.Context, h Handle, exit int) (Report, error) {
+	msg := ""
+	if exit != 0 {
+		msg = "exit " + strconv.Itoa(exit)
+	}
+	r := Report{Identity: h.Identity, RuntimeID: h.RuntimeID, Exit: exit, Message: msg, Running: false}
+	logErr := writeDockerLogs(ctx, h)
+	rmErr := removeDockerContainer(ctx, h.RuntimeID)
+	if err := errors.Join(logErr, rmErr); err != nil {
+		return r, err
+	}
+	d.store(h.RuntimeID, r)
+	return r, nil
 }
 
 func (d *Docker) store(id string, r Report) {
@@ -169,7 +174,7 @@ func dockerRunArgs(job Job) []string {
 		args = append(args, "--memory", strconv.FormatInt(job.MemoryBytes, 10))
 	}
 	for _, k := range envKeys(job.Env) {
-		args = append(args, "-e", k)
+		args = append(args, "-e", k+"="+job.Env[k])
 	}
 	args = append(args, job.Image)
 	return append(args, job.Argv[1:]...)
@@ -242,12 +247,8 @@ func envKeys(env map[string]string) []string {
 	return keys
 }
 
-func dockerClientEnv(env map[string]string) []string {
-	out := []string{"PATH=/usr/bin:/bin"}
-	for _, k := range envKeys(env) {
-		out = append(out, k+"="+env[k])
-	}
-	return out
+func dockerClientEnv() []string {
+	return []string{"PATH=/usr/bin:/bin"}
 }
 
 func inspectContainer(ctx context.Context, id string) (running bool, exit int, err error) {
@@ -277,13 +278,21 @@ func writeDockerLogs(ctx context.Context, h Handle) error {
 	// the scheduler created stdout/stderr files next to work/. Callers that
 	// need logs pass Isolate on Submit; Poll writes beside the volume by
 	// inspecting the container's first bind mount when possible.
-	var buf bytes.Buffer
-	if exit, err := dockerCLI(ctx, []string{"inspect", "--format", "{{range .Mounts}}{{if eq .Destination \"" + containerWorkDir + "\"}}{{.Source}}{{end}}{{end}}", h.RuntimeID}, &buf, discard()); err != nil || exit != 0 {
-		return nil
+	var buf, errBuf bytes.Buffer
+	exit, err := dockerCLI(ctx, []string{"inspect", "--format", "{{range .Mounts}}{{if eq .Destination \"" + containerWorkDir + "\"}}{{.Source}}{{end}}{{end}}", h.RuntimeID}, &buf, &errBuf)
+	if err != nil {
+		return dockerErr(ctx, "docker logs inspect", err)
+	}
+	if exit != 0 {
+		msg := strings.TrimSpace(errBuf.String())
+		if msg == "" {
+			msg = "exit " + strconv.Itoa(exit)
+		}
+		return dockerErr(ctx, "docker logs inspect", errors.New(msg))
 	}
 	src := strings.TrimSpace(buf.String())
 	if src == "" {
-		return nil
+		return errors.New("docker logs: work mount not found")
 	}
 	attempt := filepath.Dir(src)
 	outf, err := createAttemptFile(filepath.Join(attempt, "stdout"))
@@ -292,17 +301,44 @@ func writeDockerLogs(ctx context.Context, h Handle) error {
 	}
 	errf, err := createAttemptFile(filepath.Join(attempt, "stderr"))
 	if err != nil {
-		outf.Close()
+		if closeErr := outf.Close(); closeErr != nil {
+			return errors.Join(err, fmt.Errorf("close docker stdout: %w", closeErr))
+		}
 		return err
 	}
-	_, _ = dockerCLI(ctx, []string{"logs", h.RuntimeID}, outf, errf)
-	outf.Close()
-	errf.Close()
-	return nil
+	logExit, logErr := dockerCLI(ctx, []string{"logs", h.RuntimeID}, outf, errf)
+	if logErr != nil {
+		logErr = dockerErr(ctx, "docker logs", logErr)
+	} else if logExit != 0 {
+		logErr = dockerErr(ctx, "docker logs", errors.New("exit "+strconv.Itoa(logExit)))
+	}
+	if closeErr := outf.Close(); closeErr != nil {
+		logErr = errors.Join(logErr, fmt.Errorf("close docker stdout: %w", closeErr))
+	}
+	if closeErr := errf.Close(); closeErr != nil {
+		logErr = errors.Join(logErr, fmt.Errorf("close docker stderr: %w", closeErr))
+	}
+	return logErr
+}
+
+func removeDockerContainer(ctx context.Context, id string) error {
+	var errBuf bytes.Buffer
+	exit, err := dockerCLI(ctx, []string{"rm", "-f", id}, discard(), &errBuf)
+	if err != nil {
+		return dockerErr(ctx, "docker rm", err)
+	}
+	if exit == 0 {
+		return nil
+	}
+	msg := strings.TrimSpace(errBuf.String())
+	if msg == "" {
+		msg = "exit " + strconv.Itoa(exit)
+	}
+	return dockerErr(ctx, "docker rm", errors.New(msg))
 }
 
 func dockerCLI(ctx context.Context, args []string, stdout, stderr io.Writer) (int, error) {
-	return DockerCLI(ctx, args, nil, stdout, stderr)
+	return DockerCLI(ctx, args, dockerClientEnv(), stdout, stderr)
 }
 
 func runDockerCLI(ctx context.Context, args, env []string, stdout, stderr io.Writer) (int, error) {
@@ -310,7 +346,7 @@ func runDockerCLI(ctx context.Context, args, env []string, stdout, stderr io.Wri
 		ctx = context.Background()
 	}
 	if len(env) == 0 {
-		env = []string{"PATH=/usr/bin:/bin"}
+		env = dockerClientEnv()
 	}
 	cmd := osexec.CommandContext(ctx, "docker", args...)
 	cmd.Env = env

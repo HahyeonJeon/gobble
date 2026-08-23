@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 )
@@ -64,19 +63,8 @@ func TestDockerRunArgsNonZeroResources(t *testing.T) {
 	if !hasArgPair(args, "--memory", "536870912") {
 		t.Fatalf("non-zero docker argv %v, want --memory 536870912", args)
 	}
-	if !hasArgPair(args, "-e", "FOO") || !hasArgPair(args, "-e", "HOME") {
-		t.Fatalf("non-zero docker argv %v, want sorted -e KEY", args)
-	}
-	if hasArgPair(args, "-e", "HOME=/tmp") || hasArgPair(args, "-e", "FOO=bar") {
-		t.Fatalf("docker argv %v contains env values", args)
-	}
-	joined := strings.Join(args, " ")
-	if strings.Contains(joined, "/tmp") || strings.Contains(joined, "bar") {
-		t.Fatalf("docker argv %v contains env values", args)
-	}
-	env := dockerClientEnv(job.Env)
-	if !contains(env, "HOME=/tmp") || !contains(env, "FOO=bar") {
-		t.Fatalf("docker client env got %v, want values", env)
+	if !hasArgPair(args, "-e", "FOO=bar") || !hasArgPair(args, "-e", "HOME=/tmp") {
+		t.Fatalf("non-zero docker argv %v, want sorted -e KEY=value", args)
 	}
 }
 
@@ -121,101 +109,177 @@ func hasArgPair(args []string, flag, value string) bool {
 	return false
 }
 
-func TestDockerSubmitEnvIsCallScoped(t *testing.T) {
+func TestDockerOperationsUseEngineClientEnv(t *testing.T) {
 	orig := DockerCLI
 	t.Cleanup(func() { DockerCLI = orig })
 	type rec struct {
 		args []string
 		env  []string
 	}
-	var mu sync.Mutex
 	var recs []rec
-	entered := make(chan struct{}, 2)
-	release := make(chan struct{})
 	DockerCLI = func(ctx context.Context, args []string, env []string, stdout, stderr io.Writer) (int, error) {
-		cpArgs := append([]string(nil), args...)
-		cpEnv := append([]string(nil), env...)
-		if len(args) > 0 && args[0] == "run" {
-			entered <- struct{}{}
-			<-release
-		}
-		mu.Lock()
-		recs = append(recs, rec{args: cpArgs, env: cpEnv})
-		mu.Unlock()
-		if len(args) > 0 && args[0] == "run" {
-			id := "cid-a"
-			for _, e := range env {
-				if strings.HasPrefix(e, "TOKEN=") {
-					id = "cid-" + strings.TrimPrefix(e, "TOKEN=")
-				}
-			}
-			_, _ = io.WriteString(stdout, id+"\n")
+		recs = append(recs, rec{
+			args: append([]string(nil), args...),
+			env:  append([]string(nil), env...),
+		})
+		joined := strings.Join(args, " ")
+		if len(args) > 0 && args[0] == "image" {
 			return 0, nil
 		}
-		if strings.Contains(strings.Join(args, " "), "{{.Image}}") {
+		if len(args) > 0 && args[0] == "run" {
+			_, _ = io.WriteString(stdout, "cid-submit\n")
+			return 0, nil
+		}
+		if strings.Contains(joined, "{{.Image}}") {
 			_, _ = io.WriteString(stdout, "sha256:launched\n")
 			return 0, nil
 		}
-		if len(args) >= 1 && args[0] == "image" {
+		if strings.Contains(joined, "State.Running") {
+			_, _ = io.WriteString(stdout, "true 0\n")
 			return 0, nil
 		}
-		return 0, nil
+		if len(args) > 0 && args[0] == "kill" {
+			return 0, nil
+		}
+		t.Fatalf("unexpected docker argv: %v", args)
+		return -1, nil
 	}
 	d := NewDocker()
-	var wg sync.WaitGroup
-	errc := make(chan error, 2)
-	jobs := []Job{
-		{Image: pinnedAlpine, Argv: []string{"true"}, Isolate: t.TempDir(), Env: map[string]string{"TOKEN": "alpha"}},
-		{Image: pinnedAlpine, Argv: []string{"true"}, Isolate: t.TempDir(), Env: map[string]string{"TOKEN": "beta"}},
+	taskEnv := map[string]string{
+		"DOCKER_CONFIG":  "/task/docker",
+		"DOCKER_CONTEXT": "task-context",
+		"DOCKER_HOST":    "tcp://task.invalid:2375",
+		"HOME":           "/task/home",
+		"PATH":           "/task/bin",
+		"TOKEN":          "task-token",
 	}
-	for i := range jobs {
-		wg.Add(1)
-		go func(job Job) {
-			defer wg.Done()
-			_, _, err := d.Submit(context.Background(), job)
-			errc <- err
-		}(jobs[i])
+	if _, _, err := d.Submit(context.Background(), Job{
+		Image:   pinnedAlpine,
+		Argv:    []string{"true"},
+		Isolate: t.TempDir(),
+		Env:     taskEnv,
+	}); err != nil {
+		t.Fatalf("Submit() error = %v", err)
 	}
-	<-entered
-	<-entered
-	close(release)
-	wg.Wait()
-	close(errc)
-	for err := range errc {
-		if err != nil {
-			t.Fatalf("Submit() error = %v", err)
-		}
+	if _, err := d.Poll(context.Background(), Handle{Identity: "poll", Backend: BackendDocker, RuntimeID: "cid-poll"}); err != nil {
+		t.Fatalf("Poll() error = %v", err)
 	}
-	var runEnvs [][]string
-	mu.Lock()
+	if err := d.Cancel(context.Background(), Handle{Identity: "cancel", Backend: BackendDocker, RuntimeID: "cid-cancel"}); err != nil {
+		t.Fatalf("Cancel() error = %v", err)
+	}
+	if _, err := d.Reconcile(context.Background(), Handle{Identity: "reconcile", Backend: BackendDocker, RuntimeID: "cid-reconcile"}); err != nil {
+		t.Fatalf("Reconcile() error = %v", err)
+	}
+
+	wantEnv := []string{"PATH=/usr/bin:/bin"}
+	seen := map[string]bool{}
 	for _, r := range recs {
-		if len(r.args) > 0 && r.args[0] == "run" {
-			runEnvs = append(runEnvs, r.env)
-			joined := strings.Join(r.args, " ")
-			if strings.Contains(joined, "alpha") || strings.Contains(joined, "beta") {
-				t.Fatalf("run argv contains env value: %v", r.args)
+		if strings.Join(r.env, "\x00") != strings.Join(wantEnv, "\x00") {
+			t.Fatalf("docker client env for %v got %v, want %v", r.args, r.env, wantEnv)
+		}
+		for key, value := range taskEnv {
+			if contains(r.env, key+"="+value) {
+				t.Fatalf("docker client env for %v contains task %s", r.args, key)
 			}
 		}
-	}
-	mu.Unlock()
-	if len(runEnvs) != 2 {
-		t.Fatalf("run calls got %d, want 2", len(runEnvs))
-	}
-	seen := map[string]bool{}
-	for _, env := range runEnvs {
-		hasA, hasB := contains(env, "TOKEN=alpha"), contains(env, "TOKEN=beta")
-		if hasA && hasB {
-			t.Fatalf("mixed env on one Submit: %v", env)
+		joined := strings.Join(r.args, " ")
+		switch {
+		case len(r.args) > 0 && r.args[0] == "run":
+			seen["Submit"] = true
+			if !contains(r.args, "--network=none") {
+				t.Fatalf("Submit docker argv %v lacks --network=none", r.args)
+			}
+			for key, value := range taskEnv {
+				if !hasArgPair(r.args, "-e", key+"="+value) {
+					t.Fatalf("Submit docker argv %v lacks -e %s=value", r.args, key)
+				}
+			}
+		case strings.Contains(joined, "State.Running") && r.args[len(r.args)-1] == "cid-poll":
+			seen["Poll"] = true
+		case len(r.args) > 0 && r.args[0] == "kill":
+			seen["Cancel"] = true
+		case strings.Contains(joined, "State.Running") && r.args[len(r.args)-1] == "cid-reconcile":
+			seen["Reconcile"] = true
 		}
-		if hasA {
-			seen["alpha"] = true
-		}
-		if hasB {
-			seen["beta"] = true
+	}
+	for _, operation := range []string{"Submit", "Poll", "Cancel", "Reconcile"} {
+		if !seen[operation] {
+			t.Fatalf("docker calls did not record %s: %#v", operation, recs)
 		}
 	}
-	if !seen["alpha"] || !seen["beta"] {
-		t.Fatalf("env vectors got %#v, want alpha and beta unmixed", runEnvs)
+}
+
+func TestDockerTerminalCleanupFailuresAreVisible(t *testing.T) {
+	tests := []struct {
+		name      string
+		operation string
+		failure   string
+	}{
+		{name: "poll logs", operation: "Poll", failure: "logs"},
+		{name: "poll remove", operation: "Poll", failure: "rm"},
+		{name: "reconcile logs", operation: "Reconcile", failure: "logs"},
+		{name: "reconcile remove", operation: "Reconcile", failure: "rm"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root := t.TempDir()
+			work := filepath.Join(root, "work")
+			if err := os.Mkdir(work, 0o755); err != nil {
+				t.Fatal(err)
+			}
+			orig := DockerCLI
+			t.Cleanup(func() { DockerCLI = orig })
+			calls := map[string]int{}
+			DockerCLI = func(ctx context.Context, args []string, env []string, stdout, stderr io.Writer) (int, error) {
+				joined := strings.Join(args, " ")
+				switch {
+				case strings.Contains(joined, "State.Running"):
+					_, _ = io.WriteString(stdout, "false 0\n")
+					return 0, nil
+				case strings.Contains(joined, "Mounts"):
+					_, _ = io.WriteString(stdout, work+"\n")
+					return 0, nil
+				case len(args) > 0 && args[0] == "logs":
+					calls["logs"]++
+					if tt.failure == "logs" {
+						return 23, nil
+					}
+					return 0, nil
+				case len(args) > 0 && args[0] == "rm":
+					calls["rm"]++
+					if tt.failure == "rm" {
+						_, _ = io.WriteString(stderr, "remove denied\n")
+						return 24, nil
+					}
+					return 0, nil
+				default:
+					t.Fatalf("unexpected docker argv: %v", args)
+					return -1, nil
+				}
+			}
+
+			d := NewDocker()
+			h := Handle{Identity: "cleanup", Backend: BackendDocker, RuntimeID: "cid-cleanup"}
+			var r Report
+			var err error
+			if tt.operation == "Poll" {
+				r, err = d.Poll(context.Background(), h)
+			} else {
+				r, err = d.Reconcile(context.Background(), h)
+			}
+			if err == nil || !strings.Contains(err.Error(), "docker "+tt.failure) {
+				t.Fatalf("%s() error = %v, want docker %s failure", tt.operation, err, tt.failure)
+			}
+			if r.Running || r.Exit != 0 {
+				t.Fatalf("%s() report = %#v, want stopped exit 0", tt.operation, r)
+			}
+			if _, ok := d.done[h.RuntimeID]; ok {
+				t.Fatalf("%s() cached cleanup failure as ordinary success", tt.operation)
+			}
+			if calls["logs"] != 1 || calls["rm"] != 1 {
+				t.Fatalf("%s() cleanup calls = %v, want logs=1 rm=1", tt.operation, calls)
+			}
+		})
 	}
 }
 

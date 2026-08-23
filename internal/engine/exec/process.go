@@ -19,11 +19,15 @@ type Process struct {
 }
 
 type proc struct {
+	mu   sync.Mutex
 	cmd  *osexec.Cmd
 	done chan struct{}
 	exit int
 	err  error
 }
+
+// signalProcess is syscall.Kill. Tests replace it.
+var signalProcess = syscall.Kill
 
 // NewProcess returns a process-group adapter.
 func NewProcess() *Process {
@@ -73,6 +77,7 @@ func (p *Process) Submit(ctx context.Context, job Job) (Handle, Report, error) {
 		waitErr := cmd.Wait()
 		outf.Close()
 		errf.Close()
+		pr.mu.Lock()
 		if waitErr == nil {
 			pr.exit = 0
 		} else {
@@ -85,6 +90,7 @@ func (p *Process) Submit(ctx context.Context, job Job) (Handle, Report, error) {
 			}
 		}
 		close(pr.done)
+		pr.mu.Unlock()
 	}()
 	pid := strconv.Itoa(cmd.Process.Pid)
 	p.mu.Lock()
@@ -145,9 +151,16 @@ func (p *Process) Cancel(ctx context.Context, h Handle) error {
 	if !ok || pr == nil || pr.cmd == nil || pr.cmd.Process == nil {
 		return errors.New("unproved process identity")
 	}
+	pr.mu.Lock()
+	defer pr.mu.Unlock()
+	select {
+	case <-pr.done:
+		return nil
+	default:
+	}
 	pid := pr.cmd.Process.Pid
-	err1 := syscall.Kill(-pid, syscall.SIGKILL)
-	err2 := syscall.Kill(pid, syscall.SIGKILL)
+	err1 := signalProcess(-pid, syscall.SIGKILL)
+	err2 := signalProcess(pid, syscall.SIGKILL)
 	if err1 != nil && !errors.Is(err1, syscall.ESRCH) && err2 != nil && !errors.Is(err2, syscall.ESRCH) {
 		return err2
 	}

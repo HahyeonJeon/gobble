@@ -3,6 +3,7 @@ package exec
 import (
 	"errors"
 	"os"
+	osexec "os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -154,7 +155,39 @@ func TestProcessCancelKillsGroup(t *testing.T) {
 	t.Fatal("process still running after cancel")
 }
 
+func TestProcessCancelAfterWaitDoesNotSignal(t *testing.T) {
+	orig := signalProcess
+	t.Cleanup(func() { signalProcess = orig })
+	const sentinelPID = 4242
+	var signaled []int
+	signalProcess = func(pid int, sig syscall.Signal) error {
+		signaled = append(signaled, pid)
+		return nil
+	}
+	done := make(chan struct{})
+	close(done)
+	p := NewProcess()
+	p.live[strconv.Itoa(sentinelPID)] = &proc{
+		cmd:  &osexec.Cmd{Process: &os.Process{Pid: sentinelPID}},
+		done: done,
+	}
+	h := Handle{Identity: "complete", Backend: BackendProcess, RuntimeID: strconv.Itoa(sentinelPID)}
+	if err := p.Cancel(t.Context(), h); err != nil {
+		t.Fatalf("Cancel() after Wait error = %v", err)
+	}
+	if len(signaled) != 0 {
+		t.Fatalf("Cancel() after Wait signaled sentinel PID: %v", signaled)
+	}
+}
+
 func TestProcessUnprovedPIDUnknown(t *testing.T) {
+	orig := signalProcess
+	t.Cleanup(func() { signalProcess = orig })
+	var signaled []int
+	signalProcess = func(pid int, sig syscall.Signal) error {
+		signaled = append(signaled, pid)
+		return nil
+	}
 	p := NewProcess()
 	h := Handle{Identity: "copy", Backend: BackendProcess, RuntimeID: "1"}
 	if err := p.Cancel(t.Context(), h); err == nil {
@@ -165,6 +198,9 @@ func TestProcessUnprovedPIDUnknown(t *testing.T) {
 	}
 	if _, err := p.Reconcile(t.Context(), h); err == nil {
 		t.Fatal("Reconcile unproved PID error = nil, want unproved")
+	}
+	if len(signaled) != 0 {
+		t.Fatalf("unproved operations signaled PID: %v", signaled)
 	}
 }
 
