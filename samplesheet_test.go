@@ -342,15 +342,18 @@ func TestLoadSampleSheetFileConcurrentPaths(t *testing.T) {
 		err   error
 	}
 	results := make(chan result, len(paths))
+	start := make(chan struct{})
 	var wg sync.WaitGroup
 	for i, path := range paths {
 		wg.Add(1)
 		go func(index int, sheetPath string) {
 			defer wg.Done()
+			<-start
 			sheet, err := gobble.LoadSampleSheetFile(sheetPath)
 			results <- result{index: index, sheet: sheet, err: err}
 		}(i, path)
 	}
+	close(start)
 	wg.Wait()
 	close(results)
 
@@ -417,7 +420,8 @@ func TestLoadSampleSheetFileUnreadable(t *testing.T) {
 }
 
 func TestSampleSheetPathSetter(t *testing.T) {
-	t.Cleanup(func() { gobble.SetSampleSheetPath("") })
+	previous := gobble.SampleSheetPath()
+	t.Cleanup(func() { gobble.SetSampleSheetPath(previous) })
 	gobble.SetSampleSheetPath("")
 	if gobble.DefaultSampleSheetPath != "samplesheet.csv" {
 		t.Fatalf("DefaultSampleSheetPath got %q, want %q", gobble.DefaultSampleSheetPath, "samplesheet.csv")
@@ -436,7 +440,8 @@ func TestSampleSheetPathSetter(t *testing.T) {
 }
 
 func TestLoadSampleSheetUsesSetterPath(t *testing.T) {
-	t.Cleanup(func() { gobble.SetSampleSheetPath("") })
+	previous := gobble.SampleSheetPath()
+	t.Cleanup(func() { gobble.SetSampleSheetPath(previous) })
 	path := filepath.Join(t.TempDir(), "custom.csv")
 	if err := os.WriteFile(path, []byte(validSheetCSV), 0o644); err != nil {
 		t.Fatalf("WriteFile() error = %v", err)
@@ -452,7 +457,8 @@ func TestLoadSampleSheetUsesSetterPath(t *testing.T) {
 }
 
 func TestLoadSampleSheetDefaultPath(t *testing.T) {
-	t.Cleanup(func() { gobble.SetSampleSheetPath("") })
+	previous := gobble.SampleSheetPath()
+	t.Cleanup(func() { gobble.SetSampleSheetPath(previous) })
 	gobble.SetSampleSheetPath("")
 	dir := t.TempDir()
 	cwd, err := os.Getwd()

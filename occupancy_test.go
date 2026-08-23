@@ -121,39 +121,45 @@ func TestReleaseTable(t *testing.T) {
 	})
 }
 
-func TestConcurrentSetSampleSheetThenComposeRun(t *testing.T) {
+func TestConcurrentComposeRunWithProcessSampleSheet(t *testing.T) {
+	previous := gobble.SampleSheetPath()
+	t.Cleanup(func() { gobble.SetSampleSheetPath(previous) })
+	sheet := filepath.Join(t.TempDir(), "sheet.csv")
+	if err := os.WriteFile(sheet, []byte("sample,read1,read2\nshared,reads/r1.fq,reads/r2.fq\n"), 0o644); err != nil {
+		t.Fatalf("WriteFile(%q) error = %v", sheet, err)
+	}
+	gobble.SetSampleSheetPath(sheet)
+
+	dirs := []string{readyRunWorkspace(t), readyRunWorkspace(t)}
+	ctx := t.Context()
 	var wg sync.WaitGroup
-	errs := make(chan error, 2)
-	for i := 0; i < 2; i++ {
+	errs := make(chan error, len(dirs))
+	for _, dir := range dirs {
 		wg.Add(1)
-		go func(i int) {
+		go func(dir string) {
 			defer wg.Done()
-			dir := readyRunWorkspace(t)
-			sheet := filepath.Join(dir, fmt.Sprintf("sheet-%d.csv", i))
-			body := fmt.Sprintf("sample,read1,read2\ns%d,reads/r1.fq,reads/r2.fq\n", i)
-			if err := os.WriteFile(sheet, []byte(body), 0o644); err != nil {
-				errs <- err
-				return
-			}
-			gobble.SetSampleSheetPath(sheet)
 			loaded, err := gobble.LoadSampleSheet()
 			if err != nil {
 				errs <- err
 				return
 			}
-			if loaded.Path != sheet || loaded.Rows[0].Sample != fmt.Sprintf("s%d", i) {
-				errs <- fmt.Errorf("sheet got path %q sample %q", loaded.Path, loaded.Rows[0].Sample)
+			if loaded.Path != sheet || len(loaded.Rows) != 1 || loaded.Rows[0].Sample != "shared" {
+				errs <- fmt.Errorf("sheet got %+v, want path %q and sample shared", loaded, sheet)
 				return
 			}
-			g := mustCompose(processCopyPipeline)(t)
-			errs <- gobble.Run(t.Context(), g, dir, 0)
-		}(i)
+			g, err := gobble.Compose(processCopyPipeline())
+			if err != nil {
+				errs <- fmt.Errorf("Compose() error = %w", err)
+				return
+			}
+			errs <- gobble.Run(ctx, g, dir, 0)
+		}(dir)
 	}
 	wg.Wait()
 	close(errs)
 	for err := range errs {
 		if err != nil {
-			t.Fatalf("concurrent SetSampleSheetPath Compose/Run: %v", err)
+			t.Fatalf("concurrent Compose/Run with process samplesheet: %v", err)
 		}
 	}
 }

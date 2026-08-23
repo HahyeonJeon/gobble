@@ -277,6 +277,11 @@ func TestDriverSampleInjection(t *testing.T) {
 	if !strings.Contains(got, `sample    = "my/sheet.csv"`) {
 		t.Fatalf("generated driver missing explicit sample constant:\n%s", got)
 	}
+	setAt = strings.Index(got, "gobble.SetSampleSheetPath(sample)")
+	pipeAt = strings.Index(got, "userpipe.Pipeline()")
+	if setAt < 0 || pipeAt < 0 || setAt > pipeAt {
+		t.Fatalf("explicit SetSampleSheetPath must run before Pipeline():\n%s", got)
+	}
 }
 
 func TestSheetErrorExit2(t *testing.T) {

@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -50,7 +49,10 @@ var optionalCols = map[string]bool{
 	colStrandedness: true,
 }
 
-var sampleSheetByG sync.Map
+var (
+	sampleSheetPathMu sync.RWMutex
+	sampleSheetPath   string
+)
 
 // SampleRow is one samplesheet data row. Fields are the locked column
 // names. Empty optional cells are empty strings. The zero SampleRow is
@@ -72,47 +74,36 @@ type SampleSheet struct {
 	Rows []SampleRow
 }
 
-// SetSampleSheetPath is a provisional compatibility helper for proof
-// pipelines that call [LoadSampleSheet]. Supported concurrent callers use
-// [LoadSampleSheetFile] with an explicit path. Empty or whitespace-only
-// restores [DefaultSampleSheetPath] for this helper.
+// SetSampleSheetPath sets the provisional process-owned path used by
+// [LoadSampleSheet]. It is intended for generated CLI children and proof
+// pipelines that exclusively own this process configuration. Concurrent
+// library callers use [LoadSampleSheetFile] with an explicit path. Empty or
+// whitespace-only restores [DefaultSampleSheetPath] for this helper.
 func SetSampleSheetPath(path string) {
-	id := goroutineID()
+	sampleSheetPathMu.Lock()
+	defer sampleSheetPathMu.Unlock()
 	if strings.TrimSpace(path) == "" {
-		sampleSheetByG.Delete(id)
+		sampleSheetPath = ""
 		return
 	}
-	sampleSheetByG.Store(id, strings.Clone(path))
+	sampleSheetPath = path
 }
 
-// SampleSheetPath returns the provisional path used by [LoadSampleSheet].
-// Supported concurrent callers pass an explicit path to [LoadSampleSheetFile].
+// SampleSheetPath returns the provisional process-owned path used by
+// [LoadSampleSheet]. Concurrent library callers pass an explicit path to
+// [LoadSampleSheetFile].
 func SampleSheetPath() string {
-	v, ok := sampleSheetByG.Load(goroutineID())
-	if !ok {
+	sampleSheetPathMu.RLock()
+	path := sampleSheetPath
+	sampleSheetPathMu.RUnlock()
+	if path == "" {
 		return DefaultSampleSheetPath
 	}
-	s, _ := v.(string)
-	if s == "" {
-		return DefaultSampleSheetPath
-	}
-	return s
+	return path
 }
 
-func goroutineID() uint64 {
-	var buf [32]byte
-	n := runtime.Stack(buf[:], false)
-	i := len("goroutine ")
-	var id uint64
-	for i < n && buf[i] >= '0' && buf[i] <= '9' {
-		id = id*10 + uint64(buf[i]-'0')
-		i++
-	}
-	return id
-}
-
-// LoadSampleSheet loads the provisional path returned by [SampleSheetPath].
-// Supported concurrent callers use [LoadSampleSheetFile].
+// LoadSampleSheet loads the provisional process-owned path returned by
+// [SampleSheetPath]. Concurrent library callers use [LoadSampleSheetFile].
 func LoadSampleSheet() (*SampleSheet, error) {
 	return LoadSampleSheetFile(SampleSheetPath())
 }
