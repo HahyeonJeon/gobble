@@ -830,7 +830,7 @@ func TestResumeTrueToFalseWhenSkipsPreviouslyFailedDownstream(t *testing.T) {
 	}
 }
 
-func TestResumeTrueToFalseWhenKeepsUnknownCanceledDescendant(t *testing.T) {
+func TestResumeTrueToFalseWhenSkipsReleasedCanceledDescendant(t *testing.T) {
 	dir := t.TempDir()
 	writeRunFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	g1 := mustCompose(func() *gobble.Pipeline {
@@ -854,12 +854,20 @@ func TestResumeTrueToFalseWhenKeepsUnknownCanceledDescendant(t *testing.T) {
 	if err := gobble.Release(dir); err != nil {
 		t.Fatalf("Release() error = %v", err)
 	}
+	rawRem, err := gobble.Inspect(dir, gobble.ViewRemaining, "after")
+	if err != nil {
+		t.Fatalf("Inspect remaining: %v", err)
+	}
+	if !bytes.Contains(rawRem, []byte(`"identity":"after"`)) || !bytes.Contains(rawRem, []byte(`"remaining":true`)) {
+		t.Fatalf("released canceled descendant not remaining: %s", rawRem)
+	}
 	g2, err := gobble.Compose(whenPredWithAfterCmd("keep", []string{"sleep", "30"}))
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	err = gobble.Resume(t.Context(), g2, dir, 0)
-	requireResumeError(t, "resume after canceled descendant", err, gobble.DefectUnknownBackend, "after")
+	if err := gobble.Resume(t.Context(), g2, dir, 0); err != nil {
+		t.Fatalf("Resume() error = %v, want skipped released descendant", err)
+	}
 	rawInst, err := gobble.Inspect(dir, gobble.ViewInstances, "")
 	if err != nil {
 		t.Fatalf("Inspect: %v", err)
@@ -868,8 +876,8 @@ func TestResumeTrueToFalseWhenKeepsUnknownCanceledDescendant(t *testing.T) {
 	if got["opt.copy"].Status != engine.StatusSkipped || got["opt.copy"].Condition != "false-param" {
 		t.Fatalf("true-to-false When did not skip: %s", rawInst)
 	}
-	if got["after"].Status != engine.StatusUnknown {
-		t.Fatalf("unproved canceled descendant stayed %q, want unknown: %s", got["after"].Status, rawInst)
+	if got["after"].Status != engine.StatusSkipped {
+		t.Fatalf("released canceled descendant stayed %q, want skipped: %s", got["after"].Status, rawInst)
 	}
 }
 

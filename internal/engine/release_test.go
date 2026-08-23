@@ -327,6 +327,41 @@ func TestLaterProcessFileDestCompletePublishedUnfinalized(t *testing.T) {
 	if len(raw) != 0 {
 		t.Fatalf("published-unfinalized remaining got %s, want empty", raw)
 	}
+
+	next := cloneDocument(doc)
+	next.Tasks[0].Command = []string{"sh", "-c", "exit 99"}
+	next.Tasks = append(next.Tasks, TaskPlan{
+		ID:      "after",
+		Name:    "after",
+		Command: []string{"cp", "out/sample.txt", "out/after.txt"},
+		Inputs:  []IO{{Name: "in", Path: "out/sample.txt"}},
+		Outputs: []IO{{Name: "out", Path: "out/after.txt"}},
+	})
+	next.Edges = append(next.Edges, Edge{
+		FromTask: "copy",
+		FromPort: "out",
+		ToTask:   "after",
+		ToPort:   "in",
+		Wait:     []string{"out/sample.txt"},
+	})
+	defects = Resume(t.Context(), Request{Workspace: dir, Document: next})
+	if len(defects) != 0 {
+		t.Fatalf("Resume() defects %v, want none for dest-complete skip", defects)
+	}
+	states := taskStates(t, dir)
+	if states["copy"].Status != StatusPublishedUnfinalized || states["copy"].Attempt != state.Attempt {
+		t.Fatalf("published-unfinalized copy reran: %#v", states["copy"])
+	}
+	if states["after"].Status != StatusSucceeded {
+		t.Fatalf("downstream state got %q, want succeeded", states["after"].Status)
+	}
+	if got, err := os.ReadFile(filepath.Join(dir, "out", "after.txt")); err != nil || string(got) != "reads" {
+		t.Fatalf("downstream output got %q err=%v, want reads", got, err)
+	}
+	run, exists, err := readRunIdentity(dir)
+	if err != nil || !exists || run.Status != StatusSucceeded {
+		t.Fatalf("published-unfinalized Resume run exists=%v err=%v status=%q, want succeeded", exists, err, run.Status)
+	}
 }
 
 func TestLaterProcessTreeDirectoryOnlyIncomplete(t *testing.T) {
@@ -359,8 +394,122 @@ func TestLaterProcessTreeDirectoryOnlyIncomplete(t *testing.T) {
 	if defects := Release(dir); len(defects) != 0 {
 		t.Fatalf("later-process Release() defects %v", defects)
 	}
-	if state := taskStates(t, dir)["tree"]; state.Status != StatusIncomplete {
-		t.Fatalf("tree directory-only status got %q, want incomplete", state.Status)
+	released := taskStates(t, dir)["tree"]
+	if released.Status != StatusIncomplete {
+		t.Fatalf("tree directory-only status got %q, want incomplete", released.Status)
+	}
+	if defects := Resume(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+		t.Fatalf("Resume() tree directory-only defects %v, want rerun", defects)
+	}
+	after := taskStates(t, dir)["tree"]
+	if after.Status != StatusSucceeded || after.Attempt != released.Attempt+1 {
+		t.Fatalf("resumed Tree state got status=%q attempt=%d, want succeeded attempt %d", after.Status, after.Attempt, released.Attempt+1)
+	}
+	if !regularFile(filepath.Join(dir, "out", "tree", treeManifestName)) {
+		t.Fatal("resumed Tree missing regular dest manifest")
+	}
+}
+
+func TestLaterProcessFileSymlinkIncompleteReruns(t *testing.T) {
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
+	if defects := Run(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+		t.Fatalf("Run() defects %v", defects)
+	}
+	dest := filepath.Join(dir, "out", "sample.txt")
+	if err := os.Remove(dest); err != nil {
+		t.Fatal(err)
+	}
+	writeCheckFile(t, filepath.Join(dir, "foreign.txt"), "foreign")
+	if err := os.Symlink("../foreign.txt", dest); err != nil {
+		t.Fatal(err)
+	}
+	patchAttempt(t, dir, func(st *jsonTaskState) {
+		st.Status = StatusRunning
+		st.RuntimeID = "unproved-pid"
+		st.Reason = "ready"
+		st.Ended = ""
+		st.Fingerprints = nil
+		st.Checksums = nil
+		st.Lineage = nil
+	})
+	forceDeadOwner(t, dir)
+	if defects := Release(dir); len(defects) != 0 {
+		t.Fatalf("later-process Release() defects %v", defects)
+	}
+	released := taskStates(t, dir)["copy"]
+	if released.Status != StatusIncomplete {
+		t.Fatalf("File symlink status got %q, want incomplete", released.Status)
+	}
+	if defects := Resume(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+		t.Fatalf("Resume() File symlink defects %v, want rerun", defects)
+	}
+	info, err := os.Lstat(dest)
+	if err != nil || !info.Mode().IsRegular() {
+		t.Fatalf("resumed File dest mode=%v err=%v, want regular", info, err)
+	}
+	if got, err := os.ReadFile(dest); err != nil || string(got) != "reads" {
+		t.Fatalf("resumed File dest got %q err=%v, want reads", got, err)
+	}
+	if got, err := os.ReadFile(filepath.Join(dir, "foreign.txt")); err != nil || string(got) != "foreign" {
+		t.Fatalf("symlink target got %q err=%v, want unchanged foreign", got, err)
+	}
+}
+
+func TestLaterProcessGroupPartialIncompleteReruns(t *testing.T) {
+	dir := t.TempDir()
+	doc := Document{
+		Name: "group",
+		Tasks: []TaskPlan{{
+			ID:      "group",
+			Name:    "group",
+			Command: []string{"sh", "-c", "mkdir -p out; printf a > out/a.txt; printf b > out/b.txt"},
+			Outputs: []IO{{
+				Name: "pair",
+				Kind: ArtifactGroup,
+				Members: []IOMember{
+					{Name: "a", Path: "out/a.txt"},
+					{Name: "b", Path: "out/b.txt"},
+				},
+			}},
+		}},
+	}
+	if defects := Run(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+		t.Fatalf("Run() defects %v", defects)
+	}
+	if err := os.Remove(filepath.Join(dir, "out", "b.txt")); err != nil {
+		t.Fatal(err)
+	}
+	patchAttempt(t, dir, func(st *jsonTaskState) {
+		st.Status = StatusRunning
+		st.RuntimeID = "unproved-pid"
+		st.Reason = "ready"
+		st.Ended = ""
+		st.Fingerprints = nil
+		st.Checksums = nil
+		st.Lineage = nil
+	})
+	forceDeadOwner(t, dir)
+	if defects := Release(dir); len(defects) != 0 {
+		t.Fatalf("later-process Release() defects %v", defects)
+	}
+	released := taskStates(t, dir)["group"]
+	if released.Status != StatusIncomplete {
+		t.Fatalf("partial Group status got %q, want incomplete", released.Status)
+	}
+	if defects := Resume(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+		t.Fatalf("Resume() partial Group defects %v, want rerun", defects)
+	}
+	after := taskStates(t, dir)["group"]
+	if after.Status != StatusSucceeded || after.Attempt != released.Attempt+1 {
+		t.Fatalf("resumed Group state got status=%q attempt=%d, want succeeded attempt %d", after.Status, after.Attempt, released.Attempt+1)
+	}
+	for path, want := range map[string]string{"out/a.txt": "a", "out/b.txt": "b"} {
+		got, err := os.ReadFile(filepath.Join(dir, path))
+		if err != nil || string(got) != want {
+			t.Fatalf("resumed Group member %s got %q err=%v, want %q", path, got, err, want)
+		}
 	}
 }
 

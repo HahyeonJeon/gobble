@@ -154,8 +154,29 @@ func TestLaterProcessReleaseUnprovedProcessIncomplete(t *testing.T) {
 	if occupancyIsActive(run) {
 		t.Fatal("later-process Release kept occupancy for unproved process")
 	}
-	if st := taskStates(t, dir)["copy"]; st.Status != StatusIncomplete {
-		t.Fatalf("later-process process status got %q, want incomplete", st.Status)
+	released := taskStates(t, dir)["copy"]
+	if released.Status != StatusIncomplete {
+		t.Fatalf("later-process process status got %q, want incomplete", released.Status)
+	}
+	if released.RuntimeID != "9" {
+		t.Fatalf("later-process process runtime_id got %q, want stored 9", released.RuntimeID)
+	}
+
+	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
+	defects = Resume(t.Context(), Request{Workspace: dir, Document: doc})
+	if len(defects) != 0 {
+		t.Fatalf("Resume() defects %v, want rerun without unproved reconciliation", defects)
+	}
+	after := taskStates(t, dir)["copy"]
+	if after.Status != StatusSucceeded || after.Attempt != released.Attempt+1 {
+		t.Fatalf("resumed process state got status=%q attempt=%d, want succeeded attempt %d", after.Status, after.Attempt, released.Attempt+1)
+	}
+	run, exists, err = readRunIdentity(dir)
+	if err != nil || !exists {
+		t.Fatalf("resumed run.json exists=%v err=%v", exists, err)
+	}
+	if run.Occupancy == nil || len(run.Occupancy.Unknown) != 0 {
+		t.Fatalf("resumed occupancy unknown got %#v, want none", run.Occupancy)
 	}
 }
 

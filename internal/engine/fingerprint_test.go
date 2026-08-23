@@ -410,6 +410,21 @@ func TestStatusSucceededEmptyChecksumsIsReuseMiss(t *testing.T) {
 	if decision.Decision != reuseRerun || decision.Reason != reasonOutputMissing {
 		t.Fatalf("empty checksums decision got %#v, want rerun output-missing", decision)
 	}
+	patchAttempt(t, dir, func(st *jsonTaskState) {
+		st.Checksums = nil
+		st.Lineage = nil
+	})
+	forceDeadOwner(t, dir)
+	if defects := Release(dir); len(defects) != 0 {
+		t.Fatalf("Release() defects %v", defects)
+	}
+	if defects := Resume(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+		t.Fatalf("Resume() empty-checksum defects %v, want rerun", defects)
+	}
+	after := taskStates(t, dir)["copy"]
+	if after.Status != StatusSucceeded || after.Attempt != state.Attempt+1 {
+		t.Fatalf("empty-checksum Resume state got status=%q attempt=%d, want succeeded attempt %d", after.Status, after.Attempt, state.Attempt+1)
+	}
 }
 
 func mustAttachExec(t *testing.T, st *jsonTaskState, argv0 string) {

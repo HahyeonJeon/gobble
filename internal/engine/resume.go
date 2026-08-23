@@ -7,11 +7,12 @@ import (
 )
 
 // Resume occupies a released existing run after checks, classifies
-// every reserved identity as Change, executes reruns as new
-// attempts, and persists decisions. A nil result means every
-// supplied identity succeeded. ctx cancel matches Run: stop admit,
-// cancel in-flight, persist incomplete, occupancy stays active,
-// DefectCanceled.
+// reserved identities for reuse or remaining work, executes reruns as
+// new attempts, and persists decisions. Published-unfinalized identities
+// are omitted from remaining work, never reused, and may satisfy downstream
+// inputs. They remain distinct from succeeded work without making Resume
+// fail. ctx cancel matches Run: stop admit, cancel in-flight, persist
+// incomplete, occupancy stays active, DefectCanceled.
 func Resume(ctx context.Context, req Request) []Defect {
 	if ctx == nil {
 		ctx = context.Background()
@@ -78,10 +79,30 @@ func checkResume(req Request) []Defect {
 		return unknownBackendDefects(unknown)
 	}
 	class := classifyResume(req.Workspace, recordedDoc, req.Document, tasks)
-	return checkResumeOutputs(req.Workspace, req.Document, tasks, class)
+	return checkResumeOutputs(req.Workspace, recordedDoc, req.Document, tasks, class)
 }
 
-func checkResumeOutputs(workspace string, doc Document, tasks []jsonTaskState, class remainingClass) []Defect {
+func checkResumeOutputs(workspace string, recorded, doc Document, tasks []jsonTaskState, class remainingClass) []Defect {
+	// A rerun may replace a recorded destination only when its latest
+	// attempt was incomplete or succeeded. Failed and blocked destinations
+	// remain unattributed output-exists failures.
+	replaceable := make(map[string]map[string]bool)
+	recordedTasks := taskPlanByIdentity(recorded)
+	for _, st := range latestAttempts(tasks) {
+		if st.Status != StatusIncomplete && st.Status != StatusSucceeded {
+			continue
+		}
+		ident := reservedIdentity(taskPlanFromState(st))
+		task, ok := recordedTasks[ident]
+		if !ok {
+			continue
+		}
+		paths := make(map[string]bool)
+		for _, file := range declaredIOFiles(task.Outputs) {
+			paths[file.path] = true
+		}
+		replaceable[ident] = paths
+	}
 	var defects []Defect
 	for _, t := range doc.Tasks {
 		applyReservedDefaults(&t)
@@ -95,7 +116,7 @@ func checkResumeOutputs(workspace string, doc Document, tasks []jsonTaskState, c
 				if !pathPresent(workspaceFile(workspace, out.Path)) {
 					continue
 				}
-				if treePublishedBy(tasks, ident, workspace, out) {
+				if treePublishedBy(tasks, ident, workspace, out) || replaceable[ident][out.Path] {
 					continue
 				}
 				defects = append(defects, Defect{
@@ -110,7 +131,7 @@ func checkResumeOutputs(workspace string, doc Document, tasks []jsonTaskState, c
 				if !pathPresent(workspaceFile(workspace, f.path)) {
 					continue
 				}
-				if destPublished(tasks, ident, f.path) {
+				if destPublished(tasks, ident, f.path) || replaceable[ident][f.path] {
 					continue
 				}
 				defUnit := unit
@@ -302,8 +323,10 @@ func occupyResume(req Request) (*sched, []Defect) {
 			parentIdent := reservedIdentity(parent)
 			parentDec := class.Decision[parentIdent]
 			if parentDec.Change == changeUnchanged {
-				if (whenDown[st.ID] || parent.When != "") && !liveResumeState(cp) &&
-					(cp.Status == StatusFailed || cp.Status == StatusBlocked || cp.Status == StatusIncomplete) {
+				freshIncomplete := cp.Status == StatusIncomplete && !liveResumeState(cp)
+				freshWhenBranch := (whenDown[st.ID] || parent.When != "") && !liveResumeState(cp) &&
+					(cp.Status == StatusFailed || cp.Status == StatusBlocked)
+				if freshIncomplete || freshWhenBranch {
 					member := cloneTaskPlan(parent)
 					member.Instance = cp.Instance
 					member.ShardIndex = cp.ShardIndex
@@ -361,9 +384,9 @@ func liveResumeState(st jsonTaskState) bool {
 	switch st.Status {
 	case StatusRunning, StatusUnknown:
 		return true
-	case StatusIncomplete:
-		return st.RuntimeID != ""
 	default:
+		// A RuntimeID retained on incomplete state is historical identity,
+		// not proof that this Resume owns or may reconcile that process.
 		return false
 	}
 }
@@ -374,6 +397,9 @@ func resumeNeedsFreshAttempt(t TaskPlan, st jsonTaskState, whenDownstream bool) 
 	}
 	if liveResumeState(st) {
 		return false
+	}
+	if st.Status == StatusIncomplete {
+		return true
 	}
 	if t.When != "" {
 		return true

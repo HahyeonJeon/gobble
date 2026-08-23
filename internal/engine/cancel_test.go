@@ -3,7 +3,6 @@ package engine
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"os"
 	"path/filepath"
 	"sync/atomic"
@@ -76,7 +75,7 @@ func TestRunContextCancelPersistsIncomplete(t *testing.T) {
 	}
 }
 
-func TestResumeReconcileLiveCancelsIncomplete(t *testing.T) {
+func TestResumeRerunsReleasedIncompleteWithoutReconcile(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
@@ -93,7 +92,7 @@ func TestResumeReconcileLiveCancelsIncomplete(t *testing.T) {
 		st.Reason = reasonPreviousIncomplete
 	})
 	var cancelCalled atomic.Bool
-	var canceledID string
+	var reconcileCalled atomic.Bool
 	useExec(t, &fnExec{
 		submit: func(ctx context.Context, job exec.Job) (exec.Handle, exec.Report, error) {
 			writeCheckFile(t, filepath.Join(isolateWorkspace(job.Isolate), "out", "sample.txt"), "reads")
@@ -105,22 +104,19 @@ func TestResumeReconcileLiveCancelsIncomplete(t *testing.T) {
 		},
 		cancel: func(ctx context.Context, h exec.Handle) error {
 			cancelCalled.Store(true)
-			canceledID = h.RuntimeID
 			return nil
 		},
 		reconcile: func(ctx context.Context, h exec.Handle) (exec.Report, error) {
-			if h.RuntimeID == "99" && !cancelCalled.Load() {
-				return exec.Report{Identity: h.Identity, RuntimeID: h.RuntimeID, Running: true}, nil
-			}
-			return exec.Report{Identity: h.Identity, RuntimeID: h.RuntimeID, Running: false}, nil
+			reconcileCalled.Store(true)
+			return exec.Report{}, nil
 		},
 	})
 	defects := Resume(t.Context(), Request{Workspace: dir, Document: doc})
 	if len(defects) != 0 {
 		t.Fatalf("Resume() defects %v, want none", defects)
 	}
-	if !cancelCalled.Load() || canceledID != "99" {
-		t.Fatalf("Cancel got called=%v id=%q, want runtime_id 99", cancelCalled.Load(), canceledID)
+	if reconcileCalled.Load() || cancelCalled.Load() {
+		t.Fatalf("released incomplete PID touched: reconcile=%v cancel=%v", reconcileCalled.Load(), cancelCalled.Load())
 	}
 	after := taskStates(t, dir)["copy"]
 	if after.Attempt != 2 {
@@ -131,7 +127,7 @@ func TestResumeReconcileLiveCancelsIncomplete(t *testing.T) {
 	}
 }
 
-func TestResumeReconcileFailureKeepsUnknownWhenDescendant(t *testing.T) {
+func TestResumeTrueToFalseWhenSkipsReleasedIncomplete(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	first := whenThenDoc("run", []string{"cp", "out/sample.txt", "out/after.txt"})
@@ -150,74 +146,23 @@ func TestResumeReconcileFailureKeepsUnknownWhenDescendant(t *testing.T) {
 		st.RuntimeID = "99"
 		st.Reason = reasonPreviousIncomplete
 	})
-	useExec(t, &fnExec{
-		submit: func(ctx context.Context, job exec.Job) (exec.Handle, exec.Report, error) {
-			t.Fatalf("Submit called for %s, want unknown after reconcile failure", job.Identity)
-			return exec.Handle{}, exec.Report{}, nil
-		},
-		reconcile: func(ctx context.Context, h exec.Handle) (exec.Report, error) {
-			return exec.Report{}, errors.New("reconcile failed")
-		},
-	})
-	next := whenThenDoc("keep", []string{"cp", "out/sample.txt", "out/after.txt"})
-	defects := Resume(t.Context(), Request{Workspace: dir, Document: next})
-	if !hasDefect(defects, DefectUnknownBackend, "after") {
-		t.Fatalf("Resume() defects %v, want unknown-backend after", defects)
-	}
-	st := taskStates(t, dir)["after"]
-	if st.Status != StatusUnknown {
-		t.Fatalf("after status got %q, want unknown", st.Status)
-	}
-	run, exists, err := readRunIdentity(dir)
-	if err != nil || !exists {
-		t.Fatalf("run.json exists=%v err=%v", exists, err)
-	}
-	if run.Occupancy == nil || len(run.Occupancy.Unknown) == 0 {
-		t.Fatalf("occupancy unknown got %#v, want after", run.Occupancy)
-	}
-	found := false
-	for _, u := range run.Occupancy.Unknown {
-		if u == "after" {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Fatalf("occupancy unknown %v, want after", run.Occupancy.Unknown)
-	}
-}
-
-func TestResumeTrueToFalseWhenSkipsProvedStoppedIncomplete(t *testing.T) {
-	dir := t.TempDir()
-	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
-	first := whenThenDoc("run", []string{"cp", "out/sample.txt", "out/after.txt"})
-	if defects := Run(t.Context(), Request{Workspace: dir, Document: first}); len(defects) != 0 {
-		t.Fatalf("Run() defects %v", defects)
-	}
-	forceDeadOwner(t, dir)
-	if defects := Release(dir); len(defects) != 0 {
-		t.Fatalf("Release() defects %v", defects)
-	}
-	patchAttempt(t, dir, func(st *jsonTaskState) {
-		if st.ID != "after" {
-			t.Fatalf("patchAttempt last task id=%q, want after", st.ID)
-		}
-		st.Status = StatusIncomplete
-		st.RuntimeID = "99"
-		st.Reason = reasonPreviousIncomplete
-	})
+	var reconcileCalled atomic.Bool
 	useExec(t, &fnExec{
 		submit: func(ctx context.Context, job exec.Job) (exec.Handle, exec.Report, error) {
 			t.Fatalf("Submit called for %s, want skip of proved-stopped incomplete", job.Identity)
 			return exec.Handle{}, exec.Report{}, nil
 		},
 		reconcile: func(ctx context.Context, h exec.Handle) (exec.Report, error) {
-			return exec.Report{Identity: h.Identity, RuntimeID: h.RuntimeID, Running: false}, nil
+			reconcileCalled.Store(true)
+			return exec.Report{}, nil
 		},
 	})
 	next := whenThenDoc("keep", []string{"cp", "out/sample.txt", "out/after.txt"})
 	if defects := Resume(t.Context(), Request{Workspace: dir, Document: next}); len(defects) != 0 {
-		t.Fatalf("Resume() defects %v, want skipped proved-stopped incomplete", defects)
+		t.Fatalf("Resume() defects %v, want skipped released incomplete", defects)
+	}
+	if reconcileCalled.Load() {
+		t.Fatal("Resume reconciled released incomplete RuntimeID")
 	}
 	st := taskStates(t, dir)["after"]
 	if st.Status != StatusSkipped {

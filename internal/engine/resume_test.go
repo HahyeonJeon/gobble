@@ -149,13 +149,17 @@ func TestCheckResumeOutputsUnattributed(t *testing.T) {
 	writeCheckFile(t, filepath.Join(dir, "out", "a.txt"), "foreign")
 	writeCheckFile(t, filepath.Join(dir, "out", "b.txt"), "stray")
 	writeCheckFile(t, filepath.Join(dir, "out", "ok.txt"), "ok")
+	writeCheckFile(t, filepath.Join(dir, "out", "moved-new.txt"), "foreign")
 	doc := Document{
 		Tasks: []TaskPlan{
 			{ID: "a", Outputs: []IO{{Name: "out", Path: "out/a.txt"}}},
 			{ID: "b", Outputs: []IO{{Name: "out", Path: "out/b.txt"}}},
 			{ID: "ok", Outputs: []IO{{Name: "out", Path: "out/ok.txt"}}},
+			{ID: "moved", Outputs: []IO{{Name: "out", Path: "out/moved-new.txt"}}},
 		},
 	}
+	recorded := cloneDocument(doc)
+	recorded.Tasks[3].Outputs[0].Path = "out/moved-old.txt"
 	tasks := []jsonTaskState{{
 		ID:      "a",
 		Status:  StatusFailed,
@@ -170,15 +174,24 @@ func TestCheckResumeOutputsUnattributed(t *testing.T) {
 		Attempt:   1,
 		Checksums: []jsonFileHash{{Path: "out/ok.txt", SHA256: "abc"}},
 		Lineage:   []jsonLineage{{Producer: "ok", Path: "out/ok.txt", Checksum: "abc"}},
+	}, {
+		ID:      "moved",
+		Status:  StatusSucceeded,
+		Attempt: 1,
 	}}
 	class := remainingClass{
 		Decision: map[string]reuseDecision{
 			"a":  {Identity: "a", Decision: reuseRerun},
 			"b":  {Identity: "b", Decision: reuseRerun},
 			"ok": {Identity: "ok", Decision: reuseRerun},
+			"moved": {
+				Identity: "moved",
+				Decision: reuseRerun,
+				Change:   changeRepathed,
+			},
 		},
 	}
-	defects := checkResumeOutputs(dir, doc, tasks, class)
+	defects := checkResumeOutputs(dir, recorded, doc, tasks, class)
 	if !hasDefect(defects, DefectOutputExists, "a.out") {
 		t.Fatalf("defects %v, want output-exists a.out", defects)
 	}
@@ -187,6 +200,9 @@ func TestCheckResumeOutputsUnattributed(t *testing.T) {
 	}
 	if hasDefect(defects, DefectOutputExists, "ok.out") {
 		t.Fatalf("published dest treated as output-exists")
+	}
+	if !hasDefect(defects, DefectOutputExists, "moved.out") {
+		t.Fatalf("repathed foreign dest defects %v, want output-exists moved.out", defects)
 	}
 }
 

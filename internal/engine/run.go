@@ -86,10 +86,10 @@ func schedulerExecutor() exec.Executor {
 }
 
 // Run occupies workspace after Check, schedules doc, and returns when
-// no more independent work can start. A nil result means every task
-// succeeded. When ctx is done, in-flight work is canceled, those
-// identities are persisted incomplete, occupancy stays active, and the
-// result is DefectCanceled.
+// no more independent work can start. A nil result means scheduling
+// completed without a task failure. When ctx is done, in-flight work
+// is canceled, those identities are persisted incomplete, occupancy
+// stays active, and the result is DefectCanceled.
 func Run(ctx context.Context, req Request) []Defect {
 	if ctx == nil {
 		ctx = context.Background()
