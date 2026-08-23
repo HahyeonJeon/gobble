@@ -71,3 +71,11 @@
 **Mistake:** Binding those cells with `Literal(cell)` stores an opaque filename. `AppendSuffix` marks a Literal invalid, so cleaned-read dests cannot render.
 
 **Correction:** Split a validated workspace-relative cell into Dir, Base, and Ext (`sheetFileSpec`). Keep `Literal` for opaque shared reference or GTF cells that are not suffixed. Match WGS pin PathSpecs.
+
+## Treating PID as occupancy owner
+
+**Context:** Run, Resume, Release, Inspect `live`, and live recover tests.
+
+**Mistake:** Treating PID existence as occupancy liveness, closing occupancy while identities remain unknown, treating skip as remaining work, or faking a dead PID in tests as recovery proof.
+
+**Correction:** Occupancy owner is the occupying process. Private liveness is a held occupancy flock and lease. PID and host are diagnostic Inspect fields. Occupancy does not close and Resume does not occupy while any identity remains unknown. Skip is a known terminal status and is not remaining. Live tests must not fake a dead PID as recovery.

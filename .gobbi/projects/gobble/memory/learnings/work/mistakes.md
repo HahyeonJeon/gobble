@@ -63,3 +63,11 @@
 **Mistake:** Starting the plan writer before the DISCUSSION Partner finishes. The writer then groups without independent Partner input.
 
 **Correction:** Finish the DISCUSSION Partner before the plan writer starts. Planning Partner grouping is an input, not a later patch.
+
+## Concurrent live Docker evals flake and drop Defects
+
+**Context:** Live-tagged Docker e2e under Partner evaluation.
+
+**Mistake:** Overlapping full live `./tests/local-e2e` runs so a flake looks like a product defect, or printing a collapsed defect count without structured Defects.
+
+**Correction:** Run exclusive live `go test -tags=live` for the named package. On live failure, print `gobble.Error` Defects (code, unit, path, message). Do not treat a concurrent-eval first fail as a product defect without exclusive structured evidence.
