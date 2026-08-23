@@ -11,8 +11,12 @@ Recursive index of deferred items, grouped alphabetically, without implied prior
 
 ## compose-pipeline
 
+- [Additional When predicates](compose-pipeline.md#additional-when-predicates)
 - [CLI --samples](compose-pipeline.md#cli---samples)
+- [Multi-lane samples](compose-pipeline.md#multi-lane-samples)
+- [Partial-success fan-in](compose-pipeline.md#partial-success-fan-in)
 - [Plan-time reservedIdentity expansion](compose-pipeline.md#plan-time-reservedidentity-expansion)
+- [Samplesheet extra columns](compose-pipeline.md#samplesheet-extra-columns)
 - [TSV auto-detect](compose-pipeline.md#tsv-auto-detect)
 
 ## project
@@ -27,4 +31,8 @@ Recursive index of deferred items, grouped alphabetically, without implied prior
 - [Live cancel](recover-run.md#live-cancel)
 - [Named retry with backoff](recover-run.md#named-retry-with-backoff)
 - [Transitive blocked-upstream](recover-run.md#transitive-blocked-upstream)
+
+## run-local
+
+- [Related-file output From on Run](run-local.md#related-file-output-from-on-run)
 

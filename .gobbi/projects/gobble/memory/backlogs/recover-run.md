@@ -18,7 +18,7 @@
 
 **Why backlogged:** Session proofs were occupy-release, two-instance isolation, reuse decisions, graph-diff Change tables, and the WGS assay.
 
-**Context:** Group members already stage and publish by name on Run. Compose covers a branch-merge pipeline. There is no Group or branch-merge Resume e2e. `tests/local-e2e` passed occupy/remaining/release/resume on run-local, WGS, RNA, and Methyl through API and CLI. Those graphs use module fan-out, not Group or Branch/Merge (D11). Scatter/Gather/When Resume is hermetic, not that Group/branch-merge proof.
+**Context:** Group members already stage and publish by name on Run. Compose covers a branch-merge pipeline. There is no Group or branch-merge Resume e2e. `tests/local-e2e` passed occupy/remaining/release/resume on run-local, WGS, RNA, and Methyl through API and CLI. Those graphs use module fan-out, not Group or Branch/Merge (D11). Scatter/Gather/When Resume is hermetic, not that Group/branch-merge proof. `Merge(name)` still takes no branch list.
 
 ## Guarded clean and retention
 
