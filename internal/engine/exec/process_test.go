@@ -180,6 +180,69 @@ func TestProcessCancelAfterWaitDoesNotSignal(t *testing.T) {
 	}
 }
 
+func TestProcessCancelAfterWaitReturnDoesNotSignal(t *testing.T) {
+	orig := signalProcess
+	t.Cleanup(func() { signalProcess = orig })
+	var signaled []int
+	signalProcess = func(pid int, sig syscall.Signal) error {
+		signaled = append(signaled, pid)
+		return nil
+	}
+	root := t.TempDir()
+	isolate := filepath.Join(root, "work")
+	if err := os.Mkdir(isolate, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	p := NewProcess()
+	h, _, err := p.Submit(t.Context(), Job{
+		Identity: "wait-returned",
+		Isolate:  isolate,
+		Argv:     []string{"sh", "-c", "sleep 30"},
+	})
+	if err != nil {
+		t.Fatalf("Submit() error = %v", err)
+	}
+	pid, err := strconv.Atoi(h.RuntimeID)
+	if err != nil || pid <= 0 {
+		t.Fatalf("runtime_id got %q, want pid", h.RuntimeID)
+	}
+	pr := p.live[h.RuntimeID]
+	t.Cleanup(func() { _ = pr.cmd.Process.Kill() })
+	pr.mu.Lock()
+	locked := true
+	defer func() {
+		if locked {
+			pr.mu.Unlock()
+		}
+	}()
+	if err := orig(-pid, syscall.SIGKILL); err != nil && !errors.Is(err, syscall.ESRCH) {
+		t.Fatalf("stop test process group: %v", err)
+	}
+	select {
+	case <-pr.waited:
+	case <-time.After(2 * time.Second):
+		t.Fatal("cmd.Wait() did not return")
+	}
+	select {
+	case <-pr.done:
+		t.Fatal("done closed before pending Wait cleanup completed")
+	default:
+	}
+	if err := p.Cancel(t.Context(), h); err != nil {
+		t.Fatalf("Cancel() after Wait return error = %v", err)
+	}
+	if len(signaled) != 0 {
+		t.Fatalf("Cancel() after Wait return signaled sentinel PID: %v", signaled)
+	}
+	pr.mu.Unlock()
+	locked = false
+	select {
+	case <-pr.done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("Wait cleanup did not complete")
+	}
+}
+
 func TestProcessUnprovedPIDUnknown(t *testing.T) {
 	orig := signalProcess
 	t.Cleanup(func() { signalProcess = orig })

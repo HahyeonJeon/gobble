@@ -19,11 +19,12 @@ type Process struct {
 }
 
 type proc struct {
-	mu   sync.Mutex
-	cmd  *osexec.Cmd
-	done chan struct{}
-	exit int
-	err  error
+	mu     sync.Mutex
+	cmd    *osexec.Cmd
+	waited chan struct{}
+	done   chan struct{}
+	exit   int
+	err    error
 }
 
 // signalProcess is syscall.Kill. Tests replace it.
@@ -72,9 +73,15 @@ func (p *Process) Submit(ctx context.Context, job Job) (Handle, Report, error) {
 		errf.Close()
 		return Handle{}, Report{}, err
 	}
-	pr := &proc{cmd: cmd, done: make(chan struct{})}
+	pr := &proc{
+		cmd:    cmd,
+		waited: make(chan struct{}),
+		done:   make(chan struct{}),
+	}
 	go func() {
 		waitErr := cmd.Wait()
+		// Publish Wait completion before cleanup so Cancel cannot target a reaped PID.
+		close(pr.waited)
 		outf.Close()
 		errf.Close()
 		pr.mu.Lock()
@@ -151,20 +158,30 @@ func (p *Process) Cancel(ctx context.Context, h Handle) error {
 	if !ok || pr == nil || pr.cmd == nil || pr.cmd.Process == nil {
 		return errors.New("unproved process identity")
 	}
+	if pr.waitComplete() {
+		return nil
+	}
 	pr.mu.Lock()
 	defer pr.mu.Unlock()
-	select {
-	case <-pr.done:
+	if pr.waitComplete() {
 		return nil
-	default:
 	}
 	pid := pr.cmd.Process.Pid
-	err1 := signalProcess(-pid, syscall.SIGKILL)
-	err2 := signalProcess(pid, syscall.SIGKILL)
-	if err1 != nil && !errors.Is(err1, syscall.ESRCH) && err2 != nil && !errors.Is(err2, syscall.ESRCH) {
-		return err2
+	if err := signalProcess(-pid, syscall.SIGKILL); err != nil && !errors.Is(err, syscall.ESRCH) {
+		return err
 	}
 	return nil
+}
+
+func (pr *proc) waitComplete() bool {
+	select {
+	case <-pr.waited:
+		return true
+	case <-pr.done:
+		return true
+	default:
+		return false
+	}
 }
 
 // Reconcile uses in-memory wait state. An unproved PID is unknown.
