@@ -20,5 +20,10 @@ Recursive navigation across reports, grouped by category, newest first.
 ## Review
 
 - [Gobble whole-product distribution readiness code review](review/2026-08-23-local-pipeline-engine-and-library-product-readiness-code-review.md)
+- [Local pipeline lifecycle, code, and test review](review/2026-08-23-local-pipeline-lifecycle-and-test-review.md)
 - [Adversarial codebase and Engine review](review/2026-08-22-adversarial-codebase-engine-review.md)
 - [Engine design review after WGS e2e](review/2026-08-18-engine-design-review.md)
+
+## Analysis
+
+- [Local pipeline engine distribution readiness](analysis/2026-08-23-local-pipeline-engine-distribution-readiness.md)
