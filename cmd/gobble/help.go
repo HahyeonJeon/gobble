@@ -4,8 +4,10 @@ import "io"
 
 const rootHelp = `Usage: gobble <command> [arguments]
 
-Gobble is a pre-1.0 trusted-local Linux preview for an exclusive caller-owned
-workspace. Docker is an isolation convenience, not a sandbox.
+Gobble is a pre-1.0 trusted-local linux/amd64 preview for an exclusive
+caller-owned workspace. Agents use the Go library and generic command. Humans
+receive one packed runner for one pipeline. Gobble is licensed under MIT.
+Docker is an isolation convenience, not a sandbox.
 
 Commands:
   compose    compose a pipeline from a Go package
@@ -26,15 +28,23 @@ Resume; Module, Branch, Merge, Scatter, Gather, When; PathSpec and File, Group,
 Tree binds; explicit-path samplesheet parsing; structured Error, Defect, and
 DefectCode values. Other exports are provisional.
 
-Graph verbs and pack require go on PATH. Consumer internal/ packages are unsupported.
-Success stdout is protocol JSON or JSONL only. Exits are 0 success, 1 domain or
-operational failure, and 2 invocation or input-shape failure. A spaced valued
-flag does not consume a following token that starts with '-'; use --flag=value.
+Graph verbs and pack require go on PATH. Consumer internal/ packages are
+unsupported. The installed command, selected module, pipeline, platform,
+install family, and workspace identity must match before Pipeline runs or a
+workspace changes. Exact-tag install is not yet available.
+
+Success stdout is protocol JSON or JSONL only. Exits are 0 success, 1 domain
+or operational failure, and 2 invocation or input-shape failure. A spaced
+valued flag does not consume a following token that starts with '-'; use
+--flag=value.
 
 Recovery is inspect, then release, then resume remaining work. Later-process
-release never signals an unproved process PID. Docker unknown-backend keeps
-occupancy active. The license is unset; no redistribution license is granted.
-First-horizon exit is not claimed.
+release never signals an unproved process PID. Proved-stopped Docker leftovers
+do not wedge occupancy; unproved Docker stays unknown-backend and blocks
+resume. First-horizon installed-path evidence passed on linux/amd64 for
+local-pin agents and packed runners with:
+  go test -tags=live ./tests/install-e2e
+No exact-tag release is claimed.
 `
 
 var commandHelp = map[string]string{
@@ -84,8 +94,9 @@ keeps occupancy active. --workspace is required.
 	"pack": `Usage: gobble pack [package] --output PATH
 
 Write one standalone linux/amd64 runner for package (default ".") to PATH.
-The runner contains one pipeline. PATH is replaced atomically when it is an
-existing regular file. The license is unset; no redistribution license is granted.
+The runner contains Gobble and one embedded pipeline. Gobble portions are
+licensed under MIT. The embedded pipeline may have a different license set by
+its author. PATH is replaced atomically when it is an existing regular file.
 `,
 	"help": `Usage: gobble help [command]
 
@@ -97,10 +108,40 @@ Print version JSON. Same as gobble --version.
 `,
 }
 
+const packedMITLicense = `MIT License
+
+Copyright (c) 2026 HahyeonJeon
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+`
+
+const packedLicenseSummary = `
+License: Gobble portions are licensed under MIT. The embedded pipeline may have
+a different license set by its author. See root help for Gobble's MIT notice.
+`
+
 const packedRootHelp = `Usage: gobble <command> [arguments]
 
-This standalone linux/amd64 runner contains one embedded pipeline. Docker is
-required only for pipeline tasks that use Docker.
+This standalone linux/amd64 runner contains Gobble and one embedded pipeline.
+Gobble portions are licensed under MIT. The embedded pipeline may have a
+different license set by its author. It needs no Go, package operand, or pack
+command. Docker is required only for pipeline tasks that use Docker.
 
 Commands:
   compose    compose the embedded pipeline
@@ -115,10 +156,20 @@ Commands:
 
 Use gobble help <command> for command help.
 
-Success stdout is protocol JSON or JSONL only. Exits are 0 success, 1 domain or
-operational failure, and 2 invocation or input-shape failure. The license is
-unset; no redistribution license is granted.
-`
+The embedded identity must match the workspace identity. Recovery is inspect,
+then release, then resume remaining work. Proved-stopped Docker leftovers do
+not wedge occupancy; unproved Docker stays unknown-backend and blocks resume.
+
+Success stdout is protocol JSON or JSONL only. Exits are 0 success, 1 domain
+or operational failure, and 2 invocation or input-shape failure. First-horizon
+installed-path evidence passed on linux/amd64 for local-pin source and packed
+runners with go test -tags=live ./tests/install-e2e. No exact-tag release is
+claimed.
+
+The MIT notice below applies to Gobble portions of this runner. It does not
+license the embedded pipeline unless its author says so.
+
+` + packedMITLicense
 
 var packedCommandHelp = map[string]string{
 	"compose": `Usage: gobble compose [--sample PATH]
@@ -126,48 +177,49 @@ var packedCommandHelp = map[string]string{
 Compose the embedded pipeline. --sample PATH is the samplesheet CSV. When
 omitted, pipelines that read a sheet use samplesheet.csv in the process current
 directory.
-`,
+` + packedLicenseSummary,
 	"validate": `Usage: gobble validate [--sample PATH]
 
 Compose then validate the embedded pipeline. --sample PATH is the samplesheet
 CSV. When omitted, pipelines that read a sheet use samplesheet.csv in the
 process current directory.
-`,
+` + packedLicenseSummary,
 	"plan": `Usage: gobble plan [--sample PATH]
 
 Compose then write BuildPlan JSON for the embedded pipeline. --sample PATH is
 the samplesheet CSV. When omitted, pipelines that read a sheet use
 samplesheet.csv in the process current directory.
-`,
+` + packedLicenseSummary,
 	"run": `Usage: gobble run --workspace DIR [--cap N] [--sample PATH]
 
 Compose then run the embedded pipeline in DIR. --workspace is required and is
 not created. Omit --cap to pass 0. --sample PATH is the samplesheet CSV.
-`,
+` + packedLicenseSummary,
 	"inspect": `Usage: gobble inspect VIEW --workspace DIR [--instance ID]
 
 Write one workspace view. VIEW is run, instances, errors, logs, timing, dag,
 lineage, remaining, reuse, or identity. --workspace is required and is not
 created. Omit --instance to read every reserved identity.
-`,
+` + packedLicenseSummary,
 	"resume": `Usage: gobble resume --workspace DIR [--cap N] [--sample PATH]
 
 Compose then resume a released run in DIR. --workspace is required and is not
 created. Omit --cap to pass 0. --sample PATH is the samplesheet CSV.
-`,
+` + packedLicenseSummary,
 	"release": `Usage: gobble release --workspace DIR
 
 Reconcile and close occupancy on DIR. Documents and artifacts remain.
---workspace is required.
-`,
+Proved-stopped Docker leftovers do not wedge occupancy; unproved Docker stays
+unknown-backend and blocks close. --workspace is required.
+` + packedLicenseSummary,
 	"help": `Usage: gobble help [command]
 
 Print root help, or help for command.
-`,
+` + packedLicenseSummary,
 	"version": `Usage: gobble version
 
 Print version JSON. Same as gobble --version.
-`,
+` + packedLicenseSummary,
 }
 
 func writeHelp(stdout, stderr io.Writer, command string) int {

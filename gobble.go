@@ -15,12 +15,22 @@
 // [PlanOption] construction, [TaskSpec.Backend], and package assets are not
 // supported compatibility promises.
 //
+// Agents use the library and a generic command selected from the same local
+// module graph. Humans receive one packed linux/amd64 runner for one pipeline;
+// they do not need Go at run time. Exact-tag install is not yet available.
+// Gobble is licensed under the MIT License in LICENSE.
+//
 // The caller provides trusted pipeline code and an exclusive caller-owned
 // workspace. Docker --network=none and UID/GID settings are isolation
 // conveniences, not a sandbox. Run and Resume take a context; cancellation
-// leaves occupancy active. Recovery is Inspect, then Release, then Resume
-// remaining work. Release never signals an unproved process PID and does not
-// delete control files or artifacts.
+// leaves occupancy active. Run and Resume require [WithIdentity] when called
+// through the external API. Inspect and Release may omit it and then bind the
+// current executable. A mismatch fails closed before workspace mutation.
+// Recovery is Inspect, then Release, then Resume remaining work. Release never
+// signals an unproved process PID and does not delete control files or
+// artifacts. A proved-stopped Docker task may retain a runtime id for cleanup
+// retry without keeping occupancy active; unproved disposition remains
+// unknown-backend and blocks Resume.
 //
 // File dest path is a present regular file, not a symlink. Group: every named
 // member is a present regular file, not a symlink. Tree: dest directory exists
@@ -30,6 +40,7 @@
 //
 // Gobble stages and publishes by copy. Input fingerprints cover staged isolate
 // bytes. Missing hashes are reuse misses, and Resume re-evaluates When
-// predicates. The project license is unset; no redistribution license is
-// granted. First-horizon exit is not claimed.
+// predicates. First-horizon installed-path evidence passed on linux/amd64 for
+// local-pin agents and packed human runners with
+// go test -tags=live ./tests/install-e2e. No exact-tag release is claimed.
 package gobble

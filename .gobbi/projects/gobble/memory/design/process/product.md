@@ -17,7 +17,7 @@ product under the remaining product headings.
 ### Gobble
 
 - Statement: A consumer uses the module from a trusted local source revision, writes a small Go pipeline with modules, branch, and merge, validates and inspects the plan, runs it locally, and recovers after a contained failure through Inspect, Release, and Resume. Construction order is library, then engine, then CLI. First-horizon exit still requires the complete API and CLI loop and remains unclaimed. Command names live in [system.md](../architecture/system.md) Interfaces Current. First useful outcome is that agent loop, not Nextflow- or Snakemake-class feature parity. No named external consumer is recorded.
-- Current: Gobble is a pre-1.0 trusted-local Linux source preview. The license is unset and grants no redistribution. There is no supported public-module or versioned-install route.
+- Current: Gobble is a pre-1.0 trusted-local `linux/amd64` preview licensed under MIT. Agents use the Go library and generic command through an explicit local path pin. Humans receive one packed runner for one embedded pipeline and need no Go at run time. First-horizon installed-path exit is proved for both families by `go test -tags=live ./tests/install-e2e`. This is local-pin and packed-artifact evidence; an exact-tag route is not yet available because no tag exists.
 - Source: `first-use`, `current-alternative`
 
 ## Refused uses
@@ -32,7 +32,7 @@ product under the remaining product headings.
 ### Gobble
 
 - Statement: The human-facing surface is a small CLI. Audience is coding agents first and human developers second. Interaction is the Go API plus that CLI. Default output is structured JSON or JSONL. Human text is secondary. There is no TUI or GUI. The CLI is used from a local terminal and from agent tool runners, often unattended. Color-only status is assumed insufficient. Assumed CLI style follows `go` and `git`: small verbs, stable flags, structured or plain output. Do not take Nextflow or Snakemake CLI or DSL as the interaction reference.
-- Current: Installed binary is `gobble` (`cmd/gobble`). Seven product verbs. `--sample PATH` is on compose, validate, plan, run, and resume. Inspect and release reject it. The supported concurrent samplesheet API is `LoadSampleSheetFile`. The provisional setter is process-owned, not goroutine identity. JSON or JSONL only. No color or pretty output this session. Contract in [system.md](../architecture/system.md) Interfaces Current.
+- Current: The agent binary is generic `gobble` (`cmd/gobble`) selected from the consumer module graph. The human binary is one packed `linux/amd64` runner with no Go, `pack` command, or package operand at run time. Both expose the seven product verbs. `--sample PATH` is on compose, validate, plan, run, and resume; Inspect and Release reject it. The installed command, selected module, pipeline, platform, install family, and workspace identity must match. JSON or JSONL only. Contract in [system.md](../architecture/system.md) Interfaces Current.
 - Source: `experience-direction`, `accessibility-needs`, `design-reference`
 
 ## Access and data promises
@@ -49,7 +49,7 @@ product under the remaining product headings.
 ### Gobble
 
 - Statement: The consumer sees structured task and run state, an error that names the failed unit, and which outputs remain reusable. Recovery is inspect, release occupancy, resume remaining work, or inspect-then-modify the Go pipeline and resume. Human translation of raw logs is not the recovery path.
-- Current: After a contained failure, cancellation, or controller death, recovery is `Inspect`, then occupying-process or later-process `Release`, then `Resume` remaining work. Later-process Release never signals an unproved process PID. After adapter Wait returns, Cancel does not signal the stored PID. Dest-complete process work persists `published-unfinalized` and is omitted from remaining; `classifyReuse` is never applied. Later-process incomplete leftovers that still store a RuntimeID are remaining work, not `unknown-backend`. Dest-incomplete present dests of that incomplete or succeeded recorded producer replace on Resume. Failed, blocked, and repathed foreign dests remain `output-exists`. Later-process Docker `unknown-backend` keeps occupancy active and blocks Resume. Ordinary Run and Resume lifetime is bounded only by caller context; settlement begins after stop or during Release reconciliation. There is no public Cancel, named retry, repair verb, PID adoption, or guarded Clean.
+- Current: After a contained failure, cancellation, or controller death, recovery is `Inspect`, then occupying-process or later-process `Release`, then `Resume` remaining work. Later-process Release never signals an unproved process PID. Dest-complete process work persists `published-unfinalized` and is omitted from remaining. Incomplete process work reruns. A Docker task whose stopped state and exit code were proved may retain a RuntimeID for log-copy or removal retry without becoming unknown or wedging occupancy. Unproved Docker disposition remains `unknown-backend`, keeps occupancy active, and blocks Resume. Dest-incomplete outputs from the recorded incomplete or succeeded producer may be replaced on Resume; failed, blocked, and repathed foreign destinations remain `output-exists`. There is no public Cancel, named retry, repair verb, PID adoption, or guarded Clean.
 - Source: `failure-recovery`
 
 ## Support and updates
@@ -57,7 +57,7 @@ product under the remaining product headings.
 ### Gobble
 
 - Statement: Assumption — help and updates come from the GitHub repository. There is no support SLA. Versioning will follow Go modules once the library is published.
-- Current: This source preview is not published or licensed for redistribution. Public-module versioning and updates remain future work.
+- Current: MIT permits redistribution of the current tree. No public tag or remote release exists. Future pre-1.0 publication uses one immutable repository-root `v0.x.y` tag for the root module, library, and `cmd/gobble`, with no `/v0` module path, no retag, and no supported `@latest`. A patch means no intended Go API, CLI protocol, workspace-schema, or recovery break. A minor may add features and may declare a pre-1.0 break; its release notes name Go API, CLI, workspace, and recovery effects. The first number remains Deferred until the user names it. `v0.x.y-rc.1` is used only if the user later asks. This session creates no tag, push, GitHub Release, or other remote publication. A future tag still requires release notes, MIT bytes, an exact commit, and installed external-consumer proof.
 - Source: `support-update`
 
 ## End of life

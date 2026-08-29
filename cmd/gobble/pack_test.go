@@ -321,15 +321,32 @@ func TestPackPrintpipeArtifact(t *testing.T) {
 	if help.code != 0 || len(help.stderr) != 0 {
 		t.Fatalf("packed help = code %d stderr %s", help.code, help.stderr)
 	}
-	helpText := strings.ToLower(string(help.stdout))
-	for _, want := range []string{"linux/amd64", "one embedded pipeline", "docker", "license", "unset"} {
+	helpText := strings.ToLower(strings.Join(strings.Fields(string(help.stdout)), " "))
+	for _, want := range []string{"linux/amd64", "one embedded pipeline", "docker", "gobble portions", "different license", "no go", "first-horizon", "copyright (c) 2026 hahyeonjeon", "permission is hereby granted"} {
 		if !strings.Contains(helpText, want) {
 			t.Fatalf("packed help missing %q: %s", want, help.stdout)
 		}
 	}
-	for _, forbidden := range []string{"go on path", "[package]", "--output", "mit license", "permission is hereby granted"} {
+	for _, forbidden := range []string{"go on path", "[package]", "--output", "license is unset", "runner is licensed under mit", "it is licensed under mit"} {
 		if strings.Contains(helpText, forbidden) {
 			t.Fatalf("packed help contains %q: %s", forbidden, help.stdout)
+		}
+	}
+	licenseText, err := os.ReadFile("../../LICENSE")
+	if err != nil {
+		t.Fatalf("read LICENSE: %v", err)
+	}
+	if !bytes.Contains(help.stdout, licenseText) {
+		t.Fatalf("packed root help omits Gobble's exact MIT notice:\n%s", help.stdout)
+	}
+	commandHelp := runPacked(destination, "help", "compose")
+	if commandHelp.code != 0 || len(commandHelp.stderr) != 0 {
+		t.Fatalf("packed command help = code %d stderr %s", commandHelp.code, commandHelp.stderr)
+	}
+	commandText := strings.ToLower(strings.Join(strings.Fields(string(commandHelp.stdout)), " "))
+	for _, want := range []string{"gobble portions", "mit", "embedded pipeline", "different license", "root help"} {
+		if !strings.Contains(commandText, want) {
+			t.Fatalf("packed command help missing %q: %s", want, commandHelp.stdout)
 		}
 	}
 }
@@ -594,20 +611,34 @@ func watchPackTemps(t *testing.T) {
 	})
 }
 
-func TestPackedHelpLicenseUnset(t *testing.T) {
-	texts := []string{packedRootHelp}
-	for _, text := range packedCommandHelp {
-		texts = append(texts, text)
+func TestPackedHelpLicenseBoundary(t *testing.T) {
+	licenseText, err := os.ReadFile("../../LICENSE")
+	if err != nil {
+		t.Fatalf("read LICENSE: %v", err)
 	}
-	for _, text := range texts {
-		lower := strings.ToLower(text)
-		if strings.Contains(lower, "mit license") || strings.Contains(lower, "licensed under mit") || strings.Contains(lower, "permission is hereby granted") {
-			t.Fatalf("packed help claims a license: %q", text)
+	if !strings.Contains(packedRootHelp, string(licenseText)) {
+		t.Fatalf("packed root help omits exact LICENSE text: %q", packedRootHelp)
+	}
+	for name, text := range packedCommandHelp {
+		lower := strings.ToLower(strings.Join(strings.Fields(text), " "))
+		for _, want := range []string{"gobble portions", "mit", "embedded pipeline", "different license", "root help"} {
+			if !strings.Contains(lower, want) {
+				t.Fatalf("packed %s help omits %q: %q", name, want, text)
+			}
 		}
 	}
-	root := strings.ToLower(packedRootHelp)
-	if !strings.Contains(root, "license") || !strings.Contains(root, "unset") {
-		t.Fatalf("packed root help does not state license is unset: %q", packedRootHelp)
+	for name, text := range map[string]string{"generic pack": commandHelp["pack"], "packed root": packedRootHelp} {
+		lower := strings.ToLower(strings.Join(strings.Fields(text), " "))
+		for _, want := range []string{"gobble portions", "mit", "embedded pipeline", "different license"} {
+			if !strings.Contains(lower, want) {
+				t.Fatalf("%s help omits %q: %q", name, want, text)
+			}
+		}
+		for _, forbidden := range []string{"runner is licensed under mit", "it is licensed under mit"} {
+			if strings.Contains(lower, forbidden) {
+				t.Fatalf("%s help licenses the whole runner with %q: %q", name, forbidden, text)
+			}
+		}
 	}
 }
 
