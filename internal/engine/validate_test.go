@@ -180,10 +180,18 @@ func TestEmptyGraphInvalidValueEveryEngineEntry(t *testing.T) {
 		t.Fatalf("BuildPlan(empty) plan=%v defects=%v, want nil invalid-value", plan, defects)
 	}
 	dir := t.TempDir()
-	if defects := Run(t.Context(), Request{Workspace: dir, Document: doc}); !hasDefect(defects, DefectInvalidValue, "") {
+	if defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	}); !hasDefect(defects, DefectInvalidValue, "") {
 		t.Fatalf("Run(empty) defects %v, want invalid-value", defects)
 	}
-	if defects := Resume(t.Context(), Request{Workspace: dir, Document: doc}); !hasDefect(defects, DefectInvalidValue, "") {
+	if defects := Resume(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	}); !hasDefect(defects, DefectInvalidValue, "") {
 		t.Fatalf("Resume(empty) defects %v, want invalid-value", defects)
 	}
 	if _, err := os.Stat(filepath.Join(dir, ControlDir)); !os.IsNotExist(err) {

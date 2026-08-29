@@ -42,6 +42,7 @@ func TestRunProcessPublishesAndOccupies(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
 		Workspace: dir,
 		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 	})
@@ -103,6 +104,7 @@ func TestRunRestagedInputCopiesFromSource(t *testing.T) {
 		t.Fatalf("workspace dest existed before Run")
 	}
 	defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
 		Workspace: dir,
 		Document: Document{
 			Name: "restage",
@@ -139,7 +141,10 @@ func TestRunRestagedInputCopiesFromSource(t *testing.T) {
 func TestRunOccupiedSecondStart(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
-	req := Request{Workspace: dir, Document: sampleDoc("", "", "in/sample.txt", "out/sample.txt")}
+	req := Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt")}
 	if defects := Run(t.Context(), req); len(defects) != 0 {
 		t.Fatalf("first Run() defects %v, want none", defects)
 	}
@@ -163,6 +168,7 @@ func TestRunOccupiedSecondStart(t *testing.T) {
 func TestRunRefuseDoesNotOccupy(t *testing.T) {
 	dir := t.TempDir()
 	defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
 		Workspace: dir,
 		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 	})
@@ -179,7 +185,11 @@ func TestRunMissingOutputUnpublished(t *testing.T) {
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
 	doc.Tasks[0].Command = []string{"true"}
-	defects := Run(t.Context(), Request{Workspace: dir, Document: doc})
+	defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	})
 	if !hasDefect(defects, DefectFailed, "copy") {
 		t.Fatalf("Run() defects %v, want failed copy", defects)
 	}
@@ -209,7 +219,11 @@ func TestRunPublishRollback(t *testing.T) {
 		}},
 		Edges: []Edge{{FromPort: "reads", ToTask: "copy", ToPort: "in"}},
 	}
-	defects := Run(t.Context(), Request{Workspace: dir, Document: doc})
+	defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	})
 	if !hasDefect(defects, DefectFailed, "copy") {
 		t.Fatalf("Run() defects %v, want failed copy", defects)
 	}
@@ -223,7 +237,11 @@ func TestRunUnparseableMemory(t *testing.T) {
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
 	doc.Tasks[0].Resources.Memory = "not-a-size"
-	defects := Run(t.Context(), Request{Workspace: dir, Document: doc})
+	defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	})
 	if !hasDefect(defects, DefectInvalidMemory, "copy") {
 		t.Fatalf("unparseable memory Run() defects %v, want invalid-memory copy", defects)
 	}
@@ -253,7 +271,12 @@ func TestScheduleCapOneIsSerial(t *testing.T) {
 		return report{ID: task.ID, Published: true}
 	}))
 	dir := t.TempDir()
-	defects := Run(t.Context(), Request{Workspace: dir, Cap: 1, Document: doc})
+	defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Cap:       1,
+		Document:  doc,
+	})
 	if len(defects) != 0 {
 		t.Fatalf("Run() defects %v, want none", defects)
 	}
@@ -280,7 +303,12 @@ func TestScheduleCapTwoLaunchesTogether(t *testing.T) {
 	dir := t.TempDir()
 	done := make(chan []Defect, 1)
 	go func() {
-		done <- Run(t.Context(), Request{Workspace: dir, Cap: 2, Document: doc})
+		done <- Run(t.Context(), Request{
+			Identity:  testInstallIdentity(),
+			Workspace: dir,
+			Cap:       2,
+			Document:  doc,
+		})
 	}()
 	seen := map[string]bool{}
 	for i := 0; i < 2; i++ {
@@ -326,7 +354,12 @@ func TestScheduleBlocksDependents(t *testing.T) {
 		return report{ID: task.ID, Published: true}
 	}))
 	dir := t.TempDir()
-	defects := Run(t.Context(), Request{Workspace: dir, Cap: 2, Document: doc})
+	defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Cap:       2,
+		Document:  doc,
+	})
 	if !hasDefect(defects, DefectFailed, "fail") {
 		t.Fatalf("Run() defects %v, want failed fail", defects)
 	}
@@ -384,7 +417,11 @@ func TestRunFromInPort(t *testing.T) {
 			{FromTask: "prep", FromPort: "src", ToTask: "copy", ToPort: "in", Wait: []string{"sample.fq"}},
 		},
 	}
-	defects := Run(t.Context(), Request{Workspace: dir, Document: doc})
+	defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	})
 	if len(defects) != 0 {
 		t.Fatalf("FromIn Run() defects %v, want none", defects)
 	}
@@ -403,10 +440,13 @@ func TestRunFromInPort(t *testing.T) {
 func TestRunRelatedFileOutputFrom(t *testing.T) {
 	t.Run("starts after published bam", func(t *testing.T) {
 		dir := t.TempDir()
-		defects := Run(t.Context(), Request{Workspace: dir, Document: relatedFileOutputFromDoc(
-			[]string{"sh", "-c", "printf bam > aln.bam"},
-			[]string{"cp", "aln.bam", "aln.bam.bai"},
-		)})
+		defects := Run(t.Context(), Request{
+			Identity:  testInstallIdentity(),
+			Workspace: dir,
+			Document: relatedFileOutputFromDoc(
+				[]string{"sh", "-c", "printf bam > aln.bam"},
+				[]string{"cp", "aln.bam", "aln.bam.bai"},
+			)})
 		if len(defects) != 0 {
 			t.Fatalf("related-file From Run() defects %v, want none", defects)
 		}
@@ -440,7 +480,11 @@ func TestRunRelatedFileOutputFrom(t *testing.T) {
 			return report{ID: task.ID, Published: true}
 		}))
 		dir := t.TempDir()
-		defects := Run(t.Context(), Request{Workspace: dir, Document: doc})
+		defects := Run(t.Context(), Request{
+			Identity:  testInstallIdentity(),
+			Workspace: dir,
+			Document:  doc,
+		})
 		if !hasDefect(defects, DefectFailed, "index") {
 			t.Fatalf("missing from-path Run() defects %v, want failed index", defects)
 		}
@@ -463,10 +507,13 @@ func TestRunRelatedFileOutputFrom(t *testing.T) {
 
 	t.Run("failed upstream stays blocked", func(t *testing.T) {
 		dir := t.TempDir()
-		defects := Run(t.Context(), Request{Workspace: dir, Document: relatedFileOutputFromDoc(
-			[]string{"false"},
-			[]string{"cp", "aln.bam", "aln.bam.bai"},
-		)})
+		defects := Run(t.Context(), Request{
+			Identity:  testInstallIdentity(),
+			Workspace: dir,
+			Document: relatedFileOutputFromDoc(
+				[]string{"false"},
+				[]string{"cp", "aln.bam", "aln.bam.bai"},
+			)})
 		if !hasDefect(defects, DefectFailed, "align") {
 			t.Fatalf("failed upstream Run() defects %v, want failed align", defects)
 		}
@@ -554,7 +601,11 @@ func TestRunNotStartedIsFailed(t *testing.T) {
 	useExec(t, blockingExec(doc.Tasks, func(workspace string, task TaskPlan) report {
 		return report{ID: task.ID, Published: true}
 	}))
-	defects := Run(t.Context(), Request{Workspace: dir, Document: doc})
+	defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	})
 	if !hasDefect(defects, DefectFailed, "copy") {
 		t.Fatalf("not-started Run() defects %v, want failed copy", defects)
 	}
@@ -578,6 +629,7 @@ func TestRunPersistError(t *testing.T) {
 		return report{ID: task.ID, Published: true}
 	}))
 	defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
 		Workspace: dir,
 		Document:  doc,
 	})
@@ -618,7 +670,12 @@ func TestAdmitResources(t *testing.T) {
 			return report{ID: task.ID, Published: true}
 		}))
 		dir := t.TempDir()
-		defects := Run(t.Context(), Request{Workspace: dir, Cap: 2, Document: doc})
+		defects := Run(t.Context(), Request{
+			Identity:  testInstallIdentity(),
+			Workspace: dir,
+			Cap:       2,
+			Document:  doc,
+		})
 		if len(defects) != 0 {
 			t.Fatalf("cpu admit Run() defects %v, want none", defects)
 		}
@@ -653,7 +710,12 @@ func TestAdmitResources(t *testing.T) {
 			return report{ID: task.ID, Published: true}
 		}))
 		dir := t.TempDir()
-		defects := Run(t.Context(), Request{Workspace: dir, Cap: 2, Document: doc})
+		defects := Run(t.Context(), Request{
+			Identity:  testInstallIdentity(),
+			Workspace: dir,
+			Cap:       2,
+			Document:  doc,
+		})
 		if len(defects) != 0 {
 			t.Fatalf("memory admit Run() defects %v, want none", defects)
 		}
@@ -680,7 +742,12 @@ func TestAdmitResources(t *testing.T) {
 		dir := t.TempDir()
 		done := make(chan []Defect, 1)
 		go func() {
-			done <- Run(t.Context(), Request{Workspace: dir, Cap: 2, Document: doc})
+			done <- Run(t.Context(), Request{
+				Identity:  testInstallIdentity(),
+				Workspace: dir,
+				Cap:       2,
+				Document:  doc,
+			})
 		}()
 		seen := map[string]bool{}
 		for i := 0; i < 2; i++ {
@@ -722,7 +789,12 @@ func TestAdmitResources(t *testing.T) {
 		dir := t.TempDir()
 		done := make(chan []Defect, 1)
 		go func() {
-			done <- Run(t.Context(), Request{Workspace: dir, Cap: 2, Document: doc})
+			done <- Run(t.Context(), Request{
+				Identity:  testInstallIdentity(),
+				Workspace: dir,
+				Cap:       2,
+				Document:  doc,
+			})
 		}()
 		for i := 0; i < 2; i++ {
 			select {
@@ -753,7 +825,11 @@ func TestRunScriptWrapper(t *testing.T) {
 		{Name: "out", Path: "out/sample.txt"},
 		{Name: "flags", Path: "out/flags.txt"},
 	}
-	defects := Run(t.Context(), Request{Workspace: dir, Document: doc})
+	defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	})
 	if len(defects) != 0 {
 		t.Fatalf("script Run() defects %v, want none", defects)
 	}
@@ -778,7 +854,11 @@ func TestRunScriptWrapper(t *testing.T) {
 	fail := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
 	fail.Tasks[0].Command = nil
 	fail.Tasks[0].Script = "echo $UNSET_GOBBLE_VAR > out/sample.txt"
-	defects = Run(t.Context(), Request{Workspace: dir, Document: fail})
+	defects = Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  fail,
+	})
 	if !hasDefect(defects, DefectFailed, "copy") {
 		t.Fatalf("script nounset Run() defects %v, want failed copy", defects)
 	}
@@ -795,7 +875,11 @@ func TestRunProcessEnvDeclared(t *testing.T) {
 		{Name: "out", Path: "out/sample.txt"},
 		{Name: "env", Path: "out/env.txt"},
 	}
-	defects := Run(t.Context(), Request{Workspace: dir, Document: doc})
+	defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	})
 	if len(defects) != 0 {
 		t.Fatalf("declared env Run() defects %v, want none", defects)
 	}
@@ -823,7 +907,11 @@ func TestRunProcessEnvDeclared(t *testing.T) {
 		{Name: "out", Path: "out/sample.txt"},
 		{Name: "env", Path: "out/env.txt"},
 	}
-	defects = Run(t.Context(), Request{Workspace: dir, Document: doc})
+	defects = Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	})
 	if len(defects) != 0 {
 		t.Fatalf("author PATH Run() defects %v, want none", defects)
 	}
@@ -871,7 +959,11 @@ func TestRunGroupStagePublishByName(t *testing.T) {
 		}},
 		Edges: []Edge{{FromPort: "ref", ToTask: "copy", ToPort: "idx"}},
 	}
-	defects := Run(t.Context(), Request{Workspace: dir, Document: doc})
+	defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	})
 	if len(defects) != 0 {
 		t.Fatalf("group Run() defects %v, want none", defects)
 	}
@@ -911,7 +1003,11 @@ func TestRunGroupStagePublishByName(t *testing.T) {
 	writeCheckFile(t, filepath.Join(dir, "ref.amb"), "amb")
 	writeCheckFile(t, filepath.Join(dir, "ref.ann"), "ann")
 	doc.Tasks[0].Command = []string{"sh", "-c", "cp ref.amb out.amb"}
-	defects = Run(t.Context(), Request{Workspace: dir, Document: doc})
+	defects = Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	})
 	if !hasDefect(defects, DefectFailed, "copy") {
 		t.Fatalf("missing group member Run() defects %v, want failed copy", defects)
 	}
@@ -959,7 +1055,11 @@ func TestRunWaitUsesPlanPathsOnly(t *testing.T) {
 		}
 		return report{ID: task.ID, Published: true}
 	}))
-	defects := Run(t.Context(), Request{Workspace: dir, Document: doc})
+	defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	})
 	if len(defects) != 0 {
 		t.Fatalf("wait-only Run() defects %v, want none", defects)
 	}
@@ -980,7 +1080,11 @@ func TestRunWaitUsesPlanPathsOnly(t *testing.T) {
 	dir = t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "missing-to-port.txt"), "unused")
 	doc.Edges[0].Wait = []string{"never-written.bam"}
-	defects = Run(t.Context(), Request{Workspace: dir, Document: doc})
+	defects = Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	})
 	if !hasDefect(defects, DefectFailed, "index") {
 		t.Fatalf("missing wait Run() defects %v, want failed index", defects)
 	}
@@ -1007,7 +1111,11 @@ func TestRunProcessEnvIsFixed(t *testing.T) {
 		{Name: "out", Path: "out/sample.txt"},
 		{Name: "env", Path: "out/env.txt"},
 	}
-	defects := Run(t.Context(), Request{Workspace: dir, Document: doc})
+	defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	})
 	if len(defects) != 0 {
 		t.Fatalf("env Run() defects %v, want none", defects)
 	}
@@ -1040,6 +1148,7 @@ func TestRunRefusesEscapingAttemptLog(t *testing.T) {
 		t.Fatal(err)
 	}
 	defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
 		Workspace: dir,
 		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 	})
@@ -1059,7 +1168,11 @@ func TestSecretFreePlanTasksInspect(t *testing.T) {
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
 	doc.Tasks[0].Env = map[string]string{"GOBBLE_CANARY": envCanary}
-	if defects := Run(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+	if defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	}); len(defects) != 0 {
 		t.Fatalf("canary Run() defects %v", defects)
 	}
 	for _, name := range []string{PlanFile, TasksFile} {
@@ -1074,9 +1187,9 @@ func TestSecretFreePlanTasksInspect(t *testing.T) {
 			t.Fatalf("%s missing env_digest", name)
 		}
 	}
-	raw, defects := Inspect(dir, viewInstances, "")
+	raw, defects := Inspect(dir, viewInstances, "", testInstallIdentity())
 	if len(defects) != 0 {
-		t.Fatalf("Inspect(instances) defects %v", defects)
+		t.Fatalf("Inspect(instances, testInstallIdentity()) defects %v", defects)
 	}
 	if bytes.Contains(raw, []byte(envCanary)) {
 		t.Fatalf("inspect instances contains env canary: %s", raw)
@@ -1098,7 +1211,11 @@ func TestRunProcessIgnoresParentPATH(t *testing.T) {
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
 	doc.Tasks[0].Command = []string{"sh", "-c", "cp in/sample.txt out/sample.txt"}
-	if defects := Run(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+	if defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	}); len(defects) != 0 {
 		t.Fatalf("parent PATH poison Run() defects %v", defects)
 	}
 	got, err := os.ReadFile(filepath.Join(dir, "out", "sample.txt"))

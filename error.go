@@ -67,6 +67,9 @@ const (
 	// left a reserved identity's disposition unproved. Occupancy stays
 	// active and Resume does not occupy while any identity is unknown.
 	DefectUnknownBackend DefectCode = "unknown-backend"
+	// DefectIdentityMismatch means the occupying or recovering Gobble identity
+	// differs from the workspace identity.
+	DefectIdentityMismatch DefectCode = "identity-mismatch"
 )
 
 // Defect is one named failure inside an [Error].
@@ -81,13 +84,13 @@ type Defect struct {
 	Paths []string `json:"paths"`
 }
 
-// Error is a structured failure from compose, validate, plan, render, run,
-// resume, release, or inspect. Callers inspect it with errors.As. Returned
+// Error is a structured failure from compose, validate, plan, render, identity,
+// run, resume, release, or inspect. Callers inspect it with errors.As. Returned
 // Error values, Defects slices, and Defect Paths are caller-owned copies.
 // JSON keys are op and defects.
 type Error struct {
-	// Op is the failing operation: compose, validate, plan, render, run,
-	// resume, release, or inspect.
+	// Op is the failing operation: compose, validate, plan, render, identity,
+	// run, resume, release, or inspect.
 	Op string `json:"op"`
 	// Defects is the list of named failures.
 	Defects []Defect `json:"defects"`

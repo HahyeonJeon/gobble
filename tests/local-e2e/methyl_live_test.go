@@ -20,7 +20,7 @@ func TestMethylSeqRecover(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose(assets.MethylSeq()) error = %v", err)
 	}
-	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 1, testOccupyOption(t)); err != nil {
 		fatalAPIError(t, "Run(assets.MethylSeq())", err)
 	}
 	assertOccupied(t, dir)

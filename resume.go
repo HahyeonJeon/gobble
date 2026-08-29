@@ -20,7 +20,13 @@ import (
 // return an [*Error] with Op "resume" that names the failed units.
 // When ctx is done, in-flight work is canceled and the error is
 // [*Error] with Op "resume" and DefectCanceled.
-func Resume(ctx context.Context, g *Graph, workspace string, cap int) error {
+// Resume requires exactly one effective [WithIdentity] option. Zero-value
+// OccupyOption values are ignored.
+func Resume(ctx context.Context, g *Graph, workspace string, cap int, opts ...OccupyOption) error {
+	identity, err := parseOccupyOptions("resume", true, opts)
+	if err != nil {
+		return err
+	}
 	if err := resumePreflight(g, workspace, cap); err != nil {
 		return err
 	}
@@ -32,6 +38,7 @@ func Resume(ctx context.Context, g *Graph, workspace string, cap int) error {
 		Workspace: workspace,
 		Cap:       cap,
 		Document:  doc,
+		Identity:  toEngineIdentity(identity),
 	}))
 }
 

@@ -27,14 +27,14 @@ func waitCtx(ctx context.Context) error {
 }
 
 func TestReleaseEmptyWorkspaceInvalidPath(t *testing.T) {
-	defects := Release("")
+	defects := Release("", testInstallIdentity())
 	if !hasDefect(defects, DefectInvalidPath, "") {
-		t.Fatalf("Release(\"\") defects %v, want invalid-path", defects)
+		t.Fatalf("Release(\"\", testInstallIdentity()) defects %v, want invalid-path", defects)
 	}
 	missing := filepath.Join(t.TempDir(), "absent")
-	defects = Release(missing)
+	defects = Release(missing, testInstallIdentity())
 	if !hasDefect(defects, DefectInvalidPath, "") {
-		t.Fatalf("Release(missing) defects %v, want invalid-path", defects)
+		t.Fatalf("Release(missing, testInstallIdentity()) defects %v, want invalid-path", defects)
 	}
 }
 
@@ -61,6 +61,7 @@ func TestCanceledPollAlwaysRunningStopsAtSettlementBound(t *testing.T) {
 	done := make(chan []Defect, 1)
 	go func() {
 		done <- Run(ctx, Request{
+			Identity:  testInstallIdentity(),
 			Workspace: dir,
 			Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 		})
@@ -99,12 +100,12 @@ func TestCanceledPollAlwaysRunningStopsAtSettlementBound(t *testing.T) {
 	if st.Status != StatusUnknown {
 		t.Fatalf("task status got %q, want unknown", st.Status)
 	}
-	raw, inspectDefects := Inspect(dir, viewRun, "")
+	raw, inspectDefects := Inspect(dir, viewRun, "", testInstallIdentity())
 	if len(inspectDefects) != 0 {
-		t.Fatalf("Inspect(run) defects %v", inspectDefects)
+		t.Fatalf("Inspect(run, testInstallIdentity()) defects %v", inspectDefects)
 	}
 	if !bytesContains(raw, []byte(`"unknown": true`)) && !bytesContains(raw, []byte(`"unknown":true`)) {
-		t.Fatalf("Inspect(run) missing run-scope unknown: %s", raw)
+		t.Fatalf("Inspect(run, testInstallIdentity()) missing run-scope unknown: %s", raw)
 	}
 }
 
@@ -131,6 +132,7 @@ func TestLaterProcessReleaseUnprovedProcessIncomplete(t *testing.T) {
 	done := make(chan []Defect, 1)
 	go func() {
 		done <- Run(ctx, Request{
+			Identity:  testInstallIdentity(),
 			Workspace: dir,
 			Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 		})
@@ -143,7 +145,7 @@ func TestLaterProcessReleaseUnprovedProcessIncomplete(t *testing.T) {
 	}
 	runExecutor = nil
 	DropHeldLease(dir)
-	defects := Release(dir)
+	defects := Release(dir, testInstallIdentity())
 	if len(defects) != 0 {
 		t.Fatalf("later-process Release() defects %v, want none", defects)
 	}
@@ -163,7 +165,11 @@ func TestLaterProcessReleaseUnprovedProcessIncomplete(t *testing.T) {
 	}
 
 	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
-	defects = Resume(t.Context(), Request{Workspace: dir, Document: doc})
+	defects = Resume(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	})
 	if len(defects) != 0 {
 		t.Fatalf("Resume() defects %v, want rerun without unproved reconciliation", defects)
 	}
@@ -203,6 +209,7 @@ func TestBlockingCancelRecordsUnknown(t *testing.T) {
 	done := make(chan []Defect, 1)
 	go func() {
 		done <- Run(ctx, Request{
+			Identity:  testInstallIdentity(),
 			Workspace: dir,
 			Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 		})
@@ -238,7 +245,11 @@ func TestUncancelledLongTaskExceedsSettlementBound(t *testing.T) {
 	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
 	doc.Tasks[0].Command = []string{"sh", "-c", "sleep 0.15; cp in/sample.txt out/sample.txt"}
 	start := time.Now()
-	defects := Run(t.Context(), Request{Workspace: dir, Document: doc})
+	defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	})
 	if len(defects) != 0 {
 		t.Fatalf("cooperative Run() defects %v, want none", defects)
 	}
@@ -262,6 +273,7 @@ func TestCallerDeadlineDuringSubmitPersistsIncomplete(t *testing.T) {
 	ctx, cancel := context.WithTimeout(t.Context(), 40*time.Millisecond)
 	defer cancel()
 	defects := Run(ctx, Request{
+		Identity:  testInstallIdentity(),
 		Workspace: dir,
 		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 	})
@@ -272,7 +284,7 @@ func TestCallerDeadlineDuringSubmitPersistsIncomplete(t *testing.T) {
 	if st.Status != StatusIncomplete || st.RuntimeID != "" {
 		t.Fatalf("timed-out Submit state got status=%q runtime_id=%q", st.Status, st.RuntimeID)
 	}
-	if defects := Release(dir); len(defects) != 0 {
+	if defects := Release(dir, testInstallIdentity()); len(defects) != 0 {
 		t.Fatalf("occupying Release after deadline defects %v, want none", defects)
 	}
 	if run, exists, err := readRunIdentity(dir); err != nil || !exists || occupancyIsActive(run) {
@@ -292,6 +304,7 @@ func TestWrappedCallerDeadlineDuringSubmitPersistsIncomplete(t *testing.T) {
 	ctx, cancel := context.WithTimeout(t.Context(), 40*time.Millisecond)
 	defer cancel()
 	defects := Run(ctx, Request{
+		Identity:  testInstallIdentity(),
 		Workspace: dir,
 		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 	})
@@ -320,6 +333,7 @@ func TestEvaluatorSuccessfulSubmitWithoutRuntimeID(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
 		Workspace: dir,
 		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 	})
@@ -338,7 +352,7 @@ func TestEvaluatorSuccessfulSubmitWithoutRuntimeID(t *testing.T) {
 	}
 	runExecutor = nil
 	DropHeldLease(dir)
-	if defects := Release(dir); len(defects) != 0 {
+	if defects := Release(dir, testInstallIdentity()); len(defects) != 0 {
 		t.Fatalf("later-process Release() defects %v, want none", defects)
 	}
 	if run, exists, err := readRunIdentity(dir); err != nil || !exists || occupancyIsActive(run) {
@@ -376,7 +390,7 @@ func TestLaterProcessCrashBeforeHandle(t *testing.T) {
   ]
 }
 `)
-	defects := Release(dir)
+	defects := Release(dir, testInstallIdentity())
 	if len(defects) != 0 {
 		t.Fatalf("later-process crash-before-handle Release() defects %v, want none", defects)
 	}
@@ -412,6 +426,7 @@ func TestRunContextCancelUnknown(t *testing.T) {
 	done := make(chan []Defect, 1)
 	go func() {
 		done <- Run(ctx, Request{
+			Identity:  testInstallIdentity(),
 			Workspace: dir,
 			Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 		})
@@ -438,10 +453,14 @@ func TestResumeContextCancelUnknown(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
-	if defects := Run(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+	if defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	}); len(defects) != 0 {
 		t.Fatalf("Run() defects %v", defects)
 	}
-	if defects := Release(dir); len(defects) != 0 {
+	if defects := Release(dir, testInstallIdentity()); len(defects) != 0 {
 		t.Fatalf("Release() defects %v", defects)
 	}
 	if err := os.Remove(filepath.Join(dir, "out", "sample.txt")); err != nil {
@@ -468,7 +487,11 @@ func TestResumeContextCancelUnknown(t *testing.T) {
 	ctx, cancel := context.WithCancel(t.Context())
 	done := make(chan []Defect, 1)
 	go func() {
-		done <- Resume(ctx, Request{Workspace: dir, Document: doc})
+		done <- Resume(ctx, Request{
+			Identity:  testInstallIdentity(),
+			Workspace: dir,
+			Document:  doc,
+		})
 	}()
 	select {
 	case <-submitted:
@@ -490,7 +513,10 @@ func TestResumeContextCancelUnknown(t *testing.T) {
 func TestSecondOccupyOccupiedWorkspace(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
-	req := Request{Workspace: dir, Document: sampleDoc("", "", "in/sample.txt", "out/sample.txt")}
+	req := Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt")}
 	if defects := Run(t.Context(), req); len(defects) != 0 {
 		t.Fatalf("Run() defects %v", defects)
 	}
@@ -504,6 +530,7 @@ func TestInspectSnapshotMismatchRefused(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	if defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
 		Workspace: dir,
 		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 	}); len(defects) != 0 {
@@ -521,7 +548,7 @@ func TestInspectSnapshotMismatchRefused(t *testing.T) {
 		t.Fatal(err)
 	}
 	writeCheckFile(t, path, string(append(out, '\n')))
-	_, defects := Inspect(dir, viewRun, "")
+	_, defects := Inspect(dir, viewRun, "", testInstallIdentity())
 	if !hasDefect(defects, DefectInvalidPath, "") {
 		t.Fatalf("Inspect mixed snapshot defects %v, want invalid-path", defects)
 	}
@@ -537,6 +564,7 @@ func TestConcurrentWorkspaceRunsIsolateExecutors(t *testing.T) {
 			dir := t.TempDir()
 			writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 			errs <- Run(t.Context(), Request{
+				Identity:  testInstallIdentity(),
 				Workspace: dir,
 				Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 			})

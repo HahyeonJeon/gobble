@@ -44,6 +44,29 @@ func TestInspectViewsMatchLibrary(t *testing.T) {
 	}
 }
 
+func TestInspectIdentityView(t *testing.T) {
+	dir := t.TempDir()
+	res := runCLI("run", "./testdata/hostpipe", "--workspace", dir)
+	requireOpSuccess(t, res, "run")
+	res = runCLI("inspect", "identity", "--workspace", dir)
+	if res.code != 0 || len(res.stderr) != 0 {
+		t.Fatalf("inspect identity exit=%d stderr=%s", res.code, res.stderr)
+	}
+	var header struct {
+		SchemaVersion int             `json:"schema_version"`
+		View          string          `json:"view"`
+		Match         bool            `json:"match"`
+		Required      gobble.Identity `json:"required"`
+		Have          gobble.Identity `json:"have"`
+	}
+	if err := json.Unmarshal(res.stdout, &header); err != nil {
+		t.Fatalf("inspect identity JSON: %v", err)
+	}
+	if header.SchemaVersion != 2 || header.View != "identity" || !header.Match || header.Required.IdentityMode == "" || header.Have.IdentityMode == "" {
+		t.Fatalf("inspect identity header = %#v", header)
+	}
+}
+
 func TestInspectEmptyJSONL(t *testing.T) {
 	dir := occupiedWorkspace(t)
 	for _, view := range []string{"remaining", "reuse"} {
@@ -133,7 +156,7 @@ func occupiedWorkspace(t *testing.T) string {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	if err := gobble.Run(t.Context(), g, dir, 0); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 0, testOccupyOption(t)); err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
 	return dir

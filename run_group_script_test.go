@@ -36,7 +36,7 @@ func TestRunGroupTable(t *testing.T) {
 			dir := t.TempDir()
 			writeRunFile(t, filepath.Join(dir, "in", "ref.amb"), "amb")
 			writeRunFile(t, filepath.Join(dir, "in", "ref.ann"), "ann")
-			err := gobble.Run(t.Context(), mustCompose(processGroupPipeline(tc.cmd))(t), dir, 0)
+			err := gobble.Run(t.Context(), mustCompose(processGroupPipeline(tc.cmd))(t), dir, 0, testOccupyOption(t))
 			if tc.fail {
 				requireRunError(t, tc.name, err, gobble.DefectFailed, "copy")
 			} else if err != nil {
@@ -79,7 +79,7 @@ func TestRunScriptTable(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			dir := readyRunWorkspace(t)
-			err := gobble.Run(t.Context(), mustCompose(processScriptCopyPipeline(tc.script))(t), dir, 0)
+			err := gobble.Run(t.Context(), mustCompose(processScriptCopyPipeline(tc.script))(t), dir, 0, testOccupyOption(t))
 			if tc.fail {
 				requireRunError(t, tc.name, err, gobble.DefectFailed, "copy")
 				if _, statErr := os.Stat(filepath.Join(dir, "out", "sample.txt")); !os.IsNotExist(statErr) {

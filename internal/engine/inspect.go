@@ -17,6 +17,7 @@ const (
 	viewLineage   = "lineage"
 	viewRemaining = "remaining"
 	viewReuse     = "reuse"
+	viewIdentity  = "identity"
 
 	inspectLogTail = 4096
 )
@@ -24,7 +25,7 @@ const (
 // Inspect returns one read-only view of workspace. It does not occupy,
 // create, or rewrite control files. Control files that do not share a
 // completed snapshot identity are refused as not a coherent view.
-func Inspect(workspace, view, instance string) ([]byte, []Defect) {
+func Inspect(workspace, view, instance string, supplied *InstallIdentity) ([]byte, []Defect) {
 	if d := inspectWorkspace(workspace); len(d) > 0 {
 		return nil, d
 	}
@@ -37,6 +38,25 @@ func Inspect(workspace, view, instance string) ([]byte, []Defect) {
 	}
 	run, plan, hasPlan, taskFile, _, d := readCoherentControl(workspace)
 	if len(d) > 0 {
+		return nil, d
+	}
+	if supplied != nil {
+		if d := ValidateInstallIdentity(supplied); len(d) > 0 {
+			return nil, d
+		}
+	}
+	have := installIdentityForWorkspace(run.Identity, supplied)
+	match, _ := matchInstallIdentity(run.Identity, have, identityInspect)
+	if view == viewIdentity {
+		return marshalInspect(inspectIdentityDoc{
+			SchemaVersion: run.SchemaVersion,
+			View:          viewIdentity,
+			Match:         match,
+			Required:      cloneInstallIdentity(run.Identity),
+			Have:          have,
+		})
+	}
+	if d := workspaceIdentityDefects(run.Identity, have, identityInspect); len(d) > 0 {
 		return nil, d
 	}
 	tasks := taskFile.Tasks
@@ -86,7 +106,7 @@ func Inspect(workspace, view, instance string) ([]byte, []Defect) {
 
 func knownInspectView(view string) bool {
 	switch view {
-	case viewRun, viewInstances, viewErrors, viewLogs, viewTiming, viewDAG, viewLineage, viewRemaining, viewReuse:
+	case viewRun, viewInstances, viewErrors, viewLogs, viewTiming, viewDAG, viewLineage, viewRemaining, viewReuse, viewIdentity:
 		return true
 	default:
 		return false

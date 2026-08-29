@@ -74,18 +74,15 @@ func (d *Docker) Submit(ctx context.Context, job Job) (Handle, Report, error) {
 	}, nil
 }
 
-// Poll uses docker inspect. After exit it copies logs and removes the
-// container. A cleanup failure is returned and is not cached as success.
+// Poll uses docker inspect. After a proved stop it caches the exit before
+// treating log copy or container removal as cleanup.
 func (d *Docker) Poll(ctx context.Context, h Handle) (Report, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	d.mu.Lock()
-	if r, ok := d.done[h.RuntimeID]; ok {
-		d.mu.Unlock()
+	if r, ok := d.cached(ctx, h.RuntimeID); ok {
 		return r, nil
 	}
-	d.mu.Unlock()
 	running, exit, err := inspectContainer(ctx, h.RuntimeID)
 	if err != nil {
 		return Report{Identity: h.Identity, RuntimeID: h.RuntimeID}, err
@@ -111,18 +108,14 @@ func (d *Docker) Cancel(ctx context.Context, h Handle) error {
 	return nil
 }
 
-// Reconcile uses docker inspect. Inspect or cleanup errors leave disposition
-// unproved.
+// Reconcile uses docker inspect. Inspect errors leave disposition unproved.
 func (d *Docker) Reconcile(ctx context.Context, h Handle) (Report, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	d.mu.Lock()
-	if r, ok := d.done[h.RuntimeID]; ok {
-		d.mu.Unlock()
+	if r, ok := d.cached(ctx, h.RuntimeID); ok {
 		return r, nil
 	}
-	d.mu.Unlock()
 	running, exit, err := inspectContainer(ctx, h.RuntimeID)
 	if err != nil {
 		return Report{Identity: h.Identity, RuntimeID: h.RuntimeID}, err
@@ -139,13 +132,30 @@ func (d *Docker) finishStopped(ctx context.Context, h Handle, exit int) (Report,
 		msg = "exit " + strconv.Itoa(exit)
 	}
 	r := Report{Identity: h.Identity, RuntimeID: h.RuntimeID, Exit: exit, Message: msg, Running: false}
-	logErr := writeDockerLogs(ctx, h)
-	rmErr := removeDockerContainer(ctx, h.RuntimeID)
-	if err := errors.Join(logErr, rmErr); err != nil {
-		return r, err
+	if err := writeDockerLogs(ctx, h); err != nil {
+		r.Reason = "log-copy-failed"
+	}
+	if err := removeDockerContainer(ctx, h.RuntimeID); err == nil {
+		r.RuntimeID = ""
 	}
 	d.store(h.RuntimeID, r)
 	return r, nil
+}
+
+func (d *Docker) cached(ctx context.Context, id string) (Report, bool) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	r, ok := d.done[id]
+	if !ok {
+		return Report{}, false
+	}
+	if r.RuntimeID != "" {
+		if err := removeDockerContainer(ctx, r.RuntimeID); err == nil {
+			r.RuntimeID = ""
+			d.done[id] = r
+		}
+	}
+	return r, true
 }
 
 func (d *Docker) store(id string, r Report) {
@@ -264,12 +274,19 @@ func inspectContainer(ctx context.Context, id string) (running bool, exit int, e
 		}
 		return false, -1, dockerErr(ctx, "docker inspect", errors.New(msg))
 	}
-	fields := strings.Fields(strings.TrimSpace(buf.String()))
-	if len(fields) < 2 {
+	raw := strings.TrimSpace(buf.String())
+	fields := strings.Fields(raw)
+	if len(fields) != 2 {
 		return false, -1, errors.New("docker inspect: " + strings.TrimSpace(buf.String()))
 	}
-	running = fields[0] == "true"
-	exit, _ = strconv.Atoi(fields[1])
+	running, err = strconv.ParseBool(fields[0])
+	if err != nil {
+		return false, -1, fmt.Errorf("docker inspect running %q: %w", fields[0], err)
+	}
+	exit, err = strconv.Atoi(fields[1])
+	if err != nil {
+		return false, -1, fmt.Errorf("docker inspect exit %q: %w", fields[1], err)
+	}
 	return running, exit, nil
 }
 

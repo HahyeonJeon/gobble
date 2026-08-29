@@ -26,6 +26,7 @@ func TestEmptyImageNeverReachesDocker(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
 		Workspace: dir,
 		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 	})
@@ -46,7 +47,11 @@ func TestRunDockerUnparseableMemory(t *testing.T) {
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	doc := sampleDoc(pinnedAlpine, "local", "in/sample.txt", "out/sample.txt")
 	doc.Tasks[0].Resources.Memory = "not-a-size"
-	defects := Run(t.Context(), Request{Workspace: dir, Document: doc})
+	defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	})
 	if !hasDefect(defects, DefectInvalidMemory, "copy") {
 		t.Fatalf("unparseable memory docker Run() defects %v, want invalid-memory copy", defects)
 	}
@@ -64,6 +69,7 @@ func TestDockerDaemonFailureNamed(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
 		Workspace: dir,
 		Document:  sampleDoc(pinnedAlpine, "local", "in/sample.txt", "out/sample.txt"),
 	})

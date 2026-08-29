@@ -13,6 +13,8 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+
+	"github.com/HahyeonJeon/gobble"
 )
 
 const driverTempPrefix = "gobble-driver-"
@@ -30,6 +32,13 @@ func runDriver(req *request, stdout, stderr io.Writer) int {
 	if err != nil {
 		return writeErr(stderr, invalidRequest(req.command, err.Error()), 2)
 	}
+	if hasInternalImport(importPath) {
+		return writeErr(stderr, invalidRequest(req.command, "consumer internal/ packages are unsupported for CLI graph verbs and pack; export Pipeline from a non-internal package"), 2)
+	}
+	install, err := resolveInstallIdentity(goBin, cwd, importPath, req.command)
+	if err != nil {
+		return writeDriverSetupError(stderr, req.command, err)
+	}
 	dir, err := os.MkdirTemp("", driverTempPrefix)
 	if err != nil {
 		return writeErr(stderr, invalidRequest(req.command, err.Error()), 2)
@@ -37,7 +46,7 @@ func runDriver(req *request, stdout, stderr io.Writer) int {
 	defer func() { _ = os.RemoveAll(dir) }()
 
 	src := filepath.Join(dir, "main.go")
-	if err := os.WriteFile(src, []byte(driverSource(importPath, req)), 0o600); err != nil {
+	if err := os.WriteFile(src, []byte(driverSource(importPath, req, install)), 0o600); err != nil {
 		return writeErr(stderr, invalidRequest(req.command, err.Error()), 2)
 	}
 	protocol, err := os.OpenFile(filepath.Join(dir, "protocol"), os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0o600)
@@ -70,6 +79,14 @@ func runDriver(req *request, stdout, stderr io.Writer) int {
 		return code
 	}
 	return copyDriverProtocol(protocol, stdout, stderr, req.command)
+}
+
+func writeDriverSetupError(stderr io.Writer, op string, err error) int {
+	var ge *gobble.Error
+	if errors.As(err, &ge) {
+		return writeErr(stderr, ge, 2)
+	}
+	return writeErr(stderr, invalidRequest(op, err.Error()), 2)
 }
 
 func copyDriverProtocol(protocol *os.File, stdout, stderr io.Writer, op string) int {
@@ -169,8 +186,9 @@ func compileMessage(out []byte, err error) string {
 	return msg
 }
 
-func driverSource(importPath string, req *request) string {
-	return fmt.Sprintf(driverTemplate, importPath, req.command, req.workspace, req.cap, req.sample)
+func driverSource(importPath string, req *request, install installIdentityResult) string {
+	identityJSON, _ := json.Marshal(install.Identity)
+	return fmt.Sprintf(driverTemplate, importPath, req.command, req.workspace, req.cap, req.sample, string(identityJSON), install.HasReplace, install.ReplacePath)
 }
 
 const driverTemplate = `package main
@@ -180,8 +198,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"syscall"
 
 	userpipe %q
@@ -193,6 +213,9 @@ const (
 	workspace = %q
 	cap       = %d
 	sample    = %q
+	embeddedIdentity = %q
+	expectReplace = %t
+	expectedReplacePath = %q
 )
 
 var protocol = os.NewFile(3, "gobble-protocol")
@@ -202,6 +225,10 @@ func main() {
 }
 
 func run() int {
+	identity, err := linkedIdentity()
+	if err != nil {
+		return writeIdentityFail(err)
+	}
 	gobble.SetSampleSheetPath(sample)
 	g, err := gobble.Compose(userpipe.Pipeline())
 	if err != nil {
@@ -234,20 +261,20 @@ func run() int {
 		}
 		return 0
 	case "run", "resume":
-		return occupy(g)
+		return occupy(g, identity)
 	default:
 		return writeFail("invalid request")
 	}
 }
 
-func occupy(g *gobble.Graph) int {
+func occupy(g *gobble.Graph, identity gobble.Identity) int {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 	var err error
 	if verb == "run" {
-		err = gobble.Run(ctx, g, workspace, cap)
+		err = gobble.Run(ctx, g, workspace, cap, gobble.WithIdentity(identity))
 	} else {
-		err = gobble.Resume(ctx, g, workspace, cap)
+		err = gobble.Resume(ctx, g, workspace, cap, gobble.WithIdentity(identity))
 	}
 	if err != nil {
 		return writeLibErr(err)
@@ -255,6 +282,45 @@ func occupy(g *gobble.Graph) int {
 	return writeJSON(struct {
 		Op string ` + "`json:\"op\"`" + `
 	}{Op: verb})
+}
+
+func linkedIdentity() (gobble.Identity, error) {
+	var identity gobble.Identity
+	if err := json.Unmarshal([]byte(embeddedIdentity), &identity); err != nil {
+		return identity, err
+	}
+	info, ok := debug.ReadBuildInfo()
+	if !ok || info == nil {
+		return identity, errors.New("linked Gobble build info unavailable")
+	}
+	for _, dep := range info.Deps {
+		if dep == nil || dep.Path != identity.GobbleModule {
+			continue
+		}
+		if dep.Version != identity.GobbleVersion {
+			return identity, fmt.Errorf("required Gobble %%s@%%s; have %%s@%%s", identity.GobbleModule, identity.GobbleVersion, dep.Path, dep.Version)
+		}
+		if expectReplace && (dep.Replace == nil || dep.Replace.Path != expectedReplacePath) {
+			have := ""
+			if dep.Replace != nil {
+				have = dep.Replace.Path
+			}
+			return identity, fmt.Errorf("required Gobble replace %%s; have %%s", expectedReplacePath, have)
+		}
+		return identity, nil
+	}
+	return identity, fmt.Errorf("required Gobble %%s@%%s; linked dependency missing", identity.GobbleModule, identity.GobbleVersion)
+}
+
+func writeIdentityFail(err error) int {
+	return writeErrJSON(&gobble.Error{
+		Op: verb,
+		Defects: []gobble.Defect{{
+			Code: gobble.DefectIdentityMismatch,
+			Unit: "gobble",
+			Message: err.Error(),
+		}},
+	}, 2)
 }
 
 func writeJSON(v any) int {

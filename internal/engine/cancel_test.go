@@ -39,6 +39,7 @@ func TestRunContextCancelPersistsIncomplete(t *testing.T) {
 	done := make(chan []Defect, 1)
 	go func() {
 		done <- Run(ctx, Request{
+			Identity:  testInstallIdentity(),
 			Workspace: dir,
 			Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 		})
@@ -79,11 +80,15 @@ func TestResumeRerunsReleasedIncompleteWithoutReconcile(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
-	if defects := Run(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+	if defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	}); len(defects) != 0 {
 		t.Fatalf("Run() defects %v", defects)
 	}
 	forceDeadOwner(t, dir)
-	if defects := Release(dir); len(defects) != 0 {
+	if defects := Release(dir, testInstallIdentity()); len(defects) != 0 {
 		t.Fatalf("Release() defects %v", defects)
 	}
 	patchAttempt(t, dir, func(st *jsonTaskState) {
@@ -111,7 +116,11 @@ func TestResumeRerunsReleasedIncompleteWithoutReconcile(t *testing.T) {
 			return exec.Report{}, nil
 		},
 	})
-	defects := Resume(t.Context(), Request{Workspace: dir, Document: doc})
+	defects := Resume(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	})
 	if len(defects) != 0 {
 		t.Fatalf("Resume() defects %v, want none", defects)
 	}
@@ -131,11 +140,15 @@ func TestResumeTrueToFalseWhenSkipsReleasedIncomplete(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	first := whenThenDoc("run", []string{"cp", "out/sample.txt", "out/after.txt"})
-	if defects := Run(t.Context(), Request{Workspace: dir, Document: first}); len(defects) != 0 {
+	if defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  first,
+	}); len(defects) != 0 {
 		t.Fatalf("Run() defects %v", defects)
 	}
 	forceDeadOwner(t, dir)
-	if defects := Release(dir); len(defects) != 0 {
+	if defects := Release(dir, testInstallIdentity()); len(defects) != 0 {
 		t.Fatalf("Release() defects %v", defects)
 	}
 	patchAttempt(t, dir, func(st *jsonTaskState) {
@@ -158,7 +171,11 @@ func TestResumeTrueToFalseWhenSkipsReleasedIncomplete(t *testing.T) {
 		},
 	})
 	next := whenThenDoc("keep", []string{"cp", "out/sample.txt", "out/after.txt"})
-	if defects := Resume(t.Context(), Request{Workspace: dir, Document: next}); len(defects) != 0 {
+	if defects := Resume(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  next,
+	}); len(defects) != 0 {
 		t.Fatalf("Resume() defects %v, want skipped released incomplete", defects)
 	}
 	if reconcileCalled.Load() {

@@ -10,6 +10,12 @@ import "github.com/HahyeonJeon/gobble/internal/engine"
 // not-found. Already closed occupancy is already-released. Empty or
 // missing workspace is invalid-path. Release does not execute, delete,
 // or occupy a new run.
-func Release(workspace string) error {
-	return publicError("release", engine.Release(workspace))
+// Omitted identity derives the module process identity from the workspace
+// identity mode. A supplied [WithIdentity] option is used instead.
+func Release(workspace string, opts ...OccupyOption) error {
+	identity, err := parseOccupyOptions("release", false, opts)
+	if err != nil {
+		return err
+	}
+	return publicError("release", engine.Release(workspace, toEngineIdentity(identity)))
 }

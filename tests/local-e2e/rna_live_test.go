@@ -20,7 +20,7 @@ func TestRNASeqRecover(t *testing.T) {
 		t.Fatalf("Compose(assets.RNASeq()) error = %v", err)
 	}
 	assertMultiQCOmitsBAM(t, g)
-	if err := gobble.Run(t.Context(), g, dir, 2); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 2, testOccupyOption(t)); err != nil {
 		dumpTaskLogs(t, dir, "deseq2", "merge_counts")
 		fatalAPIError(t, "Run(assets.RNASeq())", err)
 	}

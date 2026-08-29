@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sync"
 	"syscall"
 	"testing"
 	"time"
@@ -14,6 +15,21 @@ import (
 	"github.com/HahyeonJeon/gobble"
 	"github.com/HahyeonJeon/gobble/cmd/gobble/testdata/hostpipe"
 )
+
+var testIdentityOnce sync.Once
+var testIdentity gobble.Identity
+var testIdentityErr error
+
+func testOccupyOption(t *testing.T) gobble.OccupyOption {
+	t.Helper()
+	testIdentityOnce.Do(func() {
+		testIdentity, testIdentityErr = gobble.IdentityFromBuildInfo("github.com/HahyeonJeon/gobble/cmd/gobble")
+	})
+	if testIdentityErr != nil {
+		t.Fatalf("IdentityFromBuildInfo() error = %v", testIdentityErr)
+	}
+	return gobble.WithIdentity(testIdentity)
+}
 
 func TestRunSuccessOmitsCap(t *testing.T) {
 	watchDriverTemps(t)
@@ -25,7 +41,7 @@ func TestRunSuccessOmitsCap(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	libErr := gobble.Run(t.Context(), g, dir, 0)
+	libErr := gobble.Run(t.Context(), g, dir, 0, testOccupyOption(t))
 	second := runCLI("run", "./testdata/hostpipe", "--workspace", dir)
 	requireDomainError(t, second, libErr)
 }
@@ -45,7 +61,7 @@ func TestRunCapRejected(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	libErr := gobble.Run(t.Context(), g, dir, -1)
+	libErr := gobble.Run(t.Context(), g, dir, -1, testOccupyOption(t))
 	res := runCLI("run", "./testdata/hostpipe", "--workspace", dir, "--cap=-1")
 	requireDomainError(t, res, libErr)
 }
@@ -58,7 +74,7 @@ func TestRunWorkspaceRefuse(t *testing.T) {
 	}
 	t.Run("missing", func(t *testing.T) {
 		missing := filepath.Join(t.TempDir(), "absent")
-		libErr := gobble.Run(t.Context(), g, missing, 0)
+		libErr := gobble.Run(t.Context(), g, missing, 0, testOccupyOption(t))
 		res := runCLI("run", "./testdata/hostpipe", "--workspace", missing)
 		requireDomainError(t, res, libErr)
 		if _, statErr := os.Stat(missing); !os.IsNotExist(statErr) {
@@ -70,7 +86,7 @@ func TestRunWorkspaceRefuse(t *testing.T) {
 		if err := os.WriteFile(file, []byte("x"), 0o644); err != nil {
 			t.Fatal(err)
 		}
-		libErr := gobble.Run(t.Context(), g, file, 0)
+		libErr := gobble.Run(t.Context(), g, file, 0, testOccupyOption(t))
 		res := runCLI("run", "./testdata/hostpipe", "--workspace", file)
 		requireDomainError(t, res, libErr)
 	})
@@ -102,7 +118,7 @@ func TestRunInspectReleaseResume(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	libErr := gobble.Resume(t.Context(), g, dir, 0)
+	libErr := gobble.Resume(t.Context(), g, dir, 0, testOccupyOption(t))
 	occupied := runCLI("resume", "./testdata/hostpipe", "--workspace", dir)
 	requireDomainError(t, occupied, libErr)
 }
@@ -115,7 +131,7 @@ func TestResumeWorkspaceRefuse(t *testing.T) {
 	}
 	t.Run("missing", func(t *testing.T) {
 		missing := filepath.Join(t.TempDir(), "absent")
-		libErr := gobble.Resume(t.Context(), g, missing, 0)
+		libErr := gobble.Resume(t.Context(), g, missing, 0, testOccupyOption(t))
 		res := runCLI("resume", "./testdata/hostpipe", "--workspace", missing)
 		requireDomainError(t, res, libErr)
 		if _, statErr := os.Stat(missing); !os.IsNotExist(statErr) {
@@ -127,7 +143,7 @@ func TestResumeWorkspaceRefuse(t *testing.T) {
 		if err := os.WriteFile(file, []byte("x"), 0o644); err != nil {
 			t.Fatal(err)
 		}
-		libErr := gobble.Resume(t.Context(), g, file, 0)
+		libErr := gobble.Resume(t.Context(), g, file, 0, testOccupyOption(t))
 		res := runCLI("resume", "./testdata/hostpipe", "--workspace", file)
 		requireDomainError(t, res, libErr)
 	})
@@ -193,11 +209,17 @@ func TestSignalCancel(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Compose() error = %v", err)
 			}
-			libErr := gobble.Run(t.Context(), g, dir, 0)
+			libErr := gobble.Run(t.Context(), g, dir, 0, testOccupyOption(t))
 			second := runCLI("run", "./testdata/hostpipe", "--workspace", dir)
 			requireDomainError(t, second, libErr)
 
-			rel := runCLI("release", "--workspace", dir)
+			var releaseStdout, releaseStderr bytes.Buffer
+			releaseCmd := exec.Command(bin, "release", "--workspace", dir)
+			releaseCmd.Dir = cwd
+			releaseCmd.Stdout = &releaseStdout
+			releaseCmd.Stderr = &releaseStderr
+			releaseErr := releaseCmd.Run()
+			rel := cliResult{stdout: releaseStdout.Bytes(), stderr: releaseStderr.Bytes(), code: exitCode(releaseErr)}
 			requireOpSuccess(t, rel, "release")
 		})
 	}

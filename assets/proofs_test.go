@@ -8,10 +8,26 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
 )
+
+var testIdentityOnce sync.Once
+var testIdentity gobble.Identity
+var testIdentityErr error
+
+func testOccupyOption(t *testing.T) gobble.OccupyOption {
+	t.Helper()
+	testIdentityOnce.Do(func() {
+		testIdentity, testIdentityErr = gobble.IdentityFromBuildInfo("github.com/HahyeonJeon/gobble/assets")
+	})
+	if testIdentityErr != nil {
+		t.Fatalf("IdentityFromBuildInfo() error = %v", testIdentityErr)
+	}
+	return gobble.WithIdentity(testIdentity)
+}
 
 type inspectRec struct {
 	Identity  string `json:"identity"`
@@ -251,7 +267,7 @@ func mustComposeProof(t *testing.T, p *gobble.Pipeline) *gobble.Graph {
 
 func mustRunProof(t *testing.T, g *gobble.Graph, dir string, cap int) {
 	t.Helper()
-	if err := gobble.Run(t.Context(), g, dir, cap); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, cap, testOccupyOption(t)); err != nil {
 		var ge *gobble.Error
 		if errors.As(err, &ge) {
 			t.Fatalf("Run() defects %#v", ge.Defects)
@@ -269,7 +285,7 @@ func mustReleaseProof(t *testing.T, dir string) {
 
 func mustResumeProof(t *testing.T, g *gobble.Graph, dir string, cap int) {
 	t.Helper()
-	if err := gobble.Resume(t.Context(), g, dir, cap); err != nil {
+	if err := gobble.Resume(t.Context(), g, dir, cap, testOccupyOption(t)); err != nil {
 		var ge *gobble.Error
 		if errors.As(err, &ge) {
 			t.Fatalf("Resume() defects %#v", ge.Defects)

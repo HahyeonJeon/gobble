@@ -12,12 +12,28 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
 	"github.com/HahyeonJeon/gobble/assets"
 	"github.com/HahyeonJeon/gobble/internal/engine"
 )
+
+var testIdentityOnce sync.Once
+var testIdentity gobble.Identity
+var testIdentityErr error
+
+func testOccupyOption(t *testing.T) gobble.OccupyOption {
+	t.Helper()
+	testIdentityOnce.Do(func() {
+		testIdentity, testIdentityErr = gobble.IdentityFromBuildInfo("github.com/HahyeonJeon/gobble/tests/local-e2e_test")
+	})
+	if testIdentityErr != nil {
+		t.Fatalf("IdentityFromBuildInfo() error = %v", testIdentityErr)
+	}
+	return gobble.WithIdentity(testIdentity)
+}
 
 const (
 	rnaSheetRel    = "testdata/rnaseq-samplesheet.csv"
@@ -368,7 +384,7 @@ func recoverAfterSuccessAPI(t *testing.T, g *gobble.Graph, dir string, cap int) 
 	if remaining := inspectJSONL(t, dir, gobble.ViewRemaining); len(remaining) != 0 {
 		t.Fatalf("success remaining got %#v, want empty", remaining)
 	}
-	err := gobble.Run(t.Context(), g, dir, 0)
+	err := gobble.Run(t.Context(), g, dir, 0, testOccupyOption(t))
 	requireRunError(t, "second Run", err, gobble.DefectOccupiedWorkspace, "")
 
 	if err := gobble.Release(dir); err != nil {
@@ -380,7 +396,7 @@ func recoverAfterSuccessAPI(t *testing.T, g *gobble.Graph, dir string, cap int) 
 		t.Fatalf("released occupancy got %#v", occ)
 	}
 
-	if err := gobble.Resume(t.Context(), g, dir, cap); err != nil {
+	if err := gobble.Resume(t.Context(), g, dir, cap, testOccupyOption(t)); err != nil {
 		fatalAPIError(t, "Resume()", err)
 	}
 	assertOccupied(t, dir)

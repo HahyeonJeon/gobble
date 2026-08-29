@@ -44,7 +44,10 @@ func TestSessionProofTwoReservedKeysIsolate(t *testing.T) {
 	writeCheckFile(t, filepath.Join(dir, "in", "a.txt"), "left-reads")
 	writeCheckFile(t, filepath.Join(dir, "in", "b.txt"), "right-reads")
 	doc := Document{Name: "pair", Tasks: []TaskPlan{left, right}}
-	if defects := Run(t.Context(), Request{Workspace: dir, Document: doc, Cap: 2}); len(defects) != 0 {
+	if defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc, Cap: 2}); len(defects) != 0 {
 		t.Fatalf("Run() defects %v", defects)
 	}
 	if _, err := os.Stat(filepath.Join(dir, filepath.FromSlash(leftIso), "work")); err != nil {
@@ -72,12 +75,15 @@ func TestSessionProofTwoReservedKeysIsolate(t *testing.T) {
 	}
 
 	forceDeadOwner(t, dir)
-	if defects := Release(dir); len(defects) != 0 {
+	if defects := Release(dir, testInstallIdentity()); len(defects) != 0 {
 		t.Fatalf("Release() defects %v", defects)
 	}
 	rerun := doc
 	rerun.Tasks[0].Command = []string{"sh", "-c", "exit 1"}
-	if defects := Resume(t.Context(), Request{Workspace: dir, Document: rerun, Cap: 2}); !hasDefect(defects, DefectFailed, "left") {
+	if defects := Resume(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  rerun, Cap: 2}); !hasDefect(defects, DefectFailed, "left") {
 		t.Fatalf("Resume() defects %v, want failed left", defects)
 	}
 
@@ -112,18 +118,18 @@ func TestSessionProofTwoReservedKeysIsolate(t *testing.T) {
 
 func inspectJSONLByID(t *testing.T, workspace, view string) map[string]map[string]any {
 	t.Helper()
-	raw, defects := Inspect(workspace, view, "")
+	raw, defects := Inspect(workspace, view, "", testInstallIdentity())
 	if len(defects) != 0 {
-		t.Fatalf("Inspect(%s) defects %v", view, defects)
+		t.Fatalf("Inspect(%s, testInstallIdentity()) defects %v", view, defects)
 	}
 	return remainingByID(t, raw)
 }
 
 func inspectLineageByProducer(t *testing.T, workspace string) map[string][]jsonLineage {
 	t.Helper()
-	raw, defects := Inspect(workspace, viewLineage, "")
+	raw, defects := Inspect(workspace, viewLineage, "", testInstallIdentity())
 	if len(defects) != 0 {
-		t.Fatalf("Inspect(lineage) defects %v", defects)
+		t.Fatalf("Inspect(lineage, testInstallIdentity()) defects %v", defects)
 	}
 	var doc inspectLineageDoc
 	if err := json.Unmarshal(raw, &doc); err != nil {

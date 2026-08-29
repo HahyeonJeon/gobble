@@ -26,7 +26,7 @@ func TestReuseReasonTable(t *testing.T) {
 				return readyReleasedRun(t, processCopyPipeline)
 			},
 			act: func(t *testing.T, dir string) {
-				if err := gobble.Resume(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0); err != nil {
+				if err := gobble.Resume(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0, testOccupyOption(t)); err != nil {
 					t.Fatalf("Resume() error = %v", err)
 				}
 			},
@@ -41,7 +41,7 @@ func TestReuseReasonTable(t *testing.T) {
 				return readyReleasedRun(t, processCopyPipeline)
 			},
 			act: func(t *testing.T, dir string) {
-				if err := gobble.Resume(t.Context(), mustCompose(processCopyIdentityPipeline("pwd > out/pwd.txt && cp in/sample.txt out/sample.txt && true", "slow"))(t), dir, 0); err != nil {
+				if err := gobble.Resume(t.Context(), mustCompose(processCopyIdentityPipeline("pwd > out/pwd.txt && cp in/sample.txt out/sample.txt && true", "slow"))(t), dir, 0, testOccupyOption(t)); err != nil {
 					t.Fatalf("Resume() error = %v", err)
 				}
 			},
@@ -56,7 +56,7 @@ func TestReuseReasonTable(t *testing.T) {
 				return readyReleasedRun(t, processScriptCopyPipeline("cp in/sample.txt out/sample.txt"))
 			},
 			act: func(t *testing.T, dir string) {
-				if err := gobble.Resume(t.Context(), mustCompose(processScriptCopyPipeline("cp in/sample.txt out/sample.txt\n# v2"))(t), dir, 0); err != nil {
+				if err := gobble.Resume(t.Context(), mustCompose(processScriptCopyPipeline("cp in/sample.txt out/sample.txt\n# v2"))(t), dir, 0, testOccupyOption(t)); err != nil {
 					t.Fatalf("Resume() error = %v", err)
 				}
 			},
@@ -71,7 +71,7 @@ func TestReuseReasonTable(t *testing.T) {
 				return readyReleasedRun(t, processCopyParamsPipeline("fast"))
 			},
 			act: func(t *testing.T, dir string) {
-				if err := gobble.Resume(t.Context(), mustCompose(processCopyParamsPipeline("slow"))(t), dir, 0); err != nil {
+				if err := gobble.Resume(t.Context(), mustCompose(processCopyParamsPipeline("slow"))(t), dir, 0, testOccupyOption(t)); err != nil {
 					t.Fatalf("Resume() error = %v", err)
 				}
 			},
@@ -86,7 +86,7 @@ func TestReuseReasonTable(t *testing.T) {
 				return readyReleasedRun(t, processEnvCopyPipeline)
 			},
 			act: func(t *testing.T, dir string) {
-				if err := gobble.Resume(t.Context(), mustCompose(processEnvCopyHomePipeline("/tmp/gobble-home-2"))(t), dir, 0); err != nil {
+				if err := gobble.Resume(t.Context(), mustCompose(processEnvCopyHomePipeline("/tmp/gobble-home-2"))(t), dir, 0, testOccupyOption(t)); err != nil {
 					t.Fatalf("Resume() error = %v", err)
 				}
 			},
@@ -103,7 +103,7 @@ func TestReuseReasonTable(t *testing.T) {
 				return dir
 			},
 			act: func(t *testing.T, dir string) {
-				if err := gobble.Resume(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0); err != nil {
+				if err := gobble.Resume(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0, testOccupyOption(t)); err != nil {
 					t.Fatalf("Resume() error = %v", err)
 				}
 			},
@@ -130,7 +130,7 @@ func TestReuseReasonTable(t *testing.T) {
 				return dir
 			},
 			act: func(t *testing.T, dir string) {
-				if err := gobble.Resume(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0); err != nil {
+				if err := gobble.Resume(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0, testOccupyOption(t)); err != nil {
 					t.Fatalf("Resume() error = %v", err)
 				}
 			},
@@ -143,7 +143,7 @@ func TestReuseReasonTable(t *testing.T) {
 			name: "input-missing",
 			setup: func(t *testing.T) string {
 				dir := readyRunWorkspace(t)
-				if err := gobble.Run(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0); err != nil {
+				if err := gobble.Run(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0, testOccupyOption(t)); err != nil {
 					t.Fatalf("Run() error = %v", err)
 				}
 				if err := os.Remove(filepath.Join(dir, "in", "sample.txt")); err != nil {
@@ -159,7 +159,7 @@ func TestReuseReasonTable(t *testing.T) {
 			name: "output-missing",
 			setup: func(t *testing.T) string {
 				dir := readyRunWorkspace(t)
-				if err := gobble.Run(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0); err != nil {
+				if err := gobble.Run(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0, testOccupyOption(t)); err != nil {
 					t.Fatalf("Run() error = %v", err)
 				}
 				if err := os.Remove(filepath.Join(dir, "out", "sample.txt")); err != nil {
@@ -176,7 +176,7 @@ func TestReuseReasonTable(t *testing.T) {
 			setup: func(t *testing.T) string {
 				dir := readyRunWorkspace(t)
 				g := mustCompose(processCopyPipeline)(t)
-				if err := gobble.Run(t.Context(), g, dir, 0); err != nil {
+				if err := gobble.Run(t.Context(), g, dir, 0, testOccupyOption(t)); err != nil {
 					t.Fatalf("Run() error = %v", err)
 				}
 				forcePublicDeadOwner(t, dir)
@@ -187,7 +187,7 @@ func TestReuseReasonTable(t *testing.T) {
 				return dir
 			},
 			act: func(t *testing.T, dir string) {
-				if err := gobble.Resume(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0); err != nil {
+				if err := gobble.Resume(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0, testOccupyOption(t)); err != nil {
 					t.Fatalf("Resume() error = %v", err)
 				}
 			},
@@ -202,7 +202,7 @@ func TestReuseReasonTable(t *testing.T) {
 				return readyReleasedRun(t, processContainPipeline)
 			},
 			act: func(t *testing.T, dir string) {
-				err := gobble.Resume(t.Context(), mustCompose(processContainPipeline)(t), dir, 2)
+				err := gobble.Resume(t.Context(), mustCompose(processContainPipeline)(t), dir, 2, testOccupyOption(t))
 				requireResumeError(t, "contained resume", err, gobble.DefectFailed, "fail")
 			},
 			view:     "reuse",
@@ -216,7 +216,7 @@ func TestReuseReasonTable(t *testing.T) {
 				return readyReleasedRun(t, processContainPipeline)
 			},
 			act: func(t *testing.T, dir string) {
-				err := gobble.Resume(t.Context(), mustCompose(processContainPipeline)(t), dir, 2)
+				err := gobble.Resume(t.Context(), mustCompose(processContainPipeline)(t), dir, 2, testOccupyOption(t))
 				requireResumeError(t, "contained resume", err, gobble.DefectFailed, "fail")
 			},
 			view:     "reuse",
@@ -230,7 +230,7 @@ func TestReuseReasonTable(t *testing.T) {
 				return readyReleasedRun(t, processContainPipeline)
 			},
 			act: func(t *testing.T, dir string) {
-				err := gobble.Resume(t.Context(), mustCompose(processContainPipeline)(t), dir, 2)
+				err := gobble.Resume(t.Context(), mustCompose(processContainPipeline)(t), dir, 2, testOccupyOption(t))
 				requireResumeError(t, "contained resume", err, gobble.DefectFailed, "fail")
 			},
 			view:     "reuse",

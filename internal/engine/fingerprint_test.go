@@ -17,6 +17,7 @@ func TestInspectRemainingDoesNotReadFileBytes(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	if defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
 		Workspace: dir,
 		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 	}); len(defects) != 0 {
@@ -37,9 +38,9 @@ func TestInspectRemainingDoesNotReadFileBytes(t *testing.T) {
 	if _, err := os.ReadFile(inPath); err == nil {
 		t.Fatal("input is readable, chmod 000 did not block reads")
 	}
-	raw, defects := Inspect(dir, viewRemaining, "")
+	raw, defects := Inspect(dir, viewRemaining, "", testInstallIdentity())
 	if len(defects) != 0 {
-		t.Fatalf("Inspect(remaining) defects %v", defects)
+		t.Fatalf("Inspect(remaining, testInstallIdentity()) defects %v", defects)
 	}
 	if len(bytes.TrimSpace(raw)) != 0 {
 		t.Fatalf("remaining got %s, want empty (cheap keys must not read bytes)", raw)
@@ -54,6 +55,7 @@ func TestCopyFallbackDestCheapKeyIsDestInode(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	if defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
 		Workspace: dir,
 		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 	}); len(defects) != 0 {
@@ -360,6 +362,7 @@ func TestRunFingerprintsStagedBytesBeforeSubmit(t *testing.T) {
 	done := make(chan []Defect, 1)
 	go func() {
 		done <- Run(t.Context(), Request{
+			Identity:  testInstallIdentity(),
 			Workspace: dir,
 			Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 		})
@@ -401,7 +404,11 @@ func TestStatusSucceededEmptyChecksumsIsReuseMiss(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
-	if defects := Run(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+	if defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	}); len(defects) != 0 {
 		t.Fatalf("Run() defects %v", defects)
 	}
 	state := taskStates(t, dir)["copy"]
@@ -415,10 +422,14 @@ func TestStatusSucceededEmptyChecksumsIsReuseMiss(t *testing.T) {
 		st.Lineage = nil
 	})
 	forceDeadOwner(t, dir)
-	if defects := Release(dir); len(defects) != 0 {
+	if defects := Release(dir, testInstallIdentity()); len(defects) != 0 {
 		t.Fatalf("Release() defects %v", defects)
 	}
-	if defects := Resume(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+	if defects := Resume(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	}); len(defects) != 0 {
 		t.Fatalf("Resume() empty-checksum defects %v, want rerun", defects)
 	}
 	after := taskStates(t, dir)["copy"]

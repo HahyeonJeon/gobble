@@ -17,6 +17,9 @@ func Resume(ctx context.Context, req Request) []Defect {
 	if ctx == nil {
 		ctx = context.Background()
 	}
+	if d := ValidateInstallIdentity(req.Identity); len(d) > 0 {
+		return d
+	}
 	if d := checkResume(req); len(d) > 0 {
 		return d
 	}
@@ -56,7 +59,7 @@ func checkResume(req Request) []Defect {
 	if d := checkCapacity(req.Document, readHostCapacity()); len(d) > 0 {
 		return d
 	}
-	_, recorded, hasPlan, taskFile, _, d := readCoherentControl(req.Workspace)
+	run, recorded, hasPlan, taskFile, _, d := readCoherentControl(req.Workspace)
 	if len(d) > 0 {
 		if hasDefectCode(d, DefectNotFound) {
 			return []Defect{{
@@ -65,6 +68,9 @@ func checkResume(req Request) []Defect {
 				Paths:   []string{ControlDir + "/" + RunIdentityFile},
 			}}
 		}
+		return d
+	}
+	if d := workspaceIdentityDefects(run.Identity, req.Identity, identityResume); len(d) > 0 {
 		return d
 	}
 	var recordedDoc Document
@@ -214,6 +220,10 @@ func occupyResume(req Request) (*sched, []Defect) {
 		lock.Close()
 		return nil, occupiedDefect()
 	}
+	if d := workspaceIdentityDefects(existing.Identity, req.Identity, identityResume); len(d) > 0 {
+		lock.Close()
+		return nil, d
+	}
 	tasks := taskFile.Tasks
 	if len(latestAttempts(tasks)) == 0 {
 		lock.Close()
@@ -246,6 +256,7 @@ func occupyResume(req Request) (*sched, []Defect) {
 		snapshot:  snapshot,
 		run: jsonRun{
 			SchemaVersion: SchemaVersion,
+			Identity:      cloneInstallIdentity(req.Identity),
 			Snapshot:      snapshot,
 			ID:            existing.ID,
 			Status:        StatusRunning,

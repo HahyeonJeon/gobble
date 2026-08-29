@@ -77,9 +77,9 @@ func TestInspectNoFingerprintsAffectsDownstream(t *testing.T) {
 	}
 	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), string(append(taskBytes, '\n')))
 	before := snapshotDir(t, dir)
-	raw, defects := Inspect(dir, viewRemaining, "")
+	raw, defects := Inspect(dir, viewRemaining, "", testInstallIdentity())
 	if len(defects) != 0 {
-		t.Fatalf("Inspect(remaining) defects %v", defects)
+		t.Fatalf("Inspect(remaining, testInstallIdentity()) defects %v", defects)
 	}
 	recs := decodeInspectJSONL(t, raw)
 	byID := map[string]map[string]any{}
@@ -175,9 +175,9 @@ func TestInspectRemainingInstanceUsesFullSet(t *testing.T) {
 	}
 	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), string(append(taskBytes, '\n')))
 
-	allRaw, defects := Inspect(dir, viewRemaining, "")
+	allRaw, defects := Inspect(dir, viewRemaining, "", testInstallIdentity())
 	if len(defects) != 0 {
-		t.Fatalf("Inspect(remaining) defects %v", defects)
+		t.Fatalf("Inspect(remaining, testInstallIdentity()) defects %v", defects)
 	}
 	all := remainingByID(t, allRaw)
 	if all["a"]["remaining"] != true || all["a"]["affected"] != true {
@@ -190,9 +190,9 @@ func TestInspectRemainingInstanceUsesFullSet(t *testing.T) {
 		t.Fatalf("unfiltered b reason got %#v, want downstream-of-rerun", all["b"]["reason"])
 	}
 
-	oneRaw, defects := Inspect(dir, viewRemaining, "b")
+	oneRaw, defects := Inspect(dir, viewRemaining, "b", testInstallIdentity())
 	if len(defects) != 0 {
-		t.Fatalf("Inspect(remaining, b) defects %v", defects)
+		t.Fatalf("Inspect(remaining, b, testInstallIdentity()) defects %v", defects)
 	}
 	one := remainingByID(t, oneRaw)
 	if len(one) != 1 || one["b"] == nil {
@@ -242,9 +242,9 @@ func TestInspectRemainingEmptyExecIdentityMiss(t *testing.T) {
 		t.Fatal(err)
 	}
 	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), string(append(taskBytes, '\n')))
-	raw, defects := Inspect(dir, viewRemaining, "")
+	raw, defects := Inspect(dir, viewRemaining, "", testInstallIdentity())
 	if len(defects) != 0 {
-		t.Fatalf("Inspect(remaining) defects %v", defects)
+		t.Fatalf("Inspect(remaining, testInstallIdentity()) defects %v", defects)
 	}
 	recs := remainingByID(t, raw)
 	if recs["copy"]["affected"] != true || recs["copy"]["reason"] != reasonImageChanged {
@@ -294,9 +294,9 @@ func TestInspectRemainingEmptyImageDigestMiss(t *testing.T) {
 		t.Fatal(err)
 	}
 	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), string(append(taskBytes, '\n')))
-	raw, defects := Inspect(dir, viewRemaining, "")
+	raw, defects := Inspect(dir, viewRemaining, "", testInstallIdentity())
 	if len(defects) != 0 {
-		t.Fatalf("Inspect(remaining) defects %v", defects)
+		t.Fatalf("Inspect(remaining, testInstallIdentity()) defects %v", defects)
 	}
 	recs := remainingByID(t, raw)
 	if recs["copy"]["affected"] != true || recs["copy"]["reason"] != reasonImageChanged {
@@ -334,7 +334,7 @@ func TestInspectLogsEscapedPathInvalid(t *testing.T) {
   ]
 }
 `)
-	_, defects := Inspect(dir, viewLogs, "")
+	_, defects := Inspect(dir, viewLogs, "", testInstallIdentity())
 	found := false
 	for _, d := range defects {
 		if d.Code == DefectInvalidPath {
@@ -342,7 +342,7 @@ func TestInspectLogsEscapedPathInvalid(t *testing.T) {
 		}
 	}
 	if !found {
-		t.Fatalf("escaped log Inspect(logs) defects %v, want invalid-path", defects)
+		t.Fatalf("escaped log Inspect(logs, testInstallIdentity()) defects %v, want invalid-path", defects)
 	}
 }
 
@@ -350,21 +350,22 @@ func TestInspectSuccessfulRunNotAffected(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	if defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
 		Workspace: dir,
 		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 	}); len(defects) != 0 {
 		t.Fatalf("Run() defects %v", defects)
 	}
-	raw, defects := Inspect(dir, viewRemaining, "")
+	raw, defects := Inspect(dir, viewRemaining, "", testInstallIdentity())
 	if len(defects) != 0 {
-		t.Fatalf("Inspect(remaining) defects %v", defects)
+		t.Fatalf("Inspect(remaining, testInstallIdentity()) defects %v", defects)
 	}
 	if len(bytes.TrimSpace(raw)) != 0 {
 		t.Fatalf("remaining got %s, want empty", raw)
 	}
-	timing, defects := Inspect(dir, viewTiming, "")
+	timing, defects := Inspect(dir, viewTiming, "", testInstallIdentity())
 	if len(defects) != 0 {
-		t.Fatalf("Inspect(timing) defects %v", defects)
+		t.Fatalf("Inspect(timing, testInstallIdentity()) defects %v", defects)
 	}
 	var doc inspectTimingDoc
 	if err := json.Unmarshal(timing, &doc); err != nil {
@@ -402,9 +403,9 @@ func TestInspectReuseViewReadsDecisions(t *testing.T) {
   ]
 }
 `)
-	empty, defects := Inspect(dir, viewReuse, "")
+	empty, defects := Inspect(dir, viewReuse, "", testInstallIdentity())
 	if len(defects) != 0 {
-		t.Fatalf("Inspect(reuse) defects %v", defects)
+		t.Fatalf("Inspect(reuse, testInstallIdentity()) defects %v", defects)
 	}
 	recs := decodeInspectJSONL(t, empty)
 	if len(recs) != 1 || recs[0]["identity"] != "copy" || recs[0]["decision"] != reuseReused {
@@ -433,9 +434,9 @@ func TestInspectReuseViewEmptyWithoutDecisions(t *testing.T) {
   ]
 }
 `)
-	raw, defects := Inspect(dir, viewReuse, "")
+	raw, defects := Inspect(dir, viewReuse, "", testInstallIdentity())
 	if len(defects) != 0 {
-		t.Fatalf("Inspect(reuse) defects %v", defects)
+		t.Fatalf("Inspect(reuse, testInstallIdentity()) defects %v", defects)
 	}
 	if len(bytes.TrimSpace(raw)) != 0 {
 		t.Fatalf("reuse got %s, want empty", raw)
@@ -469,9 +470,9 @@ func TestInspectLogTailBounded(t *testing.T) {
   ]
 }
 `)
-	raw, defects := Inspect(dir, viewLogs, "")
+	raw, defects := Inspect(dir, viewLogs, "", testInstallIdentity())
 	if len(defects) != 0 {
-		t.Fatalf("Inspect(logs) defects %v", defects)
+		t.Fatalf("Inspect(logs, testInstallIdentity()) defects %v", defects)
 	}
 	var doc inspectLogsDoc
 	if err := json.Unmarshal(raw, &doc); err != nil {
@@ -495,20 +496,21 @@ func TestInspectInstanceSelector(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	if defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
 		Workspace: dir,
 		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 	}); len(defects) != 0 {
 		t.Fatalf("Run() defects %v", defects)
 	}
-	raw, defects := Inspect(dir, viewInstances, "copy")
+	raw, defects := Inspect(dir, viewInstances, "copy", testInstallIdentity())
 	if len(defects) != 0 {
-		t.Fatalf("Inspect(instances, copy) defects %v", defects)
+		t.Fatalf("Inspect(instances, copy, testInstallIdentity()) defects %v", defects)
 	}
 	recs := decodeInspectJSONL(t, raw)
 	if len(recs) != 1 || recs[0]["identity"] != "copy" {
 		t.Fatalf("instances copy got %#v", recs)
 	}
-	_, defects = Inspect(dir, viewRun, "missing")
+	_, defects = Inspect(dir, viewRun, "missing", testInstallIdentity())
 	if !hasDefect(defects, DefectNotFound, "missing") {
 		t.Fatalf("unknown instance defects %v, want not-found", defects)
 	}

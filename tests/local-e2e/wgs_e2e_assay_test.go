@@ -19,7 +19,7 @@ func TestWGSSuccessInspectReleaseResume(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose(assets.WGS()) error = %v", err)
 	}
-	if err := gobble.Run(t.Context(), g, dir, 2); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 2, testOccupyOption(t)); err != nil {
 		fatalAPIError(t, "Run(assets.WGS())", err)
 	}
 	assertOccupied(t, dir)
@@ -41,7 +41,7 @@ func TestThinFailFixtureInspectReleaseResume(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose(thin fail fixture) error = %v", err)
 	}
-	err = gobble.Run(t.Context(), g, dir, 2)
+	err = gobble.Run(t.Context(), g, dir, 2, testOccupyOption(t))
 	requireRunError(t, "contained failure", err, gobble.DefectFailed, "fail")
 	assertOccupied(t, dir)
 	if _, statErr := os.Stat(filepath.Join(dir, "out", "fail.txt")); !os.IsNotExist(statErr) {
@@ -63,7 +63,7 @@ func TestThinFailFixtureInspectReleaseResume(t *testing.T) {
 	if err := gobble.Release(dir); err != nil {
 		fatalAPIError(t, "Release()", err)
 	}
-	err = gobble.Resume(t.Context(), g, dir, 2)
+	err = gobble.Resume(t.Context(), g, dir, 2, testOccupyOption(t))
 	requireRunError(t, "resume remaining", err, gobble.DefectFailed, "fail")
 	assertOccupied(t, dir)
 	reuse := instanceByID(inspectJSONL(t, dir, gobble.ViewReuse))

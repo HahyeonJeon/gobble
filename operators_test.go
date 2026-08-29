@@ -126,7 +126,7 @@ func TestRunScatterMembersAndGather(t *testing.T) {
 	g := mustCompose(func() *gobble.Pipeline {
 		return scatterGroupPipeline(`f=$(find . -type f ! -name '*.out' | head -1); cp "$f" "$f.out"`)
 	})(t)
-	if err := gobble.Run(t.Context(), g, dir, 2); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 2, testOccupyOption(t)); err != nil {
 		var ge *gobble.Error
 		if errors.As(err, &ge) {
 			t.Fatalf("Run() defects %#v", ge.Defects)
@@ -196,7 +196,7 @@ func TestRunScatterFileFromOneMember(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	if err := gobble.Run(t.Context(), g, dir, 0); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 0, testOccupyOption(t)); err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
 	raw := mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile))
@@ -236,7 +236,7 @@ func TestRunGatherEmptyMembershipNeverReady(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	err = gobble.Run(t.Context(), g, dir, 0)
+	err = gobble.Run(t.Context(), g, dir, 0, testOccupyOption(t))
 	requireRunError(t, "empty gather", err, gobble.DefectNeverReady, "each.copy")
 }
 
@@ -256,7 +256,7 @@ func TestWhenSkipFalseParamAndRemaining(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	if err := gobble.Run(t.Context(), g, dir, 0); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 0, testOccupyOption(t)); err != nil {
 		t.Fatalf("Run() error = %v, want nil", err)
 	}
 	if _, err := os.Stat(filepath.Join(dir, "out", "sample.txt")); !os.IsNotExist(err) {
@@ -295,7 +295,7 @@ func TestWhenSkipMissingFile(t *testing.T) {
 	if err := gobble.Preflight(g, dir, 0); err != nil {
 		t.Fatalf("Preflight() error = %v, want skip exemption", err)
 	}
-	if err := gobble.Run(t.Context(), g, dir, 0); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 0, testOccupyOption(t)); err != nil {
 		t.Fatalf("Run() error = %v, want nil", err)
 	}
 	rawInst, err := gobble.Inspect(dir, gobble.ViewInstances, "")
@@ -322,7 +322,7 @@ func TestWhenSkipEmptyFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	if err := gobble.Run(t.Context(), g, dir, 0); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 0, testOccupyOption(t)); err != nil {
 		t.Fatalf("Run() error = %v, want nil", err)
 	}
 	rawInst, err := gobble.Inspect(dir, gobble.ViewInstances, "")
@@ -355,7 +355,7 @@ func TestWhenUnknownProducerDoesNotSkip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	err = gobble.Run(t.Context(), g, dir, 0)
+	err = gobble.Run(t.Context(), g, dir, 0, testOccupyOption(t))
 	requireRunError(t, "failed producer", err, gobble.DefectFailed, "prep")
 	rawInst, err := gobble.Inspect(dir, gobble.ViewInstances, "")
 	if err != nil {
@@ -400,13 +400,13 @@ func TestResumeUnchangedPreservesSkip(t *testing.T) {
 		return p
 	}
 	g := mustCompose(pipe)(t)
-	if err := gobble.Run(t.Context(), g, dir, 0); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 0, testOccupyOption(t)); err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
 	if err := gobble.Release(dir); err != nil {
 		t.Fatalf("Release() error = %v", err)
 	}
-	if err := gobble.Resume(t.Context(), g, dir, 0); err != nil {
+	if err := gobble.Resume(t.Context(), g, dir, 0, testOccupyOption(t)); err != nil {
 		t.Fatalf("Resume() error = %v", err)
 	}
 	rawInst, err := gobble.Inspect(dir, gobble.ViewInstances, "")
@@ -428,13 +428,13 @@ func TestResumeUnchangedPreservesScatterMembers(t *testing.T) {
 	g := mustCompose(func() *gobble.Pipeline {
 		return scatterGroupPipeline(`f=$(find . -type f ! -name '*.out' | head -1); cp "$f" "$f.out"`)
 	})(t)
-	if err := gobble.Run(t.Context(), g, dir, 2); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 2, testOccupyOption(t)); err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
 	if err := gobble.Release(dir); err != nil {
 		t.Fatalf("Release() error = %v", err)
 	}
-	if err := gobble.Resume(t.Context(), g, dir, 2); err != nil {
+	if err := gobble.Resume(t.Context(), g, dir, 2, testOccupyOption(t)); err != nil {
 		t.Fatalf("Resume() error = %v", err)
 	}
 	raw := mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile))
@@ -453,7 +453,7 @@ func TestResumeIdentityChangedReexpands(t *testing.T) {
 	g1 := mustCompose(func() *gobble.Pipeline {
 		return scatterGroupPipeline(`f=$(find . -type f ! -name '*.out' | head -1); cp "$f" "$f.out"`)
 	})(t)
-	if err := gobble.Run(t.Context(), g1, dir, 2); err != nil {
+	if err := gobble.Run(t.Context(), g1, dir, 2, testOccupyOption(t)); err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
 	if err := gobble.Release(dir); err != nil {
@@ -462,7 +462,7 @@ func TestResumeIdentityChangedReexpands(t *testing.T) {
 	g2 := mustCompose(func() *gobble.Pipeline {
 		return scatterGroupPipeline(`f=$(find . -type f ! -name '*.out' | head -1); cp "$f" "$f.out"; true`)
 	})(t)
-	if err := gobble.Resume(t.Context(), g2, dir, 2); err != nil {
+	if err := gobble.Resume(t.Context(), g2, dir, 2, testOccupyOption(t)); err != nil {
 		var ge *gobble.Error
 		if errors.As(err, &ge) {
 			t.Fatalf("Resume() defects %#v", ge.Defects)
@@ -495,7 +495,7 @@ func TestRunScatterRestagedTreeExpandsProducer(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	if err := gobble.Run(t.Context(), g, dir, 2); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 2, testOccupyOption(t)); err != nil {
 		var ge *gobble.Error
 		if errors.As(err, &ge) {
 			for _, d := range ge.Defects {
@@ -521,7 +521,7 @@ func TestResumeUnchangedRetriesFailedMember(t *testing.T) {
 	g := mustCompose(func() *gobble.Pipeline {
 		return scatterGroupPipeline("false")
 	})(t)
-	if err := gobble.Run(t.Context(), g, dir, 2); err == nil {
+	if err := gobble.Run(t.Context(), g, dir, 2, testOccupyOption(t)); err == nil {
 		t.Fatalf("Run() error = nil, want failed members")
 	}
 	if err := gobble.Release(dir); err != nil {
@@ -534,7 +534,7 @@ func TestResumeUnchangedRetriesFailedMember(t *testing.T) {
 	if !bytes.Contains(rawRem, []byte("each.copy/s1/0")) && !bytes.Contains(rawRem, []byte("each.copy/s2/0")) {
 		t.Fatalf("failed members not remaining: %s", rawRem)
 	}
-	_ = gobble.Resume(t.Context(), g, dir, 2)
+	_ = gobble.Resume(t.Context(), g, dir, 2, testOccupyOption(t))
 	raw := mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile))
 	if memberAttempt(raw, "s1") < 2 && memberAttempt(raw, "s2") < 2 {
 		t.Fatalf("Unchanged resume did not retry failed members: %s", raw)
@@ -560,7 +560,7 @@ func TestResumePredicateChangeReevaluates(t *testing.T) {
 		return p
 	}
 	g1 := mustCompose(first)(t)
-	if err := gobble.Run(t.Context(), g1, dir, 0); err != nil {
+	if err := gobble.Run(t.Context(), g1, dir, 0, testOccupyOption(t)); err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
 	if err := gobble.Release(dir); err != nil {
@@ -582,7 +582,7 @@ func TestResumePredicateChangeReevaluates(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	if err := gobble.Resume(t.Context(), g2, dir, 0); err != nil {
+	if err := gobble.Resume(t.Context(), g2, dir, 0, testOccupyOption(t)); err != nil {
 		t.Fatalf("Resume() error = %v", err)
 	}
 	if _, err := os.Stat(filepath.Join(dir, "out", "sample.txt")); err != nil {
@@ -616,7 +616,7 @@ func TestRunScatterAddModuleSameMemberFlow(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	if err := gobble.Run(t.Context(), g, dir, 2); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 2, testOccupyOption(t)); err != nil {
 		var ge *gobble.Error
 		if errors.As(err, &ge) {
 			t.Fatalf("Run() defects %#v", ge.Defects)
@@ -667,7 +667,7 @@ func TestRunScatterAddModuleThreeTaskChain(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	if err := gobble.Run(t.Context(), g, dir, 2); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 2, testOccupyOption(t)); err != nil {
 		var ge *gobble.Error
 		if errors.As(err, &ge) {
 			t.Fatalf("Run() defects %#v", ge.Defects)
@@ -700,7 +700,7 @@ func TestResumeFromChangeDoesNotSubmitLeftoverMembers(t *testing.T) {
 			},
 		)
 	})(t)
-	if err := gobble.Run(t.Context(), g1, dir, 2); err != nil {
+	if err := gobble.Run(t.Context(), g1, dir, 2, testOccupyOption(t)); err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
 	if err := gobble.Release(dir); err != nil {
@@ -715,7 +715,7 @@ func TestResumeFromChangeDoesNotSubmitLeftoverMembers(t *testing.T) {
 			},
 		)
 	})(t)
-	if err := gobble.Resume(t.Context(), g2, dir, 2); err != nil {
+	if err := gobble.Resume(t.Context(), g2, dir, 2, testOccupyOption(t)); err != nil {
 		var ge *gobble.Error
 		if errors.As(err, &ge) {
 			t.Fatalf("Resume() defects %#v", ge.Defects)
@@ -770,7 +770,7 @@ func TestResumeTrueToFalseWhenSkips(t *testing.T) {
 		return whenPredWithAfter("run")
 	}
 	g1 := mustCompose(first)(t)
-	if err := gobble.Run(t.Context(), g1, dir, 0); err != nil {
+	if err := gobble.Run(t.Context(), g1, dir, 0, testOccupyOption(t)); err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
 	if err := gobble.Release(dir); err != nil {
@@ -780,7 +780,7 @@ func TestResumeTrueToFalseWhenSkips(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	if err := gobble.Resume(t.Context(), g2, dir, 0); err != nil {
+	if err := gobble.Resume(t.Context(), g2, dir, 0, testOccupyOption(t)); err != nil {
 		t.Fatalf("Resume() error = %v", err)
 	}
 	rawInst, err := gobble.Inspect(dir, gobble.ViewInstances, "")
@@ -804,7 +804,7 @@ func TestResumeTrueToFalseWhenSkipsPreviouslyFailedDownstream(t *testing.T) {
 	g1 := mustCompose(func() *gobble.Pipeline {
 		return whenPredWithAfterCmd("run", []string{"false"})
 	})(t)
-	if err := gobble.Run(t.Context(), g1, dir, 0); err == nil {
+	if err := gobble.Run(t.Context(), g1, dir, 0, testOccupyOption(t)); err == nil {
 		t.Fatalf("Run() error = nil, want failed downstream")
 	}
 	if err := gobble.Release(dir); err != nil {
@@ -814,7 +814,7 @@ func TestResumeTrueToFalseWhenSkipsPreviouslyFailedDownstream(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	if err := gobble.Resume(t.Context(), g2, dir, 0); err != nil {
+	if err := gobble.Resume(t.Context(), g2, dir, 0, testOccupyOption(t)); err != nil {
 		t.Fatalf("Resume() error = %v, want skipped downstream", err)
 	}
 	rawInst, err := gobble.Inspect(dir, gobble.ViewInstances, "")
@@ -839,7 +839,7 @@ func TestResumeTrueToFalseWhenSkipsReleasedCanceledDescendant(t *testing.T) {
 	ctx, cancel := context.WithCancel(t.Context())
 	done := make(chan error, 1)
 	go func() {
-		done <- gobble.Run(ctx, g1, dir, 0)
+		done <- gobble.Run(ctx, g1, dir, 0, testOccupyOption(t))
 	}()
 	waitTaskStatus(t, dir, "after", engine.StatusRunning)
 	cancel()
@@ -865,7 +865,7 @@ func TestResumeTrueToFalseWhenSkipsReleasedCanceledDescendant(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	if err := gobble.Resume(t.Context(), g2, dir, 0); err != nil {
+	if err := gobble.Resume(t.Context(), g2, dir, 0, testOccupyOption(t)); err != nil {
 		t.Fatalf("Resume() error = %v, want skipped released descendant", err)
 	}
 	rawInst, err := gobble.Inspect(dir, gobble.ViewInstances, "")
@@ -889,7 +889,7 @@ func TestResumeTrueToFalseWhenSkipsFailedScatterMember(t *testing.T) {
 	g1 := mustCompose(func() *gobble.Pipeline {
 		return whenScatterFailPipeline("run")
 	})(t)
-	if err := gobble.Run(t.Context(), g1, dir, 2); err == nil {
+	if err := gobble.Run(t.Context(), g1, dir, 2, testOccupyOption(t)); err == nil {
 		t.Fatalf("Run() error = nil, want failed scatter members")
 	}
 	if err := gobble.Release(dir); err != nil {
@@ -899,7 +899,7 @@ func TestResumeTrueToFalseWhenSkipsFailedScatterMember(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	if err := gobble.Resume(t.Context(), g2, dir, 2); err != nil {
+	if err := gobble.Resume(t.Context(), g2, dir, 2, testOccupyOption(t)); err != nil {
 		t.Fatalf("Resume() error = %v, want skipped failed members", err)
 	}
 	rawInst, err := gobble.Inspect(dir, gobble.ViewInstances, "")

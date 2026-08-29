@@ -15,7 +15,7 @@ import (
 // occupying process is live is live-occupancy. Later-process unproved process
 // identities become incomplete or published-unfinalized; Docker unknowns keep
 // occupancy active.
-func Release(workspace string) []Defect {
+func Release(workspace string, supplied *InstallIdentity) []Defect {
 	if d := checkWorkspace(workspace); len(d) > 0 {
 		return d
 	}
@@ -31,6 +31,14 @@ func Release(workspace string) []Defect {
 		}}
 	}
 	if d := unsupportedControlSchema(workspace, run); len(d) > 0 {
+		return d
+	}
+	if supplied != nil {
+		if d := ValidateInstallIdentity(supplied); len(d) > 0 {
+			return d
+		}
+	}
+	if d := workspaceIdentityDefects(run.Identity, installIdentityForWorkspace(run.Identity, supplied), identityRelease); len(d) > 0 {
 		return d
 	}
 	if !occupancyIsActive(run) {
@@ -74,6 +82,9 @@ func Release(workspace string) []Defect {
 	}
 	run, plan, hasPlan, taskFile, _, d := readCoherentControl(workspace)
 	if len(d) > 0 {
+		return d
+	}
+	if d := workspaceIdentityDefects(run.Identity, installIdentityForWorkspace(run.Identity, supplied), identityRelease); len(d) > 0 {
 		return d
 	}
 	tasks := taskFile.Tasks
@@ -254,7 +265,7 @@ func reconcileRelease(workspace string, ex exec.Executor, settle *settlement, re
 			if st.Status == StatusRunning || st.Status == StatusUnknown {
 				st.Status = StatusIncomplete
 				st.Ended = now
-				st.Reason = "released"
+				markReleasedReason(st)
 				marked = append(marked, ident)
 			}
 		case StatusRunning:
@@ -271,13 +282,46 @@ func reconcileRelease(workspace string, ex exec.Executor, settle *settlement, re
 			if st.Status == StatusRunning {
 				st.Status = StatusIncomplete
 				st.Ended = now
-				st.Reason = "released"
+				markReleasedReason(st)
 				marked = append(marked, ident)
+			}
+		default:
+			if dockerLeftover(st) && !retryDockerLeftover(workspace, ex, settle, st) {
+				unknown = append(unknown, ident)
 			}
 		}
 	}
 	sort.Strings(unknown)
 	return tasks, marked, unknown
+}
+
+func markReleasedReason(st *jsonTaskState) {
+	if st.Reason == "" || st.Reason == "ready" || st.Reason == "unknown-backend" {
+		st.Reason = "released"
+	}
+}
+
+func dockerLeftover(st *jsonTaskState) bool {
+	return st.RuntimeID != "" && (st.Executor == executorDocker || st.Image != "")
+}
+
+func retryDockerLeftover(workspace string, ex exec.Executor, settle *settlement, st *jsonTaskState) bool {
+	ident := reservedIdentity(taskPlanFromState(*st))
+	h, ok := backendHandle(workspace, ident, st)
+	if !ok {
+		return true
+	}
+	r, err := settle.reconcile(ex, h)
+	if err != nil {
+		// The terminal task state is prior stopped proof. A cleanup retry
+		// failure does not make that disposition unknown again.
+		return true
+	}
+	if r.Running {
+		return false
+	}
+	st.RuntimeID = r.RuntimeID
+	return true
 }
 
 func reconcileIdentity(workspace string, ex exec.Executor, settle *settlement, releaseState *sched, st *jsonTaskState, owner bool, now string) bool {
@@ -340,6 +384,7 @@ func reconcileIdentity(workspace string, ex exec.Executor, settle *settlement, r
 				return false
 			}
 			if !pr.Running {
+				applyDockerStoppedReport(st, backend, pr)
 				return true
 			}
 			if err := settle.pause(); err != nil {
@@ -350,7 +395,18 @@ func reconcileIdentity(workspace string, ex exec.Executor, settle *settlement, r
 			}
 		}
 	}
+	applyDockerStoppedReport(st, backend, r)
 	return true
+}
+
+func applyDockerStoppedReport(st *jsonTaskState, backend string, r exec.Report) {
+	if backend != executorDocker || r.Running {
+		return
+	}
+	st.RuntimeID = r.RuntimeID
+	if r.Reason != "" {
+		st.Reason = r.Reason
+	}
 }
 
 func destComplete(workspace string, outputs []IO) bool {

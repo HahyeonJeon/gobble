@@ -1,16 +1,20 @@
 package engine
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"sync"
 	"testing"
+
+	"github.com/HahyeonJeon/gobble/internal/engine/exec"
 )
 
 func TestReleaseMissingRun(t *testing.T) {
 	dir := t.TempDir()
-	defects := Release(dir)
+	defects := Release(dir, testInstallIdentity())
 	if !hasDefect(defects, DefectNotFound, "") {
 		t.Fatalf("Release() defects %v, want not-found", defects)
 	}
@@ -20,7 +24,7 @@ func TestReleaseAlreadyReleased(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, ControlDir, RunIdentityFile), closedRunJSON("run-1"))
 	before := snapshotDir(t, dir)
-	defects := Release(dir)
+	defects := Release(dir, testInstallIdentity())
 	if !hasDefect(defects, DefectAlreadyReleased, "") {
 		t.Fatalf("Release() defects %v, want already-released", defects)
 	}
@@ -34,6 +38,7 @@ func TestReleaseLiveOccupancy(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	if defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
 		Workspace: dir,
 		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 	}); len(defects) != 0 {
@@ -41,7 +46,7 @@ func TestReleaseLiveOccupancy(t *testing.T) {
 	}
 	ForgetHeldLease(dir)
 	before := snapshotDir(t, dir)
-	defects := Release(dir)
+	defects := Release(dir, testInstallIdentity())
 	if !hasDefect(defects, DefectLiveOccupancy, "") {
 		t.Fatalf("Release() defects %v, want live-occupancy", defects)
 	}
@@ -56,12 +61,13 @@ func TestReleaseOccupyingProcessAfterRun(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	if defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
 		Workspace: dir,
 		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 	}); len(defects) != 0 {
 		t.Fatalf("Run() defects %v, want none", defects)
 	}
-	if defects := Release(dir); len(defects) != 0 {
+	if defects := Release(dir, testInstallIdentity()); len(defects) != 0 {
 		t.Fatalf("occupying-process Release() defects %v, want none", defects)
 	}
 	run, exists, err := readRunIdentity(dir)
@@ -80,7 +86,7 @@ func TestReleasePIDOnlyUnsupported(t *testing.T) {
 		t.Fatal(err)
 	}
 	writeOccupancy(t, dir, jsonOccupancy{Active: true, Host: host, PID: os.Getpid(), Started: "2026-01-01T00:00:00Z"})
-	defects := Release(dir)
+	defects := Release(dir, testInstallIdentity())
 	if !hasDefect(defects, DefectUnsupportedSchema, "") {
 		t.Fatalf("PID-only Release() defects %v, want unsupported-schema", defects)
 	}
@@ -90,7 +96,7 @@ func TestReleaseForeignHost(t *testing.T) {
 	dir := t.TempDir()
 	writeOccupancy(t, dir, jsonOccupancy{Active: true, Host: "other-host", PID: deadPID(t), Lease: "lease", Started: "2026-01-01T00:00:00Z"})
 	before := snapshotDir(t, dir)
-	defects := Release(dir)
+	defects := Release(dir, testInstallIdentity())
 	if !hasDefect(defects, DefectForeignHost, "") {
 		t.Fatalf("Release() defects %v, want foreign-host", defects)
 	}
@@ -111,7 +117,7 @@ func TestReleaseUnsupportedSchema(t *testing.T) {
 }
 `)
 	before := snapshotDir(t, dir)
-	defects := Release(dir)
+	defects := Release(dir, testInstallIdentity())
 	if !hasDefect(defects, DefectUnsupportedSchema, "") {
 		t.Fatalf("Release() defects %v, want unsupported-schema", defects)
 	}
@@ -149,7 +155,7 @@ func TestReleaseDeadOwnerEmptyRuntimeIDBecomesIncomplete(t *testing.T) {
   ]
 }
 `)
-	defects := Release(dir)
+	defects := Release(dir, testInstallIdentity())
 	if len(defects) != 0 {
 		t.Fatalf("Release() defects %v, want none", defects)
 	}
@@ -184,7 +190,7 @@ func TestReleaseSchema0And1Unsupported(t *testing.T) {
 		}
 		writeCheckFile(t, filepath.Join(dir, ControlDir, RunIdentityFile), body)
 		before := snapshotDir(t, dir)
-		defects := Release(dir)
+		defects := Release(dir, testInstallIdentity())
 		if !hasDefect(defects, DefectUnsupportedSchema, "") {
 			t.Fatalf("schema %d: Release() defects %v, want unsupported-schema", ver, defects)
 		}
@@ -234,7 +240,7 @@ func TestReleaseMarksIncompleteWithSlots(t *testing.T) {
   ]
 }
 `)
-	defects := Release(dir)
+	defects := Release(dir, testInstallIdentity())
 	if len(defects) != 0 {
 		t.Fatalf("Release() defects %v, want none", defects)
 	}
@@ -269,13 +275,14 @@ func TestReleaseSucceededRunKeepsSucceeded(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	if defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
 		Workspace: dir,
 		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 	}); len(defects) != 0 {
 		t.Fatalf("Run() defects %v, want none", defects)
 	}
 	forceDeadOwner(t, dir)
-	if defects := Release(dir); len(defects) != 0 {
+	if defects := Release(dir, testInstallIdentity()); len(defects) != 0 {
 		t.Fatalf("Release() defects %v, want none", defects)
 	}
 	run, exists, err := readRunIdentity(dir)
@@ -297,7 +304,11 @@ func TestLaterProcessFileDestCompletePublishedUnfinalized(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
-	if defects := Run(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+	if defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	}); len(defects) != 0 {
 		t.Fatalf("Run() defects %v", defects)
 	}
 	patchAttempt(t, dir, func(st *jsonTaskState) {
@@ -310,7 +321,7 @@ func TestLaterProcessFileDestCompletePublishedUnfinalized(t *testing.T) {
 		st.Lineage = nil
 	})
 	forceDeadOwner(t, dir)
-	if defects := Release(dir); len(defects) != 0 {
+	if defects := Release(dir, testInstallIdentity()); len(defects) != 0 {
 		t.Fatalf("later-process Release() defects %v", defects)
 	}
 	state := taskStates(t, dir)["copy"]
@@ -320,9 +331,9 @@ func TestLaterProcessFileDestCompletePublishedUnfinalized(t *testing.T) {
 	if len(state.Checksums) != 0 || len(state.Fingerprints) != 0 {
 		t.Fatalf("published-unfinalized invented identity: fingerprints=%#v checksums=%#v", state.Fingerprints, state.Checksums)
 	}
-	raw, defects := Inspect(dir, viewRemaining, "")
+	raw, defects := Inspect(dir, viewRemaining, "", testInstallIdentity())
 	if len(defects) != 0 {
-		t.Fatalf("Inspect(remaining) defects %v", defects)
+		t.Fatalf("Inspect(remaining, testInstallIdentity()) defects %v", defects)
 	}
 	if len(raw) != 0 {
 		t.Fatalf("published-unfinalized remaining got %s, want empty", raw)
@@ -344,7 +355,11 @@ func TestLaterProcessFileDestCompletePublishedUnfinalized(t *testing.T) {
 		ToPort:   "in",
 		Wait:     []string{"out/sample.txt"},
 	})
-	defects = Resume(t.Context(), Request{Workspace: dir, Document: next})
+	defects = Resume(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  next,
+	})
 	if len(defects) != 0 {
 		t.Fatalf("Resume() defects %v, want none for dest-complete skip", defects)
 	}
@@ -375,7 +390,11 @@ func TestLaterProcessTreeDirectoryOnlyIncomplete(t *testing.T) {
 			Outputs: []IO{{Name: "tree", Kind: ArtifactTree, Path: "out/tree"}},
 		}},
 	}
-	if defects := Run(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+	if defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	}); len(defects) != 0 {
 		t.Fatalf("Run() defects %v", defects)
 	}
 	if err := os.Remove(filepath.Join(dir, "out", "tree", treeManifestName)); err != nil {
@@ -391,14 +410,18 @@ func TestLaterProcessTreeDirectoryOnlyIncomplete(t *testing.T) {
 		st.Lineage = nil
 	})
 	forceDeadOwner(t, dir)
-	if defects := Release(dir); len(defects) != 0 {
+	if defects := Release(dir, testInstallIdentity()); len(defects) != 0 {
 		t.Fatalf("later-process Release() defects %v", defects)
 	}
 	released := taskStates(t, dir)["tree"]
 	if released.Status != StatusIncomplete {
 		t.Fatalf("tree directory-only status got %q, want incomplete", released.Status)
 	}
-	if defects := Resume(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+	if defects := Resume(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	}); len(defects) != 0 {
 		t.Fatalf("Resume() tree directory-only defects %v, want rerun", defects)
 	}
 	after := taskStates(t, dir)["tree"]
@@ -414,7 +437,11 @@ func TestLaterProcessFileSymlinkIncompleteReruns(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
-	if defects := Run(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+	if defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	}); len(defects) != 0 {
 		t.Fatalf("Run() defects %v", defects)
 	}
 	dest := filepath.Join(dir, "out", "sample.txt")
@@ -435,14 +462,18 @@ func TestLaterProcessFileSymlinkIncompleteReruns(t *testing.T) {
 		st.Lineage = nil
 	})
 	forceDeadOwner(t, dir)
-	if defects := Release(dir); len(defects) != 0 {
+	if defects := Release(dir, testInstallIdentity()); len(defects) != 0 {
 		t.Fatalf("later-process Release() defects %v", defects)
 	}
 	released := taskStates(t, dir)["copy"]
 	if released.Status != StatusIncomplete {
 		t.Fatalf("File symlink status got %q, want incomplete", released.Status)
 	}
-	if defects := Resume(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+	if defects := Resume(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	}); len(defects) != 0 {
 		t.Fatalf("Resume() File symlink defects %v, want rerun", defects)
 	}
 	info, err := os.Lstat(dest)
@@ -475,7 +506,11 @@ func TestLaterProcessGroupPartialIncompleteReruns(t *testing.T) {
 			}},
 		}},
 	}
-	if defects := Run(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+	if defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	}); len(defects) != 0 {
 		t.Fatalf("Run() defects %v", defects)
 	}
 	if err := os.Remove(filepath.Join(dir, "out", "b.txt")); err != nil {
@@ -491,14 +526,18 @@ func TestLaterProcessGroupPartialIncompleteReruns(t *testing.T) {
 		st.Lineage = nil
 	})
 	forceDeadOwner(t, dir)
-	if defects := Release(dir); len(defects) != 0 {
+	if defects := Release(dir, testInstallIdentity()); len(defects) != 0 {
 		t.Fatalf("later-process Release() defects %v", defects)
 	}
 	released := taskStates(t, dir)["group"]
 	if released.Status != StatusIncomplete {
 		t.Fatalf("partial Group status got %q, want incomplete", released.Status)
 	}
-	if defects := Resume(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+	if defects := Resume(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	}); len(defects) != 0 {
 		t.Fatalf("Resume() partial Group defects %v, want rerun", defects)
 	}
 	after := taskStates(t, dir)["group"]
@@ -517,7 +556,11 @@ func TestLaterProcessDockerUnknownKeepsOccupancy(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
-	if defects := Run(t.Context(), Request{Workspace: dir, Document: doc}); len(defects) != 0 {
+	if defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	}); len(defects) != 0 {
 		t.Fatalf("Run() defects %v", defects)
 	}
 	patchAttempt(t, dir, func(st *jsonTaskState) {
@@ -529,13 +572,171 @@ func TestLaterProcessDockerUnknownKeepsOccupancy(t *testing.T) {
 		st.Ended = ""
 	})
 	forceDeadOwner(t, dir)
-	defects := Release(dir)
+	defects := Release(dir, testInstallIdentity())
 	if !hasDefect(defects, DefectUnknownBackend, "copy") {
 		t.Fatalf("later-process Docker Release() defects %v, want unknown-backend", defects)
 	}
 	run, exists, err := readRunIdentity(dir)
 	if err != nil || !exists || !occupancyIsActive(run) {
 		t.Fatalf("Docker unknown occupancy exists=%v err=%v run=%#v", exists, err, run.Occupancy)
+	}
+}
+
+func TestLaterProcessDockerInspectFailureKeepsOccupancy(t *testing.T) {
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
+	if defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	}); len(defects) != 0 {
+		t.Fatalf("Run() defects %v", defects)
+	}
+	patchAttempt(t, dir, func(st *jsonTaskState) {
+		st.Status = StatusRunning
+		st.Executor = executorDocker
+		st.Image = "example.invalid/image:latest"
+		st.RuntimeID = "cid-unproved"
+		st.Reason = "ready"
+		st.Ended = ""
+	})
+	forceDeadOwner(t, dir)
+	useExec(t, &fnExec{
+		submit: func(context.Context, exec.Job) (exec.Handle, exec.Report, error) {
+			t.Fatal("Release called Submit")
+			return exec.Handle{}, exec.Report{}, nil
+		},
+		reconcile: func(context.Context, exec.Handle) (exec.Report, error) {
+			return exec.Report{}, errors.New("docker inspect failed")
+		},
+	})
+	defects := Release(dir, testInstallIdentity())
+	if !hasDefect(defects, DefectUnknownBackend, "copy") {
+		t.Fatalf("Release() defects %v, want unknown-backend", defects)
+	}
+	run, exists, err := readRunIdentity(dir)
+	if err != nil || !exists || !occupancyIsActive(run) {
+		t.Fatalf("Release() occupancy exists=%v err=%v run=%#v, want active", exists, err, run.Occupancy)
+	}
+	state := taskStates(t, dir)["copy"]
+	if state.Status != StatusUnknown || state.RuntimeID != "cid-unproved" {
+		t.Fatalf("Release() state=%#v, want unknown with retained runtime_id", state)
+	}
+}
+
+func TestReleaseRetriesProvedStoppedDockerLeftover(t *testing.T) {
+	for _, tt := range []struct {
+		name           string
+		retryRuntimeID string
+	}{
+		{name: "remove succeeds"},
+		{name: "remove still fails", retryRuntimeID: "cid-leftover"},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			dir := t.TempDir()
+			reconcileCalls := 0
+			executor := &fnExec{
+				submit: func(ctx context.Context, job exec.Job) (exec.Handle, exec.Report, error) {
+					h := exec.Handle{Identity: job.Identity, Backend: exec.BackendDocker, RuntimeID: "cid-leftover"}
+					return h, exec.Report{Identity: job.Identity, RuntimeID: h.RuntimeID, Running: true}, nil
+				},
+				poll: func(ctx context.Context, h exec.Handle) (exec.Report, error) {
+					return exec.Report{
+						Identity:  h.Identity,
+						RuntimeID: h.RuntimeID,
+						Reason:    "log-copy-failed",
+						Published: true,
+					}, nil
+				},
+				reconcile: func(ctx context.Context, h exec.Handle) (exec.Report, error) {
+					reconcileCalls++
+					return exec.Report{Identity: h.Identity, RuntimeID: tt.retryRuntimeID}, nil
+				},
+			}
+			useExec(t, executor)
+			doc := Document{Name: "leftover", Tasks: []TaskPlan{{
+				ID:      "docker",
+				Name:    "docker",
+				Image:   "example.invalid/image:latest",
+				Command: []string{"true"},
+			}}}
+			if defects := Run(t.Context(), Request{
+				Identity:  testInstallIdentity(),
+				Workspace: dir,
+				Document:  doc,
+			}); len(defects) != 0 {
+				t.Fatalf("Run() defects %v, want none", defects)
+			}
+			before := taskStates(t, dir)["docker"]
+			if before.Status != StatusSucceeded || before.Reason != "log-copy-failed" || before.RuntimeID != "cid-leftover" {
+				t.Fatalf("proved-stop state = %#v, want succeeded log-copy-failed leftover", before)
+			}
+			if defects := Release(dir, testInstallIdentity()); len(defects) != 0 {
+				t.Fatalf("Release() defects %v, want none", defects)
+			}
+			after := taskStates(t, dir)["docker"]
+			if after.Status != StatusSucceeded || after.Reason != "log-copy-failed" || after.RuntimeID != tt.retryRuntimeID {
+				t.Fatalf("released state = %#v, want preserved terminal status and runtime_id %q", after, tt.retryRuntimeID)
+			}
+			if reconcileCalls != 1 {
+				t.Fatalf("Release() reconcile calls = %d, want 1 cleanup retry", reconcileCalls)
+			}
+			run, exists, err := readRunIdentity(dir)
+			if err != nil || !exists || occupancyIsActive(run) {
+				t.Fatalf("Release() occupancy exists=%v err=%v run=%#v, want closed", exists, err, run.Occupancy)
+			}
+		})
+	}
+}
+
+func TestResumeDoesNotRefuseTerminalDockerLeftover(t *testing.T) {
+	dir := t.TempDir()
+	pollCalls := 0
+	executor := &fnExec{
+		submit: func(ctx context.Context, job exec.Job) (exec.Handle, exec.Report, error) {
+			h := exec.Handle{Identity: job.Identity, Backend: exec.BackendDocker, RuntimeID: "cid-leftover"}
+			return h, exec.Report{Identity: job.Identity, RuntimeID: h.RuntimeID, Running: true}, nil
+		},
+		poll: func(ctx context.Context, h exec.Handle) (exec.Report, error) {
+			pollCalls++
+			if pollCalls == 1 {
+				return exec.Report{Identity: h.Identity, RuntimeID: h.RuntimeID, Exit: 7, Message: "exit 7"}, nil
+			}
+			return exec.Report{Identity: h.Identity, RuntimeID: h.RuntimeID, Published: true}, nil
+		},
+		reconcile: func(ctx context.Context, h exec.Handle) (exec.Report, error) {
+			return exec.Report{Identity: h.Identity, RuntimeID: h.RuntimeID}, nil
+		},
+	}
+	useExec(t, executor)
+	doc := Document{Name: "leftover", Tasks: []TaskPlan{{
+		ID:      "docker",
+		Name:    "docker",
+		Image:   "example.invalid/image:latest",
+		Command: []string{"true"},
+	}}}
+	req := Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	}
+	if defects := Run(t.Context(), req); !hasDefect(defects, DefectFailed, "docker") {
+		t.Fatalf("Run() defects %v, want failed docker", defects)
+	}
+	if defects := Release(dir, testInstallIdentity()); len(defects) != 0 {
+		t.Fatalf("Release() defects %v, want none", defects)
+	}
+	leftover := taskStates(t, dir)["docker"]
+	if leftover.Status != StatusFailed || leftover.RuntimeID != "cid-leftover" {
+		t.Fatalf("released leftover = %#v, want failed with runtime_id", leftover)
+	}
+	if defects := Resume(t.Context(), req); len(defects) != 0 {
+		t.Fatalf("Resume() defects %v, want rerun despite terminal runtime_id", defects)
+	}
+	after := taskStates(t, dir)["docker"]
+	if after.Status != StatusSucceeded || after.Attempt != leftover.Attempt+1 {
+		t.Fatalf("resumed state = %#v, want succeeded attempt %d", after, leftover.Attempt+1)
 	}
 }
 
@@ -570,12 +771,15 @@ func TestDestCompleteByBindKind(t *testing.T) {
 func TestReleaseMixedSnapshotRefused(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
-	if defects := Run(t.Context(), Request{Workspace: dir, Document: sampleDoc("", "", "in/sample.txt", "out/sample.txt")}); len(defects) != 0 {
+	if defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt")}); len(defects) != 0 {
 		t.Fatalf("Run() defects %v", defects)
 	}
 	tamperTasksSnapshot(t, dir, "mixed")
 	before := snapshotDir(t, dir)
-	if defects := Release(dir); !hasDefect(defects, DefectInvalidPath, "") {
+	if defects := Release(dir, testInstallIdentity()); !hasDefect(defects, DefectInvalidPath, "") {
 		t.Fatalf("Release mixed snapshot defects %v, want invalid-path", defects)
 	}
 	if after := snapshotDir(t, dir); after != before {
@@ -586,7 +790,10 @@ func TestReleaseMixedSnapshotRefused(t *testing.T) {
 func TestConcurrentOccupyingProcessReleaseSerialized(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
-	if defects := Run(t.Context(), Request{Workspace: dir, Document: sampleDoc("", "", "in/sample.txt", "out/sample.txt")}); len(defects) != 0 {
+	if defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt")}); len(defects) != 0 {
 		t.Fatalf("Run() defects %v", defects)
 	}
 	start := make(chan struct{})
@@ -597,7 +804,7 @@ func TestConcurrentOccupyingProcessReleaseSerialized(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			<-start
-			results <- Release(dir)
+			results <- Release(dir, testInstallIdentity())
 		}()
 	}
 	close(start)
@@ -631,10 +838,10 @@ func TestInspectAndReleaseZeroAttemptsNotSuccess(t *testing.T) {
 	}
 	writeOccupancy(t, dir, jsonOccupancy{Active: true, Host: host, PID: deadPID(t), Lease: "lease"})
 	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), `{"schema_version":2,"tasks":[]}`)
-	if _, defects := Inspect(dir, viewRun, ""); !hasDefect(defects, DefectInvalidValue, "") {
+	if _, defects := Inspect(dir, viewRun, "", testInstallIdentity()); !hasDefect(defects, DefectInvalidValue, "") {
 		t.Fatalf("Inspect zero attempts defects %v, want invalid-value", defects)
 	}
-	if defects := Release(dir); !hasDefect(defects, DefectInvalidValue, "") {
+	if defects := Release(dir, testInstallIdentity()); !hasDefect(defects, DefectInvalidValue, "") {
 		t.Fatalf("Release zero attempts defects %v, want invalid-value", defects)
 	}
 }
@@ -656,7 +863,7 @@ func tamperTasksSnapshot(t *testing.T, workspace, snapshot string) {
 
 func writeOccupancy(t *testing.T, workspace string, occ jsonOccupancy) {
 	t.Helper()
-	run := jsonRun{
+	run := jsonRun{Identity: testInstallIdentity(),
 		SchemaVersion: SchemaVersion,
 		ID:            "run-1",
 		Status:        StatusRunning,

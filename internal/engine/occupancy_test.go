@@ -15,6 +15,7 @@ func TestCheckClosedOccupancyNotOccupied(t *testing.T) {
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	writeCheckFile(t, filepath.Join(dir, ControlDir, RunIdentityFile), closedRunJSON("run-1"))
 	req := Request{
+		Identity:  testInstallIdentity(),
 		Workspace: dir,
 		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 	}
@@ -29,6 +30,7 @@ func TestCheckClosedOccupancyOutputExists(t *testing.T) {
 	writeCheckFile(t, filepath.Join(dir, "out", "sample.txt"), "leftover")
 	writeCheckFile(t, filepath.Join(dir, ControlDir, RunIdentityFile), closedRunJSON("run-1"))
 	defects := Check(Request{
+		Identity:  testInstallIdentity(),
 		Workspace: dir,
 		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 	})
@@ -45,6 +47,7 @@ func TestOccupyClosedWorkspaceOneOwner(t *testing.T) {
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	writeCheckFile(t, filepath.Join(dir, ControlDir, RunIdentityFile), closedRunJSON("run-1"))
 	req := Request{
+		Identity:  testInstallIdentity(),
 		Workspace: dir,
 		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 	}
@@ -102,6 +105,7 @@ func TestRunPersistsIdentityFacts(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
 		Workspace: dir,
 		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
 	})
@@ -202,6 +206,7 @@ func TestReservedIdentityKeysTwoInstances(t *testing.T) {
 	writeCheckFile(t, filepath.Join(dir, "in", "a.txt"), "a")
 	writeCheckFile(t, filepath.Join(dir, "in", "b.txt"), "b")
 	if defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
 		Workspace: dir,
 		Document:  Document{Name: "pair", Tasks: []TaskPlan{a, b}},
 		Cap:       2,
@@ -218,7 +223,7 @@ func TestReservedIdentityKeysTwoInstances(t *testing.T) {
 	if _, ok := states["copy"]; ok {
 		t.Fatalf("first-horizon key copy should not collide with instances: %#v", states)
 	}
-	raw, defects := Inspect(dir, viewInstances, "copy/s1/0")
+	raw, defects := Inspect(dir, viewInstances, "copy/s1/0", testInstallIdentity())
 	if len(defects) != 0 {
 		t.Fatalf("Inspect instance filter defects %v", defects)
 	}
@@ -228,7 +233,7 @@ func TestReservedIdentityKeysTwoInstances(t *testing.T) {
 	}
 
 	forceDeadOwner(t, dir)
-	if defects := Release(dir); len(defects) != 0 {
+	if defects := Release(dir, testInstallIdentity()); len(defects) != 0 {
 		t.Fatalf("Release() defects %v", defects)
 	}
 }
@@ -254,7 +259,10 @@ func TestIsolatePathsDistinct(t *testing.T) {
 func TestRunAfterReleaseHitsOutputExists(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
-	req := Request{Workspace: dir, Document: sampleDoc("", "", "in/sample.txt", "out/sample.txt")}
+	req := Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt")}
 	if defects := Run(t.Context(), req); len(defects) != 0 {
 		t.Fatalf("first Run() defects %v, want none", defects)
 	}
@@ -263,7 +271,7 @@ func TestRunAfterReleaseHitsOutputExists(t *testing.T) {
 		t.Fatal(err)
 	}
 	forceDeadOwner(t, dir)
-	if defects := Release(dir); len(defects) != 0 {
+	if defects := Release(dir, testInstallIdentity()); len(defects) != 0 {
 		t.Fatalf("Release() defects %v, want none", defects)
 	}
 	defects := Run(t.Context(), req)
@@ -283,8 +291,10 @@ func TestRunAfterReleaseHitsOutputExists(t *testing.T) {
 }
 
 func closedRunJSON(id string) string {
+	identity, _ := json.Marshal(testInstallIdentity())
 	return `{
   "schema_version": 2,
+  "identity": ` + string(identity) + `,
   "id": "` + id + `",
   "status": "succeeded",
   "started": "2026-01-01T00:00:00Z",

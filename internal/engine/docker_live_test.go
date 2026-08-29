@@ -28,7 +28,11 @@ func TestRunDockerPublishes(t *testing.T) {
 		{Name: "out", Path: "out/docker/sample.txt"},
 		{Name: "pwd", Path: "out/docker/pwd.txt"},
 	}
-	defects := Run(t.Context(), Request{Workspace: dir, Document: doc})
+	defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	})
 	if len(defects) != 0 {
 		t.Fatalf("docker Run() defects %v, want none", defects)
 	}
@@ -77,7 +81,11 @@ func TestRunDockerBadImageContained(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	doc := sampleDoc("gobble-missing-image:not-a-tag", "local", "in/sample.txt", "out/sample.txt")
-	defects := Run(t.Context(), Request{Workspace: dir, Document: doc})
+	defects := Run(t.Context(), Request{
+		Identity:  testInstallIdentity(),
+		Workspace: dir,
+		Document:  doc,
+	})
 	if !hasDefect(defects, DefectFailed, "copy") {
 		t.Fatalf("bad image Run() defects %v, want failed copy", defects)
 	}

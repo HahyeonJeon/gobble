@@ -64,7 +64,7 @@ sheet use samplesheet.csv in the process current directory.
 `,
 	"inspect": `Usage: gobble inspect VIEW --workspace DIR [--instance ID]
 
-Write one workspace view. VIEW is run, instances, errors, logs, timing, dag, lineage, remaining, or reuse.
+Write one workspace view. VIEW is run, instances, errors, logs, timing, dag, lineage, remaining, reuse, or identity.
 --workspace is required and is not created. Omit --instance to read every reserved identity.
 `,
 	"resume": `Usage: gobble resume [package] --workspace DIR [--cap N] [--sample PATH]

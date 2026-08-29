@@ -476,7 +476,7 @@ func finishThinSliceAfterRunError(t *testing.T, g *gobble.Graph, dir string, rec
 		rec.MappedMethod = method
 		t.Logf("mapped reads after failed Run: %d via %s", count, method)
 	}
-	occErr := gobble.Run(t.Context(), g, dir, 0)
+	occErr := gobble.Run(t.Context(), g, dir, 0, testOccupyOption(t))
 	var ge *gobble.Error
 	if errors.As(occErr, &ge) {
 		rec.OccupyError = occErr.Error()

@@ -21,7 +21,13 @@ import (
 // succeeded. Contained task failure returns an [*Error] with Op "run"
 // that names the failed units. When ctx is done, in-flight work is
 // canceled and the error is [*Error] with Op "run" and DefectCanceled.
-func Run(ctx context.Context, g *Graph, workspace string, cap int) error {
+// Run requires exactly one effective [WithIdentity] option. Zero-value
+// OccupyOption values are ignored.
+func Run(ctx context.Context, g *Graph, workspace string, cap int, opts ...OccupyOption) error {
+	identity, err := parseOccupyOptions("run", true, opts)
+	if err != nil {
+		return err
+	}
 	if err := preflight(g, workspace, cap); err != nil {
 		return err
 	}
@@ -33,6 +39,7 @@ func Run(ctx context.Context, g *Graph, workspace string, cap int) error {
 		Workspace: workspace,
 		Cap:       cap,
 		Document:  doc,
+		Identity:  toEngineIdentity(identity),
 	}))
 }
 

@@ -24,7 +24,7 @@ func TestFastQCStandaloneRun(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 1, testOccupyOption(t)); err != nil {
 		fatalAPIError(t, "Run()", err)
 	}
 	for _, rel := range []string{"work/fastqc/test_1_fastqc.html", "work/fastqc/test_1_fastqc.zip"} {
@@ -46,7 +46,7 @@ func TestFastQCExtraArgsResume(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 1, testOccupyOption(t)); err != nil {
 		fatalAPIError(t, "Run()", err)
 	}
 	if err := gobble.Release(dir); err != nil {
@@ -57,7 +57,7 @@ func TestFastQCExtraArgsResume(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose(changed extra-args) error = %v", err)
 	}
-	if err := gobble.Resume(t.Context(), g2, dir, 1); err != nil {
+	if err := gobble.Resume(t.Context(), g2, dir, 1, testOccupyOption(t)); err != nil {
 		fatalAPIError(t, "Resume()", err)
 	}
 	instances := inspectJSONL(t, dir, "instances")
@@ -80,7 +80,7 @@ func TestBWAIndexStandaloneRun(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 1, testOccupyOption(t)); err != nil {
 		fatalAPIError(t, "Run()", err)
 	}
 	for _, rel := range []string{
@@ -111,7 +111,7 @@ func TestFastpStandaloneRun(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 1, testOccupyOption(t)); err != nil {
 		fatalAPIError(t, "Run()", err)
 	}
 	for _, rel := range []string{
@@ -138,7 +138,7 @@ func TestMultiQCStandaloneRun(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 1, testOccupyOption(t)); err != nil {
 		fatalAPIError(t, "Run()", err)
 	}
 	for _, rel := range []string{"work/multiqc/multiqc_report.html", "work/multiqc/multiqc_data.zip"} {
@@ -167,7 +167,7 @@ func TestSTARGenomeGenerateStandaloneRun(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 1, testOccupyOption(t)); err != nil {
 		fatalAPIError(t, "Run()", err)
 	}
 	want := starGenomePublishedPaths("work/star-genome", true)
@@ -214,7 +214,7 @@ func TestSTARAlignNestedRun(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 1, testOccupyOption(t)); err != nil {
 		fatalAPIError(t, "Run()", err)
 	}
 	bam := filepath.Join(dir, filepath.FromSlash("work/star-align/Aligned.out.bam"))
@@ -238,7 +238,7 @@ func TestBismarkGenomeStandaloneRun(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 1, testOccupyOption(t)); err != nil {
 		fatalAPIError(t, "Run()", err)
 	}
 	if _, err := os.Stat(filepath.Join(dir, filepath.FromSlash("in/Bisulfite_Genome"))); !os.IsNotExist(err) {
@@ -266,7 +266,7 @@ func TestBismarkAlignNestedRun(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 1, testOccupyOption(t)); err != nil {
 		fatalAPIError(t, "Run()", err)
 	}
 	info, err := os.Stat(filepath.Join(dir, filepath.FromSlash("work/bismark-align/aligned_pe.bam")))
@@ -293,7 +293,7 @@ func TestBismarkMethylationExtractorNestedRun(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
-	if err := gobble.Run(t.Context(), g, dir, 1); err != nil {
+	if err := gobble.Run(t.Context(), g, dir, 1, testOccupyOption(t)); err != nil {
 		fatalAPIError(t, "Run()", err)
 	}
 	for _, rel := range []string{

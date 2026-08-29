@@ -256,7 +256,7 @@ func TestDriverSampleInjection(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parse() error = %v", err)
 	}
-	src := driverSource("example.com/pipe", def)
+	src := driverSource("example.com/pipe", def, installIdentityResult{})
 	if !strings.Contains(src, `sample    = "`+gobble.DefaultSampleSheetPath+`"`) {
 		t.Fatalf("generated driver missing default sample constant:\n%s", src)
 	}
@@ -273,7 +273,7 @@ func TestDriverSampleInjection(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parse() error = %v", err)
 	}
-	got := driverSource("example.com/pipe", explicit)
+	got := driverSource("example.com/pipe", explicit, installIdentityResult{})
 	if !strings.Contains(got, `sample    = "my/sheet.csv"`) {
 		t.Fatalf("generated driver missing explicit sample constant:\n%s", got)
 	}

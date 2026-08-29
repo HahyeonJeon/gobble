@@ -15,7 +15,7 @@ import (
 func TestOccupancyTable(t *testing.T) {
 	t.Run("occupy after Run", func(t *testing.T) {
 		dir := readyRunWorkspace(t)
-		if err := gobble.Run(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0); err != nil {
+		if err := gobble.Run(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0, testOccupyOption(t)); err != nil {
 			t.Fatalf("Run() error = %v", err)
 		}
 		if occupancySnapshot(t, dir) != "active" {
@@ -29,7 +29,7 @@ func TestOccupancyTable(t *testing.T) {
 	})
 	t.Run("Inspect allowed while occupied", func(t *testing.T) {
 		dir := readyRunWorkspace(t)
-		if err := gobble.Run(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0); err != nil {
+		if err := gobble.Run(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0, testOccupyOption(t)); err != nil {
 			t.Fatalf("Run() error = %v", err)
 		}
 		before := snapshotWorkspace(t, dir)
@@ -44,19 +44,19 @@ func TestOccupancyTable(t *testing.T) {
 	t.Run("second Run occupied-workspace", func(t *testing.T) {
 		dir := readyRunWorkspace(t)
 		g := mustCompose(processCopyPipeline)(t)
-		if err := gobble.Run(t.Context(), g, dir, 0); err != nil {
+		if err := gobble.Run(t.Context(), g, dir, 0, testOccupyOption(t)); err != nil {
 			t.Fatalf("Run() error = %v", err)
 		}
-		err := gobble.Run(t.Context(), g, dir, 0)
+		err := gobble.Run(t.Context(), g, dir, 0, testOccupyOption(t))
 		requireRunError(t, "second Run", err, gobble.DefectOccupiedWorkspace, "")
 	})
 	t.Run("Resume occupied-workspace", func(t *testing.T) {
 		dir := readyRunWorkspace(t)
 		g := mustCompose(processCopyPipeline)(t)
-		if err := gobble.Run(t.Context(), g, dir, 0); err != nil {
+		if err := gobble.Run(t.Context(), g, dir, 0, testOccupyOption(t)); err != nil {
 			t.Fatalf("Run() error = %v", err)
 		}
-		err := gobble.Resume(t.Context(), g, dir, 0)
+		err := gobble.Resume(t.Context(), g, dir, 0, testOccupyOption(t))
 		requireResumeError(t, "resume occupied", err, gobble.DefectOccupiedWorkspace, "")
 	})
 }
@@ -68,7 +68,7 @@ func TestReleaseTable(t *testing.T) {
 	})
 	t.Run("occupying-process Release", func(t *testing.T) {
 		dir := readyRunWorkspace(t)
-		if err := gobble.Run(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0); err != nil {
+		if err := gobble.Run(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0, testOccupyOption(t)); err != nil {
 			t.Fatalf("Run() error = %v", err)
 		}
 		if err := gobble.Release(dir); err != nil {
@@ -80,7 +80,7 @@ func TestReleaseTable(t *testing.T) {
 	})
 	t.Run("live-occupancy", func(t *testing.T) {
 		dir := readyRunWorkspace(t)
-		if err := gobble.Run(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0); err != nil {
+		if err := gobble.Run(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0, testOccupyOption(t)); err != nil {
 			t.Fatalf("Run() error = %v", err)
 		}
 		gobble.ForgetHeldLease(dir)
@@ -93,7 +93,7 @@ func TestReleaseTable(t *testing.T) {
 	})
 	t.Run("dead owner then already-released", func(t *testing.T) {
 		dir := readyRunWorkspace(t)
-		if err := gobble.Run(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0); err != nil {
+		if err := gobble.Run(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0, testOccupyOption(t)); err != nil {
 			t.Fatalf("Run() error = %v", err)
 		}
 		forcePublicDeadOwner(t, dir)
@@ -108,7 +108,7 @@ func TestReleaseTable(t *testing.T) {
 	})
 	t.Run("foreign-host", func(t *testing.T) {
 		dir := readyRunWorkspace(t)
-		if err := gobble.Run(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0); err != nil {
+		if err := gobble.Run(t.Context(), mustCompose(processCopyPipeline)(t), dir, 0, testOccupyOption(t)); err != nil {
 			t.Fatalf("Run() error = %v", err)
 		}
 		forcePublicDeadOwner(t, dir)
@@ -152,7 +152,7 @@ func TestConcurrentComposeRunWithProcessSampleSheet(t *testing.T) {
 				errs <- fmt.Errorf("Compose() error = %w", err)
 				return
 			}
-			errs <- gobble.Run(ctx, g, dir, 0)
+			errs <- gobble.Run(ctx, g, dir, 0, testOccupyOption(t))
 		}(dir)
 	}
 	wg.Wait()

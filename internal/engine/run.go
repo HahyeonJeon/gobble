@@ -94,6 +94,9 @@ func Run(ctx context.Context, req Request) []Defect {
 	if ctx == nil {
 		ctx = context.Background()
 	}
+	if d := ValidateInstallIdentity(req.Identity); len(d) > 0 {
+		return d
+	}
 	if d := Check(req); len(d) > 0 {
 		return d
 	}
@@ -165,13 +168,14 @@ func (b *resourceBudget) release(t TaskPlan) {
 }
 
 type jsonRun struct {
-	SchemaVersion int            `json:"schema_version"`
-	Snapshot      string         `json:"snapshot,omitempty"`
-	ID            string         `json:"id"`
-	Status        string         `json:"status"`
-	Started       string         `json:"started"`
-	Ended         string         `json:"ended,omitempty"`
-	Occupancy     *jsonOccupancy `json:"occupancy"`
+	SchemaVersion int              `json:"schema_version"`
+	Identity      *InstallIdentity `json:"identity,omitempty"`
+	Snapshot      string           `json:"snapshot,omitempty"`
+	ID            string           `json:"id"`
+	Status        string           `json:"status"`
+	Started       string           `json:"started"`
+	Ended         string           `json:"ended,omitempty"`
+	Occupancy     *jsonOccupancy   `json:"occupancy"`
 }
 
 type jsonTaskState struct {
@@ -259,6 +263,7 @@ func occupy(req Request) (*sched, []Defect) {
 		snapshot:  snapshot,
 		run: jsonRun{
 			SchemaVersion: SchemaVersion,
+			Identity:      cloneInstallIdentity(req.Identity),
 			Snapshot:      snapshot,
 			ID:            runID(doc),
 			Status:        StatusRunning,
@@ -334,6 +339,7 @@ type report struct {
 	ID               string
 	Exit             int
 	Message          string
+	Reason           string
 	Stdout           string
 	Stderr           string
 	Published        bool
@@ -1177,10 +1183,9 @@ func (s *sched) runJob(ctx context.Context, workspace string, task TaskPlan, ex 
 		}
 		r.Exit = pr.Exit
 		r.Message = pr.Message
+		r.Reason = pr.Reason
 		r.Published = pr.Published
-		if pr.RuntimeID != "" {
-			r.RuntimeID = pr.RuntimeID
-		}
+		r.RuntimeID = pr.RuntimeID
 		if pr.ImageDigest != "" {
 			r.ImageDigest = pr.ImageDigest
 		}
@@ -1370,9 +1375,7 @@ func (s *sched) apply(r report) {
 	}
 	st.Stdout = r.Stdout
 	st.Stderr = r.Stderr
-	if r.RuntimeID != "" {
-		st.RuntimeID = r.RuntimeID
-	}
+	st.RuntimeID = r.RuntimeID
 	if r.ImageDigest != "" {
 		st.ImageDigest = r.ImageDigest
 	}
@@ -1405,14 +1408,14 @@ func (s *sched) apply(r report) {
 	}
 	if r.Published && r.Exit == 0 && r.Message == "" {
 		st.Status = StatusSucceeded
-		st.Reason = "ready"
+		st.Reason = terminalReason(r)
 		st.Error = nil
 		if task, ok := s.taskByIdent(r.ID); ok {
 			s.notePersist(s.recordSuccess(st, task, r.Fingerprints))
 		}
 	} else {
 		st.Status = StatusFailed
-		st.Reason = "ready"
+		st.Reason = terminalReason(r)
 		msg := r.Message
 		if msg == "" {
 			msg = "exit " + strconv.Itoa(r.Exit)
@@ -1425,6 +1428,13 @@ func (s *sched) apply(r report) {
 		s.blockFrom(r.ID)
 	}
 	s.notePersist(s.persistControl())
+}
+
+func terminalReason(r report) string {
+	if r.Reason != "" {
+		return r.Reason
+	}
+	return "ready"
 }
 
 func (s *sched) recordSuccess(st *jsonTaskState, task TaskPlan, inputs []jsonFileHash) error {

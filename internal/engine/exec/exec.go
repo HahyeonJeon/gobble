@@ -59,6 +59,7 @@ type Report struct {
 	ImageDigest string
 	Exit        int
 	Message     string
+	Reason      string
 	Running     bool
 	Published   bool
 }

@@ -211,14 +211,17 @@ func TestDockerOperationsUseEngineClientEnv(t *testing.T) {
 
 func TestDockerTerminalCleanupFailuresAreVisible(t *testing.T) {
 	tests := []struct {
-		name      string
-		operation string
-		failure   string
+		name       string
+		operation  string
+		logsFail   bool
+		removeFail bool
 	}{
-		{name: "poll logs", operation: "Poll", failure: "logs"},
-		{name: "poll remove", operation: "Poll", failure: "rm"},
-		{name: "reconcile logs", operation: "Reconcile", failure: "logs"},
-		{name: "reconcile remove", operation: "Reconcile", failure: "rm"},
+		{name: "poll logs", operation: "Poll", logsFail: true},
+		{name: "poll remove", operation: "Poll", removeFail: true},
+		{name: "poll both", operation: "Poll", logsFail: true, removeFail: true},
+		{name: "reconcile logs", operation: "Reconcile", logsFail: true},
+		{name: "reconcile remove", operation: "Reconcile", removeFail: true},
+		{name: "reconcile both", operation: "Reconcile", logsFail: true, removeFail: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -234,20 +237,22 @@ func TestDockerTerminalCleanupFailuresAreVisible(t *testing.T) {
 				joined := strings.Join(args, " ")
 				switch {
 				case strings.Contains(joined, "State.Running"):
-					_, _ = io.WriteString(stdout, "false 0\n")
+					_, _ = io.WriteString(stdout, "false 17\n")
 					return 0, nil
 				case strings.Contains(joined, "Mounts"):
 					_, _ = io.WriteString(stdout, work+"\n")
 					return 0, nil
 				case len(args) > 0 && args[0] == "logs":
 					calls["logs"]++
-					if tt.failure == "logs" {
+					_, _ = io.WriteString(stdout, "partial stdout\n")
+					_, _ = io.WriteString(stderr, "partial stderr\n")
+					if tt.logsFail {
 						return 23, nil
 					}
 					return 0, nil
 				case len(args) > 0 && args[0] == "rm":
 					calls["rm"]++
-					if tt.failure == "rm" {
+					if tt.removeFail {
 						_, _ = io.WriteString(stderr, "remove denied\n")
 						return 24, nil
 					}
@@ -267,17 +272,115 @@ func TestDockerTerminalCleanupFailuresAreVisible(t *testing.T) {
 			} else {
 				r, err = d.Reconcile(context.Background(), h)
 			}
-			if err == nil || !strings.Contains(err.Error(), "docker "+tt.failure) {
-				t.Fatalf("%s() error = %v, want docker %s failure", tt.operation, err, tt.failure)
+			if err != nil {
+				t.Fatalf("%s() error = %v, want proved-stop cleanup success", tt.operation, err)
 			}
-			if r.Running || r.Exit != 0 {
-				t.Fatalf("%s() report = %#v, want stopped exit 0", tt.operation, r)
+			if r.Running || r.Exit != 17 || r.Message != "exit 17" {
+				t.Fatalf("%s() report = %#v, want stopped exit 17", tt.operation, r)
 			}
-			if _, ok := d.done[h.RuntimeID]; ok {
-				t.Fatalf("%s() cached cleanup failure as ordinary success", tt.operation)
+			wantReason := ""
+			if tt.logsFail {
+				wantReason = "log-copy-failed"
+			}
+			if r.Reason != wantReason {
+				t.Fatalf("%s() reason = %q, want %q", tt.operation, r.Reason, wantReason)
+			}
+			wantRuntimeID := ""
+			if tt.removeFail {
+				wantRuntimeID = h.RuntimeID
+			}
+			if r.RuntimeID != wantRuntimeID {
+				t.Fatalf("%s() runtime_id = %q, want %q", tt.operation, r.RuntimeID, wantRuntimeID)
+			}
+			cached, ok := d.done[h.RuntimeID]
+			if !ok || cached != r {
+				t.Fatalf("%s() cache = %#v, want %#v", tt.operation, cached, r)
 			}
 			if calls["logs"] != 1 || calls["rm"] != 1 {
 				t.Fatalf("%s() cleanup calls = %v, want logs=1 rm=1", tt.operation, calls)
+			}
+		})
+	}
+}
+
+func TestDockerCachedLeftoverRetriesRemoveAndClearsRuntimeID(t *testing.T) {
+	root := t.TempDir()
+	work := filepath.Join(root, "work")
+	if err := os.Mkdir(work, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	orig := DockerCLI
+	t.Cleanup(func() { DockerCLI = orig })
+	calls := map[string]int{}
+	DockerCLI = func(ctx context.Context, args []string, env []string, stdout, stderr io.Writer) (int, error) {
+		joined := strings.Join(args, " ")
+		switch {
+		case strings.Contains(joined, "State.Running"):
+			calls["inspect"]++
+			_, _ = io.WriteString(stdout, "false 19\n")
+			return 0, nil
+		case strings.Contains(joined, "Mounts"):
+			_, _ = io.WriteString(stdout, work+"\n")
+			return 0, nil
+		case len(args) > 0 && args[0] == "logs":
+			calls["logs"]++
+			return 0, nil
+		case len(args) > 0 && args[0] == "rm":
+			calls["rm"]++
+			if calls["rm"] == 1 {
+				return 24, nil
+			}
+			return 0, nil
+		default:
+			t.Fatalf("unexpected docker argv: %v", args)
+			return -1, nil
+		}
+	}
+
+	d := NewDocker()
+	h := Handle{Identity: "cleanup", Backend: BackendDocker, RuntimeID: "cid-cleanup"}
+	first, err := d.Poll(context.Background(), h)
+	if err != nil || first.Exit != 19 || first.RuntimeID != h.RuntimeID {
+		t.Fatalf("first Poll() report=%#v error=%v, want cached leftover exit 19", first, err)
+	}
+	second, err := d.Reconcile(context.Background(), h)
+	if err != nil || second.Exit != 19 || second.RuntimeID != "" {
+		t.Fatalf("second Reconcile() report=%#v error=%v, want cleared leftover exit 19", second, err)
+	}
+	third, err := d.Poll(context.Background(), h)
+	if err != nil || third != second {
+		t.Fatalf("third Poll() report=%#v error=%v, want cached %#v", third, err, second)
+	}
+	if calls["inspect"] != 1 || calls["logs"] != 1 || calls["rm"] != 2 {
+		t.Fatalf("docker calls = %v, want inspect=1 logs=1 rm=2", calls)
+	}
+}
+
+func TestDockerStoppedUnknownExitIsUnproved(t *testing.T) {
+	for _, output := range []string{"false\n", "false nope\n", "false 0 extra\n"} {
+		t.Run(strings.TrimSpace(output), func(t *testing.T) {
+			orig := DockerCLI
+			t.Cleanup(func() { DockerCLI = orig })
+			calls := 0
+			DockerCLI = func(ctx context.Context, args []string, env []string, stdout, stderr io.Writer) (int, error) {
+				calls++
+				if !strings.Contains(strings.Join(args, " "), "State.Running") {
+					t.Fatalf("unexpected docker argv: %v", args)
+				}
+				_, _ = io.WriteString(stdout, output)
+				return 0, nil
+			}
+			d := NewDocker()
+			h := Handle{Identity: "unknown", Backend: BackendDocker, RuntimeID: "cid-unknown"}
+			r, err := d.Poll(context.Background(), h)
+			if err == nil {
+				t.Fatalf("Poll() report=%#v error=nil, want unproved inspect error", r)
+			}
+			if _, ok := d.done[h.RuntimeID]; ok {
+				t.Fatal("Poll() cached unproved stop")
+			}
+			if calls != 1 {
+				t.Fatalf("docker calls=%d, want inspect only", calls)
 			}
 		})
 	}
@@ -318,7 +421,7 @@ func TestDockerSubmitPersistsLaunchedContainerImage(t *testing.T) {
 	}
 }
 
-func TestDockerPollLogCreateFailureIsEscapedPath(t *testing.T) {
+func TestDockerPollLogCreateFailureMarksIncompleteLogs(t *testing.T) {
 	outside := t.TempDir()
 	sentinel := filepath.Join(outside, "secret.log")
 	if err := os.WriteFile(sentinel, []byte("keep"), 0o644); err != nil {
@@ -366,9 +469,12 @@ func TestDockerPollLogCreateFailureIsEscapedPath(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Submit() error = %v", err)
 	}
-	_, err = d.Poll(context.Background(), h)
-	if !errors.Is(err, ErrEscapedPath) {
-		t.Fatalf("Poll() error = %v, want ErrEscapedPath", err)
+	report, err := d.Poll(context.Background(), h)
+	if err != nil {
+		t.Fatalf("Poll() error = %v, want proved-stop cleanup success", err)
+	}
+	if report.Reason != "log-copy-failed" || report.RuntimeID != "" || report.Running {
+		t.Fatalf("Poll() report = %#v, want stopped incomplete logs with removed container", report)
 	}
 	got, err := os.ReadFile(sentinel)
 	if err != nil || string(got) != "keep" {

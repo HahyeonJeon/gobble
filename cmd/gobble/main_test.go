@@ -83,6 +83,15 @@ func TestVersion(t *testing.T) {
 			if got.Version == "" {
 				t.Fatalf("version empty")
 			}
+			if got.Process != "generic-cli" || got.InstallKind != "module" || got.IdentityMode == "" {
+				t.Fatalf("version identity = %#v", got)
+			}
+			if got.GOOS != "linux" || got.GOARCH != "amd64" {
+				t.Fatalf("version platform = %s/%s", got.GOOS, got.GOARCH)
+			}
+			if got.IdentityMode == "local-pin" && len(got.ExecutableSHA256) != 64 {
+				t.Fatalf("local-pin executable_sha256 = %q", got.ExecutableSHA256)
+			}
 			var raw map[string]any
 			if err := json.Unmarshal(res.stdout, &raw); err != nil {
 				t.Fatal(err)

@@ -16,6 +16,7 @@ type Document struct {
 // Request is a run check. Workspace and Cap do not belong on Document.
 type Request struct {
 	Workspace string
+	Identity  *InstallIdentity
 	// Cap is the caller concurrency limit. Zero means DefaultCap.
 	Cap      int
 	Document Document

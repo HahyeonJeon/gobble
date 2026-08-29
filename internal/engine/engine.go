@@ -41,6 +41,7 @@ const (
 	DefectNothingToResume    = "nothing-to-resume"
 	DefectCanceled           = "canceled"
 	DefectUnknownBackend     = "unknown-backend"
+	DefectIdentityMismatch   = "identity-mismatch"
 )
 
 // SchemaVersion is the control-document version this engine writes.
