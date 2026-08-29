@@ -15,6 +15,7 @@ type request struct {
 	cap       int
 	instance  string
 	sample    string
+	output    string
 	help      bool
 	version   bool
 }
@@ -33,6 +34,9 @@ type rawArgs struct {
 	sample          string
 	sampleSet       bool
 	sampleRepeat    bool
+	output          string
+	outputSet       bool
+	outputRepeat    bool
 	help            bool
 	version         bool
 	unknown         []string
@@ -103,6 +107,12 @@ func collectArgs(args []string) rawArgs {
 				}
 				raw.sampleSet = true
 				raw.sample = val
+			case "output":
+				if raw.outputSet {
+					raw.outputRepeat = true
+				}
+				raw.outputSet = true
+				raw.output = val
 			default:
 				raw.unknown = append(raw.unknown, "--"+name)
 			}
@@ -149,9 +159,9 @@ func interpret(raw rawArgs) (*request, *gobble.Error) {
 		return nil, invalidRequest("cli", "unknown command")
 	}
 
-	allowWS, allowCap, allowInst, allowSample := flagsFor(cmd)
+	allowWS, allowCap, allowInst, allowSample, allowOutput := flagsFor(cmd)
 	if cmd == "help" || cmd == "version" || cmd == "" {
-		allowWS, allowCap, allowInst, allowSample = false, false, false, false
+		allowWS, allowCap, allowInst, allowSample, allowOutput = false, false, false, false, false
 	}
 	unknown := append([]string(nil), raw.unknown...)
 	if raw.workspaceSet && !allowWS {
@@ -165,6 +175,9 @@ func interpret(raw rawArgs) (*request, *gobble.Error) {
 	}
 	if raw.sampleSet && !allowSample {
 		unknown = append(unknown, "--sample")
+	}
+	if raw.outputSet && !allowOutput {
+		unknown = append(unknown, "--output")
 	}
 
 	if cmd == "help" {
@@ -191,7 +204,7 @@ func interpret(raw rawArgs) (*request, *gobble.Error) {
 		if len(unknown) > 0 {
 			return nil, inv("unknown flag " + unknown[0])
 		}
-		if raw.workspaceRepeat || raw.capRepeat || raw.instanceRepeat || raw.sampleRepeat {
+		if raw.workspaceRepeat || raw.capRepeat || raw.instanceRepeat || raw.sampleRepeat || raw.outputRepeat {
 			return nil, repeatedFlagError(op, raw)
 		}
 		return &request{command: cmd, help: true}, nil
@@ -221,7 +234,7 @@ func interpret(raw rawArgs) (*request, *gobble.Error) {
 	if len(unknown) > 0 {
 		return nil, inv("unknown flag " + unknown[0])
 	}
-	if raw.workspaceRepeat || raw.capRepeat || raw.instanceRepeat || raw.sampleRepeat {
+	if raw.workspaceRepeat || raw.capRepeat || raw.instanceRepeat || raw.sampleRepeat || raw.outputRepeat {
 		return nil, repeatedFlagError(op, raw)
 	}
 
@@ -235,6 +248,18 @@ func interpret(raw rawArgs) (*request, *gobble.Error) {
 		if len(operands) == 1 {
 			req.pkg = operands[0]
 		}
+	case "pack":
+		if len(operands) > 1 {
+			return nil, inv("extra operand")
+		}
+		req.pkg = "."
+		if len(operands) == 1 {
+			req.pkg = operands[0]
+		}
+		if !raw.outputSet || raw.output == "" {
+			return nil, inv("missing --output")
+		}
+		req.output = raw.output
 	case "run", "resume":
 		if len(operands) > 1 {
 			return nil, inv("extra operand")
@@ -301,31 +326,35 @@ func repeatedFlagError(op string, raw rawArgs) *gobble.Error {
 		return invalidRequest(op, "repeated flag --cap")
 	case raw.instanceRepeat:
 		return invalidRequest(op, "repeated flag --instance")
-	default:
+	case raw.sampleRepeat:
 		return invalidRequest(op, "repeated flag --sample")
+	default:
+		return invalidRequest(op, "repeated flag --output")
 	}
 }
 
 func isOperate(cmd string) bool {
 	switch cmd {
-	case "compose", "validate", "plan", "run", "inspect", "resume", "release":
+	case "compose", "validate", "plan", "run", "inspect", "resume", "release", "pack":
 		return true
 	default:
 		return false
 	}
 }
 
-func flagsFor(cmd string) (workspace, cap, instance, sample bool) {
+func flagsFor(cmd string) (workspace, cap, instance, sample, output bool) {
 	switch cmd {
 	case "compose", "validate", "plan":
-		return false, false, false, true
+		return false, false, false, true, false
 	case "run", "resume":
-		return true, true, false, true
+		return true, true, false, true, false
 	case "inspect":
-		return true, false, true, false
+		return true, false, true, false, false
 	case "release":
-		return true, false, false, false
+		return true, false, false, false, false
+	case "pack":
+		return false, false, false, false, true
 	default:
-		return false, false, false, false
+		return false, false, false, false, false
 	}
 }

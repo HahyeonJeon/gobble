@@ -36,6 +36,8 @@ func TestHelp(t *testing.T) {
 		{name: "inspect help", args: []string{"inspect", "--help"}, want: "Usage: gobble inspect"},
 		{name: "run help", args: []string{"run", "--help"}, want: "Usage: gobble run"},
 		{name: "release help", args: []string{"release", "--help"}, want: "Usage: gobble release"},
+		{name: "help pack", args: []string{"help", "pack"}, want: "Usage: gobble pack"},
+		{name: "pack help", args: []string{"pack", "--help"}, want: "Usage: gobble pack"},
 		{name: "inspect help skips view", args: []string{"inspect", "--help", "--workspace", t.TempDir()}, want: "Usage: gobble inspect"},
 	}
 	for _, tc := range cases {
@@ -160,10 +162,68 @@ func TestInvocationFailures(t *testing.T) {
 		{name: "empty workspace", args: []string{"release", "--workspace="}, op: "release"},
 		{name: "help with version flag", args: []string{"help", "--version"}, op: "cli"},
 		{name: "unknown short flag", args: []string{"-v"}, op: "cli"},
+		{name: "pack missing output", args: []string{"pack"}, op: "pack"},
+		{name: "pack missing output value", args: []string{"pack", "--output"}, op: "pack"},
+		{name: "pack empty output", args: []string{"pack", "--output="}, op: "pack"},
+		{name: "pack repeated output", args: []string{"pack", "--output", "a", "--output", "b"}, op: "pack"},
+		{name: "pack extra package", args: []string{"pack", "a", "b", "--output", "runner"}, op: "pack"},
+		{name: "pack short output", args: []string{"pack", "-o", "runner"}, op: "pack"},
+		{name: "pack short output with value", args: []string{"pack", "-o=runner"}, op: "pack"},
+		{name: "pack single dash output", args: []string{"pack", "-output", "runner"}, op: "pack"},
+		{name: "output on compose", args: []string{"compose", "--output", "runner"}, op: "compose"},
+		{name: "workspace on pack", args: []string{"pack", "--workspace", dir, "--output", "runner"}, op: "pack"},
+		{name: "sample on pack", args: []string{"pack", "--sample", "x.csv", "--output", "runner"}, op: "pack"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			requireInvocationFailure(t, tc.args, tc.op)
+		})
+	}
+}
+
+func TestParsePack(t *testing.T) {
+	cases := []struct {
+		name       string
+		args       []string
+		wantPkg    string
+		wantOutput string
+	}{
+		{name: "default package", args: []string{"pack", "--output", "runner"}, wantPkg: ".", wantOutput: "runner"},
+		{name: "package before output", args: []string{"pack", "./pipe", "--output", "runner"}, wantPkg: "./pipe", wantOutput: "runner"},
+		{name: "output before package", args: []string{"pack", "--output", "runner", "./pipe"}, wantPkg: "./pipe", wantOutput: "runner"},
+		{name: "equals output", args: []string{"pack", "./pipe", "--output=bin/runner"}, wantPkg: "./pipe", wantOutput: "bin/runner"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := parse(tc.args)
+			if err != nil {
+				t.Fatalf("parse() error = %v", err)
+			}
+			if req.command != "pack" || req.pkg != tc.wantPkg || req.output != tc.wantOutput {
+				t.Fatalf("request = %#v, want pack pkg %q output %q", req, tc.wantPkg, tc.wantOutput)
+			}
+		})
+	}
+}
+
+func TestPackShortOutputIsUnknown(t *testing.T) {
+	for _, args := range [][]string{
+		{"pack", "-o", "runner"},
+		{"pack", "-o=runner"},
+		{"pack", "-output", "runner"},
+	} {
+		t.Run(strings.Join(args[1:], " "), func(t *testing.T) {
+			res := runCLI(args...)
+			if res.code != 2 || len(res.stdout) != 0 {
+				t.Fatalf("result = code %d stdout %q stderr %s", res.code, res.stdout, res.stderr)
+			}
+			var ge gobble.Error
+			if err := json.Unmarshal(res.stderr, &ge); err != nil {
+				t.Fatal(err)
+			}
+			if ge.Op != "pack" || len(ge.Defects) == 0 || !strings.Contains(ge.Defects[0].Message, "unknown flag") {
+				t.Fatalf("error = %#v, want pack unknown flag", ge)
+			}
 		})
 	}
 }
