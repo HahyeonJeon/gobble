@@ -1,9 +1,8 @@
-// Package assets holds temporary constructors for the three pre-lift assay
-// graphs.
+// Package assets holds temporary constructors for first-party assay products.
 //
 // WGS, RNASeq, and MethylSeq delegate to their assets/pipelines owners and
-// preserve graph bytes at the mechanical ownership checkpoint. They preserve
-// source names for compatible workspaces only while the graph is unchanged.
-// Each later assay lift is a named new graph generation and requires a new
-// workspace. Command adders live only in assets/modules child packages.
+// preserve source names across the ownership migration. RNASeq now targets the
+// lifted STAR-Salmon generation; pre-lift RNA workspaces require a new
+// workspace. WGS and MethylSeq retain their checkpoint graphs until their own
+// named lifts. Command adders live only in assets/modules child packages.
 package assets

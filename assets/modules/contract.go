@@ -43,9 +43,41 @@ func Standalone(name string, inputs []Input, build func(Parent, []gobble.Handle)
 	return p
 }
 
+// StandaloneChecked creates a standalone module pipeline and records any
+// command-specific option or path error as a compose defect. Lifted modules
+// use this form so expected input failures never panic.
+func StandaloneChecked(name string, inputs []Input, build func(Parent, []gobble.Handle) error) *gobble.Pipeline {
+	p := gobble.NewPipeline(name)
+	handles := make([]gobble.Handle, len(inputs))
+	for i, in := range inputs {
+		switch {
+		case in.Group != nil:
+			handles[i] = p.AddInputGroup(in.Name, in.Group)
+		case !in.Tree.IsZero():
+			handles[i] = p.AddInputTree(in.Name, in.Tree)
+		default:
+			handles[i] = p.AddInput(in.Name, in.Spec)
+		}
+	}
+	if err := build(p, handles); err != nil {
+		p.RecordComposeError(err)
+	}
+	return p
+}
+
 // CommandPath renders spec as one command token.
 func CommandPath(spec gobble.PathSpec) (string, error) {
 	return spec.Render()
+}
+
+// HandlePath renders a regular-file handle for unit. Invalid authored paths
+// become compose-time invalid-path defects owned by the command module.
+func HandlePath(unit string, handle gobble.Handle) (string, error) {
+	path, err := CommandPath(handle.Spec())
+	if err != nil {
+		return "", ComposeDefect(gobble.DefectInvalidPath, unit, "command input path is invalid")
+	}
+	return path, nil
 }
 
 // MustCommandPath preserves the pre-migration authored-path behavior. Lifted
@@ -104,6 +136,59 @@ func (o Options) Clone() Options {
 	out := o
 	out.ExtraArgs = append([]string(nil), o.ExtraArgs...)
 	return out
+}
+
+// ResolveOptions applies one command's immutable image and resource defaults,
+// validates the selected image, and appends ExtraArgs after collision checks.
+// The returned values do not alias caller-owned slices.
+func ResolveOptions(unit string, options Options, defaultImage Image, defaultResources gobble.Resources, command, namedFlags []string) ([]string, string, gobble.Resources, error) {
+	options = options.Clone()
+	image := options.Image
+	if image == "" {
+		image = defaultImage
+	}
+	imageRef, err := image.TaskReference(unit)
+	if err != nil {
+		return nil, "", gobble.Resources{}, err
+	}
+	resources := options.Resources
+	if resources.CPU == 0 && resources.Memory == "" {
+		resources = defaultResources
+	}
+	resolved, err := AppendExtraArgs(unit, command, options.ExtraArgs, namedFlags)
+	if err != nil {
+		return nil, "", gobble.Resources{}, err
+	}
+	return resolved, imageRef, resources, nil
+}
+
+// ShellRedirect renders one argv command followed only by a stdout file
+// redirection. Every token is single-quoted, so ExtraArgs remain argv tokens
+// and cannot introduce shell syntax. Use it only for tools whose documented
+// output contract is stdout.
+func ShellRedirect(command []string, output string) string {
+	quoted := make([]string, 0, len(command))
+	for _, token := range command {
+		quoted = append(quoted, shellQuote(token))
+	}
+	return strings.Join(quoted, " ") + " > " + shellQuote(output)
+}
+
+func shellQuote(value string) string {
+	return "'" + strings.ReplaceAll(value, "'", "'\"'\"'") + "'"
+}
+
+// ComposeDefect returns one structured command-module compose defect.
+func ComposeDefect(code gobble.DefectCode, unit, message string, paths ...string) *gobble.Error {
+	return &gobble.Error{
+		Op: "compose",
+		Defects: []gobble.Defect{{
+			Code:    code,
+			Unit:    unit,
+			Message: message,
+			Paths:   append([]string(nil), paths...),
+		}},
+	}
 }
 
 // AppendExtraArgs copies command and appends copied extraArgs. namedFlags are

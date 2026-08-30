@@ -49,7 +49,7 @@ func TestLinkedQCComposeBuildPlan(t *testing.T) {
 	)
 }
 
-func TestLinkedQCSharesPinPathSpecs(t *testing.T) {
+func TestLinkedQCUsesIndependentEngineFixture(t *testing.T) {
 	wgsPlan := pc.MustPlanJSON(t, wgs.Pipeline())
 	prev := gobble.SampleSheetPath()
 	t.Cleanup(func() { gobble.SetSampleSheetPath(prev) })
@@ -61,8 +61,8 @@ func TestLinkedQCSharesPinPathSpecs(t *testing.T) {
 
 	pc.AssertIOPath(t, pc.TaskByID(t, wgsPlan, "sample1.fastp").Inputs, "r1", "in/test_1.fastq.gz")
 	pc.AssertIOPath(t, pc.TaskByID(t, wgsPlan, "sample1.fastp").Inputs, "r2", "in/test_2.fastq.gz")
-	pc.AssertIOPath(t, pc.TaskByID(t, rnaPlan, "ctrl1.fastp").Inputs, "r1", "in/SRR6357072_1.fastq.gz")
-	pc.AssertIOPath(t, pc.TaskByID(t, rnaPlan, "ctrl1.fastp").Inputs, "r2", "in/SRR6357072_2.fastq.gz")
+	pc.AssertIOPath(t, pc.TaskByID(t, rnaPlan, "WT_REP2.trim_galore").Inputs, "read1", "in/reads/SRR6357072_1.fastq.gz")
+	pc.AssertIOPath(t, pc.TaskByID(t, rnaPlan, "WT_REP2.trim_galore").Inputs, "read2", "in/reads/SRR6357072_2.fastq.gz")
 	pc.AssertIOPath(t, pc.TaskByID(t, methylPlan, "sample1.fastp").Inputs, "r1", "in/Ecoli_10K_methylated_R1.fastq.gz")
 	pc.AssertIOPath(t, pc.TaskByID(t, methylPlan, "sample1.fastp").Inputs, "r2", "in/Ecoli_10K_methylated_R2.fastq.gz")
 	pc.AssertIOPath(t, pc.TaskByID(t, qc, "rna.fastqc").Inputs, "reads", "in/SRR6357072_1.fastq.gz")

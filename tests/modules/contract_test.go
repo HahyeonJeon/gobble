@@ -163,6 +163,14 @@ func TestAppendExtraArgsRejectsNamedOptionCollision(t *testing.T) {
 	}
 }
 
+func TestShellRedirectQuotesEveryArgvToken(t *testing.T) {
+	got := modules.ShellRedirect([]string{"tool", "$(touch pwned)", "a'b"}, "out/x y")
+	want := `'tool' '$(touch pwned)' 'a'"'"'b' > 'out/x y'`
+	if got != want {
+		t.Fatalf("ShellRedirect() = %q, want %q", got, want)
+	}
+}
+
 func contractModulePipeline(extraArgs []string) (*gobble.Pipeline, contractPorts) {
 	p := gobble.NewPipeline("contract-module")
 	input := p.AddInput("input", gobble.PathSpec{Dir: gobble.Dir("inputs"), Base: "sample", Ext: ".txt"})

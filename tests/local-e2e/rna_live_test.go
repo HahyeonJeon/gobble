@@ -3,7 +3,6 @@
 package local_e2e_test
 
 import (
-	"path/filepath"
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
@@ -21,12 +20,11 @@ func TestRNASeqRecover(t *testing.T) {
 	}
 	assertMultiQCOmitsBAM(t, g)
 	if err := gobble.Run(t.Context(), g, dir, 2, testOccupyOption(t)); err != nil {
-		dumpTaskLogs(t, dir, "deseq2", "merge_counts")
+		dumpTaskLogs(t, dir, "salmon_quant", "tximport", "deseq2_qc", "multiqc")
 		fatalAPIError(t, "Run(rnaseq.Pipeline())", err)
 	}
 	assertOccupied(t, dir)
-	assertDESeq2ResultsShape(t, dir)
-	assertSTARMappedAndSplices(t, dir, []string{"ctrl1", "ctrl2", "treat1", "treat2"})
-	requireRegularFile(t, filepath.Join(dir, filepath.FromSlash("work/multiqc/multiqc_report.html")))
+	assertRNAProductOutputs(t, dir)
+	assertSTARMappedAndSplices(t, dir, []string{"WT_REP1", "WT_REP2", "RAP1_UNINDUCED_REP1", "RAP1_UNINDUCED_REP1_B"})
 	recoverAfterSuccessAPI(t, g, dir, 2)
 }

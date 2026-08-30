@@ -92,13 +92,12 @@ func TestRNASeqCLIRecover(t *testing.T) {
 
 	run := runGobble(t, bin, "run", rnaSeqPkg, "--workspace", dir, "--cap", "2", "--sample", sheet)
 	if run.code != 0 {
-		dumpTaskLogs(t, dir, "deseq2", "merge_counts")
+		dumpTaskLogs(t, dir, "salmon_quant", "tximport", "deseq2_qc", "multiqc")
 	}
 	requireCLIOp(t, run, "{\"op\":\"run\"}\n")
 
-	assertDESeq2ResultsShape(t, dir)
-	assertSTARMappedAndSplices(t, dir, []string{"ctrl1", "ctrl2", "treat1", "treat2"})
-	requireRegularFile(t, filepath.Join(dir, filepath.FromSlash("work/multiqc/multiqc_report.html")))
+	assertRNAProductOutputs(t, dir)
+	assertSTARMappedAndSplices(t, dir, []string{"WT_REP1", "WT_REP2", "RAP1_UNINDUCED_REP1", "RAP1_UNINDUCED_REP1_B"})
 
 	recoverAfterSuccessCLI(t, bin, rnaSeqPkg, dir, "--cap", "2", "--sample", sheet)
 }

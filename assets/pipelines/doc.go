@@ -42,10 +42,8 @@
 // function and call the same Build. File, gobble.Group, and gobble.Tree handles
 // retain the artifact kind consumed by each tool.
 //
-// The wgs, rnaseq, and methylseq children first contain graph-stable checkpoint
-// constructors moved from package assets. At that checkpoint Pipeline preserves
-// the old graph and the top-level assets constructor delegates to it. Typed
-// Sample, Config, DefaultConfig, and Build arrive only with each named assay
-// lift. A lift is a new graph generation and does not promise resume of a
-// pre-lift workspace.
+// The wgs and methylseq children retain graph-stable checkpoint constructors
+// until their named lifts. The rnaseq child owns the lifted STAR-Salmon product
+// and complete typed contract. Each lift is a new graph generation and does not
+// promise resume of a pre-lift workspace.
 package pipelines

@@ -19,6 +19,7 @@ type Task struct {
 	Name      string    `json:"name"`
 	Module    string    `json:"module"`
 	Command   []string  `json:"command"`
+	Script    string    `json:"script"`
 	Image     string    `json:"image"`
 	Resources Resources `json:"resources"`
 	Params    []Param   `json:"params"`

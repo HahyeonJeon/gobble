@@ -1,5 +1,8 @@
-sample,read1,read2,group,strandedness
-ctrl1,in/SRR6357072_1.fastq.gz,in/SRR6357072_2.fastq.gz,ctrl,reverse
-ctrl2,in/SRR6357072_1.fastq.gz,in/SRR6357072_2.fastq.gz,ctrl,reverse
-treat1,in/SRR6357072_1.fastq.gz,in/SRR6357072_2.fastq.gz,treat,reverse
-treat2,in/SRR6357072_1.fastq.gz,in/SRR6357072_2.fastq.gz,treat,reverse
+sample,fastq_1,fastq_2,strandedness
+WT_REP1,in/reads/SRR6357070_1.fastq.gz,in/reads/SRR6357070_2.fastq.gz,auto
+WT_REP1,in/reads/SRR6357071_1.fastq.gz,in/reads/SRR6357071_2.fastq.gz,auto
+WT_REP2,in/reads/SRR6357072_1.fastq.gz,in/reads/SRR6357072_2.fastq.gz,reverse
+RAP1_UNINDUCED_REP1,in/reads/SRR6357073_1.fastq.gz,,reverse
+RAP1_UNINDUCED_REP2,in/reads/SRR6357074_1.fastq.gz,,reverse
+RAP1_UNINDUCED_REP2,in/reads/SRR6357075_1.fastq.gz,,reverse
+RAP1_IAA_30M_REP1,in/reads/SRR6357076_1.fastq.gz,in/reads/SRR6357076_2.fastq.gz,reverse

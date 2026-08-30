@@ -162,16 +162,15 @@ func stageRNASeqPins(t *testing.T, dir string) {
 		pin fixture.Pin
 		rel string
 	}{
-		{rnaseqevidence.GenomeFASTA, "in/genome.fasta"},
-		{rnaseqevidence.GTF, "in/genes.gtf"},
-		{rnaseqevidence.Ctrl1FASTQ1, "in/SRR6357070_1.fastq.gz"},
-		{rnaseqevidence.Ctrl1FASTQ2, "in/SRR6357070_2.fastq.gz"},
-		{rnaseqevidence.Ctrl2FASTQ1, "in/SRR6357071_1.fastq.gz"},
-		{rnaseqevidence.Ctrl2FASTQ2, "in/SRR6357071_2.fastq.gz"},
-		{rnaseqevidence.Test1FASTQ, "in/SRR6357072_1.fastq.gz"},
-		{rnaseqevidence.Test2FASTQ, "in/SRR6357072_2.fastq.gz"},
-		{rnaseqevidence.Treat2FASTQ1, "in/SRR6357073_1.fastq.gz"},
-		{rnaseqevidence.Treat2FASTQ2, "in/SRR6357073_2.fastq.gz"},
+		{rnaseqevidence.GenomeFASTA, "in/reference/genome.fasta"},
+		{rnaseqevidence.GTF, "in/reference/genes_with_empty_tid.gtf.gz"},
+		{rnaseqevidence.Ctrl1FASTQ1, "in/reads/SRR6357070_1.fastq.gz"},
+		{rnaseqevidence.Ctrl1FASTQ2, "in/reads/SRR6357070_2.fastq.gz"},
+		{rnaseqevidence.Ctrl2FASTQ1, "in/reads/SRR6357071_1.fastq.gz"},
+		{rnaseqevidence.Ctrl2FASTQ2, "in/reads/SRR6357071_2.fastq.gz"},
+		{rnaseqevidence.Test1FASTQ, "in/reads/SRR6357072_1.fastq.gz"},
+		{rnaseqevidence.Test2FASTQ, "in/reads/SRR6357072_2.fastq.gz"},
+		{rnaseqevidence.Treat2FASTQ1, "in/reads/SRR6357073_1.fastq.gz"},
 	})
 }
 
@@ -475,32 +474,16 @@ func assertMultiQCOmitsBAM(t *testing.T, g *gobble.Graph) {
 	}
 }
 
-func assertDESeq2ResultsShape(t *testing.T, dir string) {
+func assertRNAProductOutputs(t *testing.T, dir string) {
 	t.Helper()
-	path := filepath.Join(dir, filepath.FromSlash("work/deseq2/results.csv"))
-	requireRegularFile(t, path)
-	f, err := os.Open(path)
-	if err != nil {
-		t.Fatalf("Open(%s) error = %v", path, err)
-	}
-	defer f.Close()
-	sc := bufio.NewScanner(f)
-	if !sc.Scan() {
-		t.Fatalf("%s missing header: %v", path, sc.Err())
-	}
-	header := strings.TrimSpace(sc.Text())
-	cols := strings.Split(header, ",")
-	hasGene, hasLFC := false, false
-	for _, col := range cols {
-		switch strings.Trim(col, `"`) {
-		case "gene_id":
-			hasGene = true
-		case "log2FoldChange":
-			hasLFC = true
-		}
-	}
-	if !hasGene || !hasLFC {
-		t.Fatalf("%s header = %q, want gene_id and log2FoldChange", path, header)
+	for _, rel := range []string{
+		"results/rnaseq/matrices/gene_counts.tsv",
+		"results/rnaseq/matrices/transcript_tpm.tsv",
+		"results/rnaseq/deseq2-qc/pca.pdf",
+		"results/rnaseq/deseq2-qc/sample_distance.pdf",
+		"results/rnaseq/multiqc/multiqc_report.html",
+	} {
+		requireRegularFile(t, filepath.Join(dir, filepath.FromSlash(rel)))
 	}
 }
 
@@ -508,7 +491,7 @@ func assertSTARMappedAndSplices(t *testing.T, dir string, samples []string) {
 	t.Helper()
 	ok := false
 	for _, sample := range samples {
-		path := filepath.Join(dir, filepath.FromSlash("work/"+sample+"/star-align/Log.final.out"))
+		path := filepath.Join(dir, filepath.FromSlash("work/"+sample+"/star/Log.final.out"))
 		mapped := uniquelyMappedReads(t, path)
 		splices := starLogInt(t, path, starSplicesTotalField)
 		t.Logf("%s uniquely mapped = %d splices = %d", sample, mapped, splices)

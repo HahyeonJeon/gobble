@@ -21,6 +21,21 @@ type Contract[S, C any] struct {
 	Pipeline func() *gobble.Pipeline
 }
 
+// LifecycleParticipation states how one product enters the shared lifecycle
+// evidence owners. Scenario packages verify the behavior; this value does not
+// duplicate an assay graph or fixture.
+type LifecycleParticipation struct {
+	GraphGeneration  string
+	Design           bool
+	Build            bool
+	Customize        bool
+	Run              bool
+	Resume           bool
+	Stop             bool
+	Failure          bool
+	PreLiftResumable bool
+}
+
 // CopySlice returns a shallow copy of in. An assay package must also copy any
 // reference-bearing values inside each element before retaining them.
 func CopySlice[T any](in []T) []T {

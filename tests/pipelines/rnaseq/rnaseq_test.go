@@ -1,264 +1,295 @@
 package rnaseqevidence_test
 
 import (
-	"crypto/sha256"
+	"bytes"
 	"errors"
-	"fmt"
 	"os"
-	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
-	. "github.com/HahyeonJeon/gobble/assets/pipelines/rnaseq"
+	"github.com/HahyeonJeon/gobble/assets/pipelines/rnaseq"
 	pc "github.com/HahyeonJeon/gobble/tests/internal/plancheck"
 	"github.com/HahyeonJeon/gobble/tests/internal/sourcecheck"
 )
 
 const rnaFixtureSheet = "testdata/rnaseq-samplesheet.csv"
 
-const (
-	rnaGroupRuleMessage        = "RNA samplesheet requires group on every row and exactly two groups"
-	rnaStrandednessRuleMessage = "RNA samplesheet strandedness must be unstranded, forward, or reverse"
-	rnaMateRuleMessage         = "RNA samplesheet requires read2 on every row"
-)
-
-func TestRNASeqComposeBuildPlan(t *testing.T) {
-	withSampleSheet(t, rnaFixtureSheet)
-	raw := pc.MustPlanJSON(t, Pipeline())
-	if got := fmt.Sprintf("%x", sha256.Sum256(raw)); got != "827931c2a6addaf716b8a9ee62057177b3a1838d135d967dc575906fbd948667" {
-		t.Fatalf("graph snapshot = %s, want pre-move RNA-seq identity", got)
+func TestParseOfficialMixedRunAndReadModes(t *testing.T) {
+	samples, err := rnaseq.Load(rnaFixtureSheet)
+	if err != nil {
+		t.Fatalf("Load(%s) error = %v", rnaFixtureSheet, err)
 	}
-	tasks := pc.AllTasks(t, raw)
-
-	for _, id := range []string{
-		"ctrl1.raw.fastqc", "ctrl2.raw.fastqc", "treat1.raw.fastqc", "treat2.raw.fastqc",
-		"ctrl1.clean.fastqc", "ctrl1.fastp", "ctrl1.star_align", "ctrl1.samtools_sort",
-		"ctrl1.samtools_index", "ctrl1.featurecounts",
-		"ctrl2.star_align", "treat1.star_align", "treat2.star_align",
-		"star_genome_generate", "merge_counts", "deseq2", "multiqc",
-	} {
-		pc.MustHaveTaskID(t, tasks, id)
+	if got, want := len(samples), 5; got != want {
+		t.Fatalf("sample count = %d, want %d", got, want)
 	}
-
-	if got := pc.CountTasksNamed(tasks, "star_genome_generate"); got != 1 {
-		t.Fatalf("star_genome_generate count = %d, want 1", got)
+	if got, want := len(samples[0].Runs), 2; got != want {
+		t.Fatalf("WT_REP1 run count = %d, want %d", got, want)
 	}
-	if got := pc.CountTasksNamed(tasks, "star_align"); got != 4 {
-		t.Fatalf("star_align count = %d, want 4", got)
+	if samples[0].Runs[0].ID != "run_1" || samples[0].Runs[1].ID != "run_2" {
+		t.Fatalf("WT_REP1 run IDs = %+v, want run_1 and run_2", samples[0].Runs)
 	}
-	if got := pc.CountTasksNamed(tasks, "merge_counts"); got != 1 {
-		t.Fatalf("merge_counts count = %d, want 1", got)
+	if samples[0].Strandedness != rnaseq.StrandednessAuto || samples[0].Runs[0].Fastq2 == "" {
+		t.Fatalf("WT_REP1 = %+v, want paired auto sample", samples[0])
 	}
-	if got := pc.CountTasksNamed(tasks, "deseq2"); got != 1 {
-		t.Fatalf("deseq2 count = %d, want 1", got)
+	if samples[2].Runs[0].Fastq2 != "" {
+		t.Fatalf("RAP1_UNINDUCED_REP1 = %+v, want single-end sample", samples[2])
 	}
-	if got := pc.CountTasksNamed(tasks, "multiqc"); got != 1 {
-		t.Fatalf("multiqc count = %d, want 1", got)
-	}
-	if got := pc.CountTasksNamed(tasks, "featurecounts"); got != 4 {
-		t.Fatalf("featurecounts count = %d, want 4", got)
+	if got, want := len(samples[3].Runs), 2; got != want {
+		t.Fatalf("RAP1_UNINDUCED_REP2 run count = %d, want %d", got, want)
 	}
 
-	rawQC := pc.TaskByID(t, raw, "ctrl1.raw.fastqc")
-	if rawQC.Module != "raw" {
-		t.Fatalf("ctrl1.raw.fastqc module = %q, want raw", rawQC.Module)
+	// Returned run slices are caller-owned.
+	samples[0].Runs[0].Fastq1 = "changed.fastq.gz"
+	again, err := rnaseq.Load(rnaFixtureSheet)
+	if err != nil {
+		t.Fatalf("second Load error = %v", err)
 	}
-	cleanQC := pc.TaskByID(t, raw, "ctrl1.clean.fastqc")
-	if cleanQC.Module != "clean" {
-		t.Fatalf("ctrl1.clean.fastqc module = %q, want clean", cleanQC.Module)
+	if again[0].Runs[0].Fastq1 == "changed.fastq.gz" {
+		t.Fatal("Load retained a caller-owned run slice")
 	}
-
-	gg := pc.TaskByID(t, raw, "star_genome_generate")
-	if !pc.ContainsAll(gg.Command,
-		"--sjdbGTFfile", "in/genes.gtf",
-		"--runThreadN", "2",
-		"--genomeSAindexNbases", "7",
-		"--sjdbOverhang", "100",
-	) {
-		t.Fatalf("genomeGenerate command = %#v, want GTF, threads, and extra-args", gg.Command)
-	}
-	pc.AssertIOPath(t, gg.Inputs, "fasta", "in/genome.fasta")
-	pc.AssertIOPath(t, gg.Inputs, "gtf", "in/genes.gtf")
-	pc.AssertTreeIO(t, gg.Outputs, "index", "work/star-genome")
-
-	align := pc.TaskByID(t, raw, "ctrl1.star_align")
-	if !pc.ContainsAll(align.Command, "--runThreadN", "2") {
-		t.Fatalf("align command = %#v, want --runThreadN 2", align.Command)
-	}
-	pc.AssertIOPath(t, align.Outputs, "bam", "work/ctrl1/star-align/Aligned.out.bam")
-	pc.AssertIOPath(t, align.Outputs, "log_final", "work/ctrl1/star-align/Log.final.out")
-	pc.AssertTreeIO(t, align.Inputs, "index", "work/star-genome")
-
-	fc := pc.TaskByID(t, raw, "ctrl1.featurecounts")
-	if !pc.ContainsAll(fc.Command, "-s", "2", "-p", "work/ctrl1/samtools-sort/Aligned.bam") {
-		t.Fatalf("featurecounts command = %#v, want reverse strand and sorted BAM", fc.Command)
-	}
-	pc.AssertIOPath(t, fc.Inputs, "bam", "work/ctrl1/samtools-sort/Aligned.bam")
-	pc.AssertIOPath(t, fc.Outputs, "counts", "work/ctrl1/featurecounts/counts.txt")
-
-	if !pc.ContainsAll(pc.TaskByID(t, raw, "deseq2").Command, "ctrl", "treat", "work/deseq2/results.csv") {
-		t.Fatalf("deseq2 command = %#v, want ctrl/treat groups and results dest", pc.TaskByID(t, raw, "deseq2").Command)
-	}
-	pc.AssertIOPath(t, pc.TaskByID(t, raw, "merge_counts").Outputs, "counts", "work/deseq2/counts.csv")
-	pc.AssertIOPath(t, pc.TaskByID(t, raw, "deseq2").Outputs, "results", "work/deseq2/results.csv")
-
-	pc.AssertIOPath(t, pc.TaskByID(t, raw, "ctrl1.fastp").Inputs, "r1", "in/SRR6357072_1.fastq.gz")
-	pc.AssertIOPath(t, pc.TaskByID(t, raw, "ctrl1.fastp").Inputs, "r2", "in/SRR6357072_2.fastq.gz")
-	pc.AssertIOPath(t, pc.TaskByID(t, raw, "multiqc").Inputs, "report_0", "work/ctrl1/raw/fastqc/SRR6357072_1_fastqc.html")
-	pc.AssertIOPath(t, pc.TaskByID(t, raw, "multiqc").Inputs, "report_4", "work/ctrl1/fastp/SRR6357072_1.fastp.json")
-	pc.AssertIOPath(t, pc.TaskByID(t, raw, "multiqc").Inputs, "report_6", "work/ctrl1/star-align/Log.final.out")
-	for _, in := range pc.TaskByID(t, raw, "multiqc").Inputs {
-		if strings.HasSuffix(in.Path, ".bam") || strings.Contains(in.Path, "counts") {
-			t.Fatalf("multiqc input %q path = %q, MultiQC must not consume BAM or count tables", in.Name, in.Path)
-		}
-	}
-
-	pc.AssertNoTaskName(t, tasks, "bwa_index", "bwa_mem", "bismark_align", "bismark_genome", "bismark_methylation_extractor")
-}
-
-func TestRNASeqEmptyStrandednessBindsReverse(t *testing.T) {
-	csv := strings.Join([]string{
-		"sample,read1,read2,group,strandedness",
-		"ctrl1,in/SRR6357072_1.fastq.gz,in/SRR6357072_2.fastq.gz,ctrl,",
-		"treat1,in/SRR6357072_1.fastq.gz,in/SRR6357072_2.fastq.gz,treat,",
-	}, "\n") + "\n"
-	withSampleSheet(t, writeTempSheet(t, csv))
-	raw := pc.MustPlanJSON(t, Pipeline())
-	fc := pc.TaskByID(t, raw, "ctrl1.featurecounts")
-	if !pc.ContainsAll(fc.Command, "-s", "2") {
-		t.Fatalf("featurecounts command = %#v, want default reverse -s 2", fc.Command)
+	metadata, err := rnaseq.Parse(strings.NewReader("sample,fastq_1,fastq_2,strandedness,seq_platform,seq_center\na,in/a.fq.gz,,forward,ILLUMINA,center-a\n"))
+	if err != nil || metadata[0].SeqPlatform != "ILLUMINA" || metadata[0].SeqCenter != "center-a" {
+		t.Fatalf("optional sequencing metadata = %+v, %v", metadata, err)
 	}
 }
 
-func TestRNASeqTwoGroupRule(t *testing.T) {
+func TestParseRejectsInvalidRNAData(t *testing.T) {
 	tests := []struct {
 		name string
 		csv  string
-		msg  string
+		want string
 	}{
-		{
-			name: "one group",
-			csv: "sample,read1,read2,group\n" +
-				"ctrl1,in/SRR6357072_1.fastq.gz,in/SRR6357072_2.fastq.gz,ctrl\n" +
-				"ctrl2,in/SRR6357072_1.fastq.gz,in/SRR6357072_2.fastq.gz,ctrl\n",
-			msg: rnaGroupRuleMessage,
-		},
-		{
-			name: "three groups",
-			csv: "sample,read1,read2,group\n" +
-				"a,in/SRR6357072_1.fastq.gz,in/SRR6357072_2.fastq.gz,g1\n" +
-				"b,in/SRR6357072_1.fastq.gz,in/SRR6357072_2.fastq.gz,g2\n" +
-				"c,in/SRR6357072_1.fastq.gz,in/SRR6357072_2.fastq.gz,g3\n",
-			msg: rnaGroupRuleMessage,
-		},
-		{
-			name: "missing group column",
-			csv: "sample,read1,read2\n" +
-				"ctrl1,in/SRR6357072_1.fastq.gz,in/SRR6357072_2.fastq.gz\n" +
-				"treat1,in/SRR6357072_1.fastq.gz,in/SRR6357072_2.fastq.gz\n",
-			msg: rnaGroupRuleMessage,
-		},
-		{
-			name: "empty group cell",
-			csv: "sample,read1,read2,group\n" +
-				"ctrl1,in/SRR6357072_1.fastq.gz,in/SRR6357072_2.fastq.gz,ctrl\n" +
-				"treat1,in/SRR6357072_1.fastq.gz,in/SRR6357072_2.fastq.gz,\n",
-			msg: rnaGroupRuleMessage,
-		},
-		{
-			name: "invalid strandedness",
-			csv: "sample,read1,read2,group,strandedness\n" +
-				"ctrl1,in/SRR6357072_1.fastq.gz,in/SRR6357072_2.fastq.gz,ctrl,bogus\n" +
-				"treat1,in/SRR6357072_1.fastq.gz,in/SRR6357072_2.fastq.gz,treat,reverse\n",
-			msg: rnaStrandednessRuleMessage,
-		},
-		{
-			name: "empty read2",
-			csv: "sample,read1,read2,group\n" +
-				"ctrl1,in/SRR6357072_1.fastq.gz,,ctrl\n" +
-				"treat1,in/SRR6357072_1.fastq.gz,in/SRR6357072_2.fastq.gz,treat\n",
-			msg: rnaMateRuleMessage,
-		},
-		{
-			name: "omitted read2 header",
-			csv: "sample,read1,group\n" +
-				"ctrl1,in/SRR6357072_1.fastq.gz,ctrl\n" +
-				"treat1,in/SRR6357072_1.fastq.gz,treat\n",
-			msg: rnaMateRuleMessage,
-		},
+		{name: "unknown column", csv: "sample,fastq_1,fastq_2,strandedness,group\na,in/a.fq.gz,,reverse,x\n", want: "unknown RNA samplesheet column"},
+		{name: "non-exact header", csv: "sample,fastq_1,fastq_2,strandedness \na,in/a.fq.gz,,reverse\n", want: "unknown RNA samplesheet column"},
+		{name: "missing mate header", csv: "sample,fastq_1,strandedness\na,in/a.fq.gz,reverse\n", want: "missing required RNA samplesheet column"},
+		{name: "URL", csv: "sample,fastq_1,fastq_2,strandedness\na,https://example.invalid/a.fq.gz,,reverse\n", want: "workspace-relative"},
+		{name: "bad strand", csv: "sample,fastq_1,fastq_2,strandedness\na,in/a.fq.gz,,unknown\n", want: "strandedness must be"},
+		{name: "mixed read mode", csv: "sample,fastq_1,fastq_2,strandedness\na,in/a.fq.gz,in/a2.fq.gz,reverse\na,in/b.fq.gz,,reverse\n", want: "mixes single-end and paired-end"},
+		{name: "metadata conflict", csv: "sample,fastq_1,fastq_2,strandedness,seq_center\na,in/a.fq.gz,,reverse,x\na,in/b.fq.gz,,reverse,y\n", want: "metadata disagrees"},
+		{name: "duplicate run", csv: "sample,fastq_1,fastq_2,strandedness\na,in/a.fq.gz,,reverse\na,in/a.fq.gz,,reverse\n", want: "duplicate sequencing run"},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			withSampleSheet(t, writeTempSheet(t, tt.csv))
-			p := Pipeline()
-			ge := mustComposeSheetError(t, p)
-			if !hasSheetMessage(ge, tt.msg) {
-				t.Fatalf("defects = %+v, want message %q", ge.Defects, tt.msg)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			_, err := rnaseq.Parse(strings.NewReader(test.csv))
+			if err == nil || !strings.Contains(errDetails(err), test.want) {
+				t.Fatalf("Parse error = %v (%s), want detail %q", err, errDetails(err), test.want)
+			}
+			if !gobble.IsSampleSheetError(err) {
+				t.Fatalf("IsSampleSheetError(%v) = false, want true", err)
 			}
 		})
 	}
 }
 
-func TestRNASeqBadSheetIsSampleSheetError(t *testing.T) {
-	withSampleSheet(t, filepath.Join(t.TempDir(), "missing.csv"))
-	p := Pipeline()
-	if p == nil {
-		t.Fatal("RNASeq() = nil, want pipeline")
+func TestSTARSalmonPlanDeclaresSelectedProduct(t *testing.T) {
+	samples := loadSamples(t)
+	pipeline := rnaseq.Build(samples, rnaseq.DefaultConfig())
+	if _, err := gobble.Compose(pipeline); err != nil {
+		var structured *gobble.Error
+		errors.As(err, &structured)
+		t.Fatalf("Compose defects = %+v", structured.Defects)
 	}
-	mustComposeSheetError(t, p)
+	raw := pc.MustPlanJSON(t, pipeline)
+	tasks := pc.AllTasks(t, raw)
 
-	withSampleSheet(t, writeTempSheet(t, "not a samplesheet\n"))
-	mustComposeSheetError(t, Pipeline())
+	for _, id := range []string{
+		"reference.transcriptome.gffread_transcriptome",
+		"reference.gunzip",
+		"reference.gene_intervals.gffread_bed",
+		"reference.samtools_faidx",
+		"reference.cut_chrom_sizes",
+		"reference.star_genome_generate",
+		"reference.salmon_index",
+		"WT_REP1.consolidate_r1.cat_fastq",
+		"WT_REP1.trim_galore",
+		"WT_REP1.strandedness.salmon_strandedness",
+		"WT_REP1.star_align",
+		"WT_REP1.salmon_quant",
+		"WT_REP1.picard_markduplicates",
+		"WT_REP1.stringtie",
+		"WT_REP1.coverage_combined.ucsc_bedgraphtobigwig",
+		"WT_REP1.rseqc_inferexperiment",
+		"WT_REP1.qualimap_bamqc",
+		"WT_REP1.dupradar",
+		"WT_REP1.featurecounts_biotype_qc",
+		"cohort.tximport",
+		"cohort_qc.deseq2_qc",
+		"multiqc",
+	} {
+		pc.MustHaveTaskID(t, tasks, id)
+	}
+
+	if got, want := pc.CountTasksNamed(tasks, "star_align"), len(samples); got != want {
+		t.Fatalf("star_align task count = %d, want %d", got, want)
+	}
+	if got, want := pc.CountTasksNamed(tasks, "salmon_quant"), len(samples); got != want {
+		t.Fatalf("salmon_quant task count = %d, want %d", got, want)
+	}
+	if got := pc.CountTasksNamed(tasks, "salmon_strandedness"); got != 1 {
+		t.Fatalf("salmon_strandedness task count = %d, want 1 auto sample", got)
+	}
+	pc.AssertNoTaskName(t, tasks, "merge_counts", "featurecounts", "deseq2", "fastp", "bwa_mem", "hisat2_align", "rsem")
+
+	for _, task := range tasks {
+		if task.Image != "" && !strings.Contains(task.Image, "@sha256:") {
+			t.Errorf("task %s image = %q, want immutable tag and digest", task.ID, task.Image)
+		}
+		if pc.ContainsAll(task.Command, "--contrast") || pc.ContainsAll(task.Command, "--design") {
+			t.Errorf("task %s command exposes study design/contrast: %#v", task.ID, task.Command)
+		}
+	}
+
+	star := pc.TaskByID(t, raw, "WT_REP1.star_align")
+	if !pc.ContainsAll(star.Command, "--quantMode", "TranscriptomeSAM", "GeneCounts", "--outSAMtype", "BAM", "Unsorted") {
+		t.Fatalf("STAR command = %#v, want genome/transcriptome selected outputs", star.Command)
+	}
+	if !pc.ContainsAll(pc.TaskByID(t, raw, "reference.star_genome_generate").Command, "--genomeSAindexNbases", "7") {
+		t.Fatal("STAR genomeGenerate omits the official small-reference index setting")
+	}
+	pc.AssertIOPath(t, star.Outputs, "transcript_bam", "work/WT_REP1/star/Aligned.toTranscriptome.out.bam")
+	pc.AssertIOPath(t, pc.TaskByID(t, raw, "WT_REP1.picard_markduplicates").Outputs, "marked_bam", "results/rnaseq/bam/WT_REP1/WT_REP1.marked.bam")
+	pc.AssertIOPath(t, pc.TaskByID(t, raw, "cohort.tximport").Outputs, "gene_counts", "results/rnaseq/matrices/gene_counts.tsv")
+	pc.AssertIOPath(t, pc.TaskByID(t, raw, "cohort.tximport").Outputs, "transcript_tpm", "results/rnaseq/matrices/transcript_tpm.tsv")
+	pc.AssertIOPath(t, pc.TaskByID(t, raw, "cohort.tximport").Outputs, "gene_scaled", "results/rnaseq/matrices/gene_counts_scaled.tsv")
+	pc.AssertIOPath(t, pc.TaskByID(t, raw, "cohort_qc.deseq2_qc").Outputs, "pca", "results/rnaseq/deseq2-qc/pca.pdf")
+	pc.AssertTreeIO(t, pc.TaskByID(t, raw, "multiqc").Outputs, "data", "results/rnaseq/multiqc/multiqc_data")
+
+	single := pc.TaskByID(t, raw, "RAP1_UNINDUCED_REP1.trim_galore")
+	if pc.ContainsAll(single.Command, "--paired") {
+		t.Fatalf("single-end Trim Galore command = %#v, must not contain --paired", single.Command)
+	}
+	paired := pc.TaskByID(t, raw, "WT_REP1.trim_galore")
+	if !pc.ContainsAll(paired.Command, "--paired") {
+		t.Fatalf("paired Trim Galore command = %#v, want --paired", paired.Command)
+	}
+	catTask := pc.TaskByID(t, raw, "WT_REP1.consolidate_r1.cat_fastq")
+	if !pc.ContainsAll(catTask.Command, "sh", "-c") || !strings.Contains(catTask.Script, "'cat'") || strings.Contains(catTask.Script, "--output") {
+		t.Fatalf("cat FASTQ task = command %#v script %q, want one quoted stdout command", catTask.Command, catTask.Script)
+	}
 }
 
-func TestRNASeqOmitsRawAddTask(t *testing.T) {
-	sourcecheck.AssertNoCall(t, "../../../assets/pipelines/rnaseq/rnaseq.go", "AddTask")
+func TestPipelineAdapterMatchesBuild(t *testing.T) {
+	previous := gobble.SampleSheetPath()
+	gobble.SetSampleSheetPath(rnaFixtureSheet)
+	t.Cleanup(func() { gobble.SetSampleSheetPath(previous) })
+	got := pc.MustPlanJSON(t, rnaseq.Pipeline())
+	want := pc.MustPlanJSON(t, rnaseq.Build(loadSamples(t), rnaseq.DefaultConfig()))
+	if !bytes.Equal(got, want) {
+		t.Fatal("Pipeline plan differs from Load plus DefaultConfig plus Build")
+	}
 }
 
-func withSampleSheet(t *testing.T, path string) {
+func TestBuildRejectsInvalidConfigAndOptionCollisions(t *testing.T) {
+	tests := []struct {
+		name   string
+		mutate func(*rnaseq.Config)
+		want   gobble.DefectCode
+	}{
+		{name: "reference escape", mutate: func(config *rnaseq.Config) { config.Reference.FASTA = gobble.Literal("../genome.fa") }, want: gobble.DefectInvalidPath},
+		{name: "STAR owned flag", mutate: func(config *rnaseq.Config) { config.STAR.ExtraArgs = []string{"--outSAMtype", "SAM"} }, want: gobble.DefectInvalidValue},
+		{name: "Salmon route flag", mutate: func(config *rnaseq.Config) { config.Salmon.ExtraArgs = []string{"-a", "other.bam"} }, want: gobble.DefectInvalidValue},
+		{name: "DESeq2 contrast", mutate: func(config *rnaseq.Config) { config.DESeq2QC.ExtraArgs = []string{"--contrast", "a,b"} }, want: gobble.DefectInvalidValue},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			config := rnaseq.DefaultConfig()
+			test.mutate(&config)
+			graph, err := gobble.Compose(rnaseq.Build(loadSamples(t), config))
+			if graph != nil || !hasDefect(err, test.want) {
+				t.Fatalf("Compose() = (%v, %v), want nil graph and %s", graph, err, test.want)
+			}
+		})
+	}
+
+	graph, err := gobble.Compose(rnaseq.Build(nil, rnaseq.DefaultConfig()))
+	if graph != nil || !hasDefect(err, gobble.DefectInvalidSampleSheet) {
+		t.Fatalf("empty Build Compose() = (%v, %v), want invalid-samplesheet", graph, err)
+	}
+}
+
+func TestConfigCustomizationIsVisibleAndDefaultsAreFresh(t *testing.T) {
+	samples := loadSamples(t)
+	first := rnaseq.DefaultConfig()
+	first.Salmon.ExtraArgs = append(first.Salmon.ExtraArgs, "--validateMappings")
+	custom := pc.MustPlanJSON(t, rnaseq.Build(samples, first))
+	if !pc.ContainsAll(pc.TaskByID(t, custom, "WT_REP1.salmon_quant").Command, "--validateMappings") {
+		t.Fatal("custom Salmon option is absent from plan")
+	}
+
+	second := rnaseq.DefaultConfig()
+	plain := pc.MustPlanJSON(t, rnaseq.Build(samples, second))
+	if pc.ContainsAll(pc.TaskByID(t, plain, "WT_REP1.salmon_quant").Command, "--validateMappings") {
+		t.Fatal("DefaultConfig retained a prior caller mutation")
+	}
+	if !slices.Equal(pc.TaskByID(t, custom, "WT_REP1.star_align").Command, pc.TaskByID(t, plain, "WT_REP1.star_align").Command) {
+		t.Fatal("Salmon-only customization changed STAR command identity")
+	}
+}
+
+func TestUncompressedGTFPolicyRemovesOnlyGunzipStage(t *testing.T) {
+	config := rnaseq.DefaultConfig()
+	config.Reference.GTF = gobble.PathSpec{Dir: gobble.Dir("in/reference"), Base: "genes", Ext: ".gtf"}
+	config.Reference.GTFCompressed = false
+	tasks := pc.AllTasks(t, pc.MustPlanJSON(t, rnaseq.Build(loadSamples(t), config)))
+	if pc.CountTasksNamed(tasks, "gunzip") != 0 || pc.CountTasksNamed(tasks, "star_align") == 0 || pc.CountTasksNamed(tasks, "salmon_quant") == 0 {
+		t.Fatalf("uncompressed GTF tasks omit required route or retain gunzip: %+v", tasks)
+	}
+}
+
+func loadSamples(t *testing.T) []rnaseq.Sample {
 	t.Helper()
-	prev := gobble.SampleSheetPath()
-	gobble.SetSampleSheetPath(path)
-	t.Cleanup(func() { gobble.SetSampleSheetPath(prev) })
+	samples, err := rnaseq.Load(rnaFixtureSheet)
+	if err != nil {
+		t.Fatalf("Load(%s) error = %v", rnaFixtureSheet, err)
+	}
+	return samples
 }
 
-func writeTempSheet(t *testing.T, csv string) string {
-	t.Helper()
-	path := filepath.Join(t.TempDir(), "samplesheet.csv")
-	if err := os.WriteFile(path, []byte(csv), 0o644); err != nil {
-		t.Fatalf("WriteFile(%s): %v", path, err)
+func errDetails(err error) string {
+	var structured *gobble.Error
+	if !errors.As(err, &structured) || structured == nil {
+		return ""
 	}
-	return path
+	var details strings.Builder
+	for _, defect := range structured.Defects {
+		details.WriteString(defect.Message)
+		details.WriteByte('\n')
+	}
+	return details.String()
 }
 
-func mustComposeSheetError(t *testing.T, p *gobble.Pipeline) *gobble.Error {
-	t.Helper()
-	if p == nil {
-		t.Fatal("constructor returned nil pipeline")
-	}
-	g, err := gobble.Compose(p)
-	if g != nil {
-		t.Fatal("Compose() graph != nil, want no tasks")
-	}
-	if !gobble.IsSampleSheetError(err) {
-		t.Fatalf("IsSampleSheetError() = false, error = %v", err)
-	}
-	var ge *gobble.Error
-	if !errors.As(err, &ge) {
-		t.Fatalf("error = %v, want *Error", err)
-	}
-	return ge
-}
-
-func hasSheetMessage(ge *gobble.Error, message string) bool {
-	if ge == nil {
+func hasDefect(err error, code gobble.DefectCode) bool {
+	var structured *gobble.Error
+	if !errors.As(err, &structured) || structured == nil {
 		return false
 	}
-	for _, d := range ge.Defects {
-		if d.Message == message {
+	for _, defect := range structured.Defects {
+		if defect.Code == code {
 			return true
 		}
 	}
 	return false
+}
+
+func TestLoadMissingSheetIsStructured(t *testing.T) {
+	_, err := rnaseq.Load("testdata/does-not-exist.csv")
+	if !hasDefect(err, gobble.DefectNotFound) || !gobble.IsSampleSheetError(err) {
+		t.Fatalf("Load missing error = %v, want structured samplesheet not-found", err)
+	}
+}
+
+func TestBuildHasNoAmbientOrNetworkInput(t *testing.T) {
+	sourcecheck.AssertNoCall(t, "../../../assets/pipelines/rnaseq/build.go", "SampleSheetPath", "Load", "Getenv", "Open", "ReadFile", "Get")
+}
+
+func TestFixtureIsCommittedText(t *testing.T) {
+	data, err := os.ReadFile(rnaFixtureSheet)
+	if err != nil {
+		t.Fatalf("ReadFile(%s): %v", rnaFixtureSheet, err)
+	}
+	if bytes.Contains(data, []byte("https://")) {
+		t.Fatal("staged product samplesheet contains a remote URL")
+	}
 }
