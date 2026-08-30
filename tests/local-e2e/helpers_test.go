@@ -171,6 +171,10 @@ func stageRNASeqPins(t *testing.T, dir string) {
 		{rnaseqevidence.Test1FASTQ, "in/reads/SRR6357072_1.fastq.gz"},
 		{rnaseqevidence.Test2FASTQ, "in/reads/SRR6357072_2.fastq.gz"},
 		{rnaseqevidence.Treat2FASTQ1, "in/reads/SRR6357073_1.fastq.gz"},
+		{rnaseqevidence.Single2Run1, "in/reads/SRR6357074_1.fastq.gz"},
+		{rnaseqevidence.Single2Run2, "in/reads/SRR6357075_1.fastq.gz"},
+		{rnaseqevidence.FinalFASTQ1, "in/reads/SRR6357076_1.fastq.gz"},
+		{rnaseqevidence.FinalFASTQ2, "in/reads/SRR6357076_2.fastq.gz"},
 	})
 }
 

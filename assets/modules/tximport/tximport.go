@@ -52,16 +52,16 @@ type Options struct {
 
 // Ports are the selected gene, transcript, length, and R-object outputs.
 type Ports struct {
-	GeneCounts       gobble.Handle
-	GeneTPM          gobble.Handle
-	GeneLengthScaled gobble.Handle
-	GeneScaled       gobble.Handle
-	GeneLengths      gobble.Handle
-	TranscriptCounts gobble.Handle
-	TranscriptTPM    gobble.Handle
+	GeneCounts        gobble.Handle
+	GeneTPM           gobble.Handle
+	GeneLengthScaled  gobble.Handle
+	GeneScaled        gobble.Handle
+	GeneLengths       gobble.Handle
+	TranscriptCounts  gobble.Handle
+	TranscriptTPM     gobble.Handle
 	TranscriptLengths gobble.Handle
-	Tx2Gene          gobble.Handle
-	RObject          gobble.Handle
+	Tx2Gene           gobble.Handle
+	RObject           gobble.Handle
 }
 
 // Add records one validated tximport merge over every declared quant.sf.

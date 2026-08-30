@@ -29,6 +29,16 @@ type Ports struct {
 
 // Add records one validated reference-guided StringTie command.
 func Add(parent modules.Parent, bam, gtf gobble.Handle, options Options) (Ports, error) {
+	return add(parent, bam, gtf, gobble.Handle{}, options)
+}
+
+// AddInferred records StringTie with --fr/--rf selected from a completed
+// strandedness inference task.
+func AddInferred(parent modules.Parent, bam, gtf, strandedness gobble.Handle, options Options) (Ports, error) {
+	return add(parent, bam, gtf, strandedness, options)
+}
+
+func add(parent modules.Parent, bam, gtf, strandedness gobble.Handle, options Options) (Ports, error) {
 	const unit = "stringtie"
 	bamPath, err := modules.HandlePath(unit, bam)
 	if err != nil {
@@ -56,23 +66,47 @@ func Add(parent modules.Parent, bam, gtf gobble.Handle, options Options) (Ports,
 	if resources.CPU == 0 && resources.Memory == "" {
 		resources = gobble.Resources{CPU: 2, Memory: "2g"}
 	}
-	command := []string{"stringtie", bamPath, "-G", gtfPath, "-o", transcriptsPath, "-A", abundancePath, "-C", coveragePath, "-p", strconv.Itoa(modules.ThreadCount(resources.CPU))}
-	switch options.Strandedness {
-	case gobble.StrandednessForward:
-		command = append(command, "--fr")
-	case gobble.StrandednessReverse:
-		command = append(command, "--rf")
-	case "", "auto", gobble.StrandednessUnstranded:
-	default:
-		return Ports{}, modules.ComposeDefect(gobble.DefectInvalidValue, unit, "strandedness must be unstranded, forward, reverse, or auto")
+	commandFor := func(strand string) ([]string, string, gobble.Resources, error) {
+		command := []string{"stringtie", bamPath, "-G", gtfPath, "-o", transcriptsPath, "-A", abundancePath, "-C", coveragePath, "-p", strconv.Itoa(modules.ThreadCount(resources.CPU))}
+		switch strand {
+		case gobble.StrandednessForward:
+			command = append(command, "--fr")
+		case gobble.StrandednessReverse:
+			command = append(command, "--rf")
+		case "", gobble.StrandednessUnstranded:
+		default:
+			return nil, "", gobble.Resources{}, modules.ComposeDefect(gobble.DefectInvalidValue, unit, "strandedness must be unstranded, forward, or reverse")
+		}
+		base := options.Options
+		base.Resources = resources
+		return modules.ResolveOptions(unit, base, DefaultImage, resources, command, []string{"-G", "-o", "-A", "-C", "-p", "--fr", "--rf"})
 	}
-	base := options.Options
-	base.Resources = resources
-	command, image, resources, err := modules.ResolveOptions(unit, base, DefaultImage, resources, command, []string{"-G", "-o", "-A", "-C", "-p", "--fr", "--rf"})
-	if err != nil {
-		return Ports{}, err
+	inputs := []gobble.Bind{{Name: "bam", From: bam}, {Name: "gtf", From: gtf}}
+	spec := gobble.TaskSpec{Name: unit, Resources: resources, Inputs: inputs, Outputs: []gobble.Bind{{Name: "transcripts", Spec: transcripts}, {Name: "abundance", Spec: abundance}, {Name: "coverage", Spec: coverage}}}
+	if strandedness.IsZero() {
+		command, image, resolvedResources, commandErr := commandFor(options.Strandedness)
+		if commandErr != nil {
+			return Ports{}, commandErr
+		}
+		spec.Command, spec.Image, spec.Resources = command, image, resolvedResources
+	} else {
+		strandPath, pathErr := modules.HandlePath(unit, strandedness)
+		if pathErr != nil {
+			return Ports{}, pathErr
+		}
+		commands := make(map[string][]string, 3)
+		for _, strand := range []string{gobble.StrandednessUnstranded, gobble.StrandednessForward, gobble.StrandednessReverse} {
+			command, image, resolvedResources, commandErr := commandFor(strand)
+			if commandErr != nil {
+				return Ports{}, commandErr
+			}
+			commands[strand] = command
+			spec.Image, spec.Resources = image, resolvedResources
+		}
+		spec.Script = modules.StrandedCommand(strandPath, commands[gobble.StrandednessUnstranded], commands[gobble.StrandednessForward], commands[gobble.StrandednessReverse])
+		spec.Inputs = append(spec.Inputs, gobble.Bind{Name: "strandedness", From: strandedness})
 	}
-	task := parent.AddTask(gobble.TaskSpec{Name: unit, Command: command, Image: image, Resources: resources, Inputs: []gobble.Bind{{Name: "bam", From: bam}, {Name: "gtf", From: gtf}}, Outputs: []gobble.Bind{{Name: "transcripts", Spec: transcripts}, {Name: "abundance", Spec: abundance}, {Name: "coverage", Spec: coverage}}})
+	task := parent.AddTask(spec)
 	return Ports{Transcripts: task.Out("transcripts"), Abundance: task.Out("abundance"), Coverage: task.Out("coverage")}, nil
 }
 

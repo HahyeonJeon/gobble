@@ -14,8 +14,8 @@ const DefaultImage modules.Image = "community.wave.seqera.io/library/htslib_samt
 // Options controls one lifted STAR genomeGenerate command.
 type Options struct {
 	modules.Options
-	OutDir       gobble.Directory
-	SJDBOverhang int
+	OutDir              gobble.Directory
+	SJDBOverhang        int
 	GenomeSAIndexNBases int
 }
 

@@ -12,7 +12,11 @@ temporary `assets.RNASeq` constructor now points here.
   `seq_center`. Unknown columns are errors. Repeated rows become ordered typed
   `Run` values. Single- and paired-end runs cannot be mixed within one sample.
 - `DefaultConfig` returns fresh typed reference, output, module, image,
-  resource, and argv policy. It selects STAR and Salmon only.
+  resource, argv, sample-removal, strandedness-inference, and publication
+  policy. It selects STAR and Salmon only. The benchmark defaults reject fewer
+  than 10,000 trimmed reads, less than 5% uniquely mapped reads, strand calls
+  below 0.8 support, and unstranded calls farther than 0.1 from equal strand
+  support.
 - `Build(samples, config)` copies caller data, reads no process state or
   network location, and records invalid data, path, image, and option conflicts
   as compose defects.
@@ -34,6 +38,18 @@ scaled matrices and an R object, reference-guided transcript and abundance
 files, BigWig tracks, selected QC reports, DESeq2 PCA and sample-distance
 artifacts, and MultiQC HTML/data. featureCounts is biotype QC only. DESeq2 has
 no study design or contrast.
+
+For an `auto` sample, Salmon writes one typed `unstranded`, `forward`, or
+`reverse` result before STAR starts. That result is an input to STAR and selects
+the final Salmon library type, StringTie mode, Qualimap protocol, dupRadar and
+featureCounts strand codes, and biological-direction coverage. An inferred
+unstranded library publishes directional coverage status Trees without false
+BigWig members. Required final BAM, quantification, matrix, coverage, and report
+publication cannot be disabled. Typed publication policy can additionally move
+trimmed reads, STAR intermediates, and generated transcriptome, annotation,
+STAR-index, and Salmon-index products under the results directory. The
+samtools FAI remains beside its caller-staged FASTA because that is the tool's
+output contract.
 
 ## Lifecycle and support boundary
 

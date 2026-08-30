@@ -2,6 +2,8 @@
 package ucscbedgraphtobigwig
 
 import (
+	"fmt"
+
 	"github.com/HahyeonJeon/gobble"
 	"github.com/HahyeonJeon/gobble/assets/modules"
 )
@@ -19,6 +21,10 @@ type Options struct {
 
 // Ports contains the BigWig track.
 type Ports struct{ BigWig gobble.Handle }
+
+// OptionalPorts contains status.txt and, for inferred stranded libraries, a
+// directional coverage.bigWig in one Tree.
+type OptionalPorts struct{ Artifacts gobble.Handle }
 
 // Add records one validated bedGraphToBigWig command.
 func Add(parent modules.Parent, bedgraph, sizes gobble.Handle, options Options) (Ports, error) {
@@ -48,6 +54,47 @@ func Add(parent modules.Parent, bedgraph, sizes gobble.Handle, options Options) 
 	}
 	task := parent.AddTask(gobble.TaskSpec{Name: unit, Command: command, Image: image, Resources: resources, Inputs: []gobble.Bind{{Name: "bedgraph", From: bedgraph}, {Name: "sizes", From: sizes}}, Outputs: []gobble.Bind{{Name: "bigwig", Spec: output}}})
 	return Ports{BigWig: task.Out("bigwig")}, nil
+}
+
+// AddOptional converts a clipped bedGraph only when the inferred coverage
+// Tree contains one. Unstranded inference remains an explicit status artifact.
+func AddOptional(parent modules.Parent, bedgraphTree, sizes gobble.Handle, options Options) (OptionalPorts, error) {
+	const unit = "ucsc_bedgraphtobigwig_inferred"
+	sizesPath, err := modules.HandlePath(unit, sizes)
+	if err != nil {
+		return OptionalPorts{}, err
+	}
+	inputDir := bedgraphTree.Tree().Dir
+	if inputDir.IsZero() {
+		return OptionalPorts{}, modules.ComposeDefect(gobble.DefectInvalidValue, unit, "clipped bedGraph artifacts must be a Tree")
+	}
+	outDir := options.OutDir
+	if outDir.IsZero() {
+		outDir = gobble.Dir("results/coverage")
+	}
+	prefix := options.Prefix
+	if prefix == "" {
+		prefix = "coverage"
+	}
+	treeDir := outDir.Join(prefix)
+	inputPath := inputDir.String() + "/clipped.bedGraph"
+	outputPath := treeDir.String() + "/coverage.bigWig"
+	command := []string{"bedGraphToBigWig", inputPath, sizesPath, outputPath}
+	command, image, resources, err := modules.ResolveOptions(unit, options.Options, DefaultImage, gobble.Resources{CPU: 1, Memory: "1g"}, command, nil)
+	if err != nil {
+		return OptionalPorts{}, err
+	}
+	script := fmt.Sprintf(`mkdir -p %s
+cp %s %s
+if test -f %s; then
+  %s
+fi`, modules.ShellQuote(treeDir.String()), modules.ShellQuote(inputDir.String()+"/status.txt"), modules.ShellQuote(treeDir.String()+"/status.txt"), modules.ShellQuote(inputPath), modules.ShellCommand(command))
+	task := parent.AddTask(gobble.TaskSpec{
+		Name: unit, Script: script, Image: image, Resources: resources,
+		Inputs:  []gobble.Bind{{Name: "bedgraph_artifacts", From: bedgraphTree, Tree: gobble.DeclareTree(inputDir)}, {Name: "sizes", From: sizes}},
+		Outputs: []gobble.Bind{{Name: "artifacts", Tree: gobble.DeclareTree(treeDir)}},
+	})
+	return OptionalPorts{Artifacts: task.Out("artifacts")}, nil
 }
 
 // Pipeline returns a standalone validated bedGraphToBigWig module.

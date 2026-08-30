@@ -33,6 +33,16 @@ type Ports struct {
 // Add records one validated STAR alignment command. A zero read2 is
 // single-end; otherwise the command is paired-end.
 func Add(parent modules.Parent, index, gtf, read1, read2 gobble.Handle, options Options) (Ports, error) {
+	return add(parent, index, gtf, read1, read2, nil, options)
+}
+
+// AddAfter records STAR after every supplied policy or inference handle has
+// completed. The handles enforce graph order; STAR itself has no strand flag.
+func AddAfter(parent modules.Parent, index, gtf, read1, read2 gobble.Handle, after []gobble.Handle, options Options) (Ports, error) {
+	return add(parent, index, gtf, read1, read2, after, options)
+}
+
+func add(parent modules.Parent, index, gtf, read1, read2 gobble.Handle, after []gobble.Handle, options Options) (Ports, error) {
 	const unit = "star_align"
 	read1Path, err := modules.HandlePath(unit, read1)
 	if err != nil {
@@ -88,6 +98,11 @@ func Add(parent modules.Parent, index, gtf, read1, read2 gobble.Handle, options 
 	inputs[0].Tree = gobble.DeclareTree(index.Tree().Dir)
 	if !read2.IsZero() {
 		inputs = append(inputs, gobble.Bind{Name: "read2", From: read2})
+	}
+	for i, dependency := range after {
+		if !dependency.IsZero() {
+			inputs = append(inputs, gobble.Bind{Name: "prerequisite_" + strconv.Itoa(i+1), From: dependency})
+		}
 	}
 	genome := gobble.PathSpec{Dir: outDir, Base: "Aligned", Ext: ".out.bam"}
 	transcript := gobble.PathSpec{Dir: outDir, Base: "Aligned.toTranscriptome", Ext: ".out.bam"}

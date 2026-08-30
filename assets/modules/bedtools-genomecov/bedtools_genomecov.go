@@ -2,6 +2,8 @@
 package bedtoolsgenomecov
 
 import (
+	"fmt"
+
 	"github.com/HahyeonJeon/gobble"
 	"github.com/HahyeonJeon/gobble/assets/modules"
 )
@@ -20,6 +22,10 @@ type Options struct {
 
 // Ports contains one sorted bedGraph.
 type Ports struct{ BedGraph gobble.Handle }
+
+// OptionalPorts contains a Tree with status.txt and, when inference resolves
+// to a stranded library, coverage.bedGraph.
+type OptionalPorts struct{ Artifacts gobble.Handle }
 
 // Add records one validated bedtools genomecov command.
 func Add(parent modules.Parent, bam gobble.Handle, options Options) (Ports, error) {
@@ -51,6 +57,74 @@ func Add(parent modules.Parent, bam gobble.Handle, options Options) (Ports, erro
 	}
 	task := parent.AddTask(gobble.TaskSpec{Name: unit, Script: modules.ShellRedirect(command, bedgraphPath), Image: image, Resources: resources, Inputs: []gobble.Bind{{Name: "bam", From: bam}}, Outputs: []gobble.Bind{{Name: "bedgraph", Spec: bedgraph}}})
 	return Ports{BedGraph: task.Out("bedgraph")}, nil
+}
+
+// AddInferred records one biological-direction coverage task. direction is +
+// for the library-forward track and - for the library-reverse track. Runtime
+// inference maps that biological direction to the corresponding BAM strand;
+// unstranded libraries publish only an explicit not-applicable status.
+func AddInferred(parent modules.Parent, bam, strandedness gobble.Handle, direction string, options Options) (OptionalPorts, error) {
+	const unit = "bedtools_genomecov_inferred"
+	if direction != "+" && direction != "-" {
+		return OptionalPorts{}, modules.ComposeDefect(gobble.DefectInvalidValue, unit, "direction must be + or -")
+	}
+	bamPath, err := modules.HandlePath(unit, bam)
+	if err != nil {
+		return OptionalPorts{}, err
+	}
+	strandPath, err := modules.HandlePath(unit, strandedness)
+	if err != nil {
+		return OptionalPorts{}, err
+	}
+	outDir := options.OutDir
+	if outDir.IsZero() {
+		outDir = gobble.Dir("work/coverage")
+	}
+	prefix := options.Prefix
+	if prefix == "" {
+		prefix = "coverage"
+	}
+	treeDir := outDir.Join(prefix)
+	bedgraphPath := treeDir.String() + "/coverage.bedGraph"
+	commandFor := func(strand string) ([]string, string, gobble.Resources, error) {
+		command := []string{"bedtools", "genomecov", "-bg", "-split", "-ibam", bamPath, "-strand", strand}
+		return modules.ResolveOptions(unit, options.Options, DefaultImage, gobble.Resources{CPU: 1, Memory: "1g"}, command, []string{"-bg", "-split", "-ibam", "-strand"})
+	}
+	forwardStrand, reverseStrand := direction, oppositeStrand(direction)
+	forward, image, resources, err := commandFor(forwardStrand)
+	if err != nil {
+		return OptionalPorts{}, err
+	}
+	reverse, reverseImage, reverseResources, err := commandFor(reverseStrand)
+	if err != nil {
+		return OptionalPorts{}, err
+	}
+	if reverseImage != image {
+		return OptionalPorts{}, modules.ComposeDefect(gobble.DefectInvalidValue, unit, "runtime strand variants resolved different images")
+	}
+	resources = reverseResources
+	script := fmt.Sprintf(`mkdir -p %s
+strand=$(cat %s)
+printf '%%s\n' "$strand" > %s
+case "$strand" in
+  unstranded) ;;
+  forward) %s > %s ;;
+  reverse) %s > %s ;;
+  *) echo "invalid inferred strandedness: $strand" >&2; exit 2 ;;
+esac`, modules.ShellQuote(treeDir.String()), modules.ShellQuote(strandPath), modules.ShellQuote(treeDir.String()+"/status.txt"), modules.ShellCommand(forward), modules.ShellQuote(bedgraphPath), modules.ShellCommand(reverse), modules.ShellQuote(bedgraphPath))
+	task := parent.AddTask(gobble.TaskSpec{
+		Name: unit, Script: script, Image: image, Resources: resources,
+		Inputs:  []gobble.Bind{{Name: "bam", From: bam}, {Name: "strandedness", From: strandedness}},
+		Outputs: []gobble.Bind{{Name: "artifacts", Tree: gobble.DeclareTree(treeDir)}},
+	})
+	return OptionalPorts{Artifacts: task.Out("artifacts")}, nil
+}
+
+func oppositeStrand(strand string) string {
+	if strand == "+" {
+		return "-"
+	}
+	return "+"
 }
 
 // Pipeline returns a standalone validated bedtools genomecov module.

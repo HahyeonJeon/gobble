@@ -23,6 +23,15 @@ type Ports struct{ BAM gobble.Handle }
 
 // Add records one validated samtools sort command.
 func Add(parent modules.Parent, alignment gobble.Handle, options Options) (Ports, error) {
+	return add(parent, alignment, gobble.Handle{}, options)
+}
+
+// AddAfter records samtools sort after a sample policy gate.
+func AddAfter(parent modules.Parent, alignment, after gobble.Handle, options Options) (Ports, error) {
+	return add(parent, alignment, after, options)
+}
+
+func add(parent modules.Parent, alignment, after gobble.Handle, options Options) (Ports, error) {
 	const unit = "samtools_sort"
 	inputPath, err := modules.HandlePath(unit, alignment)
 	if err != nil {
@@ -56,7 +65,11 @@ func Add(parent modules.Parent, alignment gobble.Handle, options Options) (Ports
 	if err != nil {
 		return Ports{}, err
 	}
-	task := parent.AddTask(gobble.TaskSpec{Name: unit, Command: command, Image: image, Resources: resources, Inputs: []gobble.Bind{{Name: "alignment", From: alignment}}, Outputs: []gobble.Bind{{Name: "bam", Spec: output}}})
+	inputs := []gobble.Bind{{Name: "alignment", From: alignment}}
+	if !after.IsZero() {
+		inputs = append(inputs, gobble.Bind{Name: "sample_accepted", From: after})
+	}
+	task := parent.AddTask(gobble.TaskSpec{Name: unit, Command: command, Image: image, Resources: resources, Inputs: inputs, Outputs: []gobble.Bind{{Name: "bam", Spec: output}}})
 	return Ports{BAM: task.Out("bam")}, nil
 }
 

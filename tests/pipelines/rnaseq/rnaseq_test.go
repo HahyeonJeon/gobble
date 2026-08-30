@@ -2,8 +2,11 @@ package rnaseqevidence_test
 
 import (
 	"bytes"
+	"compress/gzip"
 	"errors"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
@@ -15,6 +18,7 @@ import (
 )
 
 const rnaFixtureSheet = "testdata/rnaseq-samplesheet.csv"
+const rnaLiveFixtureSheet = "testdata/rnaseq-live-samplesheet.csv"
 
 func TestParseOfficialMixedRunAndReadModes(t *testing.T) {
 	samples, err := rnaseq.Load(rnaFixtureSheet)
@@ -52,6 +56,20 @@ func TestParseOfficialMixedRunAndReadModes(t *testing.T) {
 	metadata, err := rnaseq.Parse(strings.NewReader("sample,fastq_1,fastq_2,strandedness,seq_platform,seq_center\na,in/a.fq.gz,,forward,ILLUMINA,center-a\n"))
 	if err != nil || metadata[0].SeqPlatform != "ILLUMINA" || metadata[0].SeqCenter != "center-a" {
 		t.Fatalf("optional sequencing metadata = %+v, %v", metadata, err)
+	}
+}
+
+func TestLiveSheetPreservesOfficialRowSemantics(t *testing.T) {
+	fixture, err := os.ReadFile(rnaFixtureSheet)
+	if err != nil {
+		t.Fatalf("ReadFile(%s): %v", rnaFixtureSheet, err)
+	}
+	live, err := os.ReadFile(rnaLiveFixtureSheet)
+	if err != nil {
+		t.Fatalf("ReadFile(%s): %v", rnaLiveFixtureSheet, err)
+	}
+	if !bytes.Equal(fixture, live) {
+		t.Fatalf("live sheet changes official staged row semantics\nfixture:\n%s\nlive:\n%s", fixture, live)
 	}
 }
 
@@ -140,6 +158,20 @@ func TestSTARSalmonPlanDeclaresSelectedProduct(t *testing.T) {
 			t.Errorf("task %s command exposes study design/contrast: %#v", task.ID, task.Command)
 		}
 	}
+	for id, wants := range map[string][]string{
+		"WT_REP1.salmon_quant":             {"'--libType' 'IU'", "'--libType' 'ISF'", "'--libType' 'ISR'"},
+		"WT_REP1.stringtie":                {"'--fr'", "'--rf'"},
+		"WT_REP1.qualimap_bamqc":           {"'non-strand-specific'", "'strand-specific-forward'", "'strand-specific-reverse'"},
+		"WT_REP1.dupradar":                 {"'0'", "'1'", "'2'"},
+		"WT_REP1.featurecounts_biotype_qc": {"'-s' '0'", "'-s' '1'", "'-s' '2'"},
+	} {
+		script := pc.TaskByID(t, raw, id).Script
+		for _, want := range wants {
+			if !strings.Contains(script, want) {
+				t.Fatalf("task %s script omits %q: %s", id, want, script)
+			}
+		}
+	}
 
 	star := pc.TaskByID(t, raw, "WT_REP1.star_align")
 	if !pc.ContainsAll(star.Command, "--quantMode", "TranscriptomeSAM", "GeneCounts", "--outSAMtype", "BAM", "Unsorted") {
@@ -167,6 +199,39 @@ func TestSTARSalmonPlanDeclaresSelectedProduct(t *testing.T) {
 	catTask := pc.TaskByID(t, raw, "WT_REP1.consolidate_r1.cat_fastq")
 	if !pc.ContainsAll(catTask.Command, "sh", "-c") || !strings.Contains(catTask.Script, "'cat'") || strings.Contains(catTask.Script, "--output") {
 		t.Fatalf("cat FASTQ task = command %#v script %q, want one quoted stdout command", catTask.Command, catTask.Script)
+	}
+}
+
+func TestAutoStrandednessPrecedesAndControlsEveryDependentStage(t *testing.T) {
+	raw := pc.MustPlanJSON(t, rnaseq.Build(loadSamples(t), rnaseq.DefaultConfig()))
+	inferredPath := "work/WT_REP1/strandedness/WT_REP1/strandedness.txt"
+	pc.AssertIOPath(t, pc.TaskByID(t, raw, "WT_REP1.strandedness.salmon_strandedness").Outputs, "strandedness", inferredPath)
+	pc.AssertIOPath(t, pc.TaskByID(t, raw, "WT_REP1.star_align").Inputs, "prerequisite_2", inferredPath)
+
+	for _, id := range []string{
+		"WT_REP1.salmon_quant",
+		"WT_REP1.stringtie",
+		"WT_REP1.qualimap_bamqc",
+		"WT_REP1.dupradar",
+		"WT_REP1.featurecounts_biotype_qc",
+	} {
+		task := pc.TaskByID(t, raw, id)
+		pc.AssertIOPath(t, task.Inputs, "strandedness", inferredPath)
+		for _, want := range []string{"unstranded)", "forward)", "reverse)"} {
+			if !strings.Contains(task.Script, want) {
+				t.Fatalf("task %s script omits inferred case %q: %s", id, want, task.Script)
+			}
+		}
+	}
+	for _, id := range []string{
+		"WT_REP1.coverage_forward.bedtools_genomecov_inferred",
+		"WT_REP1.coverage_reverse.bedtools_genomecov_inferred",
+	} {
+		task := pc.TaskByID(t, raw, id)
+		pc.AssertIOPath(t, task.Inputs, "strandedness", inferredPath)
+		if !strings.Contains(task.Script, "unstranded) ;;") || !strings.Contains(task.Script, "-strand") {
+			t.Fatalf("coverage task %s does not condition directional output on inference: %s", id, task.Script)
+		}
 	}
 }
 
@@ -214,17 +279,100 @@ func TestConfigCustomizationIsVisibleAndDefaultsAreFresh(t *testing.T) {
 	first := rnaseq.DefaultConfig()
 	first.Salmon.ExtraArgs = append(first.Salmon.ExtraArgs, "--validateMappings")
 	custom := pc.MustPlanJSON(t, rnaseq.Build(samples, first))
-	if !pc.ContainsAll(pc.TaskByID(t, custom, "WT_REP1.salmon_quant").Command, "--validateMappings") {
+	if !strings.Contains(pc.TaskByID(t, custom, "WT_REP1.salmon_quant").Script, "'--validateMappings'") {
 		t.Fatal("custom Salmon option is absent from plan")
 	}
 
 	second := rnaseq.DefaultConfig()
 	plain := pc.MustPlanJSON(t, rnaseq.Build(samples, second))
-	if pc.ContainsAll(pc.TaskByID(t, plain, "WT_REP1.salmon_quant").Command, "--validateMappings") {
+	if strings.Contains(pc.TaskByID(t, plain, "WT_REP1.salmon_quant").Script, "'--validateMappings'") {
 		t.Fatal("DefaultConfig retained a prior caller mutation")
 	}
 	if !slices.Equal(pc.TaskByID(t, custom, "WT_REP1.star_align").Command, pc.TaskByID(t, plain, "WT_REP1.star_align").Command) {
 		t.Fatal("Salmon-only customization changed STAR command identity")
+	}
+}
+
+func TestTypedPoliciesAreValidatedAndPlanVisible(t *testing.T) {
+	config := rnaseq.DefaultConfig()
+	if config.SampleRemoval.MinTrimmedReads != 10000 || config.SampleRemoval.MinMappedPercent != 5 || config.StrandednessInference.StrandedFraction != 0.8 || config.StrandednessInference.UnstrandedDifference != 0.1 {
+		t.Fatalf("default typed policies = %+v %+v, want nf-core 3.26.0 boundaries", config.SampleRemoval, config.StrandednessInference)
+	}
+	raw := pc.MustPlanJSON(t, rnaseq.Build(loadSamples(t), config))
+	trimGate := pc.TaskByID(t, raw, "WT_REP1.sample_retention_trimmed")
+	mappedGate := pc.TaskByID(t, raw, "WT_REP1.sample_retention_mapped")
+	inference := pc.TaskByID(t, raw, "WT_REP1.strandedness.salmon_strandedness")
+	if !strings.Contains(trimGate.Script, "minimum=10000") || !strings.Contains(mappedGate.Script, "minimum=5") || !strings.Contains(inference.Script, "limit=0.8") || !strings.Contains(inference.Script, "limit=0.1") {
+		t.Fatalf("policy scripts omit typed defaults: trim=%q mapped=%q inference=%q", trimGate.Script, mappedGate.Script, inference.Script)
+	}
+
+	invalid := rnaseq.DefaultConfig()
+	invalid.StrandednessInference.StrandedFraction = 0.4
+	if graph, err := gobble.Compose(rnaseq.Build(loadSamples(t), invalid)); graph != nil || !hasDefect(err, gobble.DefectInvalidValue) {
+		t.Fatalf("invalid inference policy Compose() = (%v, %v), want invalid-value", graph, err)
+	}
+	invalid = rnaseq.DefaultConfig()
+	invalid.Publication.Matrices = false
+	if graph, err := gobble.Compose(rnaseq.Build(loadSamples(t), invalid)); graph != nil || !hasDefect(err, gobble.DefectInvalidValue) {
+		t.Fatalf("disabled required publication Compose() = (%v, %v), want invalid-value", graph, err)
+	}
+
+	published := rnaseq.DefaultConfig()
+	published.Publication.TrimmedReads = true
+	published.Publication.STARAlignments = true
+	published.Publication.GeneratedReference = true
+	publishedPlan := pc.MustPlanJSON(t, rnaseq.Build(loadSamples(t), published))
+	pc.AssertIOPath(t, pc.TaskByID(t, publishedPlan, "WT_REP1.trim_galore").Outputs, "trimmed_read1", "results/rnaseq/intermediates/trimmed/WT_REP1/WT_REP1_val_1.fq.gz")
+	pc.AssertIOPath(t, pc.TaskByID(t, publishedPlan, "WT_REP1.star_align").Outputs, "genome_bam", "results/rnaseq/intermediates/star/WT_REP1/Aligned.out.bam")
+	pc.AssertTreeIO(t, pc.TaskByID(t, publishedPlan, "reference.star_genome_generate").Outputs, "index", "results/rnaseq/reference/star-index")
+}
+
+func TestSampleRemovalThresholdScriptsAcceptBoundaryValues(t *testing.T) {
+	config := rnaseq.DefaultConfig()
+	config.SampleRemoval.MinTrimmedReads = 2
+	config.SampleRemoval.MinMappedPercent = 5
+	raw := pc.MustPlanJSON(t, rnaseq.Build(loadSamples(t), config))
+	dir := t.TempDir()
+	trimmed := filepath.Join(dir, "work", "WT_REP1", "trim-galore", "WT_REP1_val_1.fq.gz")
+	if err := os.MkdirAll(filepath.Dir(trimmed), 0o755); err != nil {
+		t.Fatalf("MkdirAll trimmed: %v", err)
+	}
+	file, err := os.Create(trimmed)
+	if err != nil {
+		t.Fatalf("Create trimmed: %v", err)
+	}
+	zw := gzip.NewWriter(file)
+	if _, err := zw.Write([]byte("@a\nA\n+\n!\n@b\nA\n+\n!\n")); err != nil {
+		t.Fatalf("write gzip: %v", err)
+	}
+	if err := zw.Close(); err != nil {
+		t.Fatalf("close gzip: %v", err)
+	}
+	if err := file.Close(); err != nil {
+		t.Fatalf("close trimmed: %v", err)
+	}
+	policyDir := filepath.Join(dir, "work", "WT_REP1", "policy")
+	if err := os.MkdirAll(policyDir, 0o755); err != nil {
+		t.Fatalf("MkdirAll policy: %v", err)
+	}
+	runScript(t, dir, pc.TaskByID(t, raw, "WT_REP1.sample_retention_trimmed").Script)
+
+	starDir := filepath.Join(dir, "work", "WT_REP1", "star")
+	if err := os.MkdirAll(starDir, 0o755); err != nil {
+		t.Fatalf("MkdirAll STAR: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(starDir, "Log.final.out"), []byte("Uniquely mapped reads % | 5%\n"), 0o644); err != nil {
+		t.Fatalf("WriteFile STAR log: %v", err)
+	}
+	runScript(t, dir, pc.TaskByID(t, raw, "WT_REP1.sample_retention_mapped").Script)
+}
+
+func runScript(t *testing.T, dir, script string) {
+	t.Helper()
+	cmd := exec.Command("sh", "-c", "set -eu\n"+script)
+	cmd.Dir = dir
+	if output, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("script failed: %v\n%s\n%s", err, output, script)
 	}
 }
 

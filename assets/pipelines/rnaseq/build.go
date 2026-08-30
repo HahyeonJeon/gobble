@@ -1,6 +1,8 @@
 package rnaseq
 
 import (
+	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/HahyeonJeon/gobble"
@@ -48,10 +50,14 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 	fasta := pipeline.AddInput("fasta", config.Reference.FASTA)
 	gtfCompressed := pipeline.AddInput("gtf", config.Reference.GTF)
 	reference := pipeline.AddModule("reference")
+	referenceDir := gobble.Dir("work/reference")
+	if config.Publication.GeneratedReference {
+		referenceDir = gobble.Dir(config.Results.String() + "/reference")
+	}
 	gtf := gtfCompressed
 	if config.Reference.GTFCompressed {
 		gunzipOptions := config.Gunzip
-		gunzipOptions.OutDir = gobble.Dir("work/reference")
+		gunzipOptions.OutDir = referenceDir
 		gunzipOptions.Prefix = "genes"
 		annotation, err := gunzip.Add(reference, gtfCompressed, gunzipOptions)
 		if recordModuleError(pipeline, err) {
@@ -61,14 +67,14 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 	}
 
 	transcriptOptions := config.GFFRead
-	transcriptOptions.OutDir = gobble.Dir("work/reference")
+	transcriptOptions.OutDir = referenceDir
 	transcriptOptions.Prefix = "transcriptome"
 	transcriptome, err := gffread.AddTranscriptome(reference.AddModule("transcriptome"), gtf, fasta, transcriptOptions)
 	if recordModuleError(pipeline, err) {
 		return pipeline
 	}
 	bedOptions := config.GFFRead
-	bedOptions.OutDir = gobble.Dir("work/reference")
+	bedOptions.OutDir = referenceDir
 	bedOptions.Prefix = "genes"
 	geneBED, err := gffread.AddBED(reference.AddModule("gene_intervals"), gtf, fasta, bedOptions)
 	if recordModuleError(pipeline, err) {
@@ -86,7 +92,7 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 	var starIndexHandle gobble.Handle
 	if config.Reference.STARIndex.IsZero() {
 		starOptions := config.STARGenome
-		starOptions.OutDir = gobble.Dir("work/reference/star-index")
+		starOptions.OutDir = referenceDir.Join("star-index")
 		starIndex, addErr := stargenomegenerate.Add(reference, fasta, gtf, starOptions)
 		if recordModuleError(pipeline, addErr) {
 			return pipeline
@@ -104,7 +110,7 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 	if needsInference {
 		if config.Reference.SalmonIndex.IsZero() {
 			salmonOptions := config.SalmonIndex
-			salmonOptions.OutDir = gobble.Dir("work/reference/salmon-index")
+			salmonOptions.OutDir = referenceDir.Join("salmon-index")
 			salmonIndexPorts, addErr := salmonindex.Add(reference, transcriptome.Output, salmonOptions)
 			if recordModuleError(pipeline, addErr) {
 				return pipeline
@@ -185,12 +191,18 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 
 		trimOptions := config.TrimGalore
 		trimOptions.OutDir = gobble.Dir("work/" + sample.Name + "/trim-galore")
+		if config.Publication.TrimmedReads {
+			trimOptions.OutDir = gobble.Dir(config.Results.String() + "/intermediates/trimmed/" + sample.Name)
+		}
 		trimOptions.Prefix = sample.Name
 		trimmed, addErr := trimgalore.Add(module, read1, read2, trimOptions)
 		if recordModuleError(pipeline, addErr) {
 			return pipeline
 		}
-		reports = append(reports, trimmed.Log)
+		reports = append(reports, trimmed.Report1)
+		if !trimmed.Report2.IsZero() {
+			reports = append(reports, trimmed.Report2)
+		}
 		cleanReads := []struct {
 			name   string
 			handle gobble.Handle
@@ -219,33 +231,51 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 			reports = append(reports, lint.Report, qc.HTML, qc.Zip)
 		}
 
+		retained, retentionErr := addTrimmedReadGate(module, trimmed.Read1, trimmed.Read2, sample.Name, config.SampleRemoval.MinTrimmedReads)
+		if recordModuleError(pipeline, retentionErr) {
+			return pipeline
+		}
+
+		var inferred gobble.Handle
 		if sample.Strandedness == StrandednessAuto {
 			inferenceOptions := config.Salmon
 			inferenceOptions.OutDir = gobble.Dir("work/" + sample.Name + "/strandedness")
 			inferenceOptions.Prefix = sample.Name
-			inference, inferenceErr := salmonquant.AddInference(module.AddModule("strandedness"), salmonIndexHandle, trimmed.Read1, trimmed.Read2, inferenceOptions)
+			inferenceThresholds := salmonquant.InferenceThresholds{
+				StrandedFraction:     config.StrandednessInference.StrandedFraction,
+				UnstrandedDifference: config.StrandednessInference.UnstrandedDifference,
+			}
+			inference, inferenceErr := salmonquant.AddInference(module.AddModule("strandedness"), salmonIndexHandle, trimmed.Read1, trimmed.Read2, retained, inferenceThresholds, inferenceOptions)
 			if recordModuleError(pipeline, inferenceErr) {
 				return pipeline
 			}
+			inferred = inference.Strandedness
 			reports = append(reports, inference.MetaInfo, inference.LibFormatCounts, inference.Log)
 		}
 
 		starOptions := config.STAR
 		starOptions.OutDir = gobble.Dir("work/" + sample.Name + "/star")
+		if config.Publication.STARAlignments {
+			starOptions.OutDir = gobble.Dir(config.Results.String() + "/intermediates/star/" + sample.Name)
+		}
 		starOptions.Sample = sample.Name
 		starOptions.ReadGroup = sample.Name
 		starOptions.Platform = sample.SeqPlatform
 		starOptions.Center = sample.SeqCenter
-		aligned, addErr := staralign.Add(module, starIndexHandle, gtf, trimmed.Read1, trimmed.Read2, starOptions)
+		aligned, addErr := staralign.AddAfter(module, starIndexHandle, gtf, trimmed.Read1, trimmed.Read2, []gobble.Handle{retained, inferred}, starOptions)
 		if recordModuleError(pipeline, addErr) {
 			return pipeline
 		}
 		reports = append(reports, aligned.LogFinal, aligned.Junctions)
+		accepted, policyErr := addMappedReadGate(module, aligned.LogFinal, retained, sample.Name, config.SampleRemoval.MinMappedPercent)
+		if recordModuleError(pipeline, policyErr) {
+			return pipeline
+		}
 
 		sortOptions := config.Sort
 		sortOptions.OutDir = gobble.Dir("work/" + sample.Name + "/sorted")
 		sortOptions.Prefix = sample.Name
-		sorted, addErr := samtoolssort.Add(module, aligned.GenomeBAM, sortOptions)
+		sorted, addErr := samtoolssort.AddAfter(module, aligned.GenomeBAM, accepted, sortOptions)
 		if recordModuleError(pipeline, addErr) {
 			return pipeline
 		}
@@ -272,8 +302,15 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 		salmonOptions := config.Salmon
 		salmonOptions.OutDir = gobble.Dir(config.Results.String() + "/salmon")
 		salmonOptions.Prefix = sample.Name
-		salmonOptions.LibType = salmonLibType(sample.Strandedness, len(sample.Runs[0].Fastq2) > 0)
-		quant, addErr := salmonquant.AddAlignment(module, aligned.TranscriptBAM, transcriptome.Output, gtf, salmonOptions)
+		paired := sample.Runs[0].Fastq2 != ""
+		var quant salmonquant.Ports
+		if inferred.IsZero() {
+			salmonOptions.LibType = salmonLibType(sample.Strandedness, paired)
+			quant, addErr = salmonquant.AddAlignmentAfter(module, aligned.TranscriptBAM, transcriptome.Output, gtf, accepted, salmonOptions)
+		} else {
+			salmonOptions.LibType = ""
+			quant, addErr = salmonquant.AddAlignmentInferred(module, aligned.TranscriptBAM, transcriptome.Output, gtf, inferred, accepted, paired, salmonOptions)
+		}
 		if recordModuleError(pipeline, addErr) {
 			return pipeline
 		}
@@ -284,18 +321,23 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 		stringTieOptions := config.StringTie
 		stringTieOptions.OutDir = gobble.Dir(config.Results.String() + "/stringtie/" + sample.Name)
 		stringTieOptions.Prefix = sample.Name
-		stringTieOptions.Strandedness = string(sample.Strandedness)
-		stringTiePorts, addErr := stringtie.Add(module, marked.BAM, gtf, stringTieOptions)
+		var stringTiePorts stringtie.Ports
+		if inferred.IsZero() {
+			stringTieOptions.Strandedness = string(sample.Strandedness)
+			stringTiePorts, addErr = stringtie.Add(module, marked.BAM, gtf, stringTieOptions)
+		} else {
+			stringTieOptions.Strandedness = ""
+			stringTiePorts, addErr = stringtie.AddInferred(module, marked.BAM, gtf, inferred, stringTieOptions)
+		}
 		if recordModuleError(pipeline, addErr) {
 			return pipeline
 		}
 		reports = append(reports, stringTiePorts.Abundance, stringTiePorts.Coverage)
 
-		coverageReports, coverageErr := addCoverage(module, marked.BAM, chromSizes.Sizes, sample, config)
+		coverageErr := addCoverage(module, marked.BAM, chromSizes.Sizes, sample, inferred, config)
 		if recordModuleError(pipeline, coverageErr) {
 			return pipeline
 		}
-		reports = append(reports, coverageReports...)
 
 		rseqcOptions := config.RSeQC
 		rseqcOptions.OutDir = gobble.Dir(config.Results.String() + "/qc/" + sample.Name)
@@ -307,26 +349,44 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 		qualimapOptions := config.Qualimap
 		qualimapOptions.OutDir = gobble.Dir(config.Results.String() + "/qc/qualimap")
 		qualimapOptions.Prefix = sample.Name
-		qualimapOptions.Strandedness = string(sample.Strandedness)
-		qualimapOptions.Paired = sample.Runs[0].Fastq2 != ""
-		qualimapPorts, addErr := qualimapbamqc.Add(module, marked.BAM, gtf, qualimapOptions)
+		qualimapOptions.Paired = paired
+		var qualimapPorts qualimapbamqc.Ports
+		if inferred.IsZero() {
+			qualimapOptions.Strandedness = string(sample.Strandedness)
+			qualimapPorts, addErr = qualimapbamqc.Add(module, marked.BAM, gtf, qualimapOptions)
+		} else {
+			qualimapOptions.Strandedness = ""
+			qualimapPorts, addErr = qualimapbamqc.AddInferred(module, marked.BAM, gtf, inferred, qualimapOptions)
+		}
 		if recordModuleError(pipeline, addErr) {
 			return pipeline
 		}
 		dupOptions := config.DupRadar
 		dupOptions.OutDir = gobble.Dir(config.Results.String() + "/qc/" + sample.Name)
 		dupOptions.Prefix = sample.Name
-		dupOptions.Strandedness = string(sample.Strandedness)
-		dupOptions.Paired = sample.Runs[0].Fastq2 != ""
-		dup, addErr := dupradar.Add(module, marked.BAM, gtf, dupOptions)
+		dupOptions.Paired = paired
+		var dup dupradar.Ports
+		if inferred.IsZero() {
+			dupOptions.Strandedness = string(sample.Strandedness)
+			dup, addErr = dupradar.Add(module, marked.BAM, gtf, dupOptions)
+		} else {
+			dupOptions.Strandedness = ""
+			dup, addErr = dupradar.AddInferred(module, marked.BAM, gtf, inferred, dupOptions)
+		}
 		if recordModuleError(pipeline, addErr) {
 			return pipeline
 		}
 		biotypeOptions := config.BiotypeQC
 		biotypeOptions.OutDir = gobble.Dir(config.Results.String() + "/qc/" + sample.Name)
-		biotypeOptions.Strandedness = string(sample.Strandedness)
-		biotypeOptions.Paired = sample.Runs[0].Fastq2 != ""
-		biotype, addErr := featurecounts.AddBiotype(module, marked.BAM, gtf, biotypeOptions)
+		biotypeOptions.Paired = paired
+		var biotype featurecounts.BiotypePorts
+		if inferred.IsZero() {
+			biotypeOptions.Strandedness = string(sample.Strandedness)
+			biotype, addErr = featurecounts.AddBiotype(module, marked.BAM, gtf, biotypeOptions)
+		} else {
+			biotypeOptions.Strandedness = ""
+			biotype, addErr = featurecounts.AddBiotypeInferred(module, marked.BAM, gtf, inferred, biotypeOptions)
+		}
 		if recordModuleError(pipeline, addErr) {
 			return pipeline
 		}
@@ -356,7 +416,7 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 	return pipeline
 }
 
-func addCoverage(parent *gobble.Module, bam, sizes gobble.Handle, sample Sample, config Config) ([]gobble.Handle, error) {
+func addCoverage(parent *gobble.Module, bam, sizes gobble.Handle, sample Sample, inferred gobble.Handle, config Config) error {
 	strands := []struct {
 		name   string
 		strand string
@@ -364,34 +424,98 @@ func addCoverage(parent *gobble.Module, bam, sizes gobble.Handle, sample Sample,
 	if sample.Strandedness != StrandednessUnstranded {
 		strands = append(strands, struct{ name, strand string }{name: "forward", strand: "+"}, struct{ name, strand string }{name: "reverse", strand: "-"})
 	}
-	tracks := make([]gobble.Handle, 0, len(strands))
 	for _, strand := range strands {
 		stage := parent.AddModule("coverage_" + strand.name)
 		coverageOptions := config.GenomeCov
 		coverageOptions.OutDir = gobble.Dir("work/" + sample.Name + "/coverage")
 		coverageOptions.Prefix = sample.Name + "." + strand.name
 		coverageOptions.Strand = strand.strand
+		if !inferred.IsZero() && strand.strand != "" {
+			coverage, err := bedtoolsgenomecov.AddInferred(stage, bam, inferred, strand.strand, coverageOptions)
+			if err != nil {
+				return err
+			}
+			clipOptions := config.BedClip
+			clipOptions.OutDir = gobble.Dir("work/" + sample.Name + "/coverage")
+			clipOptions.Prefix = sample.Name + "." + strand.name + ".clipped"
+			clipped, err := ucscbedclip.AddOptional(stage, coverage.Artifacts, sizes, clipOptions)
+			if err != nil {
+				return err
+			}
+			bigWigOptions := config.BedGraphToBigWig
+			bigWigOptions.OutDir = gobble.Dir(config.Results.String() + "/coverage/" + sample.Name)
+			bigWigOptions.Prefix = strand.name
+			if _, err = ucscbedgraphtobigwig.AddOptional(stage, clipped.Artifacts, sizes, bigWigOptions); err != nil {
+				return err
+			}
+			continue
+		}
 		coverage, err := bedtoolsgenomecov.Add(stage, bam, coverageOptions)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		clipOptions := config.BedClip
 		clipOptions.OutDir = gobble.Dir("work/" + sample.Name + "/coverage")
 		clipOptions.Prefix = sample.Name + "." + strand.name + ".clipped"
 		clipped, err := ucscbedclip.Add(stage, coverage.BedGraph, sizes, clipOptions)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		bigWigOptions := config.BedGraphToBigWig
 		bigWigOptions.OutDir = gobble.Dir(config.Results.String() + "/coverage/" + sample.Name)
 		bigWigOptions.Prefix = sample.Name + "." + strand.name
-		track, err := ucscbedgraphtobigwig.Add(stage, clipped.BedGraph, sizes, bigWigOptions)
+		_, err = ucscbedgraphtobigwig.Add(stage, clipped.BedGraph, sizes, bigWigOptions)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		tracks = append(tracks, track.BigWig)
 	}
-	return tracks, nil
+	return nil
+}
+
+func addTrimmedReadGate(parent *gobble.Module, read1, read2 gobble.Handle, sample string, minimum int64) (gobble.Handle, error) {
+	const unit = "sample_retention_trimmed"
+	read1Path, err := modules.HandlePath(unit, read1)
+	if err != nil {
+		return gobble.Handle{}, err
+	}
+	out := gobble.PathSpec{Dir: gobble.Dir("work/" + sample + "/policy"), Base: "trimmed_reads", Ext: ".accepted.txt"}
+	outPath, _ := out.Render()
+	script := fmt.Sprintf(`count=$(gzip -cd %s | awk 'END {if (NR %% 4 != 0) exit 2; print NR / 4}')
+awk -v count="$count" -v minimum=%d 'BEGIN {exit !(count >= minimum)}'
+printf '%%s\n' "$count" > %s`, modules.ShellQuote(read1Path), minimum, modules.ShellQuote(outPath))
+	inputs := []gobble.Bind{{Name: "read1", From: read1}}
+	if !read2.IsZero() {
+		inputs = append(inputs, gobble.Bind{Name: "read2", From: read2})
+	}
+	image, err := staralign.DefaultImage.TaskReference(unit)
+	if err != nil {
+		return gobble.Handle{}, err
+	}
+	task := parent.AddTask(gobble.TaskSpec{Name: unit, Script: script, Image: image, Resources: gobble.Resources{CPU: 1, Memory: "256m"}, Inputs: inputs, Outputs: []gobble.Bind{{Name: "accepted", Spec: out}}})
+	return task.Out("accepted"), nil
+}
+
+func addMappedReadGate(parent *gobble.Module, starLog, trimmedAccepted gobble.Handle, sample string, minimum float64) (gobble.Handle, error) {
+	const unit = "sample_retention_mapped"
+	logPath, err := modules.HandlePath(unit, starLog)
+	if err != nil {
+		return gobble.Handle{}, err
+	}
+	out := gobble.PathSpec{Dir: gobble.Dir("work/" + sample + "/policy"), Base: "mapped_reads", Ext: ".accepted.txt"}
+	outPath, _ := out.Render()
+	script := fmt.Sprintf(`mapped=$(awk -F'|' '/Uniquely mapped reads %%/ {v=$2; gsub(/[ %%]/, "", v); print v; exit}' %s)
+test -n "$mapped"
+awk -v mapped="$mapped" -v minimum=%s 'BEGIN {exit !(mapped >= minimum)}'
+printf '%%s\n' "$mapped" > %s`, modules.ShellQuote(logPath), strconv.FormatFloat(minimum, 'g', -1, 64), modules.ShellQuote(outPath))
+	image, err := staralign.DefaultImage.TaskReference(unit)
+	if err != nil {
+		return gobble.Handle{}, err
+	}
+	task := parent.AddTask(gobble.TaskSpec{
+		Name: unit, Script: script, Image: image, Resources: gobble.Resources{CPU: 1, Memory: "256m"},
+		Inputs: []gobble.Bind{{Name: "star_log", From: starLog}, {Name: "trimmed_accepted", From: trimmedAccepted}}, Outputs: []gobble.Bind{{Name: "accepted", Spec: out}},
+	})
+	return task.Out("accepted"), nil
 }
 
 func recordModuleError(pipeline *gobble.Pipeline, err error) bool {
@@ -482,6 +606,15 @@ func validateBuild(samples []Sample, config Config) []gobble.Defect {
 	}
 	if config.Results.IsZero() {
 		defects = append(defects, gobble.Defect{Code: gobble.DefectInvalidPath, Unit: "results", Message: "RNA results directory is required"})
+	}
+	if config.SampleRemoval.MinTrimmedReads < 0 || config.SampleRemoval.MinMappedPercent < 0 || config.SampleRemoval.MinMappedPercent > 100 {
+		defects = append(defects, gobble.Defect{Code: gobble.DefectInvalidValue, Unit: "sample_removal", Message: "RNA sample-removal thresholds must be non-negative and mapped percent must not exceed 100"})
+	}
+	if config.StrandednessInference.StrandedFraction < 0.5 || config.StrandednessInference.StrandedFraction > 1 || config.StrandednessInference.UnstrandedDifference < 0 || config.StrandednessInference.UnstrandedDifference > 1 {
+		defects = append(defects, gobble.Defect{Code: gobble.DefectInvalidValue, Unit: "strandedness_inference", Message: "RNA inference thresholds must satisfy stranded fraction 0.5..1 and unstranded difference 0..1"})
+	}
+	if !config.Publication.FinalBAMs || !config.Publication.Quantification || !config.Publication.Matrices || !config.Publication.CoverageTracks || !config.Publication.Reports {
+		defects = append(defects, gobble.Defect{Code: gobble.DefectInvalidValue, Unit: "publication", Message: "RNA required final BAM, quantification, matrix, coverage, and report publication cannot be disabled"})
 	}
 	if !config.Reference.STARIndex.IsZero() && config.Reference.STARIndex.Dir.IsZero() {
 		defects = append(defects, gobble.Defect{Code: gobble.DefectInvalidPath, Unit: "reference.star_index", Message: "ready STAR index directory is required"})

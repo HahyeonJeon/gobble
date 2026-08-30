@@ -28,6 +28,16 @@ type BiotypePorts struct {
 
 // AddBiotype records one validated featureCounts biotype-QC command.
 func AddBiotype(parent modules.Parent, bam, gtf gobble.Handle, options BiotypeOptions) (BiotypePorts, error) {
+	return addBiotype(parent, bam, gtf, gobble.Handle{}, options)
+}
+
+// AddBiotypeInferred records biotype QC with its -s value selected from a
+// completed strandedness inference task.
+func AddBiotypeInferred(parent modules.Parent, bam, gtf, strandedness gobble.Handle, options BiotypeOptions) (BiotypePorts, error) {
+	return addBiotype(parent, bam, gtf, strandedness, options)
+}
+
+func addBiotype(parent modules.Parent, bam, gtf, strandedness gobble.Handle, options BiotypeOptions) (BiotypePorts, error) {
 	const unit = "featurecounts_biotype_qc"
 	bamPath, err := modules.HandlePath(unit, bam)
 	if err != nil {
@@ -36,13 +46,6 @@ func AddBiotype(parent modules.Parent, bam, gtf gobble.Handle, options BiotypeOp
 	gtfPath, err := modules.HandlePath(unit, gtf)
 	if err != nil {
 		return BiotypePorts{}, err
-	}
-	strand := options.Strandedness
-	if strand == "auto" {
-		strand = gobble.StrandednessUnstranded
-	}
-	if strand != gobble.StrandednessUnstranded && strand != gobble.StrandednessForward && strand != gobble.StrandednessReverse {
-		return BiotypePorts{}, modules.ComposeDefect(gobble.DefectInvalidValue, unit, "strandedness must be unstranded, forward, reverse, or auto")
 	}
 	outDir := options.OutDir
 	if outDir.IsZero() {
@@ -55,18 +58,47 @@ func AddBiotype(parent modules.Parent, bam, gtf gobble.Handle, options BiotypeOp
 	if resources.CPU == 0 && resources.Memory == "" {
 		resources = gobble.Resources{CPU: 2, Memory: "2g"}
 	}
-	command := []string{"featureCounts", "-a", gtfPath, "-o", countsPath, "-s", featureCountsStrand(strand), "-T", strconv.Itoa(modules.ThreadCount(resources.CPU))}
-	if options.Paired {
-		command = append(command, "-p")
+	commandFor := func(strand string) ([]string, string, gobble.Resources, error) {
+		if strand == "" {
+			strand = gobble.StrandednessUnstranded
+		}
+		if strand != gobble.StrandednessUnstranded && strand != gobble.StrandednessForward && strand != gobble.StrandednessReverse {
+			return nil, "", gobble.Resources{}, modules.ComposeDefect(gobble.DefectInvalidValue, unit, "strandedness must be unstranded, forward, or reverse")
+		}
+		command := []string{"featureCounts", "-a", gtfPath, "-o", countsPath, "-s", featureCountsStrand(strand), "-T", strconv.Itoa(modules.ThreadCount(resources.CPU))}
+		if options.Paired {
+			command = append(command, "-p")
+		}
+		command = append(command, bamPath)
+		base := options.Options
+		base.Resources = resources
+		return modules.ResolveOptions(unit, base, DefaultImage, resources, command, []string{"-a", "-o", "-s", "-T", "-p"})
 	}
-	command = append(command, bamPath)
-	base := options.Options
-	base.Resources = resources
-	command, image, resources, err := modules.ResolveOptions(unit, base, DefaultImage, resources, command, []string{"-a", "-o", "-s", "-T", "-p"})
-	if err != nil {
-		return BiotypePorts{}, err
+	spec := gobble.TaskSpec{Name: unit, Inputs: []gobble.Bind{{Name: "bam", From: bam}, {Name: "gtf", From: gtf}}, Outputs: []gobble.Bind{{Name: "counts", Spec: counts}, {Name: "summary", Spec: summary}}}
+	if strandedness.IsZero() {
+		command, image, resolvedResources, commandErr := commandFor(options.Strandedness)
+		if commandErr != nil {
+			return BiotypePorts{}, commandErr
+		}
+		spec.Command, spec.Image, spec.Resources = command, image, resolvedResources
+	} else {
+		strandPath, pathErr := modules.HandlePath(unit, strandedness)
+		if pathErr != nil {
+			return BiotypePorts{}, pathErr
+		}
+		commands := make(map[string][]string, 3)
+		for _, strand := range []string{gobble.StrandednessUnstranded, gobble.StrandednessForward, gobble.StrandednessReverse} {
+			command, image, resolvedResources, commandErr := commandFor(strand)
+			if commandErr != nil {
+				return BiotypePorts{}, commandErr
+			}
+			commands[strand] = command
+			spec.Image, spec.Resources = image, resolvedResources
+		}
+		spec.Script = modules.StrandedCommand(strandPath, commands[gobble.StrandednessUnstranded], commands[gobble.StrandednessForward], commands[gobble.StrandednessReverse])
+		spec.Inputs = append(spec.Inputs, gobble.Bind{Name: "strandedness", From: strandedness})
 	}
-	task := parent.AddTask(gobble.TaskSpec{Name: unit, Command: command, Image: image, Resources: resources, Inputs: []gobble.Bind{{Name: "bam", From: bam}, {Name: "gtf", From: gtf}}, Outputs: []gobble.Bind{{Name: "counts", Spec: counts}, {Name: "summary", Spec: summary}}})
+	task := parent.AddTask(spec)
 	return BiotypePorts{Counts: task.Out("counts"), Summary: task.Out("summary")}, nil
 }
 

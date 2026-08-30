@@ -25,6 +25,6 @@ func TestRNASeqRecover(t *testing.T) {
 	}
 	assertOccupied(t, dir)
 	assertRNAProductOutputs(t, dir)
-	assertSTARMappedAndSplices(t, dir, []string{"WT_REP1", "WT_REP2", "RAP1_UNINDUCED_REP1", "RAP1_UNINDUCED_REP1_B"})
+	assertSTARMappedAndSplices(t, dir, []string{"WT_REP1", "WT_REP2", "RAP1_UNINDUCED_REP1", "RAP1_UNINDUCED_REP2", "RAP1_IAA_30M_REP1"})
 	recoverAfterSuccessAPI(t, g, dir, 2)
 }

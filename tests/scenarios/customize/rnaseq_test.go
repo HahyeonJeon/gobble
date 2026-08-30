@@ -1,6 +1,7 @@
 package customize_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/HahyeonJeon/gobble/assets/pipelines/rnaseq"
@@ -12,7 +13,7 @@ func TestRNASalmonCustomizationIsPlanVisible(t *testing.T) {
 	config := rnaseq.DefaultConfig()
 	config.Salmon.ExtraArgs = []string{"--validateMappings"}
 	raw := rnaseqscenario.Plan(t, config)
-	if !pc.ContainsAll(pc.TaskByID(t, raw, "WT_REP1.salmon_quant").Command, "--validateMappings") || !rnaseq.Lifecycle.Customize {
+	if !strings.Contains(pc.TaskByID(t, raw, "WT_REP1.salmon_quant").Script, "'--validateMappings'") || !rnaseq.Lifecycle.Customize {
 		t.Fatal("RNA Salmon customization is not visible in the selected command")
 	}
 }

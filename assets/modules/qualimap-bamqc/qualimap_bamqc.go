@@ -24,6 +24,16 @@ type Ports struct{ Report gobble.Handle }
 
 // Add records one validated Qualimap rnaseq command.
 func Add(parent modules.Parent, bam, gtf gobble.Handle, options Options) (Ports, error) {
+	return add(parent, bam, gtf, gobble.Handle{}, options)
+}
+
+// AddInferred records Qualimap with its protocol selected from a completed
+// strandedness inference task.
+func AddInferred(parent modules.Parent, bam, gtf, strandedness gobble.Handle, options Options) (Ports, error) {
+	return add(parent, bam, gtf, strandedness, options)
+}
+
+func add(parent modules.Parent, bam, gtf, strandedness gobble.Handle, options Options) (Ports, error) {
 	const unit = "qualimap_bamqc"
 	bamPath, err := modules.HandlePath(unit, bam)
 	if err != nil {
@@ -42,26 +52,49 @@ func Add(parent modules.Parent, bam, gtf gobble.Handle, options Options) (Ports,
 		prefix = "sample"
 	}
 	resultDir := gobble.Dir(outDir.String() + "/" + prefix)
-	protocol := "non-strand-specific"
-	switch options.Strandedness {
-	case gobble.StrandednessForward:
-		protocol = "strand-specific-forward"
-	case gobble.StrandednessReverse:
-		protocol = "strand-specific-reverse"
-	case "", "auto", gobble.StrandednessUnstranded:
-	default:
-		return Ports{}, modules.ComposeDefect(gobble.DefectInvalidValue, unit, "strandedness must be unstranded, forward, reverse, or auto")
-	}
-	command := []string{"qualimap", "rnaseq", "-bam", bamPath, "-gtf", gtfPath, "-p", protocol, "-outdir", resultDir.String()}
-	if options.Paired {
-		command = append(command, "-pe")
-	}
-	command, image, resources, err := modules.ResolveOptions(unit, options.Options, DefaultImage, gobble.Resources{CPU: 2, Memory: "4g"}, command, []string{"-bam", "-gtf", "-p", "-outdir", "-pe"})
-	if err != nil {
-		return Ports{}, err
+	commandFor := func(strand string) ([]string, string, gobble.Resources, error) {
+		protocol := "non-strand-specific"
+		switch strand {
+		case gobble.StrandednessForward:
+			protocol = "strand-specific-forward"
+		case gobble.StrandednessReverse:
+			protocol = "strand-specific-reverse"
+		case "", gobble.StrandednessUnstranded:
+		default:
+			return nil, "", gobble.Resources{}, modules.ComposeDefect(gobble.DefectInvalidValue, unit, "strandedness must be unstranded, forward, or reverse")
+		}
+		command := []string{"qualimap", "rnaseq", "-bam", bamPath, "-gtf", gtfPath, "-p", protocol, "-outdir", resultDir.String()}
+		if options.Paired {
+			command = append(command, "-pe")
+		}
+		return modules.ResolveOptions(unit, options.Options, DefaultImage, gobble.Resources{CPU: 2, Memory: "4g"}, command, []string{"-bam", "-gtf", "-p", "-outdir", "-pe"})
 	}
 	report := gobble.PathSpec{Dir: resultDir, Base: "rnaseq_qc_results", Ext: ".txt"}
-	task := parent.AddTask(gobble.TaskSpec{Name: unit, Command: command, Image: image, Resources: resources, Inputs: []gobble.Bind{{Name: "bam", From: bam}, {Name: "gtf", From: gtf}}, Outputs: []gobble.Bind{{Name: "report", Spec: report}}})
+	spec := gobble.TaskSpec{Name: unit, Inputs: []gobble.Bind{{Name: "bam", From: bam}, {Name: "gtf", From: gtf}}, Outputs: []gobble.Bind{{Name: "report", Spec: report}}}
+	if strandedness.IsZero() {
+		command, image, resources, commandErr := commandFor(options.Strandedness)
+		if commandErr != nil {
+			return Ports{}, commandErr
+		}
+		spec.Command, spec.Image, spec.Resources = command, image, resources
+	} else {
+		strandPath, pathErr := modules.HandlePath(unit, strandedness)
+		if pathErr != nil {
+			return Ports{}, pathErr
+		}
+		commands := make(map[string][]string, 3)
+		for _, strand := range []string{gobble.StrandednessUnstranded, gobble.StrandednessForward, gobble.StrandednessReverse} {
+			command, image, resources, commandErr := commandFor(strand)
+			if commandErr != nil {
+				return Ports{}, commandErr
+			}
+			commands[strand] = command
+			spec.Image, spec.Resources = image, resources
+		}
+		spec.Script = modules.StrandedCommand(strandPath, commands[gobble.StrandednessUnstranded], commands[gobble.StrandednessForward], commands[gobble.StrandednessReverse])
+		spec.Inputs = append(spec.Inputs, gobble.Bind{Name: "strandedness", From: strandedness})
+	}
+	task := parent.AddTask(spec)
 	return Ports{Report: task.Out("report")}, nil
 }
 

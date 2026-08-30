@@ -53,7 +53,7 @@ func Add(parent modules.Parent, reads gobble.Handle, options Options) (Ports, er
 	}
 	task := parent.AddTask(gobble.TaskSpec{
 		Name: unit, Command: command, Image: image, Resources: resources,
-		Inputs: []gobble.Bind{{Name: "reads", From: reads}},
+		Inputs:  []gobble.Bind{{Name: "reads", From: reads}},
 		Outputs: []gobble.Bind{{Name: "html", Spec: html}, {Name: "zip", Spec: zip}},
 	})
 	return Ports{HTML: task.Out("html"), Zip: task.Out("zip")}, nil

@@ -42,6 +42,21 @@ func DefaultConfig() Config {
 			GTFCompressed: true,
 		},
 		Results: gobble.Dir("results/rnaseq"),
+		SampleRemoval: SampleRemovalThresholds{
+			MinTrimmedReads:  10000,
+			MinMappedPercent: 5,
+		},
+		StrandednessInference: StrandednessInferenceThresholds{
+			StrandedFraction:     0.8,
+			UnstrandedDifference: 0.1,
+		},
+		Publication: PublicationPolicy{
+			FinalBAMs:      true,
+			Quantification: true,
+			Matrices:       true,
+			CoverageTracks: true,
+			Reports:        true,
+		},
 		GFFRead:          gffreadDefault(),
 		Gunzip:           gunzipDefault(),
 		STARGenome:       starGenomeDefault(),
@@ -77,22 +92,22 @@ func base(cpu float64, memory string) modules.Options {
 }
 
 func gffreadDefault() gffread.Options { return gffread.Options{Options: base(1, "1g")} }
-func gunzipDefault() gunzip.Options { return gunzip.Options{Options: base(1, "256m")} }
+func gunzipDefault() gunzip.Options   { return gunzip.Options{Options: base(1, "256m")} }
 func starGenomeDefault() stargenomegenerate.Options {
 	return stargenomegenerate.Options{Options: base(2, "6g"), SJDBOverhang: 100, GenomeSAIndexNBases: 7}
 }
 func salmonIndexDefault() salmonindex.Options { return salmonindex.Options{Options: base(2, "2g")} }
-func faidxDefault() samtoolsfaidx.Options { return samtoolsfaidx.Options{Options: base(1, "1g")} }
+func faidxDefault() samtoolsfaidx.Options     { return samtoolsfaidx.Options{Options: base(1, "1g")} }
 func cutChromSizesDefault() cutchromsizes.Options {
 	return cutchromsizes.Options{Options: base(1, "256m")}
 }
-func catDefault() catfastq.Options { return catfastq.Options{Options: base(1, "512m")} }
-func fqLintDefault() fqlint.Options { return fqlint.Options{Options: base(1, "512m")} }
-func fastQCDefault() fastqc.Options { return fastqc.Options{Options: base(2, "1g")} }
-func trimDefault() trimgalore.Options { return trimgalore.Options{Options: base(4, "2g")} }
-func starDefault() staralign.Options { return staralign.Options{Options: base(4, "8g")} }
+func catDefault() catfastq.Options       { return catfastq.Options{Options: base(1, "512m")} }
+func fqLintDefault() fqlint.Options      { return fqlint.Options{Options: base(1, "512m")} }
+func fastQCDefault() fastqc.Options      { return fastqc.Options{Options: base(2, "1g")} }
+func trimDefault() trimgalore.Options    { return trimgalore.Options{Options: base(4, "2g")} }
+func starDefault() staralign.Options     { return staralign.Options{Options: base(4, "8g")} }
 func salmonDefault() salmonquant.Options { return salmonquant.Options{Options: base(2, "2g")} }
-func sortDefault() samtoolssort.Options { return samtoolssort.Options{Options: base(2, "2g")} }
+func sortDefault() samtoolssort.Options  { return samtoolssort.Options{Options: base(2, "2g")} }
 func markDuplicatesDefault() picardmarkduplicates.Options {
 	return picardmarkduplicates.Options{Options: base(2, "4g")}
 }
@@ -110,10 +125,10 @@ func rseqcDefault() rseqcinferexperiment.Options {
 	return rseqcinferexperiment.Options{Options: base(1, "2g")}
 }
 func qualimapDefault() qualimapbamqc.Options { return qualimapbamqc.Options{Options: base(2, "4g")} }
-func dupRadarDefault() dupradar.Options { return dupradar.Options{Options: base(2, "4g")} }
+func dupRadarDefault() dupradar.Options      { return dupradar.Options{Options: base(2, "4g")} }
 func biotypeDefault() featurecounts.BiotypeOptions {
 	return featurecounts.BiotypeOptions{Options: base(2, "2g")}
 }
 func tximportDefault() tximport.Options { return tximport.Options{Options: base(2, "4g")} }
-func deseq2Default() deseq2qc.Options { return deseq2qc.Options{Options: base(2, "4g")} }
-func multiQCDefault() multiqc.Options { return multiqc.Options{Options: base(1, "2g")} }
+func deseq2Default() deseq2qc.Options   { return deseq2qc.Options{Options: base(2, "4g")} }
+func multiQCDefault() multiqc.Options   { return multiqc.Options{Options: base(1, "2g")} }

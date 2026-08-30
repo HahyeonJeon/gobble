@@ -44,18 +44,26 @@ type fixtureEntry struct {
 }
 
 type imageEntry struct {
-	Modules      []string `json:"modules"`
-	Reference    string   `json:"reference"`
-	Digest       string   `json:"digest"`
-	Tool         string   `json:"tool"`
-	ModuleCommit string   `json:"module_commit"`
-	Platform     string   `json:"platform"`
+	Modules           []string `json:"modules"`
+	Reference         string   `json:"reference"`
+	Digest            string   `json:"digest"`
+	Tool              string   `json:"tool"`
+	Command           string   `json:"command"`
+	Version           string   `json:"version"`
+	BenchmarkPipeline string   `json:"benchmark_pipeline"`
+	BenchmarkRelease  string   `json:"benchmark_release"`
+	ModuleCommit      string   `json:"module_commit"`
+	ModuleSource      string   `json:"module_source"`
+	Provenance        string   `json:"provenance"`
+	License           string   `json:"license"`
+	LicenseSource     string   `json:"license_source"`
+	Platform          string   `json:"platform"`
 }
 
 func TestManifestIsExactFixtureAndImageAuthority(t *testing.T) {
 	manifest := loadManifest(t)
-	if manifest.Schema != 1 || manifest.Benchmark.Pipeline != "nf-core/rnaseq" || manifest.Benchmark.Release != "3.26.0" {
-		t.Fatalf("benchmark = %+v, want nf-core/rnaseq 3.26.0 schema 1", manifest.Benchmark)
+	if manifest.Schema != 2 || manifest.Benchmark.Pipeline != "nf-core/rnaseq" || manifest.Benchmark.Release != "3.26.0" {
+		t.Fatalf("benchmark = %+v, want nf-core/rnaseq 3.26.0 schema 2", manifest.Benchmark)
 	}
 	if manifest.Benchmark.Commit != "e7ca46272c8f9d5ceee3f71759f4ba551d3217a4" || manifest.Benchmark.DatasetCommit != "626c8fab639062eade4b10747e919341cbf9b41a" {
 		t.Fatalf("benchmark commits = %+v, want exact pipeline and dataset commits", manifest.Benchmark)
@@ -91,7 +99,7 @@ func TestManifestIsExactFixtureAndImageAuthority(t *testing.T) {
 	modules := make(map[string]bool)
 	images := make(map[string]bool)
 	for _, image := range manifest.Images {
-		if len(image.Modules) == 0 || image.Reference == "" || strings.Contains(image.Reference, "@") || !strings.HasPrefix(image.Digest, "sha256:") || !lowerHex(strings.TrimPrefix(image.Digest, "sha256:"), 64) || image.Tool == "" || !lowerHex(image.ModuleCommit, 40) || image.Platform != "linux/amd64" {
+		if len(image.Modules) == 0 || image.Reference == "" || strings.Contains(image.Reference, "@") || !strings.HasPrefix(image.Digest, "sha256:") || !lowerHex(strings.TrimPrefix(image.Digest, "sha256:"), 64) || image.Tool == "" || image.Command == "" || image.Version == "" || image.BenchmarkPipeline != manifest.Benchmark.Pipeline || image.BenchmarkRelease != manifest.Benchmark.Release || !lowerHex(image.ModuleCommit, 40) || !strings.Contains(image.ModuleSource, image.ModuleCommit) || image.Provenance == "" || image.License == "" || image.LicenseSource == "" || image.Platform != "linux/amd64" {
 			t.Fatalf("invalid image authority: %+v", image)
 		}
 		for _, module := range image.Modules {

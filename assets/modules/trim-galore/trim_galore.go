@@ -2,6 +2,7 @@
 package trimgalore
 
 import (
+	"path"
 	"strconv"
 
 	"github.com/HahyeonJeon/gobble"
@@ -19,11 +20,13 @@ type Options struct {
 	Prefix string
 }
 
-// Ports are trimmed reads and the retained command log.
+// Ports are trimmed reads and input-derived Trim Galore reports. Report2 is
+// zero for single-end input.
 type Ports struct {
-	Read1 gobble.Handle
-	Read2 gobble.Handle
-	Log   gobble.Handle
+	Read1   gobble.Handle
+	Read2   gobble.Handle
+	Report1 gobble.Handle
+	Report2 gobble.Handle
 }
 
 // Add records one validated Trim Galore command. A zero read2 selects
@@ -79,20 +82,22 @@ func Add(parent modules.Parent, read1, read2 gobble.Handle, options Options) (Po
 	}
 	read1Out := gobble.PathSpec{Dir: outDir, Base: prefix + "_val_1", Ext: ".fq.gz"}
 	if read2.IsZero() {
-		read1Out = gobble.PathSpec{Dir: outDir, Base: prefix, Ext: "_trimmed.fq.gz"}
+		read1Out = gobble.Literal(prefix + "_trimmed.fq.gz").WithDir(outDir)
 	}
 	read2Out := gobble.PathSpec{Dir: outDir, Base: prefix + "_val_2", Ext: ".fq.gz"}
-	log := gobble.PathSpec{Dir: outDir, Base: prefix, Ext: ".trimming_report.txt"}
+	report1 := gobble.Literal(path.Base(read1Path) + "_trimming_report.txt").WithDir(outDir)
 	inputs := []gobble.Bind{{Name: "read1", From: read1}}
-	outputs := []gobble.Bind{{Name: "trimmed_read1", Spec: read1Out}, {Name: "log", Spec: log}}
+	outputs := []gobble.Bind{{Name: "trimmed_read1", Spec: read1Out}, {Name: "report1", Spec: report1}}
 	if !read2.IsZero() {
 		inputs = append(inputs, gobble.Bind{Name: "read2", From: read2})
-		outputs = append(outputs, gobble.Bind{Name: "trimmed_read2", Spec: read2Out})
+		report2 := gobble.Literal(path.Base(read2Path) + "_trimming_report.txt").WithDir(outDir)
+		outputs = append(outputs, gobble.Bind{Name: "trimmed_read2", Spec: read2Out}, gobble.Bind{Name: "report2", Spec: report2})
 	}
 	task := parent.AddTask(gobble.TaskSpec{Name: unit, Command: command, Image: image, Resources: resources, Inputs: inputs, Outputs: outputs})
-	ports := Ports{Read1: task.Out("trimmed_read1"), Log: task.Out("log")}
+	ports := Ports{Read1: task.Out("trimmed_read1"), Report1: task.Out("report1")}
 	if !read2.IsZero() {
 		ports.Read2 = task.Out("trimmed_read2")
+		ports.Report2 = task.Out("report2")
 	}
 	return ports, nil
 }

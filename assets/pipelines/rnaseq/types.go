@@ -54,9 +54,9 @@ type Strandedness string
 
 const (
 	StrandednessUnstranded Strandedness = "unstranded"
-	StrandednessForward   Strandedness = "forward"
-	StrandednessReverse   Strandedness = "reverse"
-	StrandednessAuto      Strandedness = "auto"
+	StrandednessForward    Strandedness = "forward"
+	StrandednessReverse    Strandedness = "reverse"
+	StrandednessAuto       Strandedness = "auto"
 )
 
 // Run is one explicit sequencing run belonging to a logical sample. ID is a
@@ -82,18 +82,52 @@ type Sample struct {
 // indexes. GTFCompressed selects one explicit gzip decompression task. Zero
 // ready Trees make Build generate the corresponding index.
 type ReferenceConfig struct {
-	FASTA       gobble.PathSpec
-	GTF         gobble.PathSpec
+	FASTA         gobble.PathSpec
+	GTF           gobble.PathSpec
 	GTFCompressed bool
-	STARIndex   gobble.Tree
-	SalmonIndex gobble.Tree
+	STARIndex     gobble.Tree
+	SalmonIndex   gobble.Tree
+}
+
+// SampleRemovalThresholds are the nf-core/rnaseq sample-retention boundaries.
+// Gobble has required cohort fan-in, so a sample below either threshold fails
+// its branch and blocks cohort outputs instead of silently creating a hole.
+type SampleRemovalThresholds struct {
+	MinTrimmedReads  int64
+	MinMappedPercent float64
+}
+
+// StrandednessInferenceThresholds classify Salmon strand-mapping bias. A
+// stranded call needs StrandedFraction support. An unstranded call needs its
+// forward and reverse fractions to differ by no more than
+// UnstrandedDifference.
+type StrandednessInferenceThresholds struct {
+	StrandedFraction     float64
+	UnstrandedDifference float64
+}
+
+// PublicationPolicy identifies required result categories and supported
+// optional intermediates. Required categories cannot be disabled without
+// changing the selected product.
+type PublicationPolicy struct {
+	FinalBAMs          bool
+	Quantification     bool
+	Matrices           bool
+	CoverageTracks     bool
+	Reports            bool
+	TrimmedReads       bool
+	STARAlignments     bool
+	GeneratedReference bool
 }
 
 // Config is the complete selected STAR-Salmon analysis and task-build policy.
 // It has no aligner selector, quantifier selector, contrast, or skip list.
 type Config struct {
-	Reference ReferenceConfig
-	Results   gobble.Directory
+	Reference             ReferenceConfig
+	Results               gobble.Directory
+	SampleRemoval         SampleRemovalThresholds
+	StrandednessInference StrandednessInferenceThresholds
+	Publication           PublicationPolicy
 
 	GFFRead          gffread.Options
 	Gunzip           gunzip.Options
@@ -137,7 +171,7 @@ var Contract = pipelines.Contract[Sample, Config]{
 // pre-lift featureCounts/two-group workspace is a different generation.
 var Lifecycle = pipelines.LifecycleParticipation{
 	GraphGeneration: GraphGeneration,
-	Design: true, Build: true, Customize: true, Run: true,
+	Design:          true, Build: true, Customize: true, Run: true,
 	Resume: true, Stop: true, Failure: true, PreLiftResumable: false,
 }
 

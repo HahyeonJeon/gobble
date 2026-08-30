@@ -167,15 +167,34 @@ func ResolveOptions(unit string, options Options, defaultImage Image, defaultRes
 // and cannot introduce shell syntax. Use it only for tools whose documented
 // output contract is stdout.
 func ShellRedirect(command []string, output string) string {
-	quoted := make([]string, 0, len(command))
-	for _, token := range command {
-		quoted = append(quoted, shellQuote(token))
-	}
-	return strings.Join(quoted, " ") + " > " + shellQuote(output)
+	return ShellCommand(command) + " > " + ShellQuote(output)
 }
 
-func shellQuote(value string) string {
+// ShellCommand renders argv as one shell-safe command. It is used only when a
+// task must select a typed runtime variant before invoking the owned tool.
+func ShellCommand(command []string) string {
+	quoted := make([]string, 0, len(command))
+	for _, token := range command {
+		quoted = append(quoted, ShellQuote(token))
+	}
+	return strings.Join(quoted, " ")
+}
+
+// ShellQuote renders one literal POSIX shell word.
+func ShellQuote(value string) string {
 	return "'" + strings.ReplaceAll(value, "'", "'\"'\"'") + "'"
+}
+
+// StrandedCommand renders a runtime dispatch over the only three typed RNA
+// strandedness values produced by inference.
+func StrandedCommand(strandednessPath string, unstranded, forward, reverse []string) string {
+	return "strand=$(cat " + ShellQuote(strandednessPath) + ")\n" +
+		"case \"$strand\" in\n" +
+		"  unstranded) " + ShellCommand(unstranded) + " ;;\n" +
+		"  forward) " + ShellCommand(forward) + " ;;\n" +
+		"  reverse) " + ShellCommand(reverse) + " ;;\n" +
+		"  *) echo \"invalid inferred strandedness: $strand\" >&2; exit 2 ;;\n" +
+		"esac"
 }
 
 // ComposeDefect returns one structured command-module compose defect.
