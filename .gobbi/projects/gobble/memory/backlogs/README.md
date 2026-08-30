@@ -26,7 +26,6 @@ Recursive index of deferred items, grouped alphabetically, without implied prior
 ## recover-run
 
 - [Dest-rename successful publish proof](recover-run.md#dest-rename-successful-publish-proof)
-- [Docker log-copy or rm failure drops retryable stopped proof](recover-run.md#docker-log-copy-or-rm-failure-drops-retryable-stopped-proof)
 - [Group and branch-merge resume e2e](recover-run.md#group-and-branch-merge-resume-e2e)
 - [Guarded clean and retention](recover-run.md#guarded-clean-and-retention)
 - [Live cancel](recover-run.md#live-cancel)

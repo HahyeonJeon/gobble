@@ -2,6 +2,7 @@
 
 Recursive navigation across completed-session history, newest first.
 
+- [Gobble install](2026-08-30-gobble-install.md)
 - [Honest local preview](2026-08-23-honest-local-preview.md)
 - [Gobble Engine](2026-08-23-gobble-engine.md)
 - [Local samplesheet e2e pack](2026-08-21-local-e2e.md)

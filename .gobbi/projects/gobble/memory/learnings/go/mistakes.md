@@ -95,3 +95,19 @@
 **Mistake:** Publishing Wait completion only after file closes and mutex, so Cancel can still SIGKILL a reaped PID while done is open.
 
 **Correction:** Publish Wait return before cleanup. Cancel checks that signal before and after the mutex. After Wait returns, Cancel is a no-op.
+
+## Treating stamped vcs.revision as occupy identity in a linked worktree
+
+**Context:** A linked worktree builds `cmd/gobble`. Go `debug.ReadBuildInfo` stamps `vcs.revision` from the main checkout.
+
+**Mistake:** Treating that stamped revision as local-pin occupy identity. Occupy then refuses a valid pin because the stamp is the main checkout, not the selected module directory.
+
+**Correction:** Local-pin occupy uses git of the selected module Dir plus the executable digest. Ignore BuildInfo `vcs.revision` for that compare. Exact-tag still compares `Main.Version`.
+
+## Treating empty protocol bytes as globally invalid
+
+**Context:** The packed trampoline copies child protocol from a seeked temporary file. `inspect remaining` and `inspect reuse` encode no records as empty JSONL.
+
+**Mistake:** Treating empty protocol bytes as invalid for every child endpoint. Successful remaining or reuse with zero records then fails closed.
+
+**Correction:** Exact empty JSONL is valid only for successful `inspect remaining` and `inspect reuse`. Other child protocol endpoints still require a record. Whitespace-only or malformed bytes stay invalid.

@@ -29,3 +29,11 @@
 **Tip:** The CSV is opened relative to process cwd, or as an absolute `--sample` path. Cell PathSpecs and published outputs live under DIR. Compose does not search DIR for the sheet.
 
 **Application:** Put `samplesheet.csv` in the command cwd when `--sample` is omitted. Stage FASTQ, FASTA, and GTF under DIR before run. Help text must say process current directory, not workspace.
+
+## Packed runner license scope
+
+**Context:** `gobble pack` embeds one pipeline in a linux/amd64 trampoline. Root LICENSE is MIT `Copyright (c) 2026 HahyeonJeon`.
+
+**Tip:** Gobble portions are MIT. The embedded pipeline may differ. Never label the whole binary MIT without evidence for every portion.
+
+**Application:** Packed root help embeds the MIT notice and scopes it to Gobble portions. Command help and README state that the pipeline author owns that license.

@@ -10,16 +10,6 @@
 
 **Context:** Public dest-rename Resume may still fail to publish if the command writes the old path. `TestResumeDestRenameDoesNotReuse` proves the miss. A successful new dest needs a command that writes the new path. This session still did not ship a live dest-rename proof (D11).
 
-## Docker log-copy or rm failure drops retryable stopped proof
-
-**Backlogged at:** 2026-08-23T15:45:00Z
-
-**What:** Preserve retryable stopped Docker proof when log-copy or `docker rm` fails.
-
-**Why backlogged:** This session made log-copy and `docker rm` failures visible. Leftover recovery beyond that visibility stayed deferred.
-
-**Context:** `finishStopped` copies logs, then `docker rm -f`, then caches the stopped Report only if both succeed. A joined cleanup error still returns the stopped Report, but the scheduler treats Poll or Reconcile error as `unknown-backend` and discards that Report. The container may already be gone, so later Reconcile cannot re-prove stop. Occupancy stays active and Resume refuses. Visible log/rm failure was in-scope; recovering from that leftover was not.
-
 ## Group and branch-merge resume e2e
 
 **Backlogged at:** 2026-08-18T15:07:00Z
