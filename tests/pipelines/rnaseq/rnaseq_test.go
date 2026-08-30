@@ -214,6 +214,40 @@ func TestSTARSalmonPlanDeclaresSelectedProduct(t *testing.T) {
 	}
 }
 
+func TestReadySTARIndexSkipsGenomeGeneration(t *testing.T) {
+	const readyIndex = "in/reference/star-index"
+	config := rnaseq.DefaultConfig()
+	config.Reference.STARIndex = gobble.DeclareTree(gobble.Dir(readyIndex))
+
+	raw := pc.MustPlanJSON(t, rnaseq.Build(loadSamples(t), config))
+	tasks := pc.AllTasks(t, raw)
+	if got := pc.CountTasksNamed(tasks, "star_genome_generate"); got != 0 {
+		t.Fatalf("star_genome_generate task count = %d, want 0 with ready STAR index", got)
+	}
+	star := pc.TaskByID(t, raw, "WT_REP1.star_align")
+	pc.AssertTreeIO(t, star.Inputs, "index", readyIndex)
+	if !pc.ContainsAll(star.Command, "--genomeDir", readyIndex) {
+		t.Fatalf("STAR command = %#v, want ready index %q", star.Command, readyIndex)
+	}
+}
+
+func TestReadySalmonIndexSkipsIndexGeneration(t *testing.T) {
+	const readyIndex = "in/reference/salmon-index"
+	config := rnaseq.DefaultConfig()
+	config.Reference.SalmonIndex = gobble.DeclareTree(gobble.Dir(readyIndex))
+
+	raw := pc.MustPlanJSON(t, rnaseq.Build(loadSamples(t), config))
+	tasks := pc.AllTasks(t, raw)
+	if got := pc.CountTasksNamed(tasks, "salmon_index"); got != 0 {
+		t.Fatalf("salmon_index task count = %d, want 0 with ready Salmon index", got)
+	}
+	inference := pc.TaskByID(t, raw, "WT_REP1.strandedness.salmon_strandedness")
+	pc.AssertTreeIO(t, inference.Inputs, "index", readyIndex)
+	if !strings.Contains(inference.Script, "'-i' '"+readyIndex+"'") {
+		t.Fatalf("Salmon inference script omits ready index %q: %s", readyIndex, inference.Script)
+	}
+}
+
 func TestBuildRejectsSingleSampleBecauseDESeq2QCNeedsReplicates(t *testing.T) {
 	samples := []rnaseq.Sample{{
 		Name:         "sample_a",
@@ -349,6 +383,78 @@ func TestBuildRejectsInvalidConfigAndOptionCollisions(t *testing.T) {
 	graph, err := gobble.Compose(rnaseq.Build(nil, rnaseq.DefaultConfig()))
 	if graph != nil || !hasDefect(err, gobble.DefectInvalidSampleSheet) {
 		t.Fatalf("empty Build Compose() = (%v, %v), want invalid-samplesheet", graph, err)
+	}
+}
+
+func TestBuildRejectsMissingAndInvalidReadyIndexTrees(t *testing.T) {
+	tests := []struct {
+		name    string
+		mutate  func(*rnaseq.Config)
+		unit    string
+		message string
+		paths   []string
+	}{
+		{
+			name: "missing STAR index directory",
+			mutate: func(config *rnaseq.Config) {
+				config.Reference.STARIndex = gobble.DeclareTree(gobble.Directory{})
+			},
+			unit:    "reference.star_index",
+			message: "ready STAR index directory is required",
+		},
+		{
+			name: "invalid STAR index directory",
+			mutate: func(config *rnaseq.Config) {
+				config.Reference.STARIndex = gobble.DeclareTree(gobble.Dir("../star-index"))
+			},
+			unit:    "star_index",
+			message: "path escapes directory",
+			paths:   []string{"../star-index"},
+		},
+		{
+			name: "missing Salmon index directory",
+			mutate: func(config *rnaseq.Config) {
+				config.Reference.SalmonIndex = gobble.DeclareTree(gobble.Directory{})
+			},
+			unit:    "reference.salmon_index",
+			message: "ready Salmon index directory is required",
+		},
+		{
+			name: "invalid Salmon index directory",
+			mutate: func(config *rnaseq.Config) {
+				config.Reference.SalmonIndex = gobble.DeclareTree(gobble.Dir("../salmon-index"))
+			},
+			unit:    "salmon_index",
+			message: "path escapes directory",
+			paths:   []string{"../salmon-index"},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			config := rnaseq.DefaultConfig()
+			test.mutate(&config)
+			graph, err := gobble.Compose(rnaseq.Build(loadSamples(t), config))
+			if graph != nil {
+				t.Fatalf("Compose() graph = %v, want nil", graph)
+			}
+			var structured *gobble.Error
+			if !errors.As(err, &structured) || structured == nil {
+				t.Fatalf("Compose() error = %v, want structured compose error", err)
+			}
+			if got, want := structured.Op, "compose"; got != want {
+				t.Fatalf("compose error op = %q, want %q", got, want)
+			}
+			found := false
+			for _, defect := range structured.Defects {
+				if defect.Code != gobble.DefectInvalidPath || defect.Message != test.message || !slices.Equal(defect.Paths, test.paths) {
+					t.Fatalf("compose defect = %+v, want invalid-path message %q paths %v", defect, test.message, test.paths)
+				}
+				found = found || defect.Unit == test.unit
+			}
+			if !found {
+				t.Fatalf("compose defects = %+v, want unit %q", structured.Defects, test.unit)
+			}
+		})
 	}
 }
 
