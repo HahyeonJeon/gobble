@@ -200,6 +200,17 @@ func TestBuildRejectsInvalidInputConfigAndRouteExtras(t *testing.T) {
 			config.Reference.BismarkIndex = gobble.DeclareTree(gobble.Dir("../BismarkIndex"))
 		}, code: gobble.DefectInvalidPath},
 		{name: "special library", mutate: func(config *methylseq.Config) { config.BismarkAlign.ExtraArgs = []string{"--pbat"} }, code: gobble.DefectInvalidValue},
+		{name: "minimap2 aligner", mutate: func(config *methylseq.Config) { config.BismarkAlign.ExtraArgs = []string{"--mm2"} }, code: gobble.DefectInvalidValue},
+		{name: "alternate genome", mutate: func(config *methylseq.Config) {
+			config.BismarkAlign.ExtraArgs = []string{"--genome_folder", "in/other-index"}
+		}, code: gobble.DefectInvalidValue},
+		{name: "alternate output directory", mutate: func(config *methylseq.Config) { config.BismarkAlign.ExtraArgs = []string{"-owork/other"} }, code: gobble.DefectInvalidValue},
+		{name: "alternate basename", mutate: func(config *methylseq.Config) { config.BismarkAlign.ExtraArgs = []string{"-Bother"} }, code: gobble.DefectInvalidValue},
+		{name: "alternate prefix", mutate: func(config *methylseq.Config) { config.BismarkAlign.ExtraArgs = []string{"--prefix=other"} }, code: gobble.DefectInvalidValue},
+		{name: "deduplication output escape", mutate: func(config *methylseq.Config) { config.Deduplicate.ExtraArgs = []string{"-oother"} }, code: gobble.DefectInvalidValue},
+		{name: "extractor output escape", mutate: func(config *methylseq.Config) { config.Extractor.ExtraArgs = []string{"-oother"} }, code: gobble.DefectInvalidValue},
+		{name: "sample report output escape", mutate: func(config *methylseq.Config) { config.Report.ExtraArgs = []string{"-oother"} }, code: gobble.DefectInvalidValue},
+		{name: "summary output escape", mutate: func(config *methylseq.Config) { config.Summary.ExtraArgs = []string{"-oother"} }, code: gobble.DefectInvalidValue},
 		{name: "typed special library", mutate: func(config *methylseq.Config) { config.LibraryMode = methylseq.LibraryMode("pbat") }, code: gobble.DefectInvalidValue},
 		{name: "alternate aligner", mutate: func(config *methylseq.Config) { config.BismarkGenome.ExtraArgs = []string{"--hisat2"} }, code: gobble.DefectInvalidValue},
 		{name: "undeclared extractor outputs", mutate: func(config *methylseq.Config) { config.Extractor.ExtraArgs = []string{"--cytosine_report"} }, code: gobble.DefectInvalidValue},

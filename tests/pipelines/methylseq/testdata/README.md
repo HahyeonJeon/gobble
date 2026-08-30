@@ -18,7 +18,9 @@ The generated-index fixture uses `genome.fa`. The ready-index branch uses the
 same exact FASTA plus every member of `Bowtie2_Index.tar.gz` as the declared
 `BismarkIndex` Tree. The manifest records the archive and every extracted
 member separately. A fixture preparer must reject a missing, extra, wrong-size,
-or wrong-hash member rather than rewrite this authority.
+or wrong-hash member rather than rewrite this authority. The test support API
+`PrepareReadyIndex` performs that exact check before publishing the Tree, and
+the ready-index live scenario stages the archive only through that API.
 
 The small bacterial data proves graph, command, artifact, and lifecycle
 engineering only. Its conversion and methylation values do not define product

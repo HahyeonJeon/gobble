@@ -80,6 +80,22 @@ func (r *Runtime) Resume(ctx context.Context) error {
 	return gobble.Resume(ctx, r.graph, r.workspace, 8, gobble.WithIdentity(r.identity))
 }
 
+// ResumeWith composes changed typed samples and config, then resumes that
+// graph in the existing workspace. It stages only newly named fixture inputs.
+func (r *Runtime) ResumeWith(ctx context.Context, samples []methylseq.Sample, config methylseq.Config) error {
+	r.t.Helper()
+	pipe := methylseq.Build(samples, config)
+	graph, err := gobble.Compose(pipe)
+	if err != nil {
+		return fmt.Errorf("compose changed Methyl runtime graph: %w", err)
+	}
+	raw := pc.MustPlanJSON(r.t, pipe)
+	stageRuntimeInputs(r.t, r.workspace, samples, config)
+	r.graph = graph
+	r.docker.setTasks(pc.AllTasks(r.t, raw))
+	return r.Resume(ctx)
+}
+
 // Release invokes the public recovery release.
 func (r *Runtime) Release() error {
 	return gobble.Release(r.workspace, gobble.WithIdentity(r.identity))
@@ -140,6 +156,11 @@ func stageRuntimeInputs(t *testing.T, workspace string, samples []methylseq.Samp
 	}
 	for _, rel := range paths {
 		path := filepath.Join(workspace, filepath.FromSlash(rel))
+		if _, err := os.Stat(path); err == nil {
+			continue
+		} else if !os.IsNotExist(err) {
+			t.Fatalf("Stat(%s): %v", path, err)
+		}
 		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 			t.Fatalf("MkdirAll(%s): %v", path, err)
 		}
@@ -174,11 +195,19 @@ type fakeContainer struct {
 }
 
 func newFakeDocker(tasks []pc.Task, runtime *Runtime) *fakeDocker {
+	fake := &fakeDocker{runtime: runtime, modes: make(map[string]fakeMode), containers: make(map[string]*fakeContainer)}
+	fake.setTasks(tasks)
+	return fake
+}
+
+func (f *fakeDocker) setTasks(tasks []pc.Task) {
 	indexed := make(map[string]pc.Task, len(tasks))
 	for _, task := range tasks {
 		indexed[fakeTaskKey(task.Image, taskArgv(task))] = task
 	}
-	return &fakeDocker{runtime: runtime, tasks: indexed, modes: make(map[string]fakeMode), containers: make(map[string]*fakeContainer)}
+	f.mu.Lock()
+	f.tasks = indexed
+	f.mu.Unlock()
 }
 
 func (f *fakeDocker) setMode(id string, mode fakeMode) {

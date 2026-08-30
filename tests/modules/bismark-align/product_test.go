@@ -26,5 +26,32 @@ func TestLiftedBismarkAlignSupportsSingleAndPairedTrees(t *testing.T) {
 	}
 	pc.AssertIOPath(t, single.Outputs, "bam", "work/bismark-align/single.bam")
 	pc.AssertIOPath(t, single.Outputs, "report", "work/bismark-align/single_SE_report.txt")
-	cc.Invalid(t, bismarkalign.Pipeline(index, gobble.Literal("in/read.fastq.gz"), gobble.PathSpec{}, bismarkalign.Options{Options: modules.Options{ExtraArgs: []string{"--non_directional"}}}))
+
+	for _, extra := range [][]string{
+		{"--non_directional"},
+		{"--minimap2"},
+		{"--mm2"},
+		{"--genome_folder", "in/other-index"},
+		{"--genome_folder=in/other-index"},
+		{"--output_dir", "work/other"},
+		{"--output_dir=work/other"},
+		{"-o", "work/other"},
+		{"-owork/other"},
+		{"--basename", "other"},
+		{"--prefix=other"},
+		{"-Bother"},
+		{"--single_end", "in/other.fastq.gz"},
+		{"--se=in/other.fastq.gz"},
+		{"-f"},
+		{"-un"},
+		{"--ambiguous"},
+		{"--ambig_bam"},
+		{"--parallel", "2"},
+		{"-I42"},
+		{"-X=400"},
+	} {
+		t.Run(extra[0], func(t *testing.T) {
+			cc.Invalid(t, bismarkalign.Pipeline(index, gobble.Literal("in/read.fastq.gz"), gobble.PathSpec{}, bismarkalign.Options{Options: modules.Options{ExtraArgs: extra}}))
+		})
+	}
 }

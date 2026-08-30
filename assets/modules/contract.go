@@ -212,17 +212,17 @@ func ComposeDefect(code gobble.DefectCode, unit, message string, paths ...string
 
 // AppendExtraArgs copies command and appends copied extraArgs. namedFlags are
 // the flags already owned by active named options at this command-specific
-// insertion point. An exact flag token or --flag=value form in extraArgs
-// returns a structured compose defect instead of creating order-dependent
-// argv. A child module remains responsible for any additional collision forms
-// defined by its command.
+// insertion point. Exact flag tokens, --flag=value forms, and short options
+// with attached values return a structured compose defect instead of creating
+// order-dependent argv. A child module remains responsible for any additional
+// collision forms defined by its command.
 func AppendExtraArgs(unit string, command, extraArgs, namedFlags []string) ([]string, error) {
 	for _, arg := range extraArgs {
 		for _, flag := range namedFlags {
 			if flag == "" {
 				continue
 			}
-			if arg == flag || strings.HasPrefix(arg, flag+"=") {
+			if extraArgOwnsFlag(arg, flag) {
 				return nil, composeInvalidValue(unit, "ExtraArgs conflicts with named option "+flag)
 			}
 		}
@@ -234,18 +234,26 @@ func AppendExtraArgs(unit string, command, extraArgs, namedFlags []string) ([]st
 }
 
 // RejectExtraArgs rejects command tokens that would select unsupported
-// behavior. Both --flag and --flag=value forms are recognized. Command modules
-// use this before AppendExtraArgs when a flag would change the owned command's
-// product meaning rather than customize that command.
+// behavior. Exact flags, --flag=value forms, and short options with attached
+// values are recognized. Command modules use this before AppendExtraArgs when
+// a flag would change the owned command's product meaning rather than customize
+// that command.
 func RejectExtraArgs(unit string, extraArgs, forbiddenFlags []string) error {
 	for _, arg := range extraArgs {
 		for _, flag := range forbiddenFlags {
-			if arg == flag || strings.HasPrefix(arg, flag+"=") {
+			if extraArgOwnsFlag(arg, flag) {
 				return composeInvalidValue(unit, "ExtraArgs contains unsupported option "+flag)
 			}
 		}
 	}
 	return nil
+}
+
+func extraArgOwnsFlag(arg, flag string) bool {
+	if arg == flag || strings.HasPrefix(arg, flag+"=") {
+		return true
+	}
+	return len(flag) == 2 && flag[0] == '-' && flag[1] != '-' && len(arg) > len(flag) && strings.HasPrefix(arg, flag)
 }
 
 const (

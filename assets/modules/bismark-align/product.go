@@ -60,7 +60,7 @@ func Add(parent modules.Parent, index, read1, read2 gobble.Handle, options Optio
 	if options.Multicore < 0 {
 		return Ports{}, modules.ComposeDefect(gobble.DefectInvalidValue, unit, "Multicore must not be negative")
 	}
-	if err := modules.RejectExtraArgs(unit, options.ExtraArgs, []string{"--hisat2", "--non_directional", "--pbat", "--unmapped", "--sam", "--cram", "--nucleotide_coverage", "--version", "--help"}); err != nil {
+	if err := rejectProtectedExtraArgs(unit, options.ExtraArgs); err != nil {
 		return Ports{}, err
 	}
 	outDir := options.OutDir
@@ -122,6 +122,25 @@ func Add(parent modules.Parent, index, read1, read2 gobble.Handle, options Optio
 	}
 	task := parent.AddTask(gobble.TaskSpec{Name: unit, Command: command, Image: image, Resources: resources, Inputs: inputs, Outputs: []gobble.Bind{{Name: "bam", Spec: bam}, {Name: "report", Spec: report}}})
 	return Ports{BAM: task.Out("bam"), Report: task.Out("report")}, nil
+}
+
+func rejectProtectedExtraArgs(unit string, extraArgs []string) error {
+	protected := []string{
+		"--hisat2", "--minimap2", "--mm2",
+		"--non_directional", "--pbat",
+		"--se", "--single_end", "-f", "--fasta",
+		"-un", "--unmapped", "--ambiguous", "--ambig_bam",
+		"--sam", "--cram", "--nucleotide_coverage",
+		"--bowtie2", "--genome", "--genome_folder", "--bam",
+		"-o", "--output_dir", "-B", "--basename", "--prefix",
+		"--multicore", "--parallel", "--score_min", "--local",
+		"--minins", "-I", "--maxins", "-X", "-1", "-2",
+		"--version", "--help",
+	}
+	if err := modules.RejectExtraArgs(unit, extraArgs, protected); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Pipeline returns a standalone validated directional Bismark alignment module.

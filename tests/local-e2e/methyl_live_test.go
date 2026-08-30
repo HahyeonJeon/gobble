@@ -39,3 +39,28 @@ func TestMethylSeqRecover(t *testing.T) {
 	)
 	recoverAfterSuccessAPI(t, g, dir, 1)
 }
+
+func TestMethylSeqReadyIndexRecover(t *testing.T) {
+	requireDocker(t)
+	dir := t.TempDir()
+	stageMethylPins(t, dir)
+	stageMethylReadyIndex(t, dir)
+	samples, err := methylseq.Load(packSheet(t, methylSheetRel))
+	if err != nil {
+		t.Fatalf("Load Methyl fixture: %v", err)
+	}
+	config := methylseq.DefaultConfig()
+	config.Reference.FASTA = gobble.PathSpec{}
+	config.Reference.BismarkIndex = gobble.DeclareTree(gobble.Dir("in/reference/BismarkIndex"))
+	g, err := gobble.Compose(methylseq.Build(samples, config))
+	if err != nil {
+		t.Fatalf("Compose ready-index Methyl graph: %v", err)
+	}
+	if err := gobble.Run(t.Context(), g, dir, 1, testOccupyOption(t)); err != nil {
+		fatalAPIError(t, "Run ready-index Methyl graph", err)
+	}
+	assertMethylExtractorOutputs(t, dir, []string{"SRR389222_sub1", "SRR389222_sub2", "Ecoli_10K_methylated"})
+	requireRegularFile(t, filepath.Join(dir, filepath.FromSlash("results/methylseq/summary/bismark_summary_report.html")))
+	requireRegularFile(t, filepath.Join(dir, filepath.FromSlash("results/methylseq/multiqc/multiqc_report.html")))
+	recoverAfterSuccessAPI(t, g, dir, 1)
+}

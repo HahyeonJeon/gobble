@@ -193,6 +193,15 @@ func stageMethylPins(t *testing.T, dir string) {
 	})
 }
 
+func stageMethylReadyIndex(t *testing.T, dir string) {
+	t.Helper()
+	archive := fetchPin(t, methylseqevidence.CacheDir, methylseqevidence.ReadyIndexArchive)
+	tree := filepath.Join(dir, filepath.FromSlash("in/reference/BismarkIndex"))
+	if err := methylseqevidence.PrepareReadyIndex(archive, tree); err != nil {
+		t.Fatalf("prepare official ready Bismark index: %v", err)
+	}
+}
+
 func copyRunLocalInput(t *testing.T, workspace string) {
 	t.Helper()
 	data := readModuleFile(t, runLocalInput)

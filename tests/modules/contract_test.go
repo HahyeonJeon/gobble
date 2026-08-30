@@ -151,14 +151,32 @@ func TestAppendExtraArgsCopiesArgv(t *testing.T) {
 }
 
 func TestAppendExtraArgsRejectsNamedOptionCollision(t *testing.T) {
-	for _, extra := range [][]string{{"--threads", "8"}, {"--threads=8"}} {
-		_, err := modules.AppendExtraArgs("example", []string{"tool", "--threads", "2"}, extra, []string{"--threads"})
+	for _, test := range []struct {
+		extra []string
+		flag  string
+	}{
+		{extra: []string{"--threads", "8"}, flag: "--threads"},
+		{extra: []string{"--threads=8"}, flag: "--threads"},
+		{extra: []string{"-t8"}, flag: "-t"},
+		{extra: []string{"-t=8"}, flag: "-t"},
+	} {
+		_, err := modules.AppendExtraArgs("example", []string{"tool", "--threads", "2"}, test.extra, []string{test.flag})
 		var composeErr *gobble.Error
 		if !errors.As(err, &composeErr) {
-			t.Fatalf("AppendExtraArgs(%#v) error = %T %v, want *gobble.Error", extra, err, err)
+			t.Fatalf("AppendExtraArgs(%#v) error = %T %v, want *gobble.Error", test.extra, err, err)
 		}
 		if len(composeErr.Defects) != 1 || composeErr.Defects[0].Code != gobble.DefectInvalidValue {
-			t.Fatalf("AppendExtraArgs(%#v) error = %#v, want one invalid-value defect", extra, composeErr)
+			t.Fatalf("AppendExtraArgs(%#v) error = %#v, want one invalid-value defect", test.extra, composeErr)
+		}
+	}
+}
+
+func TestRejectExtraArgsRecognizesLongAndAttachedShortOptions(t *testing.T) {
+	for _, extra := range [][]string{{"--route=other"}, {"-oother"}, {"-o=other"}} {
+		err := modules.RejectExtraArgs("example", extra, []string{"--route", "-o"})
+		var composeErr *gobble.Error
+		if !errors.As(err, &composeErr) || len(composeErr.Defects) != 1 || composeErr.Defects[0].Code != gobble.DefectInvalidValue {
+			t.Fatalf("RejectExtraArgs(%#v) error = %#v, want one invalid-value defect", extra, err)
 		}
 	}
 }
