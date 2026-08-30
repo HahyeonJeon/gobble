@@ -13,7 +13,7 @@ counts <- round(as.matrix(counts))
 suppressPackageStartupMessages(library(DESeq2))
 coldata <- data.frame(sample=colnames(counts), row.names=colnames(counts))
 dds <- DESeqDataSetFromMatrix(countData=counts, colData=coldata, design=~1)
-v <- vst(dds, blind=TRUE)
+v <- varianceStabilizingTransformation(dds, blind=TRUE)
 mat <- assay(v)
 write.table(data.frame(id=rownames(mat), mat, check.names=FALSE), args[[4]], sep="\t", quote=FALSE, row.names=FALSE)
 pdf(args[[2]])
@@ -24,9 +24,10 @@ heatmap(as.matrix(dist(t(mat))), symm=TRUE)
 dev.off()
 `
 
-// DefaultImage is the nf-core/rnaseq 3.26.0 R/Bioconductor image resolved for
-// linux/amd64. This module does not expose a design formula or contrast.
-const DefaultImage modules.Image = "quay.io/biocontainers/bioconductor-tximeta:1.20.1--r43hdfd78af_0@sha256:3dfeb5c838ed192efaab23476078775ef214bd6b4472fb5b966bfc119e0b77c0"
+// DefaultImage is the nf-core/rnaseq 3.26.0 local DESeq2-QC image resolved for
+// linux/amd64. It contains R 4.4.2 and DESeq2 1.46.0. This module does not
+// expose a design formula or contrast.
+const DefaultImage modules.Image = "community.wave.seqera.io/library/r-base_r-optparse_r-ggplot2_r-rcolorbrewer_pruned:9e75394d0bc21987@sha256:afd00df7ce26f38ecb2a063f65d441fc20c0803e5c7319ee5cbe3a23732a30dd"
 
 // Options controls cohort expression QC. There is intentionally no contrast.
 type Options struct {
@@ -58,8 +59,8 @@ func Add(parent modules.Parent, lengthScaled gobble.Handle, options Options) (Po
 	pcaPath, _ := pca.Render()
 	distancePath, _ := distance.Render()
 	normalizedPath, _ := normalized.Render()
-	command := []string{"Rscript", "-e", deseq2QCR, "--", matrixPath, pcaPath, distancePath, normalizedPath}
-	command, image, resources, err := modules.ResolveOptions(unit, options.Options, DefaultImage, gobble.Resources{CPU: 2, Memory: "4g"}, command, []string{"-e", "--", "--design", "--contrast"})
+	command := []string{"Rscript", "-e", deseq2QCR, matrixPath, pcaPath, distancePath, normalizedPath}
+	command, image, resources, err := modules.ResolveOptions(unit, options.Options, DefaultImage, gobble.Resources{CPU: 2, Memory: "4g"}, command, []string{"-e", "--design", "--contrast"})
 	if err != nil {
 		return Ports{}, err
 	}

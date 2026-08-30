@@ -1,8 +1,6 @@
 package rnaseq
 
 import (
-	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/HahyeonJeon/gobble"
@@ -16,6 +14,7 @@ import (
 	"github.com/HahyeonJeon/gobble/assets/modules/featurecounts"
 	fqlint "github.com/HahyeonJeon/gobble/assets/modules/fq-lint"
 	"github.com/HahyeonJeon/gobble/assets/modules/gffread"
+	gtffilter "github.com/HahyeonJeon/gobble/assets/modules/gtf-filter"
 	"github.com/HahyeonJeon/gobble/assets/modules/gunzip"
 	"github.com/HahyeonJeon/gobble/assets/modules/multiqc"
 	picardmarkduplicates "github.com/HahyeonJeon/gobble/assets/modules/picard-markduplicates"
@@ -23,6 +22,8 @@ import (
 	rseqcinferexperiment "github.com/HahyeonJeon/gobble/assets/modules/rseqc-inferexperiment"
 	salmonindex "github.com/HahyeonJeon/gobble/assets/modules/salmon-index"
 	salmonquant "github.com/HahyeonJeon/gobble/assets/modules/salmon-quant"
+	sampleretentionmapped "github.com/HahyeonJeon/gobble/assets/modules/sample-retention-mapped"
+	sampleretentiontrimmed "github.com/HahyeonJeon/gobble/assets/modules/sample-retention-trimmed"
 	samtoolsfaidx "github.com/HahyeonJeon/gobble/assets/modules/samtools-faidx"
 	samtoolsindex "github.com/HahyeonJeon/gobble/assets/modules/samtools-index"
 	samtoolssort "github.com/HahyeonJeon/gobble/assets/modules/samtools-sort"
@@ -65,6 +66,14 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 		}
 		gtf = annotation.File
 	}
+	filterOptions := config.GTFFilter
+	filterOptions.OutDir = referenceDir
+	filterOptions.Prefix = "genes.filtered"
+	filtered, err := gtffilter.Add(reference, gtf, fasta, filterOptions)
+	if recordModuleError(pipeline, err) {
+		return pipeline
+	}
+	gtf = filtered.GTF
 
 	transcriptOptions := config.GFFRead
 	transcriptOptions.OutDir = referenceDir
@@ -231,10 +240,14 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 			reports = append(reports, lint.Report, qc.HTML, qc.Zip)
 		}
 
-		retained, retentionErr := addTrimmedReadGate(module, trimmed.Read1, trimmed.Read2, sample.Name, config.SampleRemoval.MinTrimmedReads)
+		trimmedRetentionOptions := config.TrimmedRetention
+		trimmedRetentionOptions.OutDir = gobble.Dir("work/" + sample.Name + "/policy")
+		trimmedRetentionOptions.Prefix = "trimmed_reads"
+		trimmedRetention, retentionErr := sampleretentiontrimmed.Add(module, trimmed.Read1, config.SampleRemoval.MinTrimmedReads, trimmedRetentionOptions)
 		if recordModuleError(pipeline, retentionErr) {
 			return pipeline
 		}
+		retained := trimmedRetention.Accepted
 
 		var inferred gobble.Handle
 		if sample.Strandedness == StrandednessAuto {
@@ -267,10 +280,14 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 			return pipeline
 		}
 		reports = append(reports, aligned.LogFinal, aligned.Junctions)
-		accepted, policyErr := addMappedReadGate(module, aligned.LogFinal, retained, sample.Name, config.SampleRemoval.MinMappedPercent)
+		mappedRetentionOptions := config.MappedRetention
+		mappedRetentionOptions.OutDir = gobble.Dir("work/" + sample.Name + "/policy")
+		mappedRetentionOptions.Prefix = "mapped_reads"
+		mappedRetention, policyErr := sampleretentionmapped.Add(module, aligned.LogFinal, retained, config.SampleRemoval.MinMappedPercent, mappedRetentionOptions)
 		if recordModuleError(pipeline, policyErr) {
 			return pipeline
 		}
+		accepted := mappedRetention.Accepted
 
 		sortOptions := config.Sort
 		sortOptions.OutDir = gobble.Dir("work/" + sample.Name + "/sorted")
@@ -316,7 +333,10 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 		}
 		quants = append(quants, quant.Quant)
 		sampleNames = append(sampleNames, sample.Name)
-		reports = append(reports, quant.MetaInfo, quant.LibFormatCounts, quant.Log)
+		reports = append(reports, quant.MetaInfo, quant.Log)
+		if !quant.LibFormatCounts.IsZero() {
+			reports = append(reports, quant.LibFormatCounts)
+		}
 
 		stringTieOptions := config.StringTie
 		stringTieOptions.OutDir = gobble.Dir(config.Results.String() + "/stringtie/" + sample.Name)
@@ -422,7 +442,11 @@ func addCoverage(parent *gobble.Module, bam, sizes gobble.Handle, sample Sample,
 		strand string
 	}{{name: "combined"}}
 	if sample.Strandedness != StrandednessUnstranded {
-		strands = append(strands, struct{ name, strand string }{name: "forward", strand: "+"}, struct{ name, strand string }{name: "reverse", strand: "-"})
+		forwardStrand, reverseStrand := "+", "-"
+		if sample.Strandedness == StrandednessReverse {
+			forwardStrand, reverseStrand = reverseStrand, forwardStrand
+		}
+		strands = append(strands, struct{ name, strand string }{name: "forward", strand: forwardStrand}, struct{ name, strand string }{name: "reverse", strand: reverseStrand})
 	}
 	for _, strand := range strands {
 		stage := parent.AddModule("coverage_" + strand.name)
@@ -470,52 +494,6 @@ func addCoverage(parent *gobble.Module, bam, sizes gobble.Handle, sample Sample,
 		}
 	}
 	return nil
-}
-
-func addTrimmedReadGate(parent *gobble.Module, read1, read2 gobble.Handle, sample string, minimum int64) (gobble.Handle, error) {
-	const unit = "sample_retention_trimmed"
-	read1Path, err := modules.HandlePath(unit, read1)
-	if err != nil {
-		return gobble.Handle{}, err
-	}
-	out := gobble.PathSpec{Dir: gobble.Dir("work/" + sample + "/policy"), Base: "trimmed_reads", Ext: ".accepted.txt"}
-	outPath, _ := out.Render()
-	script := fmt.Sprintf(`count=$(gzip -cd %s | awk 'END {if (NR %% 4 != 0) exit 2; print NR / 4}')
-awk -v count="$count" -v minimum=%d 'BEGIN {exit !(count >= minimum)}'
-printf '%%s\n' "$count" > %s`, modules.ShellQuote(read1Path), minimum, modules.ShellQuote(outPath))
-	inputs := []gobble.Bind{{Name: "read1", From: read1}}
-	if !read2.IsZero() {
-		inputs = append(inputs, gobble.Bind{Name: "read2", From: read2})
-	}
-	image, err := staralign.DefaultImage.TaskReference(unit)
-	if err != nil {
-		return gobble.Handle{}, err
-	}
-	task := parent.AddTask(gobble.TaskSpec{Name: unit, Script: script, Image: image, Resources: gobble.Resources{CPU: 1, Memory: "256m"}, Inputs: inputs, Outputs: []gobble.Bind{{Name: "accepted", Spec: out}}})
-	return task.Out("accepted"), nil
-}
-
-func addMappedReadGate(parent *gobble.Module, starLog, trimmedAccepted gobble.Handle, sample string, minimum float64) (gobble.Handle, error) {
-	const unit = "sample_retention_mapped"
-	logPath, err := modules.HandlePath(unit, starLog)
-	if err != nil {
-		return gobble.Handle{}, err
-	}
-	out := gobble.PathSpec{Dir: gobble.Dir("work/" + sample + "/policy"), Base: "mapped_reads", Ext: ".accepted.txt"}
-	outPath, _ := out.Render()
-	script := fmt.Sprintf(`mapped=$(awk -F'|' '/Uniquely mapped reads %%/ {v=$2; gsub(/[ %%]/, "", v); print v; exit}' %s)
-test -n "$mapped"
-awk -v mapped="$mapped" -v minimum=%s 'BEGIN {exit !(mapped >= minimum)}'
-printf '%%s\n' "$mapped" > %s`, modules.ShellQuote(logPath), strconv.FormatFloat(minimum, 'g', -1, 64), modules.ShellQuote(outPath))
-	image, err := staralign.DefaultImage.TaskReference(unit)
-	if err != nil {
-		return gobble.Handle{}, err
-	}
-	task := parent.AddTask(gobble.TaskSpec{
-		Name: unit, Script: script, Image: image, Resources: gobble.Resources{CPU: 1, Memory: "256m"},
-		Inputs: []gobble.Bind{{Name: "star_log", From: starLog}, {Name: "trimmed_accepted", From: trimmedAccepted}}, Outputs: []gobble.Bind{{Name: "accepted", Spec: out}},
-	})
-	return task.Out("accepted"), nil
 }
 
 func recordModuleError(pipeline *gobble.Pipeline, err error) bool {
@@ -627,6 +605,7 @@ func validateBuild(samples []Sample, config Config) []gobble.Defect {
 
 func cloneConfig(config Config) Config {
 	clone := func(options *modules.Options) { *options = options.Clone() }
+	clone(&config.GTFFilter.Options)
 	clone(&config.GFFRead.Options)
 	clone(&config.Gunzip.Options)
 	clone(&config.STARGenome.Options)
@@ -637,7 +616,9 @@ func cloneConfig(config Config) Config {
 	clone(&config.FQLint.Options)
 	clone(&config.FastQC.Options)
 	clone(&config.TrimGalore.Options)
+	clone(&config.TrimmedRetention.Options)
 	clone(&config.STAR.Options)
+	clone(&config.MappedRetention.Options)
 	clone(&config.Salmon.Options)
 	clone(&config.Sort.Options)
 	clone(&config.MarkDuplicates.Options)

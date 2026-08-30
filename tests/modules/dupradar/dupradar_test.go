@@ -1,6 +1,7 @@
 package dupradar_test
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
@@ -13,7 +14,7 @@ import (
 func TestCommandContract(t *testing.T) {
 	bam, gtf := gobble.Literal("in/sample.bam"), gobble.Literal("in/genes.gtf")
 	task := cc.Task(t, dupradar.Pipeline(bam, gtf, dupradar.Options{Strandedness: gobble.StrandednessReverse, Paired: true}), "dupradar")
-	if !pc.ContainsAll(task.Command, "Rscript", "--", "in/sample.bam", "in/genes.gtf", "2", "true") {
+	if !pc.ContainsAll(task.Command, "Rscript", "-e", "in/sample.bam", "in/genes.gtf", "2", "true") || slices.Contains(task.Command, "--") {
 		t.Fatalf("command = %#v, want reverse paired dupRadar argv", task.Command)
 	}
 	pc.AssertIOPath(t, task.Outputs, "multiqc", "work/dupradar/sample_dup_intercept_mqc.txt")

@@ -107,10 +107,18 @@ func TestManifestIsExactFixtureAndImageAuthority(t *testing.T) {
 		}
 		images[image.Reference+"@"+image.Digest] = true
 	}
-	for _, required := range []string{"star-align", "salmon-quant", "tximport", "deseq2-qc", "multiqc", "featurecounts-biotype-qc"} {
+	for _, required := range []string{"gtf-filter", "sample-retention-trimmed", "sample-retention-mapped", "star-align", "salmon-quant", "tximport", "deseq2-qc", "multiqc", "featurecounts-biotype-qc"} {
 		if !modules[required] {
 			t.Errorf("image authority omits %s", required)
 		}
+	}
+	deseq2Image, ok := imageForModule(manifest.Images, "deseq2-qc")
+	if !ok || deseq2Image.Reference != "community.wave.seqera.io/library/r-base_r-optparse_r-ggplot2_r-rcolorbrewer_pruned:9e75394d0bc21987" || deseq2Image.Digest != "sha256:afd00df7ce26f38ecb2a063f65d441fc20c0803e5c7319ee5cbe3a23732a30dd" || !strings.Contains(deseq2Image.Version, "DESeq2 1.46.0") {
+		t.Fatalf("DESeq2-QC image authority = %+v, %v, want probed release image and DESeq2 version", deseq2Image, ok)
+	}
+	tximportImage, ok := imageForModule(manifest.Images, "tximport")
+	if !ok || strings.Contains(tximportImage.Tool, "DESeq2") || tximportImage.Reference == deseq2Image.Reference {
+		t.Fatalf("tximport image authority = %+v, want truthful non-DESeq2 runtime distinct from DESeq2-QC", tximportImage)
 	}
 	for _, task := range pc.AllTasks(t, pc.MustPlanJSON(t, rnaseq.Build(loadSamples(t), rnaseq.DefaultConfig()))) {
 		if task.Image != "" && !images[task.Image] {
@@ -168,6 +176,17 @@ func entryNamed(entries []fixtureEntry, name string) (fixtureEntry, bool) {
 		}
 	}
 	return fixtureEntry{}, false
+}
+
+func imageForModule(images []imageEntry, name string) (imageEntry, bool) {
+	for _, image := range images {
+		for _, module := range image.Modules {
+			if module == name {
+				return image, true
+			}
+		}
+	}
+	return imageEntry{}, false
 }
 
 func lowerHex(value string, length int) bool {

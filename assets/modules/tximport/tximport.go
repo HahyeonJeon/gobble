@@ -78,7 +78,7 @@ func Add(parent modules.Parent, quants []gobble.Handle, sampleNames []string, gt
 	if outDir.IsZero() {
 		outDir = gobble.Dir("results/salmon")
 	}
-	command := []string{"Rscript", "-e", tximportR, "--", gtfPath, outDir.String()}
+	command := []string{"Rscript", "-e", tximportR, gtfPath, outDir.String()}
 	inputs := []gobble.Bind{{Name: "gtf", From: gtf}}
 	for i, quant := range quants {
 		path, pathErr := modules.HandlePath(unit, quant)
@@ -90,7 +90,7 @@ func Add(parent modules.Parent, quants []gobble.Handle, sampleNames []string, gt
 	}
 	base := options.Options
 	base.ExtraArgs = append([]string(nil), options.ExtraArgs...)
-	command, image, resources, err := modules.ResolveOptions(unit, base, DefaultImage, gobble.Resources{CPU: 2, Memory: "4g"}, command, []string{"-e", "--"})
+	command, image, resources, err := modules.ResolveOptions(unit, base, DefaultImage, gobble.Resources{CPU: 2, Memory: "4g"}, command, []string{"-e"})
 	if err != nil {
 		return Ports{}, err
 	}

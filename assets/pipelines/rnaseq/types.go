@@ -21,6 +21,7 @@ import (
 	"github.com/HahyeonJeon/gobble/assets/modules/featurecounts"
 	fqlint "github.com/HahyeonJeon/gobble/assets/modules/fq-lint"
 	"github.com/HahyeonJeon/gobble/assets/modules/gffread"
+	gtffilter "github.com/HahyeonJeon/gobble/assets/modules/gtf-filter"
 	"github.com/HahyeonJeon/gobble/assets/modules/gunzip"
 	"github.com/HahyeonJeon/gobble/assets/modules/multiqc"
 	picardmarkduplicates "github.com/HahyeonJeon/gobble/assets/modules/picard-markduplicates"
@@ -28,6 +29,8 @@ import (
 	rseqcinferexperiment "github.com/HahyeonJeon/gobble/assets/modules/rseqc-inferexperiment"
 	salmonindex "github.com/HahyeonJeon/gobble/assets/modules/salmon-index"
 	salmonquant "github.com/HahyeonJeon/gobble/assets/modules/salmon-quant"
+	sampleretentionmapped "github.com/HahyeonJeon/gobble/assets/modules/sample-retention-mapped"
+	sampleretentiontrimmed "github.com/HahyeonJeon/gobble/assets/modules/sample-retention-trimmed"
 	samtoolsfaidx "github.com/HahyeonJeon/gobble/assets/modules/samtools-faidx"
 	samtoolsindex "github.com/HahyeonJeon/gobble/assets/modules/samtools-index"
 	samtoolssort "github.com/HahyeonJeon/gobble/assets/modules/samtools-sort"
@@ -129,6 +132,7 @@ type Config struct {
 	StrandednessInference StrandednessInferenceThresholds
 	Publication           PublicationPolicy
 
+	GTFFilter        gtffilter.Options
 	GFFRead          gffread.Options
 	Gunzip           gunzip.Options
 	STARGenome       stargenomegenerate.Options
@@ -139,7 +143,9 @@ type Config struct {
 	FQLint           fqlint.Options
 	FastQC           fastqc.Options
 	TrimGalore       trimgalore.Options
+	TrimmedRetention sampleretentiontrimmed.Options
 	STAR             staralign.Options
+	MappedRetention  sampleretentionmapped.Options
 	Salmon           salmonquant.Options
 	Sort             samtoolssort.Options
 	MarkDuplicates   picardmarkduplicates.Options

@@ -94,10 +94,10 @@ func add(parent modules.Parent, bam, gtf, strandedness gobble.Handle, options Op
 		default:
 			return nil, "", gobble.Resources{}, modules.ComposeDefect(gobble.DefectInvalidValue, unit, "strandedness must be unstranded, forward, or reverse")
 		}
-		command := []string{"Rscript", "-e", dupRadarR, "--", bamPath, gtfPath, strand, paired, strconv.Itoa(modules.ThreadCount(resources.CPU)), matrixPath, multiQCPath, prefix}
+		command := []string{"Rscript", "-e", dupRadarR, bamPath, gtfPath, strand, paired, strconv.Itoa(modules.ThreadCount(resources.CPU)), matrixPath, multiQCPath, prefix}
 		base := options.Options
 		base.Resources = resources
-		return modules.ResolveOptions(unit, base, DefaultImage, resources, command, []string{"-e", "--"})
+		return modules.ResolveOptions(unit, base, DefaultImage, resources, command, []string{"-e"})
 	}
 	spec := gobble.TaskSpec{Name: unit, Inputs: []gobble.Bind{{Name: "bam", From: bam}, {Name: "gtf", From: gtf}}, Outputs: []gobble.Bind{{Name: "matrix", Spec: matrix}, {Name: "multiqc", Spec: multiQC}}}
 	if strandedness.IsZero() {

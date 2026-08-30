@@ -22,6 +22,11 @@ func TestAlignmentCommandContract(t *testing.T) {
 		t.Fatalf("command = %#v, want alignment-mode Salmon argv", task.Command)
 	}
 	pc.AssertIOPath(t, task.Outputs, "quant", "work/salmon-quant/quant/quant.sf")
+	for _, output := range task.Outputs {
+		if output.Name == "lib_format_counts" {
+			t.Fatal("alignment-mode Salmon falsely requires lib_format_counts.json")
+		}
+	}
 	cc.Invalid(t, salmonquant.AlignmentPipeline(bam, transcriptome, gtf, salmonquant.Options{Options: modules.Options{Image: "alpine:latest"}}))
 }
 

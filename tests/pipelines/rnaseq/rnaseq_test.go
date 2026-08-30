@@ -113,6 +113,7 @@ func TestSTARSalmonPlanDeclaresSelectedProduct(t *testing.T) {
 	tasks := pc.AllTasks(t, raw)
 
 	for _, id := range []string{
+		"reference.gtf_filter",
 		"reference.transcriptome.gffread_transcriptome",
 		"reference.gunzip",
 		"reference.gene_intervals.gffread_bed",
@@ -181,6 +182,20 @@ func TestSTARSalmonPlanDeclaresSelectedProduct(t *testing.T) {
 		t.Fatal("STAR genomeGenerate omits the official small-reference index setting")
 	}
 	pc.AssertIOPath(t, star.Outputs, "transcript_bam", "work/WT_REP1/star/Aligned.toTranscriptome.out.bam")
+	for _, id := range []string{
+		"reference.transcriptome.gffread_transcriptome",
+		"reference.gene_intervals.gffread_bed",
+		"reference.star_genome_generate",
+		"WT_REP1.star_align",
+		"WT_REP1.salmon_quant",
+		"WT_REP1.stringtie",
+		"WT_REP1.qualimap_bamqc",
+		"WT_REP1.dupradar",
+		"WT_REP1.featurecounts_biotype_qc",
+		"cohort.tximport",
+	} {
+		pc.AssertIOPath(t, pc.TaskByID(t, raw, id).Inputs, "gtf", "work/reference/genes.filtered.gtf")
+	}
 	pc.AssertIOPath(t, pc.TaskByID(t, raw, "WT_REP1.picard_markduplicates").Outputs, "marked_bam", "results/rnaseq/bam/WT_REP1/WT_REP1.marked.bam")
 	pc.AssertIOPath(t, pc.TaskByID(t, raw, "cohort.tximport").Outputs, "gene_counts", "results/rnaseq/matrices/gene_counts.tsv")
 	pc.AssertIOPath(t, pc.TaskByID(t, raw, "cohort.tximport").Outputs, "transcript_tpm", "results/rnaseq/matrices/transcript_tpm.tsv")
@@ -232,6 +247,22 @@ func TestAutoStrandednessPrecedesAndControlsEveryDependentStage(t *testing.T) {
 		if !strings.Contains(task.Script, "unstranded) ;;") || !strings.Contains(task.Script, "-strand") {
 			t.Fatalf("coverage task %s does not condition directional output on inference: %s", id, task.Script)
 		}
+	}
+}
+
+func TestExplicitReverseCoverageMatchesInferredReverseDirection(t *testing.T) {
+	raw := pc.MustPlanJSON(t, rnaseq.Build(loadSamples(t), rnaseq.DefaultConfig()))
+	forward := pc.TaskByID(t, raw, "WT_REP2.coverage_forward.bedtools_genomecov")
+	reverse := pc.TaskByID(t, raw, "WT_REP2.coverage_reverse.bedtools_genomecov")
+	if !strings.Contains(forward.Script, "'-strand' '-'") || !strings.Contains(reverse.Script, "'-strand' '+'") {
+		t.Fatalf("explicit reverse coverage strands = forward %#v reverse %#v, want - and +", forward.Command, reverse.Command)
+	}
+
+	autoForward := pc.TaskByID(t, raw, "WT_REP1.coverage_forward.bedtools_genomecov_inferred").Script
+	autoReverse := pc.TaskByID(t, raw, "WT_REP1.coverage_reverse.bedtools_genomecov_inferred").Script
+	if !strings.Contains(autoForward, "reverse) 'bedtools' 'genomecov' '-bg' '-split' '-ibam' 'results/rnaseq/bam/WT_REP1/WT_REP1.marked.bam' '-strand' '-'") ||
+		!strings.Contains(autoReverse, "reverse) 'bedtools' 'genomecov' '-bg' '-split' '-ibam' 'results/rnaseq/bam/WT_REP1/WT_REP1.marked.bam' '-strand' '+'") {
+		t.Fatalf("inferred reverse coverage does not match explicit reverse: forward=%q reverse=%q", autoForward, autoReverse)
 	}
 }
 
@@ -430,6 +461,7 @@ func TestLoadMissingSheetIsStructured(t *testing.T) {
 
 func TestBuildHasNoAmbientOrNetworkInput(t *testing.T) {
 	sourcecheck.AssertNoCall(t, "../../../assets/pipelines/rnaseq/build.go", "SampleSheetPath", "Load", "Getenv", "Open", "ReadFile", "Get")
+	sourcecheck.AssertNoCall(t, "../../../assets/pipelines/rnaseq/build.go", "AddTask")
 }
 
 func TestFixtureIsCommittedText(t *testing.T) {

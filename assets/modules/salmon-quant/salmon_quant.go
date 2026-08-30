@@ -117,16 +117,16 @@ func AddAlignmentInferred(parent modules.Parent, bam, transcriptome, gtf, strand
 		image = resolvedImage
 		resources = resolvedResources
 	}
-	quant, meta, lib, log := outputSpecs(resultDir)
+	quant, meta, _, log := outputSpecs(resultDir)
 	inputs := []gobble.Bind{{Name: "bam", From: bam}, {Name: "transcriptome", From: transcriptome}, {Name: "gtf", From: gtf}, {Name: "strandedness", From: strandedness}}
 	if !accepted.IsZero() {
 		inputs = append(inputs, gobble.Bind{Name: "sample_accepted", From: accepted})
 	}
 	task := parent.AddTask(gobble.TaskSpec{
 		Name: unit, Script: modules.StrandedCommand(strandPath, commands["unstranded"], commands["forward"], commands["reverse"]), Image: image, Resources: resources, Inputs: inputs,
-		Outputs: []gobble.Bind{{Name: "quant", Spec: quant}, {Name: "meta_info", Spec: meta}, {Name: "lib_format_counts", Spec: lib}, {Name: "log", Spec: log}},
+		Outputs: []gobble.Bind{{Name: "quant", Spec: quant}, {Name: "meta_info", Spec: meta}, {Name: "log", Spec: log}},
 	})
-	return Ports{Quant: task.Out("quant"), MetaInfo: task.Out("meta_info"), LibFormatCounts: task.Out("lib_format_counts"), Log: task.Out("log")}, nil
+	return Ports{Quant: task.Out("quant"), MetaInfo: task.Out("meta_info"), Log: task.Out("log")}, nil
 }
 
 // AddInference records read-mode Salmon quant with automatic library-type
@@ -194,9 +194,9 @@ func add(parent modules.Parent, unit string, command []string, inputs []gobble.B
 	if err != nil {
 		return Ports{}, err
 	}
-	quant, meta, lib, log := outputSpecs(resultDir)
-	task := parent.AddTask(gobble.TaskSpec{Name: unit, Command: command, Image: image, Resources: resources, Inputs: inputs, Outputs: []gobble.Bind{{Name: "quant", Spec: quant}, {Name: "meta_info", Spec: meta}, {Name: "lib_format_counts", Spec: lib}, {Name: "log", Spec: log}}})
-	return Ports{Quant: task.Out("quant"), MetaInfo: task.Out("meta_info"), LibFormatCounts: task.Out("lib_format_counts"), Log: task.Out("log")}, nil
+	quant, meta, _, log := outputSpecs(resultDir)
+	task := parent.AddTask(gobble.TaskSpec{Name: unit, Command: command, Image: image, Resources: resources, Inputs: inputs, Outputs: []gobble.Bind{{Name: "quant", Spec: quant}, {Name: "meta_info", Spec: meta}, {Name: "log", Spec: log}}})
+	return Ports{Quant: task.Out("quant"), MetaInfo: task.Out("meta_info"), Log: task.Out("log")}, nil
 }
 
 func outputPolicy(options Options) (gobble.Directory, gobble.Resources) {

@@ -12,6 +12,7 @@ import (
 	"github.com/HahyeonJeon/gobble/assets/modules/featurecounts"
 	fqlint "github.com/HahyeonJeon/gobble/assets/modules/fq-lint"
 	"github.com/HahyeonJeon/gobble/assets/modules/gffread"
+	gtffilter "github.com/HahyeonJeon/gobble/assets/modules/gtf-filter"
 	"github.com/HahyeonJeon/gobble/assets/modules/gunzip"
 	"github.com/HahyeonJeon/gobble/assets/modules/multiqc"
 	picardmarkduplicates "github.com/HahyeonJeon/gobble/assets/modules/picard-markduplicates"
@@ -19,6 +20,8 @@ import (
 	rseqcinferexperiment "github.com/HahyeonJeon/gobble/assets/modules/rseqc-inferexperiment"
 	salmonindex "github.com/HahyeonJeon/gobble/assets/modules/salmon-index"
 	salmonquant "github.com/HahyeonJeon/gobble/assets/modules/salmon-quant"
+	sampleretentionmapped "github.com/HahyeonJeon/gobble/assets/modules/sample-retention-mapped"
+	sampleretentiontrimmed "github.com/HahyeonJeon/gobble/assets/modules/sample-retention-trimmed"
 	samtoolsfaidx "github.com/HahyeonJeon/gobble/assets/modules/samtools-faidx"
 	samtoolsindex "github.com/HahyeonJeon/gobble/assets/modules/samtools-index"
 	samtoolssort "github.com/HahyeonJeon/gobble/assets/modules/samtools-sort"
@@ -57,6 +60,7 @@ func DefaultConfig() Config {
 			CoverageTracks: true,
 			Reports:        true,
 		},
+		GTFFilter:        gtfFilterDefault(),
 		GFFRead:          gffreadDefault(),
 		Gunzip:           gunzipDefault(),
 		STARGenome:       starGenomeDefault(),
@@ -67,7 +71,9 @@ func DefaultConfig() Config {
 		FQLint:           fqLintDefault(),
 		FastQC:           fastQCDefault(),
 		TrimGalore:       trimDefault(),
+		TrimmedRetention: trimmedRetentionDefault(),
 		STAR:             starDefault(),
+		MappedRetention:  mappedRetentionDefault(),
 		Salmon:           salmonDefault(),
 		Sort:             sortDefault(),
 		MarkDuplicates:   markDuplicatesDefault(),
@@ -91,8 +97,9 @@ func base(cpu float64, memory string) modules.Options {
 	return modules.Options{Resources: gobble.Resources{CPU: cpu, Memory: memory}}
 }
 
-func gffreadDefault() gffread.Options { return gffread.Options{Options: base(1, "1g")} }
-func gunzipDefault() gunzip.Options   { return gunzip.Options{Options: base(1, "256m")} }
+func gtfFilterDefault() gtffilter.Options { return gtffilter.Options{Options: base(1, "1g")} }
+func gffreadDefault() gffread.Options     { return gffread.Options{Options: base(1, "1g")} }
+func gunzipDefault() gunzip.Options       { return gunzip.Options{Options: base(1, "256m")} }
 func starGenomeDefault() stargenomegenerate.Options {
 	return stargenomegenerate.Options{Options: base(2, "6g"), SJDBOverhang: 100, GenomeSAIndexNBases: 7}
 }
@@ -101,11 +108,17 @@ func faidxDefault() samtoolsfaidx.Options     { return samtoolsfaidx.Options{Opt
 func cutChromSizesDefault() cutchromsizes.Options {
 	return cutchromsizes.Options{Options: base(1, "256m")}
 }
-func catDefault() catfastq.Options       { return catfastq.Options{Options: base(1, "512m")} }
-func fqLintDefault() fqlint.Options      { return fqlint.Options{Options: base(1, "512m")} }
-func fastQCDefault() fastqc.Options      { return fastqc.Options{Options: base(2, "1g")} }
-func trimDefault() trimgalore.Options    { return trimgalore.Options{Options: base(4, "2g")} }
-func starDefault() staralign.Options     { return staralign.Options{Options: base(4, "8g")} }
+func catDefault() catfastq.Options    { return catfastq.Options{Options: base(1, "512m")} }
+func fqLintDefault() fqlint.Options   { return fqlint.Options{Options: base(1, "512m")} }
+func fastQCDefault() fastqc.Options   { return fastqc.Options{Options: base(2, "1g")} }
+func trimDefault() trimgalore.Options { return trimgalore.Options{Options: base(4, "2g")} }
+func trimmedRetentionDefault() sampleretentiontrimmed.Options {
+	return sampleretentiontrimmed.Options{Options: base(1, "256m")}
+}
+func starDefault() staralign.Options { return staralign.Options{Options: base(4, "8g")} }
+func mappedRetentionDefault() sampleretentionmapped.Options {
+	return sampleretentionmapped.Options{Options: base(1, "256m")}
+}
 func salmonDefault() salmonquant.Options { return salmonquant.Options{Options: base(2, "2g")} }
 func sortDefault() samtoolssort.Options  { return samtoolssort.Options{Options: base(2, "2g")} }
 func markDuplicatesDefault() picardmarkduplicates.Options {

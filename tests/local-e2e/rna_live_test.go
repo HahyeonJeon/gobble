@@ -20,7 +20,16 @@ func TestRNASeqRecover(t *testing.T) {
 	}
 	assertMultiQCOmitsBAM(t, g)
 	if err := gobble.Run(t.Context(), g, dir, 2, testOccupyOption(t)); err != nil {
-		dumpTaskLogs(t, dir, "salmon_quant", "tximport", "deseq2_qc", "multiqc")
+		dumpTaskLogs(t, dir,
+			"WT_REP1.salmon_quant",
+			"WT_REP2.salmon_quant",
+			"RAP1_UNINDUCED_REP1.salmon_quant",
+			"RAP1_UNINDUCED_REP2.salmon_quant",
+			"RAP1_IAA_30M_REP1.salmon_quant",
+			"cohort.tximport",
+			"cohort_qc.deseq2_qc",
+			"multiqc",
+		)
 		fatalAPIError(t, "Run(rnaseq.Pipeline())", err)
 	}
 	assertOccupied(t, dir)
