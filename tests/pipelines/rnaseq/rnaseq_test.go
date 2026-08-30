@@ -214,6 +214,53 @@ func TestSTARSalmonPlanDeclaresSelectedProduct(t *testing.T) {
 	}
 }
 
+func TestBuildRejectsSingleSampleBecauseDESeq2QCNeedsReplicates(t *testing.T) {
+	samples := []rnaseq.Sample{{
+		Name:         "sample_a",
+		Runs:         []rnaseq.Run{{ID: "run_1", Fastq1: "in/sample_a.fastq.gz"}},
+		Strandedness: rnaseq.StrandednessUnstranded,
+	}}
+	graph, err := gobble.Compose(rnaseq.Build(samples, rnaseq.DefaultConfig()))
+	if graph != nil {
+		t.Fatalf("Compose() graph = %v, want nil", graph)
+	}
+	var structured *gobble.Error
+	if !errors.As(err, &structured) || structured == nil {
+		t.Fatalf("Compose() error = %v, want structured compose error", err)
+	}
+	if got, want := structured.Op, "compose"; got != want {
+		t.Fatalf("compose error op = %q, want %q", got, want)
+	}
+	if len(structured.Defects) != 1 {
+		t.Fatalf("compose defects = %+v, want one DESeq2-QC cardinality defect", structured.Defects)
+	}
+	defect := structured.Defects[0]
+	if defect.Code != gobble.DefectInvalidSampleSheet || defect.Unit != "cohort_qc" || defect.Message != "RNA DESeq2-QC requires at least two samples so DESeq2 has replicates for dispersion estimation" || len(defect.Paths) != 0 {
+		t.Fatalf("compose defect = %+v, want invalid-samplesheet cohort_qc DESeq2 replicate defect", defect)
+	}
+}
+
+func TestRawFastQCDestinationsUseRunAndMateIdentity(t *testing.T) {
+	samples, err := rnaseq.Parse(strings.NewReader("sample,fastq_1,fastq_2,strandedness\n" +
+		"repeated,in/lane-a/r1/reads.fastq.gz,in/lane-a/r2/reads.fastq.gz,forward\n" +
+		"repeated,in/lane-b/r1/reads.fastq.gz,in/lane-b/r2/reads.fastq.gz,forward\n" +
+		"support,in/support/reads.fastq.gz,,unstranded\n"))
+	if err != nil {
+		t.Fatalf("Parse() error = %v, want distinct same-basename paths accepted", err)
+	}
+	raw := pc.MustPlanJSON(t, rnaseq.Build(samples, rnaseq.DefaultConfig()))
+	for id, dir := range map[string]string{
+		"repeated.run_1_raw_r1.fastqc": "work/repeated/raw/fastqc/run_1/r1",
+		"repeated.run_1_raw_r2.fastqc": "work/repeated/raw/fastqc/run_1/r2",
+		"repeated.run_2_raw_r1.fastqc": "work/repeated/raw/fastqc/run_2/r1",
+		"repeated.run_2_raw_r2.fastqc": "work/repeated/raw/fastqc/run_2/r2",
+	} {
+		task := pc.TaskByID(t, raw, id)
+		pc.AssertIOPath(t, task.Outputs, "html", dir+"/reads_fastqc.html")
+		pc.AssertIOPath(t, task.Outputs, "zip", dir+"/reads_fastqc.zip")
+	}
+}
+
 func TestAutoStrandednessPrecedesAndControlsEveryDependentStage(t *testing.T) {
 	raw := pc.MustPlanJSON(t, rnaseq.Build(loadSamples(t), rnaseq.DefaultConfig()))
 	inferredPath := "work/WT_REP1/strandedness/WT_REP1/strandedness.txt"

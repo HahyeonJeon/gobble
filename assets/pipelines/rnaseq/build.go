@@ -150,7 +150,7 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 				return pipeline
 			}
 			qcOptions := config.FastQC
-			qcOptions.OutDir = gobble.Dir("work/" + sample.Name + "/raw/fastqc")
+			qcOptions.OutDir = gobble.Dir("work/" + sample.Name + "/raw/fastqc/" + runName + "/r1")
 			qc, addErr := fastqc.Add(raw1, read1, qcOptions)
 			if recordModuleError(pipeline, addErr) {
 				return pipeline
@@ -167,6 +167,7 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 			if recordModuleError(pipeline, addErr) {
 				return pipeline
 			}
+			qcOptions.OutDir = gobble.Dir("work/" + sample.Name + "/raw/fastqc/" + runName + "/r2")
 			qc, addErr = fastqc.Add(raw2, read2, qcOptions)
 			if recordModuleError(pipeline, addErr) {
 				return pipeline
@@ -553,6 +554,8 @@ func validateBuild(samples []Sample, config Config) []gobble.Defect {
 	var defects []gobble.Defect
 	if len(samples) == 0 {
 		defects = append(defects, gobble.Defect{Code: gobble.DefectInvalidSampleSheet, Unit: "samplesheet", Message: "RNA samples must not be empty"})
+	} else if len(samples) < 2 {
+		defects = append(defects, gobble.Defect{Code: gobble.DefectInvalidSampleSheet, Unit: "cohort_qc", Message: "RNA DESeq2-QC requires at least two samples so DESeq2 has replicates for dispersion estimation"})
 	}
 	seen := make(map[string]bool, len(samples))
 	for _, sample := range samples {

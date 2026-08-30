@@ -19,7 +19,8 @@ temporary `assets.RNASeq` constructor now points here.
   support.
 - `Build(samples, config)` copies caller data, reads no process state or
   network location, and records invalid data, path, image, and option conflicts
-  as compose defects.
+  as compose defects. It requires at least two samples because mandatory
+  DESeq2 cohort QC needs replicates for dispersion estimation.
 - `Pipeline` is only the process-exclusive CLI adapter. It loads the injected
   sheet path and delegates to `Build` with fresh defaults.
 
@@ -31,6 +32,9 @@ strandedness evidence, STAR genome and transcriptome alignment, alignment-mode
 Salmon quantification, sorting, duplicate marking, indexing, StringTie,
 combined and directional coverage, selected alignment and biotype QC, tximport
 cohort matrices, DESeq2 cohort QC, and MultiQC.
+
+Raw FastQC destinations use sample, run, and mate identity. Distinct accepted
+read paths may therefore have the same basename without output collisions.
 
 Declared results include marked/indexed BAMs, STAR logs and junctions,
 `quant.sf` plus Salmon reports, gene and transcript count/TPM/length matrices,

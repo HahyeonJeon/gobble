@@ -2,10 +2,11 @@
 // RNA-seq product.
 //
 // Build is the reusable typed entry point. Pipeline is the process-exclusive
-// CLI adapter. The product supports repeated single- or paired-end runs and
-// unstranded, forward, reverse, or automatically inferred libraries. DESeq2
-// produces PCA and sample-distance QC only; this package has no study contrast
-// or differential-expression result.
+// CLI adapter. The product requires at least two samples for DESeq2 cohort QC
+// and supports repeated single- or paired-end runs and unstranded, forward,
+// reverse, or automatically inferred libraries. DESeq2 produces PCA and
+// sample-distance QC only; this package has no study contrast or
+// differential-expression result.
 package rnaseq
 
 import (
