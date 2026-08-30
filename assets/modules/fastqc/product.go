@@ -47,6 +47,9 @@ func Add(parent modules.Parent, reads gobble.Handle, options Options) (Ports, er
 	command = append(command, readPath)
 	base := options.Options
 	base.Resources = resources
+	if err := modules.RejectExtraArgs(unit, options.ExtraArgs, []string{"--extract", "--version", "--help"}); err != nil {
+		return Ports{}, err
+	}
 	command, image, resources, err := modules.ResolveOptions(unit, base, DefaultImage, resources, command, []string{"--outdir", "--noextract", "--threads"})
 	if err != nil {
 		return Ports{}, err

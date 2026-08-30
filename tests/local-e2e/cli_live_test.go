@@ -121,11 +121,12 @@ func TestMethylSeqCLIRecover(t *testing.T) {
 	run := runGobble(t, bin, "run", methylSeqPkg, "--workspace", dir, "--cap", "1", "--sample", sheet)
 	requireCLIOp(t, run, "{\"op\":\"run\"}\n")
 
-	if _, err := os.Stat(filepath.Join(dir, filepath.FromSlash("in/Bisulfite_Genome"))); !os.IsNotExist(err) {
-		t.Fatalf("Bisulfite_Genome written into in/: %v", err)
+	if _, err := os.Stat(filepath.Join(dir, filepath.FromSlash("in/reference/Bisulfite_Genome"))); !os.IsNotExist(err) {
+		t.Fatalf("Bisulfite_Genome written into caller input: %v", err)
 	}
-	assertMethylExtractorOutputs(t, dir, []string{"sample1", "sample2"})
-	requireRegularFile(t, filepath.Join(dir, filepath.FromSlash("work/multiqc/multiqc_report.html")))
+	assertMethylExtractorOutputs(t, dir, []string{"SRR389222_sub1", "SRR389222_sub2", "Ecoli_10K_methylated"})
+	requireRegularFile(t, filepath.Join(dir, filepath.FromSlash("results/methylseq/summary/bismark_summary_report.html")))
+	requireRegularFile(t, filepath.Join(dir, filepath.FromSlash("results/methylseq/multiqc/multiqc_report.html")))
 
 	recoverAfterSuccessCLI(t, bin, methylSeqPkg, dir, "--cap", "1", "--sample", sheet)
 }

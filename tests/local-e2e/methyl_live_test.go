@@ -24,19 +24,18 @@ func TestMethylSeqRecover(t *testing.T) {
 		fatalAPIError(t, "Run(methylseq.Pipeline())", err)
 	}
 	assertOccupied(t, dir)
-	if _, err := os.Stat(filepath.Join(dir, filepath.FromSlash("in/Bisulfite_Genome"))); !os.IsNotExist(err) {
-		t.Fatalf("Bisulfite_Genome written into in/: %v", err)
+	if _, err := os.Stat(filepath.Join(dir, filepath.FromSlash("in/reference/Bisulfite_Genome"))); !os.IsNotExist(err) {
+		t.Fatalf("Bisulfite_Genome written into caller input: %v", err)
 	}
-	assertMethylExtractorOutputs(t, dir, []string{"sample1", "sample2"})
-	requireRegularFile(t, filepath.Join(dir, filepath.FromSlash("work/multiqc/multiqc_report.html")))
-	for _, sample := range []string{"sample1", "sample2"} {
-		unique := uniquePEAlignments(t, filepath.Join(dir, filepath.FromSlash("work/"+sample+"/bismark-align/aligned_PE_report.txt")))
-		t.Logf("%s unique paired-end alignments = %d", sample, unique)
-		assertUniqueAlignmentFloor(t, unique)
-		assertMethylationCallRows(t, unique,
-			filepath.Join(dir, filepath.FromSlash("work/"+sample+"/bismark-extract/CpG_context_aligned_pe.txt.gz")),
-			filepath.Join(dir, filepath.FromSlash("work/"+sample+"/bismark-extract/aligned_pe.bismark.cov.gz")),
-		)
-	}
+	assertMethylExtractorOutputs(t, dir, []string{"SRR389222_sub1", "SRR389222_sub2", "Ecoli_10K_methylated"})
+	requireRegularFile(t, filepath.Join(dir, filepath.FromSlash("results/methylseq/summary/bismark_summary_report.html")))
+	requireRegularFile(t, filepath.Join(dir, filepath.FromSlash("results/methylseq/multiqc/multiqc_report.html")))
+	unique := uniquePEAlignments(t, filepath.Join(dir, filepath.FromSlash("work/Ecoli_10K_methylated/bismark-align/Ecoli_10K_methylated_PE_report.txt")))
+	t.Logf("Ecoli_10K_methylated unique paired-end alignments = %d", unique)
+	assertUniqueAlignmentFloor(t, unique)
+	assertMethylationCallRows(t, unique,
+		filepath.Join(dir, filepath.FromSlash("results/methylseq/methylation-calls/Ecoli_10K_methylated/CpG_context_Ecoli_10K_methylated_pe.deduplicated.txt.gz")),
+		filepath.Join(dir, filepath.FromSlash("results/methylseq/methylation-calls/Ecoli_10K_methylated/Ecoli_10K_methylated_pe.deduplicated.bismark.cov.gz")),
+	)
 	recoverAfterSuccessAPI(t, g, dir, 1)
 }

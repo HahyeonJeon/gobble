@@ -16,8 +16,16 @@ const DefaultImage modules.Image = "community.wave.seqera.io/library/trim-galore
 // Options controls one single- or paired-end Trim Galore command.
 type Options struct {
 	modules.Options
-	OutDir gobble.Directory
-	Prefix string
+	OutDir           gobble.Directory
+	Prefix           string
+	ClipR1           int
+	ClipR2           int
+	ThreePrimeClipR1 int
+	ThreePrimeClipR2 int
+	Quality          int
+	Length           int
+	Adapter          string
+	Adapter2         string
 }
 
 // Ports are trimmed reads and input-derived Trim Galore reports. Report2 is
@@ -43,6 +51,15 @@ func Add(parent modules.Parent, read1, read2 gobble.Handle, options Options) (Po
 		if err != nil {
 			return Ports{}, err
 		}
+	}
+	if options.ClipR1 < 0 || options.ClipR2 < 0 || options.ThreePrimeClipR1 < 0 || options.ThreePrimeClipR2 < 0 || options.Quality < 0 || options.Length < 0 {
+		return Ports{}, modules.ComposeDefect(gobble.DefectInvalidValue, unit, "Trim Galore clipping, quality, and length values must not be negative")
+	}
+	if read2.IsZero() && (options.ClipR2 != 0 || options.ThreePrimeClipR2 != 0 || options.Adapter2 != "") {
+		return Ports{}, modules.ComposeDefect(gobble.DefectInvalidValue, unit, "read-2 Trim Galore options require paired-end reads")
+	}
+	if err := modules.RejectExtraArgs(unit, options.ExtraArgs, []string{"--fastqc", "--rrbs", "--dont_gzip", "--retain_unpaired", "--hardtrim3", "--hardtrim5", "--version", "--help"}); err != nil {
+		return Ports{}, err
 	}
 	outDir := options.OutDir
 	if outDir.IsZero() {
@@ -70,13 +87,27 @@ func Add(parent modules.Parent, read1, read2 gobble.Handle, options Options) (Po
 	if !read2.IsZero() {
 		command = append(command, "--paired")
 	}
+	for _, value := range []struct {
+		flag string
+		set  int
+	}{{"--clip_R1", options.ClipR1}, {"--clip_R2", options.ClipR2}, {"--three_prime_clip_R1", options.ThreePrimeClipR1}, {"--three_prime_clip_R2", options.ThreePrimeClipR2}, {"--quality", options.Quality}, {"--length", options.Length}} {
+		if value.set > 0 {
+			command = append(command, value.flag, strconv.Itoa(value.set))
+		}
+	}
+	if options.Adapter != "" {
+		command = append(command, "--adapter", options.Adapter)
+	}
+	if options.Adapter2 != "" {
+		command = append(command, "--adapter2", options.Adapter2)
+	}
 	command = append(command, read1Path)
 	if read2Path != "" {
 		command = append(command, read2Path)
 	}
 	base := options.Options
 	base.Resources = resources
-	command, image, resources, err := modules.ResolveOptions(unit, base, DefaultImage, resources, command, []string{"--cores", "--gzip", "--output_dir", "--basename", "--paired"})
+	command, image, resources, err := modules.ResolveOptions(unit, base, DefaultImage, resources, command, []string{"--cores", "--gzip", "--output_dir", "--basename", "--paired", "--clip_R1", "--clip_R2", "--three_prime_clip_R1", "--three_prime_clip_R2", "--quality", "--length", "--adapter", "--adapter2"})
 	if err != nil {
 		return Ports{}, err
 	}

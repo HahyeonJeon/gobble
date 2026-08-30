@@ -41,6 +41,9 @@ func Add(parent modules.Parent, reports []gobble.Handle, options Options) (Ports
 		}
 		inputs[i] = gobble.Bind{Name: "report_" + strconv.Itoa(i), From: report}
 	}
+	if err := modules.RejectExtraArgs(unit, options.ExtraArgs, []string{"--filename", "--no-data-dir", "--zip-data-dir", "--version", "--help"}); err != nil {
+		return Ports{}, err
+	}
 	command, image, resources, err := modules.ResolveOptions(unit, options.Options, DefaultImage, gobble.Resources{CPU: 1, Memory: "2g"}, command, []string{"--force", "--outdir"})
 	if err != nil {
 		return Ports{}, err

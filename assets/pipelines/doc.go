@@ -42,8 +42,8 @@
 // function and call the same Build. File, gobble.Group, and gobble.Tree handles
 // retain the artifact kind consumed by each tool.
 //
-// The wgs and methylseq children retain graph-stable checkpoint constructors
-// until their named lifts. The rnaseq child owns the lifted STAR-Salmon product
-// and complete typed contract. Each lift is a new graph generation and does not
-// promise resume of a pre-lift workspace.
+// The wgs child retains its graph-stable checkpoint constructor until its named
+// lift. The rnaseq and methylseq children own lifted products and complete typed
+// contracts. Each lift is a new graph generation and does not promise resume of
+// a pre-lift workspace.
 package pipelines

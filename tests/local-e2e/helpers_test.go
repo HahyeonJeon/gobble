@@ -184,9 +184,12 @@ func stageMethylPins(t *testing.T, dir string) {
 		pin fixture.Pin
 		rel string
 	}{
-		{methylseqevidence.GenomeFASTA, "in/genome.fa"},
-		{methylseqevidence.Test1FASTQ, "in/Ecoli_10K_methylated_R1.fastq.gz"},
-		{methylseqevidence.Test2FASTQ, "in/Ecoli_10K_methylated_R2.fastq.gz"},
+		{methylseqevidence.GenomeFASTA, "in/reference/genome.fa"},
+		{methylseqevidence.Single1FASTQ, "in/reads/SRR389222_sub1.fastq.gz"},
+		{methylseqevidence.Single2FASTQ, "in/reads/SRR389222_sub2.fastq.gz"},
+		{methylseqevidence.Single3FASTQ, "in/reads/SRR389222_sub3.fastq.gz"},
+		{methylseqevidence.Test1FASTQ, "in/reads/Ecoli_10K_methylated_R1.fastq.gz"},
+		{methylseqevidence.Test2FASTQ, "in/reads/Ecoli_10K_methylated_R2.fastq.gz"},
 	})
 }
 
@@ -622,13 +625,22 @@ func methylationCallRows(t *testing.T, path string) int {
 func assertMethylExtractorOutputs(t *testing.T, dir string, samples []string) {
 	t.Helper()
 	for _, sample := range samples {
-		base := "work/" + sample + "/bismark-extract/"
+		prefix := sample
+		if sample == "Ecoli_10K_methylated" {
+			prefix += "_pe"
+		}
+		calls := "results/methylseq/methylation-calls/" + sample + "/"
 		for _, rel := range []string{
-			base + "aligned_pe.bedGraph.gz",
-			base + "aligned_pe.bismark.cov.gz",
-			base + "aligned_pe_splitting_report.txt",
-			base + "aligned_pe.M-bias.txt",
-			base + "CpG_context_aligned_pe.txt.gz",
+			"results/methylseq/bismark/" + sample + "/" + prefix + ".deduplicated.bam",
+			"results/methylseq/bismark/" + sample + "/" + prefix + ".deduplication_report.txt",
+			calls + prefix + ".deduplicated.bedGraph.gz",
+			calls + prefix + ".deduplicated.bismark.cov.gz",
+			calls + prefix + ".deduplicated_splitting_report.txt",
+			calls + prefix + ".deduplicated.M-bias.txt",
+			calls + "CpG_context_" + prefix + ".deduplicated.txt.gz",
+			calls + "CHG_context_" + prefix + ".deduplicated.txt.gz",
+			calls + "CHH_context_" + prefix + ".deduplicated.txt.gz",
+			"results/methylseq/reports/" + sample + "/" + sample + ".bismark_report.html",
 		} {
 			requireRegularFile(t, filepath.Join(dir, filepath.FromSlash(rel)))
 		}

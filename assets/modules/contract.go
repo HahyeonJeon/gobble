@@ -233,6 +233,21 @@ func AppendExtraArgs(unit string, command, extraArgs, namedFlags []string) ([]st
 	return out, nil
 }
 
+// RejectExtraArgs rejects command tokens that would select unsupported
+// behavior. Both --flag and --flag=value forms are recognized. Command modules
+// use this before AppendExtraArgs when a flag would change the owned command's
+// product meaning rather than customize that command.
+func RejectExtraArgs(unit string, extraArgs, forbiddenFlags []string) error {
+	for _, arg := range extraArgs {
+		for _, flag := range forbiddenFlags {
+			if arg == flag || strings.HasPrefix(arg, flag+"=") {
+				return composeInvalidValue(unit, "ExtraArgs contains unsupported option "+flag)
+			}
+		}
+	}
+	return nil
+}
+
 const (
 	maxRepositoryNameLength = 255
 	maxTagLength            = 128
