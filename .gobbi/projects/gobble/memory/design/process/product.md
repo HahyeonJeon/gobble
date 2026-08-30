@@ -17,7 +17,7 @@ product under the remaining product headings.
 ### Gobble
 
 - Statement: A consumer uses the module from a trusted local source revision, writes a small Go pipeline with modules, branch, and merge, validates and inspects the plan, runs it locally, and recovers after a contained failure through Inspect, Release, and Resume. Construction order is library, then engine, then CLI. First-horizon exit still requires the complete API and CLI loop and remains unclaimed. Command names live in [system.md](../architecture/system.md) Interfaces Current. First useful outcome is that agent loop, not Nextflow- or Snakemake-class feature parity. No named external consumer is recorded.
-- Current: Gobble is a pre-1.0 trusted-local `linux/amd64` preview licensed under MIT. Agents use the Go library and generic command through an explicit local path pin. Humans receive one packed runner for one embedded pipeline and need no Go at run time. First-horizon installed-path exit is proved for both families by `go test -tags=live ./tests/install-e2e`. This is local-pin and packed-artifact evidence; an exact-tag route is not yet available because no tag exists.
+- Current: Gobble is a pre-1.0 trusted-local `linux/amd64` preview licensed under MIT. The published agent install is `github.com/HahyeonJeon/gobble@v0.1.0` for the library and `github.com/HahyeonJeon/gobble/cmd/gobble@v0.1.0` for the command. A local path pin remains valid for an unpublished tree. Humans receive one packed runner for one embedded pipeline and need no Go at run time. First-horizon installed-path exit is proved for the local-pin and packed families by `go test -tags=live ./tests/install-e2e`.
 - Source: `first-use`, `current-alternative`
 
 ## Refused uses
@@ -57,7 +57,7 @@ product under the remaining product headings.
 ### Gobble
 
 - Statement: Assumption — help and updates come from the GitHub repository. There is no support SLA. Versioning will follow Go modules once the library is published.
-- Current: MIT permits redistribution of the current tree. No public tag or remote release exists. Future pre-1.0 publication uses one immutable repository-root `v0.x.y` tag for the root module, library, and `cmd/gobble`, with no `/v0` module path, no retag, and no supported `@latest`. A patch means no intended Go API, CLI protocol, workspace-schema, or recovery break. A minor may add features and may declare a pre-1.0 break; its release notes name Go API, CLI, workspace, and recovery effects. The first number remains Deferred until the user names it. `v0.x.y-rc.1` is used only if the user later asks. This session creates no tag, push, GitHub Release, or other remote publication. A future tag still requires release notes, MIT bytes, an exact commit, and installed external-consumer proof.
+- Current: MIT permits redistribution. The first public pre-1.0 tag is immutable repository-root `v0.1.0` for the root module, library, and `cmd/gobble`, with no `/v0` module path, no retag, and no supported `@latest`. Release notes are in `CHANGELOG.md`. A later patch means no intended Go API, CLI protocol, workspace-schema, or recovery break. A later minor may add features and may declare a pre-1.0 break; its release notes name Go API, CLI, workspace, and recovery effects. `v0.x.y-rc.1` is used only if later requested.
 - Source: `support-update`
 
 ## End of life

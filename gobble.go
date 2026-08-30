@@ -15,9 +15,10 @@
 // [PlanOption] construction, [TaskSpec.Backend], and package assets are not
 // supported compatibility promises.
 //
-// Agents use the library and a generic command selected from the same local
-// module graph. Humans receive one packed linux/amd64 runner for one pipeline;
-// they do not need Go at run time. Exact-tag install is not yet available.
+// Agents use the library and a generic command selected from the same module
+// graph. The published agent install is github.com/HahyeonJeon/gobble@v0.1.0
+// and github.com/HahyeonJeon/gobble/cmd/gobble@v0.1.0. Humans receive one
+// packed linux/amd64 runner for one pipeline; they do not need Go at run time.
 // Gobble is licensed under the MIT License in LICENSE.
 //
 // The caller provides trusted pipeline code and an exclusive caller-owned
@@ -42,5 +43,6 @@
 // bytes. Missing hashes are reuse misses, and Resume re-evaluates When
 // predicates. First-horizon installed-path evidence passed on linux/amd64 for
 // local-pin agents and packed human runners with
-// go test -tags=live ./tests/install-e2e. No exact-tag release is claimed.
+// go test -tags=live ./tests/install-e2e. The published module version is
+// v0.1.0.
 package gobble

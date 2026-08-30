@@ -4,6 +4,7 @@ Recursive navigation across reports, grouped by category, newest first.
 
 ## Note
 
+- [Gobble v0.1.0](note/2026-08-30-gobble-v0.1.0.md)
 - [Gobble install](note/2026-08-30-gobble-install.md)
 - [Honest local preview](note/2026-08-23-honest-local-preview.md)
 - [Gobble Engine](note/2026-08-23-gobble-engine.md)

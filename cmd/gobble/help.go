@@ -31,7 +31,10 @@ DefectCode values. Other exports are provisional.
 Graph verbs and pack require go on PATH. Consumer internal/ packages are
 unsupported. The installed command, selected module, pipeline, platform,
 install family, and workspace identity must match before Pipeline runs or a
-workspace changes. Exact-tag install is not yet available.
+workspace changes. The published agent install is
+github.com/HahyeonJeon/gobble@v0.1.0 and
+github.com/HahyeonJeon/gobble/cmd/gobble@v0.1.0. No supported install uses
+@latest.
 
 Success stdout is protocol JSON or JSONL only. Exits are 0 success, 1 domain
 or operational failure, and 2 invocation or input-shape failure. A spaced
@@ -44,7 +47,7 @@ do not wedge occupancy; unproved Docker stays unknown-backend and blocks
 resume. First-horizon installed-path evidence passed on linux/amd64 for
 local-pin agents and packed runners with:
   go test -tags=live ./tests/install-e2e
-No exact-tag release is claimed.
+The published module version is v0.1.0.
 `
 
 var commandHelp = map[string]string{
@@ -163,8 +166,8 @@ not wedge occupancy; unproved Docker stays unknown-backend and blocks resume.
 Success stdout is protocol JSON or JSONL only. Exits are 0 success, 1 domain
 or operational failure, and 2 invocation or input-shape failure. First-horizon
 installed-path evidence passed on linux/amd64 for local-pin source and packed
-runners with go test -tags=live ./tests/install-e2e. No exact-tag release is
-claimed.
+runners with go test -tags=live ./tests/install-e2e. The published Gobble
+module version is v0.1.0.
 
 The MIT notice below applies to Gobble portions of this runner. It does not
 license the embedded pipeline unless its author says so.

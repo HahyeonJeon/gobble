@@ -13,7 +13,18 @@ Gobble is licensed under the [MIT License](LICENSE).
 
 ## Agent install
 
-The available install route is a local path pin to a trusted Gobble tree. In the consumer pipeline module, select that tree explicitly:
+The published agent install is the exact tag `v0.1.0` for both the library and the command:
+
+```sh
+go get github.com/HahyeonJeon/gobble@v0.1.0
+mkdir -p .gobbin
+GOBIN="$PWD/.gobbin" go install github.com/HahyeonJeon/gobble/cmd/gobble@v0.1.0
+export PATH="$PWD/.gobbin:$PATH"
+```
+
+Keep the installed binary on `PATH` for graph verbs. No supported install uses `@latest`.
+
+A local path pin remains valid for an unpublished trusted tree:
 
 ```sh
 go mod edit -require=github.com/HahyeonJeon/gobble@v0.0.0
@@ -24,16 +35,7 @@ GOBIN="$PWD/.gobbin" go install github.com/HahyeonJeon/gobble/cmd/gobble
 export PATH="$PWD/.gobbin:$PATH"
 ```
 
-The `go install` command intentionally has no version suffix. The consumer's `go.mod` supplies the selected local revision. `v0.0.0` is a local module-graph placeholder, not a release tag. Keep the installed binary on `PATH` for graph verbs.
-
-Exact-tag install is not yet available because no release tag exists. After the user names and authorizes an exact tag, the future commands will use the same tag for the library and command:
-
-```sh
-go get github.com/HahyeonJeon/gobble@v0.x.y
-GOBIN="$PWD/.gobbin" go install github.com/HahyeonJeon/gobble/cmd/gobble@v0.x.y
-```
-
-`v0.x.y` is a pattern, not a published version. No supported install uses `@latest`.
+That `go install` has no version suffix because the consumer `go.mod` supplies the selected local revision. `v0.0.0` is a local module-graph placeholder, not a release tag.
 
 ## Human install
 
@@ -103,17 +105,15 @@ First-horizon installed-path exit is proved on `linux/amd64` for the local-pin a
 go test -tags=live ./tests/install-e2e
 ```
 
-The assay fails rather than skips when Docker is unavailable. It covers a local-pin external consumer, a `GOBIN` command, a packed runner with Go made uncallable, three distinct WGS workspaces, cancellation after a real Docker task starts, non-empty remaining work, Release, and successful Resume. This is local-pin and packed-artifact evidence. No exact-tag install or published release is claimed.
+The assay fails rather than skips when Docker is unavailable. It covers a local-pin external consumer, a `GOBIN` command, a packed runner with Go made uncallable, three distinct WGS workspaces, cancellation after a real Docker task starts, non-empty remaining work, Release, and successful Resume. That live package proves local-pin and packed-artifact first-horizon exit. The published agent install is the exact tag `v0.1.0`.
 
 ## Versioning
 
-A future pre-1.0 release uses one immutable repository-root tag matching `v0.x.y` for the root module, library, and `cmd/gobble`. The module path has no `/v0` suffix. A tag is never moved or reused, and supported commands never use `@latest`.
+The first public pre-1.0 release is the immutable repository-root tag `v0.1.0` for the root module, library, and `cmd/gobble`. The module path has no `/v0` suffix. That tag is never moved or reused, and supported commands never use `@latest`. Release notes are in [CHANGELOG.md](CHANGELOG.md).
 
-A patch release means no intended break to the Go API, CLI protocol, workspace schema, or recovery behavior. A minor release may add features and may declare a pre-1.0 break. Its release notes must name the effects on the Go API, CLI, workspaces, and recovery.
+A later patch means no intended break to the Go API, CLI protocol, workspace schema, or recovery behavior. A later minor may add features and may declare a pre-1.0 break. Its release notes must name the effects on the Go API, CLI, workspaces, and recovery.
 
-The first version number remains deferred until the user names the exact tag. A pre-release matching `v0.x.y-rc.1` is used only if the user later requests it. This session creates no tag, push, GitHub Release, or other remote publication.
-
-A future tag still requires release notes, MIT license bytes, an exact commit, and installed external-consumer proof. The current local assay does not publish those bytes.
+A pre-release matching `v0.x.y-rc.1` is used only if later requested.
 
 ## Out of scope
 
