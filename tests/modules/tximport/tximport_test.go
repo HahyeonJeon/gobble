@@ -21,4 +21,5 @@ func TestCommandContract(t *testing.T) {
 	pc.AssertIOPath(t, task.Outputs, "gene_length_scaled", "results/salmon/gene_counts_length_scaled.tsv")
 	cc.Invalid(t, tximport.Pipeline(quants, []string{"a"}, gtf, tximport.Options{}))
 	cc.Invalid(t, tximport.Pipeline(quants, []string{"a", "b"}, gtf, tximport.Options{Options: modules.Options{Image: "alpine:latest"}}))
+	cc.Invalid(t, tximport.Pipeline(quants, []string{"a", "b"}, gtf, tximport.Options{Options: modules.Options{ExtraArgs: []string{"fake-sample", "fake-quant.sf"}}}))
 }

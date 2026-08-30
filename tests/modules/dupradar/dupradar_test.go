@@ -19,4 +19,5 @@ func TestCommandContract(t *testing.T) {
 	}
 	pc.AssertIOPath(t, task.Outputs, "multiqc", "work/dupradar/sample_dup_intercept_mqc.txt")
 	cc.Invalid(t, dupradar.Pipeline(bam, gtf, dupradar.Options{Options: modules.Options{Image: "alpine:latest"}}))
+	cc.Invalid(t, dupradar.Pipeline(bam, gtf, dupradar.Options{Options: modules.Options{ExtraArgs: []string{"--arbitrary"}}}))
 }

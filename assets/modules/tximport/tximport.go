@@ -44,7 +44,9 @@ saveRDS(list(transcript=txi, gene=gene, gene_length_scaled=gene_ls, gene_scaled=
 // linux/amd64.
 const DefaultImage modules.Image = "quay.io/biocontainers/bioconductor-tximeta:1.20.1--r43hdfd78af_0@sha256:3dfeb5c838ed192efaab23476078775ef214bd6b4472fb5b966bfc119e0b77c0"
 
-// Options controls one complete required-cohort tximport merge.
+// Options controls one complete required-cohort tximport merge. The inline R
+// program uses all trailing operands for sample/file pairs, so ExtraArgs are
+// rejected.
 type Options struct {
 	modules.Options
 	OutDir gobble.Directory
@@ -67,6 +69,9 @@ type Ports struct {
 // Add records one validated tximport merge over every declared quant.sf.
 func Add(parent modules.Parent, quants []gobble.Handle, sampleNames []string, gtf gobble.Handle, options Options) (Ports, error) {
 	const unit = "tximport"
+	if len(options.ExtraArgs) != 0 {
+		return Ports{}, modules.ComposeDefect(gobble.DefectInvalidValue, unit, "the tximport R program does not accept ExtraArgs")
+	}
 	if len(quants) == 0 || len(quants) != len(sampleNames) {
 		return Ports{}, modules.ComposeDefect(gobble.DefectInvalidValue, unit, "quant files and sample names must be non-empty and equal length")
 	}
@@ -89,7 +94,7 @@ func Add(parent modules.Parent, quants []gobble.Handle, sampleNames []string, gt
 		inputs = append(inputs, gobble.Bind{Name: "quant_" + strconv.Itoa(i), From: quant})
 	}
 	base := options.Options
-	base.ExtraArgs = append([]string(nil), options.ExtraArgs...)
+	base.ExtraArgs = nil
 	command, image, resources, err := modules.ResolveOptions(unit, base, DefaultImage, gobble.Resources{CPU: 2, Memory: "4g"}, command, []string{"-e"})
 	if err != nil {
 		return Ports{}, err

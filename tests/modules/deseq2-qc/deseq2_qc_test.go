@@ -26,4 +26,5 @@ func TestCommandContract(t *testing.T) {
 	}
 	pc.AssertIOPath(t, task.Outputs, "matrix", "results/deseq2-qc/vst_matrix.tsv")
 	cc.Invalid(t, deseq2qc.Pipeline(matrix, deseq2qc.Options{Options: modules.Options{Image: "alpine:latest"}}))
+	cc.Invalid(t, deseq2qc.Pipeline(matrix, deseq2qc.Options{Options: modules.Options{ExtraArgs: []string{"--alpha", "0.05"}}}))
 }

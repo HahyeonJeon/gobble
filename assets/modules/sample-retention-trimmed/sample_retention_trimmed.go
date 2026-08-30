@@ -2,16 +2,38 @@
 package sampleretentiontrimmed
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/HahyeonJeon/gobble"
 	"github.com/HahyeonJeon/gobble/assets/modules"
 )
 
-// DefaultImage is the nf-core/rnaseq 3.26.0 coreutils/gzip image resolved for
-// linux/amd64. The pinned image also contains mawk for the gate expression.
-const DefaultImage modules.Image = "community.wave.seqera.io/library/coreutils_grep_gzip_lbzip2_pruned:838ba80435a629f8@sha256:63c2c6b22e83b2f656e88fbb1553e595da4e9e58794e3bfcb98b20b3837f328a"
+const trimmedRetentionPython = `
+import gzip
+import sys
+
+input_path, minimum_text, output_path = sys.argv[1:]
+minimum = int(minimum_text)
+line_count = 0
+with gzip.open(input_path, "rt", encoding="ascii", newline="") as source:
+    for line_count, _ in enumerate(source, start=1):
+        pass
+
+if line_count % 4 != 0:
+    raise ValueError("FASTQ does not contain complete four-line records")
+
+count = line_count // 4
+if count < minimum:
+    raise ValueError(f"trimmed read count {count} is below minimum {minimum}")
+
+with open(output_path, "w", encoding="ascii") as output:
+    output.write(f"{count}\n")
+`
+
+// DefaultImage is the nf-core/rnaseq 3.26.0 custom/gtffilter Python image
+// resolved for linux/amd64. Its standard library reads gzip without a helper
+// process, so the retention task remains one executable command.
+const DefaultImage modules.Image = "quay.io/biocontainers/python:3.9--1@sha256:d97d2b329b4e44d2e07a9737ba348b185d6a47f34fba0ef301d44d11669cac60"
 
 // Options controls one trimmed-read retention command.
 type Options struct {
@@ -51,17 +73,15 @@ func Add(parent modules.Parent, read1 gobble.Handle, minimum int64, options Opti
 	if err != nil {
 		return Ports{}, modules.ComposeDefect(gobble.DefectInvalidPath, unit, "trimmed-read retention output path is invalid")
 	}
-	script := fmt.Sprintf(`count=$(gzip -cd %s | awk 'END {if (NR %% 4 != 0) exit 2; print NR / 4}')
-awk -v count="$count" -v minimum=%s 'BEGIN {exit !(count >= minimum)}'
-printf '%%s\n' "$count" > %s`, modules.ShellQuote(read1Path), strconv.FormatInt(minimum, 10), modules.ShellQuote(acceptedPath))
 	base := options.Options
 	base.ExtraArgs = nil
-	_, image, resources, err := modules.ResolveOptions(unit, base, DefaultImage, gobble.Resources{CPU: 1, Memory: "256m"}, []string{"sh", "-c"}, []string{"-c"})
+	command := []string{"python", "-c", trimmedRetentionPython, read1Path, strconv.FormatInt(minimum, 10), acceptedPath}
+	command, image, resources, err := modules.ResolveOptions(unit, base, DefaultImage, gobble.Resources{CPU: 1, Memory: "256m"}, command, []string{"-c"})
 	if err != nil {
 		return Ports{}, err
 	}
 	task := parent.AddTask(gobble.TaskSpec{
-		Name: unit, Script: script, Image: image, Resources: resources,
+		Name: unit, Command: command, Image: image, Resources: resources,
 		Inputs:  []gobble.Bind{{Name: "read1", From: read1}},
 		Outputs: []gobble.Bind{{Name: "accepted", Spec: accepted}},
 	})

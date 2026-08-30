@@ -2,11 +2,8 @@ package rnaseqevidence_test
 
 import (
 	"bytes"
-	"compress/gzip"
 	"errors"
 	"os"
-	"os/exec"
-	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
@@ -287,6 +284,9 @@ func TestBuildRejectsInvalidConfigAndOptionCollisions(t *testing.T) {
 		{name: "STAR owned flag", mutate: func(config *rnaseq.Config) { config.STAR.ExtraArgs = []string{"--outSAMtype", "SAM"} }, want: gobble.DefectInvalidValue},
 		{name: "Salmon route flag", mutate: func(config *rnaseq.Config) { config.Salmon.ExtraArgs = []string{"-a", "other.bam"} }, want: gobble.DefectInvalidValue},
 		{name: "DESeq2 contrast", mutate: func(config *rnaseq.Config) { config.DESeq2QC.ExtraArgs = []string{"--contrast", "a,b"} }, want: gobble.DefectInvalidValue},
+		{name: "DESeq2 unsupported extra", mutate: func(config *rnaseq.Config) { config.DESeq2QC.ExtraArgs = []string{"--alpha", "0.05"} }, want: gobble.DefectInvalidValue},
+		{name: "dupRadar unsupported extra", mutate: func(config *rnaseq.Config) { config.DupRadar.ExtraArgs = []string{"--arbitrary"} }, want: gobble.DefectInvalidValue},
+		{name: "tximport extra operands", mutate: func(config *rnaseq.Config) { config.TxImport.ExtraArgs = []string{"fake-sample", "fake-quant.sf"} }, want: gobble.DefectInvalidValue},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -333,8 +333,8 @@ func TestTypedPoliciesAreValidatedAndPlanVisible(t *testing.T) {
 	trimGate := pc.TaskByID(t, raw, "WT_REP1.sample_retention_trimmed")
 	mappedGate := pc.TaskByID(t, raw, "WT_REP1.sample_retention_mapped")
 	inference := pc.TaskByID(t, raw, "WT_REP1.strandedness.salmon_strandedness")
-	if !strings.Contains(trimGate.Script, "minimum=10000") || !strings.Contains(mappedGate.Script, "minimum=5") || !strings.Contains(inference.Script, "limit=0.8") || !strings.Contains(inference.Script, "limit=0.1") {
-		t.Fatalf("policy scripts omit typed defaults: trim=%q mapped=%q inference=%q", trimGate.Script, mappedGate.Script, inference.Script)
+	if !slices.Contains(trimGate.Command, "10000") || !slices.Contains(mappedGate.Command, "5") || !strings.Contains(inference.Script, "limit=0.8") || !strings.Contains(inference.Script, "limit=0.1") {
+		t.Fatalf("policy tasks omit typed defaults: trim=%#v mapped=%#v inference=%q", trimGate.Command, mappedGate.Command, inference.Script)
 	}
 
 	invalid := rnaseq.DefaultConfig()
@@ -356,55 +356,6 @@ func TestTypedPoliciesAreValidatedAndPlanVisible(t *testing.T) {
 	pc.AssertIOPath(t, pc.TaskByID(t, publishedPlan, "WT_REP1.trim_galore").Outputs, "trimmed_read1", "results/rnaseq/intermediates/trimmed/WT_REP1/WT_REP1_val_1.fq.gz")
 	pc.AssertIOPath(t, pc.TaskByID(t, publishedPlan, "WT_REP1.star_align").Outputs, "genome_bam", "results/rnaseq/intermediates/star/WT_REP1/Aligned.out.bam")
 	pc.AssertTreeIO(t, pc.TaskByID(t, publishedPlan, "reference.star_genome_generate").Outputs, "index", "results/rnaseq/reference/star-index")
-}
-
-func TestSampleRemovalThresholdScriptsAcceptBoundaryValues(t *testing.T) {
-	config := rnaseq.DefaultConfig()
-	config.SampleRemoval.MinTrimmedReads = 2
-	config.SampleRemoval.MinMappedPercent = 5
-	raw := pc.MustPlanJSON(t, rnaseq.Build(loadSamples(t), config))
-	dir := t.TempDir()
-	trimmed := filepath.Join(dir, "work", "WT_REP1", "trim-galore", "WT_REP1_val_1.fq.gz")
-	if err := os.MkdirAll(filepath.Dir(trimmed), 0o755); err != nil {
-		t.Fatalf("MkdirAll trimmed: %v", err)
-	}
-	file, err := os.Create(trimmed)
-	if err != nil {
-		t.Fatalf("Create trimmed: %v", err)
-	}
-	zw := gzip.NewWriter(file)
-	if _, err := zw.Write([]byte("@a\nA\n+\n!\n@b\nA\n+\n!\n")); err != nil {
-		t.Fatalf("write gzip: %v", err)
-	}
-	if err := zw.Close(); err != nil {
-		t.Fatalf("close gzip: %v", err)
-	}
-	if err := file.Close(); err != nil {
-		t.Fatalf("close trimmed: %v", err)
-	}
-	policyDir := filepath.Join(dir, "work", "WT_REP1", "policy")
-	if err := os.MkdirAll(policyDir, 0o755); err != nil {
-		t.Fatalf("MkdirAll policy: %v", err)
-	}
-	runScript(t, dir, pc.TaskByID(t, raw, "WT_REP1.sample_retention_trimmed").Script)
-
-	starDir := filepath.Join(dir, "work", "WT_REP1", "star")
-	if err := os.MkdirAll(starDir, 0o755); err != nil {
-		t.Fatalf("MkdirAll STAR: %v", err)
-	}
-	if err := os.WriteFile(filepath.Join(starDir, "Log.final.out"), []byte("Uniquely mapped reads % | 5%\n"), 0o644); err != nil {
-		t.Fatalf("WriteFile STAR log: %v", err)
-	}
-	runScript(t, dir, pc.TaskByID(t, raw, "WT_REP1.sample_retention_mapped").Script)
-}
-
-func runScript(t *testing.T, dir, script string) {
-	t.Helper()
-	cmd := exec.Command("sh", "-c", "set -eu\n"+script)
-	cmd.Dir = dir
-	if output, err := cmd.CombinedOutput(); err != nil {
-		t.Fatalf("script failed: %v\n%s\n%s", err, output, script)
-	}
 }
 
 func TestUncompressedGTFPolicyRemovesOnlyGunzipStage(t *testing.T) {

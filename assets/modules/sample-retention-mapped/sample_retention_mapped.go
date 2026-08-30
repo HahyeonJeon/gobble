@@ -2,16 +2,47 @@
 package sampleretentionmapped
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/HahyeonJeon/gobble"
 	"github.com/HahyeonJeon/gobble/assets/modules"
 )
 
-// DefaultImage is the nf-core/rnaseq 3.26.0 coreutils image resolved for
-// linux/amd64. The pinned image contains mawk for parsing STAR's final log.
-const DefaultImage modules.Image = "community.wave.seqera.io/library/coreutils_grep_gzip_lbzip2_pruned:838ba80435a629f8@sha256:63c2c6b22e83b2f656e88fbb1553e595da4e9e58794e3bfcb98b20b3837f328a"
+const mappedRetentionPython = `
+import math
+import sys
+
+input_path, minimum_text, output_path = sys.argv[1:]
+minimum = float(minimum_text)
+mapped_text = None
+
+with open(input_path, encoding="utf-8") as source:
+    for line in source:
+        label, separator, value = line.partition("|")
+        if separator and label.strip() == "Uniquely mapped reads %":
+            value = value.strip()
+            if not value.endswith("%"):
+                raise ValueError("STAR uniquely mapped reads value has no percent suffix")
+            mapped_text = value[:-1].strip()
+            break
+
+if mapped_text is None:
+    raise ValueError("STAR log has no uniquely mapped reads percentage")
+
+mapped = float(mapped_text)
+if not math.isfinite(mapped) or mapped < 0 or mapped > 100:
+    raise ValueError("STAR uniquely mapped reads percentage is outside 0..100")
+if mapped < minimum:
+    raise ValueError(f"mapped read percentage {mapped} is below minimum {minimum}")
+
+with open(output_path, "w", encoding="ascii") as output:
+    output.write(f"{mapped_text}\n")
+`
+
+// DefaultImage is the nf-core/rnaseq 3.26.0 custom/gtffilter Python image
+// resolved for linux/amd64. One Python process parses, checks, and records the
+// STAR metric.
+const DefaultImage modules.Image = "quay.io/biocontainers/python:3.9--1@sha256:d97d2b329b4e44d2e07a9737ba348b185d6a47f34fba0ef301d44d11669cac60"
 
 // Options controls one mapped-read retention command.
 type Options struct {
@@ -49,13 +80,10 @@ func Add(parent modules.Parent, starLog, prerequisite gobble.Handle, minimum flo
 	if err != nil {
 		return Ports{}, modules.ComposeDefect(gobble.DefectInvalidPath, unit, "mapped-read retention output path is invalid")
 	}
-	script := fmt.Sprintf(`mapped=$(awk -F'|' '/Uniquely mapped reads %%/ {v=$2; gsub(/[ %%]/, "", v); print v; exit}' %s)
-test -n "$mapped"
-awk -v mapped="$mapped" -v minimum=%s 'BEGIN {exit !(mapped >= minimum)}'
-printf '%%s\n' "$mapped" > %s`, modules.ShellQuote(logPath), strconv.FormatFloat(minimum, 'g', -1, 64), modules.ShellQuote(acceptedPath))
 	base := options.Options
 	base.ExtraArgs = nil
-	_, image, resources, err := modules.ResolveOptions(unit, base, DefaultImage, gobble.Resources{CPU: 1, Memory: "256m"}, []string{"sh", "-c"}, []string{"-c"})
+	command := []string{"python", "-c", mappedRetentionPython, logPath, strconv.FormatFloat(minimum, 'g', -1, 64), acceptedPath}
+	command, image, resources, err := modules.ResolveOptions(unit, base, DefaultImage, gobble.Resources{CPU: 1, Memory: "256m"}, command, []string{"-c"})
 	if err != nil {
 		return Ports{}, err
 	}
@@ -64,7 +92,7 @@ printf '%%s\n' "$mapped" > %s`, modules.ShellQuote(logPath), strconv.FormatFloat
 		inputs = append(inputs, gobble.Bind{Name: "prerequisite", From: prerequisite})
 	}
 	task := parent.AddTask(gobble.TaskSpec{
-		Name: unit, Script: script, Image: image, Resources: resources,
+		Name: unit, Command: command, Image: image, Resources: resources,
 		Inputs: inputs, Outputs: []gobble.Bind{{Name: "accepted", Spec: accepted}},
 	})
 	return Ports{Accepted: task.Out("accepted")}, nil

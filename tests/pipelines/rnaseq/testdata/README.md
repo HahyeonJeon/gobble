@@ -7,8 +7,8 @@ SHA-256 values, licenses, stage uses, and linux/amd64 image tags, digests,
 commands, versions, module-source revisions, provenance, and license sources.
 The manifest records separate tximport and DESeq2-QC runtimes. The selected
 DESeq2-QC image was probed at its pinned linux/amd64 digest for R 4.4.2 and
-DESeq2 1.46.0. It also records the explicit GTF and sample-retention command
-owners introduced by Gobble's executable product graph.
+DESeq2 1.46.0. It also records the explicit GTF and single-command Python
+sample-retention owners introduced by Gobble's executable product graph.
 
 `rnaseq-samplesheet.csv` and the live-consumer copy
 `rnaseq-live-samplesheet.csv` are byte-equivalent in row meaning to the

@@ -27,7 +27,8 @@ writeLines(lines, args[[7]])
 // linux/amd64.
 const DefaultImage modules.Image = "community.wave.seqera.io/library/bioconductor-dupradar:1.38.0--831da16eb40a64ab@sha256:9509e959f6a9fe5ebc3cc16b907ba0fc0423fe03d2c02d6ac2e05c5fb50114fb"
 
-// Options controls one dupRadar command.
+// Options controls one dupRadar command. The inline R program has no optional
+// argv region, so ExtraArgs are rejected.
 type Options struct {
 	modules.Options
 	OutDir       gobble.Directory
@@ -55,6 +56,9 @@ func AddInferred(parent modules.Parent, bam, gtf, strandedness gobble.Handle, op
 
 func add(parent modules.Parent, bam, gtf, strandedness gobble.Handle, options Options) (Ports, error) {
 	const unit = "dupradar"
+	if len(options.ExtraArgs) != 0 {
+		return Ports{}, modules.ComposeDefect(gobble.DefectInvalidValue, unit, "the dupRadar R program does not accept ExtraArgs")
+	}
 	bamPath, err := modules.HandlePath(unit, bam)
 	if err != nil {
 		return Ports{}, err
@@ -97,6 +101,7 @@ func add(parent modules.Parent, bam, gtf, strandedness gobble.Handle, options Op
 		command := []string{"Rscript", "-e", dupRadarR, bamPath, gtfPath, strand, paired, strconv.Itoa(modules.ThreadCount(resources.CPU)), matrixPath, multiQCPath, prefix}
 		base := options.Options
 		base.Resources = resources
+		base.ExtraArgs = nil
 		return modules.ResolveOptions(unit, base, DefaultImage, resources, command, []string{"-e"})
 	}
 	spec := gobble.TaskSpec{Name: unit, Inputs: []gobble.Bind{{Name: "bam", From: bam}, {Name: "gtf", From: gtf}}, Outputs: []gobble.Bind{{Name: "matrix", Spec: matrix}, {Name: "multiqc", Spec: multiQC}}}

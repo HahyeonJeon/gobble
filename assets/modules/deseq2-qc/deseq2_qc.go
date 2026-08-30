@@ -30,6 +30,7 @@ dev.off()
 const DefaultImage modules.Image = "community.wave.seqera.io/library/r-base_r-optparse_r-ggplot2_r-rcolorbrewer_pruned:9e75394d0bc21987@sha256:afd00df7ce26f38ecb2a063f65d441fc20c0803e5c7319ee5cbe3a23732a30dd"
 
 // Options controls cohort expression QC. There is intentionally no contrast.
+// The inline R program has no optional argv region, so ExtraArgs are rejected.
 type Options struct {
 	modules.Options
 	OutDir gobble.Directory
@@ -45,6 +46,9 @@ type Ports struct {
 // Add records one validated DESeq2 quality-control command.
 func Add(parent modules.Parent, lengthScaled gobble.Handle, options Options) (Ports, error) {
 	const unit = "deseq2_qc"
+	if len(options.ExtraArgs) != 0 {
+		return Ports{}, modules.ComposeDefect(gobble.DefectInvalidValue, unit, "the DESeq2-QC R program does not accept ExtraArgs")
+	}
 	matrixPath, err := modules.HandlePath(unit, lengthScaled)
 	if err != nil {
 		return Ports{}, err
@@ -60,7 +64,9 @@ func Add(parent modules.Parent, lengthScaled gobble.Handle, options Options) (Po
 	distancePath, _ := distance.Render()
 	normalizedPath, _ := normalized.Render()
 	command := []string{"Rscript", "-e", deseq2QCR, matrixPath, pcaPath, distancePath, normalizedPath}
-	command, image, resources, err := modules.ResolveOptions(unit, options.Options, DefaultImage, gobble.Resources{CPU: 2, Memory: "4g"}, command, []string{"-e", "--design", "--contrast"})
+	base := options.Options
+	base.ExtraArgs = nil
+	command, image, resources, err := modules.ResolveOptions(unit, base, DefaultImage, gobble.Resources{CPU: 2, Memory: "4g"}, command, []string{"-e", "--design", "--contrast"})
 	if err != nil {
 		return Ports{}, err
 	}
