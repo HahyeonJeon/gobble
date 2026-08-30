@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
-	"github.com/HahyeonJeon/gobble/assets"
+	"github.com/HahyeonJeon/gobble/assets/pipelines/rnaseq"
 )
 
 func TestRNASeqRecover(t *testing.T) {
@@ -15,14 +15,14 @@ func TestRNASeqRecover(t *testing.T) {
 	dir := t.TempDir()
 	stageRNASeqPins(t, dir)
 	withSampleSheet(t, packSheet(t, rnaSheetRel))
-	g, err := gobble.Compose(assets.RNASeq())
+	g, err := gobble.Compose(rnaseq.Pipeline())
 	if err != nil {
-		t.Fatalf("Compose(assets.RNASeq()) error = %v", err)
+		t.Fatalf("Compose(rnaseq.Pipeline()) error = %v", err)
 	}
 	assertMultiQCOmitsBAM(t, g)
 	if err := gobble.Run(t.Context(), g, dir, 2, testOccupyOption(t)); err != nil {
 		dumpTaskLogs(t, dir, "deseq2", "merge_counts")
-		fatalAPIError(t, "Run(assets.RNASeq())", err)
+		fatalAPIError(t, "Run(rnaseq.Pipeline())", err)
 	}
 	assertOccupied(t, dir)
 	assertDESeq2ResultsShape(t, dir)

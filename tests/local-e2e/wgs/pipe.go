@@ -2,9 +2,9 @@ package wgs
 
 import (
 	"github.com/HahyeonJeon/gobble"
-	"github.com/HahyeonJeon/gobble/assets"
+	product "github.com/HahyeonJeon/gobble/assets/pipelines/wgs"
 )
 
 func Pipeline() *gobble.Pipeline {
-	return assets.WGS()
+	return product.Pipeline()
 }

@@ -13,6 +13,68 @@ type Parent interface {
 	AddTask(spec gobble.TaskSpec) *gobble.Task
 }
 
+// Input describes one input to a command module's standalone adapter.
+// A non-nil Group records AddInputGroup. A present Tree records AddInputTree.
+// Otherwise Standalone records Spec with AddInput.
+type Input struct {
+	Name  string
+	Spec  gobble.PathSpec
+	Group gobble.Group
+	Tree  gobble.Tree
+}
+
+// Standalone creates a pipeline from explicit inputs and delegates task
+// construction to build. It is the compatibility adapter used by modules at
+// the graph-stable migration checkpoint.
+func Standalone(name string, inputs []Input, build func(Parent, []gobble.Handle)) *gobble.Pipeline {
+	p := gobble.NewPipeline(name)
+	handles := make([]gobble.Handle, len(inputs))
+	for i, in := range inputs {
+		switch {
+		case in.Group != nil:
+			handles[i] = p.AddInputGroup(in.Name, in.Group)
+		case !in.Tree.IsZero():
+			handles[i] = p.AddInputTree(in.Name, in.Tree)
+		default:
+			handles[i] = p.AddInput(in.Name, in.Spec)
+		}
+	}
+	build(p, handles)
+	return p
+}
+
+// CommandPath renders spec as one command token.
+func CommandPath(spec gobble.PathSpec) (string, error) {
+	return spec.Render()
+}
+
+// MustCommandPath preserves the pre-migration authored-path behavior. Lifted
+// product builders replace this compatibility helper with structured defects.
+func MustCommandPath(spec gobble.PathSpec) string {
+	path, err := CommandPath(spec)
+	if err != nil {
+		panic(err)
+	}
+	return path
+}
+
+// AppendLegacyExtraArgs preserves the pre-migration argv position without
+// applying the lifted module collision policy.
+func AppendLegacyExtraArgs(command, extra []string) []string {
+	out := make([]string, 0, len(command)+len(extra))
+	out = append(out, command...)
+	out = append(out, extra...)
+	return out
+}
+
+// ThreadCount returns the historical integer thread count for a CPU request.
+func ThreadCount(cpu float64) int {
+	if cpu < 1 {
+		return 0
+	}
+	return int(cpu)
+}
+
 // Image is a complete immutable container reference in
 // registry/repository:tag@sha256:digest form. Module defaults declare Image as
 // constants so a tag and its resolved content digest are one source fact.

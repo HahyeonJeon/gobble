@@ -51,10 +51,10 @@ const wgsSource = `package wgs
 
 import (
 	"github.com/HahyeonJeon/gobble"
-	"github.com/HahyeonJeon/gobble/assets"
+	"github.com/HahyeonJeon/gobble/assets/pipelines/wgs"
 )
 
-func Pipeline() *gobble.Pipeline { return assets.WGS() }
+func Pipeline() *gobble.Pipeline { return wgs.Pipeline() }
 `
 
 const printpipeSource = `package printpipe
@@ -112,7 +112,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/HahyeonJeon/gobble/assets"
+	wgsevidence "github.com/HahyeonJeon/gobble/tests/pipelines/wgs"
 )
 
 func main() {
@@ -121,8 +121,8 @@ func main() {
 		os.Exit(2)
 	}
 	workspace := os.Args[1]
-	for _, pin := range assets.WGSPins {
-		source, err := assets.FetchPin(pin)
+	for _, pin := range wgsevidence.MustPins() {
+		source, err := wgsevidence.Fetch("testdata/cache", pin)
 		if err != nil {
 			fail(err)
 		}

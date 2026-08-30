@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
-	"github.com/HahyeonJeon/gobble/assets"
+	"github.com/HahyeonJeon/gobble/assets/pipelines/methylseq"
 )
 
 func TestMethylSeqRecover(t *testing.T) {
@@ -16,12 +16,12 @@ func TestMethylSeqRecover(t *testing.T) {
 	dir := t.TempDir()
 	stageMethylPins(t, dir)
 	withSampleSheet(t, packSheet(t, methylSheetRel))
-	g, err := gobble.Compose(assets.MethylSeq())
+	g, err := gobble.Compose(methylseq.Pipeline())
 	if err != nil {
-		t.Fatalf("Compose(assets.MethylSeq()) error = %v", err)
+		t.Fatalf("Compose(methylseq.Pipeline()) error = %v", err)
 	}
 	if err := gobble.Run(t.Context(), g, dir, 1, testOccupyOption(t)); err != nil {
-		fatalAPIError(t, "Run(assets.MethylSeq())", err)
+		fatalAPIError(t, "Run(methylseq.Pipeline())", err)
 	}
 	assertOccupied(t, dir)
 	if _, err := os.Stat(filepath.Join(dir, filepath.FromSlash("in/Bisulfite_Genome"))); !os.IsNotExist(err) {

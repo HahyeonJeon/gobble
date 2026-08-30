@@ -1,19 +1,30 @@
-# assets — First-party proofs
+# assets — Module and pipeline ownership
 
-Same-module package `github.com/HahyeonJeon/gobble/assets` holds dual-entry first-party assets. They are proofs, not Gobble product tools. Package `gobble` and `cmd/gobble` must not import `assets`. Reverse import is a defect.
+First-party command adders live in one command package below `assets/modules`.
+The graph-stable WGS, RNA-seq, and Methyl-seq checkpoints live below
+`assets/pipelines/wgs`, `assets/pipelines/rnaseq`, and
+`assets/pipelines/methylseq`. Package `gobble` and `cmd/gobble` do not import
+asset or product packages.
 
-Constructors: `WGS`, `RNASeq`, `MethylSeq`, independent `LinkedQC`, and `OptionalMate`. Each asset is one tool command: typed options, extra-args, image pin, named ports, parent adder, and standalone wrapper. Proof constructors call parent adders and wire Handles. `LinkedQC` `AddInput`s one official RNA FASTQ and one official Methyl FASTQ and calls FastQC and MultiQC only. `LinkedQC` is plan-only. `OptionalMate` is a hermetic single-end or optional-mate proof: empty `read2` copies only read1.
+Package `assets` temporarily exposes only `WGS`, `RNASeq`, and `MethylSeq`.
+Each constructor delegates directly to its pipeline owner. The mechanical move
+preserves task ids, edges, commands, images, parameters, resources, inputs,
+binds, and destinations. The pre-move plan SHA-256 values are locked by pipeline
+tests: WGS `fd762650d4fcfb4f14b862a67cc123777e98a3b2cd291b76196d94472295e2f1`,
+RNA-seq `827931c2a6addaf716b8a9ee62057177b3a1838d135d967dc575906fbd948667`,
+and Methyl-seq `d6cd91ea0e4962f3cea1eec9633912a1f6f9b01261445b28f356c9420b23e517`.
 
-`RNASeq()` loads the samplesheet, expands one module per sample, shares one STAR genome, runs featureCounts, merge counts, two-group DESeq2 (`work/deseq2/results.csv`), and merged MultiQC. Live RNA is four samples and two groups. New adders: `AddFeatureCounts`, `AddMergeCounts`, `AddDESeq2`. Images: `quay.io/biocontainers/subread:2.1.1--h577a1d6_0`, `quay.io/biocontainers/bioconductor-deseq2:1.50.2--r45ha27e39d_0`. Live RNA pins are four distinct GSE110004 pairs SRR6357070–SRR6357073 (identical-count fallback). RNA sheet rules require `group` on every row, exactly two groups, and `read2` on every row. Empty or omitted `read2` is `invalid-samplesheet`. Replacing one-sample `RNASeq()` task ids is an authorized proof-constructor break.
+This checkpoint preserves unchanged-graph workspace meaning only. The later
+RNA, Methyl, and WGS main-path lifts are separate graph generations and require
+new workspaces. The shims preserve source names, not old graph bytes after a
+lift.
 
-`MethylSeq()` loads the samplesheet, expands one module per sample, shares one Bismark genome, runs per-sample extract, and merged MultiQC. There is no DMR. Live Methyl is two samples. Group and gtf are not required. Methyl requires `read2` on every row. Empty or omitted `read2` is `invalid-samplesheet`. Replacing one-sample `MethylSeq()` task ids is an authorized proof-constructor break.
+Module evidence follows each command below `tests/modules/<module>`. Pipeline
+graph and fixture evidence follows each assay below `tests/pipelines/<assay>`.
+The WGS JSON manifest is the sole WGS pin authority. RNA and Methyl pin records
+and sheets have one assay owner each. Shared fetch and plan-check mechanics live
+under `tests/internal` and contain no fixture facts.
 
-Sheet parse allows empty `read2`. Mate-only constructors still reject it.
-
-Read cells use Dir/Base/Ext via `sheetFileSpec` because `AppendSuffix` refuses Literal. Shared reference/GTF cells may stay Literal when not suffixed.
-
-`WGS()` stays authored two-sample modules. Scenario live home is `tests/local-e2e`, not `tests/wgs-e2e`. Live occupy, remaining empty, occupied second Run, occupying-process or later-process Release, Resume, and reuse `reused-identity-matched` passed on WGS, RNA, and Methyl in that pack through API and CLI.
-
-STAR `--genomeDir` is a Tree dest via `DeclareTree`. Directory remains placement. Bismark genome folder is still a token plus declared regular files.
-
-See [compose-pipeline](compose-pipeline.md) for `AddInput` / `AddInputGroup` / `AddInputTree` and File, Group, Tree. See [run-local](run-local.md) for isolate restage (`IO.Source`) and link-then-copy staging.
+`LinkedQC` is design evidence under `tests/scenarios/design`. `OptionalMate` and
+the synthetic Scatter, Gather, When, Tree, fan-out, and cohort proofs are engine
+and resume evidence under `tests/scenarios/resume`. None is a product.

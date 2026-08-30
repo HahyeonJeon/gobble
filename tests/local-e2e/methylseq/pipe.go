@@ -2,9 +2,9 @@ package methylseq
 
 import (
 	"github.com/HahyeonJeon/gobble"
-	"github.com/HahyeonJeon/gobble/assets"
+	product "github.com/HahyeonJeon/gobble/assets/pipelines/methylseq"
 )
 
 func Pipeline() *gobble.Pipeline {
-	return assets.MethylSeq()
+	return product.Pipeline()
 }

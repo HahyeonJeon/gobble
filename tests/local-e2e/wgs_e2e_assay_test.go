@@ -8,19 +8,19 @@ import (
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
-	"github.com/HahyeonJeon/gobble/assets"
+	"github.com/HahyeonJeon/gobble/assets/pipelines/wgs"
 )
 
 func TestWGSSuccessInspectReleaseResume(t *testing.T) {
 	requireDocker(t)
 	dir := t.TempDir()
 	stageWGSPins(t, dir)
-	g, err := gobble.Compose(assets.WGS())
+	g, err := gobble.Compose(wgs.Pipeline())
 	if err != nil {
-		t.Fatalf("Compose(assets.WGS()) error = %v", err)
+		t.Fatalf("Compose(wgs.Pipeline()) error = %v", err)
 	}
 	if err := gobble.Run(t.Context(), g, dir, 2, testOccupyOption(t)); err != nil {
-		fatalAPIError(t, "Run(assets.WGS())", err)
+		fatalAPIError(t, "Run(wgs.Pipeline())", err)
 	}
 	assertOccupied(t, dir)
 	for _, rel := range []string{

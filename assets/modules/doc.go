@@ -31,4 +31,11 @@
 // dated benchmark and benchmark-informed task resources. A caller-supplied
 // replacement must also be digest-pinned, changes task identity, and is outside
 // the behavioral support claim for the default image.
+//
+// Command packages moved at the graph-stable checkpoint retain their pre-lift
+// option shapes, image strings, unchecked ExtraArgs, and authored-path panic
+// behavior through explicitly named compatibility helpers in this package.
+// That exception exists only to preserve graph identity during the ownership
+// move. Each later product lift adopts the complete contract above as a
+// separate graph generation.
 package modules

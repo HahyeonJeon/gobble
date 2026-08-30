@@ -1,7 +1,9 @@
-// Package assets holds first-party dual-entry tool assets.
+// Package assets holds temporary constructors for the three pre-lift assay
+// graphs.
 //
-// These assets are external-source examples. They are not package gobble
-// product features. Third-party authors copy the helper shape and import
-// only github.com/HahyeonJeon/gobble. They must not need to import this
-// package.
+// WGS, RNASeq, and MethylSeq delegate to their assets/pipelines owners and
+// preserve graph bytes at the mechanical ownership checkpoint. They preserve
+// source names for compatible workspaces only while the graph is unchanged.
+// Each later assay lift is a named new graph generation and requires a new
+// workspace. Command adders live only in assets/modules child packages.
 package assets

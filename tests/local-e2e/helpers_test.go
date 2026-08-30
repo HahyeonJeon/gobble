@@ -16,8 +16,11 @@ import (
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
-	"github.com/HahyeonJeon/gobble/assets"
 	"github.com/HahyeonJeon/gobble/internal/engine"
+	"github.com/HahyeonJeon/gobble/tests/internal/fixture"
+	methylseqevidence "github.com/HahyeonJeon/gobble/tests/pipelines/methylseq"
+	rnaseqevidence "github.com/HahyeonJeon/gobble/tests/pipelines/rnaseq"
+	wgsevidence "github.com/HahyeonJeon/gobble/tests/pipelines/wgs"
 )
 
 var testIdentityOnce sync.Once
@@ -36,8 +39,8 @@ func testOccupyOption(t *testing.T) gobble.OccupyOption {
 }
 
 const (
-	rnaSheetRel    = "testdata/rnaseq-samplesheet.csv"
-	methylSheetRel = "testdata/methylseq-samplesheet.csv"
+	rnaSheetRel    = "tests/pipelines/rnaseq/testdata/rnaseq-live-samplesheet.csv"
+	methylSheetRel = "tests/pipelines/methylseq/testdata/methylseq-samplesheet.csv"
 	runLocalInput  = "testdata/run-local/in/sample.txt"
 	runLocalImage  = "alpine:3.21"
 	runLocalPkg    = "./tests/cli-valid/runlocal"
@@ -80,7 +83,7 @@ func withSampleSheet(t *testing.T, path string) {
 
 func packSheet(t *testing.T, rel string) string {
 	t.Helper()
-	return filepath.Join(moduleRoot(t), "tests", "local-e2e", filepath.FromSlash(rel))
+	return filepath.Join(moduleRoot(t), filepath.FromSlash(rel))
 }
 
 func readModuleFile(t *testing.T, rel string) []byte {
@@ -117,66 +120,70 @@ func stageFile(t *testing.T, workspace, rel, src string) {
 	}
 }
 
-func fetchPin(t *testing.T, pin assets.Pin) string {
+func fetchPin(t *testing.T, cacheDir string, pin fixture.Pin) string {
 	t.Helper()
-	src, err := assets.FetchPin(pin)
+	if !filepath.IsAbs(cacheDir) {
+		cacheDir = filepath.Join(moduleRoot(t), filepath.FromSlash(cacheDir))
+	}
+	src, err := fixture.Fetch(cacheDir, pin)
 	if err != nil {
 		t.Fatalf("download %s: %v", pin.URL, err)
 	}
 	return src
 }
 
-func stagePins(t *testing.T, dir string, pins []struct {
-	pin assets.Pin
+func stagePins(t *testing.T, dir, cacheDir string, pins []struct {
+	pin fixture.Pin
 	rel string
 }) {
 	t.Helper()
 	for _, p := range pins {
-		stageFile(t, dir, p.rel, fetchPin(t, p.pin))
+		stageFile(t, dir, p.rel, fetchPin(t, cacheDir, p.pin))
 	}
 }
 
 func stageWGSPins(t *testing.T, dir string) {
 	t.Helper()
-	stagePins(t, dir, []struct {
-		pin assets.Pin
+	pins := wgsevidence.MustPins()
+	stagePins(t, dir, wgsevidence.CacheDir, []struct {
+		pin fixture.Pin
 		rel string
 	}{
-		{assets.PinWGSTest1FASTQ, "in/test_1.fastq.gz"},
-		{assets.PinWGSTest2FASTQ, "in/test_2.fastq.gz"},
-		{assets.PinWGSGenomeFASTA, "in/genome.fasta"},
-		{assets.PinWGSGenomeFAI, "in/genome.fasta.fai"},
+		{pins[0], "in/test_1.fastq.gz"},
+		{pins[1], "in/test_2.fastq.gz"},
+		{pins[2], "in/genome.fasta"},
+		{pins[3], "in/genome.fasta.fai"},
 	})
 }
 
 func stageRNASeqPins(t *testing.T, dir string) {
 	t.Helper()
-	stagePins(t, dir, []struct {
-		pin assets.Pin
+	stagePins(t, dir, rnaseqevidence.CacheDir, []struct {
+		pin fixture.Pin
 		rel string
 	}{
-		{assets.PinRNAGenomeFASTA, "in/genome.fasta"},
-		{assets.PinRNAGTF, "in/genes.gtf"},
-		{assets.PinRNACtrl1FASTQ1, "in/SRR6357070_1.fastq.gz"},
-		{assets.PinRNACtrl1FASTQ2, "in/SRR6357070_2.fastq.gz"},
-		{assets.PinRNACtrl2FASTQ1, "in/SRR6357071_1.fastq.gz"},
-		{assets.PinRNACtrl2FASTQ2, "in/SRR6357071_2.fastq.gz"},
-		{assets.PinRNATest1FASTQ, "in/SRR6357072_1.fastq.gz"},
-		{assets.PinRNATest2FASTQ, "in/SRR6357072_2.fastq.gz"},
-		{assets.PinRNATreat2FASTQ1, "in/SRR6357073_1.fastq.gz"},
-		{assets.PinRNATreat2FASTQ2, "in/SRR6357073_2.fastq.gz"},
+		{rnaseqevidence.GenomeFASTA, "in/genome.fasta"},
+		{rnaseqevidence.GTF, "in/genes.gtf"},
+		{rnaseqevidence.Ctrl1FASTQ1, "in/SRR6357070_1.fastq.gz"},
+		{rnaseqevidence.Ctrl1FASTQ2, "in/SRR6357070_2.fastq.gz"},
+		{rnaseqevidence.Ctrl2FASTQ1, "in/SRR6357071_1.fastq.gz"},
+		{rnaseqevidence.Ctrl2FASTQ2, "in/SRR6357071_2.fastq.gz"},
+		{rnaseqevidence.Test1FASTQ, "in/SRR6357072_1.fastq.gz"},
+		{rnaseqevidence.Test2FASTQ, "in/SRR6357072_2.fastq.gz"},
+		{rnaseqevidence.Treat2FASTQ1, "in/SRR6357073_1.fastq.gz"},
+		{rnaseqevidence.Treat2FASTQ2, "in/SRR6357073_2.fastq.gz"},
 	})
 }
 
 func stageMethylPins(t *testing.T, dir string) {
 	t.Helper()
-	stagePins(t, dir, []struct {
-		pin assets.Pin
+	stagePins(t, dir, methylseqevidence.CacheDir, []struct {
+		pin fixture.Pin
 		rel string
 	}{
-		{assets.PinMethylGenomeFASTA, "in/genome.fa"},
-		{assets.PinMethylTest1FASTQ, "in/Ecoli_10K_methylated_R1.fastq.gz"},
-		{assets.PinMethylTest2FASTQ, "in/Ecoli_10K_methylated_R2.fastq.gz"},
+		{methylseqevidence.GenomeFASTA, "in/genome.fa"},
+		{methylseqevidence.Test1FASTQ, "in/Ecoli_10K_methylated_R1.fastq.gz"},
+		{methylseqevidence.Test2FASTQ, "in/Ecoli_10K_methylated_R2.fastq.gz"},
 	})
 }
 
@@ -259,9 +266,9 @@ func TestFormatAPIError(t *testing.T) {
 	if err.Error() != "run: 2 defects" {
 		t.Fatalf("Error() = %q, want collapsed multi-defect text", err.Error())
 	}
-	got := formatAPIError("Run(assets.WGS())", err)
+	got := formatAPIError("Run(wgs.Pipeline())", err)
 	for _, want := range []string{
-		"Run(assets.WGS()) op=run",
+		"Run(wgs.Pipeline()) op=run",
 		"code=failed unit=a path=out/a message=boom",
 		"code=failed unit=b path=out/b,work/b message=bang",
 	} {

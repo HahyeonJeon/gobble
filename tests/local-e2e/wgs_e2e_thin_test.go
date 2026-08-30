@@ -108,7 +108,7 @@ func wgsE2EThinPipelineWithBWA(bwaImage string) *gobble.Pipeline {
 }
 
 // TestWGSThinSlicePlan is a demoted four-task graph. It is not the WGS
-// product proof; that is tests/local-e2e executing assets.WGS().
+// product proof; that is tests/local-e2e executing assets/pipelines/wgs.
 func TestWGSThinSlicePlan(t *testing.T) {
 	p := wgsE2EThinPipeline()
 	g, err := gobble.Compose(p)
