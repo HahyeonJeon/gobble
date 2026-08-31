@@ -199,8 +199,11 @@ func TestBuildRejectsInvalidInputConfigAndRouteExtras(t *testing.T) {
 		{name: "ready Tree escape", mutate: func(config *methylseq.Config) {
 			config.Reference.BismarkIndex = gobble.DeclareTree(gobble.Dir("../BismarkIndex"))
 		}, code: gobble.DefectInvalidPath},
+		{name: "abbreviated non-directional library", mutate: func(config *methylseq.Config) { config.BismarkAlign.ExtraArgs = []string{"--non_d"} }, code: gobble.DefectInvalidValue},
 		{name: "special library", mutate: func(config *methylseq.Config) { config.BismarkAlign.ExtraArgs = []string{"--pbat"} }, code: gobble.DefectInvalidValue},
+		{name: "short abbreviated special library", mutate: func(config *methylseq.Config) { config.BismarkAlign.ExtraArgs = []string{"--pb"} }, code: gobble.DefectInvalidValue},
 		{name: "abbreviated special library", mutate: func(config *methylseq.Config) { config.BismarkAlign.ExtraArgs = []string{"--pba"} }, code: gobble.DefectInvalidValue},
+		{name: "ambiguous protected option prefix", mutate: func(config *methylseq.Config) { config.BismarkAlign.ExtraArgs = []string{"--p"} }, code: gobble.DefectInvalidValue},
 		{name: "SLAM library", mutate: func(config *methylseq.Config) { config.BismarkAlign.ExtraArgs = []string{"--slam"} }, code: gobble.DefectInvalidValue},
 		{name: "abbreviated SLAM library", mutate: func(config *methylseq.Config) { config.BismarkAlign.ExtraArgs = []string{"--sla"} }, code: gobble.DefectInvalidValue},
 		{name: "minimap2 aligner", mutate: func(config *methylseq.Config) { config.BismarkAlign.ExtraArgs = []string{"--mm2"} }, code: gobble.DefectInvalidValue},

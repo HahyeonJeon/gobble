@@ -140,9 +140,11 @@ func rejectProtectedExtraArgs(unit string, extraArgs []string) error {
 	return nil
 }
 
-// UnsupportedRouteOption returns the canonical Bismark option selected by
-// ExtraArgs when it changes the directional Bowtie2 route, inputs, or outputs.
-// It recognizes Bismark's unique PBAT, SLAM, and output-directory prefixes.
+// UnsupportedRouteOption returns a canonical protected Bismark option matched
+// by ExtraArgs when it could change the directional Bowtie2 route, inputs, or
+// outputs.
+// Every non-empty prefix of a protected long option is rejected. This also
+// rejects ambiguous protected prefixes rather than passing them to Getopt::Long.
 func UnsupportedRouteOption(extraArgs []string) string {
 	unsupported := []string{
 		"--hisat2", "--minimap2", "--mm2",
@@ -159,25 +161,19 @@ func UnsupportedRouteOption(extraArgs []string) string {
 				return option
 			}
 		}
-		for _, option := range []struct {
-			minimum   string
-			canonical string
-		}{
-			{minimum: "--pba", canonical: "--pbat"},
-			{minimum: "--outp", canonical: "--output_dir"},
-			{minimum: "--sla", canonical: "--slam"},
-		} {
-			name, _, _ := strings.Cut(arg, "=")
-			if len(name) >= len(option.minimum) && strings.HasPrefix(option.canonical, name) {
-				return option.canonical
-			}
-		}
 	}
 	return ""
 }
 
 func extraArgSelectsOption(arg, option string) bool {
 	if arg == option || strings.HasPrefix(arg, option+"=") {
+		return true
+	}
+	name, _, _ := strings.Cut(arg, "=")
+	if strings.HasPrefix(option, "--") &&
+		strings.HasPrefix(name, "--") &&
+		len(name) > 2 && len(name) <= len(option) &&
+		strings.EqualFold(name, option[:len(name)]) {
 		return true
 	}
 	return len(option) == 2 && option[0] == '-' && option[1] != '-' && len(arg) > len(option) && strings.HasPrefix(arg, option)

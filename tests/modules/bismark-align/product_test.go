@@ -29,9 +29,12 @@ func TestLiftedBismarkAlignSupportsSingleAndPairedTrees(t *testing.T) {
 
 	for _, extra := range [][]string{
 		{"--non_directional"},
+		{"--non_d"},
 		{"--slam"},
 		{"--sla"},
+		{"--pb"},
 		{"--pba"},
+		{"--p"},
 		{"--minimap2"},
 		{"--mm2"},
 		{"--genome_folder", "in/other-index"},
