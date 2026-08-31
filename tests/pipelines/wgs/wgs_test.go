@@ -113,12 +113,12 @@ func TestWGSComposeBuildPlanSelectedVertical(t *testing.T) {
 	pc.AssertIOPath(t, pc.TaskByID(t, raw, "patient1.testN.gvcf_gather.gatk4_mergevcfs").Outputs, "vcf", "results/wgs/samples/patient1/testN/gvcf/testN.g.vcf.gz")
 	pc.AssertIOPath(t, pc.TaskByID(t, raw, "joint_gather.joint.gatk4_mergevcfs").Outputs, "vcf", "results/wgs/joint/joint_germline.vcf.gz")
 	pc.AssertIOPath(t, pc.TaskByID(t, raw, "joint_gather.joint.gatk4_mergevcfs").Outputs, "tbi", "results/wgs/joint/joint_germline.vcf.gz.tbi")
-	pc.AssertTreeIO(t, pc.TaskByID(t, raw, "joint_intervals.database.gatk4_genomicsdbimport").Outputs, "database", "work/joint/cohort-604439d34707f4df78926ac0c7b9dbd1159db10516bd9425c1616da5448a347e/genomicsdb")
+	pc.AssertTreeIO(t, pc.TaskByID(t, raw, "joint_intervals.database.gatk4_genomicsdbimport").Outputs, "database", "work/joint/cohort-604439d34707f4df78926ac0c7b9dbd1159db10516bd9425c1616da5448a347e/intervals-c78d0c9ad1526d46003e719d6ad3e19575f5715709ac8bf394df7d320359d77c/genomicsdb")
 
 	genomicsDB := pc.TaskByID(t, raw, "joint_intervals.database.gatk4_genomicsdbimport")
 	pc.AssertIOPath(t, genomicsDB.Inputs, "gvcf_0", "results/wgs/samples/patient1/testN/gvcf/testN.g.vcf.gz")
 	pc.AssertIOPath(t, genomicsDB.Inputs, "gvcf_1", "results/wgs/samples/patient2/testT/gvcf/testT.g.vcf.gz")
-	if !pc.ContainsAll(pc.TaskByID(t, raw, "joint_gather.joint.gatk4_mergevcfs").Command, "MergeVcfs", "--INPUT", "work/joint/cohort-604439d34707f4df78926ac0c7b9dbd1159db10516bd9425c1616da5448a347e/sorted/interval_001.sorted.vcf.gz", "work/joint/cohort-604439d34707f4df78926ac0c7b9dbd1159db10516bd9425c1616da5448a347e/sorted/interval_002.sorted.vcf.gz") {
+	if !pc.ContainsAll(pc.TaskByID(t, raw, "joint_gather.joint.gatk4_mergevcfs").Command, "MergeVcfs", "--INPUT", "work/joint/cohort-604439d34707f4df78926ac0c7b9dbd1159db10516bd9425c1616da5448a347e/intervals-c78d0c9ad1526d46003e719d6ad3e19575f5715709ac8bf394df7d320359d77c/sorted/interval_001.sorted.vcf.gz", "work/joint/cohort-604439d34707f4df78926ac0c7b9dbd1159db10516bd9425c1616da5448a347e/intervals-c78d0c9ad1526d46003e719d6ad3e19575f5715709ac8bf394df7d320359d77c/sorted/interval_002.sorted.vcf.gz") {
 		t.Fatalf("joint gather command does not require every interval: %#v", pc.TaskByID(t, raw, "joint_gather.joint.gatk4_mergevcfs").Command)
 	}
 	pc.AssertNoTaskName(t, tasks, "VariantRecalibrator", "ApplyVQSR", "Mutect2", "Strelka", "DeepVariant")
@@ -199,8 +199,8 @@ func TestWGSSexIdentityChangesGraphAndReuseIdentity(t *testing.T) {
 	}
 	assertParam(t, plainJoint.Params, "cohort", "patient1.testN.XX,patient2.testT.XY")
 	assertParam(t, changedJoint.Params, "cohort", "patient1.testN.XY,patient2.testT.XY")
-	pc.AssertTreeIO(t, plainJoint.Outputs, "database", "work/joint/cohort-604439d34707f4df78926ac0c7b9dbd1159db10516bd9425c1616da5448a347e/genomicsdb")
-	pc.AssertTreeIO(t, changedJoint.Outputs, "database", "work/joint/cohort-f4a734014c7e0af6c953fbe72778e7dce01f4a8e315491ab96263a862e8e13ba/genomicsdb")
+	pc.AssertTreeIO(t, plainJoint.Outputs, "database", "work/joint/cohort-604439d34707f4df78926ac0c7b9dbd1159db10516bd9425c1616da5448a347e/intervals-c78d0c9ad1526d46003e719d6ad3e19575f5715709ac8bf394df7d320359d77c/genomicsdb")
+	pc.AssertTreeIO(t, changedJoint.Outputs, "database", "work/joint/cohort-f4a734014c7e0af6c953fbe72778e7dce01f4a8e315491ab96263a862e8e13ba/intervals-c78d0c9ad1526d46003e719d6ad3e19575f5715709ac8bf394df7d320359d77c/genomicsdb")
 }
 
 func TestWGSBuildIsPureAndCopiesCallerData(t *testing.T) {

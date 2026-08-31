@@ -39,10 +39,13 @@ MultiQC.
 The exact interval Group drives native Gobble Scatter/Gather for BQSR,
 HaplotypeCaller, GenomicsDB import, and joint genotyping. Every gathered
 command names every expected interval path. Each GenomicsDB Scatter member
-derives one Tree below `work/joint/cohort-<cohort-sha256>/genomicsdb` and passes
-that exact member Tree to the matching joint-genotype instance. The digest is
-over the ordered cohort identity recorded in task params. A missing sample,
-interval, index, Tree manifest, or gathered member fails closed.
+derives one Tree below
+`work/joint/cohort-<cohort-sha256>/intervals-<membership-sha256>/genomicsdb` and
+passes that exact member Tree to the matching joint-genotype instance. The
+cohort digest covers the ordered identity recorded in task params. The interval
+digest covers ordered member names and paths, so changed membership cannot
+collide with prior joint work. A missing sample, interval, index, Tree manifest,
+or gathered member fails closed.
 
 Required results are indexed recalibrated BAMs and per-sample gVCFs below
 `results/wgs/samples/<patient>/<sample>/`, indexed unfiltered

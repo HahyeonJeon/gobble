@@ -309,7 +309,10 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 	}
 	jointScatter := pipeline.Scatter("joint_intervals").From(intervals)
 	cohort := cohortIdentity(samples)
-	jointWorkDir := gobble.Dir("work/joint").Join("cohort-" + cohortWorkIdentity(cohort))
+	jointWorkDir := gobble.Dir("work/joint").Join(
+		"cohort-"+cohortWorkIdentity(cohort),
+		"intervals-"+intervalWorkIdentity(config.Reference.Intervals),
+	)
 	databaseOptions := config.GenomicsDBImport
 	databaseOptions.IntervalDir = intervalDirectory(config.Reference.Intervals)
 	databaseOptions.OutDir = jointWorkDir.Join("genomicsdb")
@@ -424,6 +427,16 @@ func cohortIdentity(samples []Sample) string {
 
 func cohortWorkIdentity(cohort string) string {
 	digest := sha256.Sum256([]byte(cohort))
+	return hex.EncodeToString(digest[:])
+}
+
+func intervalWorkIdentity(intervals gobble.Group) string {
+	parts := make([]string, 0, len(intervals)*2)
+	for _, interval := range intervals {
+		path, _ := interval.Spec.Render()
+		parts = append(parts, interval.Name, path)
+	}
+	digest := sha256.Sum256([]byte(strings.Join(parts, "\x00")))
 	return hex.EncodeToString(digest[:])
 }
 
