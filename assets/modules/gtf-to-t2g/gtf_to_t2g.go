@@ -35,9 +35,10 @@ if written == 0:
     raise ValueError("GTF contains no complete transcript-to-gene relations")
 `
 
-// DefaultImage is the nf-core/scrnaseq 4.2.0 reference Python image resolved
-// for linux/amd64.
-const DefaultImage modules.Image = "quay.io/biocontainers/python:3.9--1@sha256:d97d2b329b4e44d2e07a9737ba348b185d6a47f34fba0ef301d44d11669cac60"
+// DefaultImage is the nf-core/scrnaseq 4.2.0 reference Python image for
+// linux/amd64. docker.io is the explicit registry form of nf-core's
+// biocontainers/python reference.
+const DefaultImage modules.Image = "docker.io/biocontainers/python:3.9--1@sha256:d97d2b329b4e44d2e07a9737ba348b185d6a47f34fba0ef301d44d11669cac60"
 
 // Options controls one three-column transcript-to-gene relation output.
 type Options struct {

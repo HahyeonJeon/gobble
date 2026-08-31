@@ -114,9 +114,17 @@ func TestManifestIsExactFixtureAndCommandAuthority(t *testing.T) {
 	}
 
 	imagesByTask := make(map[string]image, len(m.Images))
+	benchmarkReferences := map[string]string{
+		"gtf_gene_filter":       "docker.io/biocontainers/python:3.9--1",
+		"gffread_transcriptome": "docker.io/biocontainers/gffread:0.12.7--hd03093a_1",
+		"gtf_to_t2g":            "docker.io/biocontainers/python:3.9--1",
+	}
 	for _, authority := range m.Images {
 		if authority.Module == "" || authority.TaskName == "" || authority.Reference == "" || strings.Contains(authority.Reference, "@") || !strings.HasPrefix(authority.Digest, "sha256:") || !lowerHex(strings.TrimPrefix(authority.Digest, "sha256:"), 64) || authority.Tool == "" || authority.Command == "" || authority.Version == "" || authority.Source == "" || authority.License == "" || authority.Platform != "linux/amd64" || imagesByTask[authority.TaskName].Module != "" {
 			t.Fatalf("invalid image authority: %+v", authority)
+		}
+		if want := benchmarkReferences[authority.TaskName]; want != "" && authority.Reference != want {
+			t.Errorf("%s benchmark image reference = %q, want exact nf-core/scrnaseq 4.2.0 reference %q", authority.TaskName, authority.Reference, want)
 		}
 		imagesByTask[authority.TaskName] = authority
 	}

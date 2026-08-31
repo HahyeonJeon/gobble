@@ -66,11 +66,12 @@ contract; this product adds no retry, fallback, repair, cleanup, or migration
 verb.
 
 Live fixture evidence fetches and verifies the nine exact official bytes,
-stages them as ordinary product inputs, and drives every selected operation
-through an input-consuming hermetic command boundary. This proves byte identity,
-declared data flow, complete Tree publication, lifecycle state, and provenance
-without Docker. It does not prove third-party scientific output parity or
-registry availability.
+stages them as ordinary product inputs, validates command-specific argv for
+every selected stage, and re-opens that stage's exact staged-byte origins. The
+hermetic output double proves only engine occupancy, complete Tree publication,
+and lifecycle state; its placeholder bytes are not selected-command evidence.
+This path does not prove third-party scientific output parity or registry
+availability.
 
 Gobble does not claim that a barcode is a valid cell, that expected-cell
 metadata is correct, that QCatch filtering is suitable, or that any raw,

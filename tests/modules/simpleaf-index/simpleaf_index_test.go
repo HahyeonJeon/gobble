@@ -17,8 +17,10 @@ func TestSimpleafIndexDeclaresCompleteTreeAndProtectsOutput(t *testing.T) {
 		t.Fatalf("task = %#v", task)
 	}
 	pc.AssertTreeIO(t, task.Outputs, "index", "results/scrnaseq/reference/simpleaf_index/index")
-	bad := simpleafindex.Pipeline(gobble.PathSpec{Base: "transcripts", Ext: ".fa"}, simpleafindex.Options{Options: modules.Options{ExtraArgs: []string{"-oelsewhere"}}})
-	if graph, err := gobble.Compose(bad); graph != nil || err == nil {
-		t.Fatalf("protected output compose = (%v, %v), want defect", graph, err)
+	for _, extra := range []string{"-oelsewhere", "--no-piscem", "--use-selective-alignment"} {
+		bad := simpleafindex.Pipeline(gobble.PathSpec{Base: "transcripts", Ext: ".fa"}, simpleafindex.Options{Options: modules.Options{ExtraArgs: []string{extra}}})
+		if graph, err := gobble.Compose(bad); graph != nil || err == nil {
+			t.Errorf("protected ExtraArgs %q compose = (%v, %v), want defect", extra, graph, err)
+		}
 	}
 }

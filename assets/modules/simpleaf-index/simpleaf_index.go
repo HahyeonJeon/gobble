@@ -37,7 +37,7 @@ func Add(parent modules.Parent, transcriptFASTA gobble.Handle, options Options) 
 	if resources.CPU == 0 && resources.Memory == "" {
 		resources = gobble.Resources{CPU: 4, Memory: "8g"}
 	}
-	if err := modules.RejectExtraArgPrefixes(unit, options.ExtraArgs, []string{"--threads", "--ref-seq", "--fasta", "--gtf", "--feature-csv", "--probe-csv", "--output", "-o"}); err != nil {
+	if err := modules.RejectExtraArgPrefixes(unit, options.ExtraArgs, []string{"--threads", "--ref-seq", "--fasta", "--gtf", "--feature-csv", "--probe-csv", "--output", "-o", "--no-piscem", "--use-selective-alignment"}); err != nil {
 		return Ports{}, err
 	}
 	command := []string{"simpleaf", "index", "--threads", strconv.Itoa(modules.ThreadCount(resources.CPU)), "--ref-seq", transcriptPath, "--output", outDir.String()}

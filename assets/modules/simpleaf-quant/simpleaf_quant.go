@@ -62,7 +62,7 @@ func Add(parent modules.Parent, index, t2g, whitelist, read1, read2 gobble.Handl
 	if resources.CPU == 0 && resources.Memory == "" {
 		resources = gobble.Resources{CPU: 4, Memory: "8g"}
 	}
-	protected := []string{"--map-dir", "--index", "--t2g-map", "--chemistry", "--reads1", "--reads2", "--resolution", "--output", "-o", "--threads", "--anndata-out", "--knee", "--forced-cells", "--expect-cells", "--explicit-pl", "--unfiltered-pl"}
+	protected := []string{"--map-dir", "--index", "--t2g-map", "--chemistry", "--reads1", "--reads2", "--resolution", "--output", "-o", "--threads", "--anndata-out", "--knee", "--forced-cells", "--expect-cells", "--explicit-pl", "--unfiltered-pl", "--no-piscem", "--use-selective-alignment"}
 	if err := modules.RejectExtraArgPrefixes(unit, options.ExtraArgs, protected); err != nil {
 		return Ports{}, err
 	}

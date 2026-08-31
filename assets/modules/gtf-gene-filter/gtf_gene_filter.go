@@ -29,9 +29,10 @@ if kept == 0:
     raise ValueError("GTF has no annotations on reference sequences")
 `
 
-// DefaultImage is the nf-core/scrnaseq 4.2.0 GTF_GENE_FILTER Python image
-// resolved for linux/amd64.
-const DefaultImage modules.Image = "quay.io/biocontainers/python:3.9--1@sha256:d97d2b329b4e44d2e07a9737ba348b185d6a47f34fba0ef301d44d11669cac60"
+// DefaultImage is the nf-core/scrnaseq 4.2.0 GTF_GENE_FILTER Python image for
+// linux/amd64. docker.io is the explicit registry form of nf-core's
+// biocontainers/python reference.
+const DefaultImage modules.Image = "docker.io/biocontainers/python:3.9--1@sha256:d97d2b329b4e44d2e07a9737ba348b185d6a47f34fba0ef301d44d11669cac60"
 
 // Options controls one required GTF sequence filter.
 type Options struct {

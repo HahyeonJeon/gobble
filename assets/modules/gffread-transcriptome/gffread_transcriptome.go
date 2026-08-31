@@ -6,9 +6,10 @@ import (
 	"github.com/HahyeonJeon/gobble/assets/modules"
 )
 
-// DefaultImage is the nf-core/scrnaseq 4.2.0 GFFREAD_TRANSCRIPTOME image
-// resolved for linux/amd64.
-const DefaultImage modules.Image = "quay.io/biocontainers/gffread:0.12.7--hd03093a_1@sha256:f46049f79cc002aaa23c31eb30b4ee7037c76c1429217a15792b242e0dbf365d"
+// DefaultImage is the nf-core/scrnaseq 4.2.0 GFFREAD_TRANSCRIPTOME image for
+// linux/amd64. docker.io is the explicit registry form of nf-core's
+// biocontainers/gffread reference.
+const DefaultImage modules.Image = "docker.io/biocontainers/gffread:0.12.7--hd03093a_1@sha256:f46049f79cc002aaa23c31eb30b4ee7037c76c1429217a15792b242e0dbf365d"
 
 // Options controls one transcript FASTA extraction.
 type Options struct {

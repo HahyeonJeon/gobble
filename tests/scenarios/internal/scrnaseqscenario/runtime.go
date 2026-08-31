@@ -49,13 +49,6 @@ func NewRuntime(t *testing.T, config scrnaseq.Config) *Runtime {
 	return newRuntime(t, config, t.TempDir(), true)
 }
 
-// NewRuntimeWithWorkspaceInputs composes the scRNA graph over inputs already
-// staged in workspace. It is used by live fixture evidence after exact fetch.
-func NewRuntimeWithWorkspaceInputs(t *testing.T, config scrnaseq.Config, workspace string) *Runtime {
-	t.Helper()
-	return newRuntime(t, config, workspace, false)
-}
-
 func newRuntime(t *testing.T, config scrnaseq.Config, workspace string, stage bool) *Runtime {
 	t.Helper()
 	samples, _ := Samples(t)
@@ -121,12 +114,6 @@ func (r *Runtime) Release() error {
 
 // Workspace returns the caller-created test workspace.
 func (r *Runtime) Workspace() string { return r.workspace }
-
-// ConsumedInputs returns a copy of regular input identities opened by each
-// selected command double.
-func (r *Runtime) ConsumedInputs() map[string][]ConsumedInput {
-	return r.docker.consumedInputs()
-}
 
 // InspectObject decodes one object-shaped Inspect view.
 func (r *Runtime) InspectObject(view gobble.View) map[string]any {
@@ -205,6 +192,7 @@ type fakeDocker struct {
 	tasks      map[string][]pc.Task
 	modes      map[string]fakeMode
 	consumed   map[string][]ConsumedInput
+	official   *officialEvidence
 	containers map[string]fakeContainer
 	next       int
 }
@@ -246,16 +234,6 @@ func (f *fakeDocker) setMode(id string, mode fakeMode) {
 	f.mu.Lock()
 	f.modes[id] = mode
 	f.mu.Unlock()
-}
-
-func (f *fakeDocker) consumedInputs() map[string][]ConsumedInput {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-	out := make(map[string][]ConsumedInput, len(f.consumed))
-	for id, inputs := range f.consumed {
-		out[id] = append([]ConsumedInput(nil), inputs...)
-	}
-	return out
 }
 
 func (f *fakeDocker) call(ctx context.Context, args, _ []string, stdout, stderr io.Writer) (int, error) {
@@ -312,10 +290,12 @@ func (f *fakeDocker) run(args []string, stdout, stderr io.Writer) (int, error) {
 		}
 	}
 	var candidates []pc.Task
+	var actualArgv []string
 	for i := 1; i < len(args); i++ {
 		argv := append([]string{entrypoint}, args[i+1:]...)
 		if tasks := f.tasks[fakeTaskKey(args[i], argv)]; len(tasks) > 0 {
 			candidates = tasks
+			actualArgv = argv
 			break
 		}
 	}
@@ -351,9 +331,20 @@ func (f *fakeDocker) run(args []string, stdout, stderr io.Writer) (int, error) {
 		container.running = true
 		f.runtime.startedOnce.Do(func() { close(f.runtime.started) })
 	default:
+		var officialInputs []ConsumedInput
+		if f.official != nil {
+			officialInputs, err = f.proveOfficialTask(mount, task, actualArgv)
+			if err != nil {
+				_, _ = io.WriteString(stderr, err.Error())
+				return 1, nil
+			}
+		}
 		if err := writeOutputs(mount, task, consumed); err != nil {
 			_, _ = io.WriteString(stderr, err.Error())
 			return 1, nil
+		}
+		if f.official != nil {
+			f.recordOfficialTask(task, actualArgv, officialInputs)
 		}
 	}
 	f.containers[id] = container

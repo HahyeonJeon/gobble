@@ -97,8 +97,8 @@ func protectedExtra(config Config) (string, string) {
 	}{
 		{unit: "fastqc", args: config.FastQC.ExtraArgs, flags: []string{"--outdir", "--threads", "--extract"}},
 		{unit: "gffread_transcriptome", args: config.Transcriptome.ExtraArgs, flags: []string{"-F", "-w", "-g", "-o"}},
-		{unit: "simpleaf_index", args: config.SimpleafIndex.ExtraArgs, flags: []string{"--threads", "--ref-seq", "--fasta", "--gtf", "--feature-csv", "--probe-csv", "--output", "-o"}},
-		{unit: "simpleaf_quant", args: config.SimpleafQuant.ExtraArgs, flags: []string{"--map-dir", "--index", "--t2g-map", "--chemistry", "--reads1", "--reads2", "--resolution", "--output", "-o", "--threads", "--anndata-out", "--knee", "--forced-cells", "--expect-cells", "--explicit-pl", "--unfiltered-pl", "--aligner"}},
+		{unit: "simpleaf_index", args: config.SimpleafIndex.ExtraArgs, flags: []string{"--threads", "--ref-seq", "--fasta", "--gtf", "--feature-csv", "--probe-csv", "--output", "-o", "--no-piscem", "--use-selective-alignment"}},
+		{unit: "simpleaf_quant", args: config.SimpleafQuant.ExtraArgs, flags: []string{"--map-dir", "--index", "--t2g-map", "--chemistry", "--reads1", "--reads2", "--resolution", "--output", "-o", "--threads", "--anndata-out", "--knee", "--forced-cells", "--expect-cells", "--explicit-pl", "--unfiltered-pl", "--no-piscem", "--use-selective-alignment", "--aligner"}},
 		{unit: "qcatch", args: config.QCatch.ExtraArgs, flags: []string{"--input", "-i", "--output", "-o", "--chemistry", "-c", "--n_partitions", "-n", "--save_filtered_h5ad", "-s", "--export_summary_table", "-x", "--remove_doublets", "-d", "--visualize_doublets", "-vd", "--skip_umap_tsne", "-u", "--gene_id2name_file", "-g", "--valid_cell_list", "-l"}},
 		{unit: "multiqc", args: config.MultiQC.ExtraArgs, flags: []string{"--outdir", "--filename", "--no-data-dir", "--zip-data-dir"}},
 	}
