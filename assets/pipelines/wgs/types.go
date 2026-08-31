@@ -51,9 +51,10 @@ type Lane struct {
 	Fastq2 string
 }
 
-// Sample is one germline sample. Patient plus Name is its biological and graph
-// identity. Lanes retains samplesheet order and is copied by Build. Optional
-// Sex remains data identity, not caller policy.
+// Sample is one germline sample. Patient plus Name is its stable sample key.
+// Lanes retains samplesheet order and is copied by Build. When present, Sex is
+// experiment-data identity in the sample branch and downstream cohort joins;
+// it is not caller policy.
 type Sample struct {
 	Patient string
 	Name    string

@@ -1,6 +1,8 @@
 package wgs
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"strconv"
 	"strings"
 
@@ -307,9 +309,10 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 	}
 	jointScatter := pipeline.Scatter("joint_intervals").From(intervals)
 	cohort := cohortIdentity(samples)
+	jointWorkDir := gobble.Dir("work/joint").Join("cohort-" + cohortWorkIdentity(cohort))
 	databaseOptions := config.GenomicsDBImport
 	databaseOptions.IntervalDir = intervalDirectory(config.Reference.Intervals)
-	databaseOptions.OutDir = gobble.Dir("work/joint/genomicsdb")
+	databaseOptions.OutDir = jointWorkDir.Join("genomicsdb")
 	database, err := gatk4genomicsdbimport.Add(cohortTaskParent(jointScatter.AddModule("database"), cohort), variants, intervals, databaseOptions)
 	if recordModuleError(pipeline, err) {
 		return pipeline
@@ -317,7 +320,7 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 	jointParent := cohortTaskParent(jointScatter.AddModule("genotype"), cohort)
 	genotypeOptions := config.GenotypeGVCFs
 	genotypeOptions.IntervalDir = intervalDirectory(config.Reference.Intervals)
-	genotypeOptions.OutDir = gobble.Dir("work/joint/genotype")
+	genotypeOptions.OutDir = jointWorkDir.Join("genotype")
 	genotyped, err := gatk4genotypegvcfs.Add(jointParent, database.Database, intervals, fasta, fai, dict, dbsnp.vcf, dbsnp.tbi, genotypeOptions)
 	if recordModuleError(pipeline, err) {
 		return pipeline
@@ -325,7 +328,7 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 	sortOptions := config.BCFToolsSort
 	sortOptions.IntervalDir = intervalDirectory(config.Reference.Intervals)
 	sortOptions.InputDir = genotypeOptions.OutDir
-	sortOptions.OutDir = gobble.Dir("work/joint/sorted")
+	sortOptions.OutDir = jointWorkDir.Join("sorted")
 	sorted, err := bcftoolssort.Add(jointParent, genotyped.VCF, genotyped.TBI, intervals, sortOptions)
 	if recordModuleError(pipeline, err) {
 		return pipeline
@@ -386,6 +389,9 @@ func sampleModule(parent moduleParent, patients map[string]*gobble.Module, sampl
 
 func sampleTaskParent(parent modules.Parent, sample Sample, lane string) modules.Parent {
 	params := []gobble.Param{{Name: "patient", Value: sample.Patient}, {Name: "sample", Value: sample.Name}}
+	if sample.Sex != "" {
+		params = append(params, gobble.Param{Name: "sex", Value: sample.Sex})
+	}
 	if lane != "" {
 		params = append(params, gobble.Param{Name: "lane", Value: lane})
 	}
@@ -397,6 +403,14 @@ func cohortTaskParent(parent modules.Parent, cohort string) modules.Parent {
 }
 
 func sampleIdentity(sample Sample) string {
+	identity := sampleKey(sample)
+	if sample.Sex != "" {
+		identity += "." + sample.Sex
+	}
+	return identity
+}
+
+func sampleKey(sample Sample) string {
 	return sample.Patient + "." + sample.Name
 }
 
@@ -408,10 +422,18 @@ func cohortIdentity(samples []Sample) string {
 	return strings.Join(identities, ",")
 }
 
+func cohortWorkIdentity(cohort string) string {
+	digest := sha256.Sum256([]byte(cohort))
+	return hex.EncodeToString(digest[:])
+}
+
 func sampleInputName(sample Sample, lane string) string {
-	return "p" + strconv.Itoa(len(sample.Patient)) + "_" + sample.Patient +
-		"_s" + strconv.Itoa(len(sample.Name)) + "_" + sample.Name +
-		"_l" + strconv.Itoa(len(lane)) + "_" + lane
+	name := "p" + strconv.Itoa(len(sample.Patient)) + "_" + sample.Patient +
+		"_s" + strconv.Itoa(len(sample.Name)) + "_" + sample.Name
+	if sample.Sex != "" {
+		name += "_x" + strconv.Itoa(len(sample.Sex)) + "_" + sample.Sex
+	}
+	return name + "_l" + strconv.Itoa(len(lane)) + "_" + lane
 }
 
 func sampleWorkDir(sample Sample) string {
@@ -468,7 +490,7 @@ func validateBuild(samples []Sample, config Config) []gobble.Defect {
 	}
 	seenSamples := make(map[string]bool, len(samples))
 	for _, sample := range samples {
-		identity := sampleIdentity(sample)
+		identity := sampleKey(sample)
 		if !identityPattern.MatchString(sample.Patient) || !identityPattern.MatchString(sample.Name) || seenSamples[identity] {
 			defects = append(defects, gobble.Defect{Code: gobble.DefectInvalidSampleSheet, Unit: identity, Message: "WGS patient/sample identity is invalid or duplicated"})
 		}

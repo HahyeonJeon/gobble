@@ -113,12 +113,12 @@ func TestWGSComposeBuildPlanSelectedVertical(t *testing.T) {
 	pc.AssertIOPath(t, pc.TaskByID(t, raw, "patient1.testN.gvcf_gather.gatk4_mergevcfs").Outputs, "vcf", "results/wgs/samples/patient1/testN/gvcf/testN.g.vcf.gz")
 	pc.AssertIOPath(t, pc.TaskByID(t, raw, "joint_gather.joint.gatk4_mergevcfs").Outputs, "vcf", "results/wgs/joint/joint_germline.vcf.gz")
 	pc.AssertIOPath(t, pc.TaskByID(t, raw, "joint_gather.joint.gatk4_mergevcfs").Outputs, "tbi", "results/wgs/joint/joint_germline.vcf.gz.tbi")
-	pc.AssertTreeIO(t, pc.TaskByID(t, raw, "joint_intervals.database.gatk4_genomicsdbimport").Outputs, "database", "work/joint/genomicsdb")
+	pc.AssertTreeIO(t, pc.TaskByID(t, raw, "joint_intervals.database.gatk4_genomicsdbimport").Outputs, "database", "work/joint/cohort-604439d34707f4df78926ac0c7b9dbd1159db10516bd9425c1616da5448a347e/genomicsdb")
 
 	genomicsDB := pc.TaskByID(t, raw, "joint_intervals.database.gatk4_genomicsdbimport")
 	pc.AssertIOPath(t, genomicsDB.Inputs, "gvcf_0", "results/wgs/samples/patient1/testN/gvcf/testN.g.vcf.gz")
 	pc.AssertIOPath(t, genomicsDB.Inputs, "gvcf_1", "results/wgs/samples/patient2/testT/gvcf/testT.g.vcf.gz")
-	if !pc.ContainsAll(pc.TaskByID(t, raw, "joint_gather.joint.gatk4_mergevcfs").Command, "MergeVcfs", "--INPUT", "work/joint/sorted/interval_001.sorted.vcf.gz", "work/joint/sorted/interval_002.sorted.vcf.gz") {
+	if !pc.ContainsAll(pc.TaskByID(t, raw, "joint_gather.joint.gatk4_mergevcfs").Command, "MergeVcfs", "--INPUT", "work/joint/cohort-604439d34707f4df78926ac0c7b9dbd1159db10516bd9425c1616da5448a347e/sorted/interval_001.sorted.vcf.gz", "work/joint/cohort-604439d34707f4df78926ac0c7b9dbd1159db10516bd9425c1616da5448a347e/sorted/interval_002.sorted.vcf.gz") {
 		t.Fatalf("joint gather command does not require every interval: %#v", pc.TaskByID(t, raw, "joint_gather.joint.gatk4_mergevcfs").Command)
 	}
 	pc.AssertNoTaskName(t, tasks, "VariantRecalibrator", "ApplyVQSR", "Mutect2", "Strelka", "DeepVariant")
@@ -143,13 +143,13 @@ func TestWGSPatientIdentityChangesGraphAndReuseIdentity(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Compose(changed patient) error = %v", err)
 	}
-	if !slices.Contains(plainGraph.InputNames(), "p8_patient1_s5_testN_l4_L001_r1") || !slices.Contains(changedGraph.InputNames(), "p15_changed_patient_s5_testN_l4_L001_r1") {
+	if !slices.Contains(plainGraph.InputNames(), "p8_patient1_s5_testN_x2_XX_l4_L001_r1") || !slices.Contains(changedGraph.InputNames(), "p15_changed_patient_s5_testN_x2_XX_l4_L001_r1") {
 		t.Fatal("patient identity is absent from pipeline input identity")
 	}
 
 	plainTask := pc.TaskByID(t, plain, "patient1.testN.L001.bwa_mem")
 	changedTask := pc.TaskByID(t, changed, "changed_patient.testN.L001.bwa_mem")
-	if !strings.Contains(plainTask.Script, "ID:patient1.testN.L001") || !strings.Contains(changedTask.Script, "ID:changed_patient.testN.L001") {
+	if !strings.Contains(plainTask.Script, "ID:patient1.testN.XX.L001") || !strings.Contains(changedTask.Script, "ID:changed_patient.testN.XX.L001") {
 		t.Fatalf("patient identity is absent from read groups:\nplain: %s\nchanged: %s", plainTask.Script, changedTask.Script)
 	}
 	assertParam(t, plainTask.Params, "patient", "patient1")
@@ -159,8 +159,48 @@ func TestWGSPatientIdentityChangesGraphAndReuseIdentity(t *testing.T) {
 	if bytes.Equal(mustJSON(t, plainJoint), mustJSON(t, changedJoint)) {
 		t.Fatal("changing patient identity left cohort import reuse identity unchanged")
 	}
-	assertParam(t, plainJoint.Params, "cohort", "patient1.testN,patient2.testT")
-	assertParam(t, changedJoint.Params, "cohort", "changed_patient.testN,patient2.testT")
+	assertParam(t, plainJoint.Params, "cohort", "patient1.testN.XX,patient2.testT.XY")
+	assertParam(t, changedJoint.Params, "cohort", "changed_patient.testN.XX,patient2.testT.XY")
+}
+
+func TestWGSSexIdentityChangesGraphAndReuseIdentity(t *testing.T) {
+	samples := loadSamples(t)
+	plainPipeline := wgs.Build(samples, wgs.DefaultConfig())
+	plain := pc.MustPlanJSON(t, plainPipeline)
+	samples[0].Sex = "XY"
+	changedPipeline := wgs.Build(samples, wgs.DefaultConfig())
+	changed := pc.MustPlanJSON(t, changedPipeline)
+	if bytes.Equal(plain, changed) {
+		t.Fatal("changing sex identity left the WGS plan unchanged")
+	}
+	plainGraph, err := gobble.Compose(plainPipeline)
+	if err != nil {
+		t.Fatalf("Compose(plain sex) error = %v", err)
+	}
+	changedGraph, err := gobble.Compose(changedPipeline)
+	if err != nil {
+		t.Fatalf("Compose(changed sex) error = %v", err)
+	}
+	if !slices.Contains(plainGraph.InputNames(), "p8_patient1_s5_testN_x2_XX_l4_L001_r1") || !slices.Contains(changedGraph.InputNames(), "p8_patient1_s5_testN_x2_XY_l4_L001_r1") {
+		t.Fatal("sex identity is absent from pipeline input identity")
+	}
+
+	plainTask := pc.TaskByID(t, plain, "patient1.testN.L001.bwa_mem")
+	changedTask := pc.TaskByID(t, changed, "patient1.testN.L001.bwa_mem")
+	if !strings.Contains(plainTask.Script, "ID:patient1.testN.XX.L001") || !strings.Contains(changedTask.Script, "ID:patient1.testN.XY.L001") {
+		t.Fatalf("sex identity is absent from read groups:\nplain: %s\nchanged: %s", plainTask.Script, changedTask.Script)
+	}
+	assertParam(t, plainTask.Params, "sex", "XX")
+	assertParam(t, changedTask.Params, "sex", "XY")
+	plainJoint := pc.TaskByID(t, plain, "joint_intervals.database.gatk4_genomicsdbimport")
+	changedJoint := pc.TaskByID(t, changed, "joint_intervals.database.gatk4_genomicsdbimport")
+	if bytes.Equal(mustJSON(t, plainJoint), mustJSON(t, changedJoint)) {
+		t.Fatal("changing sex identity left cohort import reuse identity unchanged")
+	}
+	assertParam(t, plainJoint.Params, "cohort", "patient1.testN.XX,patient2.testT.XY")
+	assertParam(t, changedJoint.Params, "cohort", "patient1.testN.XY,patient2.testT.XY")
+	pc.AssertTreeIO(t, plainJoint.Outputs, "database", "work/joint/cohort-604439d34707f4df78926ac0c7b9dbd1159db10516bd9425c1616da5448a347e/genomicsdb")
+	pc.AssertTreeIO(t, changedJoint.Outputs, "database", "work/joint/cohort-f4a734014c7e0af6c953fbe72778e7dce01f4a8e315491ab96263a862e8e13ba/genomicsdb")
 }
 
 func TestWGSBuildIsPureAndCopiesCallerData(t *testing.T) {
@@ -180,6 +220,15 @@ func TestWGSBuildIsPureAndCopiesCallerData(t *testing.T) {
 
 func TestWGSRejectsIntervalAndProtectedOptionDefects(t *testing.T) {
 	samples := loadSamples(t)
+
+	t.Run("duplicate sample key with different sex", func(t *testing.T) {
+		duplicated := append([]wgs.Sample(nil), samples...)
+		duplicated[1].Patient = duplicated[0].Patient
+		duplicated[1].Name = duplicated[0].Name
+		duplicated[1].Sex = "XY"
+		_, err := gobble.Compose(wgs.Build(duplicated, wgs.DefaultConfig()))
+		requireDefect(t, err, gobble.DefectInvalidSampleSheet, "patient1.testN")
+	})
 
 	t.Run("empty intervals", func(t *testing.T) {
 		config := wgs.DefaultConfig()

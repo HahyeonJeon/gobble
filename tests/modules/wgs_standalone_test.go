@@ -1,6 +1,7 @@
 package moduleevidence
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
@@ -89,6 +90,24 @@ func TestWGSMarkDuplicatesDefaultUsesSarekModuleImage(t *testing.T) {
 	}
 	if got, want := tasks[0].Image, string(gatk4markduplicates.DefaultImage); got != want {
 		t.Fatalf("MarkDuplicates default image = %q, want Sarek module image %q", got, want)
+	}
+}
+
+func TestWGSMarkDuplicatesRejectsNamedFieldShortAliases(t *testing.T) {
+	bam := wgsSpec("in", "sample", ".bam")
+	bai := wgsSpec("in", "sample", ".bam.bai")
+	for _, arg := range []string{
+		"-I", "-I=other.bam", "-Iother.bam",
+		"-O", "-O=other.bam", "-Oother.bam",
+		"-M", "-M=other.metrics", "-Mother.metrics",
+	} {
+		options := gatk4markduplicates.Options{}
+		options.ExtraArgs = []string{arg}
+		_, err := gobble.Compose(gatk4markduplicates.Pipeline(bam, bai, options))
+		var composeErr *gobble.Error
+		if !errors.As(err, &composeErr) || len(composeErr.Defects) != 1 || composeErr.Defects[0].Code != gobble.DefectInvalidValue || composeErr.Defects[0].Unit != "gatk4_markduplicates" {
+			t.Errorf("ExtraArgs %q error = %#v, want structured protected-alias defect", arg, err)
+		}
 	}
 }
 

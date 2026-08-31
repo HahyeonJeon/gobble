@@ -18,6 +18,7 @@ type Task struct {
 	ID        string    `json:"id"`
 	Name      string    `json:"name"`
 	Module    string    `json:"module"`
+	Scatter   string    `json:"scatter"`
 	Command   []string  `json:"command"`
 	Script    string    `json:"script"`
 	Image     string    `json:"image"`
@@ -45,8 +46,19 @@ type IO struct {
 	Kind     string   `json:"kind"`
 	Path     string   `json:"path"`
 	Source   string   `json:"source"`
+	Spec     Spec     `json:"spec"`
 	Manifest string   `json:"manifest"`
 	Members  []Member `json:"members"`
+}
+
+// Spec is the rendered plan form of one path specification.
+type Spec struct {
+	Dir      string   `json:"dir"`
+	Prefix   string   `json:"prefix"`
+	Base     string   `json:"base"`
+	Suffixes []string `json:"suffixes"`
+	Ext      string   `json:"ext"`
+	Literal  bool     `json:"literal"`
 }
 
 // Member is one Group member.

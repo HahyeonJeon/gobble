@@ -53,7 +53,11 @@ func Add(parent modules.Parent, bam, inputBAI gobble.Handle, options Options) (P
 		return Ports{}, modules.ComposeDefect(gobble.DefectInvalidPath, unit, "duplicate metrics path is invalid")
 	}
 	protected := []string{"--INPUT", "--OUTPUT", "--METRICS_FILE", "--CREATE_INDEX", "--TMP_DIR"}
-	extra, image, resources, err := modules.ResolveOptions(unit, options.Options, DefaultImage, gobble.Resources{CPU: 2, Memory: "6g"}, nil, protected)
+	base := options.Options
+	if base.Image == "" {
+		base.Image = DefaultImage
+	}
+	extra, image, resources, err := modules.ResolveGATK4Options(unit, base, gobble.Resources{CPU: 2, Memory: "6g"}, protected)
 	if err != nil {
 		return Ports{}, err
 	}

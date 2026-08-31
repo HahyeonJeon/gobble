@@ -12,8 +12,9 @@ temporary `assets.WGS` constructor now points here.
   are errors. Repeated rows become ordered paired `Lane` values. At least two
   distinct patient/sample pairs are required. A sample token may occur under
   different patients. Patient, sample, and lane identity comes from typed
-  cells, never filenames, and is recorded in task IDs, params, inputs, read
-  groups, destinations, and cohort identity.
+  cells, never filenames. When present, `sex` is experiment-data identity. It
+  is recorded in sample-task params, input names, read groups, cohort identity,
+  and cohort-scoped work destinations.
 - `DefaultConfig` returns fresh typed reference, known-site, stable interval,
   output, command, immutable image, resource, argv, and publication policy. It
   selects BWA-MEM, GATK HaplotypeCaller gVCFs, GenomicsDB, and
@@ -38,9 +39,10 @@ MultiQC.
 The exact interval Group drives native Gobble Scatter/Gather for BQSR,
 HaplotypeCaller, GenomicsDB import, and joint genotyping. Every gathered
 command names every expected interval path. Each GenomicsDB Scatter member
-derives one Tree below `work/joint/genomicsdb` and passes that exact member Tree
-to the matching joint-genotype instance. A missing sample, interval, index,
-Tree manifest, or gathered member fails closed.
+derives one Tree below `work/joint/cohort-<cohort-sha256>/genomicsdb` and passes
+that exact member Tree to the matching joint-genotype instance. The digest is
+over the ordered cohort identity recorded in task params. A missing sample,
+interval, index, Tree manifest, or gathered member fails closed.
 
 Required results are indexed recalibrated BAMs and per-sample gVCFs below
 `results/wgs/samples/<patient>/<sample>/`, indexed unfiltered
@@ -50,10 +52,10 @@ publication categories. Required categories cannot be disabled.
 
 ## Lifecycle and support boundary
 
-A changed patient, sample, lane, or read invalidates that sample's consuming
-branch, gVCF, and all cohort work. Unchanged reference preparation and unrelated
-sample preprocessing stay eligible for reuse. A caller-option change affects
-its interval command and cohort descendants. Any sample-membership or
+A changed patient, sample, present sex, lane, or read invalidates that sample's
+consuming branch, gVCF, and all cohort work. Unchanged reference preparation and
+unrelated sample preprocessing stay eligible for reuse. A caller-option change
+affects its interval command and cohort descendants. Any sample-membership or
 interval-membership change invalidates the applicable strict gathers and joint
 result. Stop, failure, Inspect, Release, and Resume use the shared engine
 contract; this product adds no retry, fallback, repair, cleanup, or migration
