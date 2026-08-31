@@ -22,7 +22,8 @@ type Options struct {
 // Ports contains the lane SAM emitted by bwa mem.
 type Ports struct{ SAM gobble.Handle }
 
-// Add records one validated read-grouped bwa mem command.
+// Add records one validated read-grouped bwa mem command. A zero read2 selects
+// the command's supported single-end form.
 func Add(parent modules.Parent, fasta, index, read1, read2 gobble.Handle, options Options) (Ports, error) {
 	const unit = "bwa_mem"
 	if _, err := modules.HandlePath(unit, fasta); err != nil {
@@ -32,9 +33,12 @@ func Add(parent modules.Parent, fasta, index, read1, read2 gobble.Handle, option
 	if err != nil {
 		return Ports{}, err
 	}
-	read2Path, err := modules.HandlePath(unit, read2)
-	if err != nil {
-		return Ports{}, err
+	var read2Path string
+	if !read2.IsZero() {
+		read2Path, err = modules.HandlePath(unit, read2)
+		if err != nil {
+			return Ports{}, err
+		}
 	}
 	indexPath, err := options.IndexPrefix.Render()
 	if err != nil || indexPath == "" {
@@ -73,15 +77,21 @@ func Add(parent modules.Parent, fasta, index, read1, read2 gobble.Handle, option
 	if err != nil {
 		return Ports{}, err
 	}
-	command = append(command, indexPath, read1Path, read2Path)
+	command = append(command, indexPath, read1Path)
+	if read2Path != "" {
+		command = append(command, read2Path)
+	}
+	inputs := []gobble.Bind{
+		{Name: "fasta", From: fasta},
+		{Name: "index", From: index, Group: inputIndexGroup()},
+		{Name: "read1", From: read1},
+	}
+	if !read2.IsZero() {
+		inputs = append(inputs, gobble.Bind{Name: "read2", From: read2})
+	}
 	task := parent.AddTask(gobble.TaskSpec{
 		Name: unit, Script: modules.ShellRedirect(command, outputPath), Image: image, Resources: resources,
-		Inputs: []gobble.Bind{
-			{Name: "fasta", From: fasta},
-			{Name: "index", From: index, Group: inputIndexGroup()},
-			{Name: "read1", From: read1},
-			{Name: "read2", From: read2},
-		},
+		Inputs:  inputs,
 		Outputs: []gobble.Bind{{Name: "sam", Spec: output}},
 	})
 	return Ports{SAM: task.Out("sam")}, nil

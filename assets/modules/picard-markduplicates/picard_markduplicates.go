@@ -46,7 +46,8 @@ func Add(parent modules.Parent, bam gobble.Handle, options Options) (Ports, erro
 	}
 	metricsPath, _ := metrics.Render()
 	command := []string{"picard", "MarkDuplicates", "--INPUT", bamPath, "--OUTPUT", markedPath, "--METRICS_FILE", metricsPath}
-	command, image, resources, err := modules.ResolveOptions(unit, options.Options, DefaultImage, gobble.Resources{CPU: 2, Memory: "4g"}, command, []string{"--INPUT", "--OUTPUT", "--METRICS_FILE"})
+	protected := []string{"--INPUT", "--OUTPUT", "--METRICS_FILE", "INPUT", "OUTPUT", "METRICS_FILE", "I", "O", "M"}
+	command, image, resources, err := modules.ResolveOptions(unit, options.Options, DefaultImage, gobble.Resources{CPU: 2, Memory: "4g"}, command, protected)
 	if err != nil {
 		return Ports{}, err
 	}

@@ -26,6 +26,80 @@ type BiotypePorts struct {
 	Summary gobble.Handle
 }
 
+// ATACOptions controls consensus-interval quantification. Paired is typed
+// cohort policy; ExtraArgs cannot change it or replace the SAF/output binding.
+type ATACOptions struct {
+	modules.Options
+	OutDir gobble.Directory
+	Prefix string
+	Paired bool
+}
+
+// ATACPorts contains the strict cohort count matrix and assignment summary.
+type ATACPorts struct {
+	Counts  gobble.Handle
+	Summary gobble.Handle
+}
+
+// AddATAC records one featureCounts command over every declared filtered BAM.
+func AddATAC(parent modules.Parent, bams []gobble.Handle, saf gobble.Handle, options ATACOptions) (ATACPorts, error) {
+	const unit = "featurecounts_atac"
+	if len(bams) == 0 {
+		return ATACPorts{}, modules.ComposeDefect(gobble.DefectInvalidValue, unit, "ATAC count membership must not be empty")
+	}
+	safPath, err := modules.HandlePath(unit, saf)
+	if err != nil {
+		return ATACPorts{}, err
+	}
+	outDir := options.OutDir
+	if outDir.IsZero() {
+		outDir = gobble.Dir("results/featurecounts")
+	}
+	prefix := options.Prefix
+	if prefix == "" {
+		prefix = "consensus"
+	}
+	counts := gobble.PathSpec{Dir: outDir, Base: prefix, Ext: ".featureCounts.txt"}
+	summary := counts.AppendExt(".summary")
+	countsPath, err := counts.Render()
+	if err != nil {
+		return ATACPorts{}, modules.ComposeDefect(gobble.DefectInvalidPath, unit, "ATAC count output path is invalid")
+	}
+	resources := options.Resources
+	if resources.CPU == 0 && resources.Memory == "" {
+		resources = gobble.Resources{CPU: 2, Memory: "4g"}
+	}
+	threads := modules.ThreadCount(resources.CPU)
+	if threads < 1 {
+		threads = 1
+	}
+	command := []string{"featureCounts", "-F", "SAF", "-a", safPath, "-o", countsPath, "-s", "0", "-T", strconv.Itoa(threads)}
+	if options.Paired {
+		command = append(command, "-p")
+	}
+	protected := []string{"-F", "-a", "-o", "-s", "-T", "-p", "--countReadPairs"}
+	if err := modules.RejectExtraArgs(unit, options.ExtraArgs, protected); err != nil {
+		return ATACPorts{}, err
+	}
+	base := options.Options
+	base.Resources = resources
+	command, image, resources, err := modules.ResolveOptions(unit, base, "quay.io/biocontainers/subread:2.0.1--hed695b0_0@sha256:ccee1f6ebb924fd0b3b6db646a51dabc905697aa25be132386dd490c2318286c", resources, command, protected)
+	if err != nil {
+		return ATACPorts{}, err
+	}
+	inputs := []gobble.Bind{{Name: "saf", From: saf}}
+	for i, bam := range bams {
+		path, pathErr := modules.HandlePath(unit, bam)
+		if pathErr != nil {
+			return ATACPorts{}, pathErr
+		}
+		command = append(command, path)
+		inputs = append(inputs, gobble.Bind{Name: "bam_" + strconv.Itoa(i), From: bam})
+	}
+	task := parent.AddTask(gobble.TaskSpec{Name: unit, Command: command, Image: image, Resources: resources, Inputs: inputs, Outputs: []gobble.Bind{{Name: "counts", Spec: counts}, {Name: "summary", Spec: summary}}})
+	return ATACPorts{Counts: task.Out("counts"), Summary: task.Out("summary")}, nil
+}
+
 // AddBiotype records one validated featureCounts biotype-QC command.
 func AddBiotype(parent modules.Parent, bam, gtf gobble.Handle, options BiotypeOptions) (BiotypePorts, error) {
 	return addBiotype(parent, bam, gtf, gobble.Handle{}, options)
