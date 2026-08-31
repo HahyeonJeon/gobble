@@ -65,6 +65,10 @@ func isDir(path string) bool {
 	return err == nil && info.IsDir()
 }
 
+func treeInputReady(root string) bool {
+	return isDir(root) && regularFile(filepath.Join(root, treeManifestName))
+}
+
 func walkTreeMembers(root string) ([]string, error) {
 	info, err := os.Lstat(root)
 	if err != nil || !info.IsDir() {
@@ -144,7 +148,7 @@ func stageTree(workspace, isolate string, in IO) error {
 	if err != nil {
 		return err
 	}
-	if !isDir(srcRoot) {
+	if !treeInputReady(srcRoot) {
 		return errTreeMissing
 	}
 	dstRoot := workspaceFile(isolate, treeDir(in))
@@ -388,6 +392,9 @@ func treeDestMemberPaths(workspace string, io IO) []namedFile {
 
 func treeSourceMemberPaths(workspace string, io IO) []namedFile {
 	src := treeSourceDir(io)
+	if !treeInputReady(workspaceFile(workspace, src)) {
+		return nil
+	}
 	man := treeManifestName
 	if src != "" {
 		man = strings.TrimSuffix(strings.ReplaceAll(src, `\`, "/"), "/") + "/" + treeManifestName

@@ -2,14 +2,18 @@ package methylseqevidence_test
 
 import (
 	"bytes"
+	"context"
 	"errors"
+	"io"
 	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
 	"github.com/HahyeonJeon/gobble/assets/pipelines/methylseq"
+	engineexec "github.com/HahyeonJeon/gobble/internal/engine/exec"
 	pc "github.com/HahyeonJeon/gobble/tests/internal/plancheck"
 	"github.com/HahyeonJeon/gobble/tests/internal/sourcecheck"
 )
@@ -159,6 +163,58 @@ func TestReadyBismarkTreeSkipsGenomePreparation(t *testing.T) {
 	}
 }
 
+func TestRunRejectsReadyBismarkTreeWithoutManifestBeforeExecution(t *testing.T) {
+	workspace := t.TempDir()
+	read := filepath.Join(workspace, "in", "sample.fastq.gz")
+	index := filepath.Join(workspace, "in", "reference", "BismarkIndex")
+	if err := os.MkdirAll(index, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Dir(read), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(read, []byte("reads\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(index, "genome.fa"), []byte("reference\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	config := methylseq.DefaultConfig()
+	config.Reference.FASTA = gobble.PathSpec{}
+	config.Reference.BismarkIndex = gobble.DeclareTree(gobble.Dir("in/reference/BismarkIndex"))
+	graph, err := gobble.Compose(methylseq.Build([]methylseq.Sample{{
+		Name: "sample",
+		Runs: []methylseq.Run{{ID: "run_1", Fastq1: "in/sample.fastq.gz"}},
+	}}, config))
+	if err != nil {
+		t.Fatalf("Compose() error = %v", err)
+	}
+	identity, err := gobble.IdentityFromBuildInfo("github.com/HahyeonJeon/gobble/tests/pipelines/methylseq")
+	if err != nil {
+		t.Fatalf("IdentityFromBuildInfo() error = %v", err)
+	}
+
+	originalDockerCLI := engineexec.DockerCLI
+	dockerCalls := 0
+	engineexec.DockerCLI = func(context.Context, []string, []string, io.Writer, io.Writer) (int, error) {
+		dockerCalls++
+		return 1, errors.New("unexpected Docker execution")
+	}
+	t.Cleanup(func() { engineexec.DockerCLI = originalDockerCLI })
+
+	err = gobble.Run(t.Context(), graph, workspace, 1, gobble.WithIdentity(identity))
+	if !hasDefectUnit(err, gobble.DefectMissingInput, "sample.bismark_align.index") {
+		t.Fatalf("Run() error = %v, want missing-input for sample.bismark_align.index", err)
+	}
+	if dockerCalls != 0 {
+		t.Fatalf("Run() made %d Docker calls, want failure before Bismark execution", dockerCalls)
+	}
+	if _, statErr := os.Lstat(filepath.Join(workspace, ".gobble")); !os.IsNotExist(statErr) {
+		t.Fatalf("Run() created engine state before rejecting ready Tree: %v", statErr)
+	}
+}
+
 func TestPipelineAdapterMatchesTypedBuild(t *testing.T) {
 	previous := gobble.SampleSheetPath()
 	gobble.SetSampleSheetPath(methylFixtureSheet)
@@ -305,6 +361,19 @@ func hasDefect(err error, code gobble.DefectCode) bool {
 	}
 	for _, defect := range structured.Defects {
 		if defect.Code == code {
+			return true
+		}
+	}
+	return false
+}
+
+func hasDefectUnit(err error, code gobble.DefectCode, unit string) bool {
+	var structured *gobble.Error
+	if !errors.As(err, &structured) || structured == nil {
+		return false
+	}
+	for _, defect := range structured.Defects {
+		if defect.Code == code && defect.Unit == unit {
 			return true
 		}
 	}

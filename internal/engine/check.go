@@ -431,7 +431,7 @@ func checkInputs(workspace string, doc Document) []Defect {
 					defects = append(defects, escapeDefect(unit, src))
 					continue
 				}
-				if present && isDir(abs) {
+				if present && treeInputReady(abs) {
 					continue
 				}
 				defects = append(defects, Defect{

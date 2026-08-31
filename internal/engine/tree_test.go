@@ -51,6 +51,70 @@ func TestWalkTreeMembersMissing(t *testing.T) {
 	}
 }
 
+func TestStageTreeRequiresRegularManifest(t *testing.T) {
+	tests := []struct {
+		name     string
+		manifest func(t *testing.T, root string)
+	}{
+		{name: "missing"},
+		{name: "directory", manifest: func(t *testing.T, root string) {
+			t.Helper()
+			if err := os.Mkdir(filepath.Join(root, treeManifestName), 0o755); err != nil {
+				t.Fatal(err)
+			}
+		}},
+		{name: "symlink", manifest: func(t *testing.T, root string) {
+			t.Helper()
+			writeCheckFile(t, filepath.Join(root, "marker"), "{}")
+			if err := os.Symlink("marker", filepath.Join(root, treeManifestName)); err != nil {
+				t.Fatal(err)
+			}
+		}},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			workspace := t.TempDir()
+			root := filepath.Join(workspace, "in", "idx")
+			writeCheckFile(t, filepath.Join(root, "SA"), "x")
+			if test.manifest != nil {
+				test.manifest(t, root)
+			}
+			isolate := filepath.Join(workspace, "isolate")
+			err := stageTree(workspace, isolate, IO{
+				Name:   "idx",
+				Kind:   ArtifactTree,
+				Path:   "work/idx",
+				Source: "in/idx",
+			})
+			if err != errTreeMissing {
+				t.Fatalf("stageTree() error = %v, want missing output", err)
+			}
+			if _, statErr := os.Lstat(filepath.Join(isolate, "work", "idx", "SA")); !os.IsNotExist(statErr) {
+				t.Fatalf("stageTree() staged a manifestless Tree member: %v", statErr)
+			}
+		})
+	}
+}
+
+func TestTreeMemberPathsDoesNotWalkWithoutRegularManifest(t *testing.T) {
+	workspace := t.TempDir()
+	root := filepath.Join(workspace, "in", "idx")
+	writeCheckFile(t, filepath.Join(root, "SA"), "x")
+	in := IO{Name: "idx", Kind: ArtifactTree, Path: "work/idx", Source: "in/idx"}
+	if got := treeSourceMemberPaths(workspace, in); len(got) != 0 {
+		t.Fatalf("manifestless Tree members = %#v, want none", got)
+	}
+	staged := treeDestMemberPaths(workspace, IO{Name: "idx", Kind: ArtifactTree, Path: "in/idx"})
+	if len(staged) != 1 || staged[0].name != "SA" {
+		t.Fatalf("staged Tree members = %#v, want manifest-independent SA", staged)
+	}
+	writeCheckFile(t, filepath.Join(root, treeManifestName), "{}")
+	got := treeSourceMemberPaths(workspace, in)
+	if len(got) != 1 || got[0].name != "SA" || got[0].path != "in/idx/SA" {
+		t.Fatalf("marked Tree members = %#v, want SA", got)
+	}
+}
+
 func TestPublishTreeReplaceIsOneGeneration(t *testing.T) {
 	dir := t.TempDir()
 	oldIso := filepath.Join(dir, "old-iso")

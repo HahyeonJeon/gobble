@@ -479,6 +479,9 @@ func TestRunScatterRestagedTreeExpandsProducer(t *testing.T) {
 	dir := t.TempDir()
 	writeRunFile(t, filepath.Join(dir, "tree", "s1.txt"), "one")
 	writeRunFile(t, filepath.Join(dir, "tree", "s2.txt"), "two")
+	if err := engine.WriteTreeManifest(filepath.Join(dir, "tree")); err != nil {
+		t.Fatalf("WriteTreeManifest() error = %v", err)
+	}
 	p := gobble.NewPipeline("tree-restage")
 	tree := p.AddInputTree("items", gobble.DeclareTree(gobble.Dir("tree")))
 	p.Scatter("each").From(tree).AddTask(gobble.TaskSpec{
