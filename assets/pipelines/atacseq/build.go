@@ -388,7 +388,8 @@ func finalizeAlignment(parent modules.Parent, merged gobble.Handle, paired bool,
 	}
 	metricsOptions := config.CollectMultipleMetrics
 	metricsOptions.OutDir, metricsOptions.Prefix = qcDir.Join("picard"), prefix
-	if _, err = picardcollectmultiplemetrics.Add(parent, finalBAM, indexed.BAI, reference.fasta, reference.fai, metricsOptions); err != nil {
+	metrics, err := picardcollectmultiplemetrics.Add(parent, finalBAM, indexed.BAI, reference.fasta, reference.fai, metricsOptions)
+	if err != nil {
 		return alignmentProduct{}, err
 	}
 	coverageOptions := config.GenomeCoverage
@@ -412,7 +413,7 @@ func finalizeAlignment(parent modules.Parent, merged gobble.Handle, paired bool,
 	if err != nil {
 		return alignmentProduct{}, err
 	}
-	reportHandles := append([]gobble.Handle{marked.Metrics}, reports.handles()...)
+	reportHandles := append([]gobble.Handle{marked.Metrics, metrics.Metrics}, reports.handles()...)
 	return alignmentProduct{bam: finalBAM, bai: indexed.BAI, track: track.BigWig, reports: reportHandles}, nil
 }
 

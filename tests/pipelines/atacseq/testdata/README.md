@@ -23,5 +23,9 @@ license, and `linux/amd64` tuple.
 Hermetic tests never fetch. Live test-only preparation may download staged
 entries into the ignored cache, verify size and SHA-256, and copy them into a
 caller-created workspace. Product source and `Build` never fetch, inspect, or
-stage fixture bytes. No peak count, FRiP, PCA, fingerprint, or replicate metric
-is a scientific acceptance threshold.
+stage fixture bytes. The live operation scenario calls that fetch path, drives
+the complete product graph without Docker, and uses a command boundary that
+opens and hashes every declared input before creating input-derived outputs.
+This proves exact-byte staging and selected-operation data flow, not behavior of
+the third-party binaries or image availability. No peak count, FRiP, PCA,
+fingerprint, or replicate metric is a scientific acceptance threshold.

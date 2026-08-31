@@ -97,6 +97,10 @@ func TestBuildSelectedVerticalUsesComposeTimeStrictFanIn(t *testing.T) {
 	if got := countInputs(pc.TaskByID(t, raw, "consensus.replicates.featurecounts_merge_matrices").Inputs, "matrix_"); got != 2 {
 		t.Fatalf("mixed-mode matrix fan-in = %d, want both mode matrices", got)
 	}
+	multiQC := pc.TaskByID(t, raw, "multiqc")
+	if got := countTreeInputPathsContaining(t, multiQC.Inputs, "/qc/alignment/picard"); got != 8 {
+		t.Fatalf("MultiQC Picard CollectMultipleMetrics fan-in = %d, want all 8 replicate and aggregate Trees", got)
+	}
 	assertNoRuntimeScatter(t, raw)
 	pc.AssertNoTaskName(t, tasks, "bowtie2", "chromap", "star", "idr", "motif", "footprinting")
 	pc.AssertIOPath(t, pc.TaskByID(t, raw, "OSMOTIC_STRESS_T0_PE.replicate_1.samtools_view").Outputs, "filtered_bam", "results/atacseq/samples/OSMOTIC_STRESS_T0_PE/replicate_1/alignment/OSMOTIC_STRESS_T0_PE_R1.filtered.bam")
@@ -252,6 +256,20 @@ func countInputs(inputs []pc.IO, prefix string) int {
 	count := 0
 	for _, input := range inputs {
 		if strings.HasPrefix(input.Name, prefix) {
+			count++
+		}
+	}
+	return count
+}
+
+func countTreeInputPathsContaining(t *testing.T, inputs []pc.IO, fragment string) int {
+	t.Helper()
+	count := 0
+	for _, input := range inputs {
+		if strings.Contains(input.Path, fragment) {
+			if input.Kind != "tree" {
+				t.Errorf("MultiQC input %s at %s has kind %q, want tree", input.Name, input.Path, input.Kind)
+			}
 			count++
 		}
 	}

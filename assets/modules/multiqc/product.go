@@ -23,7 +23,7 @@ type Ports struct {
 	Data gobble.Handle
 }
 
-// Add records one validated MultiQC command over declared report files.
+// Add records one validated MultiQC command over declared report artifacts.
 func Add(parent modules.Parent, reports []gobble.Handle, options Options) (Ports, error) {
 	const unit = "multiqc"
 	if len(reports) == 0 {
@@ -36,10 +36,18 @@ func Add(parent modules.Parent, reports []gobble.Handle, options Options) (Ports
 	command := []string{"multiqc", "--force", "--outdir", outDir.String(), "."}
 	inputs := make([]gobble.Bind, len(reports))
 	for i, report := range reports {
-		if _, err := modules.HandlePath(unit, report); err != nil {
-			return Ports{}, err
+		if report.IsZero() {
+			return Ports{}, modules.ComposeDefect(gobble.DefectInvalidPath, unit, "report handle is required")
 		}
-		inputs[i] = gobble.Bind{Name: "report_" + strconv.Itoa(i), From: report}
+		input := gobble.Bind{Name: "report_" + strconv.Itoa(i), From: report}
+		if report.Tree().IsZero() {
+			if _, err := modules.HandlePath(unit, report); err != nil {
+				return Ports{}, err
+			}
+		} else {
+			input.Tree = gobble.DeclareTree(gobble.Directory{})
+		}
+		inputs[i] = input
 	}
 	if err := modules.RejectExtraArgs(unit, options.ExtraArgs, []string{"--filename", "--no-data-dir", "--zip-data-dir", "--version", "--help"}); err != nil {
 		return Ports{}, err

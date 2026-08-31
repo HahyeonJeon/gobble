@@ -15,7 +15,11 @@ no earlier ATAC workspace to resume or migrate.
   inferred from a name or filename.
 - `DefaultConfig` returns fresh reference, annotation, filter, broad/narrow peak,
   consensus, output, command, immutable image, resource, argv, and publication
-  policy. It selects only BWA and the atacseq 2.1.2 primary path.
+  policy. It selects only BWA and the atacseq 2.1.2 primary path. This exact
+  default image-and-platform tuple is the supported tuple. Replacing a module
+  image through its typed config is an expert software substitution: Gobble
+  records the replacement in task identity and provenance, but the replacement
+  leaves the supported tuple and has no behavioral-parity support claim.
 - `Build(samples, config)` copies caller data and reads no process state,
   filesystem content, current working directory, or network location. Invalid
   run membership, replicate gaps, control links, reference members, paths,
@@ -57,9 +61,13 @@ never accepts a missing BAM, peak, count, report, or session resource. Stop,
 failure, Inspect, Release, and Resume use the shared engine contract; this
 product adds no retry, fallback, repair, cleanup, or migration verb.
 
-Official small data proves engineering behavior and provenance only. Gobble
+Live fixture evidence fetches and verifies the ten exact official bytes, stages
+them as product inputs, and drives every selected operation through an
+input-consuming hermetic command boundary. This proves byte identity, declared
+data flow, strict fan-in, lifecycle state, and provenance without Docker. It
+does not claim third-party tool output parity or registry availability. Gobble
 does not claim reproducible peaks, appropriate controls, valid differential
-accessibility, assay quality, study suitability, or nf-core endorsement.
-DESeq2 is cohort QC and accepts no design or contrast. Alternate aligners, IDR,
-Preseq, motif discovery, footprinting, and study-specific differential analysis
-are absent.
+accessibility, assay quality, study suitability, or nf-core endorsement. DESeq2
+is cohort QC and accepts no design or contrast. Alternate aligners, IDR, Preseq,
+motif discovery, footprinting, and study-specific differential analysis are
+absent.
