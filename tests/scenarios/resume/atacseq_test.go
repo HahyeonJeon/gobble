@@ -27,6 +27,8 @@ func TestATACResumeReusesAlignmentAndRerunsPeakDescendants(t *testing.T) {
 		"reference.bwa_index":                                   "reused",
 		"OSMOTIC_STRESS_T0_PE.replicate_1.run_001.bwa_mem":      "reused",
 		"OSMOTIC_STRESS_T0_PE.replicate_1.peaks.macs2_callpeak": "rerun",
+		"peak_qc.replicates.plot_macs2_qc":                      "rerun",
+		"peak_qc.replicates.plot_homer_annotatepeaks":           "rerun",
 		"consensus.replicates.atac_consensus_peaks":             "rerun",
 		"consensus.replicates.featurecounts_merge_matrices":     "rerun",
 		"igv.igv_session":                                       "rerun",

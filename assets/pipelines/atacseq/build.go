@@ -30,6 +30,8 @@ import (
 	picardcollectmultiplemetrics "github.com/HahyeonJeon/gobble/assets/modules/picard-collect-multiple-metrics"
 	picardmarkduplicates "github.com/HahyeonJeon/gobble/assets/modules/picard-markduplicates"
 	picardmergesamfiles "github.com/HahyeonJeon/gobble/assets/modules/picard-merge-sam-files"
+	plothomerannotatepeaks "github.com/HahyeonJeon/gobble/assets/modules/plot-homer-annotatepeaks"
+	plotmacs2qc "github.com/HahyeonJeon/gobble/assets/modules/plot-macs2-qc"
 	samtoolsfaidx "github.com/HahyeonJeon/gobble/assets/modules/samtools-faidx"
 	samtoolsflagstat "github.com/HahyeonJeon/gobble/assets/modules/samtools-flagstat"
 	samtoolsidxstats "github.com/HahyeonJeon/gobble/assets/modules/samtools-idxstats"
@@ -65,6 +67,7 @@ type replicateState struct {
 	bai             gobble.Handle
 	track           gobble.Handle
 	peaks           gobble.Handle
+	annotation      gobble.Handle
 	ataqv           gobble.Handle
 }
 
@@ -214,6 +217,12 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 		}
 		reports = append(reports, peakReports...)
 	}
+	peakQCModule := pipeline.AddModule("peak_qc")
+	peakPlotReports, addErr := addPeakPlots(peakQCModule.AddModule("replicates"), "replicates", states, config)
+	if recordModuleError(pipeline, addErr) {
+		return pipeline
+	}
+	reports = append(reports, peakPlotReports...)
 
 	coverageReports, addErr := addCoverageQC(pipeline.AddModule("coverage_qc"), states, reference, config)
 	if recordModuleError(pipeline, addErr) {
@@ -266,6 +275,13 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 			return pipeline
 		}
 		reports = append(reports, peakReports...)
+	}
+	if len(aggregates) > 0 {
+		peakPlotReports, addErr = addPeakPlots(peakQCModule.AddModule("aggregates"), "aggregates", aggregates, config)
+		if recordModuleError(pipeline, addErr) {
+			return pipeline
+		}
+		reports = append(reports, peakPlotReports...)
 	}
 
 	var aggregateConsensus gobble.Handle
@@ -504,8 +520,42 @@ func addPeakQC(state *replicateState, control gobble.Handle, reference reference
 	if err != nil {
 		return nil, err
 	}
-	state.peaks, state.ataqv = peaks.Peaks, ataqvReport.JSON
-	return []gobble.Handle{peaks.XLS, annotation.Annotation, peakCount.Count, frip.Report, ataqvReport.JSON}, nil
+	state.peaks, state.annotation, state.ataqv = peaks.Peaks, annotation.Annotation, ataqvReport.JSON
+	return []gobble.Handle{peaks.Summits, peaks.XLS, annotation.Annotation, peakCount.Count, frip.Report, ataqvReport.JSON}, nil
+}
+
+func addPeakPlots(parent *gobble.Module, level string, states []*replicateState, config Config) ([]gobble.Handle, error) {
+	peaks := make([]gobble.Handle, len(states))
+	annotations := make([]gobble.Handle, len(states))
+	labels := make([]string, len(states))
+	for i, state := range states {
+		peaks[i], annotations[i] = state.peaks, state.annotation
+		labels[i] = state.sample
+		if state.replicate > 0 {
+			labels[i] += ".R" + strconv.Itoa(state.replicate)
+		}
+	}
+	outDir := config.Results.Join("qc", "peaks", level)
+	macsOptions := config.PlotMACS2QC
+	macsOptions.OutDir, macsOptions.Prefix = outDir, "macs2_peak"
+	macs, err := plotmacs2qc.Add(parent, peaks, labels, macsOptions)
+	if err != nil {
+		return nil, err
+	}
+	homerOptions := config.PlotHOMERAnnotatePeaks
+	homerOptions.OutDir, homerOptions.Prefix = outDir, "homer_annotation"
+	if level == "replicates" {
+		homerOptions.MultiQCID = "mlib_peak_annotation"
+		homerOptions.MultiQCSection = "MERGED LIB: HOMER peak annotation"
+	} else {
+		homerOptions.MultiQCID = "mrep_peak_annotation"
+		homerOptions.MultiQCSection = "MERGED REP: HOMER peak annotation"
+	}
+	homer, err := plothomerannotatepeaks.Add(parent, annotations, labels, homerOptions)
+	if err != nil {
+		return nil, err
+	}
+	return []gobble.Handle{macs.Summary, macs.PDF, homer.Summary, homer.PDF, homer.MultiQC}, nil
 }
 
 func addCoverageQC(parent *gobble.Module, states []*replicateState, reference referenceHandles, config Config) ([]gobble.Handle, error) {

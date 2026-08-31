@@ -27,6 +27,8 @@ import (
 	picardcollectmultiplemetrics "github.com/HahyeonJeon/gobble/assets/modules/picard-collect-multiple-metrics"
 	picardmarkduplicates "github.com/HahyeonJeon/gobble/assets/modules/picard-markduplicates"
 	picardmergesamfiles "github.com/HahyeonJeon/gobble/assets/modules/picard-merge-sam-files"
+	plothomerannotatepeaks "github.com/HahyeonJeon/gobble/assets/modules/plot-homer-annotatepeaks"
+	plotmacs2qc "github.com/HahyeonJeon/gobble/assets/modules/plot-macs2-qc"
 	samtoolsfaidx "github.com/HahyeonJeon/gobble/assets/modules/samtools-faidx"
 	samtoolsflagstat "github.com/HahyeonJeon/gobble/assets/modules/samtools-flagstat"
 	samtoolsidxstats "github.com/HahyeonJeon/gobble/assets/modules/samtools-idxstats"
@@ -102,6 +104,8 @@ func DefaultConfig() Config {
 		PlotFingerprint:        deeptoolsplotfingerprint.Options{Options: atacResources(2, "4g")},
 		MACS2:                  macs2callpeak.Options{Options: atacResources(2, "4g"), QValue: 0.05},
 		HOMER:                  homerannotatepeaks.Options{Options: atacResources(2, "4g")},
+		PlotMACS2QC:            plotmacs2qc.Options{Options: atacResources(2, "4g")},
+		PlotHOMERAnnotatePeaks: plothomerannotatepeaks.Options{Options: atacResources(2, "4g")},
 		PeakCount:              wclines.Options{Options: atacResources(1, "256m")},
 		PeakIntersect:          bedtoolsintersect.Options{Options: atacBase(atacBedtoolsImage, 1, "2g")},
 		ReadCount:              samtoolsviewcount.Options{Options: atacBase(atacSamtoolsImage, 1, "1g")},

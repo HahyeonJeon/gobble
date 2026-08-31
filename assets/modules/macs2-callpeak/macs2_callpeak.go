@@ -30,10 +30,11 @@ type Options struct {
 	QValue              float64
 }
 
-// Ports contains the selected peak set and MACS2 call table.
+// Ports contains the selected peak set, summit positions, and MACS2 call table.
 type Ports struct {
-	Peaks gobble.Handle
-	XLS   gobble.Handle
+	Peaks   gobble.Handle
+	Summits gobble.Handle
+	XLS     gobble.Handle
 }
 
 // Add records one control-aware callpeak command. A zero control is an explicit no-control call.
@@ -61,7 +62,7 @@ func Add(parent modules.Parent, treatment, control gobble.Handle, options Option
 	if options.Paired {
 		format = "BAMPE"
 	}
-	command := []string{"macs2", "callpeak", "--gsize", options.EffectiveGenomeSize, "--format", format, "--name", prefix, "--treatment", treatmentPath, "--outdir", outDir.String(), "--qvalue", formatFloat(options.QValue)}
+	command := []string{"macs2", "callpeak", "--gsize", options.EffectiveGenomeSize, "--format", format, "--name", prefix, "--treatment", treatmentPath, "--outdir", outDir.String(), "--qvalue", formatFloat(options.QValue), "--call-summits"}
 	inputs := []gobble.Bind{{Name: "treatment", From: treatment}}
 	if !control.IsZero() {
 		controlPath, pathErr := modules.HandlePath(unit, control)
@@ -86,9 +87,10 @@ func Add(parent modules.Parent, treatment, control gobble.Handle, options Option
 		return Ports{}, err
 	}
 	peaks := gobble.PathSpec{Dir: outDir, Base: prefix + "_peaks", Ext: peakExt}
+	summits := gobble.PathSpec{Dir: outDir, Base: prefix + "_summits", Ext: ".bed"}
 	xls := gobble.PathSpec{Dir: outDir, Base: prefix + "_peaks", Ext: ".xls"}
-	task := parent.AddTask(gobble.TaskSpec{Name: unit, Command: command, Image: image, Resources: resources, Inputs: inputs, Outputs: []gobble.Bind{{Name: "peaks", Spec: peaks}, {Name: "xls", Spec: xls}}})
-	return Ports{Peaks: task.Out("peaks"), XLS: task.Out("xls")}, nil
+	task := parent.AddTask(gobble.TaskSpec{Name: unit, Command: command, Image: image, Resources: resources, Inputs: inputs, Outputs: []gobble.Bind{{Name: "peaks", Spec: peaks}, {Name: "summits", Spec: summits}, {Name: "xls", Spec: xls}}})
+	return Ports{Peaks: task.Out("peaks"), Summits: task.Out("summits"), XLS: task.Out("xls")}, nil
 }
 
 func formatFloat(value float64) string {

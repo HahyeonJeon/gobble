@@ -108,6 +108,12 @@ func validateBuild(samples []Sample, config Config) []gobble.Defect {
 	if unit, flag := protectedExtra(config); flag != "" {
 		defects = append(defects, gobble.Defect{Code: gobble.DefectInvalidValue, Unit: unit, Message: "ATAC ExtraArgs contains protected option " + flag})
 	}
+	if len(config.PlotMACS2QC.ExtraArgs) != 0 {
+		defects = append(defects, gobble.Defect{Code: gobble.DefectInvalidValue, Unit: "plot_macs2_qc", Message: "ATAC MACS2 QC plot operands are typed and ExtraArgs are unsupported"})
+	}
+	if len(config.PlotHOMERAnnotatePeaks.ExtraArgs) != 0 {
+		defects = append(defects, gobble.Defect{Code: gobble.DefectInvalidValue, Unit: "plot_homer_annotatepeaks", Message: "ATAC HOMER annotation-QC operands are typed and ExtraArgs are unsupported"})
+	}
 	return defects
 }
 
@@ -120,7 +126,7 @@ func protectedExtra(config Config) (string, string) {
 		{unit: "bwa_index", args: config.BWAIndex.ExtraArgs, flags: []string{"--aligner", "--bowtie2", "--chromap", "--star"}},
 		{unit: "bwa_mem", args: config.BWAMem.ExtraArgs, flags: []string{"--aligner", "--bowtie2", "--chromap", "--star", "-R", "-t", "-o"}},
 		{unit: "bedtools_genomecov", args: config.GenomeCoverage.ExtraArgs, flags: []string{"-ibam", "-bg", "-scale", "-pc"}},
-		{unit: "macs2_callpeak", args: config.MACS2.ExtraArgs, flags: []string{"--format", "-f", "--name", "-n", "--treatment", "-t", "--control", "-c", "--outdir", "--broad"}},
+		{unit: "macs2_callpeak", args: config.MACS2.ExtraArgs, flags: []string{"--format", "-f", "--name", "-n", "--treatment", "-t", "--control", "-c", "--outdir", "--broad", "--call-summits"}},
 		{unit: "featurecounts_atac", args: config.FeatureCounts.ExtraArgs, flags: []string{"-F", "-a", "-o", "-p", "--countReadPairs"}},
 		{unit: "deseq2_qc", args: config.DESeq2QC.ExtraArgs, flags: []string{"--design", "--contrast"}},
 	}
@@ -177,6 +183,8 @@ func cloneConfig(config Config) Config {
 	clone(&config.PlotFingerprint.Options)
 	clone(&config.MACS2.Options)
 	clone(&config.HOMER.Options)
+	clone(&config.PlotMACS2QC.Options)
+	clone(&config.PlotHOMERAnnotatePeaks.Options)
 	clone(&config.PeakCount.Options)
 	clone(&config.PeakIntersect.Options)
 	clone(&config.ReadCount.Options)

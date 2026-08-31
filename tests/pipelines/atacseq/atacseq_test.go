@@ -78,6 +78,7 @@ func TestBuildSelectedVerticalUsesComposeTimeStrictFanIn(t *testing.T) {
 	for name, want := range map[string]int{
 		"samtools_faidx": 1, "atac_reference_intervals": 1, "bwa_index": 1,
 		"bwa_mem": 8, "picard_merge_sam_files": 8, "macs2_callpeak": 8,
+		"plot_macs2_qc": 2, "plot_homer_annotatepeaks": 2,
 		"ataqv": 8, "atac_consensus_peaks": 2, "featurecounts_atac": 4,
 		"featurecounts_merge_matrices": 2, "deseq2_qc": 2, "ataqv_mkarv": 1, "igv_session": 1, "multiqc": 1,
 	} {
@@ -91,6 +92,8 @@ func TestBuildSelectedVerticalUsesComposeTimeStrictFanIn(t *testing.T) {
 		"OSMOTIC_STRESS_T0_PE.replicate_1.technical_run_merge.picard_merge_sam_files",
 		"OSMOTIC_STRESS_T0_PE.aggregate.replicate_merge.picard_merge_sam_files",
 		"OSMOTIC_STRESS_T0_PE.replicate_1.peaks.macs2_callpeak",
+		"peak_qc.replicates.plot_macs2_qc", "peak_qc.replicates.plot_homer_annotatepeaks",
+		"peak_qc.aggregates.plot_macs2_qc", "peak_qc.aggregates.plot_homer_annotatepeaks",
 		"coverage_qc.deeptools_plot_fingerprint",
 		"consensus.replicates.atac_consensus_peaks",
 		"consensus.aggregates.featurecounts_merge_matrices",
@@ -114,9 +117,20 @@ func TestBuildSelectedVerticalUsesComposeTimeStrictFanIn(t *testing.T) {
 	if got := countTreeInputPathsContaining(t, multiQC.Inputs, "/qc/alignment/picard"); got != 8 {
 		t.Fatalf("MultiQC Picard CollectMultipleMetrics fan-in = %d, want all 8 replicate and aggregate Trees", got)
 	}
+	replicateMACSPlot := pc.TaskByID(t, raw, "peak_qc.replicates.plot_macs2_qc")
+	replicateHOMERPlot := pc.TaskByID(t, raw, "peak_qc.replicates.plot_homer_annotatepeaks")
+	if got := countInputs(replicateMACSPlot.Inputs, "peaks_"); got != 6 {
+		t.Fatalf("replicate MACS2 QC fan-in = %d, want all 6 peak sets", got)
+	}
+	if got := countInputs(replicateHOMERPlot.Inputs, "annotation_"); got != 6 {
+		t.Fatalf("replicate HOMER QC fan-in = %d, want all 6 annotation tables", got)
+	}
 	assertNoRuntimeScatter(t, raw)
 	pc.AssertNoTaskName(t, tasks, "bowtie2", "chromap", "star", "idr", "motif", "footprinting")
 	pc.AssertIOPath(t, pc.TaskByID(t, raw, "OSMOTIC_STRESS_T0_PE.replicate_1.samtools_view").Outputs, "filtered_bam", "results/atacseq/samples/OSMOTIC_STRESS_T0_PE/replicate_1/alignment/OSMOTIC_STRESS_T0_PE_R1.filtered.bam")
+	pc.AssertIOPath(t, pc.TaskByID(t, raw, "OSMOTIC_STRESS_T0_PE.replicate_1.peaks.macs2_callpeak").Outputs, "summits", "results/atacseq/samples/OSMOTIC_STRESS_T0_PE/replicate_1/peaks/OSMOTIC_STRESS_T0_PE_R1_summits.bed")
+	pc.AssertIOPath(t, replicateMACSPlot.Outputs, "pdf", "results/atacseq/qc/peaks/replicates/macs2_peak.plots.pdf")
+	pc.AssertIOPath(t, replicateHOMERPlot.Outputs, "multiqc", "results/atacseq/qc/peaks/replicates/homer_annotation.summary_mqc.tsv")
 	pc.AssertIOPath(t, pc.TaskByID(t, raw, "consensus.replicates.atac_consensus_peaks").Outputs, "bed", "results/atacseq/consensus/replicates/consensus.bed")
 	pc.AssertIOPath(t, pc.TaskByID(t, raw, "igv.igv_session").Outputs, "xml", "results/atacseq/igv/igv_session.xml")
 }
@@ -132,7 +146,7 @@ func TestControlBindingAndNarrowModeAreTyped(t *testing.T) {
 	peak := pc.TaskByID(t, raw, "TREATMENT.replicate_1.peaks.macs2_callpeak")
 	pc.AssertIOPath(t, peak.Inputs, "control", "results/atacseq/samples/INPUT/replicate_1/alignment/INPUT_R1.filtered.bam")
 	pc.AssertIOPath(t, peak.Outputs, "peaks", "results/atacseq/samples/TREATMENT/replicate_1/peaks/TREATMENT_R1_peaks.narrowPeak")
-	if !pc.ContainsAll(peak.Command, "--format", "BAM", "--control") || slicesContains(peak.Command, "--broad") {
+	if !pc.ContainsAll(peak.Command, "--format", "BAM", "--control", "--call-summits") || slicesContains(peak.Command, "--broad") {
 		t.Fatalf("typed narrow/control command = %#v", peak.Command)
 	}
 	if got := paramValue(peak.Params, "control"); got != "INPUT.R1" {
@@ -175,6 +189,9 @@ func TestProtectedAliasesAndInvalidPublicationFailCompose(t *testing.T) {
 	}{
 		{name: "MACS short control", unit: "macs2_callpeak", mutate: func(c *atacseq.Config) { c.MACS2.ExtraArgs = []string{"-cother.bam"} }},
 		{name: "MACS output", unit: "macs2_callpeak", mutate: func(c *atacseq.Config) { c.MACS2.ExtraArgs = []string{"--outdir=elsewhere"} }},
+		{name: "MACS summits", unit: "macs2_callpeak", mutate: func(c *atacseq.Config) { c.MACS2.ExtraArgs = []string{"--call-summits=false"} }},
+		{name: "MACS plot operands", unit: "plot_macs2_qc", mutate: func(c *atacseq.Config) { c.PlotMACS2QC.ExtraArgs = []string{"--outdir", "elsewhere"} }},
+		{name: "HOMER plot operands", unit: "plot_homer_annotatepeaks", mutate: func(c *atacseq.Config) { c.PlotHOMERAnnotatePeaks.ExtraArgs = []string{"--homer_files", "other.txt"} }},
 		{name: "Picard output alias", unit: "picard_markduplicates", mutate: func(c *atacseq.Config) { c.MarkDuplicates.ExtraArgs = []string{"O=elsewhere.bam"} }},
 		{name: "aligner route", unit: "bwa_mem", mutate: func(c *atacseq.Config) { c.BWAMem.ExtraArgs = []string{"--aligner=bowtie2"} }},
 		{name: "BWA index positional operand", unit: "bwa_index", mutate: func(c *atacseq.Config) { c.BWAIndex.ExtraArgs = []string{"in/undeclared.fasta"} }},
@@ -252,7 +269,8 @@ func TestBuildCopiesCallerDataAndDefaultsAreFresh(t *testing.T) {
 	}
 	first := atacseq.DefaultConfig()
 	first.MACS2.ExtraArgs = append(first.MACS2.ExtraArgs, "--changed")
-	if second := atacseq.DefaultConfig(); len(second.MACS2.ExtraArgs) != 0 || second.PeakMode != atacseq.PeakBroad {
+	first.PlotMACS2QC.ExtraArgs = append(first.PlotMACS2QC.ExtraArgs, "--changed")
+	if second := atacseq.DefaultConfig(); len(second.MACS2.ExtraArgs) != 0 || len(second.PlotMACS2QC.ExtraArgs) != 0 || second.PeakMode != atacseq.PeakBroad {
 		t.Fatalf("DefaultConfig retained mutation or lost broad default: %#v", second)
 	}
 	sourcecheck.AssertNoCall(t, "../../../assets/pipelines/atacseq/build.go", "SampleSheetPath", "Load", "Open", "ReadFile", "Stat", "Lstat", "Getwd")

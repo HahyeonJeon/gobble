@@ -36,10 +36,12 @@ MEM, sorting/indexing and library statistics for every technical run. It then
 strictly merges each replicate's technical runs, marks duplicates, applies
 typed mapping, orphan, mitochondrial, and optional blacklist filters, emits
 indexed final BAMs, alignment metrics, RPM-normalized BigWigs, deepTools
-coverage QC, and control-aware MACS2 peaks.
+coverage QC, and control-aware MACS2 peaks, summits, and call tables.
 
 Each replicate peak set has HOMER annotation, peak count, FRiP, and ataqv
-evidence. Every declared replicate peak and filtered BAM is a required input to
+evidence. Strict replicate-level and aggregate-level fan-in produces MACS2
+peak-distribution summaries and PDFs plus HOMER annotation summaries, PDFs, and
+MultiQC tables. Every declared replicate peak and filtered BAM is a required input to
 the consensus BED/SAF/presence table and FeatureCounts matrix. Mixed PE/SE
 cohorts are counted in typed mode-specific FeatureCounts commands, then merged
 through one same-consensus matrix check. DESeq2 emits only size-factor, PCA,

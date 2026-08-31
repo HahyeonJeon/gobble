@@ -17,6 +17,10 @@ func TestATACRunCompletesRequiredArtifactsHermetically(t *testing.T) {
 	}
 	for _, rel := range []string{
 		"results/atacseq/samples/OSMOTIC_STRESS_T0_PE/replicate_1/alignment/OSMOTIC_STRESS_T0_PE_R1.filtered.bam",
+		"results/atacseq/samples/OSMOTIC_STRESS_T0_PE/replicate_1/peaks/OSMOTIC_STRESS_T0_PE_R1_summits.bed",
+		"results/atacseq/qc/peaks/replicates/macs2_peak.plots.pdf",
+		"results/atacseq/qc/peaks/replicates/homer_annotation.plots.pdf",
+		"results/atacseq/qc/peaks/replicates/homer_annotation.summary_mqc.tsv",
 		"results/atacseq/consensus/replicates/consensus.bed",
 		"results/atacseq/consensus/replicates/featurecounts/consensus.featureCounts.txt",
 		"results/atacseq/igv/igv_session.xml",

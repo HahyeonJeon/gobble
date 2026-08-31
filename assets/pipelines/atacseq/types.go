@@ -37,6 +37,8 @@ import (
 	picardcollectmultiplemetrics "github.com/HahyeonJeon/gobble/assets/modules/picard-collect-multiple-metrics"
 	picardmarkduplicates "github.com/HahyeonJeon/gobble/assets/modules/picard-markduplicates"
 	picardmergesamfiles "github.com/HahyeonJeon/gobble/assets/modules/picard-merge-sam-files"
+	plothomerannotatepeaks "github.com/HahyeonJeon/gobble/assets/modules/plot-homer-annotatepeaks"
+	plotmacs2qc "github.com/HahyeonJeon/gobble/assets/modules/plot-macs2-qc"
 	samtoolsfaidx "github.com/HahyeonJeon/gobble/assets/modules/samtools-faidx"
 	samtoolsflagstat "github.com/HahyeonJeon/gobble/assets/modules/samtools-flagstat"
 	samtoolsidxstats "github.com/HahyeonJeon/gobble/assets/modules/samtools-idxstats"
@@ -168,6 +170,8 @@ type Config struct {
 	PlotFingerprint        deeptoolsplotfingerprint.Options
 	MACS2                  macs2callpeak.Options
 	HOMER                  homerannotatepeaks.Options
+	PlotMACS2QC            plotmacs2qc.Options
+	PlotHOMERAnnotatePeaks plothomerannotatepeaks.Options
 	PeakCount              wclines.Options
 	PeakIntersect          bedtoolsintersect.Options
 	ReadCount              samtoolsviewcount.Options

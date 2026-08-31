@@ -30,7 +30,7 @@ func TestATACInputFailureIsContainedInspectableAndRecoverable(t *testing.T) {
 	if !recordsContainATACValue(errorsView, failed) || !recordsContainATACValue(logsView, failed) || !recordsContainATACValue(logsView, "simulated ATAC input rejection for "+failed+"\n") {
 		t.Fatalf("ATAC errors/logs omit failed input unit: errors=%#v logs=%#v", errorsView, logsView)
 	}
-	if !recordsContainATACIdentity(remaining, failed) || !recordsContainATACIdentity(remaining, downstream) || !recordsContainATACIdentity(remaining, "multiqc") {
+	if !recordsContainATACIdentity(remaining, failed) || !recordsContainATACIdentity(remaining, "peak_qc.replicates.plot_macs2_qc") || !recordsContainATACIdentity(remaining, downstream) || !recordsContainATACIdentity(remaining, "multiqc") {
 		t.Fatalf("ATAC failure remaining work does not block failed descendants: %#v", remaining)
 	}
 	reusable := filepath.Join(runtime.Workspace(), "results", "atacseq", "samples", "OSMOTIC_STRESS_T0_PE", "replicate_1", "alignment", "OSMOTIC_STRESS_T0_PE_R1.filtered.bam")
@@ -52,6 +52,7 @@ func TestATACInputFailureIsContainedInspectableAndRecoverable(t *testing.T) {
 	reuse := runtime.InspectRecords(gobble.ViewReuse)
 	requireATACDecision(t, reuse, upstream, "reused")
 	requireATACDecision(t, reuse, failed, "rerun")
+	requireATACDecision(t, reuse, "peak_qc.replicates.plot_macs2_qc", "rerun")
 	requireATACDecision(t, reuse, downstream, "rerun")
 	if remaining := runtime.InspectRecords(gobble.ViewRemaining); len(remaining) != 0 {
 		t.Fatalf("remaining after ATAC failure recovery = %#v, want empty", remaining)
