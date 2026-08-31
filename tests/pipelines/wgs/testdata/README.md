@@ -15,6 +15,8 @@ sheet never turns that lineage into a biological or clinical claim.
 Live test-only preparation downloads staged entries into `cache/`, verifies
 their declared size and SHA-256, and copies them into a caller-created
 workspace. It splits the exact two-line `WG-INTERVALS` byte into stable
-`interval_001.bed` and `interval_002.bed` Scatter members. Product source and
-`Build` never fetch, inspect, or stage fixture bytes. The ignored cache is not
-committed or redistributed.
+`interval_001.bed` and `interval_002.bed` Scatter members. F consumes the four
+FASTQs through the product graph. J consumes both exact mapped BAM/BAI pairs
+through a test-owned HaplotypeCaller, GenomicsDB, GenotypeGVCFs, and unfiltered
+gathered-callset graph. Product source and `Build` never fetch, inspect, or
+stage fixture bytes. The ignored cache is not committed or redistributed.

@@ -10,9 +10,9 @@ import (
 
 func TestWGSRunCandidateDeclaresRequiredFinalArtifacts(t *testing.T) {
 	raw := wgsscenario.Plan(t, wgs.DefaultConfig())
-	pc.AssertIOPath(t, pc.TaskByID(t, raw, "testN_bqsr_gather.testN.gatk4_gatherbamfiles").Outputs, "bam", "results/wgs/samples/testN/alignment/testN.recalibrated.bam")
-	pc.AssertIOPath(t, pc.TaskByID(t, raw, "testN_gvcf_gather.testN.gatk4_mergevcfs").Outputs, "vcf", "results/wgs/samples/testN/gvcf/testN.g.vcf.gz")
-	pc.AssertTreeIO(t, pc.TaskByID(t, raw, "joint_database_interval_001.gatk4_genomicsdbimport").Outputs, "database", "work/joint/genomicsdb/interval_001")
+	pc.AssertIOPath(t, pc.TaskByID(t, raw, "patient1.testN.bqsr_gather.gatk4_gatherbamfiles").Outputs, "bam", "results/wgs/samples/patient1/testN/alignment/testN.recalibrated.bam")
+	pc.AssertIOPath(t, pc.TaskByID(t, raw, "patient1.testN.gvcf_gather.gatk4_mergevcfs").Outputs, "vcf", "results/wgs/samples/patient1/testN/gvcf/testN.g.vcf.gz")
+	pc.AssertTreeIO(t, pc.TaskByID(t, raw, "joint_intervals.database.gatk4_genomicsdbimport").Outputs, "database", "work/joint/genomicsdb")
 	pc.AssertIOPath(t, pc.TaskByID(t, raw, "joint_gather.joint.gatk4_mergevcfs").Outputs, "vcf", "results/wgs/joint/joint_germline.vcf.gz")
 	pc.AssertIOPath(t, pc.TaskByID(t, raw, "multiqc").Outputs, "html", "results/wgs/multiqc/multiqc_report.html")
 	if !wgs.Lifecycle.Run {

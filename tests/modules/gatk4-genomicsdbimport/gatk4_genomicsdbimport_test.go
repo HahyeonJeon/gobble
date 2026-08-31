@@ -1,6 +1,7 @@
 package gatk4genomicsdbimport_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
@@ -15,21 +16,26 @@ func TestGenomicsDBImportRequiresTwoSamplesAndReturnsTree(t *testing.T) {
 		{GVCF: p.AddInput("a", spec("a", ".g.vcf.gz")), TBI: p.AddInput("a_tbi", spec("a", ".g.vcf.gz.tbi"))},
 		{GVCF: p.AddInput("b", spec("b", ".g.vcf.gz")), TBI: p.AddInput("b_tbi", spec("b", ".g.vcf.gz.tbi"))},
 	}
-	interval := p.AddInput("interval", spec("interval_001", ".bed"))
-	ports, err := gatk4genomicsdbimport.Add(p, variants, interval, gatk4genomicsdbimport.Options{OutDir: gobble.Dir("work/genomicsdb/interval_001")})
+	intervals := p.AddInputGroup("intervals", gobble.Group{
+		{Name: "interval_001", Spec: spec("interval_001", ".bed")},
+		{Name: "interval_002", Spec: spec("interval_002", ".bed")},
+	})
+	ports, err := gatk4genomicsdbimport.Add(p.Scatter("intervals").From(intervals), variants, intervals, gatk4genomicsdbimport.Options{IntervalDir: gobble.Dir("in"), OutDir: gobble.Dir("work/genomicsdb")})
 	if err != nil || ports.Database.IsZero() {
 		t.Fatalf("Add() = (%#v, %v), want Tree port", ports, err)
 	}
-	task := cc.Task(t, p, "gatk4_genomicsdbimport")
-	if !pc.ContainsAll(task.Command, "GenomicsDBImport", "--variant", "in/a.g.vcf.gz", "in/b.g.vcf.gz", "--intervals", "in/interval_001.bed") {
-		t.Fatalf("GenomicsDBImport command = %#v", task.Command)
+	task := cc.Task(t, p, "intervals.gatk4_genomicsdbimport")
+	for _, want := range []string{"GenomicsDBImport", "--variant", "in/a.g.vcf.gz", "in/b.g.vcf.gz", "--intervals \"$interval\"", "'work/genomicsdb'/$stem"} {
+		if !strings.Contains(task.Script, want) {
+			t.Errorf("GenomicsDBImport script omits %q: %s", want, task.Script)
+		}
 	}
-	pc.AssertTreeIO(t, task.Outputs, "database", "work/genomicsdb/interval_001")
+	pc.AssertTreeIO(t, task.Outputs, "database", "work/genomicsdb")
 
 	p = gobble.NewPipeline("invalid")
 	one := []gatk4genomicsdbimport.Variant{{GVCF: p.AddInput("a", spec("a", ".g.vcf.gz")), TBI: p.AddInput("a_tbi", spec("a", ".g.vcf.gz.tbi"))}}
-	interval = p.AddInput("interval", spec("interval_001", ".bed"))
-	_, err = gatk4genomicsdbimport.Add(p, one, interval, gatk4genomicsdbimport.Options{})
+	intervals = p.AddInputGroup("intervals", gobble.Group{{Name: "interval_001", Spec: spec("interval_001", ".bed")}})
+	_, err = gatk4genomicsdbimport.Add(p.Scatter("intervals").From(intervals), one, intervals, gatk4genomicsdbimport.Options{IntervalDir: gobble.Dir("in")})
 	if err == nil {
 		t.Fatal("Add(one sample) error = nil, want cohort defect")
 	}

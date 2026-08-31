@@ -133,6 +133,45 @@ func TestFixtureSheetUsesOnlyManifestFASTQBytes(t *testing.T) {
 	}
 }
 
+func TestJointMappedFixtureBytesReachCallingGraph(t *testing.T) {
+	raw := pc.MustPlanJSON(t, wgsevidence.JointFixturePipeline())
+	for _, test := range []struct {
+		task string
+		bam  string
+		bai  string
+	}{
+		{task: "joint_fixture_haplotype_intervals.patient1.testN.gatk4_haplotypecaller", bam: "in/joint/testN/test.paired_end.sorted.bam", bai: "in/joint/testN/test.paired_end.sorted.bam.bai"},
+		{task: "joint_fixture_haplotype_intervals.patient2.testT.gatk4_haplotypecaller", bam: "in/joint/testT/test2.paired_end.sorted.bam", bai: "in/joint/testT/test2.paired_end.sorted.bam.bai"},
+	} {
+		task := pc.TaskByID(t, raw, test.task)
+		pc.AssertIOPath(t, task.Inputs, "bam", test.bam)
+		pc.AssertIOPath(t, task.Inputs, "bai", test.bai)
+	}
+	pc.MustHaveTaskID(t, pc.AllTasks(t, raw), "joint_fixture_intervals.database.gatk4_genomicsdbimport")
+	pc.MustHaveTaskID(t, pc.AllTasks(t, raw), "joint_fixture_intervals.genotype.gatk4_genotypegvcfs")
+	pc.AssertIOPath(t, pc.TaskByID(t, raw, "joint_fixture_gather.joint.gatk4_mergevcfs").Outputs, "vcf", "evidence/wgs/joint/joint_germline.vcf.gz")
+	pc.AssertNoTaskName(t, pc.AllTasks(t, raw), "VariantRecalibrator", "ApplyVQSR")
+}
+
+func TestJointMappedFixtureBytesAreStagedByLiveConsumers(t *testing.T) {
+	for _, source := range []string{"../../local-e2e/helpers_test.go", "../../install-e2e/consumer_source_test.go"} {
+		data, err := os.ReadFile(source)
+		if err != nil {
+			t.Fatalf("ReadFile(%s): %v", source, err)
+		}
+		for _, name := range []string{
+			"test.paired_end.sorted.bam",
+			"test.paired_end.sorted.bam.bai",
+			"test2.paired_end.sorted.bam",
+			"test2.paired_end.sorted.bam.bai",
+		} {
+			if !strings.Contains(string(data), name) {
+				t.Errorf("%s does not stage %s", source, name)
+			}
+		}
+	}
+}
+
 func loadManifest(t *testing.T) wgsManifest {
 	t.Helper()
 	data, err := os.ReadFile("testdata/manifest.json")

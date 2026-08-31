@@ -256,6 +256,17 @@ func scatterFileFromProducer(t *Task, b Bind) bool {
 	return sameHandle(b.From, sc.from)
 }
 
+func scatterMemberTreeFromProducer(t *Task, b Bind) bool {
+	if t == nil || b.Tree.IsZero() {
+		return false
+	}
+	sc := t.scatterOp()
+	if sc == nil || sc.from.IsZero() {
+		return false
+	}
+	return sameHandle(b.From, sc.from)
+}
+
 func fromScatterChild(t *Task, b Bind) bool {
 	if t == nil || b.From.task == nil {
 		return false
@@ -333,6 +344,10 @@ func (r *resolver) resolveTree(t *Task, b Bind, out bool) (Directory, bool) {
 		return Directory{}, false
 	}
 	if b.From.IsZero() {
+		r.treeMemo[key] = b.Tree.Dir
+		return b.Tree.Dir, true
+	}
+	if out && scatterMemberTreeFromProducer(t, b) {
 		r.treeMemo[key] = b.Tree.Dir
 		return b.Tree.Dir, true
 	}

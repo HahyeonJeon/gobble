@@ -31,6 +31,16 @@ func TestHaplotypeCallerRejectsEveryOutputPrefix(t *testing.T) {
 	}
 }
 
+func TestHaplotypeCallerRejectsNamedFieldShortAliases(t *testing.T) {
+	for _, arg := range []string{"-I", "-I=other.bam", "-O", "-O=other.vcf.gz", "-R", "-R=other.fasta", "-L", "-L=other.bed", "-ERC", "-ERC=NONE", "-D", "-D=dbsnp.vcf.gz"} {
+		_, err := gobble.Compose(haplotypePipeline([]string{arg}))
+		var composeErr *gobble.Error
+		if !errors.As(err, &composeErr) || len(composeErr.Defects) != 1 || composeErr.Defects[0].Code != gobble.DefectInvalidValue || composeErr.Defects[0].Unit != "gatk4_haplotypecaller" {
+			t.Errorf("ExtraArgs %q error = %#v, want structured protected-alias defect", arg, err)
+		}
+	}
+}
+
 func haplotypePipeline(extra []string) *gobble.Pipeline {
 	p := gobble.NewPipeline("haplotype")
 	bam := p.AddInput("bam", file("in", "sample", ".bam"))

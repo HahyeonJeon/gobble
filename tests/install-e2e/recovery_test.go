@@ -236,8 +236,8 @@ func requireWGSOutputs(t *testing.T, workspace string) {
 	t.Helper()
 	for _, rel := range []string{
 		"results/wgs/multiqc/multiqc_report.html",
-		"results/wgs/samples/testN/alignment/testN.recalibrated.bam",
-		"results/wgs/samples/testT/alignment/testT.recalibrated.bam",
+		"results/wgs/samples/patient1/testN/alignment/testN.recalibrated.bam",
+		"results/wgs/samples/patient2/testT/alignment/testT.recalibrated.bam",
 		"results/wgs/joint/joint_germline.vcf.gz",
 	} {
 		path := filepath.Join(workspace, filepath.FromSlash(rel))

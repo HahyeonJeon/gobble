@@ -145,6 +145,10 @@ func main() {
 		"dbsnp_146.hg38.vcf.gz.tbi": "in/reference/known-sites/dbsnp_146.hg38.vcf.gz.tbi",
 		"mills_and_1000G.indels.vcf.gz": "in/reference/known-sites/mills_and_1000G.indels.vcf.gz",
 		"mills_and_1000G.indels.vcf.gz.tbi": "in/reference/known-sites/mills_and_1000G.indels.vcf.gz.tbi",
+		"test.paired_end.sorted.bam": "in/joint/testN/test.paired_end.sorted.bam",
+		"test.paired_end.sorted.bam.bai": "in/joint/testN/test.paired_end.sorted.bam.bai",
+		"test2.paired_end.sorted.bam": "in/joint/testT/test2.paired_end.sorted.bam",
+		"test2.paired_end.sorted.bam.bai": "in/joint/testT/test2.paired_end.sorted.bam.bai",
 	}
 	for _, pin := range wgsevidence.MustPins() {
 		rel, ok := destinations[pin.Name]
@@ -356,8 +360,8 @@ func resume(workspace string) error {
 	}
 	for _, rel := range []string{
 		"results/wgs/multiqc/multiqc_report.html",
-		"results/wgs/samples/testN/alignment/testN.recalibrated.bam",
-		"results/wgs/samples/testT/alignment/testT.recalibrated.bam",
+		"results/wgs/samples/patient1/testN/alignment/testN.recalibrated.bam",
+		"results/wgs/samples/patient2/testT/alignment/testT.recalibrated.bam",
 		"results/wgs/joint/joint_germline.vcf.gz",
 	} {
 		info, err := os.Stat(filepath.Join(workspace, filepath.FromSlash(rel)))

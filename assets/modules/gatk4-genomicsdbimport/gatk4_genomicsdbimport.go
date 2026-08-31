@@ -17,19 +17,20 @@ type Variant struct {
 // Options controls one interval GenomicsDBImport command.
 type Options struct {
 	modules.Options
-	OutDir gobble.Directory
+	IntervalDir gobble.Directory
+	OutDir      gobble.Directory
 }
 
 // Ports contains the complete GenomicsDB directory Tree.
 type Ports struct{ Database gobble.Handle }
 
-// Add records one validated GenomicsDBImport command for one interval.
+// Add records one validated interval-scattered GenomicsDBImport command.
 func Add(parent modules.Parent, variants []Variant, interval gobble.Handle, options Options) (Ports, error) {
 	const unit = "gatk4_genomicsdbimport"
 	if len(variants) < 2 {
 		return Ports{}, modules.ComposeDefect(gobble.DefectInvalidValue, unit, "at least two cohort gVCFs are required")
 	}
-	intervalPath, err := modules.HandlePath(unit, interval)
+	prelude, err := modules.ScatterFilePrelude(unit, options.IntervalDir)
 	if err != nil {
 		return Ports{}, err
 	}
@@ -55,22 +56,31 @@ func Add(parent modules.Parent, variants []Variant, interval gobble.Handle, opti
 		command = append(command, "--variant", gvcfPath)
 		inputs = append(inputs, gobble.Bind{Name: "gvcf_" + strconv.Itoa(i), From: variant.GVCF}, gobble.Bind{Name: "tbi_" + strconv.Itoa(i), From: variant.TBI})
 	}
-	command = append(command, "--genomicsdb-workspace-path", outDir.String(), "--intervals", intervalPath, "--tmp-dir", ".")
-	command = append(command, extra...)
-	task := parent.AddTask(gobble.TaskSpec{Name: unit, Command: command, Image: image, Resources: resources, Inputs: inputs, Outputs: []gobble.Bind{{Name: "database", Tree: gobble.DeclareTree(outDir)}}})
+	command = append(command, "--tmp-dir", ".")
+	script := prelude +
+		"workspace=" + modules.ShellQuote(outDir.String()) + "/$stem\n" +
+		modules.ShellCommand(command) + " --genomicsdb-workspace-path \"$workspace\" --intervals \"$interval\""
+	if len(extra) > 0 {
+		script += " " + modules.ShellCommand(extra)
+	}
+	task := parent.AddTask(gobble.TaskSpec{
+		Name: unit, Script: script, Image: image, Resources: resources, Inputs: inputs,
+		Outputs: []gobble.Bind{{Name: "database", From: interval, Tree: gobble.DeclareTree(outDir)}},
+	})
 	return Ports{Database: task.Out("database")}, nil
 }
 
 // Pipeline returns a standalone validated GenomicsDBImport module.
 func Pipeline(gvcfs, indexes []gobble.PathSpec, interval gobble.PathSpec, options Options) *gobble.Pipeline {
-	inputs := []modules.Input{{Name: "interval", Spec: interval}}
+	inputs := []modules.Input{{Name: "intervals", Group: gobble.Group{{Name: interval.Base, Spec: interval}}}}
 	for i := range gvcfs {
 		inputs = append(inputs, modules.Input{Name: "gvcf_" + strconv.Itoa(i), Spec: gvcfs[i]})
 		if i < len(indexes) {
 			inputs = append(inputs, modules.Input{Name: "index_" + strconv.Itoa(i), Spec: indexes[i]})
 		}
 	}
-	return modules.StandaloneChecked("gatk4-genomicsdbimport", inputs, func(parent modules.Parent, handles []gobble.Handle) error {
+	options.IntervalDir = interval.Dir
+	return modules.StandaloneScatterChecked("gatk4-genomicsdbimport", "intervals", inputs, 0, func(parent modules.Parent, handles []gobble.Handle) error {
 		if len(handles) != 1+2*len(gvcfs) {
 			return modules.ComposeDefect(gobble.DefectInvalidValue, "gatk4_genomicsdbimport", "gVCF and index input counts differ")
 		}

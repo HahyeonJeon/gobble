@@ -1,6 +1,7 @@
 package wgs
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/HahyeonJeon/gobble"
@@ -37,6 +38,7 @@ type knownSiteHandles struct {
 
 type sampleState struct {
 	sample      Sample
+	module      *gobble.Module
 	markedBAM   gobble.Handle
 	markedBAI   gobble.Handle
 	recalBAM    gobble.Handle
@@ -66,10 +68,6 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 	fai := pipeline.AddInput("reference_fai", config.Reference.FAI)
 	dict := pipeline.AddInput("reference_dict", config.Reference.Dictionary)
 	intervals := pipeline.AddInputGroup("intervals", config.Reference.Intervals)
-	intervalHandles := make(map[string]gobble.Handle, len(config.Reference.Intervals))
-	for _, member := range config.Reference.Intervals {
-		intervalHandles[member.Name] = pipeline.AddInput("interval_"+member.Name, member.Spec)
-	}
 
 	knownSites := make(map[string]knownSiteHandles, len(config.Reference.KnownSites))
 	for _, site := range config.Reference.KnownSites {
@@ -100,33 +98,37 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 
 	reports := make([]gobble.Handle, 0, len(samples)*12)
 	states := make([]sampleState, len(samples))
+	patientModules := make(map[string]*gobble.Module)
 	for sampleIndex, sample := range samples {
-		module := pipeline.AddModule(sample.Name)
+		module := sampleModule(pipeline, patientModules, sample)
+		workDir := sampleWorkDir(sample)
 		laneBAMs := make([]gobble.Handle, 0, len(sample.Lanes))
 		laneBAIs := make([]gobble.Handle, 0, len(sample.Lanes))
 		for _, lane := range sample.Lanes {
 			laneModule := module.AddModule(lane.ID)
-			read1 := pipeline.AddInput(sample.Name+"_"+lane.ID+"_r1", sheetFileSpec(lane.Fastq1))
-			read2 := pipeline.AddInput(sample.Name+"_"+lane.ID+"_r2", sheetFileSpec(lane.Fastq2))
+			laneParent := sampleTaskParent(laneModule, sample, lane.ID)
+			inputName := sampleInputName(sample, lane.ID)
+			read1 := pipeline.AddInput(inputName+"_r1", sheetFileSpec(lane.Fastq1))
+			read2 := pipeline.AddInput(inputName+"_r2", sheetFileSpec(lane.Fastq2))
 			for _, read := range []struct {
 				name   string
 				handle gobble.Handle
 			}{{name: "r1", handle: read1}, {name: "r2", handle: read2}} {
 				options := config.FastQC
-				options.OutDir = gobble.Dir("work/" + sample.Name + "/" + lane.ID + "/raw-fastqc/" + read.name)
-				qc, err := fastqc.Add(laneModule.AddModule("raw_"+read.name), read.handle, options)
+				options.OutDir = gobble.Dir(workDir + "/" + lane.ID + "/raw-fastqc/" + read.name)
+				qc, err := fastqc.Add(sampleTaskParent(laneModule.AddModule("raw_"+read.name), sample, lane.ID), read.handle, options)
 				if recordModuleError(pipeline, err) {
 					return pipeline
 				}
 				reports = append(reports, qc.HTML, qc.Zip)
 			}
 			fastpOptions := config.FastP
-			fastpOptions.OutDir = gobble.Dir("work/" + sample.Name + "/" + lane.ID + "/fastp")
+			fastpOptions.OutDir = gobble.Dir(workDir + "/" + lane.ID + "/fastp")
 			if config.Publication.PreparedReads {
-				fastpOptions.OutDir = config.Results.Join("intermediates", "prepared", sample.Name, lane.ID)
+				fastpOptions.OutDir = config.Results.Join("intermediates", "prepared", sample.Patient, sample.Name, lane.ID)
 			}
 			fastpOptions.Prefix = sample.Name + "_" + lane.ID
-			prepared, err := fastp.Add(laneModule, read1, read2, fastpOptions)
+			prepared, err := fastp.Add(laneParent, read1, read2, fastpOptions)
 			if recordModuleError(pipeline, err) {
 				return pipeline
 			}
@@ -134,20 +136,20 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 			memOptions := config.BWAMem
 			memOptions.IndexPrefix = bwaPrefix
 			memOptions.ReadGroup = readGroup(sample, lane)
-			memOptions.OutDir = gobble.Dir("work/" + sample.Name + "/" + lane.ID + "/bwa-mem")
+			memOptions.OutDir = gobble.Dir(workDir + "/" + lane.ID + "/bwa-mem")
 			memOptions.Prefix = sample.Name + "_" + lane.ID
-			aligned, err := bwamem.Add(laneModule, fasta, bwaIndexHandle, prepared.Read1, prepared.Read2, memOptions)
+			aligned, err := bwamem.Add(laneParent, fasta, bwaIndexHandle, prepared.Read1, prepared.Read2, memOptions)
 			if recordModuleError(pipeline, err) {
 				return pipeline
 			}
 			sortOptions := config.SamtoolsSort
-			sortOptions.OutDir = gobble.Dir("work/" + sample.Name + "/" + lane.ID + "/sorted")
+			sortOptions.OutDir = gobble.Dir(workDir + "/" + lane.ID + "/sorted")
 			sortOptions.Prefix = sample.Name + "_" + lane.ID
-			sorted, err := samtoolssort.Add(laneModule, aligned.SAM, sortOptions)
+			sorted, err := samtoolssort.Add(laneParent, aligned.SAM, sortOptions)
 			if recordModuleError(pipeline, err) {
 				return pipeline
 			}
-			indexed, err := samtoolsindex.Add(laneModule, sorted.BAM, config.SamtoolsIndex)
+			indexed, err := samtoolsindex.Add(laneParent, sorted.BAM, config.SamtoolsIndex)
 			if recordModuleError(pipeline, err) {
 				return pipeline
 			}
@@ -159,34 +161,36 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 		normalizedBAI := laneBAIs[0]
 		if len(laneBAMs) > 1 {
 			mergeOptions := config.SamtoolsMerge
-			mergeOptions.OutDir = gobble.Dir("work/" + sample.Name + "/merged")
+			mergeOptions.OutDir = gobble.Dir(workDir + "/merged")
 			mergeOptions.Prefix = sample.Name
-			merged, err := samtoolsmerge.Add(module, laneBAMs, laneBAIs, mergeOptions)
+			merged, err := samtoolsmerge.Add(sampleTaskParent(module, sample, ""), laneBAMs, laneBAIs, mergeOptions)
 			if recordModuleError(pipeline, err) {
 				return pipeline
 			}
-			indexed, err := samtoolsindex.Add(module.AddModule("merged"), merged.BAM, config.SamtoolsIndex)
+			indexed, err := samtoolsindex.Add(sampleTaskParent(module.AddModule("merged"), sample, ""), merged.BAM, config.SamtoolsIndex)
 			if recordModuleError(pipeline, err) {
 				return pipeline
 			}
 			normalizedBAM, normalizedBAI = merged.BAM, indexed.BAI
 		}
 		markOptions := config.MarkDuplicates
-		markOptions.OutDir = gobble.Dir("work/" + sample.Name + "/markduplicates")
+		markOptions.OutDir = gobble.Dir(workDir + "/markduplicates")
 		markOptions.Prefix = sample.Name + ".marked"
-		marked, err := gatk4markduplicates.Add(module, normalizedBAM, normalizedBAI, markOptions)
+		marked, err := gatk4markduplicates.Add(sampleTaskParent(module, sample, ""), normalizedBAM, normalizedBAI, markOptions)
 		if recordModuleError(pipeline, err) {
 			return pipeline
 		}
 		reports = append(reports, marked.Metrics)
-		states[sampleIndex] = sampleState{sample: sample, markedBAM: marked.BAM, markedBAI: marked.BAI}
+		states[sampleIndex] = sampleState{sample: sample, module: module, markedBAM: marked.BAM, markedBAI: marked.BAI}
 	}
 
 	bqsrScatter := pipeline.Scatter("bqsr_intervals").From(intervals)
+	bqsrPatients := make(map[string]*gobble.Module)
 	for i := range states {
 		state := &states[i]
-		parent := bqsrScatter.AddModule(state.sample.Name)
-		tableDir := gobble.Dir("work/" + state.sample.Name + "/bqsr/tables")
+		parent := sampleTaskParent(sampleModule(bqsrScatter, bqsrPatients, state.sample), state.sample, "")
+		workDir := sampleWorkDir(state.sample)
+		tableDir := gobble.Dir(workDir + "/bqsr/tables")
 		baseOptions := config.BaseRecalibrator
 		baseOptions.IntervalDir = intervalDirectory(config.Reference.Intervals)
 		baseOptions.OutDir = tableDir
@@ -202,7 +206,7 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 		applyOptions := config.ApplyBQSR
 		applyOptions.IntervalDir = intervalDirectory(config.Reference.Intervals)
 		applyOptions.TableDir = tableDir
-		applyOptions.OutDir = gobble.Dir("work/" + state.sample.Name + "/bqsr/bams")
+		applyOptions.OutDir = gobble.Dir(workDir + "/bqsr/bams")
 		applied, err := gatk4applybqsr.Add(parent, state.markedBAM, state.markedBAI, fasta, fai, dict, table.Table, intervals, applyOptions)
 		if recordModuleError(pipeline, err) {
 			return pipeline
@@ -212,18 +216,19 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 
 	for i := range states {
 		state := &states[i]
-		parent := pipeline.Gather(state.sample.Name + "_bqsr_gather").AddModule(state.sample.Name)
+		parent := sampleTaskParent(state.module.Gather("bqsr_gather"), state.sample, "")
+		workDir := sampleWorkDir(state.sample)
 		tableOptions := config.GatherBQSRReports
-		tableOptions.InputPaths = intervalOutputs(config.Reference.Intervals, gobble.Dir("work/"+state.sample.Name+"/bqsr/tables"), ".table")
-		tableOptions.OutDir = config.Results.Join("samples", state.sample.Name, "bqsr")
+		tableOptions.InputPaths = intervalOutputs(config.Reference.Intervals, gobble.Dir(workDir+"/bqsr/tables"), ".table")
+		tableOptions.OutDir = sampleResultsDir(config, state.sample).Join("bqsr")
 		tableOptions.Prefix = state.sample.Name + ".recalibration"
 		_, err := gatk4gatherbqsrreports.Add(parent, []gobble.Handle{state.bqsrParts}, tableOptions)
 		if recordModuleError(pipeline, err) {
 			return pipeline
 		}
 		bamOptions := config.GatherBAM
-		bamOptions.InputPaths = intervalOutputs(config.Reference.Intervals, gobble.Dir("work/"+state.sample.Name+"/bqsr/bams"), ".bam")
-		bamOptions.OutDir = config.Results.Join("samples", state.sample.Name, "alignment")
+		bamOptions.InputPaths = intervalOutputs(config.Reference.Intervals, gobble.Dir(workDir+"/bqsr/bams"), ".bam")
+		bamOptions.OutDir = sampleResultsDir(config, state.sample).Join("alignment")
 		bamOptions.Prefix = state.sample.Name + ".recalibrated"
 		gatheredBAM, err := gatk4gatherbamfiles.Add(parent, []gobble.Handle{state.recalParts}, bamOptions)
 		if recordModuleError(pipeline, err) {
@@ -238,9 +243,9 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 
 	for i := range states {
 		state := &states[i]
-		parent := pipeline.AddModule(state.sample.Name + "_alignment_qc")
+		parent := sampleTaskParent(state.module.AddModule("alignment_qc"), state.sample, "")
 		statsOptions := config.SamtoolsStats
-		statsOptions.OutDir = config.Results.Join("qc", "alignment", state.sample.Name)
+		statsOptions.OutDir = config.Results.Join("qc", "alignment", state.sample.Patient, state.sample.Name)
 		statsOptions.Prefix = state.sample.Name
 		stats, err := samtoolsstats.Add(parent, state.recalBAM, statsOptions)
 		if recordModuleError(pipeline, err) {
@@ -268,12 +273,15 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 	}
 
 	haplotypeScatter := pipeline.Scatter("haplotype_intervals").From(intervals)
+	haplotypePatients := make(map[string]*gobble.Module)
 	for i := range states {
 		state := &states[i]
+		workDir := sampleWorkDir(state.sample)
 		options := config.HaplotypeCaller
 		options.IntervalDir = intervalDirectory(config.Reference.Intervals)
-		options.OutDir = gobble.Dir("work/" + state.sample.Name + "/haplotypecaller")
-		called, err := gatk4haplotypecaller.Add(haplotypeScatter.AddModule(state.sample.Name), state.recalBAM, state.recalBAI, fasta, fai, dict, dbsnp.vcf, dbsnp.tbi, intervals, options)
+		options.OutDir = gobble.Dir(workDir + "/haplotypecaller")
+		parent := sampleTaskParent(sampleModule(haplotypeScatter, haplotypePatients, state.sample), state.sample, "")
+		called, err := gatk4haplotypecaller.Add(parent, state.recalBAM, state.recalBAI, fasta, fai, dict, dbsnp.vcf, dbsnp.tbi, intervals, options)
 		if recordModuleError(pipeline, err) {
 			return pipeline
 		}
@@ -282,10 +290,10 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 
 	for i := range states {
 		state := &states[i]
-		parent := pipeline.Gather(state.sample.Name + "_gvcf_gather").AddModule(state.sample.Name)
+		parent := sampleTaskParent(state.module.Gather("gvcf_gather"), state.sample, "")
 		options := config.MergeGVCFs
-		options.InputPaths = intervalOutputs(config.Reference.Intervals, gobble.Dir("work/"+state.sample.Name+"/haplotypecaller"), ".g.vcf.gz")
-		options.OutDir = config.Results.Join("samples", state.sample.Name, "gvcf")
+		options.InputPaths = intervalOutputs(config.Reference.Intervals, gobble.Dir(sampleWorkDir(state.sample)+"/haplotypecaller"), ".g.vcf.gz")
+		options.OutDir = sampleResultsDir(config, state.sample).Join("gvcf")
 		options.Prefix = state.sample.Name + ".g"
 		merged, err := gatk4mergevcfs.Add(parent, []gobble.Handle{state.gvcfParts}, []gobble.Handle{state.gvcfIndexes}, dict, options)
 		if recordModuleError(pipeline, err) {
@@ -298,23 +306,20 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 	for i, state := range states {
 		variants[i] = gatk4genomicsdbimport.Variant{GVCF: state.gvcf, TBI: state.gvcfTBI}
 	}
-	databases := make([]gatk4genotypegvcfs.Database, 0, len(config.Reference.Intervals))
-	for _, member := range config.Reference.Intervals {
-		options := config.GenomicsDBImport
-		options.OutDir = gobble.Dir("work/joint/genomicsdb/" + member.Name)
-		database, err := gatk4genomicsdbimport.Add(pipeline.AddModule("joint_database_"+member.Name), variants, intervalHandles[member.Name], options)
-		if recordModuleError(pipeline, err) {
-			return pipeline
-		}
-		databases = append(databases, gatk4genotypegvcfs.Database{Interval: member.Name, Tree: database.Database})
-	}
-
 	jointScatter := pipeline.Scatter("joint_intervals").From(intervals)
-	jointParent := jointScatter.AddModule("joint")
+	cohort := cohortIdentity(samples)
+	databaseOptions := config.GenomicsDBImport
+	databaseOptions.IntervalDir = intervalDirectory(config.Reference.Intervals)
+	databaseOptions.OutDir = gobble.Dir("work/joint/genomicsdb")
+	database, err := gatk4genomicsdbimport.Add(cohortTaskParent(jointScatter.AddModule("database"), cohort), variants, intervals, databaseOptions)
+	if recordModuleError(pipeline, err) {
+		return pipeline
+	}
+	jointParent := cohortTaskParent(jointScatter.AddModule("genotype"), cohort)
 	genotypeOptions := config.GenotypeGVCFs
 	genotypeOptions.IntervalDir = intervalDirectory(config.Reference.Intervals)
 	genotypeOptions.OutDir = gobble.Dir("work/joint/genotype")
-	genotyped, err := gatk4genotypegvcfs.Add(jointParent, databases, intervals, fasta, fai, dict, dbsnp.vcf, dbsnp.tbi, genotypeOptions)
+	genotyped, err := gatk4genotypegvcfs.Add(jointParent, database.Database, intervals, fasta, fai, dict, dbsnp.vcf, dbsnp.tbi, genotypeOptions)
 	if recordModuleError(pipeline, err) {
 		return pipeline
 	}
@@ -327,7 +332,7 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 		return pipeline
 	}
 
-	jointParentGather := pipeline.Gather("joint_gather").AddModule("joint")
+	jointParentGather := cohortTaskParent(pipeline.Gather("joint_gather").AddModule("joint"), cohort)
 	jointOptions := config.MergeJointVCFs
 	jointOptions.InputPaths = intervalOutputs(config.Reference.Intervals, sortOptions.OutDir, ".sorted.vcf.gz")
 	jointOptions.OutDir = config.Results.Join("joint")
@@ -339,21 +344,83 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 	statsOptions := config.BCFToolsStats
 	statsOptions.OutDir = config.Results.Join("qc", "callset")
 	statsOptions.Prefix = "joint_germline"
-	callStats, err := bcftoolsstats.Add(pipeline.AddModule("callset_qc"), joint.VCF, joint.TBI, fasta, statsOptions)
+	callStats, err := bcftoolsstats.Add(cohortTaskParent(pipeline.AddModule("callset_qc"), cohort), joint.VCF, joint.TBI, fasta, statsOptions)
 	if recordModuleError(pipeline, err) {
 		return pipeline
 	}
 	reports = append(reports, callStats.Stats)
 	multiQCOptions := config.MultiQC
 	multiQCOptions.OutDir = config.Results.Join("multiqc")
-	if _, err = multiqc.Add(pipeline, reports, multiQCOptions); recordModuleError(pipeline, err) {
+	if _, err = multiqc.Add(cohortTaskParent(pipeline, cohort), reports, multiQCOptions); recordModuleError(pipeline, err) {
 		return pipeline
 	}
 	return pipeline
 }
 
 func readGroup(sample Sample, lane Lane) string {
-	return "@RG\\tID:" + sample.Name + "." + lane.ID + "\\tSM:" + sample.Name + "\\tLB:" + sample.Name + "\\tPL:ILLUMINA\\tPU:" + lane.ID
+	identity := sampleIdentity(sample)
+	return "@RG\\tID:" + identity + "." + lane.ID + "\\tSM:" + identity + "\\tLB:" + identity + "\\tPL:ILLUMINA\\tPU:" + identity + "." + lane.ID
+}
+
+type moduleParent interface {
+	AddModule(string) *gobble.Module
+}
+
+type parameterizedParent struct {
+	parent modules.Parent
+	params []gobble.Param
+}
+
+func (p parameterizedParent) AddTask(spec gobble.TaskSpec) *gobble.Task {
+	spec.Params = append(append([]gobble.Param(nil), spec.Params...), p.params...)
+	return p.parent.AddTask(spec)
+}
+
+func sampleModule(parent moduleParent, patients map[string]*gobble.Module, sample Sample) *gobble.Module {
+	patient := patients[sample.Patient]
+	if patient == nil {
+		patient = parent.AddModule(sample.Patient)
+		patients[sample.Patient] = patient
+	}
+	return patient.AddModule(sample.Name)
+}
+
+func sampleTaskParent(parent modules.Parent, sample Sample, lane string) modules.Parent {
+	params := []gobble.Param{{Name: "patient", Value: sample.Patient}, {Name: "sample", Value: sample.Name}}
+	if lane != "" {
+		params = append(params, gobble.Param{Name: "lane", Value: lane})
+	}
+	return parameterizedParent{parent: parent, params: params}
+}
+
+func cohortTaskParent(parent modules.Parent, cohort string) modules.Parent {
+	return parameterizedParent{parent: parent, params: []gobble.Param{{Name: "cohort", Value: cohort}}}
+}
+
+func sampleIdentity(sample Sample) string {
+	return sample.Patient + "." + sample.Name
+}
+
+func cohortIdentity(samples []Sample) string {
+	identities := make([]string, len(samples))
+	for i, sample := range samples {
+		identities[i] = sampleIdentity(sample)
+	}
+	return strings.Join(identities, ",")
+}
+
+func sampleInputName(sample Sample, lane string) string {
+	return "p" + strconv.Itoa(len(sample.Patient)) + "_" + sample.Patient +
+		"_s" + strconv.Itoa(len(sample.Name)) + "_" + sample.Name +
+		"_l" + strconv.Itoa(len(lane)) + "_" + lane
+}
+
+func sampleWorkDir(sample Sample) string {
+	return "work/" + sample.Patient + "/" + sample.Name
+}
+
+func sampleResultsDir(config Config, sample Sample) gobble.Directory {
+	return config.Results.Join("samples", sample.Patient, sample.Name)
 }
 
 func intervalDirectory(intervals gobble.Group) gobble.Directory {
@@ -402,10 +469,11 @@ func validateBuild(samples []Sample, config Config) []gobble.Defect {
 	}
 	seenSamples := make(map[string]bool, len(samples))
 	for _, sample := range samples {
-		if !identityPattern.MatchString(sample.Patient) || !identityPattern.MatchString(sample.Name) || seenSamples[sample.Name] {
-			defects = append(defects, gobble.Defect{Code: gobble.DefectInvalidSampleSheet, Unit: sample.Name, Message: "WGS patient or sample identity is invalid or duplicated"})
+		identity := sampleIdentity(sample)
+		if !identityPattern.MatchString(sample.Patient) || !identityPattern.MatchString(sample.Name) || seenSamples[identity] {
+			defects = append(defects, gobble.Defect{Code: gobble.DefectInvalidSampleSheet, Unit: identity, Message: "WGS patient/sample identity is invalid or duplicated"})
 		}
-		seenSamples[sample.Name] = true
+		seenSamples[identity] = true
 		if sample.Sex != "" && !identityPattern.MatchString(sample.Sex) {
 			defects = append(defects, gobble.Defect{Code: gobble.DefectInvalidSampleSheet, Unit: sample.Name, Message: "WGS sex identity is invalid"})
 		}

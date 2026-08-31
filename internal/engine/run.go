@@ -2100,12 +2100,12 @@ func (s *sched) specializeMemberChain(t *TaskPlan, key string, seen map[string]b
 	if memberPath != "" || !isZeroPath(memberSpec) {
 		for i := range t.Inputs {
 			if s.ioFromScatterProducer(*t, t.Inputs[i].Name) {
-				s.applyMemberIO(&t.Inputs[i], memberPath, memberSpec, true)
+				s.applyMemberIO(&t.Inputs[i], memberPath, memberSpec, key, true, false)
 			}
 		}
 		for i := range t.Outputs {
 			if s.ioFromScatterProducer(*t, t.Outputs[i].Name) {
-				s.applyMemberIO(&t.Outputs[i], memberPath, memberSpec, false)
+				s.applyMemberIO(&t.Outputs[i], memberPath, memberSpec, key, false, true)
 			}
 		}
 	}
@@ -2139,10 +2139,10 @@ func (s *sched) specializeSiblingChain(t *TaskPlan, key string, inputs bool, see
 		path := io.Path
 		spec := io.Spec
 		if inputs {
-			s.applyMemberIO(&t.Inputs[i], path, spec, true)
+			s.applyMemberIO(&t.Inputs[i], path, spec, key, true, true)
 			continue
 		}
-		s.applyMemberIO(&t.Outputs[i], path, spec, false)
+		s.applyMemberIO(&t.Outputs[i], path, spec, key, false, true)
 	}
 }
 
@@ -2249,7 +2249,23 @@ func (s *sched) memberSource(t *TaskPlan, key string) (string, Path) {
 	return key, literalPath(key)
 }
 
-func (s *sched) applyMemberIO(io *IO, memberPath string, memberSpec Path, asInput bool) {
+func (s *sched) applyMemberIO(io *IO, memberPath string, memberSpec Path, key string, asInput, treeMember bool) {
+	if io.Kind == ArtifactTree && treeMember {
+		root := strings.TrimSuffix(strings.ReplaceAll(io.Path, `\`, "/"), "/")
+		path := key
+		if root != "" {
+			path = root + "/" + key
+		}
+		io.Path = path
+		io.Manifest = path + "/" + treeManifestName
+		io.Members = nil
+		if asInput && memberPath != "" && memberPath != path {
+			io.Source = memberPath
+		} else {
+			io.Source = ""
+		}
+		return
+	}
 	from := memberSpec
 	if isZeroPath(from) {
 		from = literalPath(memberPath)

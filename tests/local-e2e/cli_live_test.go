@@ -68,8 +68,8 @@ func TestWGSCLIRecover(t *testing.T) {
 
 	for _, rel := range []string{
 		"results/wgs/multiqc/multiqc_report.html",
-		"results/wgs/samples/testN/alignment/testN.recalibrated.bam",
-		"results/wgs/samples/testT/alignment/testT.recalibrated.bam",
+		"results/wgs/samples/patient1/testN/alignment/testN.recalibrated.bam",
+		"results/wgs/samples/patient2/testT/alignment/testT.recalibrated.bam",
 		"results/wgs/joint/joint_germline.vcf.gz",
 	} {
 		requireRegularFile(t, filepath.Join(dir, filepath.FromSlash(rel)))

@@ -201,6 +201,36 @@ func TestRejectExtraArgPrefixesRecognizesEveryLongPrefix(t *testing.T) {
 	}
 }
 
+func TestResolveGATK4OptionsRejectsNamedOptionAliases(t *testing.T) {
+	for _, test := range []struct {
+		canonical string
+		aliases   []string
+	}{
+		{canonical: "--input", aliases: []string{"-I", "-I=input.bam"}},
+		{canonical: "--INPUT", aliases: []string{"-I", "-I=input.bam"}},
+		{canonical: "--output", aliases: []string{"-O", "-O=output.vcf.gz"}},
+		{canonical: "--OUTPUT", aliases: []string{"-O", "-O=output.vcf.gz"}},
+		{canonical: "--reference", aliases: []string{"-R", "-R=genome.fasta"}},
+		{canonical: "--intervals", aliases: []string{"-L", "-L=interval.bed"}},
+		{canonical: "--variant", aliases: []string{"-V", "-V=input.g.vcf.gz"}},
+		{canonical: "--emit-ref-confidence", aliases: []string{"-ERC", "-ERC=NONE"}},
+		{canonical: "--dbsnp", aliases: []string{"-D", "-D=dbsnp.vcf.gz"}},
+		{canonical: "--bqsr-recal-file", aliases: []string{"-bqsr", "-bqsr=recal.table"}},
+		{canonical: "--METRICS_FILE", aliases: []string{"-M", "-M=metrics.txt"}},
+		{canonical: "--SEQUENCE_DICTIONARY", aliases: []string{"-D", "-D=genome.dict"}},
+	} {
+		for _, alias := range test.aliases {
+			_, _, _, err := modules.ResolveGATK4Options(
+				"gatk", modules.Options{ExtraArgs: []string{alias}}, gobble.Resources{}, []string{test.canonical},
+			)
+			var composeErr *gobble.Error
+			if !errors.As(err, &composeErr) || len(composeErr.Defects) != 1 || composeErr.Defects[0].Code != gobble.DefectInvalidValue {
+				t.Errorf("ResolveGATK4Options(%q for %q) error = %#v, want protected alias defect", alias, test.canonical, err)
+			}
+		}
+	}
+}
+
 func TestShellRedirectQuotesEveryArgvToken(t *testing.T) {
 	got := modules.ShellRedirect([]string{"tool", "$(touch pwned)", "a'b"}, "out/x y")
 	want := `'tool' '$(touch pwned)' 'a'"'"'b' > 'out/x y'`

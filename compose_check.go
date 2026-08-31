@@ -251,7 +251,7 @@ func (c *composeChecker) checkPipeTask(t *Task) {
 			c.add(DefectMissingInput, bindUnit(id, b.Name), "missing input")
 			continue
 		}
-		if !c.groupFromOK(t, b) {
+		if !c.groupFromOK(t, b, false) {
 			c.add(DefectMissingInput, bindUnit(id, b.Name), "missing input")
 		}
 	}
@@ -261,7 +261,7 @@ func (c *composeChecker) checkPipeTask(t *Task) {
 			c.add(DefectMissingInput, bindUnit(id, b.Name), "missing input")
 			continue
 		}
-		if !b.From.IsZero() && c.fromInPipeline(t, b) && !c.groupFromOK(t, b) {
+		if !b.From.IsZero() && c.fromInPipeline(t, b) && !c.groupFromOK(t, b, true) {
 			c.add(DefectMissingInput, bindUnit(id, b.Name), "missing input")
 		}
 	}
@@ -323,7 +323,7 @@ func (c *graphChecker) checkTask(t *graphTask) {
 			c.add(DefectMissingInput, bindUnit(id, b.name), "missing input")
 			continue
 		}
-		if !c.groupFromOK(t, b) {
+		if !c.groupFromOK(t, b, false) {
 			c.add(DefectMissingInput, bindUnit(id, b.name), "missing input")
 		}
 	}
@@ -333,7 +333,7 @@ func (c *graphChecker) checkTask(t *graphTask) {
 			c.add(DefectMissingInput, bindUnit(id, b.name), "missing input")
 			continue
 		}
-		if b.fromKind != handleZero && c.fromInGraph(b) && !c.groupFromOK(t, b) {
+		if b.fromKind != handleZero && c.fromInGraph(b) && !c.groupFromOK(t, b, true) {
 			c.add(DefectMissingInput, bindUnit(id, b.name), "missing input")
 		}
 	}
@@ -477,12 +477,15 @@ func (c *graphChecker) fromInGraph(b graphBind) bool {
 	}
 }
 
-func (c *composeChecker) groupFromOK(t *Task, b Bind) bool {
+func (c *composeChecker) groupFromOK(t *Task, b Bind, output bool) bool {
 	srcGroup, srcMembers, srcTree, ok := c.sourceKind(t, b)
 	if !ok {
 		return false
 	}
 	if !b.Tree.IsZero() {
+		if output && scatterMemberTreeFromProducer(t, b) {
+			return !b.Tree.Dir.IsZero()
+		}
 		return srcTree && !srcGroup
 	}
 	if b.Group != nil {
@@ -494,12 +497,15 @@ func (c *composeChecker) groupFromOK(t *Task, b Bind) bool {
 	return !srcGroup && !srcTree
 }
 
-func (c *graphChecker) groupFromOK(t *graphTask, b graphBind) bool {
+func (c *graphChecker) groupFromOK(t *graphTask, b graphBind, output bool) bool {
 	srcGroup, srcMembers, srcTree, ok := c.sourceKind(b)
 	if !ok {
 		return false
 	}
 	if !b.tree.IsZero() {
+		if output && graphScatterMemberTreeFromProducer(t, b) {
+			return !b.tree.Dir.IsZero()
+		}
 		return srcTree && !srcGroup
 	}
 	if b.members != nil {
@@ -513,6 +519,16 @@ func (c *graphChecker) groupFromOK(t *graphTask, b graphBind) bool {
 
 func graphScatterFileFromProducer(t *graphTask, b graphBind) bool {
 	if t == nil || t.scatter == "" || b.members != nil || !b.tree.IsZero() {
+		return false
+	}
+	if t.scatterFromKind == handleZero {
+		return false
+	}
+	return b.fromKind == t.scatterFromKind && b.fromName == t.scatterFromName && b.fromTask == t.scatterFromTask
+}
+
+func graphScatterMemberTreeFromProducer(t *graphTask, b graphBind) bool {
+	if t == nil || t.scatter == "" || b.tree.IsZero() {
 		return false
 	}
 	if t.scatterFromKind == handleZero {

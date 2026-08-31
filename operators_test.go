@@ -517,6 +517,68 @@ func TestRunScatterRestagedTreeExpandsProducer(t *testing.T) {
 	}
 }
 
+func TestRunScatterDerivesOneTreePerFileMember(t *testing.T) {
+	dir := t.TempDir()
+	writeRunFile(t, filepath.Join(dir, "in", "interval_001.bed"), "one")
+	writeRunFile(t, filepath.Join(dir, "in", "interval_002.bed"), "two")
+	p := gobble.NewPipeline("scatter-trees")
+	intervals := p.AddInputGroup("intervals", gobble.Group{
+		{Name: "interval_001", Spec: gobble.PathSpec{Dir: gobble.Dir("in"), Base: "interval_001", Ext: ".bed"}},
+		{Name: "interval_002", Spec: gobble.PathSpec{Dir: gobble.Dir("in"), Base: "interval_002", Ext: ".bed"}},
+	})
+	scatter := p.Scatter("each").From(intervals)
+	tree := scatter.AddTask(gobble.TaskSpec{
+		Name: "make_tree",
+		Script: `set -eu
+interval=$(find in -maxdepth 1 -type f)
+stem=${interval##*/}
+stem=${stem%.*}
+mkdir -p "work/trees/$stem"
+cp "$interval" "work/trees/$stem/value.txt"`,
+		Inputs: []gobble.Bind{{Name: "interval", From: intervals}},
+		Outputs: []gobble.Bind{{
+			Name: "tree", From: intervals,
+			Tree: gobble.DeclareTree(gobble.Dir("work/trees")),
+		}},
+	})
+	scatter.AddTask(gobble.TaskSpec{
+		Name: "read_tree",
+		Script: `set -eu
+value=$(find work/trees -name value.txt)
+interval=$(find in -maxdepth 1 -type f)
+cp "$value" "$interval.out"`,
+		Inputs: []gobble.Bind{
+			{Name: "interval", From: intervals},
+			{Name: "tree", From: tree.Out("tree"), Tree: gobble.DeclareTree(gobble.Directory{})},
+		},
+		Outputs: []gobble.Bind{{
+			Name: "out", From: intervals,
+			Spec: gobble.PathSpec{Ext: ".out"},
+		}},
+	})
+	g, err := gobble.Compose(p)
+	if err != nil {
+		t.Fatalf("Compose() error = %v", err)
+	}
+	if err := gobble.Run(t.Context(), g, dir, 2, testOccupyOption(t)); err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	want := map[string]string{"interval_001": "one", "interval_002": "two"}
+	for member, content := range want {
+		value, err := os.ReadFile(filepath.Join(dir, "in", member+".bed.out"))
+		if err != nil {
+			t.Fatalf("ReadFile(%s): %v", member, err)
+		}
+		if strings.TrimSpace(string(value)) != content {
+			t.Fatalf("%s output = %q, want %q", member, value, content)
+		}
+		info, err := os.Stat(filepath.Join(dir, "work", "trees", member, ".gobble-tree.json"))
+		if err != nil || !info.Mode().IsRegular() {
+			t.Fatalf("%s Tree manifest: info=%v err=%v", member, info, err)
+		}
+	}
+}
+
 func TestResumeUnchangedRetriesFailedMember(t *testing.T) {
 	dir := t.TempDir()
 	writeRunFile(t, filepath.Join(dir, "in", "s1.txt"), "one")

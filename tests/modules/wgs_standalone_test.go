@@ -64,7 +64,7 @@ func TestWGSCommandModulesHaveOneTaskStandaloneAdapters(t *testing.T) {
 		{name: "haplotype caller", pipeline: gatk4haplotypecaller.Pipeline(bam, bai, fasta, fai, dict, dbsnp, dbsnpTBI, interval, gatk4haplotypecaller.Options{})},
 		{name: "merge VCFs", pipeline: gatk4mergevcfs.Pipeline([]gobble.PathSpec{gvcf1, gvcf2}, []gobble.PathSpec{gvcfTBI1, gvcfTBI2}, dict, gatk4mergevcfs.Options{})},
 		{name: "GenomicsDB import", pipeline: gatk4genomicsdbimport.Pipeline([]gobble.PathSpec{gvcf1, gvcf2}, []gobble.PathSpec{gvcfTBI1, gvcfTBI2}, interval, gatk4genomicsdbimport.Options{})},
-		{name: "genotype gVCFs", pipeline: gatk4genotypegvcfs.Pipeline(gobble.DeclareTree(gobble.Dir("in/genomicsdb/interval_001")), interval, fasta, fai, dict, dbsnp, dbsnpTBI, gatk4genotypegvcfs.Options{})},
+		{name: "genotype gVCFs", pipeline: gatk4genotypegvcfs.Pipeline(gobble.DeclareTree(gobble.Dir("in/genomicsdb")), interval, fasta, fai, dict, dbsnp, dbsnpTBI, gatk4genotypegvcfs.Options{})},
 		{name: "bcftools sort", pipeline: bcftoolssort.Pipeline(wgsSpec("in/intervals", "interval_001", ".vcf.gz"), wgsSpec("in/intervals", "interval_001", ".vcf.gz.tbi"), interval, bcftoolssort.Options{})},
 		{name: "bcftools stats", pipeline: bcftoolsstats.Pipeline(gvcf1, gvcfTBI1, fasta, bcftoolsstats.Options{})},
 	}

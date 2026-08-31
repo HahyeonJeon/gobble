@@ -100,23 +100,24 @@ func parse(r io.Reader, source string) ([]Sample, error) {
 			continue
 		}
 
-		position, exists := sampleIndex[sample]
+		identity := patient + "." + sample
+		position, exists := sampleIndex[identity]
 		if !exists {
-			sampleIndex[sample] = len(samples)
-			laneIDs[sample] = map[string]bool{lane: true}
+			sampleIndex[identity] = len(samples)
+			laneIDs[identity] = map[string]bool{lane: true}
 			samples = append(samples, Sample{Patient: patient, Name: sample, Sex: sex, Lanes: []Lane{{ID: lane, Fastq1: fastq1, Fastq2: fastq2}}})
 			continue
 		}
 		existing := &samples[position]
-		if existing.Patient != patient || existing.Sex != sex {
-			defects = append(defects, rowDefect(source, rowNumber, sample, "repeated sample has conflicting patient or sex identity"))
+		if existing.Sex != sex {
+			defects = append(defects, rowDefect(source, rowNumber, sample, "repeated patient/sample pair has conflicting sex identity"))
 			continue
 		}
-		if laneIDs[sample][lane] {
+		if laneIDs[identity][lane] {
 			defects = append(defects, rowDefect(source, rowNumber, sample, "duplicate sample lane"))
 			continue
 		}
-		laneIDs[sample][lane] = true
+		laneIDs[identity][lane] = true
 		existing.Lanes = append(existing.Lanes, Lane{ID: lane, Fastq1: fastq1, Fastq2: fastq2})
 	}
 	if len(samples) < 2 {

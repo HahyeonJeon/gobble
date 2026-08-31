@@ -60,8 +60,8 @@ func TestLinkedQCUsesIndependentEngineFixture(t *testing.T) {
 	methylPlan := pc.MustPlanJSON(t, methylseq.Pipeline())
 	qc := pc.MustPlanJSON(t, LinkedQC())
 
-	pc.AssertIOPath(t, pc.TaskByID(t, wgsPlan, "testN.L001.fastp").Inputs, "read1", "in/reads/test_1.fastq.gz")
-	pc.AssertIOPath(t, pc.TaskByID(t, wgsPlan, "testN.L001.fastp").Inputs, "read2", "in/reads/test_2.fastq.gz")
+	pc.AssertIOPath(t, pc.TaskByID(t, wgsPlan, "patient1.testN.L001.fastp").Inputs, "read1", "in/reads/test_1.fastq.gz")
+	pc.AssertIOPath(t, pc.TaskByID(t, wgsPlan, "patient1.testN.L001.fastp").Inputs, "read2", "in/reads/test_2.fastq.gz")
 	pc.AssertIOPath(t, pc.TaskByID(t, rnaPlan, "WT_REP2.trim_galore").Inputs, "read1", "in/reads/SRR6357072_1.fastq.gz")
 	pc.AssertIOPath(t, pc.TaskByID(t, rnaPlan, "WT_REP2.trim_galore").Inputs, "read2", "in/reads/SRR6357072_2.fastq.gz")
 	pc.AssertIOPath(t, pc.TaskByID(t, methylPlan, "Ecoli_10K_methylated.trim_galore").Inputs, "read1", "in/reads/Ecoli_10K_methylated_R1.fastq.gz")

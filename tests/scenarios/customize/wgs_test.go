@@ -13,7 +13,7 @@ func TestWGSTypedCallerCustomizationIsVisible(t *testing.T) {
 	config := wgs.DefaultConfig()
 	config.HaplotypeCaller.ExtraArgs = []string{"--min-pruning", "1"}
 	raw := wgsscenario.Plan(t, config)
-	script := pc.TaskByID(t, raw, "haplotype_intervals.testN.gatk4_haplotypecaller").Script
+	script := pc.TaskByID(t, raw, "haplotype_intervals.patient1.testN.gatk4_haplotypecaller").Script
 	if !strings.Contains(script, "'--min-pruning' '1'") || !wgs.Lifecycle.Customize {
 		t.Fatalf("WGS HaplotypeCaller customization is absent: %s", script)
 	}

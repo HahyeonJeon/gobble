@@ -160,6 +160,10 @@ func stageWGSPins(t *testing.T, dir string) {
 		{wgsevidence.MustPin("mills_and_1000G.indels.vcf.gz"), "in/reference/known-sites/mills_and_1000G.indels.vcf.gz"},
 		{wgsevidence.MustPin("mills_and_1000G.indels.vcf.gz.tbi"), "in/reference/known-sites/mills_and_1000G.indels.vcf.gz.tbi"},
 		{wgsevidence.MustPin("genome.multi_intervals.bed"), "in/reference/genome.multi_intervals.bed"},
+		{wgsevidence.MustPin("test.paired_end.sorted.bam"), "in/joint/testN/test.paired_end.sorted.bam"},
+		{wgsevidence.MustPin("test.paired_end.sorted.bam.bai"), "in/joint/testN/test.paired_end.sorted.bam.bai"},
+		{wgsevidence.MustPin("test2.paired_end.sorted.bam"), "in/joint/testT/test2.paired_end.sorted.bam"},
+		{wgsevidence.MustPin("test2.paired_end.sorted.bam.bai"), "in/joint/testT/test2.paired_end.sorted.bam.bai"},
 	})
 	data, err := os.ReadFile(filepath.Join(dir, "in", "reference", "genome.multi_intervals.bed"))
 	if err != nil {

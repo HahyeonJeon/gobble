@@ -33,8 +33,11 @@ type TaskSpec struct {
 // inheriting the rest from From. A Literal restage keeps opacity and merges
 // Dir unless Spec.Dir is set. Tree has no related-file sugar: a present
 // Tree with a zero Dir inherits the From directory; a non-zero Dir uses
-// that directory. From should name another task or a pipeline input. A From
-// that points at the same task is a cycle. A Group From must name another
+// that directory. A Tree output inside a Scatter may instead use that Scatter
+// membership as From and a non-zero Dir as its parent; each runtime member
+// derives one child Tree named by the stable member key. From should
+// name another task or a pipeline input. A From that points at the same task is
+// a cycle. A Group From must name another
 // Group port or Group pipeline input with the same member-name set. A Tree
 // From must name another Tree port or Tree pipeline input.
 // Rule is used when this Bind is a related file of From. The zero Rule is
