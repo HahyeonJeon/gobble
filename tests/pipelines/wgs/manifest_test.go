@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -44,19 +45,19 @@ type wgsEntry struct {
 }
 
 type wgsImage struct {
-	Reference    string   `json:"reference"`
-	Digest       string   `json:"digest"`
-	Modules      []string `json:"modules"`
-	Tool         string   `json:"tool"`
-	Version      string   `json:"version"`
-	ModuleSource string   `json:"module_source"`
-	License      string   `json:"license"`
-	Platform     string   `json:"platform"`
+	Reference     string   `json:"reference"`
+	Digest        string   `json:"digest"`
+	Modules       []string `json:"modules"`
+	Tool          string   `json:"tool"`
+	Version       string   `json:"version"`
+	ModuleSources []string `json:"module_sources"`
+	License       string   `json:"license"`
+	Platform      string   `json:"platform"`
 }
 
 func TestManifestIsExactPlanningByteAndImageAuthority(t *testing.T) {
 	manifest := loadManifest(t)
-	if manifest.Schema != 2 || manifest.Benchmark.Pipeline != "nf-core/sarek" || manifest.Benchmark.Release != "3.10.0" || manifest.Benchmark.Commit != "8ccac7ad37b05dd792447763bf9671b719824587" || manifest.Benchmark.DatasetCommit != "6c82958a6f302d8471a20855023ac59f9974fa8a" {
+	if manifest.Schema != 3 || manifest.Benchmark.Pipeline != "nf-core/sarek" || manifest.Benchmark.Release != "3.10.0" || manifest.Benchmark.Commit != "8ccac7ad37b05dd792447763bf9671b719824587" || manifest.Benchmark.DatasetCommit != "6c82958a6f302d8471a20855023ac59f9974fa8a" {
 		t.Fatalf("benchmark = %+v, want exact Sarek and dataset commits", manifest.Benchmark)
 	}
 	if !strings.Contains(manifest.Benchmark.SelectedRoute, "without VQSR") || manifest.Benchmark.CoverageScenarios["F"] == "" || manifest.Benchmark.CoverageScenarios["J"] == "" {
@@ -96,14 +97,20 @@ func TestManifestIsExactPlanningByteAndImageAuthority(t *testing.T) {
 
 	imageSet := make(map[string]bool, len(manifest.Images))
 	moduleSet := make(map[string]bool)
+	expectedImages := expectedImageAuthorities()
 	for _, image := range manifest.Images {
-		if image.Reference == "" || strings.Contains(image.Reference, "@") || !strings.HasPrefix(image.Digest, "sha256:") || !lowerHex(strings.TrimPrefix(image.Digest, "sha256:"), 64) || len(image.Modules) == 0 || image.Tool == "" || image.Version == "" || image.ModuleSource == "" || image.License == "" || image.Platform != "linux/amd64" {
+		want, ok := expectedImages[image.Reference]
+		if image.Reference == "" || strings.Contains(image.Reference, "@") || !strings.HasPrefix(image.Digest, "sha256:") || !lowerHex(strings.TrimPrefix(image.Digest, "sha256:"), 64) || len(image.Modules) == 0 || image.Tool == "" || image.License == "" || image.Platform != "linux/amd64" || !ok || image.Version != want.version || !reflect.DeepEqual(image.ModuleSources, want.moduleSources) {
 			t.Fatalf("invalid image authority: %+v", image)
 		}
+		delete(expectedImages, image.Reference)
 		imageSet[image.Reference+"@"+image.Digest] = true
 		for _, module := range image.Modules {
 			moduleSet[module] = true
 		}
+	}
+	if len(expectedImages) != 0 {
+		t.Fatalf("manifest omits exact image authorities: %+v", expectedImages)
 	}
 	for _, task := range pc.AllTasks(t, pc.MustPlanJSON(t, wgs.Build(loadSamples(t), wgs.DefaultConfig()))) {
 		if task.Image != "" && !imageSet[task.Image] {
@@ -188,6 +195,66 @@ func loadManifest(t *testing.T) wgsManifest {
 type byteIdentity struct {
 	bytes  int64
 	sha256 string
+}
+
+type imageAuthority struct {
+	version       string
+	moduleSources []string
+}
+
+func expectedImageAuthorities() map[string]imageAuthority {
+	return map[string]imageAuthority{
+		"community.wave.seqera.io/library/bwa_htslib_samtools:83b50ff84ead50d0": {
+			version: "BWA 0.7.19; htslib 1.22.1; samtools 1.22.1",
+			moduleSources: []string{
+				"https://raw.githubusercontent.com/nf-core/modules/6d46786420b4d7bc88eba026eb389c0c5535d120/modules/nf-core/bwa/index/main.nf",
+				"https://raw.githubusercontent.com/nf-core/modules/2fb127c8fd13de0adaa676df7169131e45c0b114/modules/nf-core/bwa/mem/main.nf",
+			},
+		},
+		"community.wave.seqera.io/library/fastp:1.1.0--08aa7c5662a30d57": {
+			version:       "1.1.0",
+			moduleSources: []string{"https://raw.githubusercontent.com/nf-core/modules/6d46786420b4d7bc88eba026eb389c0c5535d120/modules/nf-core/fastp/main.nf"},
+		},
+		"quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0": {
+			version:       "0.12.1",
+			moduleSources: []string{"https://raw.githubusercontent.com/nf-core/modules/6d46786420b4d7bc88eba026eb389c0c5535d120/modules/nf-core/fastqc/main.nf"},
+		},
+		"community.wave.seqera.io/library/htslib_samtools:1.24--d697cfb9dce007cd": {
+			version: "1.24",
+			moduleSources: []string{
+				"https://raw.githubusercontent.com/nf-core/modules/9339809fcb90af8a8b7051e6cd914894d5c52002/modules/nf-core/samtools/index/main.nf",
+				"https://raw.githubusercontent.com/nf-core/modules/9339809fcb90af8a8b7051e6cd914894d5c52002/modules/nf-core/samtools/merge/main.nf",
+				"https://raw.githubusercontent.com/nf-core/modules/9339809fcb90af8a8b7051e6cd914894d5c52002/modules/nf-core/samtools/stats/main.nf",
+			},
+		},
+		"community.wave.seqera.io/library/gatk4_gcnvkernel:edb12e4f0bf02cd3": {
+			version: "4.6.2.0",
+			moduleSources: []string{
+				"https://raw.githubusercontent.com/nf-core/modules/ad964832ffcb72516a0a9c2c34688e3443655b5a/modules/nf-core/gatk4/applybqsr/main.nf",
+				"https://raw.githubusercontent.com/nf-core/modules/6d46786420b4d7bc88eba026eb389c0c5535d120/modules/nf-core/gatk4/baserecalibrator/main.nf",
+				"https://raw.githubusercontent.com/nf-core/modules/6d46786420b4d7bc88eba026eb389c0c5535d120/modules/nf-core/gatk4/gatherbqsrreports/main.nf",
+				"https://raw.githubusercontent.com/nf-core/modules/6d46786420b4d7bc88eba026eb389c0c5535d120/modules/nf-core/gatk4/genomicsdbimport/main.nf",
+				"https://raw.githubusercontent.com/nf-core/modules/6d46786420b4d7bc88eba026eb389c0c5535d120/modules/nf-core/gatk4/genotypegvcfs/main.nf",
+				"https://raw.githubusercontent.com/nf-core/modules/7abcc95130dd0388f696002a99adeb59eca54471/modules/nf-core/gatk4/haplotypecaller/main.nf",
+				"https://raw.githubusercontent.com/nf-core/modules/6d46786420b4d7bc88eba026eb389c0c5535d120/modules/nf-core/gatk4/mergevcfs/main.nf",
+			},
+		},
+		"community.wave.seqera.io/library/htslib_mosdepth_gzip:4108dd38be84e40a": {
+			version:       "mosdepth 0.3.14; htslib 1.23.1; gzip 1.14",
+			moduleSources: []string{"https://raw.githubusercontent.com/nf-core/modules/999b9db1d6b8bdc591e1168e183f4cc87d6606f9/modules/nf-core/mosdepth/main.nf"},
+		},
+		"community.wave.seqera.io/library/bcftools_htslib:1.23.1--9f08ec665533d64a": {
+			version: "1.23.1",
+			moduleSources: []string{
+				"https://raw.githubusercontent.com/nf-core/modules/feef37435aea56816adf4b3bde1fc76aac327a8d/modules/nf-core/bcftools/sort/main.nf",
+				"https://raw.githubusercontent.com/nf-core/modules/feef37435aea56816adf4b3bde1fc76aac327a8d/modules/nf-core/bcftools/stats/main.nf",
+			},
+		},
+		"community.wave.seqera.io/library/multiqc:1.35--c17fb751507e9dfc": {
+			version:       "1.35",
+			moduleSources: []string{"https://raw.githubusercontent.com/nf-core/modules/98403d15b0e50edae1f3fec5eae5e24982f1fade/modules/nf-core/multiqc/main.nf"},
+		},
+	}
 }
 
 func expectedPlanningBytes() map[string]byteIdentity {

@@ -44,7 +44,7 @@ func Add(parent modules.Parent, bam, bai, fasta, fai, dict, dbsnp, dbsnpTBI, int
 	if resources.CPU == 0 && resources.Memory == "" {
 		resources = gobble.Resources{CPU: 2, Memory: "4g"}
 	}
-	protected := []string{"--input", "--output", "--reference", "--dbsnp", "--intervals", "--emit-ref-confidence", "--native-pair-hmm-threads", "--tmp-dir"}
+	protected := []string{"--input", "--output", "--reference", "--dbsnp", "--intervals", "--emit-ref-confidence", "--native-pair-hmm-threads", "--tmp-dir", "--create-output-variant-index"}
 	base := options.Options
 	base.Resources = resources
 	extra, image, resources, err := modules.ResolveGATK4Options(unit, base, resources, protected)

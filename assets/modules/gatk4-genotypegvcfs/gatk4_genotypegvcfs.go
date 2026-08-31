@@ -47,7 +47,7 @@ func Add(parent modules.Parent, database, interval, fasta, fai, dict, dbsnp, dbs
 		{Name: "interval", From: interval}, {Name: "fasta", From: fasta}, {Name: "fai", From: fai},
 		{Name: "dict", From: dict}, {Name: "dbsnp", From: dbsnp}, {Name: "dbsnp_tbi", From: dbsnpTBI},
 	}
-	protected := []string{"--variant", "--output", "--reference", "--dbsnp", "--intervals", "--tmp-dir"}
+	protected := []string{"--variant", "--output", "--reference", "--dbsnp", "--intervals", "--tmp-dir", "--create-output-variant-index"}
 	extra, image, resources, err := modules.ResolveGATK4Options(unit, options.Options, gobble.Resources{CPU: 1, Memory: "4g"}, protected)
 	if err != nil {
 		return Ports{}, err

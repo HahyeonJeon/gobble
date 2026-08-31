@@ -218,6 +218,7 @@ func TestResolveGATK4OptionsRejectsNamedOptionAliases(t *testing.T) {
 		{canonical: "--bqsr-recal-file", aliases: []string{"-bqsr", "-bqsr=recal.table"}},
 		{canonical: "--METRICS_FILE", aliases: []string{"-M", "-M=metrics.txt"}},
 		{canonical: "--SEQUENCE_DICTIONARY", aliases: []string{"-D", "-D=genome.dict"}},
+		{canonical: "--create-output-variant-index", aliases: []string{"-OVI", "-OVI=false"}},
 	} {
 		for _, alias := range test.aliases {
 			_, _, _, err := modules.ResolveGATK4Options(

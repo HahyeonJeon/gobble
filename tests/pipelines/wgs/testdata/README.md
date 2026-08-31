@@ -6,6 +6,8 @@ Planning-bound 24-entry byte inventory without discovering or substituting hashe
 three license/provenance records. Every URL contains the accepted commit. The
 manifest also records F and J coverage scenarios, the complete selected-stage
 trace, and immutable linux/amd64 image facts.
+Each image record names exact tool versions and immutable nf-core module source
+files. Grouped GATK records retain each distinct Sarek-locked module commit.
 
 `wgs-samplesheet.csv` localizes Sarek's multi-lane shape as two typed germline
 samples. `testN` has two declared lanes over the official `test` pair. `testT`

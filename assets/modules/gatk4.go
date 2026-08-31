@@ -18,18 +18,19 @@ func ResolveGATK4Options(unit string, options Options, defaults gobble.Resources
 
 func gatk4ProtectedOptions(protected []string) []string {
 	aliases := map[string]string{
-		"--input":               "-I",
-		"--INPUT":               "-I",
-		"--output":              "-O",
-		"--OUTPUT":              "-O",
-		"--reference":           "-R",
-		"--intervals":           "-L",
-		"--variant":             "-V",
-		"--emit-ref-confidence": "-ERC",
-		"--dbsnp":               "-D",
-		"--bqsr-recal-file":     "-bqsr",
-		"--METRICS_FILE":        "-M",
-		"--SEQUENCE_DICTIONARY": "-D",
+		"--input":                       "-I",
+		"--INPUT":                       "-I",
+		"--output":                      "-O",
+		"--OUTPUT":                      "-O",
+		"--reference":                   "-R",
+		"--intervals":                   "-L",
+		"--variant":                     "-V",
+		"--emit-ref-confidence":         "-ERC",
+		"--dbsnp":                       "-D",
+		"--bqsr-recal-file":             "-bqsr",
+		"--METRICS_FILE":                "-M",
+		"--SEQUENCE_DICTIONARY":         "-D",
+		"--create-output-variant-index": "-OVI",
 	}
 	out := make([]string, 0, 2*len(protected))
 	seen := make(map[string]bool, 2*len(protected))

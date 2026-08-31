@@ -41,6 +41,16 @@ func TestHaplotypeCallerRejectsNamedFieldShortAliases(t *testing.T) {
 	}
 }
 
+func TestHaplotypeCallerRejectsOutputIndexControls(t *testing.T) {
+	for _, arg := range []string{"--create-output-variant-index", "--create-output-variant-index=false", "-OVI", "-OVI=false"} {
+		_, err := gobble.Compose(haplotypePipeline([]string{arg}))
+		var composeErr *gobble.Error
+		if !errors.As(err, &composeErr) || len(composeErr.Defects) != 1 || composeErr.Defects[0].Code != gobble.DefectInvalidValue || composeErr.Defects[0].Unit != "gatk4_haplotypecaller" {
+			t.Errorf("ExtraArgs %q error = %#v, want structured output-index defect", arg, err)
+		}
+	}
+}
+
 func haplotypePipeline(extra []string) *gobble.Pipeline {
 	p := gobble.NewPipeline("haplotype")
 	bam := p.AddInput("bam", file("in", "sample", ".bam"))
