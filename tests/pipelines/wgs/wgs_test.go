@@ -73,10 +73,10 @@ func TestWGSComposeBuildPlanSelectedVertical(t *testing.T) {
 	tasks := pc.AllTasks(t, raw)
 	wantCounts := map[string]int{
 		"bwa_index": 1, "fastqc": 6, "fastp": 3, "bwa_mem": 3,
-		"samtools_sort": 3, "samtools_merge": 1, "samtools_index": 6,
+		"samtools_sort": 3, "samtools_merge": 3, "samtools_index": 6,
 		"gatk4_markduplicates": 2, "gatk4_baserecalibrator": 2,
 		"gatk4_applybqsr": 2, "gatk4_gather_bqsr_reports": 2,
-		"gatk4_gatherbamfiles": 2, "samtools_stats": 2,
+		"samtools_stats":    2,
 		"samtools_flagstat": 2, "samtools_idxstats": 2, "mosdepth": 2,
 		"gatk4_haplotypecaller": 2, "gatk4_mergevcfs": 3,
 		"gatk4_genomicsdbimport": 1, "gatk4_genotypegvcfs": 1,
@@ -91,7 +91,7 @@ func TestWGSComposeBuildPlanSelectedVertical(t *testing.T) {
 		"reference.bwa_index",
 		"patient1.testN.L001.fastp", "patient1.testN.L002.bwa_mem", "patient2.testT.L001.samtools_sort",
 		"bqsr_intervals.patient1.testN.gatk4_baserecalibrator",
-		"patient1.testN.bqsr_gather.gatk4_gatherbamfiles",
+		"patient1.testN.bqsr_gather.samtools_merge",
 		"haplotype_intervals.patient2.testT.gatk4_haplotypecaller",
 		"patient2.testT.gvcf_gather.gatk4_mergevcfs",
 		"joint_intervals.database.gatk4_genomicsdbimport",
@@ -105,7 +105,11 @@ func TestWGSComposeBuildPlanSelectedVertical(t *testing.T) {
 
 	pc.AssertIOPath(t, pc.TaskByID(t, raw, "patient1.testN.L001.fastp").Inputs, "read1", "in/reads/test_1.fastq.gz")
 	pc.AssertIOPath(t, pc.TaskByID(t, raw, "patient2.testT.L001.fastp").Inputs, "read1", "in/reads/test2_1.fastq.gz")
-	pc.AssertIOPath(t, pc.TaskByID(t, raw, "patient1.testN.bqsr_gather.gatk4_gatherbamfiles").Outputs, "bam", "results/wgs/samples/patient1/testN/alignment/testN.recalibrated.bam")
+	bqsrGather := pc.TaskByID(t, raw, "patient1.testN.bqsr_gather.samtools_merge")
+	pc.AssertIOPath(t, bqsrGather.Outputs, "bam", "results/wgs/samples/patient1/testN/alignment/testN.recalibrated.bam")
+	if !pc.ContainsAll(bqsrGather.Command, "samtools", "merge", "work/patient1/testN/bqsr/bams/interval_001.bam", "work/patient1/testN/bqsr/bams/interval_002.bam") {
+		t.Fatalf("BQSR BAM gather does not use Sarek's complete samtools merge path: %#v", bqsrGather.Command)
+	}
 	pc.AssertIOPath(t, pc.TaskByID(t, raw, "patient1.testN.gvcf_gather.gatk4_mergevcfs").Outputs, "vcf", "results/wgs/samples/patient1/testN/gvcf/testN.g.vcf.gz")
 	pc.AssertIOPath(t, pc.TaskByID(t, raw, "joint_gather.joint.gatk4_mergevcfs").Outputs, "vcf", "results/wgs/joint/joint_germline.vcf.gz")
 	pc.AssertIOPath(t, pc.TaskByID(t, raw, "joint_gather.joint.gatk4_mergevcfs").Outputs, "tbi", "results/wgs/joint/joint_germline.vcf.gz.tbi")
@@ -281,7 +285,7 @@ func assertScatterGatherFacts(t *testing.T, raw []byte) {
 	}
 	want := map[string][2]string{
 		"bqsr_intervals.patient1.testN.gatk4_baserecalibrator":     {"bqsr_intervals", ""},
-		"patient1.testN.bqsr_gather.gatk4_gatherbamfiles":          {"", "bqsr_gather"},
+		"patient1.testN.bqsr_gather.samtools_merge":                {"", "bqsr_gather"},
 		"haplotype_intervals.patient1.testN.gatk4_haplotypecaller": {"haplotype_intervals", ""},
 		"joint_intervals.database.gatk4_genomicsdbimport":          {"joint_intervals", ""},
 		"joint_intervals.genotype.gatk4_genotypegvcfs":             {"joint_intervals", ""},

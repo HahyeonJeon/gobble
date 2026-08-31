@@ -12,7 +12,6 @@ import (
 	gatk4applybqsr "github.com/HahyeonJeon/gobble/assets/modules/gatk4-applybqsr"
 	gatk4baserecalibrator "github.com/HahyeonJeon/gobble/assets/modules/gatk4-baserecalibrator"
 	gatk4gatherbqsrreports "github.com/HahyeonJeon/gobble/assets/modules/gatk4-gather-bqsr-reports"
-	gatk4gatherbamfiles "github.com/HahyeonJeon/gobble/assets/modules/gatk4-gatherbamfiles"
 	gatk4genomicsdbimport "github.com/HahyeonJeon/gobble/assets/modules/gatk4-genomicsdbimport"
 	gatk4genotypegvcfs "github.com/HahyeonJeon/gobble/assets/modules/gatk4-genotypegvcfs"
 	gatk4haplotypecaller "github.com/HahyeonJeon/gobble/assets/modules/gatk4-haplotypecaller"
@@ -67,11 +66,11 @@ func DefaultConfig() Config {
 		BWAMem:            bwamem.Options{Options: wgsBase(4, "4g")},
 		SamtoolsSort:      samtoolssort.Options{Options: wgsImageBase(wgsSamtoolsImage, 2, "2g")},
 		SamtoolsMerge:     samtoolsmerge.Options{Options: wgsImageBase(wgsSamtoolsImage, 2, "2g")},
-		MarkDuplicates:    gatk4markduplicates.Options{Options: wgsBase(2, "6g")},
+		MarkDuplicates:    gatk4markduplicates.Options{Options: wgsImageBase(gatk4markduplicates.DefaultImage, 2, "6g")},
 		BaseRecalibrator:  gatk4baserecalibrator.Options{Options: wgsBase(2, "4g")},
 		GatherBQSRReports: gatk4gatherbqsrreports.Options{Options: wgsBase(1, "3g")},
 		ApplyBQSR:         gatk4applybqsr.Options{Options: wgsBase(2, "4g")},
-		GatherBAM:         gatk4gatherbamfiles.Options{Options: wgsBase(1, "4g")},
+		GatherBAM:         samtoolsmerge.Options{Options: wgsImageBase(wgsSamtoolsImage, 1, "4g")},
 		SamtoolsIndex:     samtoolsindex.Options{Options: wgsImageBase(wgsSamtoolsImage, 1, "1g")},
 		SamtoolsStats:     samtoolsstats.Options{Options: wgsImageBase(wgsSamtoolsImage, 1, "1g")},
 		SamtoolsFlagstat:  samtoolsflagstat.Options{Options: wgsImageBase(wgsSamtoolsImage, 1, "1g")},

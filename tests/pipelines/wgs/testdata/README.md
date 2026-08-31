@@ -5,9 +5,11 @@ Planning-bound 24-entry byte inventory without discovering or substituting hashe
 16 staged nf-core/test-datasets bytes, five Sarek benchmark selectors, and
 three license/provenance records. Every URL contains the accepted commit. The
 manifest also records F and J coverage scenarios, the complete selected-stage
-trace, and immutable linux/amd64 image facts.
-Each image record names exact tool versions and immutable nf-core module source
-files. Grouped GATK records retain each distinct Sarek-locked module commit.
+trace, and immutable linux/amd64 image facts. Each image record maps exactly one
+WGS command module and task name to one immutable nf-core module source, image
+tag and digest, tool command and version, license, and platform. BQSR BAM gather
+uses Sarek's locked samtools merge command rather than an unselected GATK
+GatherBamFiles command.
 
 `wgs-samplesheet.csv` localizes Sarek's multi-lane shape as two typed germline
 samples. `testN` has two declared lanes over the official `test` pair. `testT`

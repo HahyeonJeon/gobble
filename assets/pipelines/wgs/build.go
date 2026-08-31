@@ -15,7 +15,6 @@ import (
 	gatk4applybqsr "github.com/HahyeonJeon/gobble/assets/modules/gatk4-applybqsr"
 	gatk4baserecalibrator "github.com/HahyeonJeon/gobble/assets/modules/gatk4-baserecalibrator"
 	gatk4gatherbqsrreports "github.com/HahyeonJeon/gobble/assets/modules/gatk4-gather-bqsr-reports"
-	gatk4gatherbamfiles "github.com/HahyeonJeon/gobble/assets/modules/gatk4-gatherbamfiles"
 	gatk4genomicsdbimport "github.com/HahyeonJeon/gobble/assets/modules/gatk4-genomicsdbimport"
 	gatk4genotypegvcfs "github.com/HahyeonJeon/gobble/assets/modules/gatk4-genotypegvcfs"
 	gatk4haplotypecaller "github.com/HahyeonJeon/gobble/assets/modules/gatk4-haplotypecaller"
@@ -230,7 +229,7 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 		bamOptions.InputPaths = intervalOutputs(config.Reference.Intervals, gobble.Dir(workDir+"/bqsr/bams"), ".bam")
 		bamOptions.OutDir = sampleResultsDir(config, state.sample).Join("alignment")
 		bamOptions.Prefix = state.sample.Name + ".recalibrated"
-		gatheredBAM, err := gatk4gatherbamfiles.Add(parent, []gobble.Handle{state.recalParts}, bamOptions)
+		gatheredBAM, err := samtoolsmerge.AddGather(parent, state.recalParts, bamOptions)
 		if recordModuleError(pipeline, err) {
 			return pipeline
 		}

@@ -12,7 +12,6 @@ import (
 	gatk4applybqsr "github.com/HahyeonJeon/gobble/assets/modules/gatk4-applybqsr"
 	gatk4baserecalibrator "github.com/HahyeonJeon/gobble/assets/modules/gatk4-baserecalibrator"
 	gatk4gatherbqsrreports "github.com/HahyeonJeon/gobble/assets/modules/gatk4-gather-bqsr-reports"
-	gatk4gatherbamfiles "github.com/HahyeonJeon/gobble/assets/modules/gatk4-gatherbamfiles"
 	gatk4genomicsdbimport "github.com/HahyeonJeon/gobble/assets/modules/gatk4-genomicsdbimport"
 	gatk4genotypegvcfs "github.com/HahyeonJeon/gobble/assets/modules/gatk4-genotypegvcfs"
 	gatk4haplotypecaller "github.com/HahyeonJeon/gobble/assets/modules/gatk4-haplotypecaller"
@@ -22,6 +21,7 @@ import (
 	samtoolsflagstat "github.com/HahyeonJeon/gobble/assets/modules/samtools-flagstat"
 	samtoolsidxstats "github.com/HahyeonJeon/gobble/assets/modules/samtools-idxstats"
 	samtoolsmerge "github.com/HahyeonJeon/gobble/assets/modules/samtools-merge"
+	pc "github.com/HahyeonJeon/gobble/tests/internal/plancheck"
 )
 
 func TestWGSCommandModulesHaveOneTaskStandaloneAdapters(t *testing.T) {
@@ -60,7 +60,6 @@ func TestWGSCommandModulesHaveOneTaskStandaloneAdapters(t *testing.T) {
 		{name: "base recalibrator", pipeline: gatk4baserecalibrator.Pipeline(bam, bai, fasta, fai, dict, interval, []gobble.PathSpec{dbsnp}, []gobble.PathSpec{dbsnpTBI}, gatk4baserecalibrator.Options{})},
 		{name: "gather BQSR", pipeline: gatk4gatherbqsrreports.Pipeline([]gobble.PathSpec{wgsSpec("in", "interval_001", ".table"), wgsSpec("in", "interval_002", ".table")}, gatk4gatherbqsrreports.Options{})},
 		{name: "apply BQSR", pipeline: gatk4applybqsr.Pipeline(bam, bai, fasta, fai, dict, wgsSpec("in/tables", "interval_001", ".table"), interval, gatk4applybqsr.Options{})},
-		{name: "gather BAM", pipeline: gatk4gatherbamfiles.Pipeline([]gobble.PathSpec{bam, wgsSpec("in", "sample2", ".bam")}, gatk4gatherbamfiles.Options{})},
 		{name: "haplotype caller", pipeline: gatk4haplotypecaller.Pipeline(bam, bai, fasta, fai, dict, dbsnp, dbsnpTBI, interval, gatk4haplotypecaller.Options{})},
 		{name: "merge VCFs", pipeline: gatk4mergevcfs.Pipeline([]gobble.PathSpec{gvcf1, gvcf2}, []gobble.PathSpec{gvcfTBI1, gvcfTBI2}, dict, gatk4mergevcfs.Options{})},
 		{name: "GenomicsDB import", pipeline: gatk4genomicsdbimport.Pipeline([]gobble.PathSpec{gvcf1, gvcf2}, []gobble.PathSpec{gvcfTBI1, gvcfTBI2}, interval, gatk4genomicsdbimport.Options{})},
@@ -78,6 +77,18 @@ func TestWGSCommandModulesHaveOneTaskStandaloneAdapters(t *testing.T) {
 				t.Fatalf("standalone task ids = %#v, want one command task", ids)
 			}
 		})
+	}
+}
+
+func TestWGSMarkDuplicatesDefaultUsesSarekModuleImage(t *testing.T) {
+	bam := wgsSpec("in", "sample", ".bam")
+	bai := wgsSpec("in", "sample", ".bam.bai")
+	tasks := pc.AllTasks(t, pc.MustPlanJSON(t, gatk4markduplicates.Pipeline(bam, bai, gatk4markduplicates.Options{})))
+	if len(tasks) != 1 {
+		t.Fatalf("MarkDuplicates task count = %d, want 1", len(tasks))
+	}
+	if got, want := tasks[0].Image, string(gatk4markduplicates.DefaultImage); got != want {
+		t.Fatalf("MarkDuplicates default image = %q, want Sarek module image %q", got, want)
 	}
 }
 

@@ -6,6 +6,10 @@ import (
 	"github.com/HahyeonJeon/gobble/assets/modules"
 )
 
+// DefaultImage is the Sarek 3.10.0 MarkDuplicates image resolved for
+// linux/amd64.
+const DefaultImage modules.Image = "community.wave.seqera.io/library/gatk4_gcnvkernel_htslib_samtools:d3becb6465454c35@sha256:e3d753d93f57969fe76b8628a8dfcd23ef44bccd08c4ced7089c1f94bf47c89f"
+
 // Options controls one GATK MarkDuplicates command.
 type Options struct {
 	modules.Options
@@ -49,7 +53,7 @@ func Add(parent modules.Parent, bam, inputBAI gobble.Handle, options Options) (P
 		return Ports{}, modules.ComposeDefect(gobble.DefectInvalidPath, unit, "duplicate metrics path is invalid")
 	}
 	protected := []string{"--INPUT", "--OUTPUT", "--METRICS_FILE", "--CREATE_INDEX", "--TMP_DIR"}
-	extra, image, resources, err := modules.ResolveGATK4Options(unit, options.Options, gobble.Resources{CPU: 2, Memory: "6g"}, protected)
+	extra, image, resources, err := modules.ResolveOptions(unit, options.Options, DefaultImage, gobble.Resources{CPU: 2, Memory: "6g"}, nil, protected)
 	if err != nil {
 		return Ports{}, err
 	}

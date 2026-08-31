@@ -21,7 +21,6 @@ import (
 	gatk4applybqsr "github.com/HahyeonJeon/gobble/assets/modules/gatk4-applybqsr"
 	gatk4baserecalibrator "github.com/HahyeonJeon/gobble/assets/modules/gatk4-baserecalibrator"
 	gatk4gatherbqsrreports "github.com/HahyeonJeon/gobble/assets/modules/gatk4-gather-bqsr-reports"
-	gatk4gatherbamfiles "github.com/HahyeonJeon/gobble/assets/modules/gatk4-gatherbamfiles"
 	gatk4genomicsdbimport "github.com/HahyeonJeon/gobble/assets/modules/gatk4-genomicsdbimport"
 	gatk4genotypegvcfs "github.com/HahyeonJeon/gobble/assets/modules/gatk4-genotypegvcfs"
 	gatk4haplotypecaller "github.com/HahyeonJeon/gobble/assets/modules/gatk4-haplotypecaller"
@@ -126,7 +125,7 @@ type Config struct {
 	BaseRecalibrator  gatk4baserecalibrator.Options
 	GatherBQSRReports gatk4gatherbqsrreports.Options
 	ApplyBQSR         gatk4applybqsr.Options
-	GatherBAM         gatk4gatherbamfiles.Options
+	GatherBAM         samtoolsmerge.Options
 	SamtoolsIndex     samtoolsindex.Options
 	SamtoolsStats     samtoolsstats.Options
 	SamtoolsFlagstat  samtoolsflagstat.Options

@@ -29,8 +29,9 @@ temporary `assets.WGS` constructor now points here.
 
 The graph prepares a truthful BWA sidecar Group, runs raw FastQC and paired
 FastP per lane, performs read-grouped BWA-MEM, lane sorting/indexing, sample
-merge, GATK duplicate marking, interval BQSR and gather, alignment QC, interval
-HaplotypeCaller and per-sample gVCF gather, complete-cohort GenomicsDB import,
+merge, GATK duplicate marking, interval BQSR with samtools BAM gather, alignment
+QC, interval HaplotypeCaller and per-sample gVCF gather, complete-cohort
+GenomicsDB import,
 interval GenotypeGVCFs and sort, final VCF gather, callset statistics, and
 MultiQC.
 

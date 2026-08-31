@@ -1,10 +1,10 @@
 package wgsevidence_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strings"
 	"testing"
 
@@ -45,19 +45,22 @@ type wgsEntry struct {
 }
 
 type wgsImage struct {
-	Reference     string   `json:"reference"`
-	Digest        string   `json:"digest"`
-	Modules       []string `json:"modules"`
-	Tool          string   `json:"tool"`
-	Version       string   `json:"version"`
-	ModuleSources []string `json:"module_sources"`
-	License       string   `json:"license"`
-	Platform      string   `json:"platform"`
+	Module       string `json:"module"`
+	TaskName     string `json:"task_name"`
+	Reference    string `json:"reference"`
+	Digest       string `json:"digest"`
+	Tool         string `json:"tool"`
+	Command      string `json:"command"`
+	Version      string `json:"version"`
+	ModuleCommit string `json:"module_commit"`
+	ModuleSource string `json:"module_source"`
+	License      string `json:"license"`
+	Platform     string `json:"platform"`
 }
 
 func TestManifestIsExactPlanningByteAndImageAuthority(t *testing.T) {
 	manifest := loadManifest(t)
-	if manifest.Schema != 3 || manifest.Benchmark.Pipeline != "nf-core/sarek" || manifest.Benchmark.Release != "3.10.0" || manifest.Benchmark.Commit != "8ccac7ad37b05dd792447763bf9671b719824587" || manifest.Benchmark.DatasetCommit != "6c82958a6f302d8471a20855023ac59f9974fa8a" {
+	if manifest.Schema != 4 || manifest.Benchmark.Pipeline != "nf-core/sarek" || manifest.Benchmark.Release != "3.10.0" || manifest.Benchmark.Commit != "8ccac7ad37b05dd792447763bf9671b719824587" || manifest.Benchmark.DatasetCommit != "6c82958a6f302d8471a20855023ac59f9974fa8a" {
 		t.Fatalf("benchmark = %+v, want exact Sarek and dataset commits", manifest.Benchmark)
 	}
 	if !strings.Contains(manifest.Benchmark.SelectedRoute, "without VQSR") || manifest.Benchmark.CoverageScenarios["F"] == "" || manifest.Benchmark.CoverageScenarios["J"] == "" {
@@ -95,31 +98,37 @@ func TestManifestIsExactPlanningByteAndImageAuthority(t *testing.T) {
 		}
 	}
 
-	imageSet := make(map[string]bool, len(manifest.Images))
-	moduleSet := make(map[string]bool)
-	expectedImages := expectedImageAuthorities()
+	expectedImages := expectedCommandAuthorities()
+	if len(manifest.Images) != len(expectedImages) {
+		t.Fatalf("image authority records = %d, want one for each of %d WGS commands", len(manifest.Images), len(expectedImages))
+	}
+	imagesByTask := make(map[string]wgsImage, len(manifest.Images))
 	for _, image := range manifest.Images {
-		want, ok := expectedImages[image.Reference]
-		if image.Reference == "" || strings.Contains(image.Reference, "@") || !strings.HasPrefix(image.Digest, "sha256:") || !lowerHex(strings.TrimPrefix(image.Digest, "sha256:"), 64) || len(image.Modules) == 0 || image.Tool == "" || image.License == "" || image.Platform != "linux/amd64" || !ok || image.Version != want.version || !reflect.DeepEqual(image.ModuleSources, want.moduleSources) {
+		want, ok := expectedImages[image.Module]
+		if !ok || image != want || image.TaskName == "" || imagesByTask[image.TaskName].Module != "" || strings.Contains(image.Reference, "@") || !strings.HasPrefix(image.Digest, "sha256:") || !lowerHex(strings.TrimPrefix(image.Digest, "sha256:"), 64) || !lowerHex(image.ModuleCommit, 40) || !strings.Contains(image.ModuleSource, image.ModuleCommit) || image.Tool == "" || image.Command == "" || image.Version == "" || image.License == "" || image.Platform != "linux/amd64" {
 			t.Fatalf("invalid image authority: %+v", image)
 		}
-		delete(expectedImages, image.Reference)
-		imageSet[image.Reference+"@"+image.Digest] = true
-		for _, module := range image.Modules {
-			moduleSet[module] = true
-		}
+		delete(expectedImages, image.Module)
+		imagesByTask[image.TaskName] = image
 	}
 	if len(expectedImages) != 0 {
-		t.Fatalf("manifest omits exact image authorities: %+v", expectedImages)
+		t.Fatalf("manifest omits exact command image authorities: %+v", expectedImages)
 	}
+	seenTasks := make(map[string]bool, len(imagesByTask))
 	for _, task := range pc.AllTasks(t, pc.MustPlanJSON(t, wgs.Build(loadSamples(t), wgs.DefaultConfig()))) {
-		if task.Image != "" && !imageSet[task.Image] {
-			t.Errorf("task %s image %q is absent from manifest", task.ID, task.Image)
+		authority, ok := imagesByTask[task.Name]
+		if !ok {
+			t.Errorf("task %s command %q has no one-to-one manifest authority", task.ID, task.Name)
+			continue
 		}
+		if want := authority.Reference + "@" + authority.Digest; task.Image != want {
+			t.Errorf("task %s image = %q, want its exact module authority %q", task.ID, task.Image, want)
+		}
+		seenTasks[task.Name] = true
 	}
-	for _, module := range []string{"bwa-index", "bwa-mem", "fastp", "fastqc", "samtools-merge", "gatk4-haplotypecaller", "gatk4-genomicsdbimport", "gatk4-genotypegvcfs", "bcftools-sort", "bcftools-stats", "multiqc"} {
-		if !moduleSet[module] {
-			t.Errorf("image authority omits %s", module)
+	for taskName := range imagesByTask {
+		if !seenTasks[taskName] {
+			t.Errorf("manifest authority for command %q has no WGS task", taskName)
 		}
 	}
 }
@@ -186,8 +195,10 @@ func loadManifest(t *testing.T) wgsManifest {
 		t.Fatalf("ReadFile manifest: %v", err)
 	}
 	var manifest wgsManifest
-	if err := json.Unmarshal(data, &manifest); err != nil {
-		t.Fatalf("Unmarshal manifest: %v", err)
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&manifest); err != nil {
+		t.Fatalf("decode strict manifest: %v", err)
 	}
 	return manifest
 }
@@ -197,64 +208,59 @@ type byteIdentity struct {
 	sha256 string
 }
 
-type imageAuthority struct {
-	version       string
-	moduleSources []string
+func expectedCommandAuthorities() map[string]wgsImage {
+	return map[string]wgsImage{
+		"bwa-index":                 commandAuthority("bwa-index", "bwa_index", "community.wave.seqera.io/library/bwa_htslib_samtools:83b50ff84ead50d0", "sha256:d7e24dc1e4d93ca4d3a76a78d4c834a7be3985b0e1e56fddd61662e047863a8a", "BWA, htslib, and samtools", "bwa index", "BWA 0.7.19; htslib 1.22.1; samtools 1.22.1", "6d46786420b4d7bc88eba026eb389c0c5535d120", "bwa/index", "GPL-3.0 and MIT"),
+		"bwa-mem":                   commandAuthority("bwa-mem", "bwa_mem", "community.wave.seqera.io/library/bwa_htslib_samtools:83b50ff84ead50d0", "sha256:d7e24dc1e4d93ca4d3a76a78d4c834a7be3985b0e1e56fddd61662e047863a8a", "BWA, htslib, and samtools", "bwa mem", "BWA 0.7.19; htslib 1.22.1; samtools 1.22.1", "2fb127c8fd13de0adaa676df7169131e45c0b114", "bwa/mem", "GPL-3.0 and MIT"),
+		"fastp":                     commandAuthority("fastp", "fastp", "community.wave.seqera.io/library/fastp:1.1.0--08aa7c5662a30d57", "sha256:556474e164daf5a5e218cd5d497681dcba0645047cf24698f88e3e078eacbd09", "FastP", "fastp", "1.1.0", "6d46786420b4d7bc88eba026eb389c0c5535d120", "fastp", "MIT"),
+		"fastqc":                    commandAuthority("fastqc", "fastqc", "quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0", "sha256:e194048df39c3145d9b4e0a14f4da20b59d59250465b6f2a9cb698445fd45900", "FastQC", "fastqc", "0.12.1", "6d46786420b4d7bc88eba026eb389c0c5535d120", "fastqc", "GPL-3.0"),
+		"samtools-sort":             samtoolsAuthority("samtools-sort", "samtools_sort", "sort"),
+		"samtools-index":            samtoolsAuthority("samtools-index", "samtools_index", "index"),
+		"samtools-merge":            samtoolsAuthority("samtools-merge", "samtools_merge", "merge"),
+		"samtools-stats":            samtoolsAuthority("samtools-stats", "samtools_stats", "stats"),
+		"samtools-flagstat":         samtoolsAuthority("samtools-flagstat", "samtools_flagstat", "flagstat"),
+		"samtools-idxstats":         samtoolsAuthority("samtools-idxstats", "samtools_idxstats", "idxstats"),
+		"gatk4-markduplicates":      commandAuthority("gatk4-markduplicates", "gatk4_markduplicates", "community.wave.seqera.io/library/gatk4_gcnvkernel_htslib_samtools:d3becb6465454c35", "sha256:e3d753d93f57969fe76b8628a8dfcd23ef44bccd08c4ced7089c1f94bf47c89f", "GATK", "gatk MarkDuplicates", "4.6.2.0", "6d46786420b4d7bc88eba026eb389c0c5535d120", "gatk4/markduplicates", "BSD-3-Clause"),
+		"gatk4-baserecalibrator":    gatkAuthority("gatk4-baserecalibrator", "gatk4_baserecalibrator", "BaseRecalibrator", "6d46786420b4d7bc88eba026eb389c0c5535d120", "baserecalibrator"),
+		"gatk4-gather-bqsr-reports": gatkAuthority("gatk4-gather-bqsr-reports", "gatk4_gather_bqsr_reports", "GatherBQSRReports", "6d46786420b4d7bc88eba026eb389c0c5535d120", "gatherbqsrreports"),
+		"gatk4-applybqsr":           gatkAuthority("gatk4-applybqsr", "gatk4_applybqsr", "ApplyBQSR", "ad964832ffcb72516a0a9c2c34688e3443655b5a", "applybqsr"),
+		"gatk4-haplotypecaller":     gatkAuthority("gatk4-haplotypecaller", "gatk4_haplotypecaller", "HaplotypeCaller", "7abcc95130dd0388f696002a99adeb59eca54471", "haplotypecaller"),
+		"gatk4-mergevcfs":           gatkAuthority("gatk4-mergevcfs", "gatk4_mergevcfs", "MergeVcfs", "6d46786420b4d7bc88eba026eb389c0c5535d120", "mergevcfs"),
+		"gatk4-genomicsdbimport":    gatkAuthority("gatk4-genomicsdbimport", "gatk4_genomicsdbimport", "GenomicsDBImport", "6d46786420b4d7bc88eba026eb389c0c5535d120", "genomicsdbimport"),
+		"gatk4-genotypegvcfs":       gatkAuthority("gatk4-genotypegvcfs", "gatk4_genotypegvcfs", "GenotypeGVCFs", "6d46786420b4d7bc88eba026eb389c0c5535d120", "genotypegvcfs"),
+		"mosdepth":                  commandAuthority("mosdepth", "mosdepth", "community.wave.seqera.io/library/htslib_mosdepth_gzip:4108dd38be84e40a", "sha256:a3dc5ea2ce788c24079d24d1721ed28086874152c43b5e7dde3f638dcf64336a", "mosdepth, htslib, and gzip", "mosdepth", "mosdepth 0.3.14; htslib 1.23.1; gzip 1.14", "999b9db1d6b8bdc591e1168e183f4cc87d6606f9", "mosdepth", "MIT"),
+		"bcftools-sort":             bcftoolsAuthority("bcftools-sort", "bcftools_sort", "sort"),
+		"bcftools-stats":            bcftoolsAuthority("bcftools-stats", "bcftools_stats", "stats"),
+		"multiqc":                   commandAuthority("multiqc", "multiqc", "community.wave.seqera.io/library/multiqc:1.35--c17fb751507e9dfc", "sha256:c8e346f4f6080eadf1253505e6ff09ef004454fc18e8d672006fd7b222cc412e", "MultiQC", "multiqc", "1.35", "98403d15b0e50edae1f3fec5eae5e24982f1fade", "multiqc", "GPL-3.0"),
+	}
 }
 
-func expectedImageAuthorities() map[string]imageAuthority {
-	return map[string]imageAuthority{
-		"community.wave.seqera.io/library/bwa_htslib_samtools:83b50ff84ead50d0": {
-			version: "BWA 0.7.19; htslib 1.22.1; samtools 1.22.1",
-			moduleSources: []string{
-				"https://raw.githubusercontent.com/nf-core/modules/6d46786420b4d7bc88eba026eb389c0c5535d120/modules/nf-core/bwa/index/main.nf",
-				"https://raw.githubusercontent.com/nf-core/modules/2fb127c8fd13de0adaa676df7169131e45c0b114/modules/nf-core/bwa/mem/main.nf",
-			},
-		},
-		"community.wave.seqera.io/library/fastp:1.1.0--08aa7c5662a30d57": {
-			version:       "1.1.0",
-			moduleSources: []string{"https://raw.githubusercontent.com/nf-core/modules/6d46786420b4d7bc88eba026eb389c0c5535d120/modules/nf-core/fastp/main.nf"},
-		},
-		"quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0": {
-			version:       "0.12.1",
-			moduleSources: []string{"https://raw.githubusercontent.com/nf-core/modules/6d46786420b4d7bc88eba026eb389c0c5535d120/modules/nf-core/fastqc/main.nf"},
-		},
-		"community.wave.seqera.io/library/htslib_samtools:1.24--d697cfb9dce007cd": {
-			version: "1.24",
-			moduleSources: []string{
-				"https://raw.githubusercontent.com/nf-core/modules/9339809fcb90af8a8b7051e6cd914894d5c52002/modules/nf-core/samtools/index/main.nf",
-				"https://raw.githubusercontent.com/nf-core/modules/9339809fcb90af8a8b7051e6cd914894d5c52002/modules/nf-core/samtools/merge/main.nf",
-				"https://raw.githubusercontent.com/nf-core/modules/9339809fcb90af8a8b7051e6cd914894d5c52002/modules/nf-core/samtools/stats/main.nf",
-			},
-		},
-		"community.wave.seqera.io/library/gatk4_gcnvkernel:edb12e4f0bf02cd3": {
-			version: "4.6.2.0",
-			moduleSources: []string{
-				"https://raw.githubusercontent.com/nf-core/modules/ad964832ffcb72516a0a9c2c34688e3443655b5a/modules/nf-core/gatk4/applybqsr/main.nf",
-				"https://raw.githubusercontent.com/nf-core/modules/6d46786420b4d7bc88eba026eb389c0c5535d120/modules/nf-core/gatk4/baserecalibrator/main.nf",
-				"https://raw.githubusercontent.com/nf-core/modules/6d46786420b4d7bc88eba026eb389c0c5535d120/modules/nf-core/gatk4/gatherbqsrreports/main.nf",
-				"https://raw.githubusercontent.com/nf-core/modules/6d46786420b4d7bc88eba026eb389c0c5535d120/modules/nf-core/gatk4/genomicsdbimport/main.nf",
-				"https://raw.githubusercontent.com/nf-core/modules/6d46786420b4d7bc88eba026eb389c0c5535d120/modules/nf-core/gatk4/genotypegvcfs/main.nf",
-				"https://raw.githubusercontent.com/nf-core/modules/7abcc95130dd0388f696002a99adeb59eca54471/modules/nf-core/gatk4/haplotypecaller/main.nf",
-				"https://raw.githubusercontent.com/nf-core/modules/6d46786420b4d7bc88eba026eb389c0c5535d120/modules/nf-core/gatk4/mergevcfs/main.nf",
-			},
-		},
-		"community.wave.seqera.io/library/htslib_mosdepth_gzip:4108dd38be84e40a": {
-			version:       "mosdepth 0.3.14; htslib 1.23.1; gzip 1.14",
-			moduleSources: []string{"https://raw.githubusercontent.com/nf-core/modules/999b9db1d6b8bdc591e1168e183f4cc87d6606f9/modules/nf-core/mosdepth/main.nf"},
-		},
-		"community.wave.seqera.io/library/bcftools_htslib:1.23.1--9f08ec665533d64a": {
-			version: "1.23.1",
-			moduleSources: []string{
-				"https://raw.githubusercontent.com/nf-core/modules/feef37435aea56816adf4b3bde1fc76aac327a8d/modules/nf-core/bcftools/sort/main.nf",
-				"https://raw.githubusercontent.com/nf-core/modules/feef37435aea56816adf4b3bde1fc76aac327a8d/modules/nf-core/bcftools/stats/main.nf",
-			},
-		},
-		"community.wave.seqera.io/library/multiqc:1.35--c17fb751507e9dfc": {
-			version:       "1.35",
-			moduleSources: []string{"https://raw.githubusercontent.com/nf-core/modules/98403d15b0e50edae1f3fec5eae5e24982f1fade/modules/nf-core/multiqc/main.nf"},
-		},
+func commandAuthority(module, taskName, reference, digest, tool, command, version, commit, sourcePath, license string) wgsImage {
+	return wgsImage{
+		Module:       module,
+		TaskName:     taskName,
+		Reference:    reference,
+		Digest:       digest,
+		Tool:         tool,
+		Command:      command,
+		Version:      version,
+		ModuleCommit: commit,
+		ModuleSource: "https://raw.githubusercontent.com/nf-core/modules/" + commit + "/modules/nf-core/" + sourcePath + "/main.nf",
+		License:      license,
+		Platform:     "linux/amd64",
 	}
+}
+
+func samtoolsAuthority(module, taskName, command string) wgsImage {
+	return commandAuthority(module, taskName, "community.wave.seqera.io/library/htslib_samtools:1.24--d697cfb9dce007cd", "sha256:e994bf4eb3731150511a14f5706b7bdfd64df1b6d40898fff334286c027e0859", "samtools", "samtools "+command, "1.24", "9339809fcb90af8a8b7051e6cd914894d5c52002", "samtools/"+command, "MIT/Expat")
+}
+
+func gatkAuthority(module, taskName, command, commit, source string) wgsImage {
+	return commandAuthority(module, taskName, "community.wave.seqera.io/library/gatk4_gcnvkernel:edb12e4f0bf02cd3", "sha256:ced519873646379e287bc28738bdf88e975edd39a92e7bc6a34bccd37153d9d0", "GATK", "gatk "+command, "4.6.2.0", commit, "gatk4/"+source, "BSD-3-Clause")
+}
+
+func bcftoolsAuthority(module, taskName, command string) wgsImage {
+	return commandAuthority(module, taskName, "community.wave.seqera.io/library/bcftools_htslib:1.23.1--9f08ec665533d64a", "sha256:0b4d52ca9a56d07be3f78a12af654e5116f5112908dba277e6796fd9dfb83fe5", "bcftools", "bcftools "+command, "1.23.1", "feef37435aea56816adf4b3bde1fc76aac327a8d", "bcftools/"+command, "MIT/Expat")
 }
 
 func expectedPlanningBytes() map[string]byteIdentity {
