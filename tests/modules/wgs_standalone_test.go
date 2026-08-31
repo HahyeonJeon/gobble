@@ -2,6 +2,7 @@ package moduleevidence
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
@@ -108,6 +109,89 @@ func TestWGSMarkDuplicatesRejectsNamedFieldShortAliases(t *testing.T) {
 		if !errors.As(err, &composeErr) || len(composeErr.Defects) != 1 || composeErr.Defects[0].Code != gobble.DefectInvalidValue || composeErr.Defects[0].Unit != "gatk4_markduplicates" {
 			t.Errorf("ExtraArgs %q error = %#v, want structured protected-alias defect", arg, err)
 		}
+	}
+}
+
+func TestBWAProductModulesRejectPositionalExtraArgs(t *testing.T) {
+	fasta := wgsSpec("in", "genome", ".fasta")
+	read1 := wgsSpec("in", "reads_R1", ".fastq.gz")
+	read2 := wgsSpec("in", "reads_R2", ".fastq.gz")
+	prefix := gobble.PathSpec{Dir: gobble.Dir("in/bwa"), Base: "genome"}
+	index := make(gobble.Group, 0, 5)
+	for _, name := range []string{"amb", "ann", "bwt", "pac", "sa"} {
+		index = append(index, gobble.Member{Name: name, Spec: prefix.AppendExt("." + name)})
+	}
+
+	tests := []struct {
+		name     string
+		unit     string
+		pipeline func() *gobble.Pipeline
+	}{
+		{
+			name: "bwa index FASTA operand",
+			unit: "bwa_index",
+			pipeline: func() *gobble.Pipeline {
+				options := bwaindex.Options{}
+				options.ExtraArgs = []string{"in/undeclared.fasta"}
+				return bwaindex.ProductPipeline(fasta, options)
+			},
+		},
+		{
+			name: "bwa mem index operand",
+			unit: "bwa_mem",
+			pipeline: func() *gobble.Pipeline {
+				options := bwamem.Options{IndexPrefix: prefix, ReadGroup: "@RG\\tID:lane\\tSM:sample"}
+				options.ExtraArgs = []string{"in/undeclared-index"}
+				return bwamem.ProductPipeline(fasta, index, read1, read2, options)
+			},
+		},
+		{
+			name: "bwa mem operand after flag",
+			unit: "bwa_mem",
+			pipeline: func() *gobble.Pipeline {
+				options := bwamem.Options{IndexPrefix: prefix, ReadGroup: "@RG\\tID:lane\\tSM:sample"}
+				options.ExtraArgs = []string{"-M", "in/undeclared-index"}
+				return bwamem.ProductPipeline(fasta, index, read1, read2, options)
+			},
+		},
+		{
+			name: "bwa mem missing option value",
+			unit: "bwa_mem",
+			pipeline: func() *gobble.Pipeline {
+				options := bwamem.Options{IndexPrefix: prefix, ReadGroup: "@RG\\tID:lane\\tSM:sample"}
+				options.ExtraArgs = []string{"-k"}
+				return bwamem.ProductPipeline(fasta, index, read1, read2, options)
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			graph, err := gobble.Compose(test.pipeline())
+			var composeErr *gobble.Error
+			if graph != nil || !errors.As(err, &composeErr) || len(composeErr.Defects) != 1 {
+				t.Fatalf("Compose() = (%v, %#v), want one structured compose defect", graph, err)
+			}
+			defect := composeErr.Defects[0]
+			if defect.Code != gobble.DefectInvalidValue || defect.Unit != test.unit || !strings.Contains(defect.Message, "positional") {
+				t.Fatalf("Compose() defect = %#v, want %s positional invalid-value defect", defect, test.unit)
+			}
+		})
+	}
+}
+
+func TestBWAMemProductAcceptsCompleteExtraArgValue(t *testing.T) {
+	fasta := wgsSpec("in", "genome", ".fasta")
+	read1 := wgsSpec("in", "reads_R1", ".fastq.gz")
+	read2 := wgsSpec("in", "reads_R2", ".fastq.gz")
+	prefix := gobble.PathSpec{Dir: gobble.Dir("in/bwa"), Base: "genome"}
+	index := make(gobble.Group, 0, 5)
+	for _, name := range []string{"amb", "ann", "bwt", "pac", "sa"} {
+		index = append(index, gobble.Member{Name: name, Spec: prefix.AppendExt("." + name)})
+	}
+	options := bwamem.Options{IndexPrefix: prefix, ReadGroup: "@RG\\tID:lane\\tSM:sample"}
+	options.ExtraArgs = []string{"-k", "19", "-M"}
+	if _, err := gobble.Compose(bwamem.ProductPipeline(fasta, index, read1, read2, options)); err != nil {
+		t.Fatalf("Compose(complete BWA-MEM options) error = %v, want nil", err)
 	}
 }
 

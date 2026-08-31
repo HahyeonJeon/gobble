@@ -51,6 +51,19 @@ func TestParserResolvesControlsAndRejectsStructuralDefects(t *testing.T) {
 	}
 }
 
+func TestBuildRejectsEmptyReplicateRunMembership(t *testing.T) {
+	samples := loadSamples(t)
+	samples[0].Replicates[0].Runs = nil
+	graph, err := gobble.Compose(atacseq.Build(samples, atacseq.DefaultConfig()))
+	if graph != nil {
+		t.Fatalf("Compose(empty run membership) graph = %v, want nil", graph)
+	}
+	defect := requireDefectValue(t, err, gobble.DefectInvalidSampleSheet, samples[0].Name)
+	if !strings.Contains(defect.Message, "technical runs") {
+		t.Fatalf("empty run membership defect = %#v, want technical-run membership failure", defect)
+	}
+}
+
 func TestBuildSelectedVerticalUsesComposeTimeStrictFanIn(t *testing.T) {
 	pipeline := atacseq.Build(loadSamples(t), atacseq.DefaultConfig())
 	if _, err := gobble.Compose(pipeline); err != nil {
@@ -164,6 +177,8 @@ func TestProtectedAliasesAndInvalidPublicationFailCompose(t *testing.T) {
 		{name: "MACS output", unit: "macs2_callpeak", mutate: func(c *atacseq.Config) { c.MACS2.ExtraArgs = []string{"--outdir=elsewhere"} }},
 		{name: "Picard output alias", unit: "picard_markduplicates", mutate: func(c *atacseq.Config) { c.MarkDuplicates.ExtraArgs = []string{"O=elsewhere.bam"} }},
 		{name: "aligner route", unit: "bwa_mem", mutate: func(c *atacseq.Config) { c.BWAMem.ExtraArgs = []string{"--aligner=bowtie2"} }},
+		{name: "BWA index positional operand", unit: "bwa_index", mutate: func(c *atacseq.Config) { c.BWAIndex.ExtraArgs = []string{"in/undeclared.fasta"} }},
+		{name: "BWA MEM positional operand", unit: "bwa_mem", mutate: func(c *atacseq.Config) { c.BWAMem.ExtraArgs = []string{"in/undeclared-index"} }},
 		{name: "FeatureCounts BAM operand", unit: "featurecounts_atac", mutate: func(c *atacseq.Config) { c.FeatureCounts.ExtraArgs = []string{"in/undeclared.bam"} }},
 		{name: "FeatureCounts BAM after switch", unit: "featurecounts_atac", mutate: func(c *atacseq.Config) { c.FeatureCounts.ExtraArgs = []string{"--primary", "in/undeclared.bam"} }},
 		{name: "FeatureCounts missing option value", unit: "featurecounts_atac", mutate: func(c *atacseq.Config) { c.FeatureCounts.ExtraArgs = []string{"-Q"} }},
@@ -198,6 +213,30 @@ func TestReadyBWAIndexAndBlacklistFilteringAreTyped(t *testing.T) {
 	filter := pc.TaskByID(t, raw, "OSMOTIC_STRESS_T0_PE.replicate_1.bedtools_intersect")
 	pc.AssertIOPath(t, filter.Inputs, "intervals", "in/reference/blacklist.bed")
 	pc.AssertIOPath(t, filter.Outputs, "selected_bam", "results/atacseq/samples/OSMOTIC_STRESS_T0_PE/replicate_1/alignment/OSMOTIC_STRESS_T0_PE_R1.filtered.bam")
+}
+
+func TestBuildRejectsPartialReadyBWAIndexMembership(t *testing.T) {
+	prefix := gobble.PathSpec{Dir: gobble.Dir("in/reference/bwa"), Base: "genome"}
+	for _, test := range []struct {
+		name    string
+		members gobble.Group
+	}{
+		{name: "nil members"},
+		{name: "incomplete members", members: gobble.Group{{Name: "amb", Spec: prefix.AppendExt(".amb")}}},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			config := atacseq.DefaultConfig()
+			config.Reference.BWAIndex = atacseq.ReadyBWAIndex{Prefix: prefix, Members: test.members}
+			graph, err := gobble.Compose(atacseq.Build(loadSamples(t), config))
+			if graph != nil {
+				t.Fatalf("Compose(partial ready BWA index) graph = %v, want nil", graph)
+			}
+			defect := requireDefectValue(t, err, gobble.DefectInvalidValue, "reference.bwa_index")
+			if !strings.Contains(defect.Message, "sidecar") && !strings.Contains(defect.Message, "incomplete") {
+				t.Fatalf("ready BWA index defect = %#v, want incomplete membership", defect)
+			}
+		})
+	}
 }
 
 func TestBuildCopiesCallerDataAndDefaultsAreFresh(t *testing.T) {
@@ -243,16 +282,22 @@ func loadSamples(t *testing.T) []atacseq.Sample {
 
 func requireDefect(t *testing.T, err error, code gobble.DefectCode, unit string) {
 	t.Helper()
+	requireDefectValue(t, err, code, unit)
+}
+
+func requireDefectValue(t *testing.T, err error, code gobble.DefectCode, unit string) gobble.Defect {
+	t.Helper()
 	var composeErr *gobble.Error
 	if !errors.As(err, &composeErr) {
 		t.Fatalf("error = %T %v, want *gobble.Error", err, err)
 	}
 	for _, defect := range composeErr.Defects {
 		if defect.Code == code && defect.Unit == unit {
-			return
+			return defect
 		}
 	}
 	t.Fatalf("defects = %#v, want code %s unit %s", composeErr.Defects, code, unit)
+	return gobble.Defect{}
 }
 
 func countInputs(inputs []pc.IO, prefix string) int {

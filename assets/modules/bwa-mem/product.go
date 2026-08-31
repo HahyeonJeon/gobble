@@ -2,6 +2,7 @@ package bwamem
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/HahyeonJeon/gobble"
 	"github.com/HahyeonJeon/gobble/assets/modules"
@@ -71,6 +72,9 @@ func Add(parent modules.Parent, fasta, index, read1, read2 gobble.Handle, option
 	if err := modules.RejectExtraArgs(unit, options.ExtraArgs, []string{"-R", "-t", "-o"}); err != nil {
 		return Ports{}, err
 	}
+	if err := validateExtraArgs(unit, options.ExtraArgs); err != nil {
+		return Ports{}, err
+	}
 	base := options.Options
 	base.Resources = resources
 	command, image, resources, err := modules.ResolveOptions(unit, base, DefaultImage, resources, command, []string{"-R", "-t"})
@@ -95,6 +99,54 @@ func Add(parent modules.Parent, fasta, index, read1, read2 gobble.Handle, option
 		Outputs: []gobble.Bind{{Name: "sam", Spec: output}},
 	})
 	return Ports{SAM: task.Out("sam")}, nil
+}
+
+func validateExtraArgs(unit string, extraArgs []string) error {
+	for i := 0; i < len(extraArgs); i++ {
+		arg := extraArgs[i]
+		if arg == "" || arg == "-" || arg == "--" || !strings.HasPrefix(arg, "-") {
+			return modules.ComposeDefect(gobble.DefectInvalidValue, unit, "ExtraArgs cannot add positional operands before typed index and read inputs")
+		}
+		name, value, attached := bwaMemExtraArg(arg)
+		if !bwaMemExtraArgTakesValue(name) {
+			continue
+		}
+		if attached {
+			if value == "" {
+				return modules.ComposeDefect(gobble.DefectInvalidValue, unit, "ExtraArgs option "+name+" requires a value before typed positional inputs")
+			}
+			continue
+		}
+		if i+1 == len(extraArgs) || extraArgs[i+1] == "" || strings.HasPrefix(extraArgs[i+1], "-") {
+			return modules.ComposeDefect(gobble.DefectInvalidValue, unit, "ExtraArgs option "+name+" requires a value before typed positional inputs")
+		}
+		i++
+	}
+	return nil
+}
+
+func bwaMemExtraArg(arg string) (name, value string, attached bool) {
+	if strings.HasPrefix(arg, "--") {
+		name, value, attached = strings.Cut(arg, "=")
+		return name, value, attached
+	}
+	if len(arg) > 2 {
+		return arg[:2], strings.TrimPrefix(arg[2:], "="), true
+	}
+	return arg, "", false
+}
+
+// BWA 0.7.17 accepts separate values for these bwa mem options. Tracking their
+// arity keeps valid option values distinct from undeclared positional inputs.
+func bwaMemExtraArgTakesValue(name string) bool {
+	switch name {
+	case "-A", "-B", "-D", "-E", "-G", "-H", "-I", "-K", "-L", "-N",
+		"-O", "-Q", "-R", "-T", "-U", "-W", "-X", "-c", "-d", "-h",
+		"-k", "-m", "-r", "-s", "-t", "-v", "-w", "-x", "-y":
+		return true
+	default:
+		return false
+	}
 }
 
 // ProductPipeline returns a standalone validated lifted bwa mem module.

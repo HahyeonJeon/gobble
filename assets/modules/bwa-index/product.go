@@ -1,6 +1,8 @@
 package bwaindex
 
 import (
+	"strings"
+
 	"github.com/HahyeonJeon/gobble"
 	"github.com/HahyeonJeon/gobble/assets/modules"
 )
@@ -45,6 +47,9 @@ func Add(parent modules.Parent, fasta gobble.Handle, options Options) (Ports, er
 	if err := modules.RejectExtraArgs(unit, options.ExtraArgs, []string{"-p", "-a"}); err != nil {
 		return Ports{}, err
 	}
+	if err := validateExtraArgs(unit, options.ExtraArgs); err != nil {
+		return Ports{}, err
+	}
 	command, image, resources, err := modules.ResolveOptions(unit, options.Options, DefaultImage, gobble.Resources{CPU: 1, Memory: "6g"}, command, []string{"-p"})
 	if err != nil {
 		return Ports{}, err
@@ -60,6 +65,15 @@ func Add(parent modules.Parent, fasta gobble.Handle, options Options) (Ports, er
 		Outputs: []gobble.Bind{{Name: "index", Group: members}},
 	})
 	return Ports{Index: task.Out("index"), Prefix: prefixSpec}, nil
+}
+
+func validateExtraArgs(unit string, extraArgs []string) error {
+	for _, arg := range extraArgs {
+		if arg == "" || arg == "-" || arg == "--" || !strings.HasPrefix(arg, "-") {
+			return modules.ComposeDefect(gobble.DefectInvalidValue, unit, "ExtraArgs cannot add positional operands before the typed FASTA input")
+		}
+	}
+	return nil
 }
 
 // ProductPipeline returns a standalone validated lifted bwa index module.

@@ -29,6 +29,9 @@ func validateBuild(samples []Sample, config Config) []gobble.Defect {
 				defects = append(defects, gobble.Defect{Code: gobble.DefectInvalidSampleSheet, Unit: sample.Name, Message: "ATAC replicates must start at 1 without gaps and contain technical runs"})
 			}
 			replicateKeys[key] = true
+			if len(replicate.Runs) == 0 {
+				continue
+			}
 			paired := replicate.Runs[0].Fastq2 != ""
 			if samplePaired == nil {
 				samplePaired = new(bool)
@@ -78,7 +81,7 @@ func validateBuild(samples []Sample, config Config) []gobble.Defect {
 	if config.Filters.RemoveBlacklist && pathSpecUnset(config.Reference.Blacklist) {
 		defects = append(defects, gobble.Defect{Code: gobble.DefectInvalidValue, Unit: "reference.blacklist", Message: "blacklist filtering requires an explicit blacklist"})
 	}
-	if config.Reference.BWAIndex.Members != nil {
+	if !pathSpecUnset(config.Reference.BWAIndex.Prefix) || config.Reference.BWAIndex.Members != nil {
 		if defect := readyBWAIndexDefect(config.Reference.BWAIndex); defect != nil {
 			defects = append(defects, *defect)
 		}
@@ -130,13 +133,13 @@ func protectedExtra(config Config) (string, string) {
 }
 
 func readyBWAIndexDefect(index ReadyBWAIndex) *gobble.Defect {
-	prefix, err := index.Prefix.Render()
-	if err != nil || !validWorkspacePath(prefix) {
-		return &gobble.Defect{Code: gobble.DefectInvalidPath, Unit: "reference.bwa_index", Message: "ready BWA index prefix must be workspace-relative", Paths: []string{prefix}}
-	}
 	want := []string{"amb", "ann", "bwt", "pac", "sa"}
 	if len(index.Members) != len(want) {
 		return &gobble.Defect{Code: gobble.DefectInvalidValue, Unit: "reference.bwa_index", Message: "ready BWA index must contain every fixed sidecar"}
+	}
+	prefix, err := index.Prefix.Render()
+	if err != nil || !validWorkspacePath(prefix) {
+		return &gobble.Defect{Code: gobble.DefectInvalidPath, Unit: "reference.bwa_index", Message: "ready BWA index prefix must be workspace-relative", Paths: []string{prefix}}
 	}
 	for i, member := range index.Members {
 		path, pathErr := member.Spec.Render()
