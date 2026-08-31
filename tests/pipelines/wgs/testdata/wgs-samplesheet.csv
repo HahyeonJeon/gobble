@@ -1,0 +1,4 @@
+patient,sample,lane,fastq_1,fastq_2,sex
+patient1,testN,L001,in/reads/test_1.fastq.gz,in/reads/test_2.fastq.gz,XX
+patient1,testN,L002,in/reads/test_1.fastq.gz,in/reads/test_2.fastq.gz,XX
+patient2,testT,L001,in/reads/test2_1.fastq.gz,in/reads/test2_2.fastq.gz,XY

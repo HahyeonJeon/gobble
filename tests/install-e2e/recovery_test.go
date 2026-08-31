@@ -235,9 +235,10 @@ func requireNoGoInvocation(t *testing.T, marker, operation string) {
 func requireWGSOutputs(t *testing.T, workspace string) {
 	t.Helper()
 	for _, rel := range []string{
-		"work/multiqc/multiqc_report.html",
-		"work/sample1/samtools-sort/aligned.bam",
-		"work/sample2/samtools-sort/aligned.bam",
+		"results/wgs/multiqc/multiqc_report.html",
+		"results/wgs/samples/testN/alignment/testN.recalibrated.bam",
+		"results/wgs/samples/testT/alignment/testT.recalibrated.bam",
+		"results/wgs/joint/joint_germline.vcf.gz",
 	} {
 		path := filepath.Join(workspace, filepath.FromSlash(rel))
 		info, err := os.Stat(path)

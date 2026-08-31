@@ -51,10 +51,20 @@ const wgsSource = `package wgs
 
 import (
 	"github.com/HahyeonJeon/gobble"
-	"github.com/HahyeonJeon/gobble/assets/pipelines/wgs"
+	product "github.com/HahyeonJeon/gobble/assets/pipelines/wgs"
 )
 
-func Pipeline() *gobble.Pipeline { return wgs.Pipeline() }
+func Pipeline() *gobble.Pipeline {
+	return product.Build([]product.Sample{
+		{Patient: "patient1", Name: "testN", Sex: "XX", Lanes: []product.Lane{
+			{ID: "L001", Fastq1: "in/reads/test_1.fastq.gz", Fastq2: "in/reads/test_2.fastq.gz"},
+			{ID: "L002", Fastq1: "in/reads/test_1.fastq.gz", Fastq2: "in/reads/test_2.fastq.gz"},
+		}},
+		{Patient: "patient2", Name: "testT", Sex: "XY", Lanes: []product.Lane{
+			{ID: "L001", Fastq1: "in/reads/test2_1.fastq.gz", Fastq2: "in/reads/test2_2.fastq.gz"},
+		}},
+	}, product.DefaultConfig())
+}
 `
 
 const printpipeSource = `package printpipe
@@ -111,6 +121,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	wgsevidence "github.com/HahyeonJeon/gobble/tests/pipelines/wgs"
 )
@@ -121,13 +132,48 @@ func main() {
 		os.Exit(2)
 	}
 	workspace := os.Args[1]
+	destinations := map[string]string{
+		"test_1.fastq.gz": "in/reads/test_1.fastq.gz",
+		"test_2.fastq.gz": "in/reads/test_2.fastq.gz",
+		"test2_1.fastq.gz": "in/reads/test2_1.fastq.gz",
+		"test2_2.fastq.gz": "in/reads/test2_2.fastq.gz",
+		"genome.fasta": "in/reference/genome.fasta",
+		"genome.fasta.fai": "in/reference/genome.fasta.fai",
+		"genome.dict": "in/reference/genome.dict",
+		"genome.multi_intervals.bed": "in/reference/genome.multi_intervals.bed",
+		"dbsnp_146.hg38.vcf.gz": "in/reference/known-sites/dbsnp_146.hg38.vcf.gz",
+		"dbsnp_146.hg38.vcf.gz.tbi": "in/reference/known-sites/dbsnp_146.hg38.vcf.gz.tbi",
+		"mills_and_1000G.indels.vcf.gz": "in/reference/known-sites/mills_and_1000G.indels.vcf.gz",
+		"mills_and_1000G.indels.vcf.gz.tbi": "in/reference/known-sites/mills_and_1000G.indels.vcf.gz.tbi",
+	}
 	for _, pin := range wgsevidence.MustPins() {
+		rel, ok := destinations[pin.Name]
+		if !ok {
+			continue
+		}
 		source, err := wgsevidence.Fetch("testdata/cache", pin)
 		if err != nil {
 			fail(err)
 		}
-		destination := filepath.Join(workspace, "in", pin.Name)
+		destination := filepath.Join(workspace, filepath.FromSlash(rel))
 		if err := copyFile(source, destination); err != nil {
+			fail(err)
+		}
+	}
+	intervals, err := os.ReadFile(filepath.Join(workspace, "in", "reference", "genome.multi_intervals.bed"))
+	if err != nil {
+		fail(err)
+	}
+	lines := strings.Split(strings.TrimSpace(string(intervals)), "\n")
+	if len(lines) != 2 {
+		fail(fmt.Errorf("interval member count %d, want 2", len(lines)))
+	}
+	for i, line := range lines {
+		destination := filepath.Join(workspace, "in", "reference", "intervals", fmt.Sprintf("interval_%03d.bed", i+1))
+		if err := os.MkdirAll(filepath.Dir(destination), 0o755); err != nil {
+			fail(err)
+		}
+		if err := os.WriteFile(destination, []byte(line+"\n"), 0o644); err != nil {
 			fail(err)
 		}
 	}
@@ -309,9 +355,10 @@ func resume(workspace string) error {
 		return err
 	}
 	for _, rel := range []string{
-		"work/multiqc/multiqc_report.html",
-		"work/sample1/samtools-sort/aligned.bam",
-		"work/sample2/samtools-sort/aligned.bam",
+		"results/wgs/multiqc/multiqc_report.html",
+		"results/wgs/samples/testN/alignment/testN.recalibrated.bam",
+		"results/wgs/samples/testT/alignment/testT.recalibrated.bam",
+		"results/wgs/joint/joint_germline.vcf.gz",
 	} {
 		info, err := os.Stat(filepath.Join(workspace, filepath.FromSlash(rel)))
 		if err != nil || !info.Mode().IsRegular() || info.Size() == 0 {

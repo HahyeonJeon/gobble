@@ -1,0 +1,40 @@
+package gatk4genomicsdbimport_test
+
+import (
+	"testing"
+
+	"github.com/HahyeonJeon/gobble"
+	gatk4genomicsdbimport "github.com/HahyeonJeon/gobble/assets/modules/gatk4-genomicsdbimport"
+	pc "github.com/HahyeonJeon/gobble/tests/internal/plancheck"
+	cc "github.com/HahyeonJeon/gobble/tests/modules/internal/commandcheck"
+)
+
+func TestGenomicsDBImportRequiresTwoSamplesAndReturnsTree(t *testing.T) {
+	p := gobble.NewPipeline("genomicsdb")
+	variants := []gatk4genomicsdbimport.Variant{
+		{GVCF: p.AddInput("a", spec("a", ".g.vcf.gz")), TBI: p.AddInput("a_tbi", spec("a", ".g.vcf.gz.tbi"))},
+		{GVCF: p.AddInput("b", spec("b", ".g.vcf.gz")), TBI: p.AddInput("b_tbi", spec("b", ".g.vcf.gz.tbi"))},
+	}
+	interval := p.AddInput("interval", spec("interval_001", ".bed"))
+	ports, err := gatk4genomicsdbimport.Add(p, variants, interval, gatk4genomicsdbimport.Options{OutDir: gobble.Dir("work/genomicsdb/interval_001")})
+	if err != nil || ports.Database.IsZero() {
+		t.Fatalf("Add() = (%#v, %v), want Tree port", ports, err)
+	}
+	task := cc.Task(t, p, "gatk4_genomicsdbimport")
+	if !pc.ContainsAll(task.Command, "GenomicsDBImport", "--variant", "in/a.g.vcf.gz", "in/b.g.vcf.gz", "--intervals", "in/interval_001.bed") {
+		t.Fatalf("GenomicsDBImport command = %#v", task.Command)
+	}
+	pc.AssertTreeIO(t, task.Outputs, "database", "work/genomicsdb/interval_001")
+
+	p = gobble.NewPipeline("invalid")
+	one := []gatk4genomicsdbimport.Variant{{GVCF: p.AddInput("a", spec("a", ".g.vcf.gz")), TBI: p.AddInput("a_tbi", spec("a", ".g.vcf.gz.tbi"))}}
+	interval = p.AddInput("interval", spec("interval_001", ".bed"))
+	_, err = gatk4genomicsdbimport.Add(p, one, interval, gatk4genomicsdbimport.Options{})
+	if err == nil {
+		t.Fatal("Add(one sample) error = nil, want cohort defect")
+	}
+}
+
+func spec(base, ext string) gobble.PathSpec {
+	return gobble.PathSpec{Dir: gobble.Dir("in"), Base: base, Ext: ext}
+}

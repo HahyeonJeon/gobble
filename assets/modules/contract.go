@@ -65,6 +65,32 @@ func StandaloneChecked(name string, inputs []Input, build func(Parent, []gobble.
 	return p
 }
 
+// StandaloneScatterChecked creates a standalone one-command pipeline whose
+// command is scattered over one explicit Group, Tree, or File input. The
+// membership index identifies that input in inputs.
+func StandaloneScatterChecked(name, scatter string, inputs []Input, membership int, build func(Parent, []gobble.Handle) error) *gobble.Pipeline {
+	p := gobble.NewPipeline(name)
+	if membership < 0 || membership >= len(inputs) {
+		p.RecordComposeError(ComposeDefect(gobble.DefectInvalidValue, scatter, "scatter membership input is missing"))
+		return p
+	}
+	handles := make([]gobble.Handle, len(inputs))
+	for i, in := range inputs {
+		switch {
+		case in.Group != nil:
+			handles[i] = p.AddInputGroup(in.Name, in.Group)
+		case !in.Tree.IsZero():
+			handles[i] = p.AddInputTree(in.Name, in.Tree)
+		default:
+			handles[i] = p.AddInput(in.Name, in.Spec)
+		}
+	}
+	if err := build(p.Scatter(scatter).From(handles[membership]), handles); err != nil {
+		p.RecordComposeError(err)
+	}
+	return p
+}
+
 // CommandPath renders spec as one command token.
 func CommandPath(spec gobble.PathSpec) (string, error) {
 	return spec.Render()

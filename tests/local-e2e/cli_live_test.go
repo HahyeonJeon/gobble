@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	wgsevidence "github.com/HahyeonJeon/gobble/tests/pipelines/wgs"
 )
 
 func TestRunLocalCLIRecover(t *testing.T) {
@@ -50,28 +52,30 @@ func TestWGSCLIRecover(t *testing.T) {
 	bin := buildGobble(t)
 	dir := t.TempDir()
 	stageWGSPins(t, dir)
+	sheet := packSheet(t, wgsevidence.FixtureSheet)
 
-	compose := runGobble(t, bin, "compose", wgsPkg)
+	compose := runGobble(t, bin, "compose", wgsPkg, "--sample", sheet)
 	requireCLIOp(t, compose, "{\"op\":\"compose\",\"pipeline\":\"wgs\"}\n")
 
-	validate := runGobble(t, bin, "validate", wgsPkg)
+	validate := runGobble(t, bin, "validate", wgsPkg, "--sample", sheet)
 	requireCLIOp(t, validate, "{\"op\":\"validate\"}\n")
 
-	plan := runGobble(t, bin, "plan", wgsPkg)
+	plan := runGobble(t, bin, "plan", wgsPkg, "--sample", sheet)
 	requireSuccess(t, plan)
 
-	run := runGobble(t, bin, "run", wgsPkg, "--workspace", dir, "--cap", "2")
+	run := runGobble(t, bin, "run", wgsPkg, "--workspace", dir, "--cap", "2", "--sample", sheet)
 	requireCLIOp(t, run, "{\"op\":\"run\"}\n")
 
 	for _, rel := range []string{
-		"work/multiqc/multiqc_report.html",
-		"work/sample1/samtools-sort/aligned.bam",
-		"work/sample2/samtools-sort/aligned.bam",
+		"results/wgs/multiqc/multiqc_report.html",
+		"results/wgs/samples/testN/alignment/testN.recalibrated.bam",
+		"results/wgs/samples/testT/alignment/testT.recalibrated.bam",
+		"results/wgs/joint/joint_germline.vcf.gz",
 	} {
 		requireRegularFile(t, filepath.Join(dir, filepath.FromSlash(rel)))
 	}
 
-	recoverAfterSuccessCLI(t, bin, wgsPkg, dir, "--cap", "2")
+	recoverAfterSuccessCLI(t, bin, wgsPkg, dir, "--cap", "2", "--sample", sheet)
 }
 
 func TestRNASeqCLIRecover(t *testing.T) {

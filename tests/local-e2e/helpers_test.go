@@ -144,16 +144,35 @@ func stagePins(t *testing.T, dir, cacheDir string, pins []struct {
 
 func stageWGSPins(t *testing.T, dir string) {
 	t.Helper()
-	pins := wgsevidence.MustPins()
 	stagePins(t, dir, wgsevidence.CacheDir, []struct {
 		pin fixture.Pin
 		rel string
 	}{
-		{pins[0], "in/test_1.fastq.gz"},
-		{pins[1], "in/test_2.fastq.gz"},
-		{pins[2], "in/genome.fasta"},
-		{pins[3], "in/genome.fasta.fai"},
+		{wgsevidence.MustPin("test_1.fastq.gz"), "in/reads/test_1.fastq.gz"},
+		{wgsevidence.MustPin("test_2.fastq.gz"), "in/reads/test_2.fastq.gz"},
+		{wgsevidence.MustPin("test2_1.fastq.gz"), "in/reads/test2_1.fastq.gz"},
+		{wgsevidence.MustPin("test2_2.fastq.gz"), "in/reads/test2_2.fastq.gz"},
+		{wgsevidence.MustPin("genome.fasta"), "in/reference/genome.fasta"},
+		{wgsevidence.MustPin("genome.fasta.fai"), "in/reference/genome.fasta.fai"},
+		{wgsevidence.MustPin("genome.dict"), "in/reference/genome.dict"},
+		{wgsevidence.MustPin("dbsnp_146.hg38.vcf.gz"), "in/reference/known-sites/dbsnp_146.hg38.vcf.gz"},
+		{wgsevidence.MustPin("dbsnp_146.hg38.vcf.gz.tbi"), "in/reference/known-sites/dbsnp_146.hg38.vcf.gz.tbi"},
+		{wgsevidence.MustPin("mills_and_1000G.indels.vcf.gz"), "in/reference/known-sites/mills_and_1000G.indels.vcf.gz"},
+		{wgsevidence.MustPin("mills_and_1000G.indels.vcf.gz.tbi"), "in/reference/known-sites/mills_and_1000G.indels.vcf.gz.tbi"},
+		{wgsevidence.MustPin("genome.multi_intervals.bed"), "in/reference/genome.multi_intervals.bed"},
 	})
+	data, err := os.ReadFile(filepath.Join(dir, "in", "reference", "genome.multi_intervals.bed"))
+	if err != nil {
+		t.Fatalf("read WGS interval source: %v", err)
+	}
+	lines := bytes.Split(bytes.TrimSpace(data), []byte("\n"))
+	if len(lines) != 2 {
+		t.Fatalf("WGS interval source has %d members, want 2", len(lines))
+	}
+	for i, line := range lines {
+		writeFile(t, filepath.Join(dir, "in", "reference", "intervals", "interval_00"+strconv.Itoa(i+1)+".bed"), string(line)+"\n")
+	}
+	withSampleSheet(t, packSheet(t, wgsevidence.FixtureSheet))
 }
 
 func stageRNASeqPins(t *testing.T, dir string) {

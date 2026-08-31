@@ -88,7 +88,7 @@ func TestFastQCExtraArgsResume(t *testing.T) {
 
 func TestBWAIndexStandaloneRun(t *testing.T) {
 	requireDocker(t)
-	src := cachePin(t, wgsevidence.CacheDir, wgsevidence.MustPins()[2])
+	src := cachePin(t, wgsevidence.CacheDir, wgsevidence.MustPin("genome.fasta"))
 	dir := t.TempDir()
 	pc.StageFile(t, dir, "in/genome.fasta", src)
 	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genome", Ext: ".fasta"}

@@ -37,10 +37,10 @@ type wgsE2EFile struct {
 
 func TestWGSFixtureManifestPins(t *testing.T) {
 	files := wgsE2EManifestFiles(t)
-	if len(files) != 4 {
-		t.Fatalf("manifest files got %d, want 4", len(files))
+	if len(files) != 16 {
+		t.Fatalf("manifest staged files got %d, want 16", len(files))
 	}
-	for i, name := range []string{"test_1.fastq.gz", "test_2.fastq.gz", "genome.fasta", "genome.fasta.fai"} {
+	for i, name := range []string{"test_1.fastq.gz", "test_2.fastq.gz", "test2_1.fastq.gz", "test2_2.fastq.gz", "genome.fasta", "genome.fasta.fai", "genome.dict", "genome.multi_intervals.bed"} {
 		if files[i].Name != name {
 			t.Fatalf("manifest[%d] name = %q, want %q", i, files[i].Name, name)
 		}

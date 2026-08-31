@@ -18,7 +18,7 @@ func TestConstructorShimsMatchPipelineOwners(t *testing.T) {
 		shim  func() *gobble.Pipeline
 		owner func() *gobble.Pipeline
 	}{
-		{name: "wgs", shim: assets.WGS, owner: wgs.Pipeline},
+		{name: "wgs", sheet: "../tests/pipelines/wgs/testdata/wgs-samplesheet.csv", shim: assets.WGS, owner: wgs.Pipeline},
 		{name: "rnaseq", sheet: "../tests/pipelines/rnaseq/testdata/rnaseq-samplesheet.csv", shim: assets.RNASeq, owner: rnaseq.Pipeline},
 		{name: "methylseq", sheet: "../tests/pipelines/methylseq/testdata/methylseq-samplesheet.csv", shim: assets.MethylSeq, owner: methylseq.Pipeline},
 	}

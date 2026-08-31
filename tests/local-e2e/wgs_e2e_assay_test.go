@@ -24,9 +24,10 @@ func TestWGSSuccessInspectReleaseResume(t *testing.T) {
 	}
 	assertOccupied(t, dir)
 	for _, rel := range []string{
-		"work/multiqc/multiqc_report.html",
-		"work/sample1/samtools-sort/aligned.bam",
-		"work/sample2/samtools-sort/aligned.bam",
+		"results/wgs/multiqc/multiqc_report.html",
+		"results/wgs/samples/testN/alignment/testN.recalibrated.bam",
+		"results/wgs/samples/testT/alignment/testT.recalibrated.bam",
+		"results/wgs/joint/joint_germline.vcf.gz",
 	} {
 		requireRegularFile(t, filepath.Join(dir, filepath.FromSlash(rel)))
 	}
