@@ -128,7 +128,10 @@ func TestBuildSelectedVerticalUsesComposeTimeStrictFanIn(t *testing.T) {
 	assertNoRuntimeScatter(t, raw)
 	pc.AssertNoTaskName(t, tasks, "bowtie2", "chromap", "star", "idr", "motif", "footprinting")
 	pc.AssertIOPath(t, pc.TaskByID(t, raw, "OSMOTIC_STRESS_T0_PE.replicate_1.samtools_view").Outputs, "filtered_bam", "results/atacseq/samples/OSMOTIC_STRESS_T0_PE/replicate_1/alignment/OSMOTIC_STRESS_T0_PE_R1.filtered.bam")
-	pc.AssertIOPath(t, pc.TaskByID(t, raw, "OSMOTIC_STRESS_T0_PE.replicate_1.peaks.macs2_callpeak").Outputs, "summits", "results/atacseq/samples/OSMOTIC_STRESS_T0_PE/replicate_1/peaks/OSMOTIC_STRESS_T0_PE_R1_summits.bed")
+	defaultPeak := pc.TaskByID(t, raw, "OSMOTIC_STRESS_T0_PE.replicate_1.peaks.macs2_callpeak")
+	if slicesContains(defaultPeak.Command, "--call-summits") || !slicesContains(defaultPeak.Command, "--broad") || ioNamed(defaultPeak.Outputs, "summits") {
+		t.Fatalf("default broad MACS2 contract = command %#v, outputs %#v", defaultPeak.Command, defaultPeak.Outputs)
+	}
 	pc.AssertIOPath(t, replicateMACSPlot.Outputs, "pdf", "results/atacseq/qc/peaks/replicates/macs2_peak.plots.pdf")
 	pc.AssertIOPath(t, replicateHOMERPlot.Outputs, "multiqc", "results/atacseq/qc/peaks/replicates/homer_annotation.summary_mqc.tsv")
 	pc.AssertIOPath(t, pc.TaskByID(t, raw, "consensus.replicates.atac_consensus_peaks").Outputs, "bed", "results/atacseq/consensus/replicates/consensus.bed")
@@ -146,6 +149,7 @@ func TestControlBindingAndNarrowModeAreTyped(t *testing.T) {
 	peak := pc.TaskByID(t, raw, "TREATMENT.replicate_1.peaks.macs2_callpeak")
 	pc.AssertIOPath(t, peak.Inputs, "control", "results/atacseq/samples/INPUT/replicate_1/alignment/INPUT_R1.filtered.bam")
 	pc.AssertIOPath(t, peak.Outputs, "peaks", "results/atacseq/samples/TREATMENT/replicate_1/peaks/TREATMENT_R1_peaks.narrowPeak")
+	pc.AssertIOPath(t, peak.Outputs, "summits", "results/atacseq/samples/TREATMENT/replicate_1/peaks/TREATMENT_R1_summits.bed")
 	if !pc.ContainsAll(peak.Command, "--format", "BAM", "--control", "--call-summits") || slicesContains(peak.Command, "--broad") {
 		t.Fatalf("typed narrow/control command = %#v", peak.Command)
 	}
@@ -189,6 +193,8 @@ func TestProtectedAliasesAndInvalidPublicationFailCompose(t *testing.T) {
 	}{
 		{name: "MACS short control", unit: "macs2_callpeak", mutate: func(c *atacseq.Config) { c.MACS2.ExtraArgs = []string{"-cother.bam"} }},
 		{name: "MACS output", unit: "macs2_callpeak", mutate: func(c *atacseq.Config) { c.MACS2.ExtraArgs = []string{"--outdir=elsewhere"} }},
+		{name: "MACS abbreviated q-value", unit: "macs2_callpeak", mutate: func(c *atacseq.Config) { c.MACS2.ExtraArgs = []string{"--qv", "0.9"} }},
+		{name: "MACS abbreviated genome size", unit: "macs2_callpeak", mutate: func(c *atacseq.Config) { c.MACS2.ExtraArgs = []string{"--gs=1e9"} }},
 		{name: "MACS summits", unit: "macs2_callpeak", mutate: func(c *atacseq.Config) { c.MACS2.ExtraArgs = []string{"--call-summits=false"} }},
 		{name: "MACS plot operands", unit: "plot_macs2_qc", mutate: func(c *atacseq.Config) { c.PlotMACS2QC.ExtraArgs = []string{"--outdir", "elsewhere"} }},
 		{name: "HOMER plot operands", unit: "plot_homer_annotatepeaks", mutate: func(c *atacseq.Config) { c.PlotHOMERAnnotatePeaks.ExtraArgs = []string{"--homer_files", "other.txt"} }},
@@ -364,6 +370,15 @@ func assertNoRuntimeScatter(t *testing.T, raw []byte) {
 func slicesContains(values []string, want string) bool {
 	for _, value := range values {
 		if value == want {
+			return true
+		}
+	}
+	return false
+}
+
+func ioNamed(values []pc.IO, want string) bool {
+	for _, value := range values {
+		if value.Name == want {
 			return true
 		}
 	}

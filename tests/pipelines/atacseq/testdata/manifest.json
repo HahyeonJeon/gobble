@@ -31,7 +31,7 @@
     "raw_qc_and_trimming":["AT-FQ-2153-R1","AT-FQ-2153-R2","AT-FQ-2154-R1","AT-FQ-2154-R2","AT-FQ-2157-R1","AT-FQ-2157-R2","AT-FQ-2158-R1","AT-FQ-2158-R2"],
     "bwa_alignment_and_run_merge":["all staged FASTQs","AT-REF-FASTA","AT-DATASET-SHEET"],
     "duplicate_filter_alignment_qc_tracks":["complete technical-run merge outputs","AT-REF-FASTA"],
-    "macs2_annotation_peak_qc":["complete filtered replicate BAMs","explicit typed controls when supplied","declared peak, summit, call-table, MACS2 plot, and HOMER annotation-QC artifacts"],
+    "macs2_annotation_peak_qc":["complete filtered replicate BAMs","explicit typed controls when supplied","declared mode-valid peak and call-table artifacts, narrow-mode summit artifacts, MACS2 plots, and HOMER annotation-QC artifacts"],
     "consensus_featurecounts_deseq2":["every declared replicate peak","every declared filtered replicate BAM"],
     "ataqv_replicate_aggregation":["all replicate BAM/peak pairs","samples with more than one replicate only"],
     "multiqc_igv":["all declared reports","all final tracks and peaks","both consensus levels when present"]

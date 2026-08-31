@@ -36,7 +36,8 @@ MEM, sorting/indexing and library statistics for every technical run. It then
 strictly merges each replicate's technical runs, marks duplicates, applies
 typed mapping, orphan, mitochondrial, and optional blacklist filters, emits
 indexed final BAMs, alignment metrics, RPM-normalized BigWigs, deepTools
-coverage QC, and control-aware MACS2 peaks, summits, and call tables.
+coverage QC, and control-aware MACS2 peaks and call tables. Narrow mode also
+produces summits; MACS2 2.2.7.1 does not produce summits in broad mode.
 
 Each replicate peak set has HOMER annotation, peak count, FRiP, and ataqv
 evidence. Strict replicate-level and aggregate-level fan-in produces MACS2

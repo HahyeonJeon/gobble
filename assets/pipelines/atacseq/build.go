@@ -521,7 +521,11 @@ func addPeakQC(state *replicateState, control gobble.Handle, reference reference
 		return nil, err
 	}
 	state.peaks, state.annotation, state.ataqv = peaks.Peaks, annotation.Annotation, ataqvReport.JSON
-	return []gobble.Handle{peaks.Summits, peaks.XLS, annotation.Annotation, peakCount.Count, frip.Report, ataqvReport.JSON}, nil
+	reports := make([]gobble.Handle, 0, 6)
+	if !peaks.Summits.IsZero() {
+		reports = append(reports, peaks.Summits)
+	}
+	return append(reports, peaks.XLS, annotation.Annotation, peakCount.Count, frip.Report, ataqvReport.JSON), nil
 }
 
 func addPeakPlots(parent *gobble.Module, level string, states []*replicateState, config Config) ([]gobble.Handle, error) {

@@ -30,7 +30,8 @@ type Options struct {
 	QValue              float64
 }
 
-// Ports contains the selected peak set, summit positions, and MACS2 call table.
+// Ports contains the selected peak set and MACS2 call table. Summits is set
+// only for narrow calls because MACS2 2.2.7.1 rejects summits in broad mode.
 type Ports struct {
 	Peaks   gobble.Handle
 	Summits gobble.Handle
@@ -62,7 +63,7 @@ func Add(parent modules.Parent, treatment, control gobble.Handle, options Option
 	if options.Paired {
 		format = "BAMPE"
 	}
-	command := []string{"macs2", "callpeak", "--gsize", options.EffectiveGenomeSize, "--format", format, "--name", prefix, "--treatment", treatmentPath, "--outdir", outDir.String(), "--qvalue", formatFloat(options.QValue), "--call-summits"}
+	command := []string{"macs2", "callpeak", "--gsize", options.EffectiveGenomeSize, "--format", format, "--name", prefix, "--treatment", treatmentPath, "--outdir", outDir.String(), "--qvalue", formatFloat(options.QValue)}
 	inputs := []gobble.Bind{{Name: "treatment", From: treatment}}
 	if !control.IsZero() {
 		controlPath, pathErr := modules.HandlePath(unit, control)
@@ -77,9 +78,10 @@ func Add(parent modules.Parent, treatment, control gobble.Handle, options Option
 		command = append(command, "--broad")
 	} else {
 		peakExt = ".narrowPeak"
+		command = append(command, "--call-summits")
 	}
 	protected := []string{"--gsize", "-g", "--format", "-f", "--name", "-n", "--treatment", "-t", "--control", "-c", "--outdir", "--qvalue", "-q", "--broad", "--call-summits"}
-	if err := modules.RejectExtraArgs(unit, options.ExtraArgs, protected); err != nil {
+	if err := modules.RejectExtraArgPrefixes(unit, options.ExtraArgs, protected); err != nil {
 		return Ports{}, err
 	}
 	command, image, resources, err := modules.ResolveOptions(unit, options.Options, DefaultImage, gobble.Resources{CPU: 2, Memory: "4g"}, command, protected)
@@ -87,10 +89,18 @@ func Add(parent modules.Parent, treatment, control gobble.Handle, options Option
 		return Ports{}, err
 	}
 	peaks := gobble.PathSpec{Dir: outDir, Base: prefix + "_peaks", Ext: peakExt}
-	summits := gobble.PathSpec{Dir: outDir, Base: prefix + "_summits", Ext: ".bed"}
 	xls := gobble.PathSpec{Dir: outDir, Base: prefix + "_peaks", Ext: ".xls"}
-	task := parent.AddTask(gobble.TaskSpec{Name: unit, Command: command, Image: image, Resources: resources, Inputs: inputs, Outputs: []gobble.Bind{{Name: "peaks", Spec: peaks}, {Name: "summits", Spec: summits}, {Name: "xls", Spec: xls}}})
-	return Ports{Peaks: task.Out("peaks"), Summits: task.Out("summits"), XLS: task.Out("xls")}, nil
+	outputs := []gobble.Bind{{Name: "peaks", Spec: peaks}}
+	if options.Mode == Narrow {
+		outputs = append(outputs, gobble.Bind{Name: "summits", Spec: gobble.PathSpec{Dir: outDir, Base: prefix + "_summits", Ext: ".bed"}})
+	}
+	outputs = append(outputs, gobble.Bind{Name: "xls", Spec: xls})
+	task := parent.AddTask(gobble.TaskSpec{Name: unit, Command: command, Image: image, Resources: resources, Inputs: inputs, Outputs: outputs})
+	ports := Ports{Peaks: task.Out("peaks"), XLS: task.Out("xls")}
+	if options.Mode == Narrow {
+		ports.Summits = task.Out("summits")
+	}
+	return ports, nil
 }
 
 func formatFloat(value float64) string {

@@ -126,7 +126,7 @@ func protectedExtra(config Config) (string, string) {
 		{unit: "bwa_index", args: config.BWAIndex.ExtraArgs, flags: []string{"--aligner", "--bowtie2", "--chromap", "--star"}},
 		{unit: "bwa_mem", args: config.BWAMem.ExtraArgs, flags: []string{"--aligner", "--bowtie2", "--chromap", "--star", "-R", "-t", "-o"}},
 		{unit: "bedtools_genomecov", args: config.GenomeCoverage.ExtraArgs, flags: []string{"-ibam", "-bg", "-scale", "-pc"}},
-		{unit: "macs2_callpeak", args: config.MACS2.ExtraArgs, flags: []string{"--format", "-f", "--name", "-n", "--treatment", "-t", "--control", "-c", "--outdir", "--broad", "--call-summits"}},
+		{unit: "macs2_callpeak", args: config.MACS2.ExtraArgs, flags: []string{"--gsize", "-g", "--format", "-f", "--name", "-n", "--treatment", "-t", "--control", "-c", "--outdir", "--qvalue", "-q", "--broad", "--call-summits"}},
 		{unit: "featurecounts_atac", args: config.FeatureCounts.ExtraArgs, flags: []string{"-F", "-a", "-o", "-p", "--countReadPairs"}},
 		{unit: "deseq2_qc", args: config.DESeq2QC.ExtraArgs, flags: []string{"--design", "--contrast"}},
 	}
