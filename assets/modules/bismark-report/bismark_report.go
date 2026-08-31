@@ -44,7 +44,11 @@ func Add(parent modules.Parent, alignment, deduplication, splitting, mbias gobbl
 	if _, err := output.Render(); err != nil {
 		return Ports{}, modules.ComposeDefect(gobble.DefectInvalidPath, unit, "Bismark report output path is invalid")
 	}
-	if err := modules.RejectExtraArgs(unit, options.ExtraArgs, []string{"--nucleotide_report", "--version", "--help"}); err != nil {
+	protected := []string{
+		"--nucleotide_report", "--version", "--help",
+		"--alignment_report", "--dedup_report", "--splitting_report", "--mbias_report", "--dir", "-o", "--output",
+	}
+	if err := modules.RejectExtraArgPrefixes(unit, options.ExtraArgs, protected); err != nil {
 		return Ports{}, err
 	}
 	command := []string{"bismark2report", "--alignment_report", paths[0], "--dedup_report", paths[1], "--splitting_report", paths[2], "--mbias_report", paths[3], "--dir", outDir.String(), "--output", filename}

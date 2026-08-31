@@ -66,7 +66,7 @@ func Add(parent modules.Parent, samples []SampleReports, options Options) (Ports
 		return Ports{}, modules.ComposeDefect(gobble.DefectInvalidPath, unit, "Bismark summary output path is invalid")
 	}
 	basename := outDir.String() + "/" + prefix
-	if err := modules.RejectExtraArgs(unit, options.ExtraArgs, []string{"--version", "--help"}); err != nil {
+	if err := modules.RejectExtraArgPrefixes(unit, options.ExtraArgs, []string{"--version", "--help", "-o", "--basename"}); err != nil {
 		return Ports{}, err
 	}
 	command := []string{"bismark2summary", "--basename", basename}

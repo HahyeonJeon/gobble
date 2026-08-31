@@ -45,7 +45,11 @@ func Add(parent modules.Parent, bam gobble.Handle, paired bool, options Options)
 	if _, err := output.Render(); err != nil {
 		return Ports{}, modules.ComposeDefect(gobble.DefectInvalidPath, unit, "Bismark deduplication output path is invalid")
 	}
-	if err := modules.RejectExtraArgs(unit, options.ExtraArgs, []string{"--sam", "--multiple", "--version", "--help"}); err != nil {
+	protected := []string{
+		"--sam", "--multiple", "--barcode", "--umi", "--version", "--help",
+		"-s", "--single", "-p", "--paired", "--bam", "--output_dir", "-o", "--outfile",
+	}
+	if err := modules.RejectExtraArgPrefixes(unit, options.ExtraArgs, protected); err != nil {
 		return Ports{}, err
 	}
 	mode := "--single"

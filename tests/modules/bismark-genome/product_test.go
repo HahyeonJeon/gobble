@@ -22,7 +22,7 @@ func TestLiftedBismarkGenomeProducesCompleteTree(t *testing.T) {
 	if task.Image != string(bismarkgenome.DefaultImage) {
 		t.Fatalf("image = %q, want %q", task.Image, bismarkgenome.DefaultImage)
 	}
-	for _, extra := range [][]string{{"--hisat2"}, {"--hi"}, {"--par", "2"}, {"--bow"}} {
+	for _, extra := range [][]string{{"--hisat2"}, {"--hi"}, {"--mini"}, {"--par", "2"}, {"--bow"}} {
 		t.Run(extra[0], func(t *testing.T) {
 			cc.Invalid(t, bismarkgenome.Pipeline(gobble.Literal("in/reference/genome.fa"), bismarkgenome.Options{Options: modules.Options{ExtraArgs: extra}}))
 		})

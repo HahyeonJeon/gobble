@@ -4,8 +4,10 @@ import (
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
+	"github.com/HahyeonJeon/gobble/assets/modules"
 	bismarksummary "github.com/HahyeonJeon/gobble/assets/modules/bismark-summary"
 	pc "github.com/HahyeonJeon/gobble/tests/internal/plancheck"
+	cc "github.com/HahyeonJeon/gobble/tests/modules/internal/commandcheck"
 )
 
 func TestBismarkSummaryRestagesRelatedReportsTogether(t *testing.T) {
@@ -26,4 +28,11 @@ func TestBismarkSummaryRestagesRelatedReportsTogether(t *testing.T) {
 	pc.AssertIOPath(t, task.Inputs, "deduplication_report_1", "work/bismark-summary-inputs/sample_pe.deduplication_report.txt")
 	pc.AssertIOPath(t, task.Outputs, "html", "results/methylseq/summary/bismark_summary_report.html")
 	pc.AssertIOPath(t, task.Outputs, "text", "results/methylseq/summary/bismark_summary_report.txt")
+	cc.Invalid(t, bismarksummary.Pipeline([]bismarksummary.SampleInputs{{
+		BAM:                 gobble.Literal("work/align/sample_pe.bam"),
+		AlignmentReport:     gobble.Literal("work/align/sample_PE_report.txt"),
+		DeduplicationReport: gobble.Literal("work/dedup/sample_pe.deduplication_report.txt"),
+		SplittingReport:     gobble.Literal("work/calls/sample_pe.deduplicated_splitting_report.txt"),
+		MBiasReport:         gobble.Literal("work/calls/sample_pe.deduplicated.M-bias.txt"),
+	}}, bismarksummary.Options{Options: modules.Options{ExtraArgs: []string{"--base=other"}}}))
 }

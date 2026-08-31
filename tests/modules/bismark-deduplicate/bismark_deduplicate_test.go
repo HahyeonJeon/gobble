@@ -18,5 +18,9 @@ func TestBismarkDeduplicateDeclaresActualOutputs(t *testing.T) {
 	}
 	pc.AssertIOPath(t, task.Outputs, "deduplicated_bam", "results/bismark/sample/sample_pe.deduplicated.bam")
 	pc.AssertIOPath(t, task.Outputs, "report", "results/bismark/sample/sample_pe.deduplication_report.txt")
-	cc.Invalid(t, bismarkdeduplicate.Pipeline(gobble.Literal("work/align/sample.bam"), false, bismarkdeduplicate.Options{Options: modules.Options{ExtraArgs: []string{"--sam"}}}))
+	for _, extra := range [][]string{{"--sam"}, {"--bar"}, {"--outp", "work/other"}} {
+		t.Run(extra[0], func(t *testing.T) {
+			cc.Invalid(t, bismarkdeduplicate.Pipeline(gobble.Literal("work/align/sample.bam"), false, bismarkdeduplicate.Options{Options: modules.Options{ExtraArgs: extra}}))
+		})
+	}
 }

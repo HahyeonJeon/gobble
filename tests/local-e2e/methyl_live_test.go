@@ -52,7 +52,6 @@ func TestMethylSeqReadyIndexRecover(t *testing.T) {
 	config := methylseq.DefaultConfig()
 	config.Reference.FASTA = gobble.PathSpec{}
 	config.Reference.BismarkIndex = gobble.DeclareTree(gobble.Dir("in/reference/BismarkIndex"))
-	t.Chdir(dir)
 	g, err := gobble.Compose(methylseq.Build(samples, config))
 	if err != nil {
 		t.Fatalf("Compose ready-index Methyl graph: %v", err)

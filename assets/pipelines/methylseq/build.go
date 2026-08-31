@@ -1,9 +1,6 @@
 package methylseq
 
 import (
-	"os"
-	"path"
-	"path/filepath"
 	"strings"
 
 	"github.com/HahyeonJeon/gobble"
@@ -20,10 +17,10 @@ import (
 	trimgalore "github.com/HahyeonJeon/gobble/assets/modules/trim-galore"
 )
 
-// Build constructs the selected directional Bismark graph from supplied
+// Build constructs the selected directional Bismark graph only from supplied
 // values. It copies samples, runs, and every module ExtraArgs slice before use.
-// A supplied ready index is accepted only when its root Tree manifest is a
-// readable regular file relative to the current working directory.
+// The engine checks a supplied ready index and its root Tree manifest against
+// the caller's workspace when the graph runs.
 func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 	pipeline := gobble.NewPipeline("methylseq")
 	samples := cloneSamples(inputSamples)
@@ -279,14 +276,6 @@ func readyBismarkIndexDefect(index gobble.Tree) *gobble.Defect {
 	if index.Dir.IsZero() || !validWorkspacePath(dir) {
 		return &gobble.Defect{Code: gobble.DefectInvalidPath, Unit: unit, Message: "ready Bismark index Tree directory must be workspace-relative", Paths: []string{dir}}
 	}
-	manifest := path.Join(dir, ".gobble-tree.json")
-	info, err := os.Lstat(filepath.FromSlash(manifest))
-	if err != nil || !info.Mode().IsRegular() {
-		return &gobble.Defect{Code: gobble.DefectInvalidPath, Unit: unit, Message: "ready Bismark index Tree requires a readable regular .gobble-tree.json manifest", Paths: []string{manifest}}
-	}
-	if _, err := os.ReadFile(filepath.FromSlash(manifest)); err != nil {
-		return &gobble.Defect{Code: gobble.DefectInvalidPath, Unit: unit, Message: "ready Bismark index Tree requires a readable regular .gobble-tree.json manifest", Paths: []string{manifest}}
-	}
 	return nil
 }
 
@@ -294,23 +283,25 @@ func unsupportedRouteExtra(config Config) (string, string) {
 	if option := bismarkalign.UnsupportedRouteOption(config.BismarkAlign.ExtraArgs); option != "" {
 		return "bismark_align", option
 	}
-	sets := []struct {
+	for _, arg := range config.TrimGalore.ExtraArgs {
+		for _, flag := range []string{"--rrbs", "--fastqc", "--dont_gzip", "--retain_unpaired"} {
+			if arg == flag || strings.HasPrefix(arg, flag+"=") {
+				return "trim_galore", flag
+			}
+		}
+	}
+	bismarkSets := []struct {
 		unit  string
 		args  []string
 		flags []string
 	}{
-		{unit: "trim_galore", args: config.TrimGalore.ExtraArgs, flags: []string{"--rrbs", "--fastqc", "--dont_gzip", "--retain_unpaired"}},
-		{unit: "bismark_genome_preparation", args: config.BismarkGenome.ExtraArgs, flags: []string{"--hisat2", "--slam"}},
-		{unit: "bismark_deduplicate", args: config.Deduplicate.ExtraArgs, flags: []string{"--sam", "--multiple"}},
+		{unit: "bismark_genome_preparation", args: config.BismarkGenome.ExtraArgs, flags: []string{"--hisat2", "--minimap2", "--mm2", "--slam"}},
+		{unit: "bismark_deduplicate", args: config.Deduplicate.ExtraArgs, flags: []string{"--sam", "--multiple", "--barcode", "--umi"}},
 		{unit: "bismark_methylation_extractor", args: config.Extractor.ExtraArgs, flags: []string{"--CX", "--CX_context", "--cytosine_report", "--yacht", "--merge_non_CpG", "--zero_based", "--ucsc", "--mbias_only", "--mbias_off", "--sam"}},
 	}
-	for _, set := range sets {
-		for _, arg := range set.args {
-			for _, flag := range set.flags {
-				if arg == flag || strings.HasPrefix(arg, flag+"=") {
-					return set.unit, flag
-				}
-			}
+	for _, set := range bismarkSets {
+		if flag := modules.MatchProtectedExtraArg(set.args, set.flags); flag != "" {
+			return set.unit, flag
 		}
 	}
 	return "", ""

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
+	"github.com/HahyeonJeon/gobble/assets/modules"
 	bismarkreport "github.com/HahyeonJeon/gobble/assets/modules/bismark-report"
 	pc "github.com/HahyeonJeon/gobble/tests/internal/plancheck"
 	cc "github.com/HahyeonJeon/gobble/tests/modules/internal/commandcheck"
@@ -21,4 +22,11 @@ func TestBismarkReportBindsEveryNamedInput(t *testing.T) {
 		t.Fatalf("command = %#v", task.Command)
 	}
 	pc.AssertIOPath(t, task.Outputs, "html", "results/reports/sample/sample.bismark_report.html")
+	cc.Invalid(t, bismarkreport.Pipeline(
+		gobble.Literal("work/sample_PE_report.txt"),
+		gobble.Literal("work/sample_pe.deduplication_report.txt"),
+		gobble.Literal("work/sample_pe.deduplicated_splitting_report.txt"),
+		gobble.Literal("work/sample_pe.deduplicated.M-bias.txt"),
+		bismarkreport.Options{Options: modules.Options{ExtraArgs: []string{"--nuc=other.txt"}}},
+	))
 }

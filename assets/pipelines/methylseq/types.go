@@ -57,10 +57,9 @@ const (
 )
 
 // ReferenceConfig names either a caller-staged FASTA or a ready Bismark index
-// Tree. A ready Tree takes precedence, requires a readable regular root
-// .gobble-tree.json relative to Build's working directory, and omits genome
-// preparation. A generated Tree contains the staged FASTA and every
-// Bismark-created member.
+// Tree. A ready Tree takes precedence and omits genome preparation. At run, the
+// engine requires its root .gobble-tree.json in the caller's workspace. A
+// generated Tree contains the staged FASTA and every Bismark-created member.
 type ReferenceConfig struct {
 	FASTA        gobble.PathSpec
 	BismarkIndex gobble.Tree
