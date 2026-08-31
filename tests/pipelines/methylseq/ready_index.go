@@ -52,8 +52,8 @@ func PrepareReadyIndex(archivePath, treeDir string) error {
 	return prepareReadyIndex(archivePath, treeDir, ReadyIndexArchive, authority)
 }
 
-// CheckReadyIndex verifies that treeDir contains exactly the official
-// BismarkIndex members, sizes, and SHA-256 identities.
+// CheckReadyIndex verifies that treeDir contains the Gobble Tree manifest and
+// exactly the official BismarkIndex members, sizes, and SHA-256 identities.
 func CheckReadyIndex(treeDir string) error {
 	authority, err := officialReadyIndexAuthority()
 	if err != nil {
@@ -109,11 +109,11 @@ func prepareReadyIndex(archivePath, treeDir string, archivePin fixture.Pin, auth
 		return err
 	}
 	staged := filepath.Join(temp, authority.Name)
-	if err := checkReadyIndex(staged, authority); err != nil {
-		return err
-	}
 	if err := engine.WriteTreeManifest(staged); err != nil {
 		return fmt.Errorf("write ready Bismark index Tree manifest: %w", err)
+	}
+	if err := checkReadyIndex(staged, authority); err != nil {
+		return err
 	}
 	if err := os.Rename(staged, treeDir); err != nil {
 		return fmt.Errorf("publish ready Bismark index: %w", err)
@@ -221,6 +221,7 @@ func checkReadyIndex(treeDir string, authority readyIndexTree) error {
 	}
 	members, directories := readyIndexSets(authority)
 	seen := make(map[string]bool, len(members))
+	manifestSeen := false
 	err = filepath.WalkDir(treeDir, func(current string, entry fs.DirEntry, walkErr error) error {
 		if walkErr != nil {
 			return walkErr
@@ -241,6 +242,7 @@ func checkReadyIndex(treeDir string, authority readyIndexTree) error {
 			if !info.Mode().IsRegular() {
 				return fmt.Errorf("ready Bismark index Tree manifest is not a regular file")
 			}
+			manifestSeen = true
 			return nil
 		}
 		if entry.IsDir() {
@@ -280,6 +282,9 @@ func checkReadyIndex(treeDir string, authority readyIndexTree) error {
 		if !seen[name] {
 			return fmt.Errorf("ready Bismark index Tree is missing member %q", name)
 		}
+	}
+	if !manifestSeen {
+		return fmt.Errorf("ready Bismark index Tree is missing %s", gobbleTreeManifestName)
 	}
 	return nil
 }

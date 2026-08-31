@@ -13,6 +13,7 @@ import (
 	"syscall"
 	"testing"
 
+	"github.com/HahyeonJeon/gobble/internal/engine"
 	"github.com/HahyeonJeon/gobble/tests/internal/fixture"
 )
 
@@ -47,6 +48,19 @@ func TestStageReadyIndexVerifiesArchiveMembersBeforePublication(t *testing.T) {
 	assertGobbleTreeManifest(t, destination, files)
 	if _, err := os.Stat(filepath.Join(destination, "Bisulfite_Genome", "CT", "index.bt2")); err != nil {
 		t.Fatalf("staged ready-index member: %v", err)
+	}
+}
+
+func TestCheckReadyIndexRejectsMissingTreeManifest(t *testing.T) {
+	authority := testReadyIndexAuthority()
+	root := writeReadyIndexTree(t)
+	if err := os.Remove(filepath.Join(root, gobbleTreeManifestName)); err != nil {
+		t.Fatal(err)
+	}
+
+	err := checkReadyIndex(root, authority)
+	if err == nil || !strings.Contains(err.Error(), "missing "+gobbleTreeManifestName) {
+		t.Fatalf("checkReadyIndex() error = %v, want missing %s", err, gobbleTreeManifestName)
 	}
 }
 
@@ -134,6 +148,9 @@ func writeReadyIndexTree(t *testing.T) string {
 		if err := os.WriteFile(filepath.Join(root, filepath.FromSlash(name)), []byte(body), 0o644); err != nil {
 			t.Fatal(err)
 		}
+	}
+	if err := engine.WriteTreeManifest(root); err != nil {
+		t.Fatal(err)
 	}
 	return root
 }
