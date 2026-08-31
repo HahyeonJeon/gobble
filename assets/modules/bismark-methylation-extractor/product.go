@@ -49,7 +49,11 @@ func Add(parent modules.Parent, bam gobble.Handle, paired bool, options Options)
 	if !paired && (options.IgnoreR2 != 0 || options.Ignore3PrimeR2 != 0) {
 		return Ports{}, modules.ComposeDefect(gobble.DefectInvalidValue, unit, "read-2 ignore values require paired-end reads")
 	}
-	if err := modules.RejectExtraArgs(unit, options.ExtraArgs, []string{"--CX", "--CX_context", "--cytosine_report", "--yacht", "--merge_non_CpG", "--zero_based", "--ucsc", "--mbias_only", "--mbias_off", "--sam", "--version", "--help"}); err != nil {
+	protected := []string{
+		"--CX", "--CX_context", "--cytosine_report", "--yacht", "--merge_non_CpG", "--zero_based", "--ucsc", "--mbias_only", "--mbias_off", "--sam", "--version", "--help",
+		"-s", "--single-end", "-p", "--paired-end", "--bedGraph", "--counts", "--gzip", "--report", "--comprehensive", "-o", "--output_dir", "--no_overlap", "--include_overlap", "--ignore", "--ignore_r2", "--ignore_3prime", "--ignore_3prime_r2", "--cutoff", "--parallel", "--multicore",
+	}
+	if err := modules.RejectExtraArgPrefixes(unit, options.ExtraArgs, protected); err != nil {
 		return Ports{}, err
 	}
 	outDir := options.OutDir

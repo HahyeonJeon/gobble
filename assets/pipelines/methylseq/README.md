@@ -15,9 +15,11 @@ The temporary `assets.MethylSeq` constructor now points here.
   output, command, image,
   resource, argv, trimming, alignment, extraction, and publication policy. It
   selects directional Bismark with Bowtie2 only.
-- `Build(samples, config)` copies caller data, reads no process state or
-  network location, and records invalid data, paths, images, ready Trees,
-  option conflicts, and route-changing extras as compose defects.
+- `Build(samples, config)` copies caller data and performs no network I/O. For a
+  caller-supplied ready Tree, call `Build` from the workspace root. It requires
+  a readable regular root `.gobble-tree.json` at the configured relative path.
+  Invalid data, paths, images, ready Trees, option conflicts, and route-changing
+  extras are compose defects.
 - `Pipeline` is only the process-exclusive CLI adapter. It loads the injected
   sheet path and delegates to `Build` with fresh defaults.
 

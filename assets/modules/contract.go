@@ -249,11 +249,46 @@ func RejectExtraArgs(unit string, extraArgs, forbiddenFlags []string) error {
 	return nil
 }
 
+// RejectExtraArgPrefixes rejects command tokens that select protected options
+// for a command parser with case-insensitive long-option abbreviation. Every
+// non-empty long-option prefix is recognized. Exact and attached short options
+// use the same rules as RejectExtraArgs.
+func RejectExtraArgPrefixes(unit string, extraArgs, protectedFlags []string) error {
+	if flag := MatchProtectedExtraArg(extraArgs, protectedFlags); flag != "" {
+		return composeInvalidValue(unit, "ExtraArgs contains protected option "+flag)
+	}
+	return nil
+}
+
+// MatchProtectedExtraArg returns the first canonical protected option selected
+// by ExtraArgs under RejectExtraArgPrefixes rules, or an empty string.
+func MatchProtectedExtraArg(extraArgs, protectedFlags []string) string {
+	for _, arg := range extraArgs {
+		for _, flag := range protectedFlags {
+			if extraArgSelectsPrefix(arg, flag) {
+				return flag
+			}
+		}
+	}
+	return ""
+}
+
 func extraArgOwnsFlag(arg, flag string) bool {
 	if arg == flag || strings.HasPrefix(arg, flag+"=") {
 		return true
 	}
 	return len(flag) == 2 && flag[0] == '-' && flag[1] != '-' && len(arg) > len(flag) && strings.HasPrefix(arg, flag)
+}
+
+func extraArgSelectsPrefix(arg, flag string) bool {
+	if extraArgOwnsFlag(arg, flag) {
+		return true
+	}
+	name, _, _ := strings.Cut(arg, "=")
+	return strings.HasPrefix(flag, "--") &&
+		strings.HasPrefix(name, "--") &&
+		len(name) > 2 && len(name) <= len(flag) &&
+		strings.EqualFold(name, flag[:len(name)])
 }
 
 const (

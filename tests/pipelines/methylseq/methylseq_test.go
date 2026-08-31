@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
@@ -145,10 +146,20 @@ func TestDirectionalBismarkPlanDeclaresSelectedProduct(t *testing.T) {
 }
 
 func TestReadyBismarkTreeSkipsGenomePreparation(t *testing.T) {
+	samples := loadSamples(t)
+	root := t.TempDir()
+	ready := filepath.Join(root, "in", "reference", "BismarkIndex")
+	if err := os.MkdirAll(ready, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(ready, ".gobble-tree.json"), []byte("{}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	t.Chdir(root)
 	config := methylseq.DefaultConfig()
 	config.Reference.FASTA = gobble.PathSpec{}
 	config.Reference.BismarkIndex = gobble.DeclareTree(gobble.Dir("in/reference/BismarkIndex"))
-	raw := pc.MustPlanJSON(t, methylseq.Build(loadSamples(t), config))
+	raw := pc.MustPlanJSON(t, methylseq.Build(samples, config))
 	if got := pc.CountTasksNamed(pc.AllTasks(t, raw), "bismark_genome_preparation"); got != 0 {
 		t.Fatalf("genome-preparation count = %d, want 0 for ready Tree", got)
 	}
@@ -156,6 +167,39 @@ func TestReadyBismarkTreeSkipsGenomePreparation(t *testing.T) {
 	pc.AssertTreeIO(t, align.Inputs, "index", "in/reference/BismarkIndex")
 	if !pc.ContainsAll(align.Command, "--genome", "in/reference/BismarkIndex") {
 		t.Fatalf("alignment command = %#v, want ready Tree path", align.Command)
+	}
+}
+
+func TestBuildRequiresReadableReadyTreeManifest(t *testing.T) {
+	samples := loadSamples(t)
+	for _, test := range []struct {
+		name  string
+		setup func(*testing.T, string)
+	}{
+		{name: "missing", setup: func(t *testing.T, ready string) {}},
+		{name: "unreadable as file", setup: func(t *testing.T, ready string) {
+			if err := os.Mkdir(filepath.Join(ready, ".gobble-tree.json"), 0o755); err != nil {
+				t.Fatal(err)
+			}
+		}},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			root := t.TempDir()
+			ready := filepath.Join(root, "in", "reference", "BismarkIndex")
+			if err := os.MkdirAll(ready, 0o755); err != nil {
+				t.Fatal(err)
+			}
+			test.setup(t, ready)
+			t.Chdir(root)
+
+			config := methylseq.DefaultConfig()
+			config.Reference.FASTA = gobble.PathSpec{}
+			config.Reference.BismarkIndex = gobble.DeclareTree(gobble.Dir("in/reference/BismarkIndex"))
+			graph, err := gobble.Compose(methylseq.Build(samples, config))
+			if graph != nil || !hasDefect(err, gobble.DefectInvalidPath) || !strings.Contains(errorDetails(err), ".gobble-tree.json") {
+				t.Fatalf("Compose() = (%v, %v), want manifest invalid-path compose defect", graph, err)
+			}
+		})
 	}
 }
 
@@ -204,6 +248,7 @@ func TestBuildRejectsInvalidInputConfigAndRouteExtras(t *testing.T) {
 		{name: "short abbreviated special library", mutate: func(config *methylseq.Config) { config.BismarkAlign.ExtraArgs = []string{"--pb"} }, code: gobble.DefectInvalidValue},
 		{name: "abbreviated special library", mutate: func(config *methylseq.Config) { config.BismarkAlign.ExtraArgs = []string{"--pba"} }, code: gobble.DefectInvalidValue},
 		{name: "ambiguous protected option prefix", mutate: func(config *methylseq.Config) { config.BismarkAlign.ExtraArgs = []string{"--p"} }, code: gobble.DefectInvalidValue},
+		{name: "abbreviated alignment multicore", mutate: func(config *methylseq.Config) { config.BismarkAlign.ExtraArgs = []string{"--mult", "2"} }, code: gobble.DefectInvalidValue},
 		{name: "SLAM library", mutate: func(config *methylseq.Config) { config.BismarkAlign.ExtraArgs = []string{"--slam"} }, code: gobble.DefectInvalidValue},
 		{name: "abbreviated SLAM library", mutate: func(config *methylseq.Config) { config.BismarkAlign.ExtraArgs = []string{"--sla"} }, code: gobble.DefectInvalidValue},
 		{name: "minimap2 aligner", mutate: func(config *methylseq.Config) { config.BismarkAlign.ExtraArgs = []string{"--mm2"} }, code: gobble.DefectInvalidValue},
@@ -220,7 +265,9 @@ func TestBuildRejectsInvalidInputConfigAndRouteExtras(t *testing.T) {
 		{name: "summary output escape", mutate: func(config *methylseq.Config) { config.Summary.ExtraArgs = []string{"-oother"} }, code: gobble.DefectInvalidValue},
 		{name: "typed special library", mutate: func(config *methylseq.Config) { config.LibraryMode = methylseq.LibraryMode("pbat") }, code: gobble.DefectInvalidValue},
 		{name: "alternate aligner", mutate: func(config *methylseq.Config) { config.BismarkGenome.ExtraArgs = []string{"--hisat2"} }, code: gobble.DefectInvalidValue},
+		{name: "abbreviated alternate aligner", mutate: func(config *methylseq.Config) { config.BismarkGenome.ExtraArgs = []string{"--hi"} }, code: gobble.DefectInvalidValue},
 		{name: "undeclared extractor outputs", mutate: func(config *methylseq.Config) { config.Extractor.ExtraArgs = []string{"--cytosine_report"} }, code: gobble.DefectInvalidValue},
+		{name: "abbreviated undeclared extractor outputs", mutate: func(config *methylseq.Config) { config.Extractor.ExtraArgs = []string{"--cyt"} }, code: gobble.DefectInvalidValue},
 		{name: "undeclared FastQC output", mutate: func(config *methylseq.Config) { config.FastQC.ExtraArgs = []string{"--extract"} }, code: gobble.DefectInvalidValue},
 		{name: "changed MultiQC output", mutate: func(config *methylseq.Config) { config.MultiQC.ExtraArgs = []string{"--filename", "other.html"} }, code: gobble.DefectInvalidValue},
 		{name: "disabled required result", mutate: func(config *methylseq.Config) { config.Publication.Reports = false }, code: gobble.DefectInvalidValue},
@@ -249,7 +296,7 @@ func TestSingleSampleIsSupported(t *testing.T) {
 	}
 }
 
-func TestBuildHasNoAmbientOrNetworkInput(t *testing.T) {
+func TestBuildReadsOnlyExplicitLocalInputs(t *testing.T) {
 	for _, source := range []string{"../../../assets/pipelines/methylseq/build.go", "../../../assets/pipelines/methylseq/config.go"} {
 		data, err := os.ReadFile(source)
 		if err != nil {
@@ -259,7 +306,7 @@ func TestBuildHasNoAmbientOrNetworkInput(t *testing.T) {
 			t.Errorf("product source %s contains a network location", source)
 		}
 	}
-	sourcecheck.AssertNoCall(t, "../../../assets/pipelines/methylseq/build.go", "SampleSheetPath", "Load", "Getenv", "Open", "ReadFile", "Get", "AddTask")
+	sourcecheck.AssertNoCall(t, "../../../assets/pipelines/methylseq/build.go", "SampleSheetPath", "Load", "Getenv", "Open", "Get", "AddTask")
 }
 
 func TestLoadMissingSheetIsStructured(t *testing.T) {

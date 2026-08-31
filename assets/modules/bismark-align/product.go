@@ -3,7 +3,6 @@ package bismarkalign
 import (
 	"math"
 	"strconv"
-	"strings"
 
 	"github.com/HahyeonJeon/gobble"
 	"github.com/HahyeonJeon/gobble/assets/modules"
@@ -134,7 +133,7 @@ func rejectProtectedExtraArgs(unit string, extraArgs []string) error {
 		"--minins", "-I", "--maxins", "-X", "-1", "-2",
 		"--version", "--help",
 	}
-	if err := modules.RejectExtraArgs(unit, extraArgs, protected); err != nil {
+	if err := modules.RejectExtraArgPrefixes(unit, extraArgs, protected); err != nil {
 		return err
 	}
 	return nil
@@ -155,28 +154,7 @@ func UnsupportedRouteOption(extraArgs []string) string {
 		"--bowtie2", "--genome", "--genome_folder", "--bam",
 		"-o", "--output_dir", "-B", "--basename", "--prefix",
 	}
-	for _, arg := range extraArgs {
-		for _, option := range unsupported {
-			if extraArgSelectsOption(arg, option) {
-				return option
-			}
-		}
-	}
-	return ""
-}
-
-func extraArgSelectsOption(arg, option string) bool {
-	if arg == option || strings.HasPrefix(arg, option+"=") {
-		return true
-	}
-	name, _, _ := strings.Cut(arg, "=")
-	if strings.HasPrefix(option, "--") &&
-		strings.HasPrefix(name, "--") &&
-		len(name) > 2 && len(name) <= len(option) &&
-		strings.EqualFold(name, option[:len(name)]) {
-		return true
-	}
-	return len(option) == 2 && option[0] == '-' && option[1] != '-' && len(arg) > len(option) && strings.HasPrefix(arg, option)
+	return modules.MatchProtectedExtraArg(extraArgs, unsupported)
 }
 
 // Pipeline returns a standalone validated directional Bismark alignment module.

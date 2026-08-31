@@ -27,5 +27,9 @@ func TestLiftedExtractorDeclaresEveryComprehensiveOutput(t *testing.T) {
 	} {
 		pc.AssertIOPath(t, task.Outputs, name, path)
 	}
-	cc.Invalid(t, bismarkextractor.Pipeline(gobble.Literal("sample.bam"), false, bismarkextractor.Options{Options: modules.Options{ExtraArgs: []string{"--CX"}}}))
+	for _, extra := range [][]string{{"--CX"}, {"--cyt"}, {"--mult", "2"}, {"--outp", "work/other"}} {
+		t.Run(extra[0], func(t *testing.T) {
+			cc.Invalid(t, bismarkextractor.Pipeline(gobble.Literal("sample.bam"), false, bismarkextractor.Options{Options: modules.Options{ExtraArgs: extra}}))
+		})
+	}
 }

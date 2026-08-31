@@ -31,7 +31,7 @@ func Add(parent modules.Parent, fasta gobble.Handle, options Options) (Ports, er
 	if outDir.IsZero() {
 		outDir = gobble.Dir("work/bismark-index")
 	}
-	if err := modules.RejectExtraArgs(unit, options.ExtraArgs, []string{"--hisat2", "--slam", "--version", "--help"}); err != nil {
+	if err := modules.RejectExtraArgPrefixes(unit, options.ExtraArgs, []string{"--hisat2", "--slam", "--version", "--help", "--bowtie2", "--parallel"}); err != nil {
 		return Ports{}, err
 	}
 	resources := options.Resources

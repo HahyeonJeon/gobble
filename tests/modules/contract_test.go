@@ -181,6 +181,26 @@ func TestRejectExtraArgsRecognizesLongAndAttachedShortOptions(t *testing.T) {
 	}
 }
 
+func TestRejectExtraArgPrefixesRecognizesEveryLongPrefix(t *testing.T) {
+	const protected = "--protected-option"
+	for length := 3; length <= len(protected); length++ {
+		prefix := protected[:length]
+		for _, arg := range []string{prefix, strings.ToUpper(prefix) + "=value"} {
+			if got := modules.MatchProtectedExtraArg([]string{arg}, []string{protected}); got != protected {
+				t.Fatalf("MatchProtectedExtraArg(%q) = %q, want %q", arg, got, protected)
+			}
+			err := modules.RejectExtraArgPrefixes("example", []string{arg}, []string{protected})
+			var composeErr *gobble.Error
+			if !errors.As(err, &composeErr) || len(composeErr.Defects) != 1 || composeErr.Defects[0].Code != gobble.DefectInvalidValue {
+				t.Fatalf("RejectExtraArgPrefixes(%q) error = %#v, want one invalid-value defect", arg, err)
+			}
+		}
+	}
+	if err := modules.RejectExtraArgPrefixes("example", []string{"--protected-option-extra"}, []string{protected}); err != nil {
+		t.Fatalf("RejectExtraArgPrefixes() rejected longer distinct option: %v", err)
+	}
+}
+
 func TestShellRedirectQuotesEveryArgvToken(t *testing.T) {
 	got := modules.ShellRedirect([]string{"tool", "$(touch pwned)", "a'b"}, "out/x y")
 	want := `'tool' '$(touch pwned)' 'a'"'"'b' > 'out/x y'`

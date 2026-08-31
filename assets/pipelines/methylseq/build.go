@@ -1,6 +1,9 @@
 package methylseq
 
 import (
+	"os"
+	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/HahyeonJeon/gobble"
@@ -17,8 +20,10 @@ import (
 	trimgalore "github.com/HahyeonJeon/gobble/assets/modules/trim-galore"
 )
 
-// Build constructs the selected directional Bismark graph only from supplied
+// Build constructs the selected directional Bismark graph from supplied
 // values. It copies samples, runs, and every module ExtraArgs slice before use.
+// A supplied ready index is accepted only when its root Tree manifest is a
+// readable regular file relative to the current working directory.
 func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 	pipeline := gobble.NewPipeline("methylseq")
 	samples := cloneSamples(inputSamples)
@@ -250,8 +255,8 @@ func validateBuild(samples []Sample, config Config) []gobble.Defect {
 		if err != nil || !validWorkspacePath(rendered) {
 			defects = append(defects, gobble.Defect{Code: gobble.DefectInvalidPath, Unit: "reference.fasta", Message: "Methyl reference FASTA must be workspace-relative", Paths: []string{rendered}})
 		}
-	} else if config.Reference.BismarkIndex.Dir.IsZero() {
-		defects = append(defects, gobble.Defect{Code: gobble.DefectInvalidPath, Unit: "reference.bismark_index", Message: "ready Bismark index Tree directory is required"})
+	} else if defect := readyBismarkIndexDefect(config.Reference.BismarkIndex); defect != nil {
+		defects = append(defects, *defect)
 	}
 	if config.Results.IsZero() || !validWorkspacePath(config.Results.String()+"/result") {
 		defects = append(defects, gobble.Defect{Code: gobble.DefectInvalidPath, Unit: "results", Message: "Methyl results directory must be workspace-relative"})
@@ -266,6 +271,23 @@ func validateBuild(samples []Sample, config Config) []gobble.Defect {
 		defects = append(defects, gobble.Defect{Code: gobble.DefectInvalidValue, Unit: route, Message: "Methyl ExtraArgs contains unsupported route option " + flag})
 	}
 	return defects
+}
+
+func readyBismarkIndexDefect(index gobble.Tree) *gobble.Defect {
+	const unit = "reference.bismark_index"
+	dir := index.Dir.String()
+	if index.Dir.IsZero() || !validWorkspacePath(dir) {
+		return &gobble.Defect{Code: gobble.DefectInvalidPath, Unit: unit, Message: "ready Bismark index Tree directory must be workspace-relative", Paths: []string{dir}}
+	}
+	manifest := path.Join(dir, ".gobble-tree.json")
+	info, err := os.Lstat(filepath.FromSlash(manifest))
+	if err != nil || !info.Mode().IsRegular() {
+		return &gobble.Defect{Code: gobble.DefectInvalidPath, Unit: unit, Message: "ready Bismark index Tree requires a readable regular .gobble-tree.json manifest", Paths: []string{manifest}}
+	}
+	if _, err := os.ReadFile(filepath.FromSlash(manifest)); err != nil {
+		return &gobble.Defect{Code: gobble.DefectInvalidPath, Unit: unit, Message: "ready Bismark index Tree requires a readable regular .gobble-tree.json manifest", Paths: []string{manifest}}
+	}
+	return nil
 }
 
 func unsupportedRouteExtra(config Config) (string, string) {

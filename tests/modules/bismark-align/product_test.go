@@ -55,6 +55,7 @@ func TestLiftedBismarkAlignSupportsSingleAndPairedTrees(t *testing.T) {
 		{"--ambiguous"},
 		{"--ambig_bam"},
 		{"--parallel", "2"},
+		{"--mult", "2"},
 		{"-I42"},
 		{"-X=400"},
 	} {
