@@ -119,6 +119,25 @@ func checkTreeOutput(isolate string, out IO) error {
 	return nil
 }
 
+// WriteTreeManifest writes the engine metadata that marks an existing,
+// non-empty directory as a complete Gobble Tree. It does not replace an
+// existing manifest.
+func WriteTreeManifest(root string) error {
+	members, err := walkTreeMembers(root)
+	if err != nil {
+		return err
+	}
+	if len(members) == 0 {
+		return errTreeMissing
+	}
+	for _, rel := range members {
+		if err := validateTreeMember(rel); err != nil {
+			return err
+		}
+	}
+	return writeTreeManifest(filepath.Join(root, treeManifestName), root, members, false)
+}
+
 func stageTree(workspace, isolate string, in IO) error {
 	srcRel := treeSourceDir(in)
 	srcRoot, err := containedFile(workspace, srcRel)

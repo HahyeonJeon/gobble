@@ -16,8 +16,11 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/HahyeonJeon/gobble/internal/engine"
 	"github.com/HahyeonJeon/gobble/tests/internal/fixture"
 )
+
+const gobbleTreeManifestName = ".gobble-tree.json"
 
 //go:embed testdata/manifest.json
 var manifestJSON []byte
@@ -108,6 +111,9 @@ func prepareReadyIndex(archivePath, treeDir string, archivePin fixture.Pin, auth
 	staged := filepath.Join(temp, authority.Name)
 	if err := checkReadyIndex(staged, authority); err != nil {
 		return err
+	}
+	if err := engine.WriteTreeManifest(staged); err != nil {
+		return fmt.Errorf("write ready Bismark index Tree manifest: %w", err)
 	}
 	if err := os.Rename(staged, treeDir); err != nil {
 		return fmt.Errorf("publish ready Bismark index: %w", err)
@@ -227,6 +233,16 @@ func checkReadyIndex(treeDir string, authority readyIndexTree) error {
 			return err
 		}
 		name := filepath.ToSlash(relative)
+		if name == authority.Name+"/"+gobbleTreeManifestName {
+			info, err := entry.Info()
+			if err != nil {
+				return err
+			}
+			if !info.Mode().IsRegular() {
+				return fmt.Errorf("ready Bismark index Tree manifest is not a regular file")
+			}
+			return nil
+		}
 		if entry.IsDir() {
 			if !directories[name] {
 				return fmt.Errorf("ready Bismark index Tree has undeclared directory %q", name)

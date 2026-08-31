@@ -200,11 +200,15 @@ func TestBuildRejectsInvalidInputConfigAndRouteExtras(t *testing.T) {
 			config.Reference.BismarkIndex = gobble.DeclareTree(gobble.Dir("../BismarkIndex"))
 		}, code: gobble.DefectInvalidPath},
 		{name: "special library", mutate: func(config *methylseq.Config) { config.BismarkAlign.ExtraArgs = []string{"--pbat"} }, code: gobble.DefectInvalidValue},
+		{name: "abbreviated special library", mutate: func(config *methylseq.Config) { config.BismarkAlign.ExtraArgs = []string{"--pba"} }, code: gobble.DefectInvalidValue},
+		{name: "SLAM library", mutate: func(config *methylseq.Config) { config.BismarkAlign.ExtraArgs = []string{"--slam"} }, code: gobble.DefectInvalidValue},
+		{name: "abbreviated SLAM library", mutate: func(config *methylseq.Config) { config.BismarkAlign.ExtraArgs = []string{"--sla"} }, code: gobble.DefectInvalidValue},
 		{name: "minimap2 aligner", mutate: func(config *methylseq.Config) { config.BismarkAlign.ExtraArgs = []string{"--mm2"} }, code: gobble.DefectInvalidValue},
 		{name: "alternate genome", mutate: func(config *methylseq.Config) {
 			config.BismarkAlign.ExtraArgs = []string{"--genome_folder", "in/other-index"}
 		}, code: gobble.DefectInvalidValue},
 		{name: "alternate output directory", mutate: func(config *methylseq.Config) { config.BismarkAlign.ExtraArgs = []string{"-owork/other"} }, code: gobble.DefectInvalidValue},
+		{name: "abbreviated output directory", mutate: func(config *methylseq.Config) { config.BismarkAlign.ExtraArgs = []string{"--outp", "work/other"} }, code: gobble.DefectInvalidValue},
 		{name: "alternate basename", mutate: func(config *methylseq.Config) { config.BismarkAlign.ExtraArgs = []string{"-Bother"} }, code: gobble.DefectInvalidValue},
 		{name: "alternate prefix", mutate: func(config *methylseq.Config) { config.BismarkAlign.ExtraArgs = []string{"--prefix=other"} }, code: gobble.DefectInvalidValue},
 		{name: "deduplication output escape", mutate: func(config *methylseq.Config) { config.Deduplicate.ExtraArgs = []string{"-oother"} }, code: gobble.DefectInvalidValue},

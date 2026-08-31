@@ -5,9 +5,12 @@ import (
 	"compress/gzip"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
+	"syscall"
 	"testing"
 
 	"github.com/HahyeonJeon/gobble/tests/internal/fixture"
@@ -29,10 +32,11 @@ func TestOfficialReadyIndexArchiveIdentity(t *testing.T) {
 
 func TestStageReadyIndexVerifiesArchiveMembersBeforePublication(t *testing.T) {
 	authority := testReadyIndexAuthority()
-	archive := writeReadyIndexArchive(t, authority, map[string]string{
+	files := map[string]string{
 		"BismarkIndex/genome.fa":                     "one",
 		"BismarkIndex/Bisulfite_Genome/CT/index.bt2": "two",
-	})
+	}
+	archive := writeReadyIndexArchive(t, authority, files)
 	destination := filepath.Join(t.TempDir(), "reference", "BismarkIndex")
 	if err := prepareReadyIndex(archive.path, destination, archive.pin, authority); err != nil {
 		t.Fatalf("prepareReadyIndex() error = %v", err)
@@ -40,6 +44,7 @@ func TestStageReadyIndexVerifiesArchiveMembersBeforePublication(t *testing.T) {
 	if err := checkReadyIndex(destination, authority); err != nil {
 		t.Fatalf("checkReadyIndex() error = %v", err)
 	}
+	assertGobbleTreeManifest(t, destination, files)
 	if _, err := os.Stat(filepath.Join(destination, "Bisulfite_Genome", "CT", "index.bt2")); err != nil {
 		t.Fatalf("staged ready-index member: %v", err)
 	}
@@ -186,4 +191,81 @@ func writeReadyIndexArchive(t *testing.T, authority readyIndexTree, files map[st
 func sumString(value string) string {
 	sum := sha256.Sum256([]byte(value))
 	return hex.EncodeToString(sum[:])
+}
+
+type testTreeManifest struct {
+	Members []testTreeManifestMember `json:"members"`
+	Digest  string                   `json:"digest"`
+}
+
+type testTreeManifestMember struct {
+	Path   string `json:"path"`
+	Size   int64  `json:"size"`
+	Mtime  int64  `json:"mtime"`
+	Dev    uint64 `json:"dev"`
+	Inode  uint64 `json:"inode"`
+	SHA256 string `json:"sha256"`
+}
+
+func assertGobbleTreeManifest(t *testing.T, root string, files map[string]string) {
+	t.Helper()
+	manifestPath := filepath.Join(root, gobbleTreeManifestName)
+	manifestInfo, err := os.Lstat(manifestPath)
+	if err != nil {
+		t.Fatalf("ready-index Tree manifest: %v", err)
+	}
+	if !manifestInfo.Mode().IsRegular() {
+		t.Fatalf("ready-index Tree manifest mode = %v, want regular file", manifestInfo.Mode())
+	}
+	raw, err := os.ReadFile(manifestPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var manifest testTreeManifest
+	if err := json.Unmarshal(raw, &manifest); err != nil {
+		t.Fatalf("ready-index Tree manifest JSON: %v", err)
+	}
+	wantPaths := make([]string, 0, len(files))
+	for member := range files {
+		relative, err := filepath.Rel(filepath.Base(root), filepath.FromSlash(member))
+		if err != nil {
+			t.Fatal(err)
+		}
+		wantPaths = append(wantPaths, filepath.ToSlash(relative))
+	}
+	sort.Strings(wantPaths)
+	if len(manifest.Members) != len(wantPaths) {
+		t.Fatalf("ready-index Tree manifest members = %#v, want %d", manifest.Members, len(wantPaths))
+	}
+	digests := make([]string, 0, len(wantPaths))
+	for i, wantPath := range wantPaths {
+		member := manifest.Members[i]
+		if member.Path != wantPath || member.Path == gobbleTreeManifestName {
+			t.Fatalf("ready-index Tree manifest member %d path = %q, want %q", i, member.Path, wantPath)
+		}
+		absolute := filepath.Join(root, filepath.FromSlash(wantPath))
+		info, err := os.Lstat(absolute)
+		if err != nil {
+			t.Fatal(err)
+		}
+		stat, ok := info.Sys().(*syscall.Stat_t)
+		if !ok {
+			t.Fatalf("ready-index Tree member %q stat_t unavailable", wantPath)
+		}
+		wantSHA := sumString(files[filepath.ToSlash(filepath.Join(filepath.Base(root), wantPath))])
+		if member.Size != info.Size() || member.Mtime != info.ModTime().UnixNano() || member.Dev != uint64(stat.Dev) || member.Inode != uint64(stat.Ino) || member.SHA256 != wantSHA {
+			t.Fatalf("ready-index Tree manifest member %q = %+v, want destination stats and sha256 %s", wantPath, member, wantSHA)
+		}
+		digests = append(digests, member.SHA256)
+	}
+	sort.Strings(digests)
+	digest := sha256.New()
+	for _, value := range digests {
+		digest.Write([]byte(value))
+		digest.Write([]byte{'\n'})
+	}
+	wantDigest := hex.EncodeToString(digest.Sum(nil))
+	if manifest.Digest != wantDigest {
+		t.Fatalf("ready-index Tree manifest digest = %q, want %q", manifest.Digest, wantDigest)
+	}
 }

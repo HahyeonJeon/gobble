@@ -269,6 +269,9 @@ func validateBuild(samples []Sample, config Config) []gobble.Defect {
 }
 
 func unsupportedRouteExtra(config Config) (string, string) {
+	if option := bismarkalign.UnsupportedRouteOption(config.BismarkAlign.ExtraArgs); option != "" {
+		return "bismark_align", option
+	}
 	sets := []struct {
 		unit  string
 		args  []string
@@ -276,7 +279,6 @@ func unsupportedRouteExtra(config Config) (string, string) {
 	}{
 		{unit: "trim_galore", args: config.TrimGalore.ExtraArgs, flags: []string{"--rrbs", "--fastqc", "--dont_gzip", "--retain_unpaired"}},
 		{unit: "bismark_genome_preparation", args: config.BismarkGenome.ExtraArgs, flags: []string{"--hisat2", "--slam"}},
-		{unit: "bismark_align", args: config.BismarkAlign.ExtraArgs, flags: []string{"--hisat2", "--minimap2", "--mm2", "--non_directional", "--pbat", "--se", "--single_end", "-f", "--fasta", "-un", "--unmapped", "--ambiguous", "--ambig_bam", "--sam", "--cram", "--nucleotide_coverage", "--genome", "--genome_folder", "-o", "--output_dir", "-B", "--basename", "--prefix"}},
 		{unit: "bismark_deduplicate", args: config.Deduplicate.ExtraArgs, flags: []string{"--sam", "--multiple"}},
 		{unit: "bismark_methylation_extractor", args: config.Extractor.ExtraArgs, flags: []string{"--CX", "--CX_context", "--cytosine_report", "--yacht", "--merge_non_CpG", "--zero_based", "--ucsc", "--mbias_only", "--mbias_off", "--sam"}},
 	}

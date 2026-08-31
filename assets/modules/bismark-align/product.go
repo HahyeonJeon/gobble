@@ -3,6 +3,7 @@ package bismarkalign
 import (
 	"math"
 	"strconv"
+	"strings"
 
 	"github.com/HahyeonJeon/gobble"
 	"github.com/HahyeonJeon/gobble/assets/modules"
@@ -125,14 +126,10 @@ func Add(parent modules.Parent, index, read1, read2 gobble.Handle, options Optio
 }
 
 func rejectProtectedExtraArgs(unit string, extraArgs []string) error {
+	if option := UnsupportedRouteOption(extraArgs); option != "" {
+		return modules.ComposeDefect(gobble.DefectInvalidValue, unit, "ExtraArgs contains unsupported option "+option)
+	}
 	protected := []string{
-		"--hisat2", "--minimap2", "--mm2",
-		"--non_directional", "--pbat",
-		"--se", "--single_end", "-f", "--fasta",
-		"-un", "--unmapped", "--ambiguous", "--ambig_bam",
-		"--sam", "--cram", "--nucleotide_coverage",
-		"--bowtie2", "--genome", "--genome_folder", "--bam",
-		"-o", "--output_dir", "-B", "--basename", "--prefix",
 		"--multicore", "--parallel", "--score_min", "--local",
 		"--minins", "-I", "--maxins", "-X", "-1", "-2",
 		"--version", "--help",
@@ -141,6 +138,49 @@ func rejectProtectedExtraArgs(unit string, extraArgs []string) error {
 		return err
 	}
 	return nil
+}
+
+// UnsupportedRouteOption returns the canonical Bismark option selected by
+// ExtraArgs when it changes the directional Bowtie2 route, inputs, or outputs.
+// It recognizes Bismark's unique PBAT, SLAM, and output-directory prefixes.
+func UnsupportedRouteOption(extraArgs []string) string {
+	unsupported := []string{
+		"--hisat2", "--minimap2", "--mm2",
+		"--non_directional", "--pbat", "--slam",
+		"--se", "--single_end", "-f", "--fasta",
+		"-un", "--unmapped", "--ambiguous", "--ambig_bam",
+		"--sam", "--cram", "--nucleotide_coverage",
+		"--bowtie2", "--genome", "--genome_folder", "--bam",
+		"-o", "--output_dir", "-B", "--basename", "--prefix",
+	}
+	for _, arg := range extraArgs {
+		for _, option := range unsupported {
+			if extraArgSelectsOption(arg, option) {
+				return option
+			}
+		}
+		for _, option := range []struct {
+			minimum   string
+			canonical string
+		}{
+			{minimum: "--pba", canonical: "--pbat"},
+			{minimum: "--outp", canonical: "--output_dir"},
+			{minimum: "--sla", canonical: "--slam"},
+		} {
+			name, _, _ := strings.Cut(arg, "=")
+			if len(name) >= len(option.minimum) && strings.HasPrefix(option.canonical, name) {
+				return option.canonical
+			}
+		}
+	}
+	return ""
+}
+
+func extraArgSelectsOption(arg, option string) bool {
+	if arg == option || strings.HasPrefix(arg, option+"=") {
+		return true
+	}
+	return len(option) == 2 && option[0] == '-' && option[1] != '-' && len(arg) > len(option) && strings.HasPrefix(arg, option)
 }
 
 // Pipeline returns a standalone validated directional Bismark alignment module.
