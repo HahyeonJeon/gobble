@@ -2,6 +2,7 @@ package featurecounts
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/HahyeonJeon/gobble"
 	"github.com/HahyeonJeon/gobble/assets/modules"
@@ -27,7 +28,8 @@ type BiotypePorts struct {
 }
 
 // ATACOptions controls consensus-interval quantification. Paired is typed
-// cohort policy; ExtraArgs cannot change it or replace the SAF/output binding.
+// cohort policy. ExtraArgs must be complete featureCounts options and cannot
+// add or consume positional BAM members or replace the SAF/output binding.
 type ATACOptions struct {
 	modules.Options
 	OutDir gobble.Directory
@@ -81,6 +83,9 @@ func AddATAC(parent modules.Parent, bams []gobble.Handle, saf gobble.Handle, opt
 	if err := modules.RejectExtraArgs(unit, options.ExtraArgs, protected); err != nil {
 		return ATACPorts{}, err
 	}
+	if err := validateATACExtraArgs(unit, options.ExtraArgs); err != nil {
+		return ATACPorts{}, err
+	}
 	base := options.Options
 	base.Resources = resources
 	command, image, resources, err := modules.ResolveOptions(unit, base, "quay.io/biocontainers/subread:2.0.1--hed695b0_0@sha256:ccee1f6ebb924fd0b3b6db646a51dabc905697aa25be132386dd490c2318286c", resources, command, protected)
@@ -98,6 +103,69 @@ func AddATAC(parent modules.Parent, bams []gobble.Handle, saf gobble.Handle, opt
 	}
 	task := parent.AddTask(gobble.TaskSpec{Name: unit, Command: command, Image: image, Resources: resources, Inputs: inputs, Outputs: []gobble.Bind{{Name: "counts", Spec: counts}, {Name: "summary", Spec: summary}}})
 	return ATACPorts{Counts: task.Out("counts"), Summary: task.Out("summary")}, nil
+}
+
+// The ATAC image uses featureCounts 2.0.1. Its option arity must be known here
+// so an incomplete option cannot consume the first typed BAM as its value.
+func validateATACExtraArgs(unit string, extraArgs []string) error {
+	for i := 0; i < len(extraArgs); i++ {
+		arg := extraArgs[i]
+		if arg == "" || arg == "-" || arg == "--" || !strings.HasPrefix(arg, "-") {
+			return modules.ComposeDefect(gobble.DefectInvalidValue, unit, "ExtraArgs cannot add positional operands outside typed BAM membership")
+		}
+
+		name, value, attached := featureCountsExtraArg(arg)
+		takesValue, known := featureCountsExtraArgTakesValue(name)
+		if !known {
+			return modules.ComposeDefect(gobble.DefectInvalidValue, unit, "ExtraArgs contains unsupported option "+name)
+		}
+		if !takesValue {
+			if attached {
+				return modules.ComposeDefect(gobble.DefectInvalidValue, unit, "ExtraArgs option "+name+" does not accept a value")
+			}
+			continue
+		}
+		if attached {
+			if value == "" {
+				return modules.ComposeDefect(gobble.DefectInvalidValue, unit, "ExtraArgs option "+name+" requires a value before typed BAM membership")
+			}
+			continue
+		}
+		if i+1 == len(extraArgs) {
+			return modules.ComposeDefect(gobble.DefectInvalidValue, unit, "ExtraArgs option "+name+" requires a value before typed BAM membership")
+		}
+		i++
+		if extraArgs[i] == "" {
+			return modules.ComposeDefect(gobble.DefectInvalidValue, unit, "ExtraArgs option "+name+" requires a non-empty value before typed BAM membership")
+		}
+	}
+	return nil
+}
+
+func featureCountsExtraArg(arg string) (name, value string, attached bool) {
+	if strings.HasPrefix(arg, "--") {
+		name, value, attached = strings.Cut(arg, "=")
+		return name, value, attached
+	}
+	if len(arg) > 2 {
+		return arg[:2], strings.TrimPrefix(arg[2:], "="), true
+	}
+	return arg, "", false
+}
+
+func featureCountsExtraArgTakesValue(name string) (bool, bool) {
+	switch name {
+	case "-a", "-o", "-F", "-t", "-g", "-A", "-G", "-Q", "-s", "-d", "-D", "-T", "-R",
+		"--extraAttributes", "--minOverlap", "--fracOverlap", "--fracOverlapFeature", "--nonOverlap",
+		"--nonOverlapFeature", "--readExtension5", "--readExtension3", "--read2pos", "--Rpath", "--tmpDir", "--maxMOp":
+		return true, true
+	case "-f", "-O", "-M", "-J", "-p", "-B", "-P", "-C", "-L", "-v",
+		"--largestOverlap", "--fraction", "--splitOnly", "--nonSplitOnly", "--primary", "--ignoreDup",
+		"--donotsort", "--countReadPairs", "--byReadGroup", "--verbose":
+		return false, true
+	default:
+		return false, false
+	}
 }
 
 // AddBiotype records one validated featureCounts biotype-QC command.

@@ -164,6 +164,9 @@ func TestProtectedAliasesAndInvalidPublicationFailCompose(t *testing.T) {
 		{name: "MACS output", unit: "macs2_callpeak", mutate: func(c *atacseq.Config) { c.MACS2.ExtraArgs = []string{"--outdir=elsewhere"} }},
 		{name: "Picard output alias", unit: "picard_markduplicates", mutate: func(c *atacseq.Config) { c.MarkDuplicates.ExtraArgs = []string{"O=elsewhere.bam"} }},
 		{name: "aligner route", unit: "bwa_mem", mutate: func(c *atacseq.Config) { c.BWAMem.ExtraArgs = []string{"--aligner=bowtie2"} }},
+		{name: "FeatureCounts BAM operand", unit: "featurecounts_atac", mutate: func(c *atacseq.Config) { c.FeatureCounts.ExtraArgs = []string{"in/undeclared.bam"} }},
+		{name: "FeatureCounts BAM after switch", unit: "featurecounts_atac", mutate: func(c *atacseq.Config) { c.FeatureCounts.ExtraArgs = []string{"--primary", "in/undeclared.bam"} }},
+		{name: "FeatureCounts missing option value", unit: "featurecounts_atac", mutate: func(c *atacseq.Config) { c.FeatureCounts.ExtraArgs = []string{"-Q"} }},
 		{name: "publication", unit: "publication", mutate: func(c *atacseq.Config) { c.Publication.ConsensusMatrix = false }},
 	} {
 		t.Run(test.name, func(t *testing.T) {
