@@ -8,9 +8,10 @@ product. There is no earlier scRNA workspace to resume or migrate.
 
 - `Parse` and `Load` accept exact columns `sample,fastq_1,fastq_2` plus optional
   `expected_cells,seq_center`. Unknown columns are errors. Repeated sample rows
-  become ordered paired `Run` values. Both mates are required and must render to
-  distinct workspace paths. One rendered path can occupy only one sample, mate,
-  and technical-run role. Optional metadata must agree across repeated rows.
+  become ordered paired `Run` values. Both mates are required. Every FASTA, GTF,
+  whitelist, and read input must render to a distinct workspace path. Reads also
+  cannot reuse one path across samples, mates, or technical runs. Optional
+  metadata must agree across repeated rows.
 - `Protocol` is one of 10x V1, V2, V3, or V4 and is never inferred. The staged
   whitelist carries the same typed protocol. `DefaultConfig` selects V2 because
   the pinned official fixture is V2. V2–V4 also require their exact typed QCatch
@@ -30,7 +31,9 @@ product. There is no earlier scRNA workspace to resume or migrate.
   filesystem content, current directory, or network location. Invalid runs,
   protocols, reference forms, Trees, QCatch combinations, publication choices,
   and protected long, abbreviated, attached, or short aliases are structured
-  compose defects.
+  compose defects. Simpleaf's expected-orientation option and every documented
+  short alias for typed chemistry, index, reads, resolution, threads, and permit
+  list are protected.
 - `Pipeline` is only the process-exclusive CLI adapter. It loads the injected
   samplesheet path and delegates to `Build` with fresh defaults. `cmd/gobble`
   remains asset-agnostic.
@@ -55,8 +58,9 @@ QCatch metrics table.
 Cells and barcodes remain rows inside matrix artifacts. No runtime `Scatter`
 represents a sample, barcode, or cell. No command scans an undeclared host
 directory or fetches a reference, whitelist, read, or mapping at runtime.
-`ExtraArgs` cannot replace the aligner, protocol, reads, index or quantification
-Trees, relation, whitelist, QCatch input, or output roots.
+`ExtraArgs` cannot replace the aligner, expected read orientation, protocol,
+reads, index or quantification Trees, relation, whitelist, QCatch input, or
+output roots.
 
 ## Lifecycle, recovery, and non-claims
 

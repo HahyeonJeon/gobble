@@ -126,6 +126,69 @@ func TestBuildRejectsMateAndRunPathAliasing(t *testing.T) {
 	}
 }
 
+func TestBuildRejectsCrossRoleRenderedPathAliasing(t *testing.T) {
+	tests := []struct {
+		name   string
+		unit   string
+		mutate func([]scrnaseq.Sample, *scrnaseq.Config)
+	}{
+		{
+			name: "FASTA and GTF",
+			unit: "reference.annotation",
+			mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config) {
+				config.Reference.Annotation = gobble.PathSpec{Dir: gobble.Dir("in/reference/."), Base: "genome", Ext: ".fa"}
+			},
+		},
+		{
+			name: "FASTA and whitelist",
+			unit: "reference.whitelist",
+			mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config) {
+				config.Reference.BarcodeWhitelist.Path = gobble.PathSpec{Dir: gobble.Dir("in/reference/."), Base: "genome", Ext: ".fa"}
+			},
+		},
+		{
+			name: "FASTA and read",
+			unit: "reference.fasta",
+			mutate: func(samples []scrnaseq.Sample, _ *scrnaseq.Config) {
+				samples[0].Runs[0].Fastq1 = "in/reference/./genome.fa"
+			},
+		},
+		{
+			name: "GTF and whitelist",
+			unit: "reference.whitelist",
+			mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config) {
+				config.Reference.BarcodeWhitelist.Path = gobble.PathSpec{Dir: gobble.Dir("in/reference/."), Base: "genes", Ext: ".gtf"}
+			},
+		},
+		{
+			name: "GTF and read",
+			unit: "reference.annotation",
+			mutate: func(samples []scrnaseq.Sample, _ *scrnaseq.Config) {
+				samples[0].Runs[0].Fastq1 = "in/reference/./genes.gtf"
+			},
+		},
+		{
+			name: "whitelist and read",
+			unit: "reference.whitelist",
+			mutate: func(samples []scrnaseq.Sample, _ *scrnaseq.Config) {
+				samples[0].Runs[0].Fastq1 = "in/reference/./10x_V2_barcode_whitelist.txt.gz"
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			samples := loadSamples(t)
+			config := scrnaseq.DefaultConfig()
+			test.mutate(samples, &config)
+			graph, err := gobble.Compose(scrnaseq.Build(samples, config))
+			if graph != nil {
+				t.Fatalf("Compose() graph = %v, want nil", graph)
+			}
+			requireDefect(t, err, gobble.DefectInvalidValue, test.unit)
+		})
+	}
+}
+
 func TestBuildRealizesSelectedSimpleafVerticalWithoutRuntimeScatter(t *testing.T) {
 	pipeline := scrnaseq.Build(loadSamples(t), scrnaseq.DefaultConfig())
 	if _, err := gobble.Compose(pipeline); err != nil {
@@ -265,6 +328,34 @@ func TestUnsupportedProtocolsIncompleteReferenceAndProtectedAliasesFailClosed(t 
 				t.Fatalf("Compose() graph = %v, want nil", graph)
 			}
 			requireDefect(t, err, gobble.DefectInvalidValue, test.unit)
+		})
+	}
+}
+
+func TestBuildRejectsSimpleafQuantProtocolAndTypedOptionAliases(t *testing.T) {
+	tests := []struct {
+		name  string
+		extra string
+	}{
+		{name: "expected orientation long", extra: "--expected-ori=both"},
+		{name: "expected orientation short attached", extra: "-dboth"},
+		{name: "index short attached", extra: "-iother"},
+		{name: "chemistry short attached", extra: "-c10xv4-3p"},
+		{name: "read one short attached", extra: "-1other.fastq.gz"},
+		{name: "read two short attached", extra: "-2other.fastq.gz"},
+		{name: "resolution short attached", extra: "-rparsimony"},
+		{name: "threads short attached", extra: "-t1"},
+		{name: "permit list short attached", extra: "-uother.txt"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			config := scrnaseq.DefaultConfig()
+			config.SimpleafQuant.ExtraArgs = []string{test.extra}
+			graph, err := gobble.Compose(scrnaseq.Build(loadSamples(t), config))
+			if graph != nil {
+				t.Fatalf("Compose() graph = %v, want nil", graph)
+			}
+			requireDefect(t, err, gobble.DefectInvalidValue, "simpleaf_quant")
 		})
 	}
 }

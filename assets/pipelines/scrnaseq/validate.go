@@ -70,6 +70,7 @@ func validateBuild(samples []Sample, config Config) []gobble.Defect {
 			defects = append(defects, gobble.Defect{Code: gobble.DefectInvalidValue, Unit: "reference.transcript_to_gene", Message: "source reference produces its transcript-to-gene relation and cannot mix a ready relation"})
 		}
 	}
+	defects = append(defects, crossRolePathDefects(samples, config)...)
 	if config.Results.IsZero() || !validWorkspacePath(config.Results.String()+"/result") {
 		defects = append(defects, gobble.Defect{Code: gobble.DefectInvalidPath, Unit: "results", Message: "scRNA results directory must be workspace-relative"})
 	}
@@ -110,7 +111,7 @@ func protectedExtra(config Config) (string, string) {
 		{unit: "fastqc", args: config.FastQC.ExtraArgs, flags: []string{"--outdir", "--threads", "--extract"}},
 		{unit: "gffread_transcriptome", args: config.Transcriptome.ExtraArgs, flags: []string{"-F", "-w", "-g", "-o"}},
 		{unit: "simpleaf_index", args: config.SimpleafIndex.ExtraArgs, flags: []string{"--threads", "--ref-seq", "--fasta", "--gtf", "--feature-csv", "--probe-csv", "--output", "-o", "--no-piscem", "--use-selective-alignment"}},
-		{unit: "simpleaf_quant", args: config.SimpleafQuant.ExtraArgs, flags: []string{"--map-dir", "--index", "--t2g-map", "--chemistry", "--reads1", "--reads2", "--resolution", "--output", "-o", "--threads", "--anndata-out", "--knee", "--forced-cells", "--expect-cells", "--explicit-pl", "--unfiltered-pl", "--no-piscem", "--use-selective-alignment", "--aligner"}},
+		{unit: "simpleaf_quant", args: config.SimpleafQuant.ExtraArgs, flags: []string{"--map-dir", "--index", "-i", "--t2g-map", "--chemistry", "-c", "--reads1", "-1", "--reads2", "-2", "--resolution", "-r", "--output", "-o", "--threads", "-t", "--anndata-out", "--knee", "--forced-cells", "--expect-cells", "--explicit-pl", "--unfiltered-pl", "-u", "--expected-ori", "-d", "--no-piscem", "--use-selective-alignment", "--aligner"}},
 		{unit: "qcatch", args: config.QCatch.ExtraArgs, flags: []string{"--input", "-i", "--output", "-o", "--chemistry", "-c", "--n_partitions", "-n", "--save_filtered_h5ad", "-s", "--export_summary_table", "-x", "--remove_doublets", "-d", "--visualize_doublets", "-vd", "--skip_umap_tsne", "-u", "--gene_id2name_file", "-g", "--valid_cell_list", "-l"}},
 		{unit: "multiqc", args: config.MultiQC.ExtraArgs, flags: []string{"--outdir", "--filename", "--no-data-dir", "--zip-data-dir"}},
 	}
@@ -177,6 +178,50 @@ func validResolution(resolution UMIResolution) bool {
 func validPathSpec(spec gobble.PathSpec) bool {
 	rendered, err := spec.Render()
 	return err == nil && validWorkspacePath(rendered)
+}
+
+func crossRolePathDefects(samples []Sample, config Config) []gobble.Defect {
+	owners := make(map[string]string)
+	for _, sample := range samples {
+		for _, run := range sample.Runs {
+			for _, read := range []string{run.Fastq1, run.Fastq2} {
+				if rendered, valid := renderWorkspacePath(read); valid {
+					owners[rendered] = "read"
+				}
+			}
+		}
+	}
+
+	references := []struct {
+		unit string
+		role string
+		spec gobble.PathSpec
+	}{
+		{unit: "reference.fasta", role: "FASTA", spec: config.Reference.FASTA},
+		{unit: "reference.annotation", role: "GTF", spec: config.Reference.Annotation},
+		{unit: "reference.whitelist", role: "whitelist", spec: config.Reference.BarcodeWhitelist.Path},
+	}
+	var defects []gobble.Defect
+	for _, reference := range references {
+		if pathSpecUnset(reference.spec) {
+			continue
+		}
+		rendered, err := reference.spec.Render()
+		if err != nil || !validWorkspacePath(rendered) {
+			continue
+		}
+		if owner, exists := owners[rendered]; exists && owner != reference.role {
+			defects = append(defects, gobble.Defect{
+				Code:    gobble.DefectInvalidValue,
+				Unit:    reference.unit,
+				Message: "scRNA " + reference.role + " path aliases the " + owner + " input role",
+				Paths:   []string{rendered},
+			})
+			continue
+		}
+		owners[rendered] = reference.role
+	}
+	return defects
 }
 
 func pathSpecUnset(spec gobble.PathSpec) bool {
