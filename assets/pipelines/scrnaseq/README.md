@@ -40,7 +40,9 @@ product. There is no earlier scRNA workspace to resume or migrate.
   `935c013ff6123cc307791501dca86b92b1f6dd16` protects every documented
   spelling that competes with typed direct-reference inputs, quantification
   inputs, outputs, resources, permit-list filtering, or the selected Piscem
-  route. Standalone adders and pipeline validation use the same policy.
+  route. It also rejects decoy-FASTA and working-directory options because they
+  would add undeclared filesystem state. Standalone adders and pipeline
+  validation use the same policy.
 - `Pipeline` is only the process-exclusive CLI adapter. It loads the injected
   samplesheet path and delegates to `Build` with fresh defaults. `cmd/gobble`
   remains asset-agnostic.
@@ -67,7 +69,7 @@ represents a sample, barcode, or cell. No command scans an undeclared host
 directory or fetches a reference, whitelist, read, or mapping at runtime.
 `ExtraArgs` cannot replace the aligner, expected read orientation, protocol,
 reads, index or quantification Trees, relation, whitelist, QCatch input, or
-output roots.
+output roots, or add decoy files or working-directory state.
 
 ## Lifecycle, recovery, and non-claims
 

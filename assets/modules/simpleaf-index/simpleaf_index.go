@@ -17,6 +17,7 @@ var protectedExtraArgs = []string{
 	"--ref-seq", "--refseq",
 	"--fasta", "-f", "--gtf", "-g", "--gff3-format", "--rlen", "-r",
 	"--dedup", "--spliced", "--unspliced", "--feature-csv", "--probe-csv",
+	"--decoy-paths", "--work-dir",
 	"--output", "-o",
 	"--no-piscem", "--use-piscem", "--sparse", "-p", "--use-selective-alignment",
 }
@@ -31,7 +32,7 @@ type Options struct {
 type Ports struct{ Index gobble.Handle }
 
 // ProtectedExtraArg returns the first Simpleaf index option that competes with
-// the module-owned direct-reference inputs, output, resources, or mapper route.
+// the module-owned inputs, output, resources, mapper route, or filesystem state.
 // It follows the pinned Simpleaf 0.19.5 IndexOpts aliases.
 func ProtectedExtraArg(extraArgs []string) string {
 	return modules.MatchProtectedExtraArg(extraArgs, protectedExtraArgs)

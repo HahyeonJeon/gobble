@@ -41,6 +41,8 @@ func TestSimpleafIndexRejectsEveryOwnedOptionAlias(t *testing.T) {
 		{name: "unspliced sequence", extra: "--unspliced=other.fa"},
 		{name: "feature CSV", extra: "--feature-csv=features.csv"},
 		{name: "probe CSV", extra: "--probe-csv=probes.csv"},
+		{name: "decoy FASTA", extra: "--decoy-paths=decoy.fa"},
+		{name: "working directory", extra: "--work-dir=other-work"},
 		{name: "output long", extra: "--output=elsewhere"},
 		{name: "output short", extra: "-oelsewhere"},
 		{name: "disable piscem", extra: "--no-piscem"},
