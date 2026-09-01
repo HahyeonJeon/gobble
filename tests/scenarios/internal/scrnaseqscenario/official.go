@@ -64,6 +64,12 @@ type expectedBoundInput struct {
 	OfficialNames []string
 }
 
+type officialH5ADMetadata struct {
+	Sample        string
+	ExpectedCells string
+	SeqCenter     string
+}
+
 // officialInputOracle deliberately freezes the manifest identities again so a
 // plan or caller-supplied identity cannot become its own expected value.
 var officialInputOracle = []OfficialInput{
@@ -580,7 +586,11 @@ func commandInputPaths(task pc.Task) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		if err := embeddedCommand(task, "python", "-c", matrixToH5ADScriptSHA256, quant, h5ad, taskParam(task, "sample"), taskParam(task, "expected_cells"), taskParam(task, "seq_center")); err != nil {
+		metadata, ok := officialMatrixToH5ADMetadata(task.ID)
+		if !ok {
+			return nil, fmt.Errorf("matrix_to_h5ad task %s has no frozen official metadata contract", task.ID)
+		}
+		if err := embeddedCommand(task, "python", "-c", matrixToH5ADScriptSHA256, quant, h5ad, metadata.Sample, metadata.ExpectedCells, metadata.SeqCenter); err != nil {
 			return nil, err
 		}
 		return []string{quant}, nil
@@ -758,11 +768,15 @@ func ioSourcePaths(value pc.IO) []string {
 	return paths
 }
 
-func taskParam(task pc.Task, name string) string {
-	for _, param := range task.Params {
-		if param.Name == name {
-			return param.Value
-		}
+// officialMatrixToH5ADMetadata intentionally repeats the official sheet values
+// so task Params and command operands cannot become their own expected values.
+func officialMatrixToH5ADMetadata(taskID string) (officialH5ADMetadata, bool) {
+	switch taskID {
+	case "Sample_X.matrix_to_h5ad":
+		return officialH5ADMetadata{Sample: "Sample_X", ExpectedCells: "5000", SeqCenter: "Broad Institute"}, true
+	case "Sample_Y.matrix_to_h5ad":
+		return officialH5ADMetadata{Sample: "Sample_Y", ExpectedCells: "5000", SeqCenter: "CRG Barcelona"}, true
+	default:
+		return officialH5ADMetadata{}, false
 	}
-	return ""
 }

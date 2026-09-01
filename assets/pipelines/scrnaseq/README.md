@@ -41,8 +41,12 @@ product. There is no earlier scRNA workspace to resume or migrate.
   spelling that competes with typed direct-reference inputs, quantification
   inputs, outputs, resources, permit-list filtering, or the selected Piscem
   route. It also rejects decoy-FASTA and working-directory options because they
-  would add undeclared filesystem state. Standalone adders and pipeline
-  validation use the same policy.
+  would add undeclared filesystem state. Because the pinned commands write
+  isolate-relative `simpleaf_info.json`, and index also uses
+  `workdir.noindex`, `Build` reserves those paths and every `workdir.noindex`
+  descendant from reads, reference files, whitelist, transcript-to-gene file,
+  ready index `Tree`, and results. Standalone adders and pipeline validation use
+  the same option policy.
 - `Pipeline` is only the process-exclusive CLI adapter. It loads the injected
   samplesheet path and delegates to `Build` with fresh defaults. `cmd/gobble`
   remains asset-agnostic.
@@ -86,6 +90,8 @@ Live fixture evidence fetches and verifies the nine exact official bytes and
 stages them as ordinary product inputs. An independent frozen oracle validates
 each selected task's complete command-specific argv and compares every declared
 input bind's producer port and exact SHA-256 identity set with its expected set.
+The oracle also freezes sample, expected-cell, and sequencing-center operands
+for each official matrix-to-h5ad task instead of reading task Params.
 The hermetic output double then
 proves only engine occupancy, complete Tree publication, and lifecycle state;
 its reads and placeholder bytes are not selected-command consumption evidence.

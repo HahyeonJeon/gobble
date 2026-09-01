@@ -485,6 +485,93 @@ func TestBuildAcceptsResultsInputPathPrefixSibling(t *testing.T) {
 	}
 }
 
+func TestBuildRejectsReservedSimpleafIsolateStatePaths(t *testing.T) {
+	roles := []struct {
+		name   string
+		unit   string
+		ready  bool
+		mutate func([]scrnaseq.Sample, *scrnaseq.Config, string)
+	}{
+		{name: "read", unit: "Sample_X", mutate: func(samples []scrnaseq.Sample, _ *scrnaseq.Config, path string) {
+			samples[0].Runs[0].Fastq1 = path
+		}},
+		{name: "FASTA", unit: "reference.fasta", mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config, path string) {
+			config.Reference.FASTA = gobble.Literal(path)
+		}},
+		{name: "GTF", unit: "reference.annotation", mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config, path string) {
+			config.Reference.Annotation = gobble.Literal(path)
+		}},
+		{name: "whitelist", unit: "reference.whitelist", mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config, path string) {
+			config.Reference.BarcodeWhitelist.Path = gobble.Literal(path)
+		}},
+		{name: "transcript-to-gene", unit: "reference.transcript_to_gene", ready: true, mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config, path string) {
+			config.Reference.TranscriptToGene = gobble.Literal(path)
+		}},
+		{name: "ready Tree", unit: "reference.simpleaf_index", ready: true, mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config, path string) {
+			config.Reference.SimpleafIndex = gobble.DeclareTree(gobble.Dir(path))
+		}},
+		{name: "results", unit: "results", mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config, path string) {
+			config.Results = gobble.Dir(path)
+		}},
+	}
+	statePaths := []struct {
+		name string
+		path string
+	}{
+		{name: "simpleaf info", path: "simpleaf_info.json"},
+		{name: "index work directory", path: "workdir.noindex"},
+		{name: "index work directory descendant", path: "workdir.noindex/staged-input"},
+	}
+	for _, role := range roles {
+		for _, state := range statePaths {
+			t.Run(role.name+"/"+state.name, func(t *testing.T) {
+				samples := loadSamples(t)
+				config := scrnaseq.DefaultConfig()
+				if role.ready {
+					config.Reference.FASTA = gobble.PathSpec{}
+					config.Reference.Annotation = gobble.PathSpec{}
+					config.Reference.SimpleafIndex = gobble.DeclareTree(gobble.Dir("in/ready-index"))
+					config.Reference.TranscriptToGene = gobble.Literal("in/reference/t2g.tsv")
+				}
+				role.mutate(samples, &config, state.path)
+				graph, err := gobble.Compose(scrnaseq.Build(samples, config))
+				if graph != nil {
+					t.Fatalf("Compose() with %s path %q returned graph %v, want nil", role.name, state.path, graph)
+				}
+				requireDefect(t, err, gobble.DefectInvalidValue, role.unit)
+			})
+		}
+	}
+}
+
+func TestBuildAcceptsSimpleafIsolateStatePrefixSiblings(t *testing.T) {
+	t.Run("source reference", func(t *testing.T) {
+		samples := loadSamples(t)
+		samples[0].Runs[0].Fastq1 = "simpleaf_info.json.input"
+		config := scrnaseq.DefaultConfig()
+		config.Reference.FASTA = gobble.Literal("simpleaf_info.json.reference")
+		config.Reference.Annotation = gobble.Literal("workdir.noindex.annotation")
+		config.Reference.BarcodeWhitelist.Path = gobble.Literal("workdir.noindex-whitelist")
+		config.Results = gobble.Dir("workdir.noindex-results")
+		if _, err := gobble.Compose(scrnaseq.Build(samples, config)); err != nil {
+			t.Fatalf("Compose() error = %v, want reserved-path prefix siblings accepted", err)
+		}
+	})
+
+	t.Run("ready reference", func(t *testing.T) {
+		config := scrnaseq.DefaultConfig()
+		config.Reference.FASTA = gobble.PathSpec{}
+		config.Reference.Annotation = gobble.PathSpec{}
+		config.Reference.SimpleafIndex = gobble.DeclareTree(gobble.Dir("workdir.noindex-ready"))
+		config.Reference.TranscriptToGene = gobble.Literal("simpleaf_info.json.t2g")
+		config.Reference.BarcodeWhitelist.Path = gobble.Literal("workdir.noindex-whitelist")
+		config.Results = gobble.Dir("simpleaf_info.json-results")
+		if _, err := gobble.Compose(scrnaseq.Build(loadSamples(t), config)); err != nil {
+			t.Fatalf("Compose() error = %v, want reserved-path prefix siblings accepted", err)
+		}
+	})
+}
+
 func TestBuildRealizesSelectedSimpleafVerticalWithoutRuntimeScatter(t *testing.T) {
 	pipeline := scrnaseq.Build(loadSamples(t), scrnaseq.DefaultConfig())
 	if _, err := gobble.Compose(pipeline); err != nil {

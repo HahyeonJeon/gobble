@@ -10,6 +10,11 @@ import (
 	simpleafquant "github.com/HahyeonJeon/gobble/assets/modules/simpleaf-quant"
 )
 
+const (
+	simpleafInfoStatePath = "simpleaf_info.json"
+	simpleafIndexWorkPath = "workdir.noindex"
+)
+
 func validateBuild(samples []Sample, config Config) []gobble.Defect {
 	var defects []gobble.Defect
 	if len(samples) == 0 {
@@ -205,6 +210,16 @@ func crossRolePathDefects(samples []Sample, config Config) []gobble.Defect {
 	owners := make(map[string]string)
 	var fileRoles []rolePath
 	var defects []gobble.Defect
+	reserve := func(unit, role, rendered string) {
+		if state, overlaps := reservedSimpleafStatePath(rendered); overlaps {
+			defects = append(defects, gobble.Defect{
+				Code:    gobble.DefectInvalidValue,
+				Unit:    unit,
+				Message: "scRNA " + role + " path overlaps reserved Simpleaf isolate state " + strconv.Quote(state),
+				Paths:   []string{rendered, state},
+			})
+		}
+	}
 	claim := func(unit, role, rendered string) bool {
 		if owner, exists := owners[rendered]; exists {
 			if owner != role {
@@ -221,6 +236,7 @@ func crossRolePathDefects(samples []Sample, config Config) []gobble.Defect {
 		return true
 	}
 	claimFile := func(unit, role, rendered string) {
+		reserve(unit, role, rendered)
 		if claim(unit, role, rendered) {
 			fileRoles = append(fileRoles, rolePath{role: role, path: rendered})
 		}
@@ -229,7 +245,7 @@ func crossRolePathDefects(samples []Sample, config Config) []gobble.Defect {
 		for _, run := range sample.Runs {
 			for _, read := range []string{run.Fastq1, run.Fastq2} {
 				if rendered, valid := renderWorkspacePath(read); valid {
-					claimFile("", "read", rendered)
+					claimFile(sample.Name, "read", rendered)
 				}
 			}
 		}
@@ -257,6 +273,7 @@ func crossRolePathDefects(samples []Sample, config Config) []gobble.Defect {
 	}
 	treeRoot, treeValid := renderTreeRoot(config.Reference.SimpleafIndex)
 	if treeValid {
+		reserve("reference.simpleaf_index", "Simpleaf index Tree", treeRoot)
 		claim("reference.simpleaf_index", "Simpleaf index Tree", treeRoot)
 		for _, file := range fileRoles {
 			if properPathOverlap(treeRoot, file.path) {
@@ -270,6 +287,7 @@ func crossRolePathDefects(samples []Sample, config Config) []gobble.Defect {
 		}
 	}
 	if resultsRoot, valid := renderDirectoryRoot(config.Results); valid {
+		reserve("results", "results", resultsRoot)
 		for _, file := range fileRoles {
 			if pathsOverlap(resultsRoot, file.path) {
 				defects = append(defects, resultsPathOverlapDefect(resultsRoot, file.role, file.path))
@@ -280,6 +298,15 @@ func crossRolePathDefects(samples []Sample, config Config) []gobble.Defect {
 		}
 	}
 	return defects
+}
+
+func reservedSimpleafStatePath(rendered string) (string, bool) {
+	for _, state := range [...]string{simpleafInfoStatePath, simpleafIndexWorkPath} {
+		if pathsOverlap(rendered, state) {
+			return state, true
+		}
+	}
+	return "", false
 }
 
 func properPathOverlap(left, right string) bool {
