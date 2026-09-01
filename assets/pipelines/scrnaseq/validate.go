@@ -5,6 +5,8 @@ import (
 
 	"github.com/HahyeonJeon/gobble"
 	"github.com/HahyeonJeon/gobble/assets/modules"
+	simpleafindex "github.com/HahyeonJeon/gobble/assets/modules/simpleaf-index"
+	simpleafquant "github.com/HahyeonJeon/gobble/assets/modules/simpleaf-quant"
 )
 
 func validateBuild(samples []Sample, config Config) []gobble.Defect {
@@ -110,12 +112,26 @@ func protectedExtra(config Config) (string, string) {
 	}{
 		{unit: "fastqc", args: config.FastQC.ExtraArgs, flags: []string{"--outdir", "--threads", "--extract"}},
 		{unit: "gffread_transcriptome", args: config.Transcriptome.ExtraArgs, flags: []string{"-F", "-w", "-g", "-o"}},
-		{unit: "simpleaf_index", args: config.SimpleafIndex.ExtraArgs, flags: []string{"--threads", "--ref-seq", "--fasta", "--gtf", "--feature-csv", "--probe-csv", "--output", "-o", "--no-piscem", "--use-selective-alignment"}},
-		{unit: "simpleaf_quant", args: config.SimpleafQuant.ExtraArgs, flags: []string{"--map-dir", "--index", "-i", "--t2g-map", "--chemistry", "-c", "--reads1", "-1", "--reads2", "-2", "--resolution", "-r", "--output", "-o", "--threads", "-t", "--anndata-out", "--knee", "--forced-cells", "--expect-cells", "--explicit-pl", "--unfiltered-pl", "-u", "--expected-ori", "-d", "--no-piscem", "--use-selective-alignment", "--aligner"}},
-		{unit: "qcatch", args: config.QCatch.ExtraArgs, flags: []string{"--input", "-i", "--output", "-o", "--chemistry", "-c", "--n_partitions", "-n", "--save_filtered_h5ad", "-s", "--export_summary_table", "-x", "--remove_doublets", "-d", "--visualize_doublets", "-vd", "--skip_umap_tsne", "-u", "--gene_id2name_file", "-g", "--valid_cell_list", "-l"}},
-		{unit: "multiqc", args: config.MultiQC.ExtraArgs, flags: []string{"--outdir", "--filename", "--no-data-dir", "--zip-data-dir"}},
 	}
 	for _, set := range sets {
+		if flag := modules.MatchProtectedExtraArg(set.args, set.flags); flag != "" {
+			return set.unit, flag
+		}
+	}
+	if flag := simpleafindex.ProtectedExtraArg(config.SimpleafIndex.ExtraArgs); flag != "" {
+		return "simpleaf_index", flag
+	}
+	if flag := simpleafquant.ProtectedExtraArg(config.SimpleafQuant.ExtraArgs); flag != "" {
+		return "simpleaf_quant", flag
+	}
+	for _, set := range []struct {
+		unit  string
+		args  []string
+		flags []string
+	}{
+		{unit: "qcatch", args: config.QCatch.ExtraArgs, flags: []string{"--input", "-i", "--output", "-o", "--chemistry", "-c", "--n_partitions", "-n", "--save_filtered_h5ad", "-s", "--export_summary_table", "-x", "--remove_doublets", "-d", "--visualize_doublets", "-vd", "--skip_umap_tsne", "-u", "--gene_id2name_file", "-g", "--valid_cell_list", "-l"}},
+		{unit: "multiqc", args: config.MultiQC.ExtraArgs, flags: []string{"--outdir", "--filename", "--no-data-dir", "--zip-data-dir"}},
+	} {
 		if flag := modules.MatchProtectedExtraArg(set.args, set.flags); flag != "" {
 			return set.unit, flag
 		}

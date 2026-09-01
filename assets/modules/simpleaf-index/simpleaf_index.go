@@ -12,6 +12,15 @@ import (
 // linux/amd64.
 const DefaultImage modules.Image = "quay.io/biocontainers/simpleaf:0.19.5--ha6fb395_0@sha256:3e2971957942246f54d8fe55b43a6dfae242a641114805f20aca147a687d73f9"
 
+var protectedExtraArgs = []string{
+	"--threads", "-t",
+	"--ref-seq", "--refseq",
+	"--fasta", "-f", "--gtf", "-g", "--gff3-format", "--rlen", "-r",
+	"--dedup", "--spliced", "--unspliced", "--feature-csv", "--probe-csv",
+	"--output", "-o",
+	"--no-piscem", "--use-piscem", "--sparse", "-p", "--use-selective-alignment",
+}
+
 // Options controls one transcript-reference Simpleaf index.
 type Options struct {
 	modules.Options
@@ -20,6 +29,13 @@ type Options struct {
 
 // Ports contains the complete produced Simpleaf index directory Tree.
 type Ports struct{ Index gobble.Handle }
+
+// ProtectedExtraArg returns the first Simpleaf index option that competes with
+// the module-owned direct-reference inputs, output, resources, or mapper route.
+// It follows the pinned Simpleaf 0.19.5 IndexOpts aliases.
+func ProtectedExtraArg(extraArgs []string) string {
+	return modules.MatchProtectedExtraArg(extraArgs, protectedExtraArgs)
+}
 
 // Add records Simpleaf path setup and one index subcommand. The path setup is
 // required by the benchmark image and does not select another graph stage.
@@ -37,13 +53,13 @@ func Add(parent modules.Parent, transcriptFASTA gobble.Handle, options Options) 
 	if resources.CPU == 0 && resources.Memory == "" {
 		resources = gobble.Resources{CPU: 4, Memory: "8g"}
 	}
-	if err := modules.RejectExtraArgPrefixes(unit, options.ExtraArgs, []string{"--threads", "--ref-seq", "--fasta", "--gtf", "--feature-csv", "--probe-csv", "--output", "-o", "--no-piscem", "--use-selective-alignment"}); err != nil {
+	if err := modules.RejectExtraArgPrefixes(unit, options.ExtraArgs, protectedExtraArgs); err != nil {
 		return Ports{}, err
 	}
 	command := []string{"simpleaf", "index", "--threads", strconv.Itoa(modules.ThreadCount(resources.CPU)), "--ref-seq", transcriptPath, "--output", outDir.String()}
 	base := options.Options
 	base.Resources = resources
-	command, image, resources, err := modules.ResolveOptions(unit, base, DefaultImage, resources, command, []string{"--threads", "--ref-seq", "--output"})
+	command, image, resources, err := modules.ResolveOptions(unit, base, DefaultImage, resources, command, protectedExtraArgs)
 	if err != nil {
 		return Ports{}, err
 	}

@@ -332,20 +332,89 @@ func TestUnsupportedProtocolsIncompleteReferenceAndProtectedAliasesFailClosed(t 
 	}
 }
 
-func TestBuildRejectsSimpleafQuantProtocolAndTypedOptionAliases(t *testing.T) {
+func TestBuildRejectsEverySimpleafIndexOwnedOptionAlias(t *testing.T) {
 	tests := []struct {
 		name  string
 		extra string
 	}{
+		{name: "threads long", extra: "--threads=1"},
+		{name: "threads short", extra: "-t1"},
+		{name: "direct reference long", extra: "--ref-seq=other.fa"},
+		{name: "direct reference long alias", extra: "--refseq=other.fa"},
+		{name: "FASTA long", extra: "--fasta=other.fa"},
+		{name: "FASTA short", extra: "-fother.fa"},
+		{name: "GTF long", extra: "--gtf=other.gtf"},
+		{name: "GTF short", extra: "-gother.gtf"},
+		{name: "GFF3 format", extra: "--gff3-format"},
+		{name: "read length long", extra: "--rlen=100"},
+		{name: "read length short", extra: "-r100"},
+		{name: "deduplicate", extra: "--dedup"},
+		{name: "spliced sequence", extra: "--spliced=other.fa"},
+		{name: "unspliced sequence", extra: "--unspliced=other.fa"},
+		{name: "feature CSV", extra: "--feature-csv=features.csv"},
+		{name: "probe CSV", extra: "--probe-csv=probes.csv"},
+		{name: "output long", extra: "--output=elsewhere"},
+		{name: "output short", extra: "-oelsewhere"},
+		{name: "disable piscem", extra: "--no-piscem"},
+		{name: "select piscem", extra: "--use-piscem"},
+		{name: "sparse salmon index long", extra: "--sparse"},
+		{name: "sparse salmon index short", extra: "-p"},
+		{name: "selective alignment route", extra: "--use-selective-alignment"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			config := scrnaseq.DefaultConfig()
+			config.SimpleafIndex.ExtraArgs = []string{test.extra}
+			graph, err := gobble.Compose(scrnaseq.Build(loadSamples(t), config))
+			if graph != nil {
+				t.Fatalf("Compose() with ExtraArgs %q returned a graph, want nil", test.extra)
+			}
+			requireDefect(t, err, gobble.DefectInvalidValue, "simpleaf_index")
+		})
+	}
+}
+
+func TestBuildRejectsEverySimpleafQuantOwnedOptionAlias(t *testing.T) {
+	tests := []struct {
+		name  string
+		extra string
+	}{
+		{name: "mapped directory", extra: "--map-dir=other"},
+		{name: "index long", extra: "--index=other"},
+		{name: "index short", extra: "-iother"},
+		{name: "transcript relation long", extra: "--t2g-map=other.tsv"},
+		{name: "transcript relation short", extra: "-mother.tsv"},
+		{name: "chemistry long", extra: "--chemistry=10xv4-3p"},
+		{name: "chemistry short", extra: "-c10xv4-3p"},
+		{name: "read one long", extra: "--reads1=other.fastq.gz"},
+		{name: "read one short", extra: "-1other.fastq.gz"},
+		{name: "read two long", extra: "--reads2=other.fastq.gz"},
+		{name: "read two short", extra: "-2other.fastq.gz"},
+		{name: "resolution long", extra: "--resolution=parsimony"},
+		{name: "resolution short", extra: "-rparsimony"},
+		{name: "output long", extra: "--output=elsewhere"},
+		{name: "output short", extra: "-oelsewhere"},
+		{name: "threads long", extra: "--threads=1"},
+		{name: "threads short", extra: "-t1"},
+		{name: "anndata output", extra: "--anndata-out"},
+		{name: "knee filtering long", extra: "--knee"},
+		{name: "knee filtering short", extra: "-k"},
+		{name: "forced cells long", extra: "--forced-cells=100"},
+		{name: "forced cells short", extra: "-f100"},
+		{name: "explicit permit list long", extra: "--explicit-pl=other.txt"},
+		{name: "explicit permit list short", extra: "-xother.txt"},
+		{name: "expected cells long", extra: "--expect-cells=100"},
+		{name: "expected cells short", extra: "-e100"},
+		{name: "unfiltered permit list long", extra: "--unfiltered-pl=other.txt"},
+		{name: "unfiltered permit list short", extra: "-uother.txt"},
 		{name: "expected orientation long", extra: "--expected-ori=both"},
-		{name: "expected orientation short attached", extra: "-dboth"},
-		{name: "index short attached", extra: "-iother"},
-		{name: "chemistry short attached", extra: "-c10xv4-3p"},
-		{name: "read one short attached", extra: "-1other.fastq.gz"},
-		{name: "read two short attached", extra: "-2other.fastq.gz"},
-		{name: "resolution short attached", extra: "-rparsimony"},
-		{name: "threads short attached", extra: "-t1"},
-		{name: "permit list short attached", extra: "-uother.txt"},
+		{name: "expected orientation short", extra: "-dboth"},
+		{name: "minimum reads", extra: "--min-reads=1"},
+		{name: "disable piscem", extra: "--no-piscem"},
+		{name: "select piscem", extra: "--use-piscem"},
+		{name: "selective alignment long", extra: "--use-selective-alignment"},
+		{name: "selective alignment short", extra: "-s"},
+		{name: "generic aligner route", extra: "--aligner=star"},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -353,7 +422,7 @@ func TestBuildRejectsSimpleafQuantProtocolAndTypedOptionAliases(t *testing.T) {
 			config.SimpleafQuant.ExtraArgs = []string{test.extra}
 			graph, err := gobble.Compose(scrnaseq.Build(loadSamples(t), config))
 			if graph != nil {
-				t.Fatalf("Compose() graph = %v, want nil", graph)
+				t.Fatalf("Compose() with ExtraArgs %q returned a graph, want nil", test.extra)
 			}
 			requireDefect(t, err, gobble.DefectInvalidValue, "simpleaf_quant")
 		})

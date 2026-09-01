@@ -12,6 +12,17 @@ import (
 // linux/amd64.
 const DefaultImage modules.Image = "quay.io/biocontainers/simpleaf:0.19.5--ha6fb395_0@sha256:3e2971957942246f54d8fe55b43a6dfae242a641114805f20aca147a687d73f9"
 
+var protectedExtraArgs = []string{
+	"--map-dir", "--index", "-i",
+	"--t2g-map", "-m", "--chemistry", "-c",
+	"--reads1", "-1", "--reads2", "-2",
+	"--resolution", "-r", "--output", "-o", "--threads", "-t", "--anndata-out",
+	"--knee", "-k", "--forced-cells", "-f", "--expect-cells", "-e",
+	"--explicit-pl", "-x", "--unfiltered-pl", "-u", "--min-reads",
+	"--expected-ori", "-d",
+	"--no-piscem", "--use-piscem", "--use-selective-alignment", "-s", "--aligner",
+}
+
 // Options controls the typed Simpleaf chemistry, UMI resolution, output root,
 // and command policy. Cell filtering is fixed to an unfiltered permit list so
 // QCatch remains the selected filter owner.
@@ -26,6 +37,13 @@ type Options struct {
 type Ports struct {
 	Map   gobble.Handle
 	Quant gobble.Handle
+}
+
+// ProtectedExtraArg returns the first Simpleaf quant option that competes with
+// module-owned inputs, output, resources, permit-list policy, or mapper route.
+// It follows the pinned Simpleaf 0.19.5 MapQuantOpts aliases.
+func ProtectedExtraArg(extraArgs []string) string {
+	return modules.MatchProtectedExtraArg(extraArgs, protectedExtraArgs)
 }
 
 // Add records one Simpleaf quant command over a complete index Tree and paired
@@ -62,8 +80,7 @@ func Add(parent modules.Parent, index, t2g, whitelist, read1, read2 gobble.Handl
 	if resources.CPU == 0 && resources.Memory == "" {
 		resources = gobble.Resources{CPU: 4, Memory: "8g"}
 	}
-	protected := []string{"--map-dir", "--index", "-i", "--t2g-map", "--chemistry", "-c", "--reads1", "-1", "--reads2", "-2", "--resolution", "-r", "--output", "-o", "--threads", "-t", "--anndata-out", "--knee", "--forced-cells", "--expect-cells", "--explicit-pl", "--unfiltered-pl", "-u", "--expected-ori", "-d", "--no-piscem", "--use-selective-alignment", "--aligner"}
-	if err := modules.RejectExtraArgPrefixes(unit, options.ExtraArgs, protected); err != nil {
+	if err := modules.RejectExtraArgPrefixes(unit, options.ExtraArgs, protectedExtraArgs); err != nil {
 		return Ports{}, err
 	}
 	command := []string{
@@ -81,7 +98,7 @@ func Add(parent modules.Parent, index, t2g, whitelist, read1, read2 gobble.Handl
 	}
 	base := options.Options
 	base.Resources = resources
-	command, image, resources, err := modules.ResolveOptions(unit, base, DefaultImage, resources, command, protected)
+	command, image, resources, err := modules.ResolveOptions(unit, base, DefaultImage, resources, command, protectedExtraArgs)
 	if err != nil {
 		return Ports{}, err
 	}

@@ -31,9 +31,12 @@ product. There is no earlier scRNA workspace to resume or migrate.
   filesystem content, current directory, or network location. Invalid runs,
   protocols, reference forms, Trees, QCatch combinations, publication choices,
   and protected long, abbreviated, attached, or short aliases are structured
-  compose defects. Simpleaf's expected-orientation option and every documented
-  short alias for typed chemistry, index, reads, resolution, threads, and permit
-  list are protected.
+  compose defects. One module-owned policy derived from Simpleaf 0.19.5
+  `IndexOpts` and `MapQuantOpts` at commit
+  `935c013ff6123cc307791501dca86b92b1f6dd16` protects every documented
+  spelling that competes with typed direct-reference inputs, quantification
+  inputs, outputs, resources, permit-list filtering, or the selected Piscem
+  route. Standalone adders and pipeline validation use the same policy.
 - `Pipeline` is only the process-exclusive CLI adapter. It loads the injected
   samplesheet path and delegates to `Build` with fresh defaults. `cmd/gobble`
   remains asset-agnostic.
