@@ -37,11 +37,14 @@ product. There is no earlier scRNA workspace to resume or migrate.
 ## Selected path and complete artifacts
 
 Every original mate receives raw FastQC. Repeated paired runs are consolidated
-mate by mate. Samples expand at compose time. Simpleaf maps and quantifies each
-sample with the explicit protocol, complete index `Tree`, transcript-to-gene
-file, whitelist, and UMI resolution. It emits separate complete map and
-quantification `Tree` artifacts. QCatch consumes the complete quantification
-`Tree` and emits its HTML report, metrics table, and separately filtered h5ad.
+mate by mate with Gobble's pinned 2026-08-30 `cat_fastq` image tuple. Its bytes
+were previously recorded for nf-core/rnaseq 3.26.0; it is not an
+nf-core/scrnaseq 4.2.0 module or image claim. Samples expand at compose time.
+Simpleaf maps and quantifies each sample with the explicit protocol, complete
+index `Tree`, transcript-to-gene file, whitelist, and UMI resolution. It emits
+separate complete map and quantification `Tree` artifacts. QCatch consumes the
+complete quantification `Tree` and emits its HTML report, metrics table, and
+separately filtered h5ad.
 The raw Simpleaf matrix is converted independently to a provenance-named h5ad,
 then to Seurat and SingleCellExperiment RDS files. Strict fan-in over every
 sample raw h5ad creates `combined_raw_matrix.h5ad` with sample identity.
@@ -65,13 +68,14 @@ report. Stop, failure, Inspect, Release, and Resume use the shared engine
 contract; this product adds no retry, fallback, repair, cleanup, or migration
 verb.
 
-Live fixture evidence fetches and verifies the nine exact official bytes,
-stages them as ordinary product inputs, validates command-specific argv for
-every selected stage, and re-opens that stage's exact staged-byte origins. The
-hermetic output double proves only engine occupancy, complete Tree publication,
-and lifecycle state; its placeholder bytes are not selected-command evidence.
-This path does not prove third-party scientific output parity or registry
-availability.
+Live fixture evidence fetches and verifies the nine exact official bytes and
+stages them as ordinary product inputs. An independent frozen oracle validates
+each selected task's complete command-specific argv and traces every declared
+input bind to those staged SHA-256 identities. The hermetic output double then
+proves only engine occupancy, complete Tree publication, and lifecycle state;
+its reads and placeholder bytes are not selected-command consumption evidence.
+This path does not execute the selected third-party commands or prove their
+scientific output parity or registry availability.
 
 Gobble does not claim that a barcode is a valid cell, that expected-cell
 metadata is correct, that QCatch filtering is suitable, or that any raw,

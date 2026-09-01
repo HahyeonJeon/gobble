@@ -1,18 +1,26 @@
 package scrnaseqscenario
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
-	"os"
 	"path"
-	"path/filepath"
 	"slices"
 	"sort"
 	"strings"
-	"testing"
 
-	"github.com/HahyeonJeon/gobble/assets/modules"
-	"github.com/HahyeonJeon/gobble/assets/pipelines/scrnaseq"
 	pc "github.com/HahyeonJeon/gobble/tests/internal/plancheck"
+)
+
+// These frozen SHA-256 values are independent script oracles. They are copied
+// from the accepted command contracts, not derived from a task under test.
+const (
+	gtfGeneFilterScriptSHA256 = "88b6fa5123522f87beba6f5c6cf5a27139b1cc957ae05a54560af2d7f72c0989"
+	gtfToT2GScriptSHA256      = "272483d07441b18b2ea722178dacafc84341837033c6cc654cb3b7ed7d1940b4"
+	matrixToH5ADScriptSHA256  = "3d08c095ef77e94447c3192892dd7ffcd8aaf768ee73b617e6dca237f4a6976e"
+	annDataRScriptSHA256      = "7420966f974fda822acf694c07e79b5327487d2a063a435a48c3f559c01a3879"
+	h5adConcatScriptSHA256    = "61f98bc56db08091affe27f0106b2df61f7fbd2c452d434c6a7845260a3121a1"
 )
 
 // OfficialInput identifies one exact staged source byte used by command
@@ -23,188 +31,171 @@ type OfficialInput struct {
 	SHA256 string
 }
 
-// OperationEvidence records the actual Docker argv and the exact staged source
-// bytes re-opened while proving one selected command contract. It is separate
-// from the placeholder outputs used only for engine occupancy evidence.
-type OperationEvidence struct {
-	TaskName     string
-	Argv         []string
-	StagedInputs []ConsumedInput
+// BoundInputEvidence records one selected task input and the exact official
+// staged bytes at the roots of its declared bind lineage. Paths are the paths
+// visible to the selected command. It makes no claim that the hermetic output
+// double executed or substituted for that command.
+type BoundInputEvidence struct {
+	Name           string
+	Paths          []string
+	OfficialInputs []OfficialInput
 }
 
-type officialEvidence struct {
-	workspace  string
-	inputs     map[string]OfficialInput
-	origins    map[string][]ConsumedInput
-	operations map[string]OperationEvidence
+// CommandEvidence records one independently validated complete argv and every
+// declared input bind's exact official-byte lineage.
+type CommandEvidence struct {
+	TaskName    string
+	Argv        []string
+	BoundInputs []BoundInputEvidence
 }
 
-// NewRuntimeWithOfficialInputs composes the scRNA graph over already staged
-// official inputs and enables command-specific argv and source-byte evidence.
-func NewRuntimeWithOfficialInputs(t *testing.T, config scrnaseq.Config, workspace string, inputs []OfficialInput) *Runtime {
-	t.Helper()
-	r := newRuntime(t, config, workspace, false)
-	if err := r.docker.enableOfficialEvidence(workspace, inputs); err != nil {
-		t.Fatalf("enable official scRNA evidence: %v", err)
-	}
-	return r
+type officialPlan struct {
+	Tasks []pc.Task `json:"tasks"`
+	DAG   struct {
+		Edges []struct {
+			From string `json:"from"`
+			To   string `json:"to"`
+		} `json:"edges"`
+	} `json:"dag"`
 }
 
-// OperationEvidence returns a deep copy keyed by task id.
-func (r *Runtime) OperationEvidence() map[string]OperationEvidence {
-	return r.docker.operationEvidence()
-}
-
-func (f *fakeDocker) enableOfficialEvidence(workspace string, inputs []OfficialInput) error {
+// ProveOfficialBindings independently validates the plan's command-specific
+// argv and traces every declared task input bind to exact staged official
+// SHA-256 bytes. It reads only the nine staged roots. Produced placeholder
+// bytes and the hermetic Docker double are outside this evidence boundary.
+func ProveOfficialBindings(workspace string, rawPlan []byte, inputs []OfficialInput) (map[string]CommandEvidence, error) {
 	if len(inputs) == 0 {
-		return fmt.Errorf("official scRNA evidence requires staged inputs")
+		return nil, fmt.Errorf("official scRNA evidence requires staged inputs")
 	}
-	official := &officialEvidence{
-		workspace:  workspace,
-		inputs:     make(map[string]OfficialInput, len(inputs)),
-		origins:    make(map[string][]ConsumedInput),
-		operations: make(map[string]OperationEvidence),
+	var plan officialPlan
+	if err := json.Unmarshal(rawPlan, &plan); err != nil {
+		return nil, fmt.Errorf("decode official scRNA plan: %w", err)
 	}
+	byPath := make(map[string]OfficialInput, len(inputs))
 	names := make(map[string]bool, len(inputs))
 	for _, input := range inputs {
-		if input.Name == "" || input.Path == "" || len(input.SHA256) != 64 || names[input.Name] || official.inputs[input.Path].Name != "" {
-			return fmt.Errorf("invalid or duplicate official scRNA input: %+v", input)
+		decoded, err := hex.DecodeString(input.SHA256)
+		if input.Name == "" || input.Path == "" || err != nil || len(decoded) != sha256.Size || hex.EncodeToString(decoded) != input.SHA256 || names[input.Name] || byPath[input.Path].Name != "" {
+			return nil, fmt.Errorf("invalid or duplicate official scRNA input: %+v", input)
 		}
 		record, err := consumeFile(workspace, input.Path)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if record.SHA256 != input.SHA256 {
-			return fmt.Errorf("official scRNA input %s at %s sha256 = %s, want %s", input.Name, input.Path, record.SHA256, input.SHA256)
+			return nil, fmt.Errorf("official scRNA input %s at %s sha256 = %s, want %s", input.Name, input.Path, record.SHA256, input.SHA256)
 		}
 		names[input.Name] = true
-		official.inputs[input.Path] = input
+		byPath[input.Path] = input
 	}
-	f.mu.Lock()
-	f.official = official
-	f.mu.Unlock()
-	return nil
-}
 
-func (f *fakeDocker) operationEvidence() map[string]OperationEvidence {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-	if f.official == nil {
-		return nil
+	tasks := make(map[string]pc.Task, len(plan.Tasks))
+	for _, task := range plan.Tasks {
+		if task.ID == "" || tasks[task.ID].ID != "" {
+			return nil, fmt.Errorf("invalid or duplicate selected task id %q", task.ID)
+		}
+		tasks[task.ID] = task
 	}
-	out := make(map[string]OperationEvidence, len(f.official.operations))
-	for id, operation := range f.official.operations {
-		operation.Argv = append([]string(nil), operation.Argv...)
-		operation.StagedInputs = append([]ConsumedInput(nil), operation.StagedInputs...)
-		out[id] = operation
+	incoming := make(map[string][]string)
+	for _, edge := range plan.DAG.Edges {
+		from := planTaskID(edge.From, tasks)
+		to := planTaskID(edge.To, tasks)
+		if from == "" || to == "" {
+			return nil, fmt.Errorf("invalid selected task edge %q -> %q", edge.From, edge.To)
+		}
+		port := strings.TrimPrefix(edge.To, to+".")
+		incoming[to+"\x00"+port] = append(incoming[to+"\x00"+port], from)
 	}
-	return out
-}
 
-func (f *fakeDocker) proveOfficialTask(mount string, task pc.Task, actualArgv []string) ([]ConsumedInput, error) {
-	paths, err := commandInputPaths(task, actualArgv)
-	if err != nil {
-		return nil, fmt.Errorf("prove official argv for %s (%s): %w", task.ID, task.Name, err)
+	directUse := make(map[string]bool, len(inputs))
+	memo := make(map[string]map[string]OfficialInput, len(tasks))
+	active := make(map[string]bool, len(tasks))
+	var taskOrigins func(string) (map[string]OfficialInput, error)
+	taskOrigins = func(taskID string) (map[string]OfficialInput, error) {
+		if origins := memo[taskID]; origins != nil {
+			return origins, nil
+		}
+		if active[taskID] {
+			return nil, fmt.Errorf("selected task bind lineage contains cycle at %s", taskID)
+		}
+		active[taskID] = true
+		defer delete(active, taskID)
+		task := tasks[taskID]
+		origins := make(map[string]OfficialInput)
+		for _, input := range task.Inputs {
+			for _, source := range ioSourcePaths(input) {
+				if official := byPath[source]; official.Name != "" {
+					origins[official.Path] = official
+					directUse[official.Path] = true
+				}
+			}
+			for _, producer := range incoming[taskID+"\x00"+input.Name] {
+				upstream, err := taskOrigins(producer)
+				if err != nil {
+					return nil, err
+				}
+				for source, official := range upstream {
+					origins[source] = official
+				}
+			}
+		}
+		if len(origins) == 0 {
+			return nil, fmt.Errorf("selected task %s (%s) has no exact official staged-byte bind origin", task.ID, task.Name)
+		}
+		memo[taskID] = origins
+		return origins, nil
 	}
-	declared := make(map[string]bool)
-	for _, input := range task.Inputs {
-		for _, inputPath := range ioPaths(input) {
-			declared[inputPath] = true
+
+	evidence := make(map[string]CommandEvidence, len(plan.Tasks))
+	for _, task := range plan.Tasks {
+		if _, err := taskOrigins(task.ID); err != nil {
+			return nil, err
 		}
-	}
-	origins := make(map[string]ConsumedInput)
-	for _, inputPath := range paths {
-		if !declared[inputPath] {
-			return nil, fmt.Errorf("%s command operand %s is not a declared input", task.ID, inputPath)
-		}
-		if err := consumeOperationPath(mount, inputPath); err != nil {
-			return nil, fmt.Errorf("%s consume command operand %s: %w", task.ID, inputPath, err)
-		}
-		inputOrigins := f.officialOrigins(inputPath)
-		if len(inputOrigins) == 0 {
-			return nil, fmt.Errorf("%s command operand %s has no exact official staged-byte origin", task.ID, inputPath)
-		}
-		for _, origin := range inputOrigins {
-			origins[origin.Path] = origin
-		}
-	}
-	verified := make([]ConsumedInput, 0, len(origins))
-	for _, origin := range origins {
-		record, err := consumeFile(f.official.workspace, origin.Path)
+		commandPaths, err := commandInputPaths(task)
 		if err != nil {
-			return nil, fmt.Errorf("%s re-open official staged input %s: %w", task.ID, origin.Path, err)
+			return nil, fmt.Errorf("prove official argv for %s (%s): %w", task.ID, task.Name, err)
 		}
-		if record.SHA256 != origin.SHA256 {
-			return nil, fmt.Errorf("%s official staged input %s sha256 = %s, want %s", task.ID, origin.Path, record.SHA256, origin.SHA256)
+		declaredPaths := allIOPaths(task.Inputs)
+		if !equalPathSet(commandPaths, declaredPaths) {
+			return nil, fmt.Errorf("%s command-bound paths = %q, want every declared input path %q", task.ID, commandPaths, declaredPaths)
 		}
-		verified = append(verified, record)
+		bound := make([]BoundInputEvidence, 0, len(task.Inputs))
+		for _, input := range task.Inputs {
+			origins := make(map[string]OfficialInput)
+			for _, source := range ioSourcePaths(input) {
+				if official := byPath[source]; official.Name != "" {
+					origins[official.Path] = official
+				}
+			}
+			for _, producer := range incoming[task.ID+"\x00"+input.Name] {
+				upstream, err := taskOrigins(producer)
+				if err != nil {
+					return nil, err
+				}
+				for source, official := range upstream {
+					origins[source] = official
+				}
+			}
+			if len(origins) == 0 {
+				return nil, fmt.Errorf("selected task %s input bind %s has no exact official staged-byte origin", task.ID, input.Name)
+			}
+			bound = append(bound, BoundInputEvidence{
+				Name:           input.Name,
+				Paths:          ioPaths(input),
+				OfficialInputs: sortedOfficialInputs(origins),
+			})
+		}
+		evidence[task.ID] = CommandEvidence{TaskName: task.Name, Argv: taskArgv(task), BoundInputs: bound}
 	}
-	sort.Slice(verified, func(i, j int) bool { return verified[i].Path < verified[j].Path })
-	return verified, nil
+	for _, input := range inputs {
+		if !directUse[input.Path] {
+			return nil, fmt.Errorf("official staged input %s at %s has no direct selected-task bind", input.Name, input.Path)
+		}
+	}
+	return evidence, nil
 }
 
-func (f *fakeDocker) officialOrigins(inputPath string) []ConsumedInput {
-	if input := f.official.inputs[inputPath]; input.Name != "" {
-		return []ConsumedInput{{Path: input.Path, SHA256: input.SHA256}}
-	}
-	return f.official.origins[inputPath]
-}
-
-func (f *fakeDocker) recordOfficialTask(task pc.Task, actualArgv []string, origins []ConsumedInput) {
-	record := OperationEvidence{
-		TaskName:     task.Name,
-		Argv:         append([]string(nil), actualArgv...),
-		StagedInputs: append([]ConsumedInput(nil), origins...),
-	}
-	f.official.operations[task.ID] = record
-	for _, output := range task.Outputs {
-		for _, outputPath := range ioPaths(output) {
-			f.official.origins[outputPath] = append([]ConsumedInput(nil), origins...)
-		}
-	}
-}
-
-func consumeOperationPath(mount, rel string) error {
-	fullPath := filepath.Join(mount, filepath.FromSlash(rel))
-	info, err := os.Stat(fullPath)
-	if err != nil {
-		return err
-	}
-	if !info.IsDir() {
-		_, err = consumeFile(mount, rel)
-		return err
-	}
-	files := 0
-	err = filepath.WalkDir(fullPath, func(filePath string, entry os.DirEntry, walkErr error) error {
-		if walkErr != nil {
-			return walkErr
-		}
-		if !entry.Type().IsRegular() {
-			return nil
-		}
-		relPath, err := filepath.Rel(mount, filePath)
-		if err != nil {
-			return err
-		}
-		if _, err := consumeFile(mount, filepath.ToSlash(relPath)); err != nil {
-			return err
-		}
-		files++
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-	if files == 0 {
-		return fmt.Errorf("directory contains no regular files")
-	}
-	return nil
-}
-
-func commandInputPaths(task pc.Task, actualArgv []string) ([]string, error) {
-	if !slices.Equal(actualArgv, taskArgv(task)) {
-		return nil, fmt.Errorf("Docker argv = %q, want planned argv %q", actualArgv, taskArgv(task))
-	}
+func commandInputPaths(task pc.Task) ([]string, error) {
 	input := func(name string) (string, error) { return namedIOPath(task.Inputs, name) }
 	output := func(name string) (string, error) { return namedIOPath(task.Outputs, name) }
 	switch task.Name {
@@ -214,7 +205,8 @@ func commandInputPaths(task pc.Task, actualArgv []string) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		if err := exactScript(task, modules.ShellRedirect(append([]string{"cat"}, inputs...), out)); err != nil {
+		want := frozenShellCommand(append([]string{"cat"}, inputs...)) + " > " + frozenShellQuote(out)
+		if err := exactScript(task, want); err != nil {
 			return nil, err
 		}
 		return inputs, nil
@@ -248,7 +240,7 @@ func commandInputPaths(task pc.Task, actualArgv []string) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		if err := embeddedCommand(task, "python", "-c", []string{"FASTA contains no sequence names", "GTF has no annotations on reference sequences"}, fasta, gtf, filtered); err != nil {
+		if err := embeddedCommand(task, "python", "-c", gtfGeneFilterScriptSHA256, fasta, gtf, filtered); err != nil {
 			return nil, err
 		}
 		return []string{fasta, gtf}, nil
@@ -275,7 +267,7 @@ func commandInputPaths(task pc.Task, actualArgv []string) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		if err := embeddedCommand(task, "python", "-c", []string{"transcript_id", "GTF contains no complete transcript-to-gene relations"}, gtf, t2g); err != nil {
+		if err := embeddedCommand(task, "python", "-c", gtfToT2GScriptSHA256, gtf, t2g); err != nil {
 			return nil, err
 		}
 		return []string{gtf}, nil
@@ -292,7 +284,7 @@ func commandInputPaths(task pc.Task, actualArgv []string) ([]string, error) {
 			return nil, fmt.Errorf("Simpleaf index Tree = %q, want index member root", index)
 		}
 		command := []string{"simpleaf", "index", "--threads", "4", "--ref-seq", transcripts, "--output", path.Dir(index)}
-		if err := exactScript(task, "'simpleaf' 'set-paths'\n"+modules.ShellCommand(command)); err != nil {
+		if err := exactScript(task, "'simpleaf' 'set-paths'\n"+frozenShellCommand(command)); err != nil {
 			return nil, err
 		}
 		return []string{transcripts}, nil
@@ -333,7 +325,7 @@ func commandInputPaths(task pc.Task, actualArgv []string) ([]string, error) {
 			return nil, err
 		}
 		command := []string{"simpleaf", "quant", "--index", index, "--t2g-map", t2g, "--chemistry", "10xv2", "--reads1", read1, "--reads2", read2, "--resolution", "cr-like", "--output", outDir, "--threads", "4", "--anndata-out", "--unfiltered-pl", whitelist}
-		if err := exactScript(task, "'simpleaf' 'set-paths'\n"+modules.ShellCommand(command)); err != nil {
+		if err := exactScript(task, "'simpleaf' 'set-paths'\n"+frozenShellCommand(command)); err != nil {
 			return nil, err
 		}
 		return []string{index, t2g, whitelist, read1, read2}, nil
@@ -375,7 +367,7 @@ func commandInputPaths(task pc.Task, actualArgv []string) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		if err := embeddedCommand(task, "python", "-c", []string{"source + \"/alevin/quants.h5ad\"", "adata.write_h5ad"}, quant, h5ad, taskParam(task, "sample"), taskParam(task, "expected_cells"), taskParam(task, "seq_center")); err != nil {
+		if err := embeddedCommand(task, "python", "-c", matrixToH5ADScriptSHA256, quant, h5ad, taskParam(task, "sample"), taskParam(task, "expected_cells"), taskParam(task, "seq_center")); err != nil {
 			return nil, err
 		}
 		return []string{quant}, nil
@@ -392,7 +384,7 @@ func commandInputPaths(task pc.Task, actualArgv []string) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		if err := embeddedCommand(task, "Rscript", "-e", []string{"read_h5ad", "as_Seurat", "as_SingleCellExperiment"}, h5ad, seurat, sce); err != nil {
+		if err := embeddedCommand(task, "Rscript", "-e", annDataRScriptSHA256, h5ad, seurat, sce); err != nil {
 			return nil, err
 		}
 		return []string{h5ad}, nil
@@ -406,7 +398,7 @@ func commandInputPaths(task pc.Task, actualArgv []string) ([]string, error) {
 		for _, inputPath := range inputs {
 			operands = append(operands, path.Base(path.Dir(inputPath)), inputPath)
 		}
-		if err := embeddedCommand(task, "python", "-c", []string{"ad.concat", "combined.write_h5ad"}, operands...); err != nil {
+		if err := embeddedCommand(task, "python", "-c", h5adConcatScriptSHA256, operands...); err != nil {
 			return nil, err
 		}
 		return inputs, nil
@@ -443,26 +435,64 @@ func exactCommand(task pc.Task, want []string) error {
 }
 
 func exactScript(task pc.Task, want string) error {
-	if task.Script != want {
-		return fmt.Errorf("command = %q script = %q, want exact script %q", task.Command, task.Script, want)
+	wantCommand := []string{"sh", "-c", "set -eu\n" + want}
+	if !slices.Equal(task.Command, wantCommand) || task.Script != want {
+		return fmt.Errorf("command = %q script = %q, want command %q and exact script %q", task.Command, task.Script, wantCommand, want)
 	}
 	return nil
 }
 
-func embeddedCommand(task pc.Task, executable, flag string, markers []string, operands ...string) error {
+func frozenShellCommand(command []string) string {
+	quoted := make([]string, len(command))
+	for i, token := range command {
+		quoted[i] = frozenShellQuote(token)
+	}
+	return strings.Join(quoted, " ")
+}
+
+func frozenShellQuote(token string) string {
+	return "'" + strings.ReplaceAll(token, "'", "'\"'\"'") + "'"
+}
+
+func embeddedCommand(task pc.Task, executable, flag, wantScriptSHA256 string, operands ...string) error {
 	if len(task.Command) != len(operands)+3 || task.Command[0] != executable || task.Command[1] != flag || task.Script != "" {
 		return fmt.Errorf("embedded command = %q script = %q", task.Command, task.Script)
 	}
-	for _, marker := range markers {
-		if !strings.Contains(task.Command[2], marker) {
-			return fmt.Errorf("embedded %s command omits contract marker %q", executable, marker)
-		}
+	gotScriptSHA256 := fmt.Sprintf("%x", sha256.Sum256([]byte(task.Command[2])))
+	if gotScriptSHA256 != wantScriptSHA256 {
+		return fmt.Errorf("embedded %s script sha256 = %s, want frozen oracle %s", executable, gotScriptSHA256, wantScriptSHA256)
 	}
-	want := append([]string{executable, flag, task.Command[2]}, operands...)
-	if !slices.Equal(task.Command, want) {
-		return fmt.Errorf("embedded command = %q, want %q", task.Command, want)
+	if !slices.Equal(task.Command[3:], operands) {
+		return fmt.Errorf("embedded %s operands = %q, want %q", executable, task.Command[3:], operands)
 	}
 	return nil
+}
+
+func planTaskID(endpoint string, tasks map[string]pc.Task) string {
+	matched := ""
+	for id := range tasks {
+		if len(id) > len(matched) && strings.HasPrefix(endpoint, id+".") {
+			matched = id
+		}
+	}
+	return matched
+}
+
+func equalPathSet(left, right []string) bool {
+	left = append([]string(nil), left...)
+	right = append([]string(nil), right...)
+	sort.Strings(left)
+	sort.Strings(right)
+	return slices.Equal(left, right)
+}
+
+func sortedOfficialInputs(inputs map[string]OfficialInput) []OfficialInput {
+	out := make([]OfficialInput, 0, len(inputs))
+	for _, input := range inputs {
+		out = append(out, input)
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].Path < out[j].Path })
+	return out
 }
 
 func namedIOPath(values []pc.IO, name string) (string, error) {
@@ -493,6 +523,20 @@ func ioPaths(value pc.IO) []string {
 	}
 	if value.Source != "" {
 		return []string{value.Source}
+	}
+	paths := make([]string, 0, len(value.Members))
+	for _, member := range value.Members {
+		paths = append(paths, member.Path)
+	}
+	return paths
+}
+
+func ioSourcePaths(value pc.IO) []string {
+	if value.Source != "" {
+		return []string{value.Source}
+	}
+	if value.Path != "" {
+		return []string{value.Path}
 	}
 	paths := make([]string, 0, len(value.Members))
 	for _, member := range value.Members {

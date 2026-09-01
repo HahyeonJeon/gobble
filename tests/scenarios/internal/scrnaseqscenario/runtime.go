@@ -23,9 +23,10 @@ import (
 )
 
 // Runtime executes the pipeline-owned scRNA graph through the public
-// lifecycle. Its Docker boundary consumes declared inputs and creates declared
-// outputs deterministically, so hermetic recovery evidence needs no image pull,
-// Docker daemon, fixture download, or scientific tool substitution.
+// lifecycle. Its Docker boundary reads declared inputs only to create
+// deterministic placeholder outputs, so hermetic occupancy and recovery
+// evidence needs no image pull, Docker daemon, fixture download, or scientific
+// tool substitution. The placeholders are not selected-command evidence.
 type Runtime struct {
 	t           *testing.T
 	graph       *gobble.Graph
@@ -47,6 +48,14 @@ type ConsumedInput struct {
 func NewRuntime(t *testing.T, config scrnaseq.Config) *Runtime {
 	t.Helper()
 	return newRuntime(t, config, t.TempDir(), true)
+}
+
+// NewRuntimeWithWorkspaceInputs composes the scRNA graph over inputs already
+// staged in workspace. Its command double proves engine occupancy and
+// publication only.
+func NewRuntimeWithWorkspaceInputs(t *testing.T, config scrnaseq.Config, workspace string) *Runtime {
+	t.Helper()
+	return newRuntime(t, config, workspace, false)
 }
 
 func newRuntime(t *testing.T, config scrnaseq.Config, workspace string, stage bool) *Runtime {
@@ -192,7 +201,6 @@ type fakeDocker struct {
 	tasks      map[string][]pc.Task
 	modes      map[string]fakeMode
 	consumed   map[string][]ConsumedInput
-	official   *officialEvidence
 	containers map[string]fakeContainer
 	next       int
 }
@@ -290,12 +298,10 @@ func (f *fakeDocker) run(args []string, stdout, stderr io.Writer) (int, error) {
 		}
 	}
 	var candidates []pc.Task
-	var actualArgv []string
 	for i := 1; i < len(args); i++ {
 		argv := append([]string{entrypoint}, args[i+1:]...)
 		if tasks := f.tasks[fakeTaskKey(args[i], argv)]; len(tasks) > 0 {
 			candidates = tasks
-			actualArgv = argv
 			break
 		}
 	}
@@ -331,20 +337,9 @@ func (f *fakeDocker) run(args []string, stdout, stderr io.Writer) (int, error) {
 		container.running = true
 		f.runtime.startedOnce.Do(func() { close(f.runtime.started) })
 	default:
-		var officialInputs []ConsumedInput
-		if f.official != nil {
-			officialInputs, err = f.proveOfficialTask(mount, task, actualArgv)
-			if err != nil {
-				_, _ = io.WriteString(stderr, err.Error())
-				return 1, nil
-			}
-		}
 		if err := writeOutputs(mount, task, consumed); err != nil {
 			_, _ = io.WriteString(stderr, err.Error())
 			return 1, nil
-		}
-		if f.official != nil {
-			f.recordOfficialTask(task, actualArgv, officialInputs)
 		}
 	}
 	f.containers[id] = container

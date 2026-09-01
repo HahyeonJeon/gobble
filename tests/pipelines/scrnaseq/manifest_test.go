@@ -126,9 +126,22 @@ func TestManifestIsExactFixtureAndCommandAuthority(t *testing.T) {
 		if want := benchmarkReferences[authority.TaskName]; want != "" && authority.Reference != want {
 			t.Errorf("%s benchmark image reference = %q, want exact nf-core/scrnaseq 4.2.0 reference %q", authority.TaskName, authority.Reference, want)
 		}
+		if authority.TaskName == "cat_fastq" {
+			for _, provenance := range []string{"Gobble-owned", "2026-08-30", "nf-core/rnaseq 3.26.0", "not an nf-core/scrnaseq 4.2.0 module"} {
+				if !strings.Contains(authority.Source, provenance) {
+					t.Errorf("cat_fastq source omits %q: %s", provenance, authority.Source)
+				}
+			}
+		}
 		imagesByTask[authority.TaskName] = authority
 	}
-	raw := pc.MustPlanJSON(t, scrnaseq.Build(loadSamples(t), scrnaseq.DefaultConfig()))
+	config := scrnaseq.DefaultConfig()
+	catAuthority := imagesByTask["cat_fastq"]
+	wantCatImage := catAuthority.Reference + "@" + catAuthority.Digest
+	if got := string(config.Consolidate.Image); got != wantCatImage {
+		t.Errorf("Gobble-owned scRNA cat_fastq image = %q, want dated manifest tuple %q", got, wantCatImage)
+	}
+	raw := pc.MustPlanJSON(t, scrnaseq.Build(loadSamples(t), config))
 	seenTasks := make(map[string]bool)
 	for _, task := range pc.AllTasks(t, raw) {
 		authority, ok := imagesByTask[task.Name]

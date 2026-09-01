@@ -3,7 +3,7 @@
 package run_test
 
 import (
-	"fmt"
+	"bytes"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -17,7 +17,7 @@ import (
 	"github.com/HahyeonJeon/gobble/tests/scenarios/internal/scrnaseqscenario"
 )
 
-func TestOfficialSCRNAFixtureProvesEverySelectedCommandWithoutImages(t *testing.T) {
+func TestOfficialSCRNAFixtureProvesEverySelectedBindAndArgvWithoutImages(t *testing.T) {
 	workspace := t.TempDir()
 	_, file, _, ok := runtime.Caller(0)
 	if !ok {
@@ -32,14 +32,21 @@ func TestOfficialSCRNAFixtureProvesEverySelectedCommandWithoutImages(t *testing.
 	for _, input := range staged {
 		officialInputs = append(officialInputs, scrnaseqscenario.OfficialInput{Name: input.Pin.Name, Path: input.Destination, SHA256: input.Pin.SHA256})
 	}
-	productRuntime := scrnaseqscenario.NewRuntimeWithOfficialInputs(t, scrnaseq.DefaultConfig(), workspace, officialInputs)
-	if err := productRuntime.Run(t.Context()); err != nil {
-		t.Fatalf("Run exact official scRNA command evidence: %v\nerrors: %#v\nlogs: %#v", err, productRuntime.InspectRecords(gobble.ViewErrors), productRuntime.InspectRecords(gobble.ViewLogs))
-	}
-
-	operations := productRuntime.OperationEvidence()
 	samples, _ := scrnaseqscenario.Samples(t)
 	raw := pc.MustPlanJSON(t, scrnaseq.Build(samples, scrnaseq.DefaultConfig()))
+	commands, err := scrnaseqscenario.ProveOfficialBindings(workspace, raw, officialInputs)
+	if err != nil {
+		t.Fatalf("prove exact official scRNA binds and argv: %v", err)
+	}
+	changedScript := bytes.Replace(raw, []byte("import scanpy as sc"), []byte("import scanpy as sx"), 1)
+	if bytes.Equal(changedScript, raw) {
+		t.Fatal("official scRNA plan omits expected frozen Scanpy script token")
+	}
+	if _, err := scrnaseqscenario.ProveOfficialBindings(workspace, changedScript, officialInputs); err == nil {
+		t.Fatal("changed embedded scRNA script proof = nil, want frozen-oracle rejection")
+	} else if !strings.Contains(err.Error(), "frozen oracle") {
+		t.Fatalf("changed embedded script error = %q, want frozen-oracle rejection", err)
+	}
 	selectedCommands := map[string]bool{
 		"cat_fastq": true, "fastqc": true, "gtf_gene_filter": true,
 		"gffread_transcriptome": true, "gtf_to_t2g": true,
@@ -49,28 +56,33 @@ func TestOfficialSCRNAFixtureProvesEverySelectedCommandWithoutImages(t *testing.
 	}
 	seenCommands := make(map[string]bool, len(selectedCommands))
 	wantByPath := make(map[string]string, len(staged))
-	consumedOfficial := make(map[string]bool, len(staged))
+	boundOfficial := make(map[string]bool, len(staged))
 	for _, input := range staged {
 		wantByPath[input.Destination] = input.Pin.SHA256
 	}
 	for _, task := range pc.AllTasks(t, raw) {
-		operation, ok := operations[task.ID]
+		command, ok := commands[task.ID]
 		if !ok {
-			t.Errorf("selected command %s (%s) has no command-specific evidence", task.ID, task.Name)
+			t.Errorf("selected task %s (%s) has no bind and argv evidence", task.ID, task.Name)
 			continue
 		}
-		if operation.TaskName != task.Name || len(operation.Argv) == 0 || len(operation.StagedInputs) == 0 {
-			t.Errorf("selected command %s evidence = %+v, want exact argv and staged bytes", task.ID, operation)
+		if command.TaskName != task.Name || len(command.Argv) == 0 || len(command.BoundInputs) != len(task.Inputs) {
+			t.Errorf("selected task %s evidence = %+v, want complete argv and all %d input binds", task.ID, command, len(task.Inputs))
 		}
 		if !selectedCommands[task.Name] {
 			t.Errorf("selected command %s uses unrecognized contract %q", task.ID, task.Name)
 		}
 		seenCommands[task.Name] = true
-		for _, input := range operation.StagedInputs {
-			if want := wantByPath[input.Path]; want == "" || input.SHA256 != want {
-				t.Errorf("selected command %s staged input = %+v, want exact manifest identity", task.ID, input)
+		for i, bound := range command.BoundInputs {
+			if i >= len(task.Inputs) || bound.Name != task.Inputs[i].Name || len(bound.Paths) == 0 || len(bound.OfficialInputs) == 0 {
+				t.Errorf("selected task %s bound input %d = %+v, want named path and official origins", task.ID, i, bound)
 			}
-			consumedOfficial[input.Path] = true
+			for _, input := range bound.OfficialInputs {
+				if want := wantByPath[input.Path]; want == "" || input.SHA256 != want {
+					t.Errorf("selected task %s bind %s official identity = %+v, want exact manifest SHA-256", task.ID, bound.Name, input)
+				}
+				boundOfficial[input.Path] = true
+			}
 		}
 	}
 	for command := range selectedCommands {
@@ -79,20 +91,32 @@ func TestOfficialSCRNAFixtureProvesEverySelectedCommandWithoutImages(t *testing.
 		}
 	}
 	for _, input := range staged {
-		if !consumedOfficial[input.Destination] {
-			t.Errorf("official identity %s %s at %s was not consumed by selected command evidence", input.Pin.Name, input.Pin.SHA256, input.Destination)
+		if !boundOfficial[input.Destination] {
+			t.Errorf("official identity %s %s at %s is absent from selected task binds", input.Pin.Name, input.Pin.SHA256, input.Destination)
 		}
 	}
 	for _, endpoint := range []string{"cohort.h5ad_concat", "multiqc"} {
-		operation := operations[endpoint]
-		if len(operation.StagedInputs) != len(staged) {
-			t.Errorf("%s exact staged origins = %d, want all %d", endpoint, len(operation.StagedInputs), len(staged))
+		origins := make(map[string]bool, len(staged))
+		for _, bound := range commands[endpoint].BoundInputs {
+			for _, input := range bound.OfficialInputs {
+				origins[input.Path] = true
+			}
+		}
+		if len(origins) != len(staged) {
+			t.Errorf("%s exact staged bind origins = %d, want all %d", endpoint, len(origins), len(staged))
 		}
 	}
 
+	// Run uses a hermetic Docker double after the independent static bind and
+	// argv proof. Its outputs establish only occupancy and publication behavior.
+	productRuntime := scrnaseqscenario.NewRuntimeWithWorkspaceInputs(t, scrnaseq.DefaultConfig(), workspace)
+	if err := productRuntime.Run(t.Context()); err != nil {
+		t.Fatalf("Run exact official scRNA occupancy evidence: %v\nerrors: %#v\nlogs: %#v", err, productRuntime.InspectRecords(gobble.ViewErrors), productRuntime.InspectRecords(gobble.ViewLogs))
+	}
+
 	// These deterministic files prove engine scheduling and publication only.
-	// Selected-command proof above comes from validated argv and separately
-	// re-opened official bytes, never from placeholder contents.
+	// Selected-task proof above comes from frozen argv oracles and declared bind
+	// lineage rooted at staged official hashes, never from placeholder contents.
 	for _, rel := range []string{
 		"results/scrnaseq/samples/Sample_X/qcatch/filtered_quants.h5ad",
 		"results/scrnaseq/matrices/Sample_X/Sample_X_raw_matrix.sce.rds",
@@ -120,7 +144,6 @@ func TestOfficialSCRNACommandEvidenceRejectsChangedStagedByte(t *testing.T) {
 	for _, input := range staged {
 		officialInputs = append(officialInputs, scrnaseqscenario.OfficialInput{Name: input.Pin.Name, Path: input.Destination, SHA256: input.Pin.SHA256})
 	}
-	productRuntime := scrnaseqscenario.NewRuntimeWithOfficialInputs(t, scrnaseq.DefaultConfig(), workspace, officialInputs)
 	changed := filepath.Join(workspace, filepath.FromSlash("in/reads/Sample_Y_S1_L002_R1_001.fastq.gz"))
 	fileHandle, err := os.OpenFile(changed, os.O_APPEND|os.O_WRONLY, 0)
 	if err != nil {
@@ -133,11 +156,11 @@ func TestOfficialSCRNACommandEvidenceRejectsChangedStagedByte(t *testing.T) {
 	if err := fileHandle.Close(); err != nil {
 		t.Fatal(err)
 	}
-	if err := productRuntime.Run(t.Context()); err == nil {
-		t.Fatal("Run changed official scRNA fixture = nil, want exact-byte rejection")
-	}
-	errorsView := productRuntime.InspectRecords(gobble.ViewErrors)
-	if rendered := fmt.Sprint(errorsView); !strings.Contains(rendered, "sha256") || !strings.Contains(rendered, "Sample_Y_S1_L002_R1_001.fastq.gz") {
-		t.Fatalf("changed-byte errors = %#v, want path-specific sha256 rejection", errorsView)
+	samples, _ := scrnaseqscenario.Samples(t)
+	raw := pc.MustPlanJSON(t, scrnaseq.Build(samples, scrnaseq.DefaultConfig()))
+	if _, err := scrnaseqscenario.ProveOfficialBindings(workspace, raw, officialInputs); err == nil {
+		t.Fatal("changed official scRNA bind proof = nil, want exact-byte rejection")
+	} else if message := err.Error(); !strings.Contains(message, "sha256") || !strings.Contains(message, "Sample_Y_S1_L002_R1_001.fastq.gz") {
+		t.Fatalf("changed-byte error = %q, want path-specific sha256 rejection", message)
 	}
 }

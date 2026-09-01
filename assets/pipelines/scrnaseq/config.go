@@ -17,7 +17,14 @@ import (
 	simpleafquant "github.com/HahyeonJeon/gobble/assets/modules/simpleaf-quant"
 )
 
-const multiQCImage modules.Image = "community.wave.seqera.io/library/multiqc:1.34--db7c73dae76bc9e6@sha256:22eb821173e8b85e1632263d98447a13cf3eef1803e895aa712b984630e2d793"
+const (
+	// catFastqImage is the Gobble-owned 2026-08-30 image tuple for the
+	// product-required run consolidation. Its container bytes were previously
+	// recorded for nf-core/rnaseq 3.26.0; cat_fastq is not an
+	// nf-core/scrnaseq 4.2.0 module.
+	catFastqImage modules.Image = "community.wave.seqera.io/library/coreutils_grep_gzip_lbzip2_pruned:838ba80435a629f8@sha256:63c2c6b22e83b2f656e88fbb1553e595da4e9e58794e3bfcb98b20b3837f328a"
+	multiQCImage  modules.Image = "community.wave.seqera.io/library/multiqc:1.34--db7c73dae76bc9e6@sha256:22eb821173e8b85e1632263d98447a13cf3eef1803e895aa712b984630e2d793"
+)
 
 // DefaultConfig returns a fresh scrnaseq 4.2.0-selected Simpleaf config. It
 // names caller-staged workspace inputs and performs no filesystem or network
@@ -39,7 +46,7 @@ func DefaultConfig() Config {
 			Index: true, Quantification: true, QCatch: true, RawH5AD: true,
 			RawRDS: true, CombinedH5AD: true, MultiQC: true,
 		},
-		Consolidate:      catfastq.Options{Options: scrnaResources(1, "512m")},
+		Consolidate:      catfastq.Options{Options: scrnaBase(catFastqImage, 1, "512m")},
 		FastQC:           fastqc.Options{Options: scrnaBase(fastqc.DefaultImage, 2, "2g")},
 		GTFFilter:        gtfgenefilter.Options{Options: scrnaBase(gtfgenefilter.DefaultImage, 1, "1g")},
 		Transcriptome:    gffreadtranscriptome.Options{Options: scrnaBase(gffreadtranscriptome.DefaultImage, 1, "1g")},
@@ -52,10 +59,6 @@ func DefaultConfig() Config {
 		H5ADConcat:       h5adconcat.Options{Options: scrnaBase(h5adconcat.DefaultImage, 2, "6g")},
 		MultiQC:          multiqc.Options{Options: scrnaBase(multiQCImage, 1, "2g")},
 	}
-}
-
-func scrnaResources(cpu float64, memory string) modules.Options {
-	return modules.Options{Resources: gobble.Resources{CPU: cpu, Memory: memory}}
 }
 
 func scrnaBase(image modules.Image, cpu float64, memory string) modules.Options {
