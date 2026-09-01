@@ -9,23 +9,31 @@ import (
 )
 
 const conversionScript = `
+import json
 import sys
 import scanpy as sc
 
 source, output, sample, expected_cells, seq_center = sys.argv[1:]
 adata = sc.read_h5ad(source + "/alevin/quants.h5ad")
-if "barcodes" in adata.obs:
-    adata.obs_names = adata.obs["barcodes"].astype(str).values
-if "gene_id" in adata.var:
-    adata.var_names = adata.var["gene_id"].astype(str).values
+adata.obs_names = adata.obs["barcodes"].values
+adata.var_names = adata.var["gene_id"].values
 adata.obs["sample"] = sample
 if expected_cells:
     adata.obs["expected_cells"] = int(expected_cells)
 if seq_center:
     adata.obs["seq_center"] = seq_center
-adata.obs_names_make_unique()
-adata.var_names_make_unique()
 adata = adata[adata.obs_names.sort_values(), adata.var_names.sort_values()].copy()
+
+adata.var["gene_versions"] = adata.var["gene_id"]
+adata.var.index = adata.var["gene_versions"].str.split(".").str[0].values
+adata.var_names_make_unique()
+
+adata = adata[adata.obs_names.sort_values(), adata.var_names.sort_values()].copy()
+
+simpleaf_map_info = json.loads(adata.uns["simpleaf_map_info"])
+simpleaf_map_info.pop("runtime_seconds")
+adata.uns["simpleaf_map_info"] = json.dumps(simpleaf_map_info, sort_keys=True)
+
 adata.write_h5ad(output)
 `
 
