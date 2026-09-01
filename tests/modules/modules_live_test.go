@@ -94,7 +94,7 @@ func TestBWAIndexStandaloneRun(t *testing.T) {
 	dir := t.TempDir()
 	pc.StageFile(t, dir, "in/genome.fasta", src)
 	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genome", Ext: ".fasta"}
-	p := bwaindex.BWAIndexPipeline(fasta, bwaindex.BWAIndexOptions{})
+	p := bwaindex.ProductPipeline(fasta, bwaindex.Options{})
 	g, err := gobble.Compose(p)
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
@@ -103,11 +103,11 @@ func TestBWAIndexStandaloneRun(t *testing.T) {
 		fatalAPIError(t, "Run()", err)
 	}
 	for _, rel := range []string{
-		"in/genome.fasta.amb",
-		"in/genome.fasta.ann",
-		"in/genome.fasta.bwt",
-		"in/genome.fasta.pac",
-		"in/genome.fasta.sa",
+		"work/reference/bwa/genome.amb",
+		"work/reference/bwa/genome.ann",
+		"work/reference/bwa/genome.bwt",
+		"work/reference/bwa/genome.pac",
+		"work/reference/bwa/genome.sa",
 	} {
 		info, err := os.Stat(filepath.Join(dir, filepath.FromSlash(rel)))
 		if err != nil || !info.Mode().IsRegular() {
@@ -125,7 +125,10 @@ func TestFastpStandaloneRun(t *testing.T) {
 	pc.StageFile(t, dir, "in/test_2.fastq.gz", src2)
 	r1 := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_1", Ext: ".fastq.gz"}
 	r2 := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_2", Ext: ".fastq.gz"}
-	p := fastp.FastpPipeline(r1, r2, fastp.FastpOptions{Resources: gobble.Resources{CPU: 1}})
+	p := fastp.ProductPipeline(r1, r2, fastp.Options{
+		Options: modules.Options{Resources: gobble.Resources{CPU: 1}},
+		Prefix:  "test",
+	})
 	g, err := gobble.Compose(p)
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
@@ -134,10 +137,10 @@ func TestFastpStandaloneRun(t *testing.T) {
 		fatalAPIError(t, "Run()", err)
 	}
 	for _, rel := range []string{
-		"work/fastp/test_1.clean.fastq.gz",
-		"work/fastp/test_2.clean.fastq.gz",
-		"work/fastp/test_1.fastp.json",
-		"work/fastp/test_1.fastp.html",
+		"work/fastp/test_R1.fastp.fastq.gz",
+		"work/fastp/test_R2.fastp.fastq.gz",
+		"work/fastp/test.fastp.json",
+		"work/fastp/test.fastp.html",
 	} {
 		info, err := os.Stat(filepath.Join(dir, filepath.FromSlash(rel)))
 		if err != nil || !info.Mode().IsRegular() {
@@ -177,10 +180,10 @@ func TestSTARGenomeGenerateStandaloneRun(t *testing.T) {
 	pc.StageFile(t, dir, "in/genes.gtf", srcGTF)
 	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genome", Ext: ".fasta"}
 	gtf := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genes", Ext: ".gtf"}
-	p := stargenomegenerate.STARGenomeGeneratePipeline(fasta, stargenomegenerate.STARGenomeGenerateOptions{
-		GTF:       gtf,
-		ExtraArgs: []string{"--genomeSAindexNbases", "7", "--sjdbOverhang", "100"},
-		Resources: gobble.Resources{CPU: 1},
+	p := stargenomegenerate.Pipeline(fasta, gtf, stargenomegenerate.Options{
+		Options:             modules.Options{Resources: gobble.Resources{CPU: 1}},
+		GenomeSAIndexNBases: 7,
+		SJDBOverhang:        100,
 	})
 	g, err := gobble.Compose(p)
 	if err != nil {
@@ -219,15 +222,19 @@ func TestSTARAlignNestedRun(t *testing.T) {
 	hg := p.AddInput("gtf", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genes", Ext: ".gtf"})
 	h1 := p.AddInput("r1", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "SRR6357072_1", Ext: ".fastq.gz"})
 	h2 := p.AddInput("r2", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "SRR6357072_2", Ext: ".fastq.gz"})
-	idx := stargenomegenerate.AddSTARGenomeGenerate(p, hf, hg, stargenomegenerate.STARGenomeGenerateOptions{
-		ExtraArgs: []string{"--genomeSAindexNbases", "7", "--sjdbOverhang", "100"},
-		Resources: gobble.Resources{CPU: 1},
+	idx, err := stargenomegenerate.Add(p, hf, hg, stargenomegenerate.Options{
+		Options:             modules.Options{Resources: gobble.Resources{CPU: 1}},
+		GenomeSAIndexNBases: 7,
+		SJDBOverhang:        100,
 	})
-	ports := staralign.AddSTARAlign(p, idx.Index, h1, h2, staralign.STARAlignOptions{
-		Resources: gobble.Resources{CPU: 1},
+	if err != nil {
+		t.Fatalf("Add STAR genomeGenerate: %v", err)
+	}
+	ports, err := staralign.Add(p, idx.Index, hg, h1, h2, staralign.Options{
+		Options: modules.Options{Resources: gobble.Resources{CPU: 1}},
 	})
-	if ports.LogFinalOut.IsZero() {
-		t.Fatalf("ports.LogFinalOut IsZero = true, want false")
+	if err != nil || ports.LogFinal.IsZero() {
+		t.Fatalf("Add STAR align = (%+v, %v)", ports, err)
 	}
 	g, err := gobble.Compose(p)
 	if err != nil {
@@ -252,7 +259,7 @@ func TestBismarkGenomeStandaloneRun(t *testing.T) {
 	dir := t.TempDir()
 	pc.StageFile(t, dir, "in/genome.fa", src)
 	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genome", Ext: ".fa"}
-	p := bismarkgenome.BismarkGenomePipeline(fasta, bismarkgenome.BismarkGenomeOptions{Resources: gobble.Resources{CPU: 1}})
+	p := bismarkgenome.Pipeline(fasta, bismarkgenome.Options{Options: modules.Options{Resources: gobble.Resources{CPU: 1}}})
 	g, err := gobble.Compose(p)
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
@@ -263,7 +270,7 @@ func TestBismarkGenomeStandaloneRun(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(dir, filepath.FromSlash("in/Bisulfite_Genome"))); !os.IsNotExist(err) {
 		t.Fatalf("Bisulfite_Genome written into in/: %v", err)
 	}
-	for _, rel := range bismarkevidence.PublishedPaths("work/bismark-genome") {
+	for _, rel := range bismarkevidence.PublishedPaths("work/bismark-index") {
 		info, err := os.Stat(filepath.Join(dir, filepath.FromSlash(rel)))
 		if err != nil || !info.Mode().IsRegular() {
 			t.Fatalf("published %s: %v", rel, err)
@@ -279,8 +286,16 @@ func TestBismarkAlignNestedRun(t *testing.T) {
 	hf := p.AddInput("fasta", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genome", Ext: ".fa"})
 	h1 := p.AddInput("r1", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "Ecoli_10K_methylated_R1", Ext: ".fastq.gz"})
 	h2 := p.AddInput("r2", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "Ecoli_10K_methylated_R2", Ext: ".fastq.gz"})
-	idx := bismarkgenome.AddBismarkGenome(p, hf, bismarkgenome.BismarkGenomeOptions{Resources: gobble.Resources{CPU: 1}})
-	bismarkalign.AddBismarkAlign(p, hf, idx.Index, h1, h2, bismarkalign.BismarkAlignOptions{Resources: gobble.Resources{CPU: 1}})
+	idx, err := bismarkgenome.Add(p, hf, bismarkgenome.Options{Options: modules.Options{Resources: gobble.Resources{CPU: 1}}})
+	if err != nil {
+		t.Fatalf("Add Bismark genome: %v", err)
+	}
+	if _, err := bismarkalign.Add(p, idx.Index, h1, h2, bismarkalign.Options{
+		Options: modules.Options{Resources: gobble.Resources{CPU: 1}},
+		Prefix:  "aligned",
+	}); err != nil {
+		t.Fatalf("Add Bismark align: %v", err)
+	}
 	g, err := gobble.Compose(p)
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
@@ -305,9 +320,20 @@ func TestBismarkMethylationExtractorNestedRun(t *testing.T) {
 	hf := p.AddInput("fasta", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genome", Ext: ".fa"})
 	h1 := p.AddInput("r1", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "Ecoli_10K_methylated_R1", Ext: ".fastq.gz"})
 	h2 := p.AddInput("r2", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "Ecoli_10K_methylated_R2", Ext: ".fastq.gz"})
-	idx := bismarkgenome.AddBismarkGenome(p, hf, bismarkgenome.BismarkGenomeOptions{Resources: gobble.Resources{CPU: 1}})
-	aln := bismarkalign.AddBismarkAlign(p, hf, idx.Index, h1, h2, bismarkalign.BismarkAlignOptions{Resources: gobble.Resources{CPU: 1}})
-	bismarkmethylationextractor.AddBismarkMethylationExtractor(p, aln.BAM, bismarkmethylationextractor.BismarkMethylationExtractorOptions{})
+	idx, err := bismarkgenome.Add(p, hf, bismarkgenome.Options{Options: modules.Options{Resources: gobble.Resources{CPU: 1}}})
+	if err != nil {
+		t.Fatalf("Add Bismark genome: %v", err)
+	}
+	aln, err := bismarkalign.Add(p, idx.Index, h1, h2, bismarkalign.Options{
+		Options: modules.Options{Resources: gobble.Resources{CPU: 1}},
+		Prefix:  "aligned",
+	})
+	if err != nil {
+		t.Fatalf("Add Bismark align: %v", err)
+	}
+	if _, err := bismarkmethylationextractor.Add(p, aln.BAM, true, bismarkmethylationextractor.Options{}); err != nil {
+		t.Fatalf("Add Bismark methylation extractor: %v", err)
+	}
 	g, err := gobble.Compose(p)
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
@@ -316,11 +342,13 @@ func TestBismarkMethylationExtractorNestedRun(t *testing.T) {
 		fatalAPIError(t, "Run()", err)
 	}
 	for _, rel := range []string{
-		"work/bismark-extractor/aligned_pe.bedGraph.gz",
-		"work/bismark-extractor/aligned_pe.bismark.cov.gz",
-		"work/bismark-extractor/aligned_pe_splitting_report.txt",
-		"work/bismark-extractor/aligned_pe.M-bias.txt",
-		"work/bismark-extractor/CpG_context_aligned_pe.txt.gz",
+		"work/bismark-methylation-extractor/aligned_pe.bedGraph.gz",
+		"work/bismark-methylation-extractor/aligned_pe.bismark.cov.gz",
+		"work/bismark-methylation-extractor/aligned_pe_splitting_report.txt",
+		"work/bismark-methylation-extractor/aligned_pe.M-bias.txt",
+		"work/bismark-methylation-extractor/CpG_context_aligned_pe.txt.gz",
+		"work/bismark-methylation-extractor/CHG_context_aligned_pe.txt.gz",
+		"work/bismark-methylation-extractor/CHH_context_aligned_pe.txt.gz",
 	} {
 		info, err := os.Stat(filepath.Join(dir, filepath.FromSlash(rel)))
 		if err != nil || !info.Mode().IsRegular() {
@@ -331,7 +359,7 @@ func TestBismarkMethylationExtractorNestedRun(t *testing.T) {
 	t.Logf("unique paired-end alignments = %d", unique)
 	assertUniqueAlignmentFloor(t, unique)
 	assertMethylationCallRows(t, unique,
-		filepath.Join(dir, filepath.FromSlash("work/bismark-extractor/CpG_context_aligned_pe.txt.gz")),
-		filepath.Join(dir, filepath.FromSlash("work/bismark-extractor/aligned_pe.bismark.cov.gz")),
+		filepath.Join(dir, filepath.FromSlash("work/bismark-methylation-extractor/CpG_context_aligned_pe.txt.gz")),
+		filepath.Join(dir, filepath.FromSlash("work/bismark-methylation-extractor/aligned_pe.bismark.cov.gz")),
 	)
 }

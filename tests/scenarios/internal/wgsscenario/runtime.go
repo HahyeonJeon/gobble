@@ -23,11 +23,13 @@ import (
 // Its Docker boundary creates declared outputs deterministically, so the WGS
 // recovery scenario needs no network, fixture download, image pull, or Docker.
 type Runtime struct {
-	t         *testing.T
-	graph     *gobble.Graph
-	workspace string
-	identity  gobble.Identity
-	docker    *fakeDocker
+	t           *testing.T
+	graph       *gobble.Graph
+	workspace   string
+	identity    gobble.Identity
+	docker      *fakeDocker
+	started     chan struct{}
+	startedOnce sync.Once
 }
 
 // NewRuntime composes config over the pipeline-owned WGS fixture, stages
@@ -41,12 +43,12 @@ func NewRuntime(t *testing.T, config wgs.Config) *Runtime {
 		t.Fatalf("Compose WGS runtime graph: %v", err)
 	}
 	raw := pc.MustPlanJSON(t, pipe)
-	r := &Runtime{t: t, graph: graph, workspace: t.TempDir()}
+	r := &Runtime{t: t, graph: graph, workspace: t.TempDir(), started: make(chan struct{})}
 	r.identity, err = gobble.IdentityFromBuildInfo("github.com/HahyeonJeon/gobble/tests/scenarios/internal/wgsscenario")
 	if err != nil {
 		t.Fatalf("IdentityFromBuildInfo: %v", err)
 	}
-	r.docker = newFakeDocker(pc.AllTasks(t, raw))
+	r.docker = newFakeDocker(pc.AllTasks(t, raw), r)
 	previous := executor.DockerCLI
 	executor.DockerCLI = r.docker.call
 	t.Cleanup(func() { executor.DockerCLI = previous })
@@ -58,6 +60,23 @@ func NewRuntime(t *testing.T, config wgs.Config) *Runtime {
 func (r *Runtime) Run(ctx context.Context) error {
 	return gobble.Run(ctx, r.graph, r.workspace, 8, gobble.WithIdentity(r.identity))
 }
+
+// Resume invokes the public WGS Resume lifecycle with the current graph.
+func (r *Runtime) Resume(ctx context.Context) error {
+	return gobble.Resume(ctx, r.graph, r.workspace, 8, gobble.WithIdentity(r.identity))
+}
+
+// FailCommand makes id return a contained nonzero command result with logs.
+func (r *Runtime) FailCommand(id string) { r.docker.setMode(id, fakeFailCommand) }
+
+// Block makes id remain active until lifecycle cancellation reaches Docker kill.
+func (r *Runtime) Block(id string) { r.docker.setMode(id, fakeBlock) }
+
+// Succeed clears a prior command-double fault for recovery evidence.
+func (r *Runtime) Succeed(id string) { r.docker.setMode(id, fakeSuccess) }
+
+// Started closes after a blocked command has started.
+func (r *Runtime) Started() <-chan struct{} { return r.started }
 
 // Workspace returns the caller-owned runtime workspace.
 func (r *Runtime) Workspace() string { return r.workspace }
@@ -81,6 +100,20 @@ func (r *Runtime) ResumeWith(ctx context.Context, samples []wgs.Sample, config w
 // Release invokes the public recovery release.
 func (r *Runtime) Release() error {
 	return gobble.Release(r.workspace, gobble.WithIdentity(r.identity))
+}
+
+// InspectObject decodes one object-shaped Inspect view.
+func (r *Runtime) InspectObject(view gobble.View) map[string]any {
+	r.t.Helper()
+	raw, err := gobble.Inspect(r.workspace, view, "", gobble.WithIdentity(r.identity))
+	if err != nil {
+		r.t.Fatalf("Inspect(%s): %v", view, err)
+	}
+	var out map[string]any
+	if err := json.Unmarshal(raw, &out); err != nil {
+		r.t.Fatalf("Inspect(%s) JSON: %v\n%s", view, err, raw)
+	}
+	return out
 }
 
 // InspectRecords decodes one JSONL Inspect view.
@@ -149,18 +182,35 @@ func renderRuntimePath(t *testing.T, spec gobble.PathSpec) string {
 
 type fakeDocker struct {
 	mu         sync.Mutex
+	runtime    *Runtime
 	tasks      map[string][]pc.Task
+	modes      map[string]fakeMode
 	containers map[string]fakeContainer
 	next       int
 }
 
 type fakeContainer struct {
-	mount string
-	image string
+	mount   string
+	image   string
+	running bool
+	exit    int
+	log     string
 }
 
-func newFakeDocker(tasks []pc.Task) *fakeDocker {
-	fake := &fakeDocker{containers: make(map[string]fakeContainer)}
+type fakeMode int
+
+const (
+	fakeSuccess fakeMode = iota
+	fakeFailCommand
+	fakeBlock
+)
+
+func newFakeDocker(tasks []pc.Task, runtime *Runtime) *fakeDocker {
+	fake := &fakeDocker{
+		runtime:    runtime,
+		modes:      make(map[string]fakeMode),
+		containers: make(map[string]fakeContainer),
+	}
 	fake.setTasks(tasks)
 	return fake
 }
@@ -173,6 +223,12 @@ func (f *fakeDocker) setTasks(tasks []pc.Task) {
 	}
 	f.mu.Lock()
 	f.tasks = indexed
+	f.mu.Unlock()
+}
+
+func (f *fakeDocker) setMode(id string, mode fakeMode) {
+	f.mu.Lock()
+	f.modes[id] = mode
 	f.mu.Unlock()
 }
 
@@ -196,7 +252,24 @@ func (f *fakeDocker) call(ctx context.Context, args, _ []string, stdout, stderr 
 		return f.run(args, stdout, stderr)
 	case "inspect":
 		return f.inspect(args, stdout)
-	case "logs", "rm":
+	case "logs":
+		if len(args) > 1 {
+			if container, ok := f.containers[args[1]]; ok && container.log != "" {
+				_, _ = io.WriteString(stderr, container.log)
+			}
+		}
+		return 0, nil
+	case "rm":
+		return 0, nil
+	case "kill":
+		if len(args) > 1 {
+			if container, ok := f.containers[args[1]]; ok {
+				container.running = false
+				container.exit = 137
+				container.log = "simulated WGS cancellation\n"
+				f.containers[args[1]] = container
+			}
+		}
 		return 0, nil
 	default:
 		_, _ = io.WriteString(stderr, "unsupported fake Docker call")
@@ -235,13 +308,24 @@ func (f *fakeDocker) run(args []string, stdout, stderr io.Writer) (int, error) {
 		_, _ = io.WriteString(stderr, "missing work mount")
 		return 1, nil
 	}
-	if err := writeFakeOutputs(mount, candidates[0]); err != nil {
-		_, _ = io.WriteString(stderr, err.Error())
-		return 1, nil
-	}
+	task := candidates[0]
 	f.next++
 	id := "wgs-fake-" + strconv.Itoa(f.next)
-	f.containers[id] = fakeContainer{mount: mount, image: candidates[0].Image}
+	container := fakeContainer{mount: mount, image: task.Image}
+	switch f.modes[task.ID] {
+	case fakeFailCommand:
+		container.exit = 42
+		container.log = "simulated WGS command failure for " + task.ID + "\n"
+	case fakeBlock:
+		container.running = true
+		f.runtime.startedOnce.Do(func() { close(f.runtime.started) })
+	default:
+		if err := writeFakeOutputs(mount, task); err != nil {
+			_, _ = io.WriteString(stderr, err.Error())
+			return 1, nil
+		}
+	}
+	f.containers[id] = container
 	_, _ = io.WriteString(stdout, id+"\n")
 	return 0, nil
 }
@@ -257,7 +341,7 @@ func (f *fakeDocker) inspect(args []string, stdout io.Writer) (int, error) {
 	format := strings.Join(args, " ")
 	switch {
 	case strings.Contains(format, ".State.Running"):
-		_, _ = io.WriteString(stdout, "false 0\n")
+		_, _ = fmt.Fprintf(stdout, "%t %d\n", container.running, container.exit)
 	case strings.Contains(format, ".Mounts"):
 		_, _ = io.WriteString(stdout, container.mount+"\n")
 	case strings.Contains(format, ".Image"):

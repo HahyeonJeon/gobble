@@ -125,7 +125,7 @@ func (m Manifest) Validate() error {
 		if !lowerHex(entry.Commit, 40) || !lowerHex(entry.SHA256, 64) || !strings.Contains(entry.URL, entry.Commit) || mutableURL(entry.URL) {
 			return fmt.Errorf("manifest entry %q has mutable or invalid byte identity", entry.LogicalName)
 		}
-		if entry.LicenseAuthority == "" && (entry.License == "" || entry.LicenseSource == "" || entry.Redistribution == "" || entry.BenchmarkRelation == "") {
+		if entry.License == "" || entry.LicenseSource == "" || entry.Redistribution == "" || entry.BenchmarkRelation == "" {
 			return fmt.Errorf("manifest entry %q has incomplete license or benchmark authority", entry.LogicalName)
 		}
 		if entry.Staged {

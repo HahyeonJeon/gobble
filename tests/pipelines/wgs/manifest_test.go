@@ -30,20 +30,24 @@ type wgsManifest struct {
 }
 
 type wgsEntry struct {
-	LogicalName      string   `json:"logical_name"`
-	Name             string   `json:"name"`
-	Role             string   `json:"role"`
-	Repository       string   `json:"repository"`
-	Commit           string   `json:"commit"`
-	Path             string   `json:"path"`
-	URL              string   `json:"url"`
-	Bytes            int64    `json:"bytes"`
-	SHA256           string   `json:"sha256"`
-	LicenseAuthority string   `json:"license_authority"`
-	Provenance       string   `json:"provenance"`
-	AssayUse         []string `json:"assay_use"`
-	Staged           bool     `json:"staged"`
-	Destination      string   `json:"destination"`
+	LogicalName       string   `json:"logical_name"`
+	Name              string   `json:"name"`
+	Role              string   `json:"role"`
+	Repository        string   `json:"repository"`
+	Commit            string   `json:"commit"`
+	Path              string   `json:"path"`
+	URL               string   `json:"url"`
+	Bytes             int64    `json:"bytes"`
+	SHA256            string   `json:"sha256"`
+	License           string   `json:"license"`
+	LicenseSource     string   `json:"license_source"`
+	LicenseAuthority  string   `json:"license_authority"`
+	Redistribution    string   `json:"redistribution"`
+	Provenance        string   `json:"provenance"`
+	AssayUse          []string `json:"assay_use"`
+	BenchmarkRelation string   `json:"benchmark_relation"`
+	Staged            bool     `json:"staged"`
+	Destination       string   `json:"destination"`
 }
 
 type wgsImage struct {
@@ -74,7 +78,7 @@ func TestManifestIsExactPlanningByteAndImageAuthority(t *testing.T) {
 	staged := make(map[string]wgsEntry)
 	seen := make(map[string]bool, len(manifest.Entries))
 	for _, entry := range manifest.Entries {
-		if seen[entry.LogicalName] || entry.LogicalName == "" || entry.Name == "" || entry.Role == "" || entry.Repository == "" || entry.Path == "" || !strings.Contains(entry.URL, entry.Commit) || entry.Bytes <= 0 || !lowerHex(entry.SHA256, 64) || entry.LicenseAuthority == "" || entry.Provenance == "" || len(entry.AssayUse) == 0 {
+		if seen[entry.LogicalName] || entry.LogicalName == "" || entry.Name == "" || entry.Role == "" || entry.Repository == "" || entry.Path == "" || !strings.Contains(entry.URL, entry.Commit) || entry.Bytes <= 0 || !lowerHex(entry.SHA256, 64) || entry.License == "" || entry.LicenseSource == "" || entry.Redistribution == "" || entry.Provenance == "" || len(entry.AssayUse) == 0 || entry.BenchmarkRelation == "" {
 			t.Fatalf("invalid or substituted manifest entry: %+v", entry)
 		}
 		seen[entry.LogicalName] = true

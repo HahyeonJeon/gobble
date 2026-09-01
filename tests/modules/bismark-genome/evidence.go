@@ -3,9 +3,6 @@ package bismarkgenomeevidence
 
 import pc "github.com/HahyeonJeon/gobble/tests/internal/plancheck"
 
-// Image is the graph-stable Bismark image reference.
-const Image = "community.wave.seqera.io/library/bismark:0.25.1--1f50935de5d79c47"
-
 // Members returns the expected ordered Bismark index members under dir.
 func Members(dir string) []pc.Member {
 	ct := dir + "/Bisulfite_Genome/CT_conversion"
