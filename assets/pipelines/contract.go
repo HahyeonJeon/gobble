@@ -1,25 +1,19 @@
 package pipelines
 
 import (
-	"io"
-
 	"github.com/HahyeonJeon/gobble"
 )
 
-// Contract gives each assay package a compile-time statement of its shared
-// typed entry points. S and C are that package's Sample and Config types.
-type Contract[S, C any] struct {
-	// Parse converts assay CSV from r into typed samples.
-	Parse func(r io.Reader) ([]S, error)
-	// Load opens the supplied filesystem path and returns its typed samples.
-	Load func(path string) ([]S, error)
-	// DefaultConfig returns a fresh supported config.
-	DefaultConfig func() C
-	// Build constructs a pipeline only from the supplied samples and config.
-	Build func(samples []S, config C) *gobble.Pipeline
-	// Pipeline returns the default command-line adapter pipeline.
-	Pipeline func() *gobble.Pipeline
-}
+const (
+	// SupportPlatform is the platform tuple covered by the five pinned default
+	// products and their image manifests.
+	SupportPlatform = "linux/amd64"
+	// SupportExecutionBoundary is the current local execution boundary.
+	SupportExecutionBoundary = "trusted-local Docker"
+	// SupportClaim limits support to engineering behavior, not scientific or
+	// clinical correctness.
+	SupportClaim = "engineering-only"
+)
 
 // LifecycleParticipation states how one product enters the shared lifecycle
 // evidence owners. Scenario packages verify the behavior; this value does not
@@ -34,6 +28,29 @@ type LifecycleParticipation struct {
 	Stop             bool
 	Failure          bool
 	PreLiftResumable bool
+}
+
+// CompleteLifecycle returns the shared supported scenario set for one current
+// graph generation. Lifted and newly introduced products do not resume a
+// pre-lift workspace.
+func CompleteLifecycle(graphGeneration string) LifecycleParticipation {
+	return LifecycleParticipation{
+		GraphGeneration: graphGeneration,
+		Design:          true,
+		Build:           true,
+		Customize:       true,
+		Run:             true,
+		Resume:          true,
+		Stop:            true,
+		Failure:         true,
+	}
+}
+
+// Complete reports whether a product participates in every supported
+// lifecycle scenario and names its current graph generation.
+func (p LifecycleParticipation) Complete() bool {
+	return p.GraphGeneration != "" && p.Design && p.Build && p.Customize &&
+		p.Run && p.Resume && p.Stop && p.Failure
 }
 
 // CopySlice returns a shallow copy of in. An assay package must also copy any

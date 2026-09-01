@@ -17,7 +17,7 @@ func TestSCRNATypedUMIAndQCatchCustomizationIsVisible(t *testing.T) {
 	raw := scrnaseqscenario.Plan(t, config)
 	quant := pc.TaskByID(t, raw, "Sample_X.simpleaf_quant")
 	qcatch := pc.TaskByID(t, raw, "Sample_X.qcatch")
-	if !strings.Contains(quant.Script, "'--resolution' 'parsimony-gene-em'") || !pc.ContainsAll(qcatch.Command, "--remove_doublets", "--visualize_doublets") || !scrnaseq.Lifecycle.Customize {
+	if !strings.Contains(quant.Script, "'--resolution' 'parsimony-gene-em'") || !pc.ContainsAll(qcatch.Command, "--remove_doublets", "--visualize_doublets") || !scrnaseq.Lifecycle().Customize {
 		t.Fatalf("scRNA typed customization absent: quant=%q qcatch=%#v", quant.Script, qcatch.Command)
 	}
 }

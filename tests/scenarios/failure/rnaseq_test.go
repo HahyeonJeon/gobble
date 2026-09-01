@@ -15,7 +15,7 @@ func TestRNAInvalidRouteFlagFailsBeforeRun(t *testing.T) {
 	config.STAR.ExtraArgs = []string{"--outSAMtype", "SAM"}
 	graph, err := gobble.Compose(rnaseq.Build(samples, config))
 	var structured *gobble.Error
-	if graph != nil || !errors.As(err, &structured) || structured == nil || !rnaseq.Lifecycle.Failure {
+	if graph != nil || !errors.As(err, &structured) || structured == nil || !rnaseq.Lifecycle().Failure {
 		t.Fatalf("invalid RNA route Compose() = (%v, %v), want structured pre-run failure", graph, err)
 	}
 }

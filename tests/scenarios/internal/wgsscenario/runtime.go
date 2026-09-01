@@ -59,6 +59,9 @@ func (r *Runtime) Run(ctx context.Context) error {
 	return gobble.Run(ctx, r.graph, r.workspace, 8, gobble.WithIdentity(r.identity))
 }
 
+// Workspace returns the caller-owned runtime workspace.
+func (r *Runtime) Workspace() string { return r.workspace }
+
 // ResumeWith composes changed typed samples and config, then resumes that
 // graph in the existing workspace. Newly named fixture inputs are staged.
 func (r *Runtime) ResumeWith(ctx context.Context, samples []wgs.Sample, config wgs.Config) error {

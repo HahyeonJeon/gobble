@@ -17,7 +17,7 @@ func TestMethylTypedBuildMatchesDefaultAdapter(t *testing.T) {
 	gobble.SetSampleSheetPath(sheet)
 	t.Cleanup(func() { gobble.SetSampleSheetPath(previous) })
 	got := pc.MustPlanJSON(t, methylseq.Pipeline())
-	if !bytes.Equal(got, want) || !methylseq.Lifecycle.Build {
+	if !bytes.Equal(got, want) || !methylseq.Lifecycle().Build {
 		t.Fatal("Methyl default adapter differs from typed Load plus Build")
 	}
 }

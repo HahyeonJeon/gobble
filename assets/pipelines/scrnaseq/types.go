@@ -127,17 +127,10 @@ type Config struct {
 	MultiQC          multiqc.Options
 }
 
-// Contract is the compile-time scRNA-seq pipeline surface.
-var Contract = pipelines.Contract[Sample, Config]{
-	Parse: Parse, Load: Load, DefaultConfig: DefaultConfig, Build: Build, Pipeline: Pipeline,
-}
-
 // Lifecycle declares participation in every shared scenario. scRNA-seq has no
 // pre-lift workspace because this generation introduces the product.
-var Lifecycle = pipelines.LifecycleParticipation{
-	GraphGeneration: GraphGeneration,
-	Design:          true, Build: true, Customize: true, Run: true,
-	Resume: true, Stop: true, Failure: true, PreLiftResumable: false,
+func Lifecycle() pipelines.LifecycleParticipation {
+	return pipelines.CompleteLifecycle(GraphGeneration)
 }
 
 var (

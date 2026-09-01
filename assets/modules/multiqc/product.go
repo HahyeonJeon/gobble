@@ -1,3 +1,4 @@
+// Package multiqc owns the validated MultiQC command module.
 package multiqc
 
 import (
@@ -73,8 +74,8 @@ func Add(parent modules.Parent, reports []gobble.Handle, options Options) (Ports
 	return Ports{HTML: task.Out("html"), Data: task.Out("data")}, nil
 }
 
-// ProductPipeline returns a standalone validated lifted MultiQC module.
-func ProductPipeline(reports []gobble.PathSpec, options Options) *gobble.Pipeline {
+// Pipeline returns a standalone validated MultiQC module.
+func Pipeline(reports []gobble.PathSpec, options Options) *gobble.Pipeline {
 	inputs := make([]modules.Input, len(reports))
 	for i, report := range reports {
 		inputs[i] = modules.Input{Name: "report_" + strconv.Itoa(i), Spec: report}

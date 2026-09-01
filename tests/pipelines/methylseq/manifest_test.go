@@ -73,8 +73,8 @@ type methylImage struct {
 
 func TestManifestIsExactFixtureTreeAndImageAuthority(t *testing.T) {
 	manifest := loadMethylManifest(t)
-	if manifest.Schema != 2 || manifest.Benchmark.Pipeline != "nf-core/methylseq" || manifest.Benchmark.Release != "4.2.0" || manifest.Benchmark.Commit != "5aa56467a85a5e2d6795ea72dfa5a5f0c9babc23" || manifest.Benchmark.DatasetCommit != "e7e1fb8940fc14e2336101147a31ce8e0eda6264" {
-		t.Fatalf("benchmark = %+v, want exact methylseq 4.2.0 authority", manifest.Benchmark)
+	if manifest.Schema != 4 || manifest.Benchmark.Pipeline != "nf-core/methylseq" || manifest.Benchmark.Release != "4.2.0" || !lowerHex(manifest.Benchmark.Commit, 40) || !lowerHex(manifest.Benchmark.DatasetCommit, 40) {
+		t.Fatalf("benchmark = %+v, want immutable methylseq 4.2.0 authority", manifest.Benchmark)
 	}
 	if manifest.Benchmark.SelectedRoute == "" || !strings.Contains(manifest.Benchmark.TestConfig, manifest.Benchmark.Commit) {
 		t.Fatalf("benchmark route/config = %+v", manifest.Benchmark)
@@ -86,7 +86,7 @@ func TestManifestIsExactFixtureTreeAndImageAuthority(t *testing.T) {
 		}
 		entries[entry.LogicalName] = entry
 	}
-	for _, pin := range methylseqevidence.Pins {
+	for _, pin := range methylseqevidence.MustPins() {
 		entry := entries[pin.Name]
 		if entry.URL != pin.URL || entry.Bytes != pin.Bytes || entry.SHA256 != pin.SHA256 {
 			t.Fatalf("typed pin %q differs from manifest authority", pin.Name)

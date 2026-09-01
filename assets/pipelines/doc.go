@@ -2,10 +2,9 @@
 // assay pipeline products.
 //
 // Each direct child package owns one assay. It declares assay-specific Sample
-// and Config types and supplies every [Contract] callable: Parse, Load,
-// DefaultConfig, Build, and Pipeline. No universal sample row, arbitrary module
-// list, serialized parameters, or cross-assay pipeline import belongs in this
-// layer.
+// and Config types and supplies Parse, Load, DefaultConfig, Build, and Pipeline.
+// No universal sample row, arbitrary module list, serialized parameters, or
+// cross-assay pipeline import belongs in this layer.
 //
 // Parse converts strict assay CSV from only the supplied reader into typed
 // Sample values. The caller retains ownership of the reader. Load opens only
@@ -42,7 +41,8 @@
 // function and call the same Build. File, gobble.Group, and gobble.Tree handles
 // retain the artifact kind consumed by each tool.
 //
-// The wgs, rnaseq, and methylseq children own lifted products and complete typed
-// contracts. Each lift is a new graph generation and does not promise resume of
-// a pre-lift workspace.
+// The wgs, rnaseq, methylseq, atacseq, and scrnaseq children own the five
+// supported products. Every product participates in the complete shared
+// lifecycle. Each lifted graph generation does not promise resume of a pre-lift
+// workspace.
 package pipelines

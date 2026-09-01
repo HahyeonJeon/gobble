@@ -13,7 +13,7 @@ func TestRNASalmonCustomizationIsPlanVisible(t *testing.T) {
 	config := rnaseq.DefaultConfig()
 	config.Salmon.ExtraArgs = []string{"--validateMappings"}
 	raw := rnaseqscenario.Plan(t, config)
-	if !strings.Contains(pc.TaskByID(t, raw, "WT_REP1.salmon_quant").Script, "'--validateMappings'") || !rnaseq.Lifecycle.Customize {
+	if !strings.Contains(pc.TaskByID(t, raw, "WT_REP1.salmon_quant").Script, "'--validateMappings'") || !rnaseq.Lifecycle().Customize {
 		t.Fatal("RNA Salmon customization is not visible in the selected command")
 	}
 }

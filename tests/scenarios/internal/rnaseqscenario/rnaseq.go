@@ -9,6 +9,7 @@ import (
 
 	"github.com/HahyeonJeon/gobble/assets/pipelines/rnaseq"
 	pc "github.com/HahyeonJeon/gobble/tests/internal/plancheck"
+	rnaseqevidence "github.com/HahyeonJeon/gobble/tests/pipelines/rnaseq"
 )
 
 // Samples loads the RNA pipeline owner's localized official fixture.
@@ -18,7 +19,7 @@ func Samples(t *testing.T) ([]rnaseq.Sample, string) {
 	if !ok {
 		t.Fatal("runtime.Caller failed")
 	}
-	path := filepath.Join(filepath.Dir(file), "..", "..", "..", "pipelines", "rnaseq", "testdata", "rnaseq-samplesheet.csv")
+	path := filepath.Join(filepath.Dir(file), "..", "..", "..", "..", filepath.FromSlash(rnaseqevidence.FixtureSheet))
 	samples, err := rnaseq.Load(path)
 	if err != nil {
 		t.Fatalf("Load RNA fixture: %v", err)

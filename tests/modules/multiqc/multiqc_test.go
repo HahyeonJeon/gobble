@@ -12,20 +12,22 @@ import (
 
 func TestMultiQCStandaloneComposeBuildPlan(t *testing.T) {
 	report := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_fastqc", Ext: ".zip"}
-	opts := MultiQCOptions{
-		ExtraArgs: []string{"--title", "qc"},
-		Resources: gobble.Resources{CPU: 1},
+	opts := Options{
+		Options: modules.Options{
+			ExtraArgs: []string{"--title", "qc"},
+			Resources: gobble.Resources{CPU: 1},
+		},
 	}
-	p := MultiQCPipeline([]gobble.PathSpec{report}, opts)
+	p := Pipeline([]gobble.PathSpec{report}, opts)
 	raw := pc.MustPlanJSON(t, p)
 	task := pc.TaskByID(t, raw, "multiqc")
 	if task.Name != "multiqc" {
 		t.Fatalf("task name = %q, want multiqc", task.Name)
 	}
-	if task.Image != "quay.io/biocontainers/multiqc:1.35--pyhdfd78af_0" {
+	if task.Image != string(DefaultImage) {
 		t.Fatalf("image = %q, want locked MultiQC pin", task.Image)
 	}
-	if !pc.ContainsAll(task.Command, "multiqc", "--force", "--outdir", "work/multiqc", "--zip-data-dir", "in/test_fastqc.zip", "--title", "qc") {
+	if !pc.ContainsAll(task.Command, "multiqc", "--force", "--outdir", "results/multiqc", ".", "--title", "qc") {
 		t.Fatalf("command = %#v, want named flags, reports, extra-args", task.Command)
 	}
 	n := len(task.Command)
@@ -37,8 +39,8 @@ func TestMultiQCStandaloneComposeBuildPlan(t *testing.T) {
 	}
 	pc.AssertUniqueParamNames(t, task.Params)
 	pc.AssertIOPath(t, task.Inputs, "report_0", "in/test_fastqc.zip")
-	pc.AssertIOPath(t, task.Outputs, "html", "work/multiqc/multiqc_report.html")
-	pc.AssertIOPath(t, task.Outputs, "data", "work/multiqc/multiqc_data.zip")
+	pc.AssertIOPath(t, task.Outputs, "html", "results/multiqc/multiqc_report.html")
+	pc.AssertTreeIO(t, task.Outputs, "data", "results/multiqc/multiqc_data")
 }
 
 func TestMultiQCNestedModule(t *testing.T) {
@@ -46,7 +48,10 @@ func TestMultiQCNestedModule(t *testing.T) {
 	p := gobble.NewPipeline("assay")
 	h := p.AddInput("zip", report)
 	mod := p.AddModule("qc")
-	ports := AddMultiQC(mod, []gobble.Handle{h}, MultiQCOptions{ExtraArgs: []string{"--fullnames"}})
+	ports, err := Add(mod, []gobble.Handle{h}, Options{Options: modules.Options{ExtraArgs: []string{"--fullnames"}}})
+	if err != nil {
+		t.Fatalf("Add() error = %v", err)
+	}
 	if ports.HTML.IsZero() || ports.Data.IsZero() {
 		t.Fatalf("ports HTML/Data IsZero = %v/%v, want false", ports.HTML.IsZero(), ports.Data.IsZero())
 	}
@@ -73,7 +78,7 @@ func TestMultiQCProductRejectsPathBearingExtraArgs(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			pipeline := ProductPipeline(
+			pipeline := Pipeline(
 				[]gobble.PathSpec{{Dir: gobble.Dir("in"), Base: "fastqc", Ext: ".zip"}},
 				Options{Options: modules.Options{ExtraArgs: []string{test.extra}}},
 			)

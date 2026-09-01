@@ -948,7 +948,7 @@ func TestBuildCopiesCallerDataDefaultsAreFreshAndAdapterMatches(t *testing.T) {
 	if got := pc.MustPlanJSON(t, scrnaseq.Pipeline()); !bytes.Equal(got, want) {
 		t.Fatal("Pipeline adapter differs from typed Build")
 	}
-	lifecycle := scrnaseq.Lifecycle
+	lifecycle := scrnaseq.Lifecycle()
 	if lifecycle.GraphGeneration != scrnaseq.GraphGeneration || !lifecycle.Design || !lifecycle.Build || !lifecycle.Customize || !lifecycle.Run || !lifecycle.Resume || !lifecycle.Stop || !lifecycle.Failure || lifecycle.PreLiftResumable {
 		t.Fatalf("Lifecycle = %#v, want complete first-generation participation", lifecycle)
 	}

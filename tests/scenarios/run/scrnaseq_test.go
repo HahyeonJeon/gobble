@@ -30,7 +30,7 @@ func TestSCRNARunCompletesRequiredArtifactsHermetically(t *testing.T) {
 			t.Errorf("required artifact %s: %v", rel, err)
 		}
 	}
-	if remaining := runtime.InspectRecords(gobble.ViewRemaining); len(remaining) != 0 || !scrnaseq.Lifecycle.Run {
-		t.Fatalf("scRNA remaining = %#v, run participation %t", remaining, scrnaseq.Lifecycle.Run)
+	if remaining := runtime.InspectRecords(gobble.ViewRemaining); len(remaining) != 0 || !scrnaseq.Lifecycle().Run {
+		t.Fatalf("scRNA remaining = %#v, run participation %t", remaining, scrnaseq.Lifecycle().Run)
 	}
 }

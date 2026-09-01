@@ -7,10 +7,8 @@ import (
 )
 
 func TestATACProductIsDiscoverable(t *testing.T) {
-	if atacseq.Contract.Parse == nil || atacseq.Contract.Load == nil || atacseq.Contract.DefaultConfig == nil || atacseq.Contract.Build == nil || atacseq.Contract.Pipeline == nil {
-		t.Fatal("ATAC typed product contract is incomplete")
-	}
-	if atacseq.BenchmarkRelease != "nf-core/atacseq 2.1.2" || atacseq.Lifecycle.GraphGeneration != atacseq.GraphGeneration || !atacseq.Lifecycle.Design || atacseq.Lifecycle.PreLiftResumable {
-		t.Fatalf("ATAC identity/lifecycle = %+v, benchmark %q", atacseq.Lifecycle, atacseq.BenchmarkRelease)
+	lifecycle := atacseq.Lifecycle()
+	if atacseq.BenchmarkRelease != "nf-core/atacseq 2.1.2" || lifecycle.GraphGeneration != atacseq.GraphGeneration || !lifecycle.Design || lifecycle.PreLiftResumable {
+		t.Fatalf("ATAC identity/lifecycle = %+v, benchmark %q", lifecycle, atacseq.BenchmarkRelease)
 	}
 }

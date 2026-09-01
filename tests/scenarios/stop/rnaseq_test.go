@@ -20,7 +20,7 @@ func TestRNAUsesOrdinaryCancellableTasks(t *testing.T) {
 			}
 		}
 	}
-	if !rnaseq.Lifecycle.Stop {
+	if !rnaseq.Lifecycle().Stop {
 		t.Fatal("RNA stop participation is false")
 	}
 }

@@ -1,11 +1,13 @@
-// Package pipelineevidence defines the common benchmark and fixture-manifest
-// contract for first-party assay pipeline evidence.
+// Package pipelineevidence anchors cross-product benchmark, manifest, pin, and
+// default-image consistency checks for first-party assay pipeline evidence.
 //
 // Each tests/pipelines/<assay> child owns sheet parsing, typed sample
 // invariants, defaults, graph identity, required stages, outputs, and one
 // authoritative testdata directory. Its manifest names every remote byte used
-// directly or after extraction. Lifecycle scenarios read this owner instead of
-// copying URLs, hashes, samplesheets, references, or assay builders.
+// directly or after extraction. Shared decoding and staging mechanics live in
+// tests/internal/fixture without owning an assay fact. Lifecycle scenarios read
+// each assay owner instead of copying URLs, hashes, samplesheets, references, or
+// assay builders.
 //
 // Hermetic tests never fetch the network. Test-only live preparation may fetch
 // a manifest URL into the assay owner's ignored host cache, verify the declared

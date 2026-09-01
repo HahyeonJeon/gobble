@@ -18,7 +18,8 @@ func TestWGSResumeIdentityTracksSampleAndCohortChanges(t *testing.T) {
 	changed := wgsscenario.Plan(t, changedConfig)
 	plainCaller := pc.TaskByID(t, plain, "haplotype_intervals.patient1.testN.gatk4_haplotypecaller")
 	changedCaller := pc.TaskByID(t, changed, "haplotype_intervals.patient1.testN.gatk4_haplotypecaller")
-	if slices.Equal([]string{plainCaller.Script}, []string{changedCaller.Script}) || !wgs.Lifecycle.Resume || wgs.Lifecycle.PreLiftResumable {
+	lifecycle := wgs.Lifecycle()
+	if slices.Equal([]string{plainCaller.Script}, []string{changedCaller.Script}) || !lifecycle.Resume || lifecycle.PreLiftResumable {
 		t.Fatal("WGS caller change is not visible to resume identity or lift boundary")
 	}
 	if !slices.Equal(pc.TaskByID(t, plain, "reference.bwa_index").Command, pc.TaskByID(t, changed, "reference.bwa_index").Command) {

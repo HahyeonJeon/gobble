@@ -15,7 +15,7 @@ func TestWGSIncompleteIntervalMembershipFailsBeforeRun(t *testing.T) {
 	config.Reference.Intervals = nil
 	graph, err := gobble.Compose(wgs.Build(samples, config))
 	var structured *gobble.Error
-	if graph != nil || !errors.As(err, &structured) || structured == nil || !wgs.Lifecycle.Failure {
+	if graph != nil || !errors.As(err, &structured) || structured == nil || !wgs.Lifecycle().Failure {
 		t.Fatalf("Compose(incomplete WGS intervals) = (%v, %#v), want structured failure", graph, err)
 	}
 }

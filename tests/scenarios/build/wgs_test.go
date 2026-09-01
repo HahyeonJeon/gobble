@@ -17,7 +17,7 @@ func TestWGSTypedBuildMatchesDefaultAdapter(t *testing.T) {
 	gobble.SetSampleSheetPath(sheet)
 	t.Cleanup(func() { gobble.SetSampleSheetPath(previous) })
 	got := pc.MustPlanJSON(t, wgs.Pipeline())
-	if !bytes.Equal(got, want) || !wgs.Lifecycle.Build {
+	if !bytes.Equal(got, want) || !wgs.Lifecycle().Build {
 		t.Fatal("WGS default adapter differs from typed Load plus Build")
 	}
 }

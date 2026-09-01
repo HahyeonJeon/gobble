@@ -25,7 +25,7 @@ func TestMethylStopIsInspectableAndRecoversByReleaseResume(t *testing.T) {
 	}
 	err := <-done
 	var structured *gobble.Error
-	if !errors.As(err, &structured) || !containsCanceled(structured) || !methylseq.Lifecycle.Stop {
+	if !errors.As(err, &structured) || !containsCanceled(structured) || !methylseq.Lifecycle().Stop {
 		t.Fatalf("Run cancellation error = %v, want canceled Methyl defect", err)
 	}
 	run := runtime.InspectObject(gobble.ViewRun)

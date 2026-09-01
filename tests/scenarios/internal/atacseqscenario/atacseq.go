@@ -9,6 +9,7 @@ import (
 
 	"github.com/HahyeonJeon/gobble/assets/pipelines/atacseq"
 	pc "github.com/HahyeonJeon/gobble/tests/internal/plancheck"
+	atacseqevidence "github.com/HahyeonJeon/gobble/tests/pipelines/atacseq"
 )
 
 // Samples loads the pipeline-owned typed ATAC fixture.
@@ -18,7 +19,7 @@ func Samples(t *testing.T) ([]atacseq.Sample, string) {
 	if !ok {
 		t.Fatal("runtime.Caller failed")
 	}
-	path := filepath.Join(filepath.Dir(file), "..", "..", "..", "pipelines", "atacseq", "testdata", "atacseq-samplesheet.csv")
+	path := filepath.Join(filepath.Dir(file), "..", "..", "..", "..", filepath.FromSlash(atacseqevidence.FixtureSheet))
 	samples, err := atacseq.Load(path)
 	if err != nil {
 		t.Fatalf("Load ATAC fixture: %v", err)

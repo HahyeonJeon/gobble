@@ -25,7 +25,7 @@ func TestSCRNAStopIsInspectableAndRecoversByReleaseResume(t *testing.T) {
 	}
 	err := <-done
 	var structured *gobble.Error
-	if !errors.As(err, &structured) || !hasSCRNACanceledDefect(structured) || !scrnaseq.Lifecycle.Stop {
+	if !errors.As(err, &structured) || !hasSCRNACanceledDefect(structured) || !scrnaseq.Lifecycle().Stop {
 		t.Fatalf("Run cancellation error = %v, want canceled scRNA defect", err)
 	}
 	run := runtime.InspectObject(gobble.ViewRun)

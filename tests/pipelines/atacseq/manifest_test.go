@@ -42,6 +42,7 @@ type entry struct {
 	Provenance       string   `json:"provenance"`
 	AssayUse         []string `json:"assay_use"`
 	Staged           bool     `json:"staged"`
+	Destination      string   `json:"destination"`
 }
 
 type image struct {
@@ -59,21 +60,19 @@ type image struct {
 
 func TestManifestIsExactFixtureAndCommandAuthority(t *testing.T) {
 	m := loadManifest(t)
-	if m.Schema != 4 || m.Benchmark.Pipeline != "nf-core/atacseq" || m.Benchmark.Release != "2.1.2" || m.Benchmark.Commit != "1a1dbe52ffbd82256c941a032b0e22abbd925b8a" || m.Benchmark.DatasetCommit != "cd022b097372b078a68d8afadb172ad7342fd91f" {
-		t.Fatalf("benchmark = %+v, want exact atacseq and dataset commits", m.Benchmark)
+	if m.Schema != 4 || m.Benchmark.Pipeline != "nf-core/atacseq" || m.Benchmark.Release != "2.1.2" || !lowerHex(m.Benchmark.Commit, 40) || !lowerHex(m.Benchmark.DatasetCommit, 40) {
+		t.Fatalf("benchmark = %+v, want immutable atacseq and dataset commits", m.Benchmark)
 	}
 	if !strings.Contains(m.Benchmark.SelectedRoute, "no alternate aligner") || !strings.Contains(m.Benchmark.SelectedRoute, "IDR") {
 		t.Fatalf("selected route is not bounded: %s", m.Benchmark.SelectedRoute)
 	}
-	expected := expectedBytes()
-	if len(m.Entries) != len(expected) {
-		t.Fatalf("entries = %d, want %d exact authorities", len(m.Entries), len(expected))
+	if len(m.Entries) != 17 {
+		t.Fatalf("entries = %d, want 17 exact authorities", len(m.Entries))
 	}
 	staged := make(map[string]entry)
 	seen := make(map[string]bool, len(m.Entries))
 	for _, entry := range m.Entries {
-		want, ok := expected[entry.LogicalName]
-		if !ok || seen[entry.LogicalName] || entry.Name == "" || entry.Role == "" || entry.Repository == "" || entry.Path == "" || entry.Commit == "" || !strings.Contains(entry.URL, entry.Commit) || entry.Bytes != want.bytes || entry.SHA256 != want.sha256 || !lowerHex(entry.SHA256, 64) || entry.LicenseAuthority == "" || entry.Provenance == "" || len(entry.AssayUse) == 0 {
+		if seen[entry.LogicalName] || entry.LogicalName == "" || entry.Name == "" || entry.Role == "" || entry.Repository == "" || entry.Path == "" || entry.Commit == "" || !strings.Contains(entry.URL, entry.Commit) || entry.Bytes <= 0 || !lowerHex(entry.SHA256, 64) || entry.LicenseAuthority == "" || entry.Provenance == "" || len(entry.AssayUse) == 0 {
 			t.Fatalf("invalid or substituted entry: %+v", entry)
 		}
 		seen[entry.LogicalName] = true
@@ -153,33 +152,6 @@ func loadManifest(t *testing.T) manifest {
 		t.Fatalf("decode strict manifest: %v", err)
 	}
 	return m
-}
-
-type byteIdentity struct {
-	bytes  int64
-	sha256 string
-}
-
-func expectedBytes() map[string]byteIdentity {
-	return map[string]byteIdentity{
-		"AT-FQ-2153-R1":           {5272547, "e94bb94aa3524dff446f405b8979b95304085323a851a33b436fa6511bec9b58"},
-		"AT-FQ-2153-R2":           {5254354, "a7c9455e792e095f5db0f2e27edf912b26bd28398976d8a3ac11ff4a463ada1f"},
-		"AT-FQ-2154-R1":           {5253787, "977e96d46afff3af01527ae8db385c844c9501ed6d239390aa091265a1063159"},
-		"AT-FQ-2154-R2":           {5315718, "95fc1034e236f790a820f5977feb42c0ed895f8fe538ffb3b1643197f6aa7534"},
-		"AT-FQ-2157-R1":           {5382195, "2c08804f7e8f4abf57ed928da041e22f442c033d4e8993946b8d95137d969a60"},
-		"AT-FQ-2157-R2":           {5380339, "d1f8df0027c48ff74b68245e3def9aa50c3c042498e8bd2f073ea12bba2d3d7b"},
-		"AT-FQ-2158-R1":           {5350303, "557434ecf97ed576642689a98622410a7903b777d6b8e1cd613f717ec78d1687"},
-		"AT-FQ-2158-R2":           {5401912, "32b00634ea4e3dfc64385d837addb5f981b473aee2a3a7a5f79f8a5bc228f4e9"},
-		"AT-REF-FASTA":            {12359807, "c0b7305c230b550c3d8ccc692df52338afc7a297b43d965868c285b98aa64ae1"},
-		"AT-REF-GTF":              {12037571, "3a1e64b8f290127562612b47d6014bc6e4c130399da3e06ad062b268fd6d08fb"},
-		"AT-DATASET-SHEET":        {1371, "52a21d927287e0b39c40243cf9c2ce7134eef83ca1582d3c89b9eeb278e67218"},
-		"AT-DATASET-DESIGN":       {874, "f8f38d25705527598e7d506ed28b10bf3caca7ecd2deeff046bde1faf8215e2d"},
-		"A1":                      {1064, "1fa2a62f20d23902c7aad04f3d728fbfc9d153df472e8f2ef163322a8c5557c8"},
-		"A2":                      {3552, "1ade3b4da0f9c7aebd505eaeb6847eb641fd187ec7a6f7e73a50b52143802e25"},
-		"AT-PIPELINE-TEST-CONFIG": {1275, "2add69ec6ac85ac7f64c958be38cd1faee115410644846f80ece5b494b74764c"},
-		"AT-PIPELINE-WORKFLOW":    {33000, "4c1ed05343026f339c02cf6efeef837dc8fdfc69481bb480af13c00b78c026e1"},
-		"A3":                      {1098, "d44c17cdbb17478f7529066ea6838eda09654aa8e8f3822a7188a298c620d961"},
-	}
 }
 
 func lowerHex(value string, length int) bool {

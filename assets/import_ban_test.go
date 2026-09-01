@@ -19,19 +19,6 @@ func TestImportBan(t *testing.T) {
 	}
 }
 
-func TestDummyComposeFileOmitsAssetsImport(t *testing.T) {
-	path := filepath.Join(moduleRoot(t), "assets", "dummy_compose_test.go")
-	imps := fileImports(t, path)
-	for _, imp := range imps {
-		if imp == bannedImport {
-			t.Fatalf("%s imports %s, want gobble only", path, bannedImport)
-		}
-	}
-	if !containsImport(imps, "github.com/HahyeonJeon/gobble") {
-		t.Fatalf("%s missing gobble import, got %v", path, imps)
-	}
-}
-
 func importHits(t *testing.T, root string) []string {
 	t.Helper()
 	var hits []string
@@ -56,7 +43,7 @@ func importHits(t *testing.T, root string) []string {
 			return nil
 		}
 		for _, imp := range fileImports(t, path) {
-			if imp == bannedImport {
+			if imp == bannedImport || strings.HasPrefix(imp, bannedImport+"/") {
 				hits = append(hits, path)
 				break
 			}
@@ -83,15 +70,6 @@ func fileImports(t *testing.T, path string) []string {
 		}
 	}
 	return out
-}
-
-func containsImport(imps []string, want string) bool {
-	for _, imp := range imps {
-		if imp == want {
-			return true
-		}
-	}
-	return false
 }
 
 func moduleRoot(t *testing.T) string {

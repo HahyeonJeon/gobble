@@ -21,7 +21,8 @@ func TestMethylExtractorChangePreservesUpstreamIdentity(t *testing.T) {
 			t.Fatalf("extractor-only change altered upstream task %s", id)
 		}
 	}
-	if slices.Equal(pc.TaskByID(t, plain, "SRR389222_sub1.bismark_methylation_extractor").Command, pc.TaskByID(t, changed, "SRR389222_sub1.bismark_methylation_extractor").Command) || !methylseq.Lifecycle.Resume || methylseq.Lifecycle.PreLiftResumable {
+	lifecycle := methylseq.Lifecycle()
+	if slices.Equal(pc.TaskByID(t, plain, "SRR389222_sub1.bismark_methylation_extractor").Command, pc.TaskByID(t, changed, "SRR389222_sub1.bismark_methylation_extractor").Command) || !lifecycle.Resume || lifecycle.PreLiftResumable {
 		t.Fatal("Methyl selective resume or graph-generation boundary is incorrect")
 	}
 }

@@ -1,7 +1,10 @@
+// Package fastqc owns the validated FastQC command module.
 package fastqc
 
 import (
+	"path"
 	"strconv"
+	"strings"
 
 	"github.com/HahyeonJeon/gobble"
 	"github.com/HahyeonJeon/gobble/assets/modules"
@@ -46,8 +49,9 @@ func Add(parent modules.Parent, reads gobble.Handle, options Options) (Ports, er
 	if outDir.IsZero() {
 		outDir = gobble.Dir("work/fastqc")
 	}
-	html := gobble.PathSpec{Dir: outDir, Base: fastqcStem(reads.Spec()), Ext: ".html"}
-	zip := gobble.PathSpec{Dir: outDir, Base: fastqcStem(reads.Spec()), Ext: ".zip"}
+	stem := fastqcStem(readPath)
+	html := gobble.PathSpec{Dir: outDir, Base: stem, Ext: ".html"}
+	zip := gobble.PathSpec{Dir: outDir, Base: stem, Ext: ".zip"}
 	command := []string{"fastqc", "--outdir", outDir.String(), "--noextract"}
 	resources := options.Resources
 	if resources.CPU == 0 && resources.Memory == "" {
@@ -80,4 +84,23 @@ func Pipeline(reads gobble.PathSpec, options Options) *gobble.Pipeline {
 		_, err := Add(parent, handles[0], options)
 		return err
 	})
+}
+
+func fastqcStem(readPath string) string {
+	base := path.Base(readPath)
+	lower := strings.ToLower(base)
+	for _, suffix := range []string{".gz", ".bz2", ".xz"} {
+		if strings.HasSuffix(lower, suffix) {
+			base = base[:len(base)-len(suffix)]
+			lower = strings.ToLower(base)
+			break
+		}
+	}
+	for _, suffix := range []string{".fastq", ".fq", ".sam", ".bam", ".txt"} {
+		if strings.HasSuffix(lower, suffix) {
+			base = base[:len(base)-len(suffix)]
+			break
+		}
+	}
+	return base + "_fastqc"
 }

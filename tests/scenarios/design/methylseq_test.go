@@ -7,10 +7,8 @@ import (
 )
 
 func TestMethylSeqProductIsDiscoverable(t *testing.T) {
-	if methylseq.Contract.Parse == nil || methylseq.Contract.Load == nil || methylseq.Contract.DefaultConfig == nil || methylseq.Contract.Build == nil || methylseq.Contract.Pipeline == nil {
-		t.Fatal("Methyl typed product contract is incomplete")
-	}
-	if methylseq.BenchmarkRelease != "nf-core/methylseq 4.2.0" || methylseq.Lifecycle.GraphGeneration != methylseq.GraphGeneration || !methylseq.Lifecycle.Design || methylseq.Lifecycle.PreLiftResumable {
-		t.Fatalf("Methyl product identity/lifecycle = %+v, benchmark %q", methylseq.Lifecycle, methylseq.BenchmarkRelease)
+	lifecycle := methylseq.Lifecycle()
+	if methylseq.BenchmarkRelease != "nf-core/methylseq 4.2.0" || lifecycle.GraphGeneration != methylseq.GraphGeneration || !lifecycle.Design || lifecycle.PreLiftResumable {
+		t.Fatalf("Methyl product identity/lifecycle = %+v, benchmark %q", lifecycle, methylseq.BenchmarkRelease)
 	}
 }

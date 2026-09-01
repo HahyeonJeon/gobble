@@ -11,6 +11,3 @@ vendor/
 # Owner-local fixture caches (dataset bytes stay untracked)
 tests/pipelines/*/testdata/cache/
 tests/modules/*/testdata/cache/
-
-# Omitted --sample CLI cwd (created under the module so go list finds go.mod)
-/local-e2e-cwd-*/

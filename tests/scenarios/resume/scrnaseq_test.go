@@ -35,7 +35,8 @@ func TestSCRNAChangedGraphReusesRawMatricesAndRerunsQCatchDescendants(t *testing
 	} {
 		requireSCRNADecision(t, reuse, identity, want)
 	}
-	if !scrnaseq.Lifecycle.Resume || scrnaseq.Lifecycle.PreLiftResumable {
+	lifecycle := scrnaseq.Lifecycle()
+	if !lifecycle.Resume || lifecycle.PreLiftResumable {
 		t.Fatal("scRNA resume participation or first-generation boundary is wrong")
 	}
 }

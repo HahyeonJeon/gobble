@@ -20,7 +20,7 @@ func TestSCRNAQCatchFailureIsContainedInspectableAndRecoverable(t *testing.T) {
 	runtime.FailInput(failed)
 	err := runtime.Run(t.Context())
 	var structured *gobble.Error
-	if !errors.As(err, &structured) || !hasSCRNADefectUnit(structured, failed) || !scrnaseq.Lifecycle.Failure {
+	if !errors.As(err, &structured) || !hasSCRNADefectUnit(structured, failed) || !scrnaseq.Lifecycle().Failure {
 		t.Fatalf("Run input failure = %v, want contained scRNA task failure", err)
 	}
 	errorsView := runtime.InspectRecords(gobble.ViewErrors)

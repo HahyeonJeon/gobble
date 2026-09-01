@@ -18,7 +18,8 @@ func TestRNASalmonChangePreservesUpstreamSTARIdentity(t *testing.T) {
 	if !slices.Equal(pc.TaskByID(t, plain, "WT_REP1.star_align").Command, pc.TaskByID(t, changed, "WT_REP1.star_align").Command) {
 		t.Fatal("Salmon-only change altered upstream STAR identity")
 	}
-	if slices.Equal(pc.TaskByID(t, plain, "WT_REP1.salmon_quant").Command, pc.TaskByID(t, changed, "WT_REP1.salmon_quant").Command) || !rnaseq.Lifecycle.Resume || rnaseq.Lifecycle.PreLiftResumable {
+	lifecycle := rnaseq.Lifecycle()
+	if slices.Equal(pc.TaskByID(t, plain, "WT_REP1.salmon_quant").Command, pc.TaskByID(t, changed, "WT_REP1.salmon_quant").Command) || !lifecycle.Resume || lifecycle.PreLiftResumable {
 		t.Fatal("RNA selective resume or graph-generation boundary is incorrect")
 	}
 }

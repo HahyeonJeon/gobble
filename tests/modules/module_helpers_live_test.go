@@ -1,6 +1,6 @@
 //go:build live
 
-package run
+package moduleevidence
 
 import (
 	"bytes"
@@ -26,7 +26,7 @@ var identityErr error
 func testOccupyOption(t *testing.T) gobble.OccupyOption {
 	t.Helper()
 	identityOnce.Do(func() {
-		identity, identityErr = gobble.IdentityFromBuildInfo("github.com/HahyeonJeon/gobble/tests/scenarios/run")
+		identity, identityErr = gobble.IdentityFromBuildInfo("github.com/HahyeonJeon/gobble/tests/modules")
 	})
 	if identityErr != nil {
 		t.Fatalf("IdentityFromBuildInfo() error = %v", identityErr)
@@ -105,9 +105,9 @@ func moduleRoot(t *testing.T) string {
 
 func stageMethylPins(t *testing.T, dir string) {
 	t.Helper()
-	pc.StageFile(t, dir, "in/genome.fa", cachePin(t, methylseqevidence.CacheDir, methylseqevidence.GenomeFASTA))
-	pc.StageFile(t, dir, "in/Ecoli_10K_methylated_R1.fastq.gz", cachePin(t, methylseqevidence.CacheDir, methylseqevidence.Test1FASTQ))
-	pc.StageFile(t, dir, "in/Ecoli_10K_methylated_R2.fastq.gz", cachePin(t, methylseqevidence.CacheDir, methylseqevidence.Test2FASTQ))
+	pc.StageFile(t, dir, "in/genome.fa", cachePin(t, methylseqevidence.CacheDir, methylseqevidence.MustPin("genome.fa")))
+	pc.StageFile(t, dir, "in/Ecoli_10K_methylated_R1.fastq.gz", cachePin(t, methylseqevidence.CacheDir, methylseqevidence.MustPin("Ecoli_10K_methylated_R1.fastq.gz")))
+	pc.StageFile(t, dir, "in/Ecoli_10K_methylated_R2.fastq.gz", cachePin(t, methylseqevidence.CacheDir, methylseqevidence.MustPin("Ecoli_10K_methylated_R2.fastq.gz")))
 }
 
 func inspectJSONL(t *testing.T, workspace, view string) []map[string]any {

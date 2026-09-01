@@ -12,17 +12,19 @@ import (
 
 func TestFastQCStandaloneComposeBuildPlan(t *testing.T) {
 	reads := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_1", Ext: ".fastq.gz"}
-	opts := FastQCOptions{
-		ExtraArgs: []string{"--kmers", "7"},
-		Resources: gobble.Resources{CPU: 2},
+	opts := Options{
+		Options: modules.Options{
+			ExtraArgs: []string{"--kmers", "7"},
+			Resources: gobble.Resources{CPU: 2},
+		},
 	}
-	p := FastQCPipeline(reads, opts)
+	p := Pipeline(reads, opts)
 	raw := pc.MustPlanJSON(t, p)
 	task := pc.TaskByID(t, raw, "fastqc")
 	if task.Name != "fastqc" {
 		t.Fatalf("task name = %q, want fastqc", task.Name)
 	}
-	if task.Image != "quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0" {
+	if task.Image != string(DefaultImage) {
 		t.Fatalf("image = %q, want locked FastQC pin", task.Image)
 	}
 	if !pc.ContainsAll(task.Command, "fastqc", "--outdir", "work/fastqc", "--noextract", "--threads", "2", "in/test_1.fastq.gz", "--kmers", "7") {
@@ -41,7 +43,10 @@ func TestFastQCNestedModule(t *testing.T) {
 	p := gobble.NewPipeline("assay")
 	h := p.AddInput("reads", reads)
 	mod := p.AddModule("raw")
-	ports := AddFastQC(mod, h, FastQCOptions{ExtraArgs: []string{"--quiet"}})
+	ports, err := Add(mod, h, Options{Options: modules.Options{ExtraArgs: []string{"--quiet"}}})
+	if err != nil {
+		t.Fatalf("Add() error = %v", err)
+	}
 	if ports.HTML.IsZero() || ports.Zip.IsZero() {
 		t.Fatalf("ports HTML/Zip IsZero = %v/%v, want false", ports.HTML.IsZero(), ports.Zip.IsZero())
 	}

@@ -142,17 +142,10 @@ type Config struct {
 	MultiQC           multiqc.Options
 }
 
-// Contract is the compile-time WGS pipeline surface.
-var Contract = pipelines.Contract[Sample, Config]{
-	Parse: Parse, Load: Load, DefaultConfig: DefaultConfig, Build: Build, Pipeline: Pipeline,
-}
-
 // Lifecycle declares WGS participation in every shared scenario owner. The
 // pre-lift two-sample alignment/QC checkpoint is a different graph generation.
-var Lifecycle = pipelines.LifecycleParticipation{
-	GraphGeneration: GraphGeneration,
-	Design:          true, Build: true, Customize: true, Run: true,
-	Resume: true, Stop: true, Failure: true, PreLiftResumable: false,
+func Lifecycle() pipelines.LifecycleParticipation {
+	return pipelines.CompleteLifecycle(GraphGeneration)
 }
 
 var (

@@ -9,6 +9,7 @@ import (
 
 	"github.com/HahyeonJeon/gobble/assets/pipelines/methylseq"
 	pc "github.com/HahyeonJeon/gobble/tests/internal/plancheck"
+	methylseqevidence "github.com/HahyeonJeon/gobble/tests/pipelines/methylseq"
 )
 
 // Samples loads the Methyl pipeline owner's localized official fixture.
@@ -18,7 +19,7 @@ func Samples(t *testing.T) ([]methylseq.Sample, string) {
 	if !ok {
 		t.Fatal("runtime.Caller failed")
 	}
-	path := filepath.Join(filepath.Dir(file), "..", "..", "..", "pipelines", "methylseq", "testdata", "methylseq-samplesheet.csv")
+	path := filepath.Join(filepath.Dir(file), "..", "..", "..", "..", filepath.FromSlash(methylseqevidence.FixtureSheet))
 	samples, err := methylseq.Load(path)
 	if err != nil {
 		t.Fatalf("Load Methyl fixture: %v", err)

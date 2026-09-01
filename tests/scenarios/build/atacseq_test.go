@@ -17,7 +17,7 @@ func TestATACTypedBuildMatchesDefaultAdapter(t *testing.T) {
 	gobble.SetSampleSheetPath(sheet)
 	t.Cleanup(func() { gobble.SetSampleSheetPath(previous) })
 	got := pc.MustPlanJSON(t, atacseq.Pipeline())
-	if !bytes.Equal(got, want) || !atacseq.Lifecycle.Build {
+	if !bytes.Equal(got, want) || !atacseq.Lifecycle().Build {
 		t.Fatal("ATAC default adapter differs from typed Load plus Build")
 	}
 }

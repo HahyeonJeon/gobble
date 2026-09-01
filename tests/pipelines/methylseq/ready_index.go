@@ -4,7 +4,6 @@ import (
 	"archive/tar"
 	"compress/gzip"
 	"crypto/sha256"
-	_ "embed"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -21,9 +20,6 @@ import (
 )
 
 const gobbleTreeManifestName = ".gobble-tree.json"
-
-//go:embed testdata/manifest.json
-var manifestJSON []byte
 
 type readyIndexManifest struct {
 	Trees []readyIndexTree `json:"trees"`
@@ -49,7 +45,7 @@ func PrepareReadyIndex(archivePath, treeDir string) error {
 	if err != nil {
 		return err
 	}
-	return prepareReadyIndex(archivePath, treeDir, ReadyIndexArchive, authority)
+	return prepareReadyIndex(archivePath, treeDir, MustPin("Bowtie2_Index.tar.gz"), authority)
 }
 
 // CheckReadyIndex verifies that treeDir contains the Gobble Tree manifest and
@@ -71,7 +67,7 @@ func officialReadyIndexAuthority() (readyIndexTree, error) {
 		return readyIndexTree{}, fmt.Errorf("ready Bismark index manifest: got %d Trees, want 1", len(manifest.Trees))
 	}
 	authority := manifest.Trees[0]
-	if authority.Name == "" || strings.Contains(authority.Name, "/") || authority.Archive != ReadyIndexArchive.Name || len(authority.Members) == 0 {
+	if authority.Name == "" || strings.Contains(authority.Name, "/") || authority.Archive != MustPin("Bowtie2_Index.tar.gz").Name || len(authority.Members) == 0 {
 		return readyIndexTree{}, errors.New("ready Bismark index manifest: invalid Tree authority")
 	}
 	seen := make(map[string]bool, len(authority.Members))

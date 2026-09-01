@@ -9,6 +9,7 @@ import (
 
 	"github.com/HahyeonJeon/gobble/assets/pipelines/scrnaseq"
 	pc "github.com/HahyeonJeon/gobble/tests/internal/plancheck"
+	scrnaseqevidence "github.com/HahyeonJeon/gobble/tests/pipelines/scrnaseq"
 )
 
 // Samples loads the pipeline-owned typed scRNA fixture.
@@ -18,7 +19,7 @@ func Samples(t *testing.T) ([]scrnaseq.Sample, string) {
 	if !ok {
 		t.Fatal("runtime.Caller failed")
 	}
-	path := filepath.Join(filepath.Dir(file), "..", "..", "..", "pipelines", "scrnaseq", "testdata", "scrnaseq-samplesheet.csv")
+	path := filepath.Join(filepath.Dir(file), "..", "..", "..", "..", filepath.FromSlash(scrnaseqevidence.FixtureSheet))
 	samples, err := scrnaseq.Load(path)
 	if err != nil {
 		t.Fatalf("Load scRNA fixture: %v", err)

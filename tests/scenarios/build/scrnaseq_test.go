@@ -17,7 +17,7 @@ func TestSCRNATypedBuildMatchesDefaultAdapter(t *testing.T) {
 	gobble.SetSampleSheetPath(sheet)
 	t.Cleanup(func() { gobble.SetSampleSheetPath(previous) })
 	got := pc.MustPlanJSON(t, scrnaseq.Pipeline())
-	if !bytes.Equal(got, want) || !scrnaseq.Lifecycle.Build {
+	if !bytes.Equal(got, want) || !scrnaseq.Lifecycle().Build {
 		t.Fatal("scRNA default adapter differs from typed Load plus Build")
 	}
 }

@@ -14,7 +14,7 @@ func TestATACTypedPeakCustomizationIsVisible(t *testing.T) {
 	config.MACS2.QValue = 0.01
 	raw := atacseqscenario.Plan(t, config)
 	task := pc.TaskByID(t, raw, "OSMOTIC_STRESS_T0_PE.replicate_1.peaks.macs2_callpeak")
-	if !pc.ContainsAll(task.Command, "--qvalue", "0.01") || contains(task.Command, "--broad") || !atacseq.Lifecycle.Customize {
+	if !pc.ContainsAll(task.Command, "--qvalue", "0.01") || contains(task.Command, "--broad") || !atacseq.Lifecycle().Customize {
 		t.Fatalf("ATAC peak customization is absent: %#v", task.Command)
 	}
 }

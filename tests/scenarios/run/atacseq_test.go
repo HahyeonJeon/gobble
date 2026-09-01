@@ -30,7 +30,7 @@ func TestATACRunCompletesRequiredArtifactsHermetically(t *testing.T) {
 			t.Errorf("required artifact %s: %v", rel, err)
 		}
 	}
-	if remaining := runtime.InspectRecords(gobble.ViewRemaining); len(remaining) != 0 || !atacseq.Lifecycle.Run {
-		t.Fatalf("ATAC remaining = %#v, run participation %t", remaining, atacseq.Lifecycle.Run)
+	if remaining := runtime.InspectRecords(gobble.ViewRemaining); len(remaining) != 0 || !atacseq.Lifecycle().Run {
+		t.Fatalf("ATAC remaining = %#v, run participation %t", remaining, atacseq.Lifecycle().Run)
 	}
 }

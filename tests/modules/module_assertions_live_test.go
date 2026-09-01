@@ -1,6 +1,6 @@
 //go:build live
 
-package run
+package moduleevidence
 
 import (
 	"bufio"

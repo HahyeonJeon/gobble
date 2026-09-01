@@ -35,7 +35,8 @@ func TestATACResumeReusesAlignmentAndRerunsPeakDescendants(t *testing.T) {
 	} {
 		requireDecision(t, reuse, identity, want)
 	}
-	if !atacseq.Lifecycle.Resume || atacseq.Lifecycle.PreLiftResumable {
+	lifecycle := atacseq.Lifecycle()
+	if !lifecycle.Resume || lifecycle.PreLiftResumable {
 		t.Fatal("ATAC resume participation or first-generation boundary is wrong")
 	}
 }

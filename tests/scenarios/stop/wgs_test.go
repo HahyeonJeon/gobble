@@ -12,7 +12,7 @@ func TestWGSStopParticipationCoversIntervalWork(t *testing.T) {
 	tasks := pc.AllTasks(t, wgsscenario.Plan(t, wgs.DefaultConfig()))
 	pc.MustHaveTaskID(t, tasks, "bqsr_intervals.patient1.testN.gatk4_applybqsr")
 	pc.MustHaveTaskID(t, tasks, "joint_intervals.genotype.gatk4_genotypegvcfs")
-	if !wgs.Lifecycle.Stop {
+	if !wgs.Lifecycle().Stop {
 		t.Fatal("WGS stop participation is false")
 	}
 }

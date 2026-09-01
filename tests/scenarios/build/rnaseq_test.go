@@ -17,7 +17,7 @@ func TestRNATypedBuildMatchesDefaultAdapter(t *testing.T) {
 	gobble.SetSampleSheetPath(sheet)
 	t.Cleanup(func() { gobble.SetSampleSheetPath(previous) })
 	got := pc.MustPlanJSON(t, rnaseq.Pipeline())
-	if !bytes.Equal(got, want) || !rnaseq.Lifecycle.Build {
+	if !bytes.Equal(got, want) || !rnaseq.Lifecycle().Build {
 		t.Fatal("RNA default adapter differs from typed Load plus Build")
 	}
 }

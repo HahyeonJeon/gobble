@@ -304,8 +304,9 @@ func TestWGSDefaultsAreFreshAndLifecycleIsComplete(t *testing.T) {
 	if second.Reference.KnownSites[0].Name != "dbsnp" || second.Reference.Intervals[0].Name != "interval_001" || len(second.HaplotypeCaller.ExtraArgs) != 0 {
 		t.Fatalf("DefaultConfig retained caller mutation: %#v", second)
 	}
-	if wgs.GraphGeneration != "wgs-joint-germline-v1" || !wgs.Lifecycle.Design || !wgs.Lifecycle.Build || !wgs.Lifecycle.Customize || !wgs.Lifecycle.Run || !wgs.Lifecycle.Resume || !wgs.Lifecycle.Stop || !wgs.Lifecycle.Failure || wgs.Lifecycle.PreLiftResumable {
-		t.Fatalf("Lifecycle = %#v, want complete non-resumable lift", wgs.Lifecycle)
+	lifecycle := wgs.Lifecycle()
+	if wgs.GraphGeneration != "wgs-joint-germline-v1" || !lifecycle.Complete() || lifecycle.PreLiftResumable {
+		t.Fatalf("Lifecycle = %#v, want complete non-resumable lift", lifecycle)
 	}
 }
 

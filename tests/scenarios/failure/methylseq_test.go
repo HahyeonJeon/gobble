@@ -15,7 +15,7 @@ func TestMethylInvalidRouteFlagFailsBeforeRun(t *testing.T) {
 	config.BismarkAlign.ExtraArgs = []string{"--pbat"}
 	graph, err := gobble.Compose(methylseq.Build(samples, config))
 	var structured *gobble.Error
-	if graph != nil || !errors.As(err, &structured) || structured == nil || !methylseq.Lifecycle.Failure {
+	if graph != nil || !errors.As(err, &structured) || structured == nil || !methylseq.Lifecycle().Failure {
 		t.Fatalf("invalid Methyl route Compose() = (%v, %v), want structured pre-run failure", graph, err)
 	}
 }

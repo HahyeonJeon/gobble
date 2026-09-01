@@ -289,7 +289,7 @@ func TestAdapterAndLifecycleContract(t *testing.T) {
 	if got, want := pc.MustPlanJSON(t, atacseq.Pipeline()), pc.MustPlanJSON(t, atacseq.Build(loadSamples(t), atacseq.DefaultConfig())); !bytes.Equal(got, want) {
 		t.Fatal("Pipeline adapter differs from typed Build")
 	}
-	lifecycle := atacseq.Lifecycle
+	lifecycle := atacseq.Lifecycle()
 	if lifecycle.GraphGeneration != atacseq.GraphGeneration || !lifecycle.Design || !lifecycle.Build || !lifecycle.Customize || !lifecycle.Run || !lifecycle.Resume || !lifecycle.Stop || !lifecycle.Failure || lifecycle.PreLiftResumable {
 		t.Fatalf("Lifecycle = %#v, want complete first-generation participation", lifecycle)
 	}

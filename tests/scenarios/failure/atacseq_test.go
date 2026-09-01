@@ -21,7 +21,7 @@ func TestATACInputFailureIsContainedInspectableAndRecoverable(t *testing.T) {
 	runtime.FailInput(failed)
 	err := runtime.Run(t.Context())
 	var structured *gobble.Error
-	if !errors.As(err, &structured) || !hasATACDefectUnit(structured, failed) || !atacseq.Lifecycle.Failure {
+	if !errors.As(err, &structured) || !hasATACDefectUnit(structured, failed) || !atacseq.Lifecycle().Failure {
 		t.Fatalf("Run input failure = %v, want contained ATAC task failure", err)
 	}
 	errorsView := runtime.InspectRecords(gobble.ViewErrors)

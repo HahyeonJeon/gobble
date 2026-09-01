@@ -1,56 +1,43 @@
-// Package wgsevidence owns typed access to the WGS fixture manifest's exact
-// Planning-bound bytes.
+// Package wgsevidence owns typed access to the WGS fixture manifest.
 package wgsevidence
 
 import (
+	"bytes"
 	_ "embed"
-	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/HahyeonJeon/gobble/tests/internal/fixture"
 )
 
-// CacheDir is the WGS owner's ignored host cache.
-const CacheDir = "tests/pipelines/wgs/testdata/cache"
-
-// ManifestPath is the WGS owner's sole fixture manifest.
-const ManifestPath = "tests/pipelines/wgs/testdata/manifest.json"
-
-// FixtureSheet is the localized typed WGS samplesheet.
-const FixtureSheet = "tests/pipelines/wgs/testdata/wgs-samplesheet.csv"
-
-type manifest struct {
-	Entries []struct {
-		Name   string `json:"name"`
-		URL    string `json:"url"`
-		Bytes  int64  `json:"bytes"`
-		SHA256 string `json:"sha256"`
-		Staged bool   `json:"staged"`
-	} `json:"entries"`
-}
+const (
+	CacheDir     = "tests/pipelines/wgs/testdata/cache"
+	ManifestPath = "tests/pipelines/wgs/testdata/manifest.json"
+	FixtureSheet = "tests/pipelines/wgs/testdata/wgs-samplesheet.csv"
+)
 
 //go:embed testdata/manifest.json
 var manifestJSON []byte
 
-// Pins returns copied directly staged pin records in manifest order. Benchmark
-// selectors and license/provenance bytes remain manifest authority but are not
-// fetched as product inputs.
-func Pins() ([]fixture.Pin, error) {
-	var decoded manifest
-	if err := json.Unmarshal(manifestJSON, &decoded); err != nil {
-		return nil, fmt.Errorf("decode WGS fixture manifest: %w", err)
+func Manifest() (fixture.Manifest, error) { return fixture.DecodeManifest(manifestJSON) }
+
+func MustManifest() fixture.Manifest {
+	manifest, err := Manifest()
+	if err != nil {
+		panic(err)
 	}
-	pins := make([]fixture.Pin, 0, len(decoded.Entries))
-	for _, entry := range decoded.Entries {
-		if !entry.Staged {
-			continue
-		}
-		pins = append(pins, fixture.Pin{Name: entry.Name, URL: entry.URL, Bytes: entry.Bytes, SHA256: entry.SHA256})
-	}
-	return pins, nil
+	return manifest
 }
 
-// MustPins returns Pins or panics for an invalid committed manifest.
+func Pins() ([]fixture.Pin, error) {
+	manifest, err := Manifest()
+	if err != nil {
+		return nil, fmt.Errorf("decode WGS fixture manifest: %w", err)
+	}
+	return manifest.Pins(), nil
+}
+
 func MustPins() []fixture.Pin {
 	pins, err := Pins()
 	if err != nil {
@@ -59,8 +46,6 @@ func MustPins() []fixture.Pin {
 	return pins
 }
 
-// MustPin returns the staged pin named name or panics when the committed
-// manifest omits it.
 func MustPin(name string) fixture.Pin {
 	for _, pin := range MustPins() {
 		if pin.Name == name {
@@ -70,7 +55,34 @@ func MustPin(name string) fixture.Pin {
 	panic("WGS fixture manifest missing staged pin " + name)
 }
 
-// Fetch returns a verified cached fixture for live evidence.
-func Fetch(cacheDir string, pin fixture.Pin) (string, error) {
-	return fixture.Fetch(cacheDir, pin)
+func StagedInputs() []fixture.StagedInput { return MustManifest().StagedInputs() }
+
+func Fetch(cacheDir string, pin fixture.Pin) (string, error) { return fixture.Fetch(cacheDir, pin) }
+
+// StageOfficial stages the default WGS product inputs and materializes the two
+// declared interval members from the manifest-owned source byte.
+func StageOfficial(cacheDir, workspace string) ([]fixture.StagedInput, error) {
+	inputs, err := fixture.StageManifest(cacheDir, workspace, MustManifest())
+	if err != nil {
+		return nil, err
+	}
+	source := filepath.Join(workspace, "in", "reference", "genome.multi_intervals.bed")
+	data, err := os.ReadFile(source)
+	if err != nil {
+		return nil, fmt.Errorf("read WGS interval source: %w", err)
+	}
+	lines := bytes.Split(bytes.TrimSpace(data), []byte("\n"))
+	if len(lines) != 2 {
+		return nil, fmt.Errorf("WGS interval source has %d members, want 2", len(lines))
+	}
+	for i, line := range lines {
+		path := filepath.Join(workspace, "in", "reference", "intervals", fmt.Sprintf("interval_%03d.bed", i+1))
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+			return nil, err
+		}
+		if err := os.WriteFile(path, append(append([]byte(nil), line...), '\n'), 0o644); err != nil {
+			return nil, err
+		}
+	}
+	return inputs, nil
 }

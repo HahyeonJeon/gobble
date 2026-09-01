@@ -1,6 +1,6 @@
 //go:build live
 
-package run
+package moduleevidence
 
 import (
 	"os"
@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
+	"github.com/HahyeonJeon/gobble/assets/modules"
 	bismarkalign "github.com/HahyeonJeon/gobble/assets/modules/bismark-align"
 	bismarkgenome "github.com/HahyeonJeon/gobble/assets/modules/bismark-genome"
 	bismarkmethylationextractor "github.com/HahyeonJeon/gobble/assets/modules/bismark-methylation-extractor"
@@ -33,9 +34,10 @@ func TestFastQCStandaloneRun(t *testing.T) {
 	dir := t.TempDir()
 	pc.StageFile(t, dir, "in/test_1.fastq.gz", src)
 	reads := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_1", Ext: ".fastq.gz"}
-	p := fastqc.FastQCPipeline(reads, fastqc.FastQCOptions{
+	p := fastqc.Pipeline(reads, fastqc.Options{Options: modules.Options{
 		ExtraArgs: []string{"--quiet"},
 		Resources: gobble.Resources{CPU: 1},
+	},
 	})
 	g, err := gobble.Compose(p)
 	if err != nil {
@@ -58,8 +60,8 @@ func TestFastQCExtraArgsResume(t *testing.T) {
 	dir := t.TempDir()
 	pc.StageFile(t, dir, "in/test_1.fastq.gz", src)
 	reads := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_1", Ext: ".fastq.gz"}
-	opts := fastqc.FastQCOptions{ExtraArgs: []string{"--quiet"}, Resources: gobble.Resources{CPU: 1}}
-	g, err := gobble.Compose(fastqc.FastQCPipeline(reads, opts))
+	opts := fastqc.Options{Options: modules.Options{ExtraArgs: []string{"--quiet"}, Resources: gobble.Resources{CPU: 1}}}
+	g, err := gobble.Compose(fastqc.Pipeline(reads, opts))
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
 	}
@@ -70,7 +72,7 @@ func TestFastQCExtraArgsResume(t *testing.T) {
 		fatalAPIError(t, "Release()", err)
 	}
 	opts.ExtraArgs = []string{"--quiet", "--kmers", "7"}
-	g2, err := gobble.Compose(fastqc.FastQCPipeline(reads, opts))
+	g2, err := gobble.Compose(fastqc.Pipeline(reads, opts))
 	if err != nil {
 		t.Fatalf("Compose(changed extra-args) error = %v", err)
 	}
@@ -150,7 +152,7 @@ func TestMultiQCStandaloneRun(t *testing.T) {
 	dir := t.TempDir()
 	pc.StageFile(t, dir, "in/test_fastqc.zip", src)
 	report := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "test_fastqc", Ext: ".zip"}
-	p := multiqc.MultiQCPipeline([]gobble.PathSpec{report}, multiqc.MultiQCOptions{})
+	p := multiqc.Pipeline([]gobble.PathSpec{report}, multiqc.Options{})
 	g, err := gobble.Compose(p)
 	if err != nil {
 		t.Fatalf("Compose() error = %v", err)
@@ -158,7 +160,7 @@ func TestMultiQCStandaloneRun(t *testing.T) {
 	if err := gobble.Run(t.Context(), g, dir, 1, testOccupyOption(t)); err != nil {
 		fatalAPIError(t, "Run()", err)
 	}
-	for _, rel := range []string{"work/multiqc/multiqc_report.html", "work/multiqc/multiqc_data.zip"} {
+	for _, rel := range []string{"results/multiqc/multiqc_report.html", "results/multiqc/multiqc_data/.gobble-tree.json"} {
 		info, err := os.Stat(filepath.Join(dir, filepath.FromSlash(rel)))
 		if err != nil || !info.Mode().IsRegular() {
 			t.Fatalf("published %s: %v", rel, err)
@@ -168,8 +170,8 @@ func TestMultiQCStandaloneRun(t *testing.T) {
 
 func TestSTARGenomeGenerateStandaloneRun(t *testing.T) {
 	requireDocker(t)
-	srcFASTA := cachePin(t, rnaseqevidence.CacheDir, rnaseqevidence.GenomeFASTA)
-	srcGTF := cachePin(t, rnaseqevidence.CacheDir, rnaseqevidence.GTF)
+	srcFASTA := cachePin(t, rnaseqevidence.CacheDir, rnaseqevidence.MustPin("genome.fasta"))
+	srcGTF := cachePin(t, rnaseqevidence.CacheDir, rnaseqevidence.MustPin("genes_with_empty_tid.gtf.gz"))
 	dir := t.TempDir()
 	pc.StageFile(t, dir, "in/genome.fasta", srcFASTA)
 	pc.StageFile(t, dir, "in/genes.gtf", srcGTF)
@@ -203,10 +205,10 @@ func TestSTARGenomeGenerateStandaloneRun(t *testing.T) {
 
 func TestSTARAlignNestedRun(t *testing.T) {
 	requireDocker(t)
-	srcFASTA := cachePin(t, rnaseqevidence.CacheDir, rnaseqevidence.GenomeFASTA)
-	srcGTF := cachePin(t, rnaseqevidence.CacheDir, rnaseqevidence.GTF)
-	srcR1 := cachePin(t, rnaseqevidence.CacheDir, rnaseqevidence.Test1FASTQ)
-	srcR2 := cachePin(t, rnaseqevidence.CacheDir, rnaseqevidence.Test2FASTQ)
+	srcFASTA := cachePin(t, rnaseqevidence.CacheDir, rnaseqevidence.MustPin("genome.fasta"))
+	srcGTF := cachePin(t, rnaseqevidence.CacheDir, rnaseqevidence.MustPin("genes_with_empty_tid.gtf.gz"))
+	srcR1 := cachePin(t, rnaseqevidence.CacheDir, rnaseqevidence.MustPin("SRR6357072_1.fastq.gz"))
+	srcR2 := cachePin(t, rnaseqevidence.CacheDir, rnaseqevidence.MustPin("SRR6357072_2.fastq.gz"))
 	dir := t.TempDir()
 	pc.StageFile(t, dir, "in/genome.fasta", srcFASTA)
 	pc.StageFile(t, dir, "in/genes.gtf", srcGTF)
@@ -246,7 +248,7 @@ func TestSTARAlignNestedRun(t *testing.T) {
 
 func TestBismarkGenomeStandaloneRun(t *testing.T) {
 	requireDocker(t)
-	src := cachePin(t, methylseqevidence.CacheDir, methylseqevidence.GenomeFASTA)
+	src := cachePin(t, methylseqevidence.CacheDir, methylseqevidence.MustPin("genome.fa"))
 	dir := t.TempDir()
 	pc.StageFile(t, dir, "in/genome.fa", src)
 	fasta := gobble.PathSpec{Dir: gobble.Dir("in"), Base: "genome", Ext: ".fa"}

@@ -16,7 +16,7 @@ func TestMethylRunCandidateDeclaresRequiredFinalArtifacts(t *testing.T) {
 	pc.AssertIOPath(t, pc.TaskByID(t, raw, "Ecoli_10K_methylated.bismark_deduplicate").Outputs, "deduplicated_bam", "results/methylseq/bismark/Ecoli_10K_methylated/Ecoli_10K_methylated_pe.deduplicated.bam")
 	pc.AssertIOPath(t, pc.TaskByID(t, raw, "Ecoli_10K_methylated.bismark_methylation_extractor").Outputs, "cpg", "results/methylseq/methylation-calls/Ecoli_10K_methylated/CpG_context_Ecoli_10K_methylated_pe.deduplicated.txt.gz")
 	pc.AssertIOPath(t, pc.TaskByID(t, raw, "multiqc").Outputs, "html", "results/methylseq/multiqc/multiqc_report.html")
-	if !methylseq.Lifecycle.Run {
+	if !methylseq.Lifecycle().Run {
 		t.Fatal("Methyl run participation is false")
 	}
 }

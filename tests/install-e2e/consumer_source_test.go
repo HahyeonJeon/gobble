@@ -132,34 +132,12 @@ func main() {
 		os.Exit(2)
 	}
 	workspace := os.Args[1]
-	destinations := map[string]string{
-		"test_1.fastq.gz": "in/reads/test_1.fastq.gz",
-		"test_2.fastq.gz": "in/reads/test_2.fastq.gz",
-		"test2_1.fastq.gz": "in/reads/test2_1.fastq.gz",
-		"test2_2.fastq.gz": "in/reads/test2_2.fastq.gz",
-		"genome.fasta": "in/reference/genome.fasta",
-		"genome.fasta.fai": "in/reference/genome.fasta.fai",
-		"genome.dict": "in/reference/genome.dict",
-		"genome.multi_intervals.bed": "in/reference/genome.multi_intervals.bed",
-		"dbsnp_146.hg38.vcf.gz": "in/reference/known-sites/dbsnp_146.hg38.vcf.gz",
-		"dbsnp_146.hg38.vcf.gz.tbi": "in/reference/known-sites/dbsnp_146.hg38.vcf.gz.tbi",
-		"mills_and_1000G.indels.vcf.gz": "in/reference/known-sites/mills_and_1000G.indels.vcf.gz",
-		"mills_and_1000G.indels.vcf.gz.tbi": "in/reference/known-sites/mills_and_1000G.indels.vcf.gz.tbi",
-		"test.paired_end.sorted.bam": "in/joint/testN/test.paired_end.sorted.bam",
-		"test.paired_end.sorted.bam.bai": "in/joint/testN/test.paired_end.sorted.bam.bai",
-		"test2.paired_end.sorted.bam": "in/joint/testT/test2.paired_end.sorted.bam",
-		"test2.paired_end.sorted.bam.bai": "in/joint/testT/test2.paired_end.sorted.bam.bai",
-	}
-	for _, pin := range wgsevidence.MustPins() {
-		rel, ok := destinations[pin.Name]
-		if !ok {
-			continue
-		}
-		source, err := wgsevidence.Fetch("testdata/cache", pin)
+	for _, input := range wgsevidence.StagedInputs() {
+		source, err := wgsevidence.Fetch("testdata/cache", input.Pin)
 		if err != nil {
 			fail(err)
 		}
-		destination := filepath.Join(workspace, filepath.FromSlash(rel))
+		destination := filepath.Join(workspace, filepath.FromSlash(input.Destination))
 		if err := copyFile(source, destination); err != nil {
 			fail(err)
 		}
