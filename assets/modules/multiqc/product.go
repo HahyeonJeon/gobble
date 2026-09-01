@@ -11,6 +11,11 @@ import (
 // linux/amd64.
 const DefaultImage modules.Image = "community.wave.seqera.io/library/multiqc:1.33--ee7739d47738383b@sha256:abd5751768f8dadb626cd9698d3d11be8f1b6458074757df57c08a0b909dac93"
 
+var protectedExtraArgs = []string{
+	"--force", "--outdir", "-o", "--filename", "-n", "--file-list",
+	"--no-data-dir", "--zip-data-dir", "--version", "--help",
+}
+
 // Options controls one lifted MultiQC command.
 type Options struct {
 	modules.Options
@@ -21,6 +26,12 @@ type Options struct {
 type Ports struct {
 	HTML gobble.Handle
 	Data gobble.Handle
+}
+
+// ProtectedExtraArg returns the first MultiQC option that competes with the
+// module-owned report inputs, outputs, or command behavior.
+func ProtectedExtraArg(extraArgs []string) string {
+	return modules.MatchProtectedExtraArg(extraArgs, protectedExtraArgs)
 }
 
 // Add records one validated MultiQC command over declared report artifacts.
@@ -49,10 +60,10 @@ func Add(parent modules.Parent, reports []gobble.Handle, options Options) (Ports
 		}
 		inputs[i] = input
 	}
-	if err := modules.RejectExtraArgs(unit, options.ExtraArgs, []string{"--filename", "--no-data-dir", "--zip-data-dir", "--version", "--help"}); err != nil {
+	if err := modules.RejectExtraArgPrefixes(unit, options.ExtraArgs, protectedExtraArgs); err != nil {
 		return Ports{}, err
 	}
-	command, image, resources, err := modules.ResolveOptions(unit, options.Options, DefaultImage, gobble.Resources{CPU: 1, Memory: "2g"}, command, []string{"--force", "--outdir"})
+	command, image, resources, err := modules.ResolveOptions(unit, options.Options, DefaultImage, gobble.Resources{CPU: 1, Memory: "2g"}, command, protectedExtraArgs)
 	if err != nil {
 		return Ports{}, err
 	}

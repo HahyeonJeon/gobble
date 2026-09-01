@@ -6,6 +6,8 @@ import (
 
 	"github.com/HahyeonJeon/gobble"
 	"github.com/HahyeonJeon/gobble/assets/modules"
+	"github.com/HahyeonJeon/gobble/assets/modules/fastqc"
+	"github.com/HahyeonJeon/gobble/assets/modules/multiqc"
 	simpleafindex "github.com/HahyeonJeon/gobble/assets/modules/simpleaf-index"
 	simpleafquant "github.com/HahyeonJeon/gobble/assets/modules/simpleaf-quant"
 )
@@ -111,12 +113,14 @@ func protectedExtra(config Config) (string, string) {
 	if len(config.Consolidate.ExtraArgs) != 0 {
 		return "cat_fastq", "typed-input"
 	}
+	if flag := fastqc.ProtectedExtraArg(config.FastQC.ExtraArgs); flag != "" {
+		return "fastqc", flag
+	}
 	sets := []struct {
 		unit  string
 		args  []string
 		flags []string
 	}{
-		{unit: "fastqc", args: config.FastQC.ExtraArgs, flags: []string{"--outdir", "--threads", "--extract"}},
 		{unit: "gffread_transcriptome", args: config.Transcriptome.ExtraArgs, flags: []string{"-F", "-w", "-g", "-o"}},
 	}
 	for _, set := range sets {
@@ -136,11 +140,13 @@ func protectedExtra(config Config) (string, string) {
 		flags []string
 	}{
 		{unit: "qcatch", args: config.QCatch.ExtraArgs, flags: []string{"--input", "-i", "--output", "-o", "--chemistry", "-c", "--n_partitions", "-n", "--save_filtered_h5ad", "-s", "--export_summary_table", "-e", "--remove_doublets", "-d", "--visualize_doublets", "-vd", "--skip_umap_tsne", "-u", "--gene_id2name_file", "-g", "--valid_cell_list", "-l"}},
-		{unit: "multiqc", args: config.MultiQC.ExtraArgs, flags: []string{"--outdir", "--filename", "--no-data-dir", "--zip-data-dir"}},
 	} {
 		if flag := modules.MatchProtectedExtraArg(set.args, set.flags); flag != "" {
 			return set.unit, flag
 		}
+	}
+	if flag := multiqc.ProtectedExtraArg(config.MultiQC.ExtraArgs); flag != "" {
+		return "multiqc", flag
 	}
 	for _, exact := range []struct {
 		unit string

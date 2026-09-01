@@ -1,9 +1,11 @@
 package multiqcevidence_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
+	"github.com/HahyeonJeon/gobble/assets/modules"
 	. "github.com/HahyeonJeon/gobble/assets/modules/multiqc"
 	pc "github.com/HahyeonJeon/gobble/tests/internal/plancheck"
 )
@@ -55,5 +57,31 @@ func TestMultiQCNestedModule(t *testing.T) {
 	}
 	if !pc.ContainsAll(task.Command, "--fullnames") {
 		t.Fatalf("command = %#v, want extra-args", task.Command)
+	}
+}
+
+func TestMultiQCProductRejectsPathBearingExtraArgs(t *testing.T) {
+	tests := []struct {
+		name  string
+		extra string
+	}{
+		{name: "output long", extra: "--outdir=elsewhere"},
+		{name: "output short", extra: "-oelsewhere"},
+		{name: "filename long", extra: "--filename=other.html"},
+		{name: "filename short", extra: "-nother.html"},
+		{name: "file list", extra: "--file-list=in/reports.txt"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			pipeline := ProductPipeline(
+				[]gobble.PathSpec{{Dir: gobble.Dir("in"), Base: "fastqc", Ext: ".zip"}},
+				Options{Options: modules.Options{ExtraArgs: []string{test.extra}}},
+			)
+			graph, err := gobble.Compose(pipeline)
+			var composeErr *gobble.Error
+			if graph != nil || !errors.As(err, &composeErr) || len(composeErr.Defects) != 1 || composeErr.Defects[0].Code != gobble.DefectInvalidValue || composeErr.Defects[0].Unit != "multiqc" {
+				t.Fatalf("Compose() with ExtraArgs %q returned graph=%t, error=%v; want one multiqc invalid-value defect", test.extra, graph != nil, err)
+			}
+		})
 	}
 }

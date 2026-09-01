@@ -727,6 +727,61 @@ func TestBuildDoesNotTreatQCatchXAsSummaryAlias(t *testing.T) {
 	}
 }
 
+func TestBuildRejectsFastQCAndMultiQCPathOptionAliases(t *testing.T) {
+	tests := []struct {
+		name   string
+		unit   string
+		flag   string
+		extra  string
+		mutate func(*scrnaseq.Config, string)
+	}{
+		{name: "FastQC output long", unit: "fastqc", flag: "--outdir", extra: "--outdir=elsewhere", mutate: setFastQCExtraArgs},
+		{name: "FastQC output short", unit: "fastqc", flag: "-o", extra: "-oelsewhere", mutate: setFastQCExtraArgs},
+		{name: "FastQC adapters long", unit: "fastqc", flag: "--adapters", extra: "--adapters=in/adapters.txt", mutate: setFastQCExtraArgs},
+		{name: "FastQC adapters short", unit: "fastqc", flag: "-a", extra: "-ain/adapters.txt", mutate: setFastQCExtraArgs},
+		{name: "FastQC contaminants long", unit: "fastqc", flag: "--contaminants", extra: "--contaminants=in/contaminants.txt", mutate: setFastQCExtraArgs},
+		{name: "FastQC contaminants short", unit: "fastqc", flag: "-c", extra: "-cin/contaminants.txt", mutate: setFastQCExtraArgs},
+		{name: "FastQC limits long", unit: "fastqc", flag: "--limits", extra: "--limits=in/limits.txt", mutate: setFastQCExtraArgs},
+		{name: "FastQC limits short", unit: "fastqc", flag: "-l", extra: "-lin/limits.txt", mutate: setFastQCExtraArgs},
+		{name: "FastQC temporary directory long", unit: "fastqc", flag: "--dir", extra: "--dir=elsewhere", mutate: setFastQCExtraArgs},
+		{name: "FastQC temporary directory short", unit: "fastqc", flag: "-d", extra: "-delsewhere", mutate: setFastQCExtraArgs},
+		{name: "MultiQC output long", unit: "multiqc", flag: "--outdir", extra: "--outdir=elsewhere", mutate: setMultiQCExtraArgs},
+		{name: "MultiQC output short", unit: "multiqc", flag: "-o", extra: "-oelsewhere", mutate: setMultiQCExtraArgs},
+		{name: "MultiQC filename long", unit: "multiqc", flag: "--filename", extra: "--filename=other.html", mutate: setMultiQCExtraArgs},
+		{name: "MultiQC filename short", unit: "multiqc", flag: "-n", extra: "-nother.html", mutate: setMultiQCExtraArgs},
+		{name: "MultiQC file list", unit: "multiqc", flag: "--file-list", extra: "--file-list=in/reports.txt", mutate: setMultiQCExtraArgs},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			config := scrnaseq.DefaultConfig()
+			test.mutate(&config, test.extra)
+			graph, err := gobble.Compose(scrnaseq.Build(loadSamples(t), config))
+			if graph != nil {
+				t.Fatalf("Compose() with ExtraArgs %q returned a graph, want nil", test.extra)
+			}
+			var composeErr *gobble.Error
+			if !errors.As(err, &composeErr) {
+				t.Fatalf("Compose() error = %v, want structured %s defect", err, test.unit)
+			}
+			wantMessage := "scRNA ExtraArgs contains protected option " + test.flag
+			for _, defect := range composeErr.Defects {
+				if defect.Code == gobble.DefectInvalidValue && defect.Unit == test.unit && defect.Message == wantMessage {
+					return
+				}
+			}
+			t.Fatalf("Compose() error = %v, want %s invalid-value defect with message %q", err, test.unit, wantMessage)
+		})
+	}
+}
+
+func setFastQCExtraArgs(config *scrnaseq.Config, extra string) {
+	config.FastQC.ExtraArgs = []string{extra}
+}
+
+func setMultiQCExtraArgs(config *scrnaseq.Config, extra string) {
+	config.MultiQC.ExtraArgs = []string{extra}
+}
+
 func TestBuildRejectsEverySimpleafIndexOwnedOptionAlias(t *testing.T) {
 	tests := []struct {
 		name  string

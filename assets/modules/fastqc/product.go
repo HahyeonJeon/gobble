@@ -11,6 +11,12 @@ import (
 // linux/amd64.
 const DefaultImage modules.Image = "quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0@sha256:e194048df39c3145d9b4e0a14f4da20b59d59250465b6f2a9cb698445fd45900"
 
+var protectedExtraArgs = []string{
+	"--outdir", "-o", "--threads", "--noextract", "--extract",
+	"--adapters", "-a", "--contaminants", "-c", "--limits", "-l", "--dir", "-d",
+	"--version", "--help",
+}
+
 // Options controls one lifted FastQC command.
 type Options struct {
 	modules.Options
@@ -21,6 +27,12 @@ type Options struct {
 type Ports struct {
 	HTML gobble.Handle
 	Zip  gobble.Handle
+}
+
+// ProtectedExtraArg returns the first FastQC option that competes with the
+// module-owned input, outputs, resources, or command behavior.
+func ProtectedExtraArg(extraArgs []string) string {
+	return modules.MatchProtectedExtraArg(extraArgs, protectedExtraArgs)
 }
 
 // Add records one validated FastQC command.
@@ -47,10 +59,10 @@ func Add(parent modules.Parent, reads gobble.Handle, options Options) (Ports, er
 	command = append(command, readPath)
 	base := options.Options
 	base.Resources = resources
-	if err := modules.RejectExtraArgs(unit, options.ExtraArgs, []string{"--extract", "--version", "--help"}); err != nil {
+	if err := modules.RejectExtraArgPrefixes(unit, options.ExtraArgs, protectedExtraArgs); err != nil {
 		return Ports{}, err
 	}
-	command, image, resources, err := modules.ResolveOptions(unit, base, DefaultImage, resources, command, []string{"--outdir", "--noextract", "--threads"})
+	command, image, resources, err := modules.ResolveOptions(unit, base, DefaultImage, resources, command, protectedExtraArgs)
 	if err != nil {
 		return Ports{}, err
 	}
