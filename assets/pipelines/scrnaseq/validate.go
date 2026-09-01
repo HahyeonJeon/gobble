@@ -198,25 +198,38 @@ func validPathSpec(spec gobble.PathSpec) bool {
 }
 
 func crossRolePathDefects(samples []Sample, config Config) []gobble.Defect {
+	type rolePath struct {
+		role string
+		path string
+	}
 	owners := make(map[string]string)
+	var fileRoles []rolePath
 	var defects []gobble.Defect
-	claim := func(unit, role, rendered string) {
-		if owner, exists := owners[rendered]; exists && owner != role {
-			defects = append(defects, gobble.Defect{
-				Code:    gobble.DefectInvalidValue,
-				Unit:    unit,
-				Message: "scRNA " + role + " path aliases the " + owner + " input role",
-				Paths:   []string{rendered},
-			})
-			return
+	claim := func(unit, role, rendered string) bool {
+		if owner, exists := owners[rendered]; exists {
+			if owner != role {
+				defects = append(defects, gobble.Defect{
+					Code:    gobble.DefectInvalidValue,
+					Unit:    unit,
+					Message: "scRNA " + role + " path aliases the " + owner + " input role",
+					Paths:   []string{rendered},
+				})
+			}
+			return false
 		}
 		owners[rendered] = role
+		return true
+	}
+	claimFile := func(unit, role, rendered string) {
+		if claim(unit, role, rendered) {
+			fileRoles = append(fileRoles, rolePath{role: role, path: rendered})
+		}
 	}
 	for _, sample := range samples {
 		for _, run := range sample.Runs {
 			for _, read := range []string{run.Fastq1, run.Fastq2} {
 				if rendered, valid := renderWorkspacePath(read); valid {
-					owners[rendered] = "read"
+					claimFile("", "read", rendered)
 				}
 			}
 		}
@@ -240,12 +253,26 @@ func crossRolePathDefects(samples []Sample, config Config) []gobble.Defect {
 		if err != nil || !validWorkspacePath(rendered) {
 			continue
 		}
-		claim(reference.unit, reference.role, rendered)
+		claimFile(reference.unit, reference.role, rendered)
 	}
 	if rendered, valid := renderTreeRoot(config.Reference.SimpleafIndex); valid {
 		claim("reference.simpleaf_index", "Simpleaf index Tree", rendered)
+		for _, file := range fileRoles {
+			if properPathOverlap(rendered, file.path) {
+				defects = append(defects, gobble.Defect{
+					Code:    gobble.DefectInvalidValue,
+					Unit:    "reference.simpleaf_index",
+					Message: "scRNA Simpleaf index Tree path overlaps the " + file.role + " input role",
+					Paths:   []string{rendered, file.path},
+				})
+			}
+		}
 	}
 	return defects
+}
+
+func properPathOverlap(left, right string) bool {
+	return strings.HasPrefix(left, right+"/") || strings.HasPrefix(right, left+"/")
 }
 
 func renderTreeRoot(tree gobble.Tree) (string, bool) {

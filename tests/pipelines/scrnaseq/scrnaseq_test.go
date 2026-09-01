@@ -259,6 +259,101 @@ func TestBuildRejectsReadyReferencePathAliasing(t *testing.T) {
 	}
 }
 
+func TestBuildRejectsReadyIndexTreeFilePathOverlap(t *testing.T) {
+	tests := []struct {
+		name   string
+		tree   gobble.Directory
+		mutate func([]scrnaseq.Sample, *scrnaseq.Config)
+	}{
+		{
+			name: "index Tree contains transcript-to-gene",
+			tree: gobble.Dir("in/ready-index"),
+			mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config) {
+				config.Reference.TranscriptToGene = gobble.PathSpec{Dir: gobble.Dir("in/ready-index"), Base: "t2g", Ext: ".tsv"}
+			},
+		},
+		{
+			name: "transcript-to-gene contains index Tree",
+			tree: gobble.Dir("in/ready-index/tree"),
+			mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config) {
+				config.Reference.TranscriptToGene = gobble.PathSpec{Dir: gobble.Dir("in"), Base: "ready-index"}
+			},
+		},
+		{
+			name: "index Tree contains whitelist",
+			tree: gobble.Dir("in/reference/index"),
+			mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config) {
+				config.Reference.BarcodeWhitelist.Path = gobble.PathSpec{Dir: gobble.Dir("in/reference/index"), Base: "whitelist", Ext: ".txt.gz"}
+			},
+		},
+		{
+			name: "whitelist contains index Tree",
+			tree: gobble.Dir("in/reference/index/tree"),
+			mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config) {
+				config.Reference.BarcodeWhitelist.Path = gobble.PathSpec{Dir: gobble.Dir("in/reference"), Base: "index"}
+			},
+		},
+		{
+			name: "index Tree contains FASTA",
+			tree: gobble.Dir("in/ready-index"),
+			mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config) {
+				config.Reference.FASTA = gobble.PathSpec{Dir: gobble.Dir("in/ready-index"), Base: "genome", Ext: ".fa"}
+			},
+		},
+		{
+			name: "FASTA contains index Tree",
+			tree: gobble.Dir("in/ready-index/tree"),
+			mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config) {
+				config.Reference.FASTA = gobble.PathSpec{Dir: gobble.Dir("in"), Base: "ready-index"}
+			},
+		},
+		{
+			name: "index Tree contains GTF",
+			tree: gobble.Dir("in/ready-index"),
+			mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config) {
+				config.Reference.Annotation = gobble.PathSpec{Dir: gobble.Dir("in/ready-index"), Base: "genes", Ext: ".gtf"}
+			},
+		},
+		{
+			name: "GTF contains index Tree",
+			tree: gobble.Dir("in/ready-index/tree"),
+			mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config) {
+				config.Reference.Annotation = gobble.PathSpec{Dir: gobble.Dir("in"), Base: "ready-index"}
+			},
+		},
+		{
+			name: "index Tree contains read",
+			tree: gobble.Dir("in/ready-index"),
+			mutate: func(samples []scrnaseq.Sample, _ *scrnaseq.Config) {
+				samples[0].Runs[0].Fastq1 = "in/ready-index/read.fastq.gz"
+			},
+		},
+		{
+			name: "read contains index Tree",
+			tree: gobble.Dir("in/ready-index/tree"),
+			mutate: func(samples []scrnaseq.Sample, _ *scrnaseq.Config) {
+				samples[0].Runs[0].Fastq1 = "in/ready-index"
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			samples := loadSamples(t)
+			config := scrnaseq.DefaultConfig()
+			config.Reference.FASTA = gobble.PathSpec{}
+			config.Reference.Annotation = gobble.PathSpec{}
+			config.Reference.SimpleafIndex = gobble.DeclareTree(test.tree)
+			config.Reference.TranscriptToGene = gobble.PathSpec{Dir: gobble.Dir("in/reference"), Base: "t2g", Ext: ".tsv"}
+			test.mutate(samples, &config)
+			graph, err := gobble.Compose(scrnaseq.Build(samples, config))
+			if graph != nil {
+				t.Fatalf("Compose() graph = %v, want nil", graph)
+			}
+			requireDefect(t, err, gobble.DefectInvalidValue, "reference.simpleaf_index")
+		})
+	}
+}
+
 func TestBuildRealizesSelectedSimpleafVerticalWithoutRuntimeScatter(t *testing.T) {
 	pipeline := scrnaseq.Build(loadSamples(t), scrnaseq.DefaultConfig())
 	if _, err := gobble.Compose(pipeline); err != nil {
