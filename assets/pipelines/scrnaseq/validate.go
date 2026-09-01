@@ -2,6 +2,7 @@ package scrnaseq
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/HahyeonJeon/gobble"
 	"github.com/HahyeonJeon/gobble/assets/modules"
@@ -198,6 +199,19 @@ func validPathSpec(spec gobble.PathSpec) bool {
 
 func crossRolePathDefects(samples []Sample, config Config) []gobble.Defect {
 	owners := make(map[string]string)
+	var defects []gobble.Defect
+	claim := func(unit, role, rendered string) {
+		if owner, exists := owners[rendered]; exists && owner != role {
+			defects = append(defects, gobble.Defect{
+				Code:    gobble.DefectInvalidValue,
+				Unit:    unit,
+				Message: "scRNA " + role + " path aliases the " + owner + " input role",
+				Paths:   []string{rendered},
+			})
+			return
+		}
+		owners[rendered] = role
+	}
 	for _, sample := range samples {
 		for _, run := range sample.Runs {
 			for _, read := range []string{run.Fastq1, run.Fastq2} {
@@ -216,8 +230,8 @@ func crossRolePathDefects(samples []Sample, config Config) []gobble.Defect {
 		{unit: "reference.fasta", role: "FASTA", spec: config.Reference.FASTA},
 		{unit: "reference.annotation", role: "GTF", spec: config.Reference.Annotation},
 		{unit: "reference.whitelist", role: "whitelist", spec: config.Reference.BarcodeWhitelist.Path},
+		{unit: "reference.transcript_to_gene", role: "transcript-to-gene", spec: config.Reference.TranscriptToGene},
 	}
-	var defects []gobble.Defect
 	for _, reference := range references {
 		if pathSpecUnset(reference.spec) {
 			continue
@@ -226,18 +240,25 @@ func crossRolePathDefects(samples []Sample, config Config) []gobble.Defect {
 		if err != nil || !validWorkspacePath(rendered) {
 			continue
 		}
-		if owner, exists := owners[rendered]; exists && owner != reference.role {
-			defects = append(defects, gobble.Defect{
-				Code:    gobble.DefectInvalidValue,
-				Unit:    reference.unit,
-				Message: "scRNA " + reference.role + " path aliases the " + owner + " input role",
-				Paths:   []string{rendered},
-			})
-			continue
-		}
-		owners[rendered] = reference.role
+		claim(reference.unit, reference.role, rendered)
+	}
+	if rendered, valid := renderTreeRoot(config.Reference.SimpleafIndex); valid {
+		claim("reference.simpleaf_index", "Simpleaf index Tree", rendered)
 	}
 	return defects
+}
+
+func renderTreeRoot(tree gobble.Tree) (string, bool) {
+	if tree.IsZero() || tree.Dir.IsZero() {
+		return "", false
+	}
+	// Render a synthetic member so the root uses PathSpec's canonical path rules.
+	member, err := (gobble.PathSpec{Dir: tree.Dir, Base: "member"}).Render()
+	if err != nil {
+		return "", false
+	}
+	root, ok := strings.CutSuffix(member, "/member")
+	return root, ok && validWorkspacePath(root)
 }
 
 func pathSpecUnset(spec gobble.PathSpec) bool {

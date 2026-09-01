@@ -189,6 +189,44 @@ func TestBuildRejectsCrossRoleRenderedPathAliasing(t *testing.T) {
 	}
 }
 
+func TestBuildRejectsReadyReferencePathAliasing(t *testing.T) {
+	tests := []struct {
+		name   string
+		unit   string
+		mutate func(*scrnaseq.Config)
+	}{
+		{
+			name: "transcript-to-gene and whitelist",
+			unit: "reference.transcript_to_gene",
+			mutate: func(config *scrnaseq.Config) {
+				config.Reference.TranscriptToGene = config.Reference.BarcodeWhitelist.Path
+			},
+		},
+		{
+			name: "index Tree root and whitelist",
+			unit: "reference.simpleaf_index",
+			mutate: func(config *scrnaseq.Config) {
+				config.Reference.SimpleafIndex = gobble.DeclareTree(gobble.Dir("in/reference/./10x_V2_barcode_whitelist.txt.gz"))
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			config := scrnaseq.DefaultConfig()
+			config.Reference.FASTA = gobble.PathSpec{}
+			config.Reference.Annotation = gobble.PathSpec{}
+			config.Reference.SimpleafIndex = gobble.DeclareTree(gobble.Dir("in/reference/simpleaf-index"))
+			config.Reference.TranscriptToGene = gobble.PathSpec{Dir: gobble.Dir("in/reference"), Base: "t2g", Ext: ".tsv"}
+			test.mutate(&config)
+			graph, err := gobble.Compose(scrnaseq.Build(loadSamples(t), config))
+			if graph != nil {
+				t.Fatalf("Compose() graph = %v, want nil", graph)
+			}
+			requireDefect(t, err, gobble.DefectInvalidValue, test.unit)
+		})
+	}
+}
+
 func TestBuildRealizesSelectedSimpleafVerticalWithoutRuntimeScatter(t *testing.T) {
 	pipeline := scrnaseq.Build(loadSamples(t), scrnaseq.DefaultConfig())
 	if _, err := gobble.Compose(pipeline); err != nil {
