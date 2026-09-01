@@ -21,9 +21,20 @@ func TestQCatchTypedChemistryOutputsAndConflicts(t *testing.T) {
 		{Chemistry: "10X_3p_v2", NPartitions: 10},
 		{Chemistry: "10X_3p_v2", VisualizeDoublets: true},
 		{Options: modules.Options{ExtraArgs: []string{"-iother"}}, Chemistry: "10X_3p_v2"},
+		{Options: modules.Options{ExtraArgs: []string{"--export_summary_table"}}, Chemistry: "10X_3p_v2"},
+		{Options: modules.Options{ExtraArgs: []string{"-e"}}, Chemistry: "10X_3p_v2"},
+		{Options: modules.Options{ExtraArgs: []string{"-eother"}}, Chemistry: "10X_3p_v2"},
 	} {
 		if graph, err := gobble.Compose(qcatch.Pipeline(gobble.DeclareTree(gobble.Dir("in/quant")), options)); graph != nil || err == nil {
 			t.Fatalf("invalid QCatch compose = (%v, %v), want defect", graph, err)
 		}
+	}
+
+	xTask := pc.AllTasks(t, pc.MustPlanJSON(t, qcatch.Pipeline(
+		gobble.DeclareTree(gobble.Dir("in/quant")),
+		qcatch.Options{Options: modules.Options{ExtraArgs: []string{"-x"}}, Chemistry: "10X_3p_v2"},
+	)))[0]
+	if !pc.ContainsAll(xTask.Command, "-x") {
+		t.Fatalf("QCatch command = %#v, want non-alias ExtraArgs -x", xTask.Command)
 	}
 }

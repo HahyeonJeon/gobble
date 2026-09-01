@@ -47,7 +47,7 @@ func Add(parent modules.Parent, quant gobble.Handle, options Options) (Ports, er
 	if outDir.IsZero() {
 		outDir = gobble.Dir("results/scrnaseq/qcatch")
 	}
-	protected := []string{"--input", "-i", "--output", "-o", "--chemistry", "-c", "--n_partitions", "-n", "--save_filtered_h5ad", "-s", "--export_summary_table", "-x", "--remove_doublets", "-d", "--visualize_doublets", "-vd", "--skip_umap_tsne", "-u", "--gene_id2name_file", "-g", "--valid_cell_list", "-l"}
+	protected := []string{"--input", "-i", "--output", "-o", "--chemistry", "-c", "--n_partitions", "-n", "--save_filtered_h5ad", "-s", "--export_summary_table", "-e", "--remove_doublets", "-d", "--visualize_doublets", "-vd", "--skip_umap_tsne", "-u", "--gene_id2name_file", "-g", "--valid_cell_list", "-l"}
 	if err := modules.RejectExtraArgPrefixes(unit, options.ExtraArgs, protected); err != nil {
 		return Ports{}, err
 	}

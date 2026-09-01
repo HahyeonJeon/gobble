@@ -354,6 +354,137 @@ func TestBuildRejectsReadyIndexTreeFilePathOverlap(t *testing.T) {
 	}
 }
 
+func TestBuildRejectsResultsInputPathOverlap(t *testing.T) {
+	tests := []struct {
+		name   string
+		ready  bool
+		mutate func([]scrnaseq.Sample, *scrnaseq.Config)
+	}{
+		{
+			name: "results contain read",
+			mutate: func(samples []scrnaseq.Sample, config *scrnaseq.Config) {
+				config.Results = gobble.Dir("in/results-root")
+				samples[0].Runs[0].Fastq1 = "in/results-root/r1.fastq.gz"
+			},
+		},
+		{
+			name: "read contains results",
+			mutate: func(samples []scrnaseq.Sample, config *scrnaseq.Config) {
+				config.Results = gobble.Dir("in/read-root/results")
+				samples[0].Runs[0].Fastq1 = "in/read-root"
+			},
+		},
+		{
+			name: "results contain FASTA",
+			mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config) {
+				config.Results = gobble.Dir("in/results-root")
+				config.Reference.FASTA = gobble.PathSpec{Dir: gobble.Dir("in/results-root"), Base: "genome", Ext: ".fa"}
+			},
+		},
+		{
+			name: "FASTA contains results",
+			mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config) {
+				config.Results = gobble.Dir("in/fasta-root/results")
+				config.Reference.FASTA = gobble.PathSpec{Dir: gobble.Dir("in"), Base: "fasta-root"}
+			},
+		},
+		{
+			name: "results contain GTF",
+			mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config) {
+				config.Results = gobble.Dir("in/results-root")
+				config.Reference.Annotation = gobble.PathSpec{Dir: gobble.Dir("in/results-root"), Base: "genes", Ext: ".gtf"}
+			},
+		},
+		{
+			name: "GTF contains results",
+			mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config) {
+				config.Results = gobble.Dir("in/gtf-root/results")
+				config.Reference.Annotation = gobble.PathSpec{Dir: gobble.Dir("in"), Base: "gtf-root"}
+			},
+		},
+		{
+			name: "results contain whitelist",
+			mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config) {
+				config.Results = gobble.Dir("in/results-root")
+				config.Reference.BarcodeWhitelist.Path = gobble.PathSpec{Dir: gobble.Dir("in/results-root"), Base: "whitelist", Ext: ".txt.gz"}
+			},
+		},
+		{
+			name: "whitelist contains results",
+			mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config) {
+				config.Results = gobble.Dir("in/whitelist-root/results")
+				config.Reference.BarcodeWhitelist.Path = gobble.PathSpec{Dir: gobble.Dir("in"), Base: "whitelist-root"}
+			},
+		},
+		{
+			name:  "results contain transcript-to-gene",
+			ready: true,
+			mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config) {
+				config.Results = gobble.Dir("in/results-root")
+				config.Reference.TranscriptToGene = gobble.PathSpec{Dir: gobble.Dir("in/results-root"), Base: "t2g", Ext: ".tsv"}
+			},
+		},
+		{
+			name:  "transcript-to-gene contains results",
+			ready: true,
+			mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config) {
+				config.Results = gobble.Dir("in/t2g-root/results")
+				config.Reference.TranscriptToGene = gobble.PathSpec{Dir: gobble.Dir("in"), Base: "t2g-root"}
+			},
+		},
+		{
+			name:  "results equal ready Tree root",
+			ready: true,
+			mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config) {
+				config.Results = gobble.Dir("in/ready-index")
+			},
+		},
+		{
+			name:  "results contain ready Tree root",
+			ready: true,
+			mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config) {
+				config.Results = gobble.Dir("in/results-root")
+				config.Reference.SimpleafIndex = gobble.DeclareTree(gobble.Dir("in/results-root/index"))
+			},
+		},
+		{
+			name:  "ready Tree root contains rendered results",
+			ready: true,
+			mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config) {
+				config.Results = gobble.Dir("in/ready-index/./results")
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			samples := loadSamples(t)
+			config := scrnaseq.DefaultConfig()
+			if test.ready {
+				config.Reference.FASTA = gobble.PathSpec{}
+				config.Reference.Annotation = gobble.PathSpec{}
+				config.Reference.SimpleafIndex = gobble.DeclareTree(gobble.Dir("in/ready-index"))
+				config.Reference.TranscriptToGene = gobble.PathSpec{Dir: gobble.Dir("in/reference"), Base: "t2g", Ext: ".tsv"}
+			}
+			test.mutate(samples, &config)
+			graph, err := gobble.Compose(scrnaseq.Build(samples, config))
+			if graph != nil {
+				t.Fatalf("Compose() graph = %v, want nil", graph)
+			}
+			requireDefect(t, err, gobble.DefectInvalidValue, "results")
+		})
+	}
+}
+
+func TestBuildAcceptsResultsInputPathPrefixSibling(t *testing.T) {
+	samples := loadSamples(t)
+	samples[0].Runs[0].Fastq1 = "in/results-root-input/r1.fastq.gz"
+	config := scrnaseq.DefaultConfig()
+	config.Results = gobble.Dir("in/results-root")
+	if _, err := gobble.Compose(scrnaseq.Build(samples, config)); err != nil {
+		t.Fatalf("Compose() error = %v, want path-component sibling accepted", err)
+	}
+}
+
 func TestBuildRealizesSelectedSimpleafVerticalWithoutRuntimeScatter(t *testing.T) {
 	pipeline := scrnaseq.Build(loadSamples(t), scrnaseq.DefaultConfig())
 	if _, err := gobble.Compose(pipeline); err != nil {
@@ -481,6 +612,9 @@ func TestUnsupportedProtocolsIncompleteReferenceAndProtectedAliasesFailClosed(t 
 		{name: "quant selective alignment route", unit: "simpleaf_quant", mutate: func(c *scrnaseq.Config) { c.SimpleafQuant.ExtraArgs = []string{"--use-selective-alignment"} }},
 		{name: "quant generic aligner route", unit: "simpleaf_quant", mutate: func(c *scrnaseq.Config) { c.SimpleafQuant.ExtraArgs = []string{"--aligner=star"} }},
 		{name: "qcatch input short", unit: "qcatch", mutate: func(c *scrnaseq.Config) { c.QCatch.ExtraArgs = []string{"-iother"} }},
+		{name: "qcatch summary long", unit: "qcatch", mutate: func(c *scrnaseq.Config) { c.QCatch.ExtraArgs = []string{"--export_summary_table"} }},
+		{name: "qcatch summary short", unit: "qcatch", mutate: func(c *scrnaseq.Config) { c.QCatch.ExtraArgs = []string{"-e"} }},
+		{name: "qcatch summary short attached", unit: "qcatch", mutate: func(c *scrnaseq.Config) { c.QCatch.ExtraArgs = []string{"-eother"} }},
 		{name: "cat extra input", unit: "cat_fastq", mutate: func(c *scrnaseq.Config) { c.Consolidate.ExtraArgs = []string{"in/other.fastq.gz"} }},
 		{name: "publication", unit: "publication", mutate: func(c *scrnaseq.Config) { c.Publication.CombinedH5AD = false }},
 	}
@@ -494,6 +628,15 @@ func TestUnsupportedProtocolsIncompleteReferenceAndProtectedAliasesFailClosed(t 
 			}
 			requireDefect(t, err, gobble.DefectInvalidValue, test.unit)
 		})
+	}
+}
+
+func TestBuildDoesNotTreatQCatchXAsSummaryAlias(t *testing.T) {
+	config := scrnaseq.DefaultConfig()
+	config.QCatch.ExtraArgs = []string{"-x"}
+	task := pc.TaskByID(t, pc.MustPlanJSON(t, scrnaseq.Build(loadSamples(t), config)), "Sample_X.qcatch")
+	if !pc.ContainsAll(task.Command, "-x") {
+		t.Fatalf("QCatch command = %#v, want non-alias ExtraArgs -x", task.Command)
 	}
 }
 

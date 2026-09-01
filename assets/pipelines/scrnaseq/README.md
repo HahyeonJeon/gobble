@@ -33,8 +33,9 @@ product. There is no earlier scRNA workspace to resume or migrate.
 - `Build(samples, config)` copies caller data and reads no process state,
   filesystem content, current directory, or network location. Invalid runs,
   protocols, reference forms, Trees, QCatch combinations, publication choices,
-  and protected long, abbreviated, attached, or short aliases are structured
-  compose defects. One module-owned policy derived from Simpleaf 0.19.5
+  result roots that equal, contain, or sit below an input, and protected long,
+  abbreviated, attached, or short aliases are structured compose defects. One
+  module-owned policy derived from Simpleaf 0.19.5
   `IndexOpts` and `MapQuantOpts` at commit
   `935c013ff6123cc307791501dca86b92b1f6dd16` protects every documented
   spelling that competes with typed direct-reference inputs, quantification

@@ -130,7 +130,7 @@ func protectedExtra(config Config) (string, string) {
 		args  []string
 		flags []string
 	}{
-		{unit: "qcatch", args: config.QCatch.ExtraArgs, flags: []string{"--input", "-i", "--output", "-o", "--chemistry", "-c", "--n_partitions", "-n", "--save_filtered_h5ad", "-s", "--export_summary_table", "-x", "--remove_doublets", "-d", "--visualize_doublets", "-vd", "--skip_umap_tsne", "-u", "--gene_id2name_file", "-g", "--valid_cell_list", "-l"}},
+		{unit: "qcatch", args: config.QCatch.ExtraArgs, flags: []string{"--input", "-i", "--output", "-o", "--chemistry", "-c", "--n_partitions", "-n", "--save_filtered_h5ad", "-s", "--export_summary_table", "-e", "--remove_doublets", "-d", "--visualize_doublets", "-vd", "--skip_umap_tsne", "-u", "--gene_id2name_file", "-g", "--valid_cell_list", "-l"}},
 		{unit: "multiqc", args: config.MultiQC.ExtraArgs, flags: []string{"--outdir", "--filename", "--no-data-dir", "--zip-data-dir"}},
 	} {
 		if flag := modules.MatchProtectedExtraArg(set.args, set.flags); flag != "" {
@@ -255,17 +255,28 @@ func crossRolePathDefects(samples []Sample, config Config) []gobble.Defect {
 		}
 		claimFile(reference.unit, reference.role, rendered)
 	}
-	if rendered, valid := renderTreeRoot(config.Reference.SimpleafIndex); valid {
-		claim("reference.simpleaf_index", "Simpleaf index Tree", rendered)
+	treeRoot, treeValid := renderTreeRoot(config.Reference.SimpleafIndex)
+	if treeValid {
+		claim("reference.simpleaf_index", "Simpleaf index Tree", treeRoot)
 		for _, file := range fileRoles {
-			if properPathOverlap(rendered, file.path) {
+			if properPathOverlap(treeRoot, file.path) {
 				defects = append(defects, gobble.Defect{
 					Code:    gobble.DefectInvalidValue,
 					Unit:    "reference.simpleaf_index",
 					Message: "scRNA Simpleaf index Tree path overlaps the " + file.role + " input role",
-					Paths:   []string{rendered, file.path},
+					Paths:   []string{treeRoot, file.path},
 				})
 			}
+		}
+	}
+	if resultsRoot, valid := renderDirectoryRoot(config.Results); valid {
+		for _, file := range fileRoles {
+			if pathsOverlap(resultsRoot, file.path) {
+				defects = append(defects, resultsPathOverlapDefect(resultsRoot, file.role, file.path))
+			}
+		}
+		if treeValid && pathsOverlap(resultsRoot, treeRoot) {
+			defects = append(defects, resultsPathOverlapDefect(resultsRoot, "Simpleaf index Tree", treeRoot))
 		}
 	}
 	return defects
@@ -275,14 +286,37 @@ func properPathOverlap(left, right string) bool {
 	return strings.HasPrefix(left, right+"/") || strings.HasPrefix(right, left+"/")
 }
 
+func pathsOverlap(left, right string) bool {
+	return left == right || left == "." || right == "." || properPathOverlap(left, right)
+}
+
+func resultsPathOverlapDefect(results, role, input string) gobble.Defect {
+	return gobble.Defect{
+		Code:    gobble.DefectInvalidValue,
+		Unit:    "results",
+		Message: "scRNA results path overlaps the " + role + " input role",
+		Paths:   []string{results, input},
+	}
+}
+
 func renderTreeRoot(tree gobble.Tree) (string, bool) {
 	if tree.IsZero() || tree.Dir.IsZero() {
 		return "", false
 	}
+	return renderDirectoryRoot(tree.Dir)
+}
+
+func renderDirectoryRoot(dir gobble.Directory) (string, bool) {
+	if dir.IsZero() {
+		return "", false
+	}
 	// Render a synthetic member so the root uses PathSpec's canonical path rules.
-	member, err := (gobble.PathSpec{Dir: tree.Dir, Base: "member"}).Render()
+	member, err := (gobble.PathSpec{Dir: dir, Base: "member"}).Render()
 	if err != nil {
 		return "", false
+	}
+	if member == "member" {
+		return ".", true
 	}
 	root, ok := strings.CutSuffix(member, "/member")
 	return root, ok && validWorkspacePath(root)
