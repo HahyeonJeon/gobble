@@ -82,7 +82,9 @@ type WhitelistConfig struct {
 // ReferenceConfig selects exactly one reference form. FASTA plus Annotation
 // asks Build to normalize the reference and produce a Simpleaf index Tree and
 // transcript-to-gene relation. A ready SimpleafIndex requires an explicit
-// TranscriptToGene file and leaves FASTA and Annotation unset.
+// TranscriptToGene file and leaves FASTA and Annotation unset. The ready
+// TranscriptToGene path and SimpleafIndex Tree root must render to paths
+// distinct from each other, the barcode whitelist, and all sample reads.
 type ReferenceConfig struct {
 	FASTA            gobble.PathSpec
 	Annotation       gobble.PathSpec

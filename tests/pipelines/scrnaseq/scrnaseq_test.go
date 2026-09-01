@@ -193,32 +193,64 @@ func TestBuildRejectsReadyReferencePathAliasing(t *testing.T) {
 	tests := []struct {
 		name   string
 		unit   string
-		mutate func(*scrnaseq.Config)
+		mutate func([]scrnaseq.Sample, *scrnaseq.Config)
 	}{
 		{
 			name: "transcript-to-gene and whitelist",
 			unit: "reference.transcript_to_gene",
-			mutate: func(config *scrnaseq.Config) {
+			mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config) {
 				config.Reference.TranscriptToGene = config.Reference.BarcodeWhitelist.Path
 			},
 		},
 		{
 			name: "index Tree root and whitelist",
 			unit: "reference.simpleaf_index",
-			mutate: func(config *scrnaseq.Config) {
+			mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config) {
 				config.Reference.SimpleafIndex = gobble.DeclareTree(gobble.Dir("in/reference/./10x_V2_barcode_whitelist.txt.gz"))
+			},
+		},
+		{
+			name: "literal transcript-to-gene aliases literal whitelist",
+			unit: "reference.transcript_to_gene",
+			mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config) {
+				config.Reference.BarcodeWhitelist.Path = gobble.Literal("shared.txt")
+				config.Reference.TranscriptToGene = gobble.Literal("shared.txt")
+			},
+		},
+		{
+			name: "index Tree root aliases literal whitelist",
+			unit: "reference.simpleaf_index",
+			mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config) {
+				config.Reference.BarcodeWhitelist.Path = gobble.Literal("shared")
+				config.Reference.SimpleafIndex = gobble.DeclareTree(gobble.Dir("shared"))
+			},
+		},
+		{
+			name: "literal transcript-to-gene aliases read",
+			unit: "reference.transcript_to_gene",
+			mutate: func(samples []scrnaseq.Sample, config *scrnaseq.Config) {
+				samples[0].Runs[0].Fastq1 = "shared.fastq.gz"
+				config.Reference.TranscriptToGene = gobble.Literal("shared.fastq.gz")
+			},
+		},
+		{
+			name: "ready form mixes literal FASTA",
+			unit: "reference",
+			mutate: func(_ []scrnaseq.Sample, config *scrnaseq.Config) {
+				config.Reference.FASTA = gobble.Literal("genome.fa")
 			},
 		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			samples := loadSamples(t)
 			config := scrnaseq.DefaultConfig()
 			config.Reference.FASTA = gobble.PathSpec{}
 			config.Reference.Annotation = gobble.PathSpec{}
 			config.Reference.SimpleafIndex = gobble.DeclareTree(gobble.Dir("in/reference/simpleaf-index"))
 			config.Reference.TranscriptToGene = gobble.PathSpec{Dir: gobble.Dir("in/reference"), Base: "t2g", Ext: ".tsv"}
-			test.mutate(&config)
-			graph, err := gobble.Compose(scrnaseq.Build(loadSamples(t), config))
+			test.mutate(samples, &config)
+			graph, err := gobble.Compose(scrnaseq.Build(samples, config))
 			if graph != nil {
 				t.Fatalf("Compose() graph = %v, want nil", graph)
 			}

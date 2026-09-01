@@ -21,8 +21,10 @@ product. There is no earlier scRNA workspace to resume or migrate.
   reference sequences, extracts transcripts, produces a three-column
   transcript-to-gene relation, and builds a complete Simpleaf index `Tree`. A
   ready reference instead supplies a complete index `Tree` and a separate
-  transcript-to-gene file. Source and ready forms cannot be mixed. A ready
-  directory without `.gobble-tree.json` is incomplete and fails preflight.
+  transcript-to-gene file. The ready transcript-to-gene path and index `Tree`
+  root must render to paths distinct from each other, the whitelist, and every
+  read. Source and ready forms cannot be mixed. A ready directory without
+  `.gobble-tree.json` is incomplete and fails preflight.
 - `DefaultConfig` returns fresh protocol, reference, UMI resolution, QCatch,
   conversion, output, immutable image, resource, argv, and publication policy.
   Its exact image-and-platform tuple is the supported tuple. A typed image

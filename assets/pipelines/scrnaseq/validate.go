@@ -262,7 +262,7 @@ func renderTreeRoot(tree gobble.Tree) (string, bool) {
 }
 
 func pathSpecUnset(spec gobble.PathSpec) bool {
-	return spec.Dir.IsZero() && spec.Prefix == "" && spec.Base == "" && len(spec.Suffixes) == 0 && spec.Ext == ""
+	return spec.Equal(gobble.PathSpec{})
 }
 
 func cloneConfig(config Config) Config {
