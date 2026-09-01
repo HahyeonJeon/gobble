@@ -79,14 +79,16 @@ func parse(r io.Reader, source string) ([]Sample, error) {
 		}
 		name, fastq1, fastq2 := cell("sample"), cell("fastq_1"), cell("fastq_2")
 		expectedCell, seqCenter := cell("expected_cells"), cell("seq_center")
+		fastq1Path, fastq1Valid := renderWorkspacePath(fastq1)
+		fastq2Path, fastq2Valid := renderWorkspacePath(fastq2)
 		var rowDefects []gobble.Defect
 		if !identityPattern.MatchString(name) {
 			rowDefects = append(rowDefects, rowDefect(source, rowNumber, "sample", "sample identity is empty or invalid"))
 		}
-		if !validWorkspacePath(fastq1) {
+		if !fastq1Valid {
 			rowDefects = append(rowDefects, rowDefect(source, rowNumber, "fastq_1", "mate 1 path must be workspace-relative and must not be a URL"))
 		}
-		if !validWorkspacePath(fastq2) {
+		if !fastq2Valid {
 			rowDefects = append(rowDefects, rowDefect(source, rowNumber, "fastq_2", "mate 2 path must be workspace-relative and must not be a URL"))
 		}
 		expected := 0
@@ -101,7 +103,7 @@ func parse(r io.Reader, source string) ([]Sample, error) {
 			continue
 		}
 
-		runKey := fastq1 + "\x00" + fastq2
+		runKey := fastq1Path + "\x00" + fastq2Path
 		position, exists := sampleIndex[name]
 		if exists {
 			existing := &samples[position]
@@ -114,20 +116,20 @@ func parse(r io.Reader, source string) ([]Sample, error) {
 				continue
 			}
 		}
-		if fastq1 == fastq2 {
+		if fastq1Path == fastq2Path {
 			defects = append(defects, rowDefect(source, rowNumber, "fastq_2", "mate paths must be distinct"))
 			continue
 		}
-		if readPaths[fastq1] {
+		if readPaths[fastq1Path] {
 			defects = append(defects, rowDefect(source, rowNumber, "fastq_1", "read path is already assigned to another mate or technical run"))
 			continue
 		}
-		if readPaths[fastq2] {
+		if readPaths[fastq2Path] {
 			defects = append(defects, rowDefect(source, rowNumber, "fastq_2", "read path is already assigned to another mate or technical run"))
 			continue
 		}
-		readPaths[fastq1] = true
-		readPaths[fastq2] = true
+		readPaths[fastq1Path] = true
+		readPaths[fastq2Path] = true
 		if !exists {
 			position = len(samples)
 			sampleIndex[name] = position
@@ -176,6 +178,17 @@ func validWorkspacePath(value string) bool {
 	}
 	cleaned := path.Clean(value)
 	return cleaned != "." && cleaned != ".." && !strings.HasPrefix(cleaned, "../")
+}
+
+func renderWorkspacePath(value string) (string, bool) {
+	if !validWorkspacePath(value) {
+		return "", false
+	}
+	rendered, err := sheetFileSpec(value).Render()
+	if err != nil {
+		return "", false
+	}
+	return rendered, true
 }
 
 func leftPad3(value int) string {

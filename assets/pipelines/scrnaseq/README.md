@@ -8,9 +8,9 @@ product. There is no earlier scRNA workspace to resume or migrate.
 
 - `Parse` and `Load` accept exact columns `sample,fastq_1,fastq_2` plus optional
   `expected_cells,seq_center`. Unknown columns are errors. Repeated sample rows
-  become ordered paired `Run` values. Both mates are required and distinct. One
-  exact path can occupy only one sample, mate, and technical-run role. Optional
-  metadata must agree across repeated rows.
+  become ordered paired `Run` values. Both mates are required and must render to
+  distinct workspace paths. One rendered path can occupy only one sample, mate,
+  and technical-run role. Optional metadata must agree across repeated rows.
 - `Protocol` is one of 10x V1, V2, V3, or V4 and is never inferred. The staged
   whitelist carries the same typed protocol. `DefaultConfig` selects V2 because
   the pinned official fixture is V2. V2–V4 also require their exact typed QCatch

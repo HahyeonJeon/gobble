@@ -22,22 +22,22 @@ func validateBuild(samples []Sample, config Config) []gobble.Defect {
 		seenRuns := make(map[string]bool, len(sample.Runs))
 		seenPairs := make(map[string]bool, len(sample.Runs))
 		for i, run := range sample.Runs {
-			pair := run.Fastq1 + "\x00" + run.Fastq2
-			fastq1Valid := validWorkspacePath(run.Fastq1)
-			fastq2Valid := validWorkspacePath(run.Fastq2)
-			pathAlias := run.Fastq1 == run.Fastq2 ||
-				(fastq1Valid && seenReadPaths[run.Fastq1]) ||
-				(fastq2Valid && seenReadPaths[run.Fastq2])
+			fastq1Path, fastq1Valid := renderWorkspacePath(run.Fastq1)
+			fastq2Path, fastq2Valid := renderWorkspacePath(run.Fastq2)
+			pair := fastq1Path + "\x00" + fastq2Path
+			pathAlias := (fastq1Valid && fastq2Valid && fastq1Path == fastq2Path) ||
+				(fastq1Valid && seenReadPaths[fastq1Path]) ||
+				(fastq2Valid && seenReadPaths[fastq2Path])
 			if !identityPattern.MatchString(run.ID) || run.ID != "run_"+leftPad3(i+1) || seenRuns[run.ID] || seenPairs[pair] || !fastq1Valid || !fastq2Valid || pathAlias {
 				defects = append(defects, gobble.Defect{Code: gobble.DefectInvalidSampleSheet, Unit: sample.Name, Message: "scRNA technical-run identity, order, mates, path, or path ownership is invalid", Paths: []string{run.Fastq1, run.Fastq2}})
 			}
 			seenRuns[run.ID] = true
 			seenPairs[pair] = true
 			if fastq1Valid {
-				seenReadPaths[run.Fastq1] = true
+				seenReadPaths[fastq1Path] = true
 			}
 			if fastq2Valid {
-				seenReadPaths[run.Fastq2] = true
+				seenReadPaths[fastq2Path] = true
 			}
 		}
 	}
