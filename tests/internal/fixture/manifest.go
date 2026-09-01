@@ -13,13 +13,13 @@ import (
 // Manifest is the common executable shape of an assay-owned fixture manifest.
 // Assay-specific fields remain in the manifest and its owner tests.
 type Manifest struct {
-	Schema    int               `json:"schema"`
-	Benchmark ManifestBenchmark `json:"benchmark"`
-	Entries   []ManifestEntry   `json:"entries"`
+	Schema     int                 `json:"schema"`
+	Benchmark  ManifestBenchmark   `json:"benchmark"`
+	Entries    []ManifestEntry     `json:"entries"`
 	StageTrace map[string][]string `json:"stage_trace"`
-	Limits    []string          `json:"limits"`
-	Images    []ManifestImage   `json:"images"`
-	Trees     json.RawMessage   `json:"trees"`
+	Limits     []string            `json:"limits"`
+	Images     []ManifestImage     `json:"images"`
+	Trees      json.RawMessage     `json:"trees"`
 }
 
 // ManifestBenchmark identifies one immutable upstream product benchmark.
