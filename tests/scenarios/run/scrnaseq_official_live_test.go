@@ -4,6 +4,7 @@ package run_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -46,6 +47,30 @@ func TestOfficialSCRNAFixtureProvesEverySelectedBindAndArgvWithoutImages(t *test
 		t.Fatal("changed embedded scRNA script proof = nil, want frozen-oracle rejection")
 	} else if !strings.Contains(err.Error(), "frozen oracle") {
 		t.Fatalf("changed embedded script error = %q, want frozen-oracle rejection", err)
+	}
+	aliasedMate := bytes.ReplaceAll(
+		raw,
+		[]byte("in/reads/Sample_X_S1_L001_R1_001.fastq.gz"),
+		[]byte("in/reads/Sample_Y_S1_L001_R1_001.fastq.gz"),
+	)
+	if bytes.Equal(aliasedMate, raw) {
+		t.Fatal("official scRNA plan omits expected Sample_X mate path")
+	}
+	if _, err := scrnaseqscenario.ProveOfficialBindings(workspace, aliasedMate, officialInputs); err == nil {
+		t.Fatal("same-SHA wrong-sample bind proof = nil, want independent identity-oracle rejection")
+	} else if !strings.Contains(err.Error(), "independent exact SHA-256 identities") {
+		t.Fatalf("same-SHA wrong-sample bind error = %q, want independent identity-oracle rejection", err)
+	}
+	rewiredPort := rewireOfficialBind(
+		t,
+		raw,
+		"Sample_X.qcatch.quant",
+		"Sample_X.simpleaf_quant.map",
+	)
+	if _, err := scrnaseqscenario.ProveOfficialBindings(workspace, rewiredPort, officialInputs); err == nil {
+		t.Fatal("wrong producer-port bind proof = nil, want independent bind-oracle rejection")
+	} else if !strings.Contains(err.Error(), "independent producer-port set") {
+		t.Fatalf("wrong producer-port bind error = %q, want independent bind-oracle rejection", err)
 	}
 	selectedCommands := map[string]bool{
 		"cat_fastq": true, "fastqc": true, "gtf_gene_filter": true,
@@ -127,6 +152,37 @@ func TestOfficialSCRNAFixtureProvesEverySelectedBindAndArgvWithoutImages(t *test
 			t.Errorf("official operation artifact %s: %v", rel, err)
 		}
 	}
+}
+
+func rewireOfficialBind(t *testing.T, raw []byte, to, from string) []byte {
+	t.Helper()
+	var plan struct {
+		Tasks []pc.Task `json:"tasks"`
+		DAG   struct {
+			Edges []struct {
+				From string `json:"from"`
+				To   string `json:"to"`
+			} `json:"edges"`
+		} `json:"dag"`
+	}
+	if err := json.Unmarshal(raw, &plan); err != nil {
+		t.Fatalf("decode official plan for adversarial bind: %v", err)
+	}
+	changed := false
+	for i := range plan.DAG.Edges {
+		if plan.DAG.Edges[i].To == to {
+			plan.DAG.Edges[i].From = from
+			changed = true
+		}
+	}
+	if !changed {
+		t.Fatalf("official plan has no bind endpoint %q", to)
+	}
+	encoded, err := json.Marshal(plan)
+	if err != nil {
+		t.Fatalf("encode adversarial official bind: %v", err)
+	}
+	return encoded
 }
 
 func TestOfficialSCRNACommandEvidenceRejectsChangedStagedByte(t *testing.T) {

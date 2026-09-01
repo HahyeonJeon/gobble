@@ -34,3 +34,22 @@ func TestSimpleafQuantBindsCompleteTreesAndProtectsInputs(t *testing.T) {
 		}
 	}
 }
+
+func TestSimpleafQuantStandaloneRejectsAlignerExtraArg(t *testing.T) {
+	options := simpleafquant.Options{
+		Options:    modules.Options{ExtraArgs: []string{"--aligner=star"}},
+		Chemistry:  "10xv2",
+		Resolution: "cr-like",
+	}
+	pipeline := simpleafquant.Pipeline(
+		gobble.DeclareTree(gobble.Dir("in/index")),
+		gobble.PathSpec{Base: "t2g"},
+		gobble.PathSpec{Base: "whitelist"},
+		gobble.PathSpec{Base: "r1"},
+		gobble.PathSpec{Base: "r2"},
+		options,
+	)
+	if graph, err := gobble.Compose(pipeline); graph != nil || err == nil {
+		t.Fatalf("standalone Compose() = (%v, %v), want protected --aligner defect", graph, err)
+	}
+}

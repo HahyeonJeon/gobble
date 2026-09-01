@@ -38,11 +38,63 @@ func TestParserRejectsMissingMatesMetadataConflictsAndUnknownColumns(t *testing.
 		{name: "missing mate", sheet: "sample,fastq_1,fastq_2\nA,in/a.fastq.gz,\n", unit: "fastq_2"},
 		{name: "metadata conflict", sheet: "sample,fastq_1,fastq_2,expected_cells\nA,in/a1.fastq.gz,in/a2.fastq.gz,10\nA,in/b1.fastq.gz,in/b2.fastq.gz,20\n", unit: "A"},
 		{name: "duplicate pair", sheet: "sample,fastq_1,fastq_2\nA,in/a.fastq.gz,in/b.fastq.gz\nA,in/a.fastq.gz,in/b.fastq.gz\n", unit: "A"},
+		{name: "same path for both mates", sheet: "sample,fastq_1,fastq_2\nA,in/a.fastq.gz,in/a.fastq.gz\n", unit: "fastq_2"},
+		{name: "path reused across runs", sheet: "sample,fastq_1,fastq_2\nA,in/a.fastq.gz,in/b.fastq.gz\nA,in/a.fastq.gz,in/c.fastq.gz\n", unit: "fastq_1"},
+		{name: "path reused across mate roles", sheet: "sample,fastq_1,fastq_2\nA,in/a.fastq.gz,in/b.fastq.gz\nA,in/c.fastq.gz,in/a.fastq.gz\n", unit: "fastq_2"},
 		{name: "unknown column", sheet: "sample,fastq_1,fastq_2,chemistry\nA,in/a.fastq.gz,in/b.fastq.gz,custom\n", unit: "samplesheet"},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			_, err := scrnaseq.Parse(strings.NewReader(test.sheet))
+			requireDefect(t, err, gobble.DefectInvalidSampleSheet, test.unit)
+		})
+	}
+}
+
+func TestBuildRejectsMateAndRunPathAliasing(t *testing.T) {
+	tests := []struct {
+		name    string
+		unit    string
+		samples []scrnaseq.Sample
+	}{
+		{
+			name: "same path for both mates",
+			unit: "A",
+			samples: []scrnaseq.Sample{{Name: "A", Runs: []scrnaseq.Run{
+				{ID: "run_001", Fastq1: "in/a.fastq.gz", Fastq2: "in/a.fastq.gz"},
+			}}},
+		},
+		{
+			name: "path reused across runs",
+			unit: "A",
+			samples: []scrnaseq.Sample{{Name: "A", Runs: []scrnaseq.Run{
+				{ID: "run_001", Fastq1: "in/a.fastq.gz", Fastq2: "in/b.fastq.gz"},
+				{ID: "run_002", Fastq1: "in/a.fastq.gz", Fastq2: "in/c.fastq.gz"},
+			}}},
+		},
+		{
+			name: "path reused across mate roles",
+			unit: "A",
+			samples: []scrnaseq.Sample{{Name: "A", Runs: []scrnaseq.Run{
+				{ID: "run_001", Fastq1: "in/a.fastq.gz", Fastq2: "in/b.fastq.gz"},
+				{ID: "run_002", Fastq1: "in/c.fastq.gz", Fastq2: "in/a.fastq.gz"},
+			}}},
+		},
+		{
+			name: "path reused across samples",
+			unit: "B",
+			samples: []scrnaseq.Sample{
+				{Name: "A", Runs: []scrnaseq.Run{{ID: "run_001", Fastq1: "in/a.fastq.gz", Fastq2: "in/b.fastq.gz"}}},
+				{Name: "B", Runs: []scrnaseq.Run{{ID: "run_001", Fastq1: "in/c.fastq.gz", Fastq2: "in/b.fastq.gz"}}},
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			graph, err := gobble.Compose(scrnaseq.Build(test.samples, scrnaseq.DefaultConfig()))
+			if graph != nil {
+				t.Fatalf("Compose() graph = %v, want nil", graph)
+			}
 			requireDefect(t, err, gobble.DefectInvalidSampleSheet, test.unit)
 		})
 	}

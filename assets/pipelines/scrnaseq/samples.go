@@ -67,6 +67,7 @@ func parse(r io.Reader, source string) ([]Sample, error) {
 	samples := make([]Sample, 0, len(records)-1)
 	sampleIndex := make(map[string]int, len(records)-1)
 	runKeys := make(map[string]map[string]bool, len(records)-1)
+	readPaths := make(map[string]bool, (len(records)-1)*2)
 	for rowIndex, record := range records[1:] {
 		rowNumber := rowIndex + 2
 		cell := func(name string) string {
@@ -102,6 +103,31 @@ func parse(r io.Reader, source string) ([]Sample, error) {
 
 		runKey := fastq1 + "\x00" + fastq2
 		position, exists := sampleIndex[name]
+		if exists {
+			existing := &samples[position]
+			if existing.ExpectedCells != expected || existing.SeqCenter != seqCenter {
+				defects = append(defects, rowDefect(source, rowNumber, name, "repeated runs have conflicting expected_cells or seq_center metadata"))
+				continue
+			}
+			if runKeys[name][runKey] {
+				defects = append(defects, rowDefect(source, rowNumber, name, "duplicate technical-run read pair"))
+				continue
+			}
+		}
+		if fastq1 == fastq2 {
+			defects = append(defects, rowDefect(source, rowNumber, "fastq_2", "mate paths must be distinct"))
+			continue
+		}
+		if readPaths[fastq1] {
+			defects = append(defects, rowDefect(source, rowNumber, "fastq_1", "read path is already assigned to another mate or technical run"))
+			continue
+		}
+		if readPaths[fastq2] {
+			defects = append(defects, rowDefect(source, rowNumber, "fastq_2", "read path is already assigned to another mate or technical run"))
+			continue
+		}
+		readPaths[fastq1] = true
+		readPaths[fastq2] = true
 		if !exists {
 			position = len(samples)
 			sampleIndex[name] = position
@@ -109,16 +135,8 @@ func parse(r io.Reader, source string) ([]Sample, error) {
 			samples = append(samples, Sample{Name: name, ExpectedCells: expected, SeqCenter: seqCenter, Runs: []Run{{ID: "run_001", Fastq1: fastq1, Fastq2: fastq2}}})
 			continue
 		}
-		existing := &samples[position]
-		if existing.ExpectedCells != expected || existing.SeqCenter != seqCenter {
-			defects = append(defects, rowDefect(source, rowNumber, name, "repeated runs have conflicting expected_cells or seq_center metadata"))
-			continue
-		}
-		if runKeys[name][runKey] {
-			defects = append(defects, rowDefect(source, rowNumber, name, "duplicate technical-run read pair"))
-			continue
-		}
 		runKeys[name][runKey] = true
+		existing := &samples[position]
 		existing.Runs = append(existing.Runs, Run{ID: "run_" + leftPad3(len(existing.Runs)+1), Fastq1: fastq1, Fastq2: fastq2})
 	}
 	if len(samples) == 0 {

@@ -8,8 +8,9 @@ product. There is no earlier scRNA workspace to resume or migrate.
 
 - `Parse` and `Load` accept exact columns `sample,fastq_1,fastq_2` plus optional
   `expected_cells,seq_center`. Unknown columns are errors. Repeated sample rows
-  become ordered paired `Run` values. Both mates are required. Optional metadata
-  must agree across repeated rows.
+  become ordered paired `Run` values. Both mates are required and distinct. One
+  exact path can occupy only one sample, mate, and technical-run role. Optional
+  metadata must agree across repeated rows.
 - `Protocol` is one of 10x V1, V2, V3, or V4 and is never inferred. The staged
   whitelist carries the same typed protocol. `DefaultConfig` selects V2 because
   the pinned official fixture is V2. V2–V4 also require their exact typed QCatch
@@ -70,8 +71,9 @@ verb.
 
 Live fixture evidence fetches and verifies the nine exact official bytes and
 stages them as ordinary product inputs. An independent frozen oracle validates
-each selected task's complete command-specific argv and traces every declared
-input bind to those staged SHA-256 identities. The hermetic output double then
+each selected task's complete command-specific argv and compares every declared
+input bind's producer port and exact SHA-256 identity set with its expected set.
+The hermetic output double then
 proves only engine occupancy, complete Tree publication, and lifecycle state;
 its reads and placeholder bytes are not selected-command consumption evidence.
 This path does not execute the selected third-party commands or prove their

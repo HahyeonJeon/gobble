@@ -13,6 +13,7 @@ func validateBuild(samples []Sample, config Config) []gobble.Defect {
 		defects = append(defects, gobble.Defect{Code: gobble.DefectInvalidSampleSheet, Unit: "samplesheet", Message: "scRNA requires at least one sample"})
 	}
 	seenSamples := make(map[string]bool, len(samples))
+	seenReadPaths := make(map[string]bool)
 	for _, sample := range samples {
 		if !identityPattern.MatchString(sample.Name) || seenSamples[sample.Name] || len(sample.Runs) == 0 || sample.ExpectedCells < 0 {
 			defects = append(defects, gobble.Defect{Code: gobble.DefectInvalidSampleSheet, Unit: sample.Name, Message: "scRNA sample identity is invalid, duplicated, has invalid metadata, or has no runs"})
@@ -22,11 +23,22 @@ func validateBuild(samples []Sample, config Config) []gobble.Defect {
 		seenPairs := make(map[string]bool, len(sample.Runs))
 		for i, run := range sample.Runs {
 			pair := run.Fastq1 + "\x00" + run.Fastq2
-			if !identityPattern.MatchString(run.ID) || run.ID != "run_"+leftPad3(i+1) || seenRuns[run.ID] || seenPairs[pair] || !validWorkspacePath(run.Fastq1) || !validWorkspacePath(run.Fastq2) {
-				defects = append(defects, gobble.Defect{Code: gobble.DefectInvalidSampleSheet, Unit: sample.Name, Message: "scRNA technical-run identity, order, mates, or path is invalid", Paths: []string{run.Fastq1, run.Fastq2}})
+			fastq1Valid := validWorkspacePath(run.Fastq1)
+			fastq2Valid := validWorkspacePath(run.Fastq2)
+			pathAlias := run.Fastq1 == run.Fastq2 ||
+				(fastq1Valid && seenReadPaths[run.Fastq1]) ||
+				(fastq2Valid && seenReadPaths[run.Fastq2])
+			if !identityPattern.MatchString(run.ID) || run.ID != "run_"+leftPad3(i+1) || seenRuns[run.ID] || seenPairs[pair] || !fastq1Valid || !fastq2Valid || pathAlias {
+				defects = append(defects, gobble.Defect{Code: gobble.DefectInvalidSampleSheet, Unit: sample.Name, Message: "scRNA technical-run identity, order, mates, path, or path ownership is invalid", Paths: []string{run.Fastq1, run.Fastq2}})
 			}
 			seenRuns[run.ID] = true
 			seenPairs[pair] = true
+			if fastq1Valid {
+				seenReadPaths[run.Fastq1] = true
+			}
+			if fastq2Valid {
+				seenReadPaths[run.Fastq2] = true
+			}
 		}
 	}
 
