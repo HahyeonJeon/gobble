@@ -79,10 +79,13 @@ under `internal/` are unsupported.
 ## First run
 
 Choose one package from [Products](docs/products.md), prepare its host
-samplesheet, and create an exclusive workspace. Stage every input named by the
-sheet or typed reference config as a regular local file. Sheet cells and typed
-reference paths are workspace-relative. Product construction and tasks do not
-fetch them.
+samplesheet, and create an exclusive workspace. Stage each file input named by
+the sheet or typed reference config as a regular local file. A supplied ready
+`gobble.Tree` must be a complete directory with every expected member and a
+regular root `.gobble-tree.json`. Sheet cells and typed reference paths are
+workspace-relative. Product construction and tasks do not fetch these inputs.
+For a generated reference Tree, stage its declared source-file inputs instead;
+execution creates the Tree.
 
 Run and Resume require a usable local Docker client in `/usr/bin` or `/bin` and
 a reachable daemon. Before the first Run, the following command must succeed for
