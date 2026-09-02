@@ -113,7 +113,8 @@ Retry, or assay-specific recovery verb.
 Run and Resume require one execution identity and exclusive occupancy. Their
 return—success, contained failure, or cancellation—does not close occupancy.
 The process boundary determines when Release is allowed. Passing this actor
-gate does not replace the backend-state gate in [Recovery](#recovery).
+gate permits Release to reconcile; it does not guarantee that reconciliation
+can close occupancy. See [Recovery](#recovery) for the fail-closed result.
 
 | Release caller | Actor gate | `inspect run` before Release |
 |---|---|---|
@@ -146,8 +147,9 @@ controller death:
    `remaining`. Use `reuse` and `lineage` to understand selective reruns. If
    `run` reports `"unknown": true`, use `instances` to identify the affected
    executor. An `unknown-backend` Docker identity has unproved backend
-   disposition; do not call Release or Resume. Stop and investigate it as
-   described below.
+   disposition. Treat it as unresolved, not as an ordinary failed task. Do not
+   Resume. Preserve the workspace state and continue to the actor gate and
+   Release steps below.
 3. Correct caller-owned inputs or configuration without deleting state or
    artifacts. Keep the same accepted graph generation unless starting a new
    workspace for a named graph break.
@@ -159,11 +161,20 @@ controller death:
      `release` invocation is therefore a different later process. Call it only
      after `occupancy.live` becomes `false`; `occupancy.active` remains `true`
      until Release succeeds.
-5. Run Release only after its actor gate passes and Docker disposition is
-   proved. Confirm **after successful Release** that `occupancy.active` and
-   `occupancy.live` are both `false`.
-6. Resume with the same package, compatible graph, sheet meaning, typed config,
-   and required execution identity. Inspect `remaining` until it is empty.
+5. After the applicable actor gate passes, run Release. Release performs backend
+   reconciliation; backend disposition does not have to be proved before the
+   call. Apply the same actor gate before each subsequent Release attempt.
+   - If Release succeeds, confirm that `occupancy.active` and `occupancy.live`
+     are both `false`. Only then continue to Resume.
+   - If Release returns `unknown-backend`, it records the unresolved identity
+     and keeps occupancy active. Resume remains blocked. Restore Docker client,
+     daemon, and backend observability. Re-run the client check in
+     [Boundary](#boundary) against the same backend that owns any recorded
+     `runtime_id`, then retry Release. If disposition still cannot be proved,
+     Release returns `unknown-backend` again and the workspace remains blocked.
+6. Only after Release succeeds, Resume with the same package, compatible graph,
+   sheet meaning, typed config, and required execution identity. Inspect
+   `remaining` until it is empty.
 7. After Resume returns, inspect again and close its new occupancy through the
    same actor and backend gates. An embedded Go owner may call Release in the
    same process even while both occupancy fields remain `true`. A CLI `resume`
@@ -173,11 +184,12 @@ controller death:
 Other Inspect views, Release, and Resume refuse an identity mismatch without
 mutating the workspace.
 
-If Docker disposition cannot be proved, the affected identity is
-`unknown-backend`. Occupancy remains active, Release cannot close it, and Resume
-is refused. Stop and investigate the backend; do not relabel it as an ordinary
-failed task, delete controls, force occupancy closed, or signal an unproved
-PID.
+An `unknown-backend` result is a recorded safe state, not a released workspace.
+Occupancy remains active, and Resume is refused until a subsequent Release
+attempt successfully reconciles the backend and closes occupancy. Leave that
+state intact while restoring observability. Do not relabel the identity as an
+ordinary failed task, delete controls, force occupancy closed, or signal an
+unproved PID.
 
 File destinations must be regular files. Every Group member must be regular.
 A Tree requires its directory and root manifest. Resume re-evaluates `When`,

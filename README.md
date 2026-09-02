@@ -171,11 +171,14 @@ them. Inspect omits task environment values.
 ## Recovery
 
 Occupancy remains active after success, failure, or cancellation. Recover with
-**Inspect → Release → Resume**. Release reconciles known backend leftovers and
-closes occupancy; it does not delete controls or artifacts. An unproved Docker
-disposition remains `unknown-backend`, keeps occupancy active, and blocks
-Resume. See [Operations](docs/operations.md#recovery) before acting on a failed
-or interrupted workspace.
+**Inspect → Release → Resume**. After its actor gate, Release performs backend
+reconciliation and closes occupancy only when every disposition is proved. If
+Release returns `unknown-backend`, it records the unresolved state, keeps
+occupancy active, and blocks Resume. Restore Docker client, daemon, and backend
+observability, then retry Release through its actor gate. Only a successful
+Release permits Resume. Release does not delete controls or artifacts. See
+[Operations](docs/operations.md#recovery) for the actor gates and full sequence
+before acting on a failed or interrupted workspace.
 
 ## Checks
 
