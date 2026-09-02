@@ -8,29 +8,39 @@
 
 **Correction:** Resolve wait paths at `BuildPlan`. Run reads `Edge.Wait` only. Do not guess from `ToPort`. Add a process-level regression.
 
-## WGS FASTQ is not RNA or bisulfite proof
+## One assay's fixture is not another assay's proof
 
-**Context:** First-party RNA-seq and Methyl-seq live Runs need assay-shaped reads.
+**Context:** A command may accept another assay's file format while its behavior
+still depends on assay-specific read, reference, annotation, or protocol shape.
 
-**Mistake:** Reusing WGS homo_sapiens FASTQ and FASTA as STAR or Bismark stand-ins proves graph shape only. Non-bisulfite WGS reads aligned 0.00% through Bismark.
+**Mistake:** Reusing WGS reads and reference bytes as STAR or Bismark stand-ins
+proved graph shape but not the selected assay path. Non-bisulfite WGS reads, for
+example, produced meaningless Bismark evidence.
 
-**Correction:** Pin official nf-core rnaseq and methylseq test-profile files. Drop WGS stand-in from RNA and Methyl proofs.
+**Correction:** Give each assay one manifest with exact official bytes and stage
+use. Reuse shared test support, not another assay's fixture authority.
 
 ## Basename-only pin cache collides
 
-**Context:** Two pins can share `Pin.Name` (`test_1.fastq.gz` for WGS and SARS-CoV-2).
+**Context:** Pins in different assay or module manifests can share a filename.
 
 **Mistake:** Writing `CacheDir/<Name>` lets the second pin overwrite or reuse the first file.
 
-**Correction:** Use `CacheDir/<sha256[:16]>/<Name>` and a shared fetch helper. Check size and sha256 after download.
+**Correction:** Use `cache/<sha256[:16]>/<name>` through the shared test-only
+fixture helper. Verify size and SHA-256 after download and again after staging.
 
-## Bismark image swap needs a CLI study
+## An image change needs a command-contract study
 
-**Context:** Gobble first used `quay.io/biocontainers/bismark:3.1.0`. Official methylseq 4.2.0 uses Seqera Bismark 0.25.1.
+**Context:** A product default image binds tool version, accepted flags, output
+names, ports, provenance, and workspace reuse.
 
-**Mistake:** Swapping the image without mapping argv. A rumor that Perl 0.25.1 wants `--output` instead of `--output_dir` is not evidence.
+**Mistake:** Swapping an image from a tag or rumor without mapping the exact CLI
+and output behavior can preserve compilation while changing task meaning.
 
-**Correction:** Study the 0.25.1 CLI (and live `--help` when available) before the swap. v0.25.1 documents `-o/--output_dir`. Keep `--basename aligned`. Do not combine `--basename` with `--multicore`. Re-run live after the image change.
+**Correction:** Study commit-bound module source and versioned tool help, update
+the exact tag and digest authority, recheck protected flags and ports, and rerun
+the applicable command and product evidence. Treat the image change as a
+compatibility and resume event.
 
 ## Do not classify from a record this operation will overwrite
 
@@ -64,13 +74,18 @@
 
 **Correction:** Map a signaled wait to `128+signal`. Keep other mapped codes in `{0,1,2}`.
 
-## Binding sheet FASTQ cells as Literal
+## Binding suffixable sheet paths as Literal
 
-**Context:** Samplesheet read cells must feed adders such as fastp that call `PathSpec.AppendSuffix`.
+**Context:** Strict assay loaders produce workspace-relative read paths that
+downstream command modules may extend with suffixes.
 
-**Mistake:** Binding those cells with `Literal(cell)` stores an opaque filename. `AppendSuffix` marks a Literal invalid, so cleaned-read dests cannot render.
+**Mistake:** Binding a suffixable path with `Literal(cell)` makes it opaque.
+`PathSpec.AppendSuffix` then marks the value invalid and destinations cannot
+render.
 
-**Correction:** Split a validated workspace-relative cell into Dir, Base, and Ext (`sheetFileSpec`). Keep `Literal` for opaque shared reference or GTF cells that are not suffixed. Match WGS pin PathSpecs.
+**Correction:** Convert validated sheet paths into structured Dir, Base, and Ext
+values before graph construction. Use Literal only for paths that the owning
+command contract treats as an opaque unsuffixed token.
 
 ## Treating PID as occupancy owner
 

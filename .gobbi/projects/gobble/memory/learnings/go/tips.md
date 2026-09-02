@@ -50,33 +50,47 @@
 
 ## Pin cache keys include content
 
-**Context:** Package `assets` caches pinned downloads under `CacheDir`. Distinct pins can share a basename (`test_1.fastq.gz`).
+**Context:** Assay-owned and module-owned test manifests can contain distinct
+bytes with the same filename.
 
-**Tip:** Cache path is `CacheDir/<sha256[:16]>/<Name>`. `Pin.Name` remains the workspace basename. Fetch into that path with tmp+rename.
+**Tip:** The shared test-only fixture helper uses
+`cache/<sha256[:16]>/<name>`. The manifest destination, not the cache basename,
+owns the workspace path. Fetch into a temporary file, verify exact size and
+SHA-256, then rename.
 
-**Application:** Collision tests must cover two pins with the same Name and different hashes.
+**Application:** Keep the same-name/different-hash collision test in
+`tests/internal/fixture`. Recheck staged bytes after copying them into a
+workspace.
 
 ## Isolate restage stages Source onto dest
 
 **Context:** A pipeline-input bind may restage so dest Dir differs from the authored From path.
 
-**Tip:** Record `IO.Source` (and `IOMember.Source`) when the From rendered path differs from dest. Empty Source keeps Path as both. Isolate stages `workspace[source]` onto `isolate[dest]` by hardlink, then process-only symlink, then copy. Docker skips symlink. Publish is hardlink then copy; never symlink.
+**Tip:** Record `IO.Source` (and `IOMember.Source`) when the From rendered path
+differs from dest. Empty Source keeps Path as both. Stage and publish copy through
+complete temporary files; staged bytes must not share an inode with their source
+or rely on a symlink.
 
 **Application:** Bismark and BWA can restage a FASTA out of `in/` into a dest Dir the tool writes beside.
 
 ## Schedule keys reservedIdentity
 
-**Context:** Later scatter needs instance and shard slots. First-horizon sample lists stay Go loops.
+**Context:** Runtime Scatter needs instance and shard slots. Product sample,
+lane, run, and replicate lists remain compose-time typed construction.
 
 **Tip:** Scheduler maps, `tasks.json` latest attempts, Inspect instance filter, and Release incomplete lists key `reservedIdentity`. Document is the only engine payload. Empty Image is process; non-empty is docker.
 
-**Application:** Adding a sample this horizon still adds authored IDs (Change Added). Do not revive `task.ID`-only maps or Snapshot as a parallel contract.
+**Application:** Adding product membership adds authored IDs and a graph Change.
+Do not revive `task.ID`-only maps or Snapshot as a parallel contract.
 
 ## Inspect remaining uses dest cheap keys
 
 **Context:** Remaining used to SHA-256 dataset bytes. Content digest is still stored at publish.
 
-**Tip:** Classify remaining and reuse from dest cheap keys (size, mtime, dev, inode) recorded after publish, plus input cheap keys recorded at task success. Do not read file bytes on Inspect remaining. Image digest is recorded on the attempt and is not reuse identity.
+**Tip:** Use recorded size, mtime, device, and inode as an Inspect fast path.
+When cheap identity is absent or differs, compare the recorded SHA-256 with
+current bytes. Docker reuse also requires the current resolved image identity to
+match the attempt's recorded image digest.
 
 **Application:** Cheap dest mismatch is `output-missing`. Schema 0 and 1 workspaces are `unsupported-schema`.
 

@@ -32,13 +32,20 @@
 
 **Correction:** They answer different questions. Keep isolate. Take from nf-core only declared regular files plus declared literals.
 
-## Cached go test is not a live Docker e2e
+## Hermetic go test is not live Docker evidence
 
-**Context:** First-check is hermetic `go test ./...`. Live tests use build tag `live` and fail closed without Docker. Go may cache a prior package result.
+**Context:** The first check is network-free `go test ./...`. Product live suites
+have separate fixture, image, Docker, registry, and command prerequisites, and
+some use hermetic command boundaries by design.
 
-**Mistake:** Treating a cached `go test ./...` as proof that a live Docker WGS e2e ran, or treating a skipped live test as pass.
+**Mistake:** Treating a cached or fresh hermetic pass as proof that Docker,
+registry access, pinned third-party commands, or scientific outputs ran. A skip
+or a command double is not a live tool pass.
 
-**Correction:** First-check cannot skip for Docker. Live proof is `go test -tags=live` (WGS assay executes `assets.WGS()`). A skip is not a live pass. Cached ok is not a fresh live run.
+**Correction:** Run the exact separately authorized live package with
+`-count=1`, wait for it to exit, and report its stated evidence boundary. When
+live Docker, network, or third-party commands were not run, record that limit
+instead of upgrading the hermetic result.
 
 ## Do not spawn general-purpose as Partner
 
@@ -64,10 +71,15 @@
 
 **Correction:** Finish the DISCUSSION Partner before the plan writer starts. Planning Partner grouping is an input, not a later patch.
 
-## Concurrent live Docker evals flake and drop Defects
+## Concurrent live Docker evaluations flake and hide Defects
 
-**Context:** Live-tagged Docker e2e under Partner evaluation.
+**Context:** Live-tagged product or install evidence shares Docker, registry,
+image, fixture-cache, and host resources.
 
-**Mistake:** Overlapping full live `./tests/local-e2e` runs so a flake looks like a product defect, or printing a collapsed defect count without structured Defects.
+**Mistake:** Overlapping live suites can make resource interference look like a
+product defect. Collapsing failure to a count also removes the structured unit
+and path needed to classify it.
 
-**Correction:** Run exclusive live `go test -tags=live` for the named package. On live failure, print `gobble.Error` Defects (code, unit, path, message). Do not treat a concurrent-eval first fail as a product defect without exclusive structured evidence.
+**Correction:** Run the named live package exclusively. On failure, print each
+`gobble.Error` Defect with code, unit, paths, and message. Do not classify the
+first concurrent failure as a product defect without an exclusive reproduction.

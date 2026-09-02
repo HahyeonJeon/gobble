@@ -1,30 +1,76 @@
-# assets — Module and pipeline ownership
+# Assay product family and ownership
 
-First-party command adders live in one command package below `assets/modules`.
-The graph-stable WGS, RNA-seq, and Methyl-seq checkpoints live below
-`assets/pipelines/wgs`, `assets/pipelines/rnaseq`, and
-`assets/pipelines/methylseq`. Package `gobble` and `cmd/gobble` do not import
-asset or product packages.
+## Current products
 
-Package `assets` temporarily exposes only `WGS`, `RNASeq`, and `MethylSeq`.
-Each constructor delegates directly to its pipeline owner. The mechanical move
-preserves task ids, edges, commands, images, parameters, resources, inputs,
-binds, and destinations. The pre-move plan SHA-256 values are locked by pipeline
-tests: WGS `fd762650d4fcfb4f14b862a67cc123777e98a3b2cd291b76196d94472295e2f1`,
-RNA-seq `827931c2a6addaf716b8a9ee62057177b3a1838d135d967dc575906fbd948667`,
-and Methyl-seq `d6cd91ea0e4962f3cea1eec9633912a1f6f9b01261445b28f356c9420b23e517`.
+The supported assay products are direct child packages below
+`assets/pipelines`. Gobble is their shared engine and is not a sixth assay.
 
-This checkpoint preserves unchanged-graph workspace meaning only. The later
-RNA, Methyl, and WGS main-path lifts are separate graph generations and require
-new workspaces. The shims preserve source names, not old graph bytes after a
-lift.
+| Product | Package | Graph generation | Dated benchmark | Selected endpoint |
+|---|---|---|---|---|
+| WGS joint germline | `assets/pipelines/wgs` | `wgs-joint-germline-v1` | nf-core/sarek 3.10.0 | Indexed unfiltered gathered joint VCF |
+| Bulk RNA-seq | `assets/pipelines/rnaseq` | `rnaseq-star-salmon-v1` | nf-core/rnaseq 3.26.0 | STAR-Salmon quantification, matrices, cohort QC, and reports |
+| Methyl-seq | `assets/pipelines/methylseq` | `methylseq-bismark-v1` | nf-core/methylseq 4.2.0 | Directional Bismark deduplication, extraction, and reports |
+| ATAC-seq | `assets/pipelines/atacseq` | `atacseq-bwa-v1` | nf-core/atacseq 2.1.2 | Filtered alignments, peaks, consensus counts, QC, and reports |
+| scRNA-seq | `assets/pipelines/scrnaseq` | `scrnaseq-simpleaf-v1` | nf-core/scrnaseq 4.2.0 | Simpleaf and QCatch Trees, raw matrix conversions, and combined raw h5ad |
 
-Module evidence follows each command below `tests/modules/<module>`. Pipeline
-graph and fixture evidence follows each assay below `tests/pipelines/<assay>`.
-The WGS JSON manifest is the sole WGS pin authority. RNA and Methyl pin records
-and sheets have one assay owner each. Shared fetch and plan-check mechanics live
-under `tests/internal` and contain no fixture facts.
+These are independent assay products with common engineering contracts. They do
+not import one another or form an integrated multiomics graph.
 
-`LinkedQC` is design evidence under `tests/scenarios/design`. `OptionalMate` and
-the synthetic Scatter, Gather, When, Tree, fan-out, and cohort proofs are engine
-and resume evidence under `tests/scenarios/resume`. None is a product.
+## Ownership
+
+One command or subcommand lives in one package below `assets/modules`. A module
+owns typed `Options`, typed `Ports`, one task, its immutable default image,
+resource request, argv-extra position, protected flags, and contained failure
+boundary. Modules exist only when a selected product uses them. The module tree
+is not a registry or independent distribution system.
+
+One assay package owns strict CSV parsing, typed experiment values, complete
+analysis config, fresh defaults, pure graph construction, default CLI adapter,
+selected stages, required outputs, graph generation, and support limits. Package
+`gobble` and `cmd/gobble` remain product-agnostic.
+
+## Shared construction contract
+
+Every assay package exposes `Parse`, `Load`, `DefaultConfig`, `Build`,
+`Pipeline`, and `Lifecycle`. `Build` copies caller-owned values and performs no
+ambient sheet, current-directory, filesystem, environment, or network lookup.
+Only `Pipeline()` adapts the process-injected sheet path for the generic command.
+
+Experiment data, analysis and task-build config, and engine run controls have
+separate owners. `ExtraArgs` remains literal argv within the owning command and
+cannot replace typed routes, inputs, outputs, or other protected options. File,
+Group, and Tree ports match what each tool consumes. A ready Tree requires its
+regular root manifest.
+
+## Evidence and provenance
+
+Command evidence follows each module under `tests/modules/<command>`. Assay
+parsing, graph, stage, output, and fixture evidence follows each product under
+`tests/pipelines/<assay>`. Each assay's schema-4
+`testdata/manifest.json` is the sole authority for that assay's official bytes,
+benchmark relation, and default-image inventory. Shared fetch and plan-check
+code under `tests/internal` contains no assay fixture facts.
+
+The seven lifecycle owners are `tests/scenarios/design`, `build`, `customize`,
+`run`, `resume`, `stop`, and `failure`. They consume product packages and
+assay-owned fixtures instead of copying graphs or manifests.
+
+## Compatibility
+
+The initial mechanical move of WGS, RNA-seq, and Methyl-seq preserved their old
+graph facts. Their later main-path lifts are named graph generations and require
+new workspaces. Temporary `assets.WGS`, `assets.RNASeq`, and
+`assets.MethylSeq` shims now delegate to the lifted defaults. They preserve
+source names only and are not permanent duplicate product owners.
+
+ATAC-seq and scRNA-seq have no pre-lift workspace. Their current generations are
+their first baselines.
+
+## Retired proof owners
+
+The former flat proof graphs are not current products. `LinkedQC` did not define
+cross-assay identity or analysis. `OptionalMate` and synthetic operator graphs
+were engine evidence. Useful behavior now belongs to module, pipeline, or
+lifecycle tests. Removed proof-only `deseq2` and `merge-counts` modules have no
+current authority; selected products use `deseq2-qc`, `tximport`, and
+`featurecounts-merge-matrices` for their narrower current responsibilities.

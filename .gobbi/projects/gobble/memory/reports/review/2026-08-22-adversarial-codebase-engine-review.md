@@ -213,7 +213,7 @@ Parameter identity is sequence-shaped in the plan but is compared through a name
 
 This weakens reproducibility and makes reuse harder to trust for regulated, clinical, or long-lived analytical results.
 
-Evidence: `internal/engine/reuse.go:70-107,131-170,595-610`, `internal/engine/plan.go:55-57`, `internal/engine/exec/docker.go:40-65,186-199`, [System data design](../../design/architecture/system.md), and [Run-local backlog](../../backlogs/run-local.md).
+Evidence: `internal/engine/reuse.go:70-107,131-170,595-610`, `internal/engine/plan.go:55-57`, `internal/engine/exec/docker.go:40-65,186-199`, [System data design](../../design/architecture/system.md), and the [later run-local disposition](../note/2026-09-02-gobble-multiomics-products.md#deferred-outcomes).
 
 ### 10. Verification is neither fully portable nor complete for critical boundaries
 

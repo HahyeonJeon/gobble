@@ -6,9 +6,11 @@
 
 **What:** Let `When` skip or run on predicates other than `SkipIfMissing` and `SkipIfFalse`.
 
-**Why backlogged:** First-horizon `When` is those two predicates only. This Engine session did not add more.
+**Why backlogged:** The current engine contract includes only those two predicates.
 
-**Context:** A `When` with no predicate never skips. `SkipIfMissing` takes a File Handle. `SkipIfFalse` takes a declared boolean param. Design Current in [`compose-pipeline`](../design/feature/compose-pipeline.md) records that contract.
+**Context:** A `When` with no predicate never skips. `SkipIfMissing` takes a File
+Handle. `SkipIfFalse` takes a declared boolean parameter. Resume re-evaluates
+the predicate.
 
 ## CLI --samples
 
@@ -16,19 +18,12 @@
 
 **What:** Add a list-valued CLI `--samples` flag.
 
-**Why backlogged:** D4 replaced that idea with singular `--sample PATH`. `--samples` is an unknown flag (exit 2).
+**Why backlogged:** The current command uses singular `--sample PATH` for one
+assay-owned CSV. A sample-ID selector was not accepted.
 
-**Context:** `--sample PATH` is the samplesheet CSV on compose, validate, plan, run, and resume. It is not a list of sample ids.
-
-## Multi-lane samples
-
-**Backlogged at:** 2026-08-23T04:56:42Z
-
-**What:** Represent one sample with more than one `read1`/`read2` pair (lanes or libraries) on the samplesheet.
-
-**Why backlogged:** D1 locked unique sample names. A second row with the same `sample` is `invalid-name` duplicate sample name.
-
-**Context:** `SampleRow` is one `Sample`, `Read1`, and optional `Read2`. Extra lane files must be `AddInput` in Go or pre-merged FASTQs. `RNASeq()` and `MethylSeq()` emit one module per unique sample row.
+**Context:** `--sample PATH` is available on compose, validate, plan, run, and
+resume. It is not a list of sample names. Product packages parse their own
+strict schemas.
 
 ## Partial-success fan-in
 
@@ -36,9 +31,14 @@
 
 **What:** Let a join task run on the succeeded subset of wired `From`s instead of waiting for every `From` to succeed.
 
-**Why backlogged:** `Run` `upstreamReady` requires every wait producer `StatusSucceeded`. That matches a declared-cohort joint call. "Genotype whoever finished" was not first-horizon fan-in.
+**Why backlogged:** Current product joins require complete declared membership.
+Joint calling, assay matrices, consensus peaks, and combined matrices must not
+silently accept holes.
 
-**Context:** `Merge` and `Gather` do not auto-wire; edges come from `Bind.From`. A join task with N file `From`s never becomes ready if one producer fails. An empty Gather membership is not gather-ready. Failed scatter members already fail the run.
+**Context:** `Merge` and `Gather` do not auto-wire; edges come from `Bind.From`.
+A join with failed required producers remains blocked. Any future partial
+semantics need a distinct output meaning and cannot silently change current
+product fan-in.
 
 ## Plan-time reservedIdentity expansion
 
@@ -46,19 +46,26 @@
 
 **What:** Expand samples as plan-time Document expansion of `reservedIdentity` instead of a compose-time Go loop.
 
-**Why backlogged:** D1 locked compose-time CSV parse that emits one `AddModule` per sample. Authored Scatter, Gather, and When occupy runtime instance and shard slots. They are not plan-time Document expansion.
+**Why backlogged:** Current product sheets become typed values and expand at
+compose time. Runtime Scatter/Gather is reserved for true artifact membership,
+such as WGS intervals.
 
-**Context:** `WGS()`, `RNASeq()`, and `MethylSeq()` already expand named modules at compose. Empty `read2` is allowed at parse. Mate-only constructors return `invalid-samplesheet`. Roadmap stop condition still names plan-time Document expansion as a later breaking rewrite. N and any compose-time batching stay in that Go loop. Runtime membership remains `Scatter.From` a Group, Tree, or File. Hierarchical gather is not a separate operator.
+**Context:** The five product builders produce authored sample, run, lane, and
+replicate task IDs. BuildPlan does not explode Document tasks into sample
+instances. A later expansion model would be a breaking engine and graph rewrite.
 
 ## Samplesheet extra columns
 
 **Backlogged at:** 2026-08-23T04:56:42Z
 
-**What:** Accept samplesheet columns beyond the locked set and expose them to the author.
+**What:** Accept samplesheet columns beyond each product's locked set and expose them to the author.
 
-**Why backlogged:** D1 locked the header set. An unknown header makes the sheet malformed.
+**Why backlogged:** Every current assay owns a strict exact header set so
+misspelled or unused metadata does not disappear silently.
 
-**Context:** Locked columns are `sample`, `read1`, `read2`, `reference`, `gtf`, `group`, and `strandedness`. Parse test `unknown header` uses an `extra` column. Extra metadata must be a separate `AddInput` file, not sheet cells.
+**Context:** Adding a column is a versioned change to that assay's typed data
+contract, not a change to one universal Gobble sheet. Analysis config, images,
+resources, and engine controls remain outside sheets.
 
 ## TSV auto-detect
 
@@ -66,6 +73,7 @@
 
 **What:** Accept tab-separated samplesheets.
 
-**Why backlogged:** D1 locked CSV only. A tab-separated file is malformed CSV.
+**Why backlogged:** Current assay loaders accept strict CSV only.
 
-**Context:** `ParseSampleSheet` uses `encoding/csv` with comma separator. No comment lines. No TSV dialect.
+**Context:** No loader auto-detects dialect, comments, or a tab separator. A
+future format must preserve exact schema and error behavior for each assay.

@@ -16,9 +16,14 @@
 
 ## File, Group, and Tree are the artifact sum
 
-**Context:** Directory-output tools such as STAR genomeGenerate need a declared directory. Glob Set and Nextflow wildcards were offered and rejected this horizon.
+**Context:** Directory-output tools such as STAR genome generation, Bismark
+indexing, and Simpleaf need a declared directory artifact. Glob Set and
+Nextflow-style wildcard ownership are not part of the current model.
 
-**Tip:** A Bind is File, Group, or Tree. Tree is a declared directory plus dest `.gobble-tree.json`. Directory is placement, not an artifact. Group stays named regular files. Do not add glob Set this horizon.
+**Tip:** A Bind is File, Group, or Tree. Tree is a declared directory plus root
+`.gobble-tree.json`. Directory is placement, not an artifact. Group stays named
+regular files. Add another artifact kind only through a separate accepted engine
+contract.
 
 **Application:** STAR `--genomeDir` is Tree. BAM+BAI stays Group. Undeclared cwd files do not publish.
 

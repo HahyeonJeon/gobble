@@ -1,25 +1,25 @@
 # Design Memory
 
-Recursive navigation across design memory, grouped by category.
+Current project design, grouped by its dominant subject.
 
 ## Architecture
 
-- [Overview](architecture/overview.md)
-- [System](architecture/system.md)
+- [Project and product-family overview](architecture/overview.md)
+- [Shared system architecture](architecture/system.md)
 
 ## Process
 
-- [Product](process/product.md)
+- [Product lifecycle and support](process/product.md)
 
 ## Feature
 
-- [compose-pipeline](feature/compose-pipeline.md)
-- [validate-plan](feature/validate-plan.md)
-- [run-local](feature/run-local.md)
-- [inspect-run](feature/inspect-run.md)
-- [recover-run](feature/recover-run.md)
-- [assets](feature/assets.md)
+- [Assay product family and ownership](feature/assets.md)
+- [Compose pipeline](feature/compose-pipeline.md)
+- [Validate and plan](feature/validate-plan.md)
+- [Run locally](feature/run-local.md)
+- [Inspect a run](feature/inspect-run.md)
+- [Recover a run](feature/recover-run.md)
 
 ## Roadmap
 
-- [Project](roadmap/project.md)
+- [Project direction](roadmap/project.md)

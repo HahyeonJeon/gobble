@@ -1,9 +1,16 @@
 # R Mistakes
 
-## Reusing one FASTQ pair as four DEG samples
+## Reusing one input pair as several differential samples
 
-**Context:** A wiring proof wants four RNA samples and a two-group DESeq2 contrast without claiming biology.
+**Context:** A real differential-analysis command needs replicated sample
+columns even when the test makes no biological claim.
 
-**Mistake:** Reusing one official PE pair on four rows produces identical count columns. DESeq2 cannot fit that matrix and exits non-zero.
+**Mistake:** Repeating one paired-read input under several sample names can
+produce identical count columns. DESeq2 cannot fit that matrix, so a graph-only
+fixture becomes a false execution fixture.
 
-**Correction:** Pin four distinct tiny official pairs in the same two groups. Keep result-shape assertions. Do not stub DESeq2. Do not skip the task. Do not assert biologically DE genes.
+**Correction:** Use distinct, provenance-bound inputs for each represented
+sample and assert only the supported result shape. Do not stub or skip the
+analysis to make the proof pass. The current RNA-seq product has no study design
+or differential-expression result; apply this lesson only to a separately
+accepted downstream analysis.

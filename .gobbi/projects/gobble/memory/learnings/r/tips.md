@@ -1,9 +1,14 @@
 # R Tips
 
-## Skip a leading -- after Rscript trailingOnly
+## Keep Rscript operands aligned with commandArgs
 
-**Context:** Gobble adders invoke `Rscript -e SCRIPT -- operand...` so operands are not treated as Rscript flags.
+**Context:** Inline R command modules index paths and metadata from
+`commandArgs(trailingOnly=TRUE)`.
 
-**Tip:** In the biocontainers R used here, `commandArgs(trailingOnly=TRUE)` can still start with `"--"`. Drop that token before indexing paths, counts, and group labels.
+**Tip:** Pass operands immediately after the `-e` script, as current modules do.
+If a command deliberately inserts a standalone `--`, normalize that token
+before indexing because some Rscript images retain it in trailing arguments.
 
-**Application:** Use the same skip in merge-counts and DESeq2 `-e` scripts. Re-check if the image pin changes.
+**Application:** Recheck argument positions whenever a pinned R image or command
+wrapper changes. Current `tximport`, `deseq2-qc`, plotting, and matrix-conversion
+modules do not use the removed proof-era merge-counts convention.
