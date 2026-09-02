@@ -112,7 +112,8 @@ Retry, or assay-specific recovery verb.
 
 Run and Resume require one execution identity and exclusive occupancy. Their
 return—success, contained failure, or cancellation—does not close occupancy.
-Close it explicitly with Release after inspecting the state.
+The same process that called Run or Resume and still holds occupancy may call
+Release after that call returns. Inspect the state before Release.
 
 Release always reconciles first. If every backend identity is known stopped, it
 closes occupancy. A proved-stopped Docker task may retain a `runtime_id` when
@@ -121,9 +122,11 @@ attempt those terminal actions again. This is backend reconciliation, not task
 retry or a general cleanup operation. Release does not execute product work,
 remove control documents, or delete artifacts.
 
-A later process must not release while the recorded owner remains live on the
-same host (`live-occupancy`). A foreign recorded host yields `foreign-host`.
-Never signal or adopt an unproved process PID.
+A different later process must not call Release while `inspect run` reports a
+live occupancy (`occupancy.live` is `true`); Release would return
+`live-occupancy`. That later process may call Release only after the recorded
+owner is no longer live. A foreign recorded host yields `foreign-host`. Never
+signal or adopt an unproved process PID.
 
 ## Recovery
 
@@ -137,11 +140,19 @@ controller death:
 3. Correct caller-owned inputs or configuration without deleting state or
    artifacts. Keep the same accepted graph generation unless starting a new
    workspace for a named graph break.
-4. Run Release only when the owner is no longer live and backend disposition is
-   known. Confirm the run view reports inactive occupancy.
+4. Identify the Release caller, then follow the matching rule:
+   - The same process that called Run or Resume and still holds occupancy may
+     call Release after that call returns.
+   - A different later process must not call Release while `inspect run`
+     reports a live occupancy (`occupancy.live` is `true`). It may call Release
+     only after the recorded owner is no longer live.
+
+   Run Release only when backend disposition is known. Confirm the run view
+   reports inactive occupancy.
 5. Resume with the same package, compatible graph, sheet meaning, typed config,
    and required execution identity. Inspect `remaining` until it is empty.
-6. Release after successful Resume.
+6. After Resume returns successfully, the process that called Resume and holds
+   occupancy calls Release.
 
 Other Inspect views, Release, and Resume refuse an identity mismatch without
 mutating the workspace.
