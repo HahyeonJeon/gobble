@@ -112,8 +112,17 @@ Retry, or assay-specific recovery verb.
 
 Run and Resume require one execution identity and exclusive occupancy. Their
 return—success, contained failure, or cancellation—does not close occupancy.
-The same process that called Run or Resume and still holds occupancy may call
-Release after that call returns. Inspect the state before Release.
+The process boundary determines when Release is allowed. Passing this actor
+gate does not replace the backend-state gate in [Recovery](#recovery).
+
+| Release caller | Actor gate | `inspect run` before Release |
+|---|---|---|
+| Owner process, through an embedded Go caller | The same process called Run or Resume, that call has returned, and the process still holds occupancy | `occupancy.active` and `occupancy.live` may both be `true` |
+| Different later process, including every generic CLI or packed-runner `release` invocation | The former owner is no longer live | `occupancy.active` is `true` and `occupancy.live` is `false` |
+
+Do not wait for `occupancy.active` to become `false` before Release. That value
+means occupancy is already closed, and another Release returns
+`already-released`.
 
 Release always reconciles first. If every backend identity is known stopped, it
 closes occupancy. A proved-stopped Docker task may retain a `runtime_id` when
@@ -122,11 +131,9 @@ attempt those terminal actions again. This is backend reconciliation, not task
 retry or a general cleanup operation. Release does not execute product work,
 remove control documents, or delete artifacts.
 
-A different later process must not call Release while `inspect run` reports a
-live occupancy (`occupancy.live` is `true`); Release would return
-`live-occupancy`. That later process may call Release only after the recorded
-owner is no longer live. A foreign recorded host yields `foreign-host`. Never
-signal or adopt an unproved process PID.
+A different later process must not call Release while `occupancy.live` is
+`true`; if it does, it receives `live-occupancy`. A foreign recorded host
+yields `foreign-host`. Never signal or adopt an unproved process PID.
 
 ## Recovery
 
@@ -136,23 +143,32 @@ controller death:
 1. Run `inspect identity`. It remains available on identity mismatch and shows
    `required`, `have`, `match`, `goos`, `goarch`, and `identity_mode`.
 2. With a matching identity, inspect `run`, `errors`, `logs`, `instances`, and
-   `remaining`. Use `reuse` and `lineage` to understand selective reruns.
+   `remaining`. Use `reuse` and `lineage` to understand selective reruns. If
+   `run` reports `"unknown": true`, use `instances` to identify the affected
+   executor. An `unknown-backend` Docker identity has unproved backend
+   disposition; do not call Release or Resume. Stop and investigate it as
+   described below.
 3. Correct caller-owned inputs or configuration without deleting state or
    artifacts. Keep the same accepted graph generation unless starting a new
    workspace for a named graph break.
-4. Identify the Release caller, then follow the matching rule:
-   - The same process that called Run or Resume and still holds occupancy may
-     call Release after that call returns.
-   - A different later process must not call Release while `inspect run`
-     reports a live occupancy (`occupancy.live` is `true`). It may call Release
-     only after the recorded owner is no longer live.
-
-   Run Release only when backend disposition is known. Confirm the run view
-   reports inactive occupancy.
-5. Resume with the same package, compatible graph, sheet meaning, typed config,
+4. Select the Release caller:
+   - An embedded Go process that called Run or Resume may call Release after
+     that call returns while it still holds occupancy. It does not wait for
+     either occupancy field to become `false`.
+   - A generic CLI or packed runner executes one command and exits. A separate
+     `release` invocation is therefore a different later process. Call it only
+     after `occupancy.live` becomes `false`; `occupancy.active` remains `true`
+     until Release succeeds.
+5. Run Release only after its actor gate passes and Docker disposition is
+   proved. Confirm **after successful Release** that `occupancy.active` and
+   `occupancy.live` are both `false`.
+6. Resume with the same package, compatible graph, sheet meaning, typed config,
    and required execution identity. Inspect `remaining` until it is empty.
-6. After Resume returns successfully, the process that called Resume and holds
-   occupancy calls Release.
+7. After Resume returns, inspect again and close its new occupancy through the
+   same actor and backend gates. An embedded Go owner may call Release in the
+   same process even while both occupancy fields remain `true`. A CLI `resume`
+   process exits first, so its later, separate `release` invocation waits for
+   `occupancy.live` to become `false`.
 
 Other Inspect views, Release, and Resume refuse an identity mismatch without
 mutating the workspace.
