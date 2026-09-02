@@ -1,30 +1,58 @@
 # Gobble
 
-Gobble is a pre-1.0 trusted-local Linux pipeline engine and Go library for coding agents and humans who receive a packed pipeline runner.
+Gobble is a pre-1.0 Go pipeline engine and a family of five trusted-local
+bioinformatics pipeline products. It serves coding agents and Go authors through
+the library and generic `gobble` command. A human operator can instead receive
+one packed runner containing one pipeline.
 
-Gobble supports two install families:
+Support is limited to engineering behavior on `linux/amd64`: graph construction,
+local Docker command execution, declared artifacts, provenance, structured
+failure, and recovery. It does not establish scientific, clinical, diagnostic,
+or regulatory validity. Docker isolation is not a sandbox.
 
-- Agents use the Go library and a generic `gobble` command selected from the same module graph.
-- Humans receive one packed runner for one embedded pipeline. They do not install generic Gobble or need Go at run time.
+## Products
 
-The supported platform is `linux/amd64`. Agents, library consumers, and the machine that creates a packed runner need Go 1.26 or newer. Docker is required only for pipeline tasks that declare a Docker image and for first-horizon evidence. Docker `--network=none` and the caller's UID/GID are isolation conveniences, not a sandbox.
+| Product | Selected path | Benchmark | Guide |
+|---|---|---|---|
+| WGS | BWA/GATK joint germline through an unfiltered joint VCF | nf-core/sarek 3.10.0 | [WGS](docs/authoring.md#wgs) |
+| Bulk RNA-seq | STAR-Salmon, reference-guided outputs, cohort QC | nf-core/rnaseq 3.26.0 | [RNA-seq](docs/authoring.md#rna-seq) |
+| Methyl-seq | Directional Bismark/Bowtie2 | nf-core/methylseq 4.2.0 | [Methyl-seq](docs/authoring.md#methyl-seq) |
+| ATAC-seq | BWA, MACS2 peaks, consensus counts, cohort QC | nf-core/atacseq 2.1.2 | [ATAC-seq](docs/authoring.md#atac-seq) |
+| scRNA-seq | Simpleaf, QCatch, raw matrix conversion and assembly | nf-core/scrnaseq 4.2.0 | [scRNA-seq](docs/authoring.md#scrna-seq) |
 
-Gobble is licensed under the [MIT License](LICENSE).
+These are five independent assay products with common engineering contracts.
+They are not an integrated multiomics analysis. No package joins modalities,
+defines cross-assay identity, or produces a cross-assay scientific result.
+
+## Documentation
+
+- [Products](docs/products.md): exact product identities, ownership, package
+  roles, dated paths, and family boundary.
+- [Authoring](docs/authoring.md): samplesheets, typed configuration, selected
+  stages, outputs, defects, and scientific limits.
+- [Operations](docs/operations.md): installation, execution, trust, lifecycle,
+  migration, occupancy, and recovery.
+- [Provenance](docs/provenance.md): benchmark and pin authority, fixture
+  staging, attribution, support, maintenance, and deferred routes.
+- [Changelog](CHANGELOG.md): released history and current unreleased state.
+
+## Release state
+
+The immutable `v0.1.0` tag is the published engine preview. It predates the
+five-product family and does not contain these product packages. The product
+bytes documented here are frozen at commit
+`f21a858c66a2d95ce8eff469e6db2bfa3240c3a5` (tree
+`c90dfe77192c2528f8fd54d17f4d9547b09a6998`). No product-family release tag has
+been assigned. This documentation closure changes no executable file. Until
+release notes name these graph generations, use an exact trusted local checkout
+containing that baseline and build the command from the same selected revision.
+Do not expect `v0.1.0` or `@latest` to provide the products.
 
 ## Agent install
 
-The published agent install is the exact tag `v0.1.0` for both the library and the command:
-
-```sh
-go get github.com/HahyeonJeon/gobble@v0.1.0
-mkdir -p .gobbin
-GOBIN="$PWD/.gobbin" go install github.com/HahyeonJeon/gobble/cmd/gobble@v0.1.0
-export PATH="$PWD/.gobbin:$PATH"
-```
-
-Keep the installed binary on `PATH` for graph verbs. No supported install uses `@latest`.
-
-A local path pin remains valid for an unpublished trusted tree:
+Agents, library consumers, and the machine creating a packed runner require Go
+1.26 or newer. For the unreleased product baseline, put an exact trusted checkout
+in the consumer module graph and build the command from that graph:
 
 ```sh
 go mod edit -require=github.com/HahyeonJeon/gobble@v0.0.0
@@ -35,86 +63,120 @@ GOBIN="$PWD/.gobbin" go install github.com/HahyeonJeon/gobble/cmd/gobble
 export PATH="$PWD/.gobbin:$PATH"
 ```
 
-That `go install` has no version suffix because the consumer `go.mod` supplies the selected local revision. `v0.0.0` is a local module-graph placeholder, not a release tag.
+The unsuffixed `go install` uses the consumer's selected local module. The
+`v0.0.0` requirement is only a local module-graph placeholder.
 
-## Human install
-
-An agent with Go and the consumer pipeline module creates a runner at an explicit path:
+The released engine-only `v0.1.0` install remains:
 
 ```sh
-gobble pack [package] --output PATH
+go get github.com/HahyeonJeon/gobble@v0.1.0
+GOBIN="$PWD/.gobbin" go install github.com/HahyeonJeon/gobble/cmd/gobble@v0.1.0
 ```
 
-The agent sends that packed `linux/amd64` binary to the human. The human runs its embedded pipeline without a package operand and without Go:
+Keep the exact selected command on `PATH` for graph verbs. Consumer packages
+under `internal/` are unsupported.
+
+## First run
+
+Choose one package from [Products](docs/products.md), prepare its host
+samplesheet, and create an exclusive workspace. Stage every input named by the
+sheet or typed reference config as a regular local file. Sheet cells and typed
+reference paths are workspace-relative. Product construction and tasks do not
+fetch them.
+
+```sh
+PIPELINE=github.com/HahyeonJeon/gobble/assets/pipelines/rnaseq
+SHEET=/absolute/path/to/rnaseq-samplesheet.csv
+WORKSPACE=/absolute/path/to/new-exclusive-workspace
+
+mkdir "$WORKSPACE"
+# Stage the sheet's reads and DefaultConfig's reference inputs in the workspace.
+gobble compose "$PIPELINE" --sample "$SHEET"
+gobble validate "$PIPELINE" --sample "$SHEET"
+gobble plan "$PIPELINE" --sample "$SHEET" > plan.json
+gobble run "$PIPELINE" --workspace "$WORKSPACE" --sample "$SHEET"
+gobble inspect run --workspace "$WORKSPACE"
+gobble release --workspace "$WORKSPACE"
+```
+
+Review Plan JSON before running. It exposes commands, parameters, resources,
+images, binds, and destinations. The default adapter uses `samplesheet.csv` in
+the process directory when `--sample` is omitted.
+
+For typed customization, call the selected package's `Load`, `DefaultConfig`,
+and `Build` from a caller-owned Go package. Do not edit product source or use a
+serialized parameter overlay. See [Authoring](docs/authoring.md#entry-roles).
+
+## Human runner
+
+An agent with Go and the exact consumer module creates a runner at an explicit
+path:
+
+```sh
+gobble pack github.com/HahyeonJeon/gobble/assets/pipelines/rnaseq --output ./rnaseq-runner
+```
+
+The human uses the embedded package without Go, a package operand, or `pack`:
 
 ```text
-./pipeline-runner compose [--sample PATH]
-./pipeline-runner validate [--sample PATH]
-./pipeline-runner plan [--sample PATH]
-./pipeline-runner run --workspace DIR [--cap N] [--sample PATH]
-./pipeline-runner inspect VIEW --workspace DIR [--instance ID]
-./pipeline-runner release --workspace DIR
-./pipeline-runner resume --workspace DIR [--cap N] [--sample PATH]
+./rnaseq-runner compose [--sample PATH]
+./rnaseq-runner validate [--sample PATH]
+./rnaseq-runner plan [--sample PATH]
+./rnaseq-runner run --workspace DIR [--cap N] [--sample PATH]
+./rnaseq-runner inspect VIEW --workspace DIR [--instance ID]
+./rnaseq-runner release --workspace DIR
+./rnaseq-runner resume --workspace DIR [--cap N] [--sample PATH]
 ```
 
-A packed runner contains Gobble plus one embedded pipeline. Gobble portions are licensed under MIT. The embedded pipeline may have a different license. Its license is not Gobble's unless its author says so. Packed root help includes Gobble's copyright and permission notice.
+Gobble portions are [MIT licensed](LICENSE). An embedded pipeline, its tools,
+images, and data can carry other licenses. Packing does not relicense them.
 
-The runner has no `pack` command and accepts no package operand. Docker remains required for embedded tasks that use Docker.
+## Engine contract
 
-## Identity
+Supported operations are `Compose`, `Validate`, `BuildPlan`, `Run`, `Inspect`,
+`Release`, and `Resume`. Composition uses `Module`, `Branch`, `Merge`, `Scatter`,
+`Gather`, and `When`. Artifacts use `PathSpec` and File, Group, or Tree binds.
+Failures use `Error`, `Defect`, and stable `DefectCode` values.
 
-Gobble fails closed unless the installed CLI, selected Gobble module, pipeline revision, platform, install family, and workspace identity match.
+`WriteTo` is the supported plan-option constructor. Graph readers `Name`,
+`TaskIDs`, `InputNames`, and `Edges`, plus Plan JSON, support inspection.
+`LoadSampleSheetFile(path)` is the explicit-path concurrent core samplesheet
+API. Other root-package exports remain provisional unless their own contract
+says otherwise.
 
-Agent graph verbs compile the selected pipeline package and therefore require `go` on `PATH` and a consumer module. The generated child performs a handshake before calling `Pipeline()`. Consumer packages under an `internal/` directory are unsupported. Generic Inspect and Release use the installed binary identity and do not require a consumer module working directory. Packed verbs use the identity embedded when the runner was created.
-
-`inspect identity --workspace DIR` remains readable on mismatch. It reports `required`, `have`, and `match`, including `goos`, `goarch`, and `identity_mode`. Other Inspect views, Release, and Resume refuse a mismatched workspace without mutation.
-
-## Pipeline contract
-
-The supported operations are `Compose`, `Validate`, `BuildPlan`, `Run`, `Inspect`, `Release`, and `Resume`. Composition uses `Module`, `Branch`, `Merge`, `Scatter`, `Gather`, and `When`. Artifacts use `PathSpec` and File, `Group`, or `Tree` binds. Failures use `Error`, `Defect`, and stable `DefectCode` values.
-
-`WriteTo` is the supported plan option constructor. Graph readers `Name`, `TaskIDs`, `InputNames`, and `Edges`, plus Plan JSON, support the documented loop. Other exported names are provisional. `LoadSampleSheetFile(path)` is the supported concurrent samplesheet API.
-
-The caller supplies trusted pipeline code and an existing, exclusive workspace. Gobble copies staged inputs into task isolates and copies published outputs to destinations. It does not use hardlinks or symlinks for staging or publication. Commands, parameters, scripts, stdout, and stderr may persist caller content. Do not put secrets there. Inspect omits task environment values.
+The caller supplies trusted pipeline code and an existing, exclusive workspace.
+Gobble copies staged inputs into task isolates and publishes outputs by copying.
+It does not hardlink or symlink staged or published data. Commands, parameters,
+scripts, stdout, and stderr may persist caller content. Do not place secrets in
+them. Inspect omits task environment values.
 
 ## Recovery
 
-After a contained failure, cancellation, or controller death:
-
-1. Inspect structured run, instance, and remaining-work views.
-2. Release occupancy with the same install identity that occupied the workspace.
-3. Resume the same pipeline to run remaining work.
-
-Cancellation leaves occupancy active. Release closes occupancy; it does not delete control files or artifacts. There is no public Cancel, Retry, Diff, Clean, PID adoption, or repair verb.
-
-A Docker task whose stopped state and exit code were proved may retain a `runtime_id` when log copy or container removal fails. That leftover is terminal and can be retried during later Poll, Reconcile, or Release without wedging occupancy. If Docker disposition is unproved, the task remains `unknown-backend`, occupancy stays active, and Resume is refused. A later process never signals an unproved process PID.
-
-File destinations must be regular files, Group members must all be regular files, and a Tree destination needs its directory and `.gobble-tree.json`. Directory presence alone is not complete. Resume re-evaluates `When`, input fingerprints, and published destination checksums.
+Occupancy remains active after success, failure, or cancellation. Recover with
+**Inspect → Release → Resume**. Release reconciles known backend leftovers and
+closes occupancy; it does not delete controls or artifacts. An unproved Docker
+disposition remains `unknown-backend`, keeps occupancy active, and blocks
+Resume. See [Operations](docs/operations.md#recovery) before acting on a failed
+or interrupted workspace.
 
 ## Checks
 
-The first check is hermetic and omits the live install assay:
+The hermetic first check performs no fixture download:
 
 ```sh
-go test ./...
+GOTOOLCHAIN=local GOPROXY=off go test -count=1 ./...
 ```
 
-First-horizon installed-path exit is proved on `linux/amd64` for the local-pin agent install and packed human runner by:
+Live suites have separate prerequisites and can fetch pinned public fixtures.
+The installed engine path is exercised by `go test -tags=live
+./tests/install-e2e`. Product-specific evidence and its limits are described in
+[Provenance](docs/provenance.md#evidence).
 
-```sh
-go test -tags=live ./tests/install-e2e
-```
+## Exclusions
 
-The assay fails rather than skips when Docker is unavailable. It covers a local-pin external consumer, a `GOBIN` command, a packed runner with Go made uncallable, three distinct WGS workspaces, cancellation after a real Docker task starts, non-empty remaining work, Release, and successful Resume. That live package proves local-pin and packed-artifact first-horizon exit. The published agent install is the exact tag `v0.1.0`.
-
-## Versioning
-
-The first public pre-1.0 release is the immutable repository-root tag `v0.1.0` for the root module, library, and `cmd/gobble`. The module path has no `/v0` suffix. That tag is never moved or reused, and supported commands never use `@latest`. Release notes are in [CHANGELOG.md](CHANGELOG.md).
-
-A later patch means no intended break to the Go API, CLI protocol, workspace schema, or recovery behavior. A later minor may add features and may declare a pre-1.0 break. Its release notes must name the effects on the Go API, CLI, workspaces, and recovery.
-
-A pre-release matching `v0.x.y-rc.1` is used only if later requested.
-
-## Out of scope
-
-The current horizon excludes Slurm, cloud and Kubernetes backends, Podman as a supported executor, a GUI, a Gobble DSL, catalogs, public Cancel/Diff/Retry/Clean verbs, assay expansion beyond first-horizon WGS, GitHub Release binaries, and nested Docker-in-Docker. No support is claimed for musl, Windows, macOS, or `linux/arm64`.
+There is no supported Slurm, cloud, Kubernetes, service, remote-execution,
+object-storage, or Podman backend. There is no GUI, Gobble DSL, YAML/JSON product
+parameter surface, component catalog, public Cancel/Retry/Diff/Repair/Clean
+verb, automatic retry or fallback, cross-workspace cache, hidden cleanup, or
+integrated cross-assay graph. No support is claimed for musl, Windows, macOS,
+or `linux/arm64`.
