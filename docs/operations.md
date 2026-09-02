@@ -13,6 +13,13 @@ workspace are trusted. Docker runs selected tasks with network disabled and the
 caller's UID/GID, but those flags are conveniences, not a sandbox. A hostile
 pipeline or image is outside the threat model.
 
+Run and Resume require a usable local Docker client and a reachable daemon. The
+engine invokes Docker with a client environment containing only
+`PATH=/usr/bin:/bin`. The command `env -i PATH=/usr/bin:/bin docker info` must
+succeed for the local user running Gobble. The task-container `--network=none`
+flag is applied by `docker run`. It does not disable registry access used by the
+Docker client before container launch.
+
 Inputs, outputs, task isolates, state, and logs stay in local caller-owned
 files. Gobble adds no account, upload, telemetry, remote analysis, object store,
 cloud, cluster, or service. Keep secrets out of samplesheets, config values,
@@ -31,6 +38,10 @@ commands, parameters, scripts, logs, and manifests.
    `.gobble-tree.json`. A directory alone is not a Tree.
 6. Compose, validate, and review Plan JSON before Run. Confirm the package,
    graph, commands, images, resources, inputs, and destinations.
+7. Make every exact Plan image available to the local daemon. Gobble runs
+   `docker image inspect` on each exact image and runs `docker pull` when that
+   image is absent. Offline use requires pre-staging every exact
+   `registry/repository:tag@sha256:digest` image before disconnecting.
 
 The default package adapter reads `--sample PATH`; without it, the adapter reads
 `samplesheet.csv` in the process current directory. The sheet file itself is a
@@ -50,8 +61,9 @@ gobble release --workspace WORKSPACE
 gobble resume PACKAGE --workspace WORKSPACE --cap N --sample SHEET
 ```
 
-For a packed runner, omit `PACKAGE`. Omit `--cap` to use the engine default of
-one; accepted values are 1 through 64. Success output is JSON or JSONL. Exit 0
+For a packed runner, omit `PACKAGE`. Omit `--cap`, or pass explicit `0`, to use
+the engine default of one. Positive explicit caps are 1 through 64. Negative
+values and values above 64 are refused. Success output is JSON or JSONL. Exit 0
 means success, 1 means a domain or operational failure, and 2 means invocation
 or input-shape failure.
 
@@ -63,6 +75,20 @@ Generic Inspect and Release use the installed command identity and need no
 package operand or consumer-module working directory. Keep the exact occupying
 command available. Packed Inspect and Release use the runner's embedded
 identity.
+
+### Failures
+
+Run and Resume first apply start preflight to the graph, workspace, cap, and
+other start conditions. A defect there prevents occupancy and task execution.
+
+Image acquisition is separate from start preflight. After occupancy, each
+Docker task submission inspects its exact image. A cache miss causes a pull. A
+non-cancellation Docker client, daemon, inspection, or pull error fails that
+task before its command starts. A task-command failure instead means the
+container started and the command exited unsuccessfully. Inspect `run`,
+`errors`, and `logs` to tell which occurred. Occupancy remains active after
+either contained failure; follow [Recovery](#recovery) rather than starting
+another Run.
 
 ## Lifecycle
 

@@ -84,6 +84,14 @@ sheet or typed reference config as a regular local file. Sheet cells and typed
 reference paths are workspace-relative. Product construction and tasks do not
 fetch them.
 
+Run and Resume require a usable local Docker client in `/usr/bin` or `/bin` and
+a reachable daemon. Before the first Run, the following command must succeed for
+the same local user: `env -i PATH=/usr/bin:/bin docker info`. Gobble inspects
+each exact Plan image and pulls it when it is absent from the daemon's local
+image store. Offline use requires pre-staging every exact
+`registry/repository:tag@sha256:digest` image before disconnecting. The
+task-container `--network=none` setting does not apply to image acquisition.
+
 ```sh
 PIPELINE=github.com/HahyeonJeon/gobble/assets/pipelines/rnaseq
 SHEET=/absolute/path/to/rnaseq-samplesheet.csv
@@ -102,6 +110,13 @@ gobble release --workspace "$WORKSPACE"
 Review Plan JSON before running. It exposes commands, parameters, resources,
 images, binds, and destinations. The default adapter uses `samplesheet.csv` in
 the process directory when `--sample` is omitted.
+
+A Run or Resume start-preflight defect rejects the start before workspace
+occupancy or task execution. Docker inspection or pull failure occurs later,
+during task submission and before that task's command starts. It records a
+contained failed task and leaves occupancy active. A task-command failure means
+the container started and its command exited unsuccessfully. Inspect the failed
+unit, then follow [Recovery](docs/operations.md#recovery).
 
 For typed customization, call the selected package's `Load`, `DefaultConfig`,
 and `Build` from a caller-owned Go package. Do not edit product source or use a

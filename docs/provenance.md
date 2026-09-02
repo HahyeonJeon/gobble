@@ -41,13 +41,20 @@ endorsement. Gobble selects only the route documented in
 
 ## Image pins
 
-Each manifest's image table maps an actual command module and task name to:
+Fixture `entries` and image rows are separate record types. Every image row in
+the five manifests records `reference`, `digest`, `tool`, `command`, `version`,
+`license`, and `platform`. The remaining image fields differ by assay:
 
-- an explicit registry, repository, tag, and `sha256` content digest;
-- the command and reported tool version;
-- the exact upstream module or Gobble-owned selection source;
-- license and provenance information; and
-- the supported `linux/amd64` platform.
+- WGS records `module`, `task_name`, `module_commit`, and `module_source`.
+- RNA-seq and Methyl-seq record `modules`, `benchmark_pipeline`,
+  `benchmark_release`, `module_commit`, `module_source`, `provenance`, and
+  `license_source`. They do not record `task_name`.
+- ATAC-seq and scRNA-seq record `module`, `task_name`, and `source`.
+
+No image row records `license_authority` or `redistribution`. WGS, ATAC-seq, and
+scRNA-seq image rows also omit `license_source` and `provenance`. The image table
+is therefore a pin and inventory record, not a complete license, provenance, or
+redistribution authority.
 
 The tag and digest form one identity. `latest`, a missing digest, and a
 tag/digest disagreement are rejected. Mirroring remains inside the supported
@@ -100,15 +107,21 @@ not automatically cover an embedded pipeline, container image, tool, reference,
 annotation, whitelist, read set, accession, or generated artifact.
 
 Before fetching, committing, packing, mirroring, or redistributing third-party
-material:
+material, use the record for that material:
 
-1. read the applicable manifest entry's `license`, `license_source`,
-   `license_authority`, `redistribution`, and `provenance` fields;
-2. preserve the named copyright, permission notice, accession, dataset,
-   reference, and tool attribution;
-3. apply any originating data or reference terms in addition to repository
-   licensing; and
-4. stop when permission or required provenance is unknown.
+1. For a fixture or source byte in `entries`, read `license`, `license_source`,
+   `redistribution`, and `provenance`. WGS, ATAC-seq, and scRNA-seq entries also
+   record `license_authority`; RNA-seq and Methyl-seq entries do not.
+2. For a container image or its tools, use the image row only as the pin and
+   inventory described in [Image pins](#image-pins). No image row states
+   redistribution terms. Verify permission and required notices from the
+   applicable upstream license and image contents before mirroring or
+   redistributing; do not infer permission from a public registry or pin.
+3. Preserve the named copyright, permission notice, accession, dataset,
+   reference, and tool attribution.
+4. Apply any originating data or reference terms in addition to repository
+   licensing.
+5. Stop when permission or required provenance is unknown.
 
 A public URL is not proof of redistribution permission. Ignored fixture caches
 are not committed or redistributed. Packing a runner does not relicense its

@@ -15,9 +15,10 @@
   workspaces require new workspaces. Temporary `assets.WGS`, `assets.RNASeq`,
   and `assets.MethylSeq` names point to the lifted defaults, not old graph
   bytes. ATAC-seq and scRNA-seq have no earlier workspace generation.
-- Defaults use immutable image tags and digests. Exact benchmark, fixture,
-  license, provenance, and attribution authority lives in each assay manifest
-  under `tests/pipelines/<assay>/testdata/manifest.json`.
+- Defaults use immutable image tags and digests. Each assay manifest under
+  `tests/pipelines/<assay>/testdata/manifest.json` records exact benchmark and
+  fixture-byte authority plus that assay's image metadata. Image rows are not a
+  uniform license, provenance, attribution, or redistribution authority.
 - Support is engineering-only on trusted-local `linux/amd64` Docker execution.
   It does not claim nf-core endorsement or scientific, clinical, diagnostic,
   or regulatory validity.
