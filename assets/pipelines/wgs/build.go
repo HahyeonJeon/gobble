@@ -87,7 +87,7 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 		if config.Publication.GeneratedBWAIndex {
 			options.OutDir = config.Results.Join("reference", "bwa")
 		}
-		prepared, err := bwaindex.Add(pipeline.AddModule("reference"), fasta, options)
+		prepared, err := bwaindex.Add(pipeline.AddModule("reference").WithDisplay(gobble.TaskDisplay{Scope: gobble.DisplayShared}), fasta, options)
 		if recordModuleError(pipeline, err) {
 			return pipeline
 		}
@@ -387,7 +387,7 @@ func sampleModule(parent moduleParent, patients map[string]*gobble.Module, sampl
 		patient = parent.AddModule(sample.Patient)
 		patients[sample.Patient] = patient
 	}
-	return patient.AddModule(sample.Name)
+	return patient.AddModule(sample.Name).WithDisplay(gobble.TaskDisplay{Samples: []string{sampleKey(sample)}, Scope: gobble.DisplaySample})
 }
 
 func sampleTaskParent(parent modules.Parent, sample Sample, lane string) modules.Parent {

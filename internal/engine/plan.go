@@ -24,6 +24,7 @@ type Request struct {
 
 // TaskPlan is one task in a plan Document.
 type TaskPlan struct {
+	Display            *Display
 	ID                 string
 	Name               string
 	Instance           string
@@ -128,6 +129,7 @@ type jsonPlan struct {
 }
 
 type jsonTask struct {
+	Display            *Display      `json:"display,omitempty"`
 	ID                 string        `json:"id"`
 	Name               string        `json:"name"`
 	Instance           string        `json:"instance"`
@@ -296,6 +298,7 @@ func encodeTask(t TaskPlan) jsonTask {
 	}
 	applyReservedDefaults(&t)
 	return jsonTask{
+		Display:            cloneDisplay(t.Display),
 		ID:                 t.ID,
 		Name:               t.Name,
 		Instance:           t.Instance,

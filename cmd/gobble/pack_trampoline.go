@@ -198,6 +198,9 @@ func innerCommand(path string, protocol *os.File, args []string) *exec.Cmd {
 	cmd := exec.Command(path, args...)
 	cmd.Stdout = io.Discard
 	cmd.Stderr = os.Stderr
+	if emptyWatch(args) {
+		cmd.Stdin = os.Stdin
+	}
 	cmd.ExtraFiles = []*os.File{protocol}
 	return cmd
 }
@@ -254,7 +257,7 @@ func copyProtocol(protocol *os.File, args []string) int {
 func validProtocol(data []byte, args []string) bool {
 	trimmed := bytes.TrimSpace(data)
 	if len(trimmed) == 0 {
-		return len(data) == 0 && emptyInspectJSONL(args)
+		return len(data) == 0 && (emptyInspectJSONL(args) || emptyWatch(args))
 	}
 	if json.Valid(trimmed) {
 		return true
@@ -279,7 +282,11 @@ func validProtocol(data []byte, args []string) bool {
 	return helpShape(args)
 }
 
-func emptyInspectJSONL(args []string) bool {
+func emptyInspectJSONL(args []string) bool { return emptyView(args, false) }
+
+func emptyWatch(args []string) bool { return emptyView(args, true) }
+
+func emptyView(args []string, watch bool) bool {
 	positionals := make([]string, 0, 2)
 	options := true
 	workspaceSet := false
@@ -296,7 +303,7 @@ func emptyInspectJSONL(args []string) bool {
 			}
 			if strings.HasPrefix(arg, "--") {
 				name, value, hasValue := strings.Cut(arg[2:], "=")
-				if name != "workspace" && name != "instance" {
+				if (name != "workspace" && name != "instance") || (watch && name == "instance") {
 					return false
 				}
 				if !hasValue {
@@ -327,6 +334,9 @@ func emptyInspectJSONL(args []string) bool {
 		if len(positionals) > 2 {
 			return false
 		}
+	}
+	if watch {
+		return workspaceSet && len(positionals) == 1 && positionals[0] == "watch"
 	}
 	return workspaceSet && len(positionals) == 2 && positionals[0] == "inspect" &&
 		(positionals[1] == "remaining" || positionals[1] == "reuse")

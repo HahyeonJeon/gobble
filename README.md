@@ -32,9 +32,26 @@ defines cross-assay identity, or produces a cross-assay scientific result.
   stages, outputs, defects, and scientific limits.
 - [Operations](docs/operations.md): installation, execution, trust, lifecycle,
   migration, occupancy, and recovery.
+- [Monitoring](docs/monitoring.md): terminal dashboard, pipeline graph, exact
+  sample search, attention list, and live task log tails.
 - [Provenance](docs/provenance.md): benchmark and pin authority, fixture
   staging, attribution, support, maintenance, and deferred routes.
 - [Changelog](CHANGELOG.md): released history and current unreleased state.
+
+## Monitor a run
+
+In another terminal, use the same command or packed runner that started the run:
+
+```sh
+gobble watch --workspace /path/to/workspace
+# or: ./rnaseq watch --workspace /path/to/workspace
+```
+
+The dashboard opens on the graph and global progress. Press `/` to find a
+sample, `!` to inspect problems, and Enter to open tasks and logs. `q` closes
+the monitor while execution continues. See [Monitoring](docs/monitoring.md)
+for authoring labels, state meanings, and keyboard controls. This command is
+available in this unreleased branch, not the published `v0.1.0` binary.
 
 ## Release state
 

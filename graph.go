@@ -34,6 +34,7 @@ type graphInput struct {
 }
 
 type graphTask struct {
+	display TaskDisplay
 	id                 string
 	name               string
 	module             string

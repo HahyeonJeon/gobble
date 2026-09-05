@@ -294,7 +294,7 @@ func interpret(raw rawArgs) (*request, *gobble.Error) {
 		if raw.instanceSet {
 			req.instance = raw.instance
 		}
-	case "release":
+	case "release", "watch":
 		if len(operands) > 0 {
 			return nil, inv("extra operand")
 		}
@@ -335,7 +335,7 @@ func repeatedFlagError(op string, raw rawArgs) *gobble.Error {
 
 func isOperate(cmd string) bool {
 	switch cmd {
-	case "compose", "validate", "plan", "run", "inspect", "resume", "release", "pack":
+	case "compose", "validate", "plan", "run", "inspect", "resume", "release", "pack", "watch":
 		return true
 	default:
 		return false
@@ -350,7 +350,7 @@ func flagsFor(cmd string) (workspace, cap, instance, sample, output bool) {
 		return true, true, false, true, false
 	case "inspect":
 		return true, false, true, false, false
-	case "release":
+	case "release", "watch":
 		return true, false, false, false, false
 	case "pack":
 		return false, false, false, false, true

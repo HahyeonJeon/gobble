@@ -486,6 +486,8 @@ func main() {
 	for _, args := range [][]string{
 		{"inspect", "remaining", "--workspace", "/tmp/workspace"},
 		{"--workspace=/tmp/workspace", "inspect", "reuse"},
+		{"watch", "--workspace", "/tmp/workspace"},
+		{"--workspace=/tmp/workspace", "watch"},
 	} {
 		empty := runPacked(runner, args...)
 		if empty.code != 0 || len(empty.stdout) != 0 || len(empty.stderr) != 0 {
@@ -498,6 +500,9 @@ func main() {
 		{"inspect", "remaining"},
 		{"inspect", "reuse", "--unknown=value"},
 		{"inspect", "remaining", "--workspace=whitespace"},
+		{"watch"},
+		{"watch", "--workspace=/tmp/workspace", "--instance=a"},
+		{"watch", "extra", "--workspace=/tmp/workspace"},
 	} {
 		empty := runPacked(runner, args...)
 		if empty.code != 1 || len(empty.stdout) != 0 || !bytes.Contains(empty.stderr, []byte("invalid child protocol")) {

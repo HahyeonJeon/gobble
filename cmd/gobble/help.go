@@ -15,6 +15,7 @@ Commands:
   plan       write plan JSON for a pipeline package
   run        run a pipeline package in a workspace
   inspect    write a workspace view as JSON or JSONL
+  watch      monitor pipeline progress in an interactive terminal
   resume     resume a released run
   release    close occupancy on a workspace
   pack       write a standalone linux/amd64 runner
@@ -36,7 +37,8 @@ github.com/HahyeonJeon/gobble@v0.1.0 and
 github.com/HahyeonJeon/gobble/cmd/gobble@v0.1.0. No supported install uses
 @latest.
 
-Success stdout is protocol JSON or JSONL only. Exits are 0 success, 1 domain
+Watch renders on stderr and leaves stdout empty; q exits only the monitor.
+Other success stdout is protocol JSON or JSONL only. Exits are 0 success, 1 domain
 or operational failure, and 2 invocation or input-shape failure. A spaced
 valued flag does not consume a following token that starts with '-'; use
 --flag=value.
@@ -78,8 +80,15 @@ sheet use samplesheet.csv in the process current directory.
 `,
 	"inspect": `Usage: gobble inspect VIEW --workspace DIR [--instance ID]
 
-Write one workspace view. VIEW is run, instances, errors, logs, timing, dag, lineage, remaining, reuse, or identity.
+Write one workspace view. VIEW is run, instances, errors, logs, timing, dag, lineage, remaining, reuse, identity, or monitor.
 --workspace is required and is not created. Omit --instance to read every reserved identity.
+`,
+	"watch": `Usage: gobble watch --workspace DIR
+
+Monitor the pipeline graph, progress, samples, problems, and task logs.
+Requires terminal stdin and stderr. Press / to find a sample, ! for problems,
+and q to exit the monitor; the pipeline keeps running in its owning process.
+--workspace is required and is not created.
 `,
 	"resume": `Usage: gobble resume [package] --workspace DIR [--cap N] [--sample PATH]
 
@@ -152,6 +161,7 @@ Commands:
   plan       write plan JSON for the embedded pipeline
   run        run the embedded pipeline in a workspace
   inspect    write a workspace view as JSON or JSONL
+  watch      monitor pipeline progress in an interactive terminal
   resume     resume a released run
   release    close occupancy on a workspace
   help       print help
@@ -163,7 +173,8 @@ The embedded identity must match the workspace identity. Recovery is inspect,
 then release, then resume remaining work. Proved-stopped Docker leftovers do
 not wedge occupancy; unproved Docker stays unknown-backend and blocks resume.
 
-Success stdout is protocol JSON or JSONL only. Exits are 0 success, 1 domain
+Watch renders on stderr and leaves stdout empty; q exits only the monitor.
+Other success stdout is protocol JSON or JSONL only. Exits are 0 success, 1 domain
 or operational failure, and 2 invocation or input-shape failure. First-horizon
 installed-path evidence passed on linux/amd64 for local-pin source and packed
 runners with go test -tags=live ./tests/install-e2e. The published Gobble
@@ -201,8 +212,15 @@ not created. Omit --cap to pass 0. --sample PATH is the samplesheet CSV.
 	"inspect": `Usage: gobble inspect VIEW --workspace DIR [--instance ID]
 
 Write one workspace view. VIEW is run, instances, errors, logs, timing, dag,
-lineage, remaining, reuse, or identity. --workspace is required and is not
+lineage, remaining, reuse, identity, or monitor. --workspace is required and is not
 created. Omit --instance to read every reserved identity.
+` + packedLicenseSummary,
+	"watch": `Usage: gobble watch --workspace DIR
+
+Monitor the pipeline graph, progress, samples, problems, and task logs.
+Requires terminal stdin and stderr. Press / to find a sample, ! for problems,
+and q to exit the monitor; the pipeline keeps running in its owning process.
+--workspace is required and is not created.
 ` + packedLicenseSummary,
 	"resume": `Usage: gobble resume --workspace DIR [--cap N] [--sample PATH]
 

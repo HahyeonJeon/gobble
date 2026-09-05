@@ -47,7 +47,7 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 	rawH5ADs := make([]gobble.Handle, 0, len(samples))
 	labels := make([]string, 0, len(samples))
 	for _, sample := range samples {
-		sampleModule := pipeline.AddModule(sample.Name)
+		sampleModule := pipeline.AddModule(sample.Name).WithDisplay(gobble.TaskDisplay{Samples: []string{sample.Name}, Scope: gobble.DisplaySample})
 		read1s := make([]gobble.Handle, 0, len(sample.Runs))
 		read2s := make([]gobble.Handle, 0, len(sample.Runs))
 		for _, run := range sample.Runs {
@@ -136,14 +136,14 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 	}
 	multiQCOptions := config.MultiQC
 	multiQCOptions.OutDir = config.Results.Join("multiqc")
-	if _, err = multiqc.Add(pipeline, reports, multiQCOptions); recordModuleError(pipeline, err) {
+	if _, err = multiqc.Add(modules.WithDisplay(pipeline, gobble.TaskDisplay{Scope: gobble.DisplayCohort}), reports, multiQCOptions); recordModuleError(pipeline, err) {
 		return pipeline
 	}
 	return pipeline
 }
 
 func addReference(pipeline *gobble.Pipeline, config Config) (referenceHandles, error) {
-	module := pipeline.AddModule("reference")
+	module := pipeline.AddModule("reference").WithDisplay(gobble.TaskDisplay{Scope: gobble.DisplayShared})
 	whitelist := pipeline.AddInput("barcode_whitelist", config.Reference.BarcodeWhitelist.Path)
 	if !config.Reference.SimpleafIndex.IsZero() {
 		return referenceHandles{

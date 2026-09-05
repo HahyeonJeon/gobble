@@ -24,6 +24,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return writeVersion(stdout, stderr)
 	}
 	switch req.command {
+	case "watch":
+		return runWatch(req, stderr)
 	case "pack":
 		return runPack(req, stderr)
 	case "inspect":

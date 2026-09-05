@@ -16,6 +16,9 @@ const (
 	ViewRemaining View = "remaining"
 	ViewReuse     View = "reuse"
 	ViewIdentity  View = "identity"
+	// ViewMonitor combines run, task, timing, display, and DAG facts from one
+	// coherent control snapshot. instance selects log tails only.
+	ViewMonitor View = "monitor"
 )
 
 // Inspect returns one read-only JSON or JSONL view of workspace.

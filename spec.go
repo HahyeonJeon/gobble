@@ -8,6 +8,7 @@ import intpath "github.com/HahyeonJeon/gobble/internal/path"
 // Backend empty or "local" is allowed. Any other backend is unsupported at
 // validate and plan time, not at builder time.
 type TaskSpec struct {
+	Display   TaskDisplay
 	Name      string
 	Command   []string
 	Script    string

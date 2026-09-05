@@ -18,6 +18,7 @@ const (
 	viewRemaining = "remaining"
 	viewReuse     = "reuse"
 	viewIdentity  = "identity"
+	viewMonitor   = "monitor"
 
 	inspectLogTail = 4096
 )
@@ -73,6 +74,8 @@ func Inspect(workspace, view, instance string, supplied *InstallIdentity) ([]byt
 		return nil, d
 	}
 	switch view {
+	case viewMonitor:
+		return inspectMonitorView(workspace, run, doc, latest, instance)
 	case viewRun:
 		return marshalInspect(inspectRunView(workspace, run, tasks))
 	case viewInstances:
@@ -106,7 +109,7 @@ func Inspect(workspace, view, instance string, supplied *InstallIdentity) ([]byt
 
 func knownInspectView(view string) bool {
 	switch view {
-	case viewRun, viewInstances, viewErrors, viewLogs, viewTiming, viewDAG, viewLineage, viewRemaining, viewReuse, viewIdentity:
+	case viewRun, viewInstances, viewErrors, viewLogs, viewTiming, viewDAG, viewLineage, viewRemaining, viewReuse, viewIdentity, viewMonitor:
 		return true
 	default:
 		return false
@@ -492,17 +495,18 @@ type inspectLog struct {
 func inspectLogsView(workspace string, tasks []jsonTaskState, schema int) (inspectLogsDoc, []Defect) {
 	out := inspectLogsDoc{SchemaVersion: schema, Logs: []inspectLog{}}
 	for _, st := range tasks {
+		stdout, stderr := taskLogPaths(st)
 		rec := inspectLog{
 			Identity: reservedIdentity(taskPlanFromState(st)),
-			Stdout:   st.Stdout,
-			Stderr:   st.Stderr,
+			Stdout:   stdout,
+			Stderr:   stderr,
 		}
 		var d []Defect
-		rec.StdoutSize, rec.StdoutTail, d = logPointer(workspace, st.Stdout)
+		rec.StdoutSize, rec.StdoutTail, d = logPointer(workspace, stdout)
 		if len(d) > 0 {
 			return inspectLogsDoc{}, d
 		}
-		rec.StderrSize, rec.StderrTail, d = logPointer(workspace, st.Stderr)
+		rec.StderrSize, rec.StderrTail, d = logPointer(workspace, stderr)
 		if len(d) > 0 {
 			return inspectLogsDoc{}, d
 		}
@@ -720,6 +724,7 @@ func documentFromPlan(plan jsonPlan) Document {
 
 func decodeTask(t jsonTask) TaskPlan {
 	return TaskPlan{
+		Display:            cloneDisplay(t.Display),
 		ID:                 t.ID,
 		Name:               t.Name,
 		Instance:           t.Instance,

@@ -306,6 +306,7 @@ func planDocument(g *Graph) (engine.Document, error) {
 			command = scriptArgv(t.script)
 		}
 		pt := engine.TaskPlan{
+			Display:            engineDisplay(t.display),
 			ID:                 t.id,
 			Name:               t.name,
 			Module:             t.module,

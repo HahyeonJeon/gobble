@@ -332,6 +332,7 @@ func cloneDocument(doc Document) Document {
 }
 
 func cloneTaskPlan(t TaskPlan) TaskPlan {
+	t.Display = cloneDisplay(t.Display)
 	t.Command = copyStrings(t.Command)
 	if t.Params != nil {
 		t.Params = append([]ParamPlan(nil), t.Params...)

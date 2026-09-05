@@ -38,7 +38,7 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 		if config.Publication.GeneratedIndex {
 			options.OutDir = gobble.Dir(config.Results.String() + "/reference/bismark-index")
 		}
-		prepared, err := bismarkgenome.Add(pipeline.AddModule("reference"), fasta, options)
+		prepared, err := bismarkgenome.Add(pipeline.AddModule("reference").WithDisplay(gobble.TaskDisplay{Scope: gobble.DisplayShared}), fasta, options)
 		if recordModuleError(pipeline, err) {
 			return pipeline
 		}
@@ -50,7 +50,7 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 	var reports []gobble.Handle
 	summaryInputs := make([]bismarksummary.SampleReports, 0, len(samples))
 	for _, sample := range samples {
-		module := pipeline.AddModule(sample.Name)
+		module := pipeline.AddModule(sample.Name).WithDisplay(gobble.TaskDisplay{Samples: []string{sample.Name}, Scope: gobble.DisplaySample})
 		read1s := make([]gobble.Handle, 0, len(sample.Runs))
 		read2s := make([]gobble.Handle, 0, len(sample.Runs))
 		for _, run := range sample.Runs {
@@ -182,14 +182,14 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 
 	summaryOptions := config.Summary
 	summaryOptions.OutDir = gobble.Dir(config.Results.String() + "/summary")
-	summary, err := bismarksummary.Add(pipeline, summaryInputs, summaryOptions)
+	summary, err := bismarksummary.Add(modules.WithDisplay(pipeline, gobble.TaskDisplay{Scope: gobble.DisplayCohort}), summaryInputs, summaryOptions)
 	if recordModuleError(pipeline, err) {
 		return pipeline
 	}
 	reports = append(reports, summary.HTML, summary.Text)
 	multiQCOptions := config.MultiQC
 	multiQCOptions.OutDir = gobble.Dir(config.Results.String() + "/multiqc")
-	if _, err = multiqc.Add(pipeline, reports, multiQCOptions); recordModuleError(pipeline, err) {
+	if _, err = multiqc.Add(modules.WithDisplay(pipeline, gobble.TaskDisplay{Scope: gobble.DisplayCohort}), reports, multiQCOptions); recordModuleError(pipeline, err) {
 		return pipeline
 	}
 	return pipeline

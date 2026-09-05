@@ -1,0 +1,55 @@
+name: Go tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: go-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Resolve dependencies and check formatting
+        id: format
+        continue-on-error: true
+        run: |
+          go mod tidy
+          gofmt -w .
+          git add -N go.sum
+          git diff --binary > /tmp/gobble-format.patch
+          git diff --exit-code
+      - name: Hermetic suite
+        env:
+          GOTOOLCHAIN: local
+          GOPROXY: off
+          GOBBLE_UI_PREVIEW: /tmp/gobble-terminal.ansi
+        run: go test -count=1 ./...
+      - name: Monitor race checks
+        env:
+          GOTOOLCHAIN: local
+          GOPROXY: off
+        run: go test -race -count=1 ./monitor/... ./internal/engine
+      - name: Review artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gobble-validation
+          path: |
+            /tmp/gobble-format.patch
+            /tmp/gobble-terminal.ansi
+          retention-days: 7
+      - name: Require clean formatting and dependency lock
+        if: steps.format.outcome == 'failure'
+        run: exit 1

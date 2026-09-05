@@ -34,6 +34,7 @@ const (
 )
 
 type ancestor struct {
+	display TaskDisplay
 	kind    nodeKind
 	name    string
 	scatter *Scatter
@@ -55,6 +56,7 @@ type node struct {
 
 // Module is a named group of tasks, branches, and merges.
 type Module struct {
+	display TaskDisplay
 	pipe     *Pipeline
 	anc      []ancestor
 	name     string
@@ -262,21 +264,21 @@ func (p *Pipeline) When(name string) *When {
 
 // AddModule records a child module and returns it.
 func (m *Module) AddModule(name string) *Module {
-	child := &Module{pipe: m.pipe, anc: childAnc(m.anc, nodeModule, m.name), name: name}
+	child := &Module{pipe: m.pipe, anc: m.ancestors(), name: name}
 	m.children = append(m.children, node{kind: nodeModule, name: name, module: child})
 	return child
 }
 
 // AddTask records a child task and returns it. Mutable fields are copied.
 func (m *Module) AddTask(spec TaskSpec) *Task {
-	t := m.pipe.newTask(childAnc(m.anc, nodeModule, m.name), spec)
+	t := m.pipe.newTask(m.ancestors(), spec)
 	m.children = append(m.children, node{kind: nodeTask, name: spec.Name, task: t})
 	return t
 }
 
 // Branch records a child branch and returns it.
 func (m *Module) Branch(name string) *Branch {
-	b := &Branch{pipe: m.pipe, anc: childAnc(m.anc, nodeModule, m.name), name: name}
+	b := &Branch{pipe: m.pipe, anc: m.ancestors(), name: name}
 	m.children = append(m.children, node{kind: nodeBranch, name: name, branch: b})
 	return b
 }
@@ -286,7 +288,7 @@ func (m *Module) Branch(name string) *Branch {
 func (m *Module) Merge(name string) *Merge {
 	mg := &Merge{
 		pipe: m.pipe,
-		anc:  childAnc(m.anc, nodeModule, m.name),
+		anc:  m.ancestors(),
 		name: name,
 	}
 	m.children = append(m.children, node{kind: nodeMerge, name: name, merge: mg})
@@ -295,7 +297,7 @@ func (m *Module) Merge(name string) *Merge {
 
 // Scatter records a child scatter and returns it.
 func (m *Module) Scatter(name string) *Scatter {
-	s := &Scatter{pipe: m.pipe, anc: childAnc(m.anc, nodeModule, m.name), name: name}
+	s := &Scatter{pipe: m.pipe, anc: m.ancestors(), name: name}
 	m.children = append(m.children, node{kind: nodeScatter, name: name, scatter: s})
 	return s
 }
@@ -303,14 +305,14 @@ func (m *Module) Scatter(name string) *Scatter {
 // Gather records a child gather and returns it. Edges come from
 // Bind.From wiring, not from a scatter list.
 func (m *Module) Gather(name string) *Gather {
-	g := &Gather{pipe: m.pipe, anc: childAnc(m.anc, nodeModule, m.name), name: name}
+	g := &Gather{pipe: m.pipe, anc: m.ancestors(), name: name}
 	m.children = append(m.children, node{kind: nodeGather, name: name, gather: g})
 	return g
 }
 
 // When records a child conditional and returns it.
 func (m *Module) When(name string) *When {
-	w := &When{pipe: m.pipe, anc: childAnc(m.anc, nodeModule, m.name), name: name}
+	w := &When{pipe: m.pipe, anc: m.ancestors(), name: name}
 	m.children = append(m.children, node{kind: nodeWhen, name: name, when: w})
 	return w
 }
@@ -444,6 +446,11 @@ func (h Handle) IsZero() bool {
 }
 
 func (p *Pipeline) newTask(anc []ancestor, spec TaskSpec) *Task {
+	var display TaskDisplay
+	for _, a := range anc {
+		display = inheritDisplay(display, a.display)
+	}
+	spec.Display = inheritDisplay(display, spec.Display)
 	t := &Task{pipe: p, anc: append([]ancestor(nil), anc...), spec: copyTaskSpec(spec)}
 	p.tasks = append(p.tasks, t)
 	return t
@@ -451,6 +458,7 @@ func (p *Pipeline) newTask(anc []ancestor, spec TaskSpec) *Task {
 
 func copyTaskSpec(spec TaskSpec) TaskSpec {
 	out := spec
+	out.Display = cloneDisplay(spec.Display)
 	out.Command = copyStrings(spec.Command)
 	out.Inputs = copyBinds(spec.Inputs)
 	out.Outputs = copyBinds(spec.Outputs)

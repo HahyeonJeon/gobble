@@ -81,6 +81,7 @@ import (
 
 	userpipe @@PIPELINE_IMPORT@@
 	"github.com/HahyeonJeon/gobble"
+	"github.com/HahyeonJeon/gobble/monitor/tui"
 )
 
 const (
@@ -144,6 +145,11 @@ func run() int {
 		return writeVersion(identity)
 	}
 	switch req.command {
+	case "watch":
+		if err := tui.Watch(context.Background(), req.workspace, os.Stdin, os.Stderr, gobble.WithIdentity(identity)); err != nil {
+			return writeLibErr(err)
+		}
+		return 0
 	case "inspect":
 		data, err := gobble.Inspect(req.workspace, gobble.View(req.view), req.instance, gobble.WithIdentity(identity))
 		if err != nil {
@@ -427,7 +433,7 @@ func interpret(raw rawArgs) (*request, *gobble.Error) {
 		if raw.instanceSet {
 			req.instance = raw.instance
 		}
-	case "release":
+	case "release", "watch":
 		if len(operands) > 0 {
 			return fail("extra operand")
 		}
@@ -466,7 +472,7 @@ func repeatedFlagError(op string, raw rawArgs) *gobble.Error {
 
 func isOperate(command string) bool {
 	switch command {
-	case "compose", "validate", "plan", "run", "inspect", "resume", "release":
+	case "compose", "validate", "plan", "run", "inspect", "resume", "release", "watch":
 		return true
 	default:
 		return false
@@ -481,7 +487,7 @@ func flagsFor(command string) (workspace, cap, instance, sample bool) {
 		return true, true, false, true
 	case "inspect":
 		return true, false, true, false
-	case "release":
+	case "release", "watch":
 		return true, false, false, false
 	default:
 		return false, false, false, false

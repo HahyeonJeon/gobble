@@ -316,14 +316,14 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 	}
 	multiQCOptions := config.MultiQC
 	multiQCOptions.OutDir = config.Results.Join("multiqc")
-	if _, addErr = multiqc.Add(pipeline, reports, multiQCOptions); recordModuleError(pipeline, addErr) {
+	if _, addErr = multiqc.Add(modules.WithDisplay(pipeline, gobble.TaskDisplay{Scope: gobble.DisplayCohort}), reports, multiQCOptions); recordModuleError(pipeline, addErr) {
 		return pipeline
 	}
 	return pipeline
 }
 
 func addReference(pipeline *gobble.Pipeline, config Config) (referenceHandles, error) {
-	module := pipeline.AddModule("reference")
+	module := pipeline.AddModule("reference").WithDisplay(gobble.TaskDisplay{Scope: gobble.DisplayShared})
 	fasta := pipeline.AddInput("reference_fasta", config.Reference.FASTA)
 	gtf := pipeline.AddInput("reference_annotation", config.Reference.Annotation)
 	faidx, err := samtoolsfaidx.Add(module, fasta, config.SamtoolsFAIDX)
@@ -737,6 +737,12 @@ type parameterizedParent struct {
 }
 
 func (p parameterizedParent) AddTask(spec gobble.TaskSpec) *gobble.Task {
+	for _, param := range p.params {
+		if param.Name == "sample" {
+			spec.Display.Samples = []string{param.Value}
+			spec.Display.Scope = gobble.DisplaySample
+		}
+	}
 	spec.Params = append(append([]gobble.Param(nil), spec.Params...), p.params...)
 	return p.parent.AddTask(spec)
 }
