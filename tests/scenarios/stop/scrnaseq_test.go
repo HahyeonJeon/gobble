@@ -1,7 +1,6 @@
 package stop_test
 
 import (
-	"context"
 	"errors"
 	"testing"
 
@@ -14,16 +13,7 @@ func TestSCRNAStopIsInspectableAndRecoversByReleaseResume(t *testing.T) {
 	runtime := scrnaseqscenario.NewRuntime(t, scrnaseq.DefaultConfig())
 	const blocked = "Sample_Y.simpleaf_quant"
 	runtime.Block(blocked)
-	ctx, cancel := context.WithCancel(t.Context())
-	done := make(chan error, 1)
-	go func() { done <- runtime.Run(ctx) }()
-	select {
-	case <-runtime.Started():
-		cancel()
-	case <-t.Context().Done():
-		t.Fatal("scRNA blocked task did not start")
-	}
-	err := <-done
+	err := cancelStartedRun(t, runtime.Run, runtime.Started())
 	var structured *gobble.Error
 	if !errors.As(err, &structured) || !hasSCRNACanceledDefect(structured) || !scrnaseq.Lifecycle().Stop {
 		t.Fatalf("Run cancellation error = %v, want canceled scRNA defect", err)

@@ -29,6 +29,13 @@ func TestMethylCommandFailureIsContainedInspectableAndRecoverable(t *testing.T) 
 	if !errors.As(err, &structured) || structured == nil {
 		t.Fatalf("Run failure = %v, want structured Methyl failure", err)
 	}
+	contained := false
+	for _, defect := range structured.Defects {
+		contained = contained || defect.Code == gobble.DefectFailed
+	}
+	if !contained {
+		t.Fatalf("Run failure = %#v, want contained Methyl task failure", structured)
+	}
 	if !recordsContainMethyl(runtime.InspectRecords(gobble.ViewErrors), failed) || !recordsContainMethyl(runtime.InspectRecords(gobble.ViewLogs), failed) || len(runtime.InspectRecords(gobble.ViewRemaining)) == 0 {
 		t.Fatal("contained Methyl failure is not fully inspectable")
 	}

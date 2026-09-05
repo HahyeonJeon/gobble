@@ -1,7 +1,6 @@
 package stop_test
 
 import (
-	"context"
 	"errors"
 	"testing"
 
@@ -14,16 +13,7 @@ func TestATACStopIsInspectableAndRecoversByReleaseResume(t *testing.T) {
 	runtime := atacseqscenario.NewRuntime(t, atacseq.DefaultConfig())
 	const blocked = "OSMOTIC_STRESS_T15_PE.replicate_1.run_002.trim_galore"
 	runtime.Block(blocked)
-	ctx, cancel := context.WithCancel(t.Context())
-	done := make(chan error, 1)
-	go func() { done <- runtime.Run(ctx) }()
-	select {
-	case <-runtime.Started():
-		cancel()
-	case <-t.Context().Done():
-		t.Fatal("ATAC blocked task did not start")
-	}
-	err := <-done
+	err := cancelStartedRun(t, runtime.Run, runtime.Started())
 	var structured *gobble.Error
 	if !errors.As(err, &structured) || !hasATACCanceledDefect(structured) || !atacseq.Lifecycle().Stop {
 		t.Fatalf("Run cancellation error = %v, want canceled ATAC defect", err)

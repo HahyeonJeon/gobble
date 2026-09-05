@@ -265,3 +265,35 @@ characters, and actual checkpoint/output files:
 The example pipeline intentionally runs inside a local process. These installed
 results verify the CLI/packed protocol and lifecycle, not a Docker runtime or
 Windows host. The runtime integration gate remains unexecuted locally.
+
+### CI environment regression fixes after the develop merge
+
+The first develop CI runs exposed three test-environment assumptions:
+
+- ATAC/Methyl lifecycle doubles inherited analysis budgets exceeding the CI
+  host's CPU capacity. Stop scenarios then waited for a start signal even when
+  Run had already returned a preflight error, masking it with a ten-minute
+  timeout. All five assay runtimes now use explicit small fixture resources;
+  production defaults stay covered by plan assertions. Stop tests share a
+  bounded wait that also reports early Run errors with their defects.
+- The hermetic Docker image ran as root, so chmod-based no-read assertions
+  failed because root could still read the files. The image now uses an
+  unprivileged user with access to its verified dependency cache.
+- The packed-runner preservation test intentionally creates a consumer without
+  `go.sum`. It now explicitly disables fresh checksum-database lookups in that
+  fixture, after cache preparation has verified the dependencies. Normal build
+  and product checksum verification remain enabled.
+
+The Docker userspace matrix now pins containers to one available CPU, with
+network access disabled, to retain coverage of small hosts.
+
+Local verification: the complete suite passed all 80 test-bearing packages;
+all lifecycle scenario packages passed with affinity restricted to one CPU;
+the packed-consumer preservation test and `go vet ./...` passed. Improved
+Methyl failure diagnostics were also rerun on one CPU.
+
+The original [Docker CI run](https://github.com/HahyeonJeon/gobble/actions/runs/33964259175)
+already passed both actual-container jobs (`docker-smoke` and `runtime-install`),
+including the no-host-Go launcher journey, live logs, Stop, repeated Stop,
+controller death, and automatic Resume. Its userspace matrix failed for the
+assumptions above. Windows Desktop and release-publication gates remain open.

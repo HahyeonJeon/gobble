@@ -1,6 +1,8 @@
 # Docker test environments
 
-The image supplies Go and cached dependencies. Mount the checkout at runtime so
+The image supplies Go and verified, cached dependencies and runs tests as an
+unprivileged user so permission checks exercise normal filesystem access.
+Mount the checkout at runtime so
 Git metadata and the pipeline source identity remain available. Build it from
 the repository root:
 
@@ -20,6 +22,13 @@ The checkout should be a complete clone. Tests that build consumer binaries need
 readable Git metadata. Generated fixture caches stay outside version control.
 The Git settings trust only the explicitly mounted checkout, whose owner can
 differ from the test image's user.
+
+CI also pins each test container to one available CPU. Assay command doubles
+use small fixture resource requests; real pipeline defaults remain covered by
+plan tests. The temporary packed-runner consumer intentionally lacks `go.sum`,
+so that test disables fresh checksum-database lookups after dependencies have
+been verified during image construction. Product checksum verification remains
+enabled.
 
 For race checks, replace the default command:
 
@@ -45,17 +54,20 @@ go test -tags=live -count=1 -run '^(TestRunDocker(Publishes|BadImageContained)|T
 
 This suite covers Docker publication/log collection/cleanup, a contained image
 failure, and controller death around container creation/start followed by
-Release/Resume. Installed generic/packed Docker recovery, live streaming logs, daemon loss,
-and Windows/WSL are additional gates in the
+Release/Resume. The separate `runtime-install` job builds the runtime and native
+launcher, then checks init/doctor, live logs, Stop, repeated Stop, controller
+death, and automatic Resume without host Go. Broader installed generic/packed
+Docker recovery, daemon loss, and Windows Desktop remain additional gates in the
 [v0.2.0 plan](../../docs/v0.2.0/plan.md). The existing broader installed suite is
 `go test -tags=live ./tests/install-e2e`; it has fixture/network prerequisites
 documented in [Provenance](../../docs/provenance.md).
 
-A future controller-container live harness must mount the workspace at the
-same absolute path seen by the daemon and put temporary task workspaces on that
-mount. Do not copy the hermetic command and add a Docker socket while leaving
-temporary work under the controller's private `/tmp`.
+The runtime launcher mounts the project and translates task workspace paths
+through the controller's inspected mounts. Do not copy the hermetic command
+and add a Docker socket while leaving temporary work in private `/tmp`.
 
-The Dockerfile and CI jobs were added in this review environment, which has no
-Docker CLI or daemon. Their actual image builds and container runs are pending
-CI execution. Linux containers do not validate native Windows or WSL behavior.
+Both `docker-smoke` and `runtime-install` passed on Linux in the
+[first Docker CI run](https://github.com/HahyeonJeon/gobble/actions/runs/33964259175).
+That run also exposed environment assumptions in the hermetic matrix, which
+the fixture, user, and checksum setup above address. Linux container results
+do not validate Windows Desktop behavior.

@@ -13,7 +13,7 @@ import (
 func TestATACRunCompletesRequiredArtifactsHermetically(t *testing.T) {
 	runtime := atacseqscenario.NewRuntime(t, atacseq.DefaultConfig())
 	if err := runtime.Run(t.Context()); err != nil {
-		t.Fatalf("Run(ATAC graph): %v", err)
+		t.Fatalf("Run(ATAC graph): %#v", err)
 	}
 	for _, rel := range []string{
 		"results/atacseq/samples/OSMOTIC_STRESS_T0_PE/replicate_1/alignment/OSMOTIC_STRESS_T0_PE_R1.filtered.bam",

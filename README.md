@@ -31,8 +31,9 @@ work, records what happened, and reuses compatible completed tasks when you resu
 > monitor planned for the next release. Published `v0.1.0` predates those features.
 > Current execution support is **Linux/amd64**. The accepted v0.2.0 default is
 > **Docker-based installation and agent-driven authoring**, with direct Linux
-> installation for advanced users. The launcher is implemented; Docker and Windows execution still
-> require validation; see the [installation design](docs/v0.2.0/container-installation.md).
+> installation for advanced users. The Docker launcher journey has passed Linux CI;
+> Windows Desktop execution remains a release gate. See the
+> [installation design](docs/v0.2.0/container-installation.md).
 
 ## Get started
 

@@ -1,7 +1,6 @@
 package stop_test
 
 import (
-	"context"
 	"errors"
 	"testing"
 
@@ -14,16 +13,7 @@ func TestMethylStopIsInspectableAndRecoversByReleaseResume(t *testing.T) {
 	runtime := methylseqscenario.NewRuntime(t, methylseq.DefaultConfig())
 	const blocked = "SRR389222_sub1.trim_galore"
 	runtime.Block(blocked)
-	ctx, cancel := context.WithCancel(t.Context())
-	done := make(chan error, 1)
-	go func() { done <- runtime.Run(ctx) }()
-	select {
-	case <-runtime.Started():
-		cancel()
-	case <-t.Context().Done():
-		t.Fatal("Methyl blocked task did not start")
-	}
-	err := <-done
+	err := cancelStartedRun(t, runtime.Run, runtime.Started())
 	var structured *gobble.Error
 	if !errors.As(err, &structured) || !containsCanceled(structured) || !methylseq.Lifecycle().Stop {
 		t.Fatalf("Run cancellation error = %v, want canceled Methyl defect", err)

@@ -38,6 +38,7 @@ type Runtime struct {
 func NewRuntime(t *testing.T, config wgs.Config) *Runtime {
 	t.Helper()
 	samples, _ := Samples(t)
+	config = fixtureConfig(config)
 	pipe := wgs.Build(samples, config)
 	graph, err := gobble.Compose(pipe)
 	if err != nil {
@@ -88,6 +89,7 @@ func (r *Runtime) Workspace() string { return r.workspace }
 // graph in the existing workspace. Newly named fixture inputs are staged.
 func (r *Runtime) ResumeWith(ctx context.Context, samples []wgs.Sample, config wgs.Config) error {
 	r.t.Helper()
+	config = fixtureConfig(config)
 	pipe := wgs.Build(samples, config)
 	graph, err := gobble.Compose(pipe)
 	if err != nil {

@@ -9,6 +9,11 @@ import (
 )
 
 func TestPackedMonitorBuildPreservesConsumerModule(t *testing.T) {
+	// This consumer intentionally has no go.sum. Its dependencies were already
+	// verified when preparing Gobble's cache; do not require a second network
+	// lookup against the checksum database to test module-file preservation.
+	t.Setenv("GOPROXY", "off")
+	t.Setenv("GOSUMDB", "off")
 	goBin, err := exec.LookPath("go")
 	if err != nil {
 		t.Fatal(err)

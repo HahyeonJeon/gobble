@@ -40,13 +40,14 @@ jobs:
           GO_IMAGE: ${{ matrix.image }}
         run: docker build --build-arg "GO_IMAGE=$GO_IMAGE" -f tests/docker/Dockerfile -t gobble-tests .
       - name: Hermetic suite without network or daemon access
-        run: >-
-          docker run --rm --network=none
-          --mount "type=bind,src=$PWD,dst=$PWD"
-          --env GIT_CONFIG_COUNT=1
-          --env GIT_CONFIG_KEY_0=safe.directory
-          --env "GIT_CONFIG_VALUE_0=$PWD"
-          --workdir "$PWD" gobble-tests
+        run: |
+          test_cpu=$(python3 -c 'import os; print(min(os.sched_getaffinity(0)))')
+          docker run --rm --network=none --cpuset-cpus="$test_cpu" \
+            --mount "type=bind,src=$PWD,dst=$PWD" \
+            --env GIT_CONFIG_COUNT=1 \
+            --env GIT_CONFIG_KEY_0=safe.directory \
+            --env "GIT_CONFIG_VALUE_0=$PWD" \
+            --workdir "$PWD" gobble-tests
 
   docker-smoke:
     runs-on: ubuntu-latest
