@@ -54,7 +54,7 @@ try:
     assert [(r["identity"], r["attempt"]) for r in before] == [(r["identity"], r["attempt"]) for r in after], "Unchanged completed work was rerun"
     print(f"PASS {assay}: {len(after)} tasks; outputs verified; Resume reused work; {time.monotonic()-started:.1f}s", flush=True)
 finally:
-    if project.is_dir():
+    if (project / "runs/demo/.gobble").is_dir():
         # A timeout must stop our run before leaving its workspace for diagnosis.
         subprocess.run([launcher, "stop", "--workspace", "runs/demo"], cwd=project, env=env, timeout=90)
         if artifacts:

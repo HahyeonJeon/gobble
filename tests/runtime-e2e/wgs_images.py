@@ -33,7 +33,12 @@ def verify(project, artifacts=None):
                                      "--entrypoint", tool, image, *args], env=env, text=True, capture_output=True, timeout=120)
             output = result.stdout + result.stderr
             evidence.append(f"{image}\n{platform}\n{output}\n")
-            assert result.returncode in exits and expected in output, (image, result.returncode, output)
+            if result.returncode not in exits or expected not in output:
+                # Public image metadata helps distinguish packaging from a
+                # tool failure without guessing executable locations.
+                config = subprocess.check_output(["docker", "image", "inspect", "--format", "{{json .Config}}", image], env=env, text=True)
+                evidence.append(config)
+                raise AssertionError((image, result.returncode, output, config))
     finally:
         if artifacts:
             (artifacts / "image-versions.txt").write_text("\n".join(evidence))

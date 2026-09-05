@@ -2,8 +2,9 @@
 
 This guide identifies the authority behind the five product defaults and the
 limits of that evidence. It also defines maintenance and support boundaries.
-It describes executable baseline
-`f21a858c66a2d95ce8eff469e6db2bfa3240c3a5`.
+The original executable baseline is
+`f21a858c66a2d95ce8eff469e6db2bfa3240c3a5`; subsequent image corrections are
+recorded below and in the manifest at the selected Gobble revision.
 
 ## Authority
 
@@ -51,8 +52,9 @@ the five manifests records `reference`, `digest`, `tool`, `command`, `version`,
   `license_source`. They do not record `task_name`.
 - ATAC-seq and scRNA-seq record `module`, `task_name`, and `source`.
 
-No image row records `license_authority` or `redistribution`. WGS, ATAC-seq, and
-scRNA-seq image rows also omit `license_source` and `provenance`. The image table
+No image row records `license_authority` or `redistribution`. WGS's MultiQC
+override additionally records `source` and `provenance`; other WGS rows and the
+ATAC-seq/scRNA-seq rows omit those additional provenance fields. The image table
 is therefore a pin and inventory record, not a complete license, provenance, or
 redistribution authority.
 
@@ -66,6 +68,16 @@ New upstream tags or releases never update defaults automatically. Change an
 image only through a product release decision that assesses command behavior,
 ports, outputs, license, security, and workspace-resume effects together.
 
+During the v0.2.0 installed-assay checks, eight WGS digest references failed to
+resolve to the manifests served for their existing tags. The
+[image audit](../tests/pipelines/wgs/testdata/image-manifest-audit.json) records
+the old identities and verified manifest hashes. The selected Wave MultiQC
+build also failed to expose its CLI on PATH, so WGS now uses the upstream
+MultiQC **v1.35** image with a pinned linux/amd64 manifest. Its command, output
+paths, and declared tool version are retained. Installed Docker tests check
+tool versions and real outputs. These corrections apply to new projects using
+the updated runtime; existing runtime locks do not migrate automatically.
+
 ## Fixture staging
 
 Each assay manifest records every directly or transitively consumed official
@@ -73,9 +85,11 @@ byte by logical role, immutable source URL and commit, byte count, SHA-256,
 provenance, license source, redistribution rule, stage use, and benchmark
 relation. Complete archive and Tree membership is explicit where applicable.
 
-Hermetic tests never fetch. Only live test support may:
+Hermetic tests never fetch. Live test support and the explicit `gobble demo`
+preparation command may:
 
-1. download an exact commit URL into that assay owner's ignored `cache/`;
+1. download an exact commit URL into a verified cache (the assay's ignored
+   `cache/` for evidence tests, or `.gobble-cache/fixtures` for demo preparation);
 2. verify the declared byte count and SHA-256;
 3. verify required archive members where applicable; and
 4. copy the verified bytes into a caller-created workspace as ordinary inputs.

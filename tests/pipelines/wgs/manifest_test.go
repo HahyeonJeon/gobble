@@ -60,6 +60,8 @@ type wgsImage struct {
 	Version      string `json:"version"`
 	ModuleCommit string `json:"module_commit"`
 	ModuleSource string `json:"module_source"`
+	Source       string `json:"source,omitempty"`
+	Provenance   string `json:"provenance,omitempty"`
 	License      string `json:"license"`
 	Platform     string `json:"platform"`
 }
@@ -108,6 +110,9 @@ func TestManifestIsExactPlanningByteAndImageAuthority(t *testing.T) {
 			t.Fatalf("invalid image authority: %+v", image)
 		}
 		imagesByTask[image.TaskName] = image
+		if image.Module == "multiqc" && (image.Source == "" || image.Provenance == "") {
+			t.Fatal("MultiQC packaging override must record its upstream source and reason")
+		}
 	}
 	seenTasks := make(map[string]bool, len(imagesByTask))
 	for _, task := range pc.AllTasks(t, pc.MustPlanJSON(t, wgs.Build(loadSamples(t), wgs.DefaultConfig()))) {

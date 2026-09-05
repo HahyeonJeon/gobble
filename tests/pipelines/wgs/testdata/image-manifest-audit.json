@@ -51,5 +51,13 @@
       "manifest": "sha256:ae074e961979ea85c72c6c67a8ed432fa3368c736b8fe37799f7223901ac84ab",
       "config": "sha256:40377d4421606bf829f29b2e8f40f2ef31589624418d8de13456729f065f5e58"
     }
-  ]
+  ],
+  "multiqc_replacement": {
+    "rejected_image": "community.wave.seqera.io/library/multiqc:1.35--c17fb751507e9dfc@sha256:ae074e961979ea85c72c6c67a8ed432fa3368c736b8fe37799f7223901ac84ab",
+    "reason": "Real Docker version check failed: multiqc executable not found on PATH.",
+    "replacement": "ghcr.io/multiqc/multiqc:v1.35@sha256:a0c146fb9ec0207a88627da3aaa36c10014c5ef8dc841c55a01c0345d8b5cae5",
+    "platform": "linux/amd64",
+    "source": "https://github.com/MultiQC/MultiQC/blob/v1.35/Dockerfile",
+    "config": "sha256:19aec6c0909849eb231a34baad1754b8b889d797f53c894794a421865d33cc33"
+  }
 }
