@@ -162,14 +162,22 @@ func (m *model) key(key tea.KeyPressMsg) tea.Cmd {
 	switch m.screen {
 	case dashboardScreen:
 		switch k {
-		case "down", "j", "right", "l":
+		case "down":
+			m.moveStageSpatial(0, 1)
+		case "up":
+			m.moveStageSpatial(0, -1)
+		case "right", "l":
+			m.moveStageSpatial(1, 0)
+		case "left", "h":
+			m.moveStageSpatial(-1, 0)
+		case "j":
 			m.moveStage(1)
-		case "up", "k", "left", "h":
+		case "k":
 			m.moveStage(-1)
 		case "pgdown":
-			m.graphOffset += max(1, m.bodyHeight()-2)
+			m.panGraph(1)
 		case "pgup":
-			m.graphOffset = max(0, m.graphOffset-m.bodyHeight()+2)
+			m.panGraph(-1)
 		case "home":
 			m.graphOffset = 0
 		case "enter":
@@ -185,9 +193,9 @@ func (m *model) key(key tea.KeyPressMsg) tea.Cmd {
 		case "up", "k":
 			m.listIndex = max(0, m.listIndex-1)
 		case "pgdown":
-			m.listIndex = min(max(0, len(items)-1), m.listIndex+max(1, m.bodyHeight()-3))
+			m.listIndex = min(max(0, len(items)-1), m.listIndex+taskPageSize(m.bodyHeight()-2))
 		case "pgup":
-			m.listIndex = max(0, m.listIndex-max(1, m.bodyHeight()-3))
+			m.listIndex = max(0, m.listIndex-taskPageSize(m.bodyHeight()-2))
 		case "enter", "l":
 			if len(items) > 0 {
 				task := m.data.Snapshot.Tasks[items[m.listIndex]]
@@ -232,9 +240,17 @@ func (m *model) searchKey(key tea.KeyPressMsg) tea.Cmd {
 	case "esc":
 		m.screen = dashboardScreen
 	case "up":
-		m.searchIndex = max(0, m.searchIndex-1)
+		m.searchIndex = max(0, m.searchIndex-searchColumns(m.graphWidth()))
 	case "down":
+		m.searchIndex = min(max(0, len(matches)-1), m.searchIndex+searchColumns(m.graphWidth()))
+	case "left":
+		m.searchIndex = max(0, m.searchIndex-1)
+	case "right":
 		m.searchIndex = min(max(0, len(matches)-1), m.searchIndex+1)
+	case "pgdown":
+		m.panGraph(1)
+	case "pgup":
+		m.panGraph(-1)
 	case "enter":
 		if len(matches) > 0 {
 			// Prefer an exact entered ID to a similarly named first result.
@@ -292,7 +308,7 @@ func (m *model) reconcileSelection(focused string) {
 }
 
 func (m *model) listTasks() []int {
-	if m.screen == attentionScreen {
+	if m.screen == attentionScreen || (m.screen == detailScreen && m.detailReturn == attentionScreen) {
 		return m.data.Attention
 	}
 	if m.stageFilter != "" {

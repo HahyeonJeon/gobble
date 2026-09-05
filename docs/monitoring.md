@@ -17,7 +17,8 @@ resumes, or cancels work.
 
 | Key | Action |
 | --- | --- |
-| Arrows / j k | Select a stage or a list entry |
+| Arrows | Move between neighboring graph cards or search results |
+| j / k | Traverse stages in dependency order, or move through task lists |
 | Enter | Open stage tasks or task details |
 | / or s | Search samples; Enter selects an exact sample ID |
 | t | List tasks in the current sample scope |
@@ -32,7 +33,26 @@ resumes, or cancels work.
 The charcoal palette uses teal for active work, green for success, rose for
 failure, and amber for uncertain or blocked work. State labels remain visible
 without color. Set `NO_COLOR=1` to disable color. The layout adapts to terminal
-size; below 44 columns or 16 rows it shows a compact status summary.
+size; below 44 columns or 20 rows it shows a compact status summary.
+
+## Dashboard layout
+
+The dashboard retains the accepted design preview's layout: three summary
+panels, a full-width state distribution, a persistent sample search field, a
+compact graph of filled stage cards, and an attention/sample-progress sidebar.
+The graph folds its topological sequence into alternating two-column rows when
+space allows. Arrowheads retain the direction of every original dependency;
+long edges route outside cards. Narrow terminals use one column and panning.
+
+Searching opens a two-column result area above the graph while global issues
+and sample progress stay visible. Selecting a sample changes stage counts and
+ownership context, while the global metrics remain above. Shared/cohort cards
+are labeled as context and excluded from sample completion.
+
+On wide terminals, task inspection keeps a task list beside the selected task's
+metadata and logs. Esc returns to the same list position. Short terminals use
+compact summaries; no layout invents ETA, resource utilization, or task states.
+See [UI design notes](ui-design.md) for the comparison to the original preview.
 
 ## Reading progress
 
@@ -101,7 +121,8 @@ display)` provides the same metadata at their `Parent` boundary.
 | `monitor/snapshot.go` | Typed reader through the public Inspect API |
 | `monitor/counts.go`, `dashboard.go`, `topology.go` | Pure aggregation, sample indices, dependency-preserving stage grouping |
 | `monitor/tui/model.go` | Bubble Tea update loop, navigation, single-flight refresh |
-| `monitor/tui/view.go`, `graph.go`, `theme.go` | Responsive views, terminal graph layout, palette and safe text |
+| `monitor/tui/view.go`, `dashboard_view.go`, `inspector_view.go` | Persistent summary, dashboard/search, and task/log layouts |
+| `monitor/tui/components.go`, `graph.go`, `theme.go` | Cell sizing, state bars, graph routing, surfaces and safe text |
 | `cmd/gobble/watch.go`, packed templates | CLI and packed-runner integration |
 
 The engine and public graph library do not import terminal packages. Bubble Tea

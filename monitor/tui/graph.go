@@ -8,7 +8,8 @@ import (
 	"github.com/HahyeonJeon/gobble/monitor"
 )
 
-const nodeHeight = 4
+const nodeHeight = 7
+const nodeGap = 2
 
 type rect struct{ x, y, w, h int }
 type graphLayout struct {
@@ -16,25 +17,25 @@ type graphLayout struct {
 	height, rail int
 }
 
-// Layout keeps a stable plan order within each topological rank. Excess nodes
-// wrap within their rank; edges still connect their exact group identities.
+// Fold the topological sequence into alternating rows. A two-column layout
+// preserves the preview's compact flow, with explicit left/right arrows in a
+// row. Edges always connect the original stage IDs; ranks still govern grouping.
 func layout(stages []monitor.Stage, width int) graphLayout {
-	columns := max(1, min(3, (width-8)/27))
-	nodeWidth := max(12, (width-8-(columns-1)*3)/columns)
-	out := graphLayout{nodes: map[string]rect{}, rail: width - 4}
-	y, column, previous := 0, 0, -1
-	for _, stage := range stages {
-		if previous >= 0 && stage.Rank != previous {
-			y += nodeHeight + 3
-			column = 0
-		} else if column == columns {
-			y += nodeHeight + 3
-			column = 0
+	columns := 1
+	if width >= 62 {
+		columns = 2
+	}
+	gap := 7
+	nw := max(12, (width-4-(columns-1)*gap)/columns)
+	out := graphLayout{nodes: map[string]rect{}, rail: width - 2}
+	for i, s := range stages {
+		row, col := i/columns, i%columns
+		if columns == 2 && row%2 == 1 {
+			col = 1 - col
 		}
-		out.nodes[stage.ID] = rect{x: column * (nodeWidth + 3), y: y, w: nodeWidth, h: nodeHeight}
+		y := row * (nodeHeight + nodeGap)
+		out.nodes[s.ID] = rect{x: col * (nw + gap), y: y, w: nw, h: nodeHeight}
 		out.height = y + nodeHeight
-		column++
-		previous = stage.Rank
 	}
 	return out
 }
@@ -62,7 +63,7 @@ func newCanvas(width, height, offset int) *canvas {
 func (c *canvas) put(x, y int, text string, role int) {
 	y -= c.offset
 	if x >= 0 && x < c.width && y >= 0 && y < c.height {
-		c.cells[y][x] = cell{text: text, role: role}
+		c.cells[y][x] = cell{text, role}
 	}
 }
 
@@ -111,7 +112,6 @@ func (c *canvas) stroke(x, y int, glyph string, role int) {
 	if old.text != " " && old.text != glyph {
 		glyph = "┼"
 	}
-	// A highlighted edge remains highlighted when another edge crosses it.
 	if old.role == 2 {
 		role = 2
 	}
@@ -119,12 +119,26 @@ func (c *canvas) stroke(x, y int, glyph string, role int) {
 }
 
 func (c *canvas) render(t theme) []string {
-	styles := []lipgloss.Style{t.plain, t.dim, t.active, t.good, t.bad, t.warn, t.selected}
+	base := []lipgloss.Style{t.plain, t.line, t.active, t.good, t.bad, t.warn, t.dim, t.title}
+	styles := append([]lipgloss.Style(nil), base...)
+	for _, color := range []string{panelColor, selectedColor} {
+		for _, style := range base {
+			if !t.monochrome {
+				style = style.Background(lipgloss.Color(color))
+			}
+			styles = append(styles, style)
+		}
+	}
 	lines := make([]string, c.height)
 	for y, row := range c.cells {
 		var out, span strings.Builder
 		role := 0
-		flush := func() { out.WriteString(styles[role].Render(span.String())); span.Reset() }
+		flush := func() {
+			if span.Len() > 0 {
+				out.WriteString(styles[role].Render(span.String()))
+				span.Reset()
+			}
+		}
 		for _, cell := range row {
 			if cell.role != role {
 				flush()
@@ -138,34 +152,18 @@ func (c *canvas) render(t theme) []string {
 	return lines
 }
 
-func nodeStatus(c monitor.Counts) string {
-	if c.Total == 0 && c.Templates == 0 {
-		return "no owned work"
-	}
-	parts := []string{}
-	for _, item := range []struct {
-		n     int
-		label string
-	}{{c.Running, "run"}, {c.Failed, "fail"}, {c.Blocked, "blocked"}, {c.Pending, "wait"}, {c.Skipped, "skip"}, {c.Incomplete, "incomplete"}, {c.Unknown, "unknown"}, {c.Unfinalized, "unfinalized"}} {
-		if item.n > 0 {
-			parts = append(parts, fmt.Sprintf("%d %s", item.n, item.label))
-		}
-	}
-	if c.Unexpanded > 0 {
-		parts = append(parts, "expanding")
-	}
-	if len(parts) == 0 {
-		return "complete"
-	}
-	return strings.Join(parts, " · ")
-}
-
 func (m *model) graphWidth() int {
-	w := m.width
-	if w >= 100 {
-		w -= 32
+	w := m.contentWidth()
+	if m.hasSidebar() {
+		w -= m.sidebarWidth() + 4
 	}
 	return max(12, w)
+}
+
+func (m *model) panGraph(direction int) {
+	height := m.graphViewportHeight()
+	limit := max(0, layout(m.data.Stages, m.graphWidth()).height-height)
+	m.graphOffset = min(limit, max(0, m.graphOffset+direction*height))
 }
 
 func (m *model) revealStage() {
@@ -188,75 +186,174 @@ func (m *model) graph(width, height int) []string {
 	g := layout(m.data.Stages, width)
 	offset := min(m.graphOffset, max(0, g.height-height))
 	c := newCanvas(width, height, offset)
-	for i, edge := range m.data.Edges {
-		from, to := g.nodes[edge.From], g.nodes[edge.To]
-		x1, x2 := from.x+from.w/2, to.x+to.w/2
-		y1, y2 := from.y+from.h, to.y-1
+	for i, e := range m.data.Edges {
+		a, b := g.nodes[e.From], g.nodes[e.To]
 		role := 1
-		if edge.From == m.stage || edge.To == m.stage {
+		if e.From == m.stage || e.To == m.stage {
 			role = 2
 		}
-		if x1 == x2 {
+		if a.y == b.y {
+			y := a.y + a.h/2
+			if a.x < b.x {
+				c.hline(a.x+a.w, b.x-1, y, role)
+				c.put(b.x-1, y, "▶", role)
+			} else {
+				c.hline(b.x+b.w, a.x-1, y, role)
+				c.put(b.x+b.w, y, "◀", role)
+			}
+			continue
+		}
+		x1, x2 := a.x+a.w/2, b.x+b.w/2
+		y1, y2 := a.y+a.h, b.y-1
+		switch {
+		case b.y-a.y == nodeHeight+nodeGap && x1 == x2:
 			c.vline(x1, y1, y2, role)
-		} else if y2-y1 == 2 {
-			// Adjacent ranks share an empty routing row. Connect there without
-			// extending an unnecessary line to the outer rail.
-			c.vline(x1, y1, y1+1, role)
-			c.hline(x1, x2, y1+1, role)
-			c.vline(x2, y1+1, y2, role)
-		} else {
-			rail := g.rail + i%3
-			c.vline(x1, y1, y1+1, role)
-			c.hline(x1, rail, y1+1, role)
-			c.vline(rail, y1+1, y2-1, role)
-			c.hline(rail, x2, y2-1, role)
-			c.vline(x2, y2-1, y2, role)
+		case b.y-a.y == nodeHeight+nodeGap:
+			c.vline(x1, y1, y1, role)
+			c.hline(x1, x2, y1, role)
+			c.vline(x2, y1, y2, role)
+		default:
+			rail := g.rail + i%2
+			c.hline(x1, rail, y1, role)
+			c.vline(rail, y1, y2, role)
+			c.hline(rail, x2, y2, role)
 		}
 		c.put(x2, y2, "▼", role)
 	}
 	for _, stage := range m.data.Stages {
-		r := g.nodes[stage.ID]
-		counts := m.data.Count(m.data.StageTasks(stage, m.sample))
-		role := 1
-		if counts.Failed > 0 {
-			role = 4
-		} else if counts.Attention() > 0 {
-			role = 5
-		} else if counts.Running > 0 {
-			role = 2
-		} else if counts.Successful() {
-			role = 3
-		}
-		if stage.ID == m.stage {
-			role = 2
-		}
-		for y := r.y; y < r.y+r.h; y++ {
-			for x := r.x; x < r.x+r.w; x++ {
-				c.put(x, y, " ", 0)
-			}
-		}
-		c.hline(r.x+1, r.x+r.w-2, r.y, role)
-		c.hline(r.x+1, r.x+r.w-2, r.y+r.h-1, role)
-		c.vline(r.x, r.y+1, r.y+r.h-2, role)
-		c.vline(r.x+r.w-1, r.y+1, r.y+r.h-2, role)
-		c.put(r.x, r.y, "┌", role)
-		c.put(r.x+r.w-1, r.y, "┐", role)
-		c.put(r.x, r.y+r.h-1, "└", role)
-		c.put(r.x+r.w-1, r.y+r.h-1, "┘", role)
-		name := " " + oneLine(stage.Name) + " "
-		if stage.ID == m.stage {
-			name = " ▸ " + oneLine(stage.Name) + " "
-		}
-		c.text(r.x+1, r.y, name, role, r.w-3)
-		first := fmt.Sprintf("%d / %d succeeded", counts.Succeeded, counts.Total)
-		if m.sample != "" && stage.Scope != "sample" {
-			first = "Context: " + first
-		}
-		if counts.Total == 0 && counts.Templates == 0 {
-			first = "Outside sample scope"
-		}
-		c.text(r.x+2, r.y+1, fit(first, r.w-4), 0, r.w-4)
-		c.text(r.x+2, r.y+2, fit(nodeStatus(counts), r.w-4), role, r.w-4)
+		m.drawNode(c, g.nodes[stage.ID], stage)
 	}
 	return c.render(m.style)
+}
+
+func (m *model) drawNode(c *canvas, r rect, s monitor.Stage) {
+	counts := m.data.Count(m.data.StageTasks(s, m.sample))
+	status := countsStatus(counts)
+	base := 8
+	if s.ID == m.stage {
+		base = 16
+	}
+	for y := r.y; y < r.y+r.h; y++ {
+		for x := r.x; x < r.x+r.w; x++ {
+			c.put(x, y, " ", base)
+		}
+	}
+	border := base + 1
+	if s.ID == m.stage {
+		border = base + 2
+	}
+	for _, y := range []int{r.y, r.y + r.h - 1} {
+		c.hline(r.x+1, r.x+r.w-2, y, border)
+	}
+	c.vline(r.x, r.y+1, r.y+r.h-2, border)
+	c.vline(r.x+r.w-1, r.y+1, r.y+r.h-2, border)
+	c.put(r.x, r.y, "╭", border)
+	c.put(r.x+r.w-1, r.y, "╮", border)
+	c.put(r.x, r.y+r.h-1, "╰", border)
+	c.put(r.x+r.w-1, r.y+r.h-1, "╯", border)
+	stateRole := 6
+	switch status {
+	case "succeeded":
+		stateRole = 3
+	case "running":
+		stateRole = 2
+	case "failed":
+		stateRole = 4
+	case "blocked", "unknown", "incomplete", "published-unfinalized":
+		stateRole = 5
+	}
+	if counts.Failed > 0 {
+		c.vline(r.x, r.y+1, r.y+r.h-2, base+4)
+	}
+	scope := "UNASSIGNED"
+	switch s.Scope {
+	case "sample":
+		scope = "PER SAMPLE"
+	case "shared":
+		scope = "SHARED"
+	case "cohort":
+		scope = "COHORT"
+	}
+	marker := strings.Fields(stateLabel(status))[0]
+	if s.ID == m.stage {
+		scope = "▸ " + scope
+	}
+	c.text(r.x+2, r.y+1, scope, base+6, r.w-6)
+	c.text(r.x+r.w-3, r.y+1, marker, base+stateRole, 1)
+	c.text(r.x+2, r.y+2, fit(oneLine(s.Name), r.w-4), base+7, r.w-4)
+	c.text(r.x+2, r.y+3, fmt.Sprintf("%d / %d succeeded", counts.Succeeded, counts.Total), base, r.w-4)
+	note := nodeStatus(counts)
+	if m.sample != "" && s.Scope != "sample" {
+		note = "Context · " + note
+	}
+	c.text(r.x+2, r.y+4, fit(note, r.w-4), base+stateRole, r.w-4)
+	parts := stateParts(counts)
+	width := r.w - 4
+	used := 0
+	for i, p := range parts {
+		end := used
+		if counts.Total > 0 {
+			before := 0
+			for j := 0; j <= i; j++ {
+				before += parts[j].n
+			}
+			end = before * width / counts.Total
+		}
+		role := 6
+		switch p.label {
+		case "succeeded":
+			role = 3
+		case "running":
+			role = 2
+		case "failed":
+			role = 4
+		case "pending":
+			role = 1
+		default:
+			role = 5
+		}
+		for x := used; x < end; x++ {
+			c.put(r.x+2+x, r.y+5, "━", base+role)
+		}
+		used = end
+	}
+	if counts.Total == 0 {
+		for x := 0; x < width; x++ {
+			c.put(r.x+2+x, r.y+5, "┄", base+1)
+		}
+	}
+}
+
+// Arrow keys follow screen geometry; j/k retain dependency-order traversal.
+func (m *model) moveStageSpatial(dx, dy int) {
+	g := layout(m.data.Stages, m.graphWidth())
+	from, ok := g.nodes[m.stage]
+	if !ok {
+		return
+	}
+	abs := func(v int) int {
+		if v < 0 {
+			return -v
+		}
+		return v
+	}
+	best, score := "", int(^uint(0)>>1)
+	for _, stage := range m.data.Stages {
+		to := g.nodes[stage.ID]
+		x, y := to.x-from.x, to.y-from.y
+		if (dx != 0 && x*dx <= 0) || (dy != 0 && y*dy <= 0) {
+			continue
+		}
+		cost := abs(x) + 4*abs(y)
+		if dy != 0 {
+			cost = abs(y) + 4*abs(x)
+		}
+		if cost < score {
+			best, score = stage.ID, cost
+		}
+	}
+	if best != "" {
+		m.stage = best
+		m.revealStage()
+	}
 }

@@ -9,51 +9,54 @@ import (
 	"charm.land/lipgloss/v2"
 )
 
-const headerHeight = 9
+func (m *model) margin() int {
+	if m.width >= 60 {
+		return 2
+	}
+	return 1
+}
 
-func (m *model) bodyHeight() int { return max(1, m.height-headerHeight-1) }
+func (m *model) contentWidth() int { return max(1, m.width-2*m.margin()) }
+func (m *model) comfortable() bool { return m.width >= 100 && m.height >= 32 }
+func (m *model) bodyHeight() int   { return max(1, m.height-len(m.header())-2) }
+func (m *model) hasSidebar() bool  { return m.contentWidth() >= 96 }
+func (m *model) sidebarWidth() int { return min(32, max(27, m.contentWidth()/4)) }
 
 func (m *model) View() tea.View {
+	w := m.contentWidth()
 	var lines []string
-	if m.width < 44 || m.height < 16 {
-		lines = []string{"GOBBLE · " + oneLine(m.data.Snapshot.Run.Status), fmt.Sprintf("Tasks: %d/%d succeeded", m.data.Total.Succeeded, m.data.Total.Total), fmt.Sprintf("Attention: %d", m.data.Total.Attention()), "Resize to at least 44 × 16", "q quit monitor · execution continues"}
+	if m.width < 44 || m.height < 20 {
+		lines = []string{m.style.active.Bold(true).Render("GOBBLE / pipeline monitor"), "", oneLine(m.data.Snapshot.Pipeline),
+			fmt.Sprintf("Succeeded %d/%d · Failed %d", m.data.Total.Succeeded, m.data.Total.Total, m.data.Total.Failed),
+			fmt.Sprintf("Running %d · Attention %d", m.data.Total.Running, m.data.Total.Attention()), "", "Resize to at least 44 × 20", "q exits monitor; execution continues"}
+		if m.err != nil {
+			lines = append(lines, "STALE · "+oneLine(m.err.Error()))
+		}
 	} else {
-		lines = m.header()
+		lines = append([]string{""}, m.header()...)
 		var body []string
 		switch m.screen {
-		case searchScreen:
-			body = m.searchView()
-		case tasksScreen, attentionScreen:
-			body = m.tasksView()
-		case detailScreen:
-			body = m.detailView()
+		case dashboardScreen, searchScreen:
+			body = m.dashboardView()
+		case tasksScreen, attentionScreen, detailScreen:
+			body = m.inspectorView()
 		case helpScreen:
 			body = m.helpView()
-		default:
-			body = m.dashboardView()
 		}
-		lines = append(lines, frame(body, m.width, m.bodyHeight())...)
+		lines = append(lines, frame(body, w, m.bodyHeight())...)
 		lines = append(lines, m.footer())
+	}
+	lines = frame(lines, w, m.height)
+	for i := range lines {
+		lines[i] = strings.Repeat(" ", m.margin()) + lines[i] + strings.Repeat(" ", m.margin())
 	}
 	v := tea.NewView(strings.Join(frame(lines, m.width, m.height), "\n"))
 	v.AltScreen = true
 	if !m.style.monochrome {
-		v.BackgroundColor = lipgloss.Color("#10171B")
-		v.ForegroundColor = lipgloss.Color("#DBE8EC")
+		v.BackgroundColor = lipgloss.Color(backgroundColor)
+		v.ForegroundColor = lipgloss.Color(textColor)
 	}
 	return v
-}
-
-func frame(lines []string, width, height int) []string {
-	out := make([]string, height)
-	for i := range out {
-		if i < len(lines) {
-			out[i] = fit(lines[i], width)
-		} else {
-			out[i] = strings.Repeat(" ", width)
-		}
-	}
-	return out
 }
 
 func elapsed(start, end string, now time.Time) string {
@@ -66,8 +69,7 @@ func elapsed(start, end string, now time.Time) string {
 			now = e
 		}
 	}
-	d := max(time.Duration(0), now.Sub(t)).Truncate(time.Second)
-	return d.String()
+	return max(time.Duration(0), now.Sub(t)).Truncate(time.Second).String()
 }
 
 func (m *model) observationTime() time.Time {
@@ -78,204 +80,149 @@ func (m *model) observationTime() time.Time {
 }
 
 func (m *model) header() []string {
+	w := m.contentWidth()
 	c := m.data.Total
 	s := m.data.Snapshot
-	complete := 0
-	for _, sample := range m.data.Samples {
-		if sample.Counts.Successful() {
-			complete++
-		}
-	}
-	scope := fmt.Sprintf("All samples · %d/%d sample task sets complete · shared/unassigned %d/%d", complete, len(m.data.Samples), m.data.Shared.Succeeded, m.data.Shared.Total)
-	if m.sample != "" {
-		sc := m.data.Count(m.data.SampleTasks(m.sample))
-		scope = fmt.Sprintf("Sample %s · %d/%d owned tasks succeeded · shared work is context", oneLine(m.sample), sc.Succeeded, sc.Total)
-	}
-	fresh := fmt.Sprintf("Last read %s · read-only · q leaves pipeline running", s.ReadAt.Format("15:04:05"))
-	if m.err != nil {
-		fresh = m.style.bad.Render("STALE · " + oneLine(m.err.Error()) + " · last read " + s.ReadAt.Format("15:04:05"))
-	} else if s.Run.Status == "running" && !s.Run.Occupancy.Live {
-		fresh = m.style.warn.Render("OWNER NOT LIVE · recorded run status may be outdated · inspect before recovery")
-	} else if s.Run.Unknown {
-		fresh = m.style.warn.Render("BACKEND UNCONFIRMED · inspect affected work before recovery")
-	}
 	name := s.Pipeline
 	if name == "" {
 		name = s.Run.ID
 	}
-	primary := fmt.Sprintf("Succeeded %d/%d (%.0f%% known)  Running %d  Failed %d", c.Succeeded, c.Total, c.Percent(), c.Running, c.Failed)
-	if m.width >= 90 {
-		filled := min(12, int(c.Percent()*12/100))
-		primary = m.style.good.Render(strings.Repeat("━", filled)) + m.style.dim.Render(strings.Repeat("━", 12-filled)) + "  " + primary
+	title := ends(m.style.title.Render(oneLine(name)), m.style.state(s.Run.Status).Render(stateLabel(s.Run.Status))+m.style.dim.Render("  "+elapsed(s.Run.Started, s.Run.Ended, m.observationTime())+" elapsed"), w)
+	lines := []string{ends(m.style.active.Bold(true).Render("G O B B L E")+m.style.dim.Render(" / pipeline monitor"), m.style.dim.Render("READ ONLY"), w), title, m.style.dim.Render(oneLine(m.workspace))}
+	if m.comfortable() {
+		lines = append(lines, "")
+		lines = append(lines, m.metrics(w)...)
+		lines = append(lines, "", distribution(c, w, m.style))
+	} else {
+		lines = append(lines, fmt.Sprintf("✓ %d/%d succeeded   ● %d running   × %d failed", c.Succeeded, c.Total, c.Running, c.Failed), distribution(c, w, m.style))
 	}
-	secondary := fmt.Sprintf("Pending %d  Blocked %d  Skipped %d  Incomplete %d", c.Pending, c.Blocked, c.Skipped, c.Incomplete)
-	tertiary := fmt.Sprintf("Unknown %d  Unfinalized %d  Reused %d  Expanding %d", c.Unknown, c.Unfinalized, c.Reused, c.Unexpanded)
-	if m.width < 70 {
-		primary = fmt.Sprintf("OK %d/%d (%.0f%%)  Run %d  Fail %d", c.Succeeded, c.Total, c.Percent(), c.Running, c.Failed)
-		secondary = fmt.Sprintf("Wait %d  Block %d  Skip %d  Incomp %d", c.Pending, c.Blocked, c.Skipped, c.Incomplete)
-		tertiary = fmt.Sprintf("Unknown %d  Unfinal %d  Reuse %d  Expand %d", c.Unknown, c.Unfinalized, c.Reused, c.Unexpanded)
-	}
-	return []string{
-		m.style.active.Bold(true).Render("G O B B L E") + m.style.dim.Render(" / pipeline monitor"),
-		oneLine(name) + " · " + m.style.state(s.Run.Status).Render(oneLine(s.Run.Status)) + " · " + elapsed(s.Run.Started, s.Run.Ended, m.observationTime()),
-		m.style.dim.Render(oneLine(m.workspace)),
-		primary,
-		m.style.dim.Render(secondary),
-		m.style.dim.Render(tertiary),
-		m.style.active.Render(scope), fresh, m.style.dim.Render(strings.Repeat("─", m.width)),
-	}
-}
-
-func (m *model) dashboardView() []string {
-	width := m.graphWidth()
-	h := m.bodyHeight() - 1
-	graph := m.graph(width, max(1, h))
-	if m.width >= 100 {
-		side := frame(m.sidebar(), 30, h)
-		for i := range graph {
-			graph[i] += m.style.dim.Render(" │") + side[i]
+	legend := []string{}
+	for i, p := range stateParts(c) {
+		if i < 5 || p.n > 0 {
+			style := m.style.dim
+			if !m.style.monochrome {
+				color := p.color
+				if p.label == "pending" {
+					color = mutedColor
+				}
+				style = style.Foreground(lipgloss.Color(color))
+			}
+			legend = append(legend, style.Render(fmt.Sprintf("%d %s", p.n, p.label)))
 		}
 	}
-	return append([]string{m.style.dim.Render("PIPELINE GRAPH · ↑↓ select · Enter tasks · PgUp/PgDn pan · ! attention")}, graph...)
-}
-
-func (m *model) sidebar() []string {
-	lines := []string{m.style.bad.Render(fmt.Sprintf("ATTENTION · %d tasks", len(m.data.Attention)))}
-	for i, index := range m.data.Attention {
-		if i == 3 {
-			lines = append(lines, fmt.Sprintf("+ %d more · press !", len(m.data.Attention)-3))
-			break
-		}
-		t := m.data.Snapshot.Tasks[index]
-		lines = append(lines, m.style.state(t.Status).Render(oneLine(t.Status)), oneLine(t.Identity), m.style.dim.Render(oneLine(t.Reason)), "")
+	if c.Reused > 0 {
+		legend = append(legend, m.style.dim.Render(fmt.Sprintf("↺ %d reused", c.Reused)))
 	}
-	if len(m.data.Attention) == 0 {
-		lines = append(lines, m.style.good.Render("No task failures recorded"), "")
+	if c.Unexpanded > 0 {
+		legend = append(legend, m.style.warn.Render(fmt.Sprintf("%d expanding", c.Unexpanded)))
 	}
-	i := m.stageIndex()
-	if i >= 0 {
-		s := m.data.Stages[i]
-		counts := m.data.Count(m.data.StageTasks(s, m.sample))
-		up, down := m.data.Neighbors(s.ID)
-		lines = append(lines, m.style.active.Render("SELECTED STAGE"), oneLine(s.Name), fmt.Sprintf("%d/%d succeeded", counts.Succeeded, counts.Total))
-		lines = append(lines, wrapPlain(nodeStatus(counts), 30)...)
-		lines = append(lines, "", m.style.dim.Render("UPSTREAM"))
-		if len(up) == 0 {
-			lines = append(lines, "Pipeline inputs")
-		}
-		for _, name := range up {
-			lines = append(lines, oneLine(name))
-		}
-		lines = append(lines, m.style.dim.Render("DOWNSTREAM"))
-		for _, name := range down {
-			lines = append(lines, oneLine(name))
-		}
+	lines = append(lines, wrapStyledParts(legend, w)...)
+	if m.comfortable() {
+		lines = append(lines, "")
+	}
+	query := "Sample ID, e.g. S06"
+	style := m.style.panel
+	if m.sample != "" {
+		query = m.sample + "    · Esc clears selection"
+	}
+	if m.screen == searchScreen {
+		query = m.query + "▏"
+		style = m.style.selected
+	}
+	lines = append(lines, style.Render(fit("  /  FIND SAMPLE    "+oneLine(query), w)))
+	scope := fmt.Sprintf("All %d samples · stage totals", len(m.data.Samples))
+	hint := "Enter opens stage tasks"
+	if m.sample != "" {
+		sc := m.data.Count(m.data.SampleTasks(m.sample))
+		scope = fmt.Sprintf("Sample %s · %d / %d owned tasks succeeded", oneLine(m.sample), sc.Succeeded, sc.Total)
+		hint = "Shared / cohort nodes are context"
+	}
+	lines = append(lines, ends(m.style.active.Render(scope), m.style.dim.Render(hint), w))
+	if m.err != nil {
+		lines = append(lines, m.style.bad.Render("STALE · "+oneLine(m.err.Error())))
+	} else if s.Run.Unknown {
+		lines = append(lines, m.style.warn.Render("BACKEND UNCONFIRMED · inspect affected work before recovery"))
+	} else if s.Run.Status == "running" && !s.Run.Occupancy.Live {
+		lines = append(lines, m.style.warn.Render("OWNER NOT LIVE · showing recorded progress"))
+	}
+	if m.comfortable() {
+		lines = append(lines, "")
 	}
 	return lines
 }
 
-func (m *model) searchView() []string {
-	lines := []string{m.style.active.Render("FIND SAMPLE"), "> " + oneLine(m.query) + "▏", ""}
-	matches := m.data.SearchSamples(m.query)
-	if len(matches) == 0 {
-		message := "No matching samples"
-		if len(m.data.Samples) == 0 {
-			message = "This run has no sample labels. Task navigation remains available."
+func wrapStyledParts(parts []string, width int) []string {
+	var rows []string
+	line := ""
+	for _, p := range parts {
+		if line != "" && lipgloss.Width(line)+3+lipgloss.Width(p) > width {
+			rows = append(rows, line)
+			line = ""
 		}
-		return append(lines, wrapPlain(message, m.width)...)
-	}
-	start := max(0, m.searchIndex-max(1, m.bodyHeight()-5)+1)
-	for i := start; i < len(matches) && len(lines) < m.bodyHeight()-1; i++ {
-		s := matches[i]
-		row := fmt.Sprintf("%s  %d/%d succeeded · %s", oneLine(s.ID), s.Counts.Succeeded, s.Counts.Total, nodeStatus(s.Counts))
-		if i == m.searchIndex {
-			row = m.style.selected.Render(fit("▸ "+row, m.width))
-		} else {
-			row = "  " + row
+		if line != "" {
+			line += "   "
 		}
-		lines = append(lines, row)
+		line += p
 	}
-	return append(lines, m.style.dim.Render(fmt.Sprintf("%d matches · Enter selects an exact identity · Esc returns", len(matches))))
+	if line != "" {
+		rows = append(rows, line)
+	}
+	return rows
 }
 
-func (m *model) tasksView() []string {
-	label := "TASKS"
-	if m.screen == attentionScreen {
-		label = "ATTENTION · all samples"
-	}
-	items := m.listTasks()
-	lines := []string{m.style.active.Render(fmt.Sprintf("%s · %d instances", label, len(items))), m.style.dim.Render(fit("TASK", m.width-27) + fit("STATUS", 18) + "ELAPSED")}
-	if len(items) == 0 {
-		return append(lines, "No tasks in this selection")
-	}
-	start := max(0, m.listIndex-max(1, m.bodyHeight()-4)+1)
-	for i := start; i < len(items) && len(lines) < m.bodyHeight()-1; i++ {
-		t := m.data.Snapshot.Tasks[items[i]]
-		status := t.Status
-		if t.Template {
-			status = "template"
+func (m *model) metrics(width int) []string {
+	c := m.data.Total
+	activeStages := 0
+	for _, s := range m.data.Stages {
+		if s.Counts.Running > 0 {
+			activeStages++
 		}
-		row := fit(oneLine(t.Identity), m.width-27) + m.style.state(t.Status).Render(fit(status, 18)) + elapsed(t.Started, t.Ended, m.observationTime())
-		if i == m.listIndex {
-			row = m.style.selected.Render(fit(row, m.width))
-		}
-		lines = append(lines, row)
 	}
-	selected := m.data.Snapshot.Tasks[items[min(m.listIndex, len(items)-1)]]
-	return append(lines, m.style.dim.Render(oneLine(selected.Reason)))
-}
-
-func (m *model) currentLog() (string, int64) {
-	for _, log := range m.data.Snapshot.Logs {
-		if log.Identity == m.task {
-			if m.logStream == "stdout" {
-				return log.StdoutTail, log.StdoutSize
+	widths := []int{(width - 4) * 4 / 10, (width - 4) * 3 / 10, 0}
+	widths[2] = width - 4 - widths[0] - widths[1]
+	labels := []string{"SUCCESSFUL TASKS", "RUNNING NOW", "TASKS FAILED"}
+	values := []string{fmt.Sprintf("%d / %d     %.0f%%", c.Succeeded, c.Total, c.Percent()), fmt.Sprint(c.Running), fmt.Sprint(c.Failed)}
+	notes := []string{"Known work · includes reused", fmt.Sprintf("%d active stages", activeStages), fmt.Sprintf("%d tasks blocked", c.Blocked)}
+	colors := []string{textColor, activeColor, badColor}
+	rows := make([]string, 3)
+	for i, width := range widths {
+		label, value, note := m.style.panel, m.style.panel.Bold(true), m.style.panel
+		if !m.style.monochrome {
+			label = label.Foreground(lipgloss.Color(mutedColor))
+			note = note.Foreground(lipgloss.Color(mutedColor))
+			value = value.Foreground(lipgloss.Color(colors[i]))
+		}
+		if i > 0 {
+			for r := range rows {
+				rows[r] += "  "
 			}
-			return log.StderrTail, log.StderrSize
+		}
+		rows[0] += label.Render(fit("  "+labels[i], width))
+		rows[1] += value.Render(fit("  "+values[i], width))
+		rows[2] += note.Render(fit("  "+notes[i], width))
+	}
+	return rows
+}
+
+func (m *model) footer() string {
+	left := "/ find sample   Enter inspect   ! attention   ? help   q quit"
+	if m.screen == detailScreen {
+		left = "1 stdout  2 stderr   ↑↓ scroll   f follow   Esc back   q quit"
+	}
+	if m.screen == searchScreen {
+		left = "↑↓ choose   Enter select   Esc close search   Ctrl+C quit"
+		if m.width < 100 {
+			return m.style.dim.Render("Enter select  Esc back  Ctrl+C quit")
 		}
 	}
-	return "", 0
-}
-
-func (m *model) logLines() []string {
-	text, _ := m.currentLog()
-	if text == "" {
-		text = "No output available in this tail."
+	if m.width < 60 {
+		return m.style.dim.Render("/ search  Enter open  Esc back  q quit")
 	}
-	return wrapPlain(strings.ReplaceAll(clean(text), "\t", "    "), m.width)
-}
-
-func (m *model) logTailOffset() int { return max(0, len(m.logLines())-max(1, m.bodyHeight()-7)) }
-
-func (m *model) detailView() []string {
-	t, ok := m.data.Task(m.task)
-	if !ok {
-		return []string{"Task is no longer in this snapshot."}
+	if m.width < 100 {
+		return m.style.dim.Render("/ search  Enter open  Esc back  ? help  q quit")
 	}
-	_, size := m.currentLog()
-	follow := "paused"
-	if m.follow {
-		follow = "following"
-	}
-	command := strings.Join(t.Command, " ")
-	if t.Script != "" {
-		command = t.Script
-	}
-	lines := []string{
-		m.style.active.Render(oneLine(t.Identity)),
-		fmt.Sprintf("%s · attempt %d · %s · CPU request %.1f · RAM request %s", oneLine(t.Status), t.Attempt, oneLine(t.Executor), t.Resources.CPU, oneLine(t.Resources.Memory)),
-		m.style.dim.Render("Image: " + oneLine(t.Image)),
-		"Command: " + oneLine(command),
-		m.style.state(t.Status).Render("Reason: " + oneLine(t.Reason)),
-		m.style.active.Render(fmt.Sprintf("1 stdout / 2 stderr · %s · %s · tail ≤4 KiB of %d bytes", m.logStream, follow, size)),
-		m.style.dim.Render(strings.Repeat("─", m.width)),
-	}
-	logs := m.logLines()
-	offset := min(m.logOffset, m.logTailOffset())
-	if m.follow {
-		offset = m.logTailOffset()
-	}
-	return append(lines, logs[offset:]...)
+	fresh := "Read " + m.data.Snapshot.ReadAt.Format("15:04:05")
+	return ends(m.style.dim.Render(left), m.style.dim.Render(fresh), m.contentWidth())
 }
 
 func wrapPlain(text string, width int) []string {
@@ -300,9 +247,5 @@ func wrapPlain(text string, width int) []string {
 }
 
 func (m *model) helpView() []string {
-	return []string{"KEYBOARD", "", "↑ ↓ / j k     Select stage, sample, or task", "Enter         Open stage tasks, task details, or sample", "/ or s        Find sample; Enter selects its exact ID", "t             Tasks in current sample scope", "!             Global attention list", "PgUp / PgDn   Pan graph or scroll lists/logs", "1 / 2         Switch stdout / stderr in task details", "f / End       Toggle follow / follow newest log tail", "r             Refresh now", "Esc           Back; on dashboard, clear sample scope", "q / Ctrl+C    Close monitor; pipeline keeps running", "", "Counts describe known tasks, not remaining compute time.", "Shared/cohort tasks are excluded from sample completion.", "Log history is bounded to the last 4 KiB per stream.", "Unknown and unfinalized states require inspection.", "NO_COLOR disables colors. Terminal resizing preserves focus."}
-}
-
-func (m *model) footer() string {
-	return m.style.dim.Render("/ sample  ! attention  Enter open  Esc back  ? help  q quit monitor")
+	return []string{m.style.title.Render("KEYBOARD"), "", "↑ ↓ / j k     Select a stage, sample, or task", "Enter         Open stage tasks or task logs", "/ or s        Find a sample by its exact ID", "t             Tasks in the current sample scope", "!             Global attention list", "PgUp / PgDn   Pan graph or scroll lists and logs", "1 / 2         Switch stdout / stderr in task details", "f / End       Toggle follow / follow newest tail", "r             Refresh now", "Esc           Back; on dashboard, clear sample scope", "q / Ctrl+C    Close monitor; pipeline keeps running", "", "Counts describe known tasks, not remaining compute time.", "Shared/cohort work is excluded from sample completion.", "Log history is bounded to the last 4 KiB per stream.", "NO_COLOR keeps symbols and selection without colors."}
 }
