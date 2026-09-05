@@ -297,3 +297,15 @@ already passed both actual-container jobs (`docker-smoke` and `runtime-install`)
 including the no-host-Go launcher journey, live logs, Stop, repeated Stop,
 controller death, and automatic Resume. Its userspace matrix failed for the
 assumptions above. Windows Desktop and release-publication gates remain open.
+
+The follow-up Docker matrix passed those scenarios and exposed two public
+Resume tests sharing a resource-only-change fixture that still requested two
+CPUs. The fixture now changes CPU/memory within a one-CPU budget and is named
+for its purpose, rather than calling the request "heavy". The new CI restriction
+is retained. Both failures were reproduced locally with one-CPU affinity.
+After correction, the entire public API test package passed on one CPU.
+
+Additional Stop scenario race verification passed in 439.648 seconds. An
+initial three-minute test timeout was too short for the large ATAC graph's
+Resume checkpoint serialization under race instrumentation; the same suite
+completed with a twelve-minute bound.
