@@ -97,6 +97,7 @@ Verification in this environment:
 | Live engine/install suites compiled with `-tags=live -run '^$'` | Passed; this is compilation, not live execution |
 | Hello CLI validate/plan/run/inspect/release | Passed; output `2` |
 | Hello missing-output Resume | Passed; output `2`, attempt 2, reason `output-missing` |
+| Packed Hello run/release/resume with Go absent from PATH | Passed from clean commit `e60d328`; both runs produced `2` |
 | Documentation local links, workflow YAML parsing, diff whitespace | Passed |
 | Docker image builds, real Docker smoke, Windows/WSL | Not executed: Docker and Windows/WSL are unavailable here |
 
