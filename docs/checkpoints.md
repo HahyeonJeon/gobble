@@ -18,6 +18,13 @@ Each generation uses one opaque ID, also recorded in every member's `snapshot`
 field. Generation files are immutable after publication. The pointer's storage
 format is `1`; the JSON document schema remains `2`. These are separate versions.
 
+Plans preserve `scatter_member_specs` alongside the static member names and
+paths so extension rules can use the authored filename structure. Deferred
+file binds record `rule: 1` for extension replacement; an absent or zero rule
+means append. Literal specs retain their filename in `opaque`. These optional
+schema-2 fields survive checkpoint reads, and changed derivation rules
+invalidate the affected Scatter work on Resume.
+
 ## Publication and recovery
 
 The writer creates a new generation, writes all three documents, syncs their

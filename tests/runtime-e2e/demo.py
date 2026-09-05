@@ -48,11 +48,13 @@ try:
         output = project / "runs/demo" / relative
         assert output.is_file() and output.stat().st_size > 0, f"Missing/empty output: {relative}"
     before = [json.loads(line) for line in command(project, "inspect", "instances", "--workspace", "runs/demo").splitlines()]
-    assert before and all(row["status"] in ("succeeded", "skipped") for row in before), before
+    # Scatter templates describe expansion and are not executable instances.
+    executed = [row for row in before if "expansion" not in row]
+    assert executed and all(row["status"] in ("succeeded", "skipped") for row in executed), before
     command(project, "resume", ".", "--workspace", "runs/demo", "--cap", "1")
     after = [json.loads(line) for line in command(project, "inspect", "instances", "--workspace", "runs/demo").splitlines()]
     assert [(r["identity"], r["attempt"]) for r in before] == [(r["identity"], r["attempt"]) for r in after], "Unchanged completed work was rerun"
-    print(f"PASS {assay}: {len(after)} tasks; outputs verified; Resume reused work; {time.monotonic()-started:.1f}s", flush=True)
+    print(f"PASS {assay}: {len(executed)} tasks; outputs verified; Resume reused work; {time.monotonic()-started:.1f}s", flush=True)
 finally:
     if (project / "runs/demo/.gobble").is_dir():
         # A timeout must stop our run before leaving its workspace for diagnosis.
@@ -62,6 +64,18 @@ finally:
                 result = subprocess.run([launcher, "inspect", view, "--workspace", "runs/demo"], cwd=project, env=env,
                                         text=True, capture_output=True, timeout=90)
                 (artifacts / (view + ".jsonl")).write_text(result.stdout + result.stderr)
+                if view == "instances" and result.returncode == 0:
+                    for line in result.stdout.splitlines():
+                        row = json.loads(line)
+                        if row["status"] != "failed":
+                            continue
+                        print(f"Failed task: {row['identity']}", flush=True)
+                        for stream in ("stdout", "stderr"):
+                            if not row.get(stream):
+                                continue
+                            log = project / "runs/demo" / row[stream]
+                            if log.is_file():
+                                print(f"{stream} (last 16 KiB):\n" + log.read_text(errors="replace")[-16384:], flush=True)
             logs = artifacts / "task-logs"
             for source in (project / "runs/demo/.gobble/tasks").rglob("*"):
                 if source.is_file() and source.name in ("stdout", "stderr"):

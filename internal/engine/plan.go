@@ -42,6 +42,7 @@ type TaskPlan struct {
 	ScatterFromPath    string
 	ScatterMembers     []string
 	ScatterMemberPaths []string
+	ScatterMemberSpecs []Path
 	SkipIfMissingTask  string
 	SkipIfMissingPort  string
 	SkipIfMissingPath  string
@@ -83,11 +84,13 @@ type ParamPlan struct {
 // from when it differs from Path. Empty Source means Path is both
 // source and dest.
 type IO struct {
-	Name     string
-	Kind     string
-	Path     string
-	Source   string
-	Spec     Path
+	Name   string
+	Kind   string
+	Path   string
+	Source string
+	Spec   Path
+	// Rule is retained for binds whose From is resolved during Scatter expansion.
+	Rule     DeriveRule
 	Members  []IOMember
 	Manifest string
 }
@@ -146,6 +149,7 @@ type jsonTask struct {
 	ScatterFromPath    string        `json:"scatter_from_path,omitempty"`
 	ScatterMembers     []string      `json:"scatter_members,omitempty"`
 	ScatterMemberPaths []string      `json:"scatter_member_paths,omitempty"`
+	ScatterMemberSpecs []jsonSpec    `json:"scatter_member_specs,omitempty"`
 	SkipIfMissingTask  string        `json:"skip_if_missing_task,omitempty"`
 	SkipIfMissingPort  string        `json:"skip_if_missing_port,omitempty"`
 	SkipIfMissingPath  string        `json:"skip_if_missing_path,omitempty"`
@@ -177,6 +181,7 @@ type jsonIO struct {
 	Path     string       `json:"path"`
 	Source   string       `json:"source,omitempty"`
 	Spec     jsonSpec     `json:"spec"`
+	Rule     DeriveRule   `json:"rule,omitempty"`
 	Members  []jsonMember `json:"members,omitempty"`
 	Manifest string       `json:"manifest,omitempty"`
 }
@@ -198,6 +203,7 @@ type jsonSpec struct {
 	Suffixes []string `json:"suffixes"`
 	Ext      string   `json:"ext"`
 	Literal  bool     `json:"literal"`
+	Opaque   string   `json:"opaque,omitempty"`
 }
 
 type jsonDAG struct {
@@ -314,6 +320,7 @@ func encodeTask(t TaskPlan) jsonTask {
 		ScatterFromPath:    t.ScatterFromPath,
 		ScatterMembers:     jsonOmitEmpty(t.ScatterMembers),
 		ScatterMemberPaths: jsonOmitEmpty(t.ScatterMemberPaths),
+		ScatterMemberSpecs: encodeSpecs(t.ScatterMemberSpecs),
 		SkipIfMissingTask:  t.SkipIfMissingTask,
 		SkipIfMissingPort:  t.SkipIfMissingPort,
 		SkipIfMissingPath:  t.SkipIfMissingPath,
@@ -357,6 +364,7 @@ func encodeIOs(in []IO) []jsonIO {
 			Path:     b.Path,
 			Source:   b.Source,
 			Spec:     encodeSpec(b.Spec),
+			Rule:     b.Rule,
 			Members:  encodeMembers(b.Members),
 			Manifest: b.Manifest,
 		})
@@ -393,6 +401,17 @@ func encodeMembers(in []IOMember) []jsonMember {
 	return out
 }
 
+func encodeSpecs(in []Path) []jsonSpec {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]jsonSpec, len(in))
+	for i, spec := range in {
+		out[i] = encodeSpec(spec)
+	}
+	return out
+}
+
 func encodeSpec(p Path) jsonSpec {
 	return jsonSpec{
 		Dir:      p.Dir,
@@ -401,6 +420,7 @@ func encodeSpec(p Path) jsonSpec {
 		Suffixes: jsonStrings(p.Suffixes),
 		Ext:      p.Ext,
 		Literal:  p.Literal,
+		Opaque:   p.Opaque,
 	}
 }
 
