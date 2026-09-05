@@ -43,8 +43,16 @@ mismatch, release/resume, unchanged-work reuse after a display-only edit, and
 runtime scatter membership. The real-PTY test checks terminal restoration and
 continued execution after leaving watch.
 
-The complete hermetic suite (`go test -count=1 ./...`) passed. Monitor/engine race checks and the command suite also passed. The final
-packed-runner terminal check is recorded after verification.
+The complete hermetic suite (`go test -count=1 ./...`) passed. Monitor/engine race checks and the command suite also passed. A fresh, separate
+consumer module successfully built the real packed runner without changing its
+module or checksum files. The packed runner was exercised through a real PTY:
+bracketed paste, task navigation, live stderr, full facts, resize, quit, empty
+watch stdout and terminal restoration all passed. The owning pipeline remained
+running after watch exited and completed after its test gate was released.
+
+The full suite ran before the final packaging fix; the entire command package
+and affected monitor/engine packages were rechecked after their final changes.
+No scientific container jobs were run for this UI review.
 
 ## Deliberate limits
 
