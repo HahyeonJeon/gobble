@@ -486,23 +486,41 @@ type inspectLog struct {
 func inspectLogsView(workspace string, tasks []jsonTaskState, schema int) (inspectLogsDoc, []Defect) {
 	out := inspectLogsDoc{SchemaVersion: schema, Logs: []inspectLog{}}
 	for _, st := range tasks {
+		stdout, stderr := taskLogPaths(st)
 		rec := inspectLog{
 			Identity: reservedIdentity(taskPlanFromState(st)),
-			Stdout:   st.Stdout,
-			Stderr:   st.Stderr,
+			Stdout:   stdout,
+			Stderr:   stderr,
 		}
 		var d []Defect
-		rec.StdoutSize, rec.StdoutTail, d = logPointer(workspace, st.Stdout)
+		rec.StdoutSize, rec.StdoutTail, d = logPointer(workspace, stdout)
 		if len(d) > 0 {
 			return inspectLogsDoc{}, d
 		}
-		rec.StderrSize, rec.StderrTail, d = logPointer(workspace, st.Stderr)
+		rec.StderrSize, rec.StderrTail, d = logPointer(workspace, stderr)
 		if len(d) > 0 {
 			return inspectLogsDoc{}, d
 		}
 		out.Logs = append(out.Logs, rec)
 	}
 	return out, nil
+}
+
+// The scheduler knows a started attempt's canonical isolate before its final
+// report publishes stdout/stderr pointers. Derive those pointers here, then
+// subject them to logPointer's usual containment and regular-file checks.
+func taskLogPaths(st jsonTaskState) (string, string) {
+	stdout, stderr := st.Stdout, st.Stderr
+	if st.Started != "" && !isScatterTemplateState(&st) {
+		base := isolateRel(taskPlanFromState(st))
+		if stdout == "" {
+			stdout = base + "/stdout"
+		}
+		if stderr == "" {
+			stderr = base + "/stderr"
+		}
+	}
+	return stdout, stderr
 }
 
 func logPointer(workspace, rel string) (int64, string, []Defect) {
