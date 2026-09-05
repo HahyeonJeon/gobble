@@ -2,6 +2,7 @@ package engine
 
 import (
 	"os"
+	"reflect"
 	"strings"
 
 	"github.com/HahyeonJeon/gobble/internal/engine/exec"
@@ -570,10 +571,20 @@ func operatorFieldsDiffer(rec, cur TaskPlan) bool {
 		rec.ScatterFromPath != cur.ScatterFromPath ||
 		!sameStrings(rec.ScatterMembers, cur.ScatterMembers) ||
 		!sameStrings(rec.ScatterMemberPaths, cur.ScatterMemberPaths) ||
+		!reflect.DeepEqual(encodeSpecs(rec.ScatterMemberSpecs), encodeSpecs(cur.ScatterMemberSpecs)) ||
+		deferredBindsDiffer(rec, cur) ||
 		rec.SkipIfMissingTask != cur.SkipIfMissingTask ||
 		rec.SkipIfMissingPort != cur.SkipIfMissingPort ||
 		rec.SkipIfMissingPath != cur.SkipIfMissingPath ||
 		rec.SkipIfFalse != cur.SkipIfFalse
+}
+
+func deferredBindsDiffer(rec, cur TaskPlan) bool {
+	if rec.Scatter == "" && cur.Scatter == "" {
+		return false
+	}
+	return !reflect.DeepEqual(encodeIOs(rec.Inputs), encodeIOs(cur.Inputs)) ||
+		!reflect.DeepEqual(encodeIOs(rec.Outputs), encodeIOs(cur.Outputs))
 }
 
 func incomingEndpointSet(doc Document, taskID string) map[string]bool {

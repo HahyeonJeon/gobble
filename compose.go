@@ -278,6 +278,7 @@ func fromScatterChild(t *Task, b Bind) bool {
 func (r *resolver) graphBind(t *Task, b Bind, out bool) graphBind {
 	gb := graphBind{
 		name:     b.Name,
+		rule:     b.Rule,
 		fromKind: b.From.kind,
 		fromName: b.From.name,
 	}

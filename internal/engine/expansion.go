@@ -508,6 +508,9 @@ func (s *sched) memberSource(t *TaskPlan, key string) (string, Path) {
 		if i < len(t.ScatterMemberPaths) && t.ScatterMemberPaths[i] != "" {
 			path = t.ScatterMemberPaths[i]
 		}
+		if i < len(t.ScatterMemberSpecs) && !isZeroPath(t.ScatterMemberSpecs[i]) {
+			return path, t.ScatterMemberSpecs[i]
+		}
 		return path, literalPath(path)
 	}
 	if t.ScatterFromKind == ArtifactFile && len(t.ScatterMembers) == 1 {
@@ -572,7 +575,7 @@ func (s *sched) applyMemberIO(io *IO, memberPath string, memberSpec Path, key st
 	if isZeroPath(from) {
 		from = literalPath(memberPath)
 	}
-	classified := pathFromSpec(intpath.Classify(io.Spec.spec(), from.spec(), intpath.DeriveAppend))
+	classified := pathFromSpec(intpath.Classify(io.Spec.spec(), from.spec(), intpath.DeriveRule(io.Rule)))
 	path, d := classified.Render()
 	if d != nil || path == "" {
 		path = memberPath

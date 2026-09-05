@@ -79,11 +79,11 @@ func add(parent modules.Parent, inputs []gobble.Bind, paths []string, options Op
 	if resources.CPU == 0 && resources.Memory == "" {
 		resources = gobble.Resources{CPU: 2, Memory: "2g"}
 	}
-	command := []string{"samtools", "merge", "--force", "--output", outputPath}
+	command := []string{"samtools", "merge", "-f", "-o", outputPath}
 	if n := modules.ThreadCount(resources.CPU); n > 1 {
 		command = append(command, "--threads", strconv.Itoa(n-1))
 	}
-	protected := []string{"--force", "--output", "--threads", "--write-index"}
+	protected := []string{"-f", "-o", "-@", "--threads", "--write-index"}
 	if err := modules.RejectExtraArgPrefixes(unit, options.ExtraArgs, protected); err != nil {
 		return Ports{}, err
 	}

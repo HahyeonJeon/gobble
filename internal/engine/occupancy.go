@@ -338,6 +338,13 @@ func cloneTaskPlan(t TaskPlan) TaskPlan {
 	}
 	t.ScatterMembers = copyStrings(t.ScatterMembers)
 	t.ScatterMemberPaths = copyStrings(t.ScatterMemberPaths)
+	if t.ScatterMemberSpecs != nil {
+		specs := make([]Path, len(t.ScatterMemberSpecs))
+		for i, spec := range t.ScatterMemberSpecs {
+			specs[i] = spec.clone()
+		}
+		t.ScatterMemberSpecs = specs
+	}
 	t.Env = copyStringMap(t.Env)
 	t.Inputs = cloneIOs(t.Inputs)
 	t.Outputs = cloneIOs(t.Outputs)

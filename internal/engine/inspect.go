@@ -737,6 +737,7 @@ func decodeTask(t jsonTask) TaskPlan {
 		ScatterFromPath:    t.ScatterFromPath,
 		ScatterMembers:     append([]string(nil), t.ScatterMembers...),
 		ScatterMemberPaths: append([]string(nil), t.ScatterMemberPaths...),
+		ScatterMemberSpecs: decodeSpecs(t.ScatterMemberSpecs),
 		SkipIfMissingTask:  t.SkipIfMissingTask,
 		SkipIfMissingPort:  t.SkipIfMissingPort,
 		SkipIfMissingPath:  t.SkipIfMissingPath,
@@ -765,6 +766,7 @@ func decodeIOs(in []jsonIO) []IO {
 			Path:     b.Path,
 			Source:   b.Source,
 			Spec:     decodeSpec(b.Spec),
+			Rule:     b.Rule,
 			Manifest: b.Manifest,
 		}
 		if b.Members != nil {
@@ -788,6 +790,17 @@ func decodeMembers(in []jsonMember) []IOMember {
 	return out
 }
 
+func decodeSpecs(in []jsonSpec) []Path {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]Path, len(in))
+	for i, spec := range in {
+		out[i] = decodeSpec(spec)
+	}
+	return out
+}
+
 func decodeSpec(s jsonSpec) Path {
 	return Path{
 		Dir:      s.Dir,
@@ -796,6 +809,7 @@ func decodeSpec(s jsonSpec) Path {
 		Suffixes: s.Suffixes,
 		Ext:      s.Ext,
 		Literal:  s.Literal,
+		Opaque:   s.Opaque,
 	}
 }
 

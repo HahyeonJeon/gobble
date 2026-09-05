@@ -68,6 +68,7 @@ type graphTask struct {
 type graphBind struct {
 	name     string
 	spec     PathSpec
+	rule     DeriveRule
 	fromKind handleKind
 	fromName string
 	fromTask string

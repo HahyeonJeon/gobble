@@ -321,6 +321,7 @@ func planDocument(g *Graph) (engine.Document, error) {
 			ScatterFromPath:    t.scatterFromPath,
 			ScatterMembers:     copyStrings(t.scatterMembers),
 			ScatterMemberPaths: copyStrings(t.scatterMemberPaths),
+			ScatterMemberSpecs: scatterMemberSpecs(g, t),
 			SkipIfMissingTask:  t.skipMissingTask,
 			SkipIfMissingPort:  t.skipMissingName,
 			SkipIfMissingPath:  t.skipMissingPath,
@@ -375,6 +376,28 @@ func planDocument(g *Graph) (engine.Document, error) {
 
 func scriptArgv(script string) []string {
 	return []string{"sh", "-c", "set -eu\n" + script}
+}
+
+// Preserve structured member names for deferred extension replacement. A
+// rendered path alone cannot distinguish Base, Suffixes and compound Ext.
+func scatterMemberSpecs(g *Graph, t *graphTask) []engine.Path {
+	if t.scatter == "" || t.scatterFromKind != handleInput {
+		return nil
+	}
+	for _, in := range g.inputs {
+		if in.name != t.scatterFromName || !in.tree.IsZero() {
+			continue
+		}
+		if in.members == nil {
+			return []engine.Path{snapshotPath(in.spec)}
+		}
+		out := make([]engine.Path, 0, len(in.members))
+		for _, member := range in.members {
+			out = append(out, snapshotPath(member.spec))
+		}
+		return out
+	}
+	return nil
 }
 
 func scatterFromArtifact(g *Graph, t *graphTask) string {
@@ -475,6 +498,7 @@ func planIO(g *Graph, t *graphTask, b graphBind, asInput bool) (engine.IO, error
 				Name: b.name,
 				Kind: engine.ArtifactFile,
 				Spec: snapshotPath(b.spec),
+				Rule: engine.DeriveRule(b.rule),
 			}, nil
 		}
 		return engine.IO{
@@ -482,6 +506,7 @@ func planIO(g *Graph, t *graphTask, b graphBind, asInput bool) (engine.IO, error
 			Kind: engine.ArtifactFile,
 			Path: path,
 			Spec: snapshotPath(b.spec),
+			Rule: engine.DeriveRule(b.rule),
 		}, nil
 	}
 	path, err := b.spec.Render()

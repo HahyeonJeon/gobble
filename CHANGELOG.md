@@ -14,6 +14,16 @@
 - Add native Mac launcher CI and installed-runtime RNA-seq/WGS Docker checks.
   Actual Mac/Windows Docker Desktop validation remains a release gate.
 
+### Execution fixes found by real WGS runs
+
+- Correct WGS image manifest pins and use the upstream MultiQC 1.35 image;
+  installed-runtime checks verify the actual platform and tool versions.
+- Use supported samtools merge flags and protect their short aliases.
+- Preserve structured Scatter member paths and `DeriveReplaceExt` through
+  planning, execution, Gather, and Resume. Earlier code could report missing
+  output even after a bioinformatics tool completed successfully.
+- Include failed task log tails in installed-assay CI diagnostics.
+
 ### Terminal monitoring
 
 - Add read-only `watch --workspace DIR` to the generic command and packed
