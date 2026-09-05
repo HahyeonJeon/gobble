@@ -1,221 +1,184 @@
+<div align="center">
+
 # Gobble
 
-Gobble is a pre-1.0 Go pipeline engine and a family of five trusted-local
-bioinformatics pipeline products. It serves coding agents and Go authors through
-the library and generic `gobble` command. A human operator can instead receive
-one packed runner containing one pipeline.
+**Design pipelines with a coding agent. Run them locally. See what is happening.**
 
-Support is limited to engineering behavior on `linux/amd64`: graph construction,
-local Docker command execution, declared artifacts, provenance, structured
-failure, and recovery. It does not establish scientific, clinical, diagnostic,
-or regulatory validity. Docker isolation is not a sandbox.
+[![Go tests](https://github.com/HahyeonJeon/gobble/actions/workflows/test.yml/badge.svg?branch=develop)](https://github.com/HahyeonJeon/gobble/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-7cc5c9)](LICENSE)
+[![Status: pre-release](https://img.shields.io/badge/status-pre--release-d5b67b)](CHANGELOG.md)
 
-## Products
+[Get started](#get-started) · [Pipelines](#bioinformatics-pipelines) · [Monitoring](#see-your-run) · [Documentation](#documentation)
 
-| Product | Selected path | Benchmark | Guide |
-|---|---|---|---|
-| WGS | BWA/GATK joint germline through an unfiltered joint VCF | nf-core/sarek 3.10.0 | [WGS](docs/authoring.md#wgs) |
-| Bulk RNA-seq | STAR-Salmon, reference-guided outputs, cohort QC | nf-core/rnaseq 3.26.0 | [RNA-seq](docs/authoring.md#rna-seq) |
-| Methyl-seq | Directional Bismark/Bowtie2 | nf-core/methylseq 4.2.0 | [Methyl-seq](docs/authoring.md#methyl-seq) |
-| ATAC-seq | BWA, MACS2 peaks, consensus counts, cohort QC | nf-core/atacseq 2.1.2 | [ATAC-seq](docs/authoring.md#atac-seq) |
-| scRNA-seq | Simpleaf, QCatch, raw matrix conversion and assembly | nf-core/scrnaseq 4.2.0 | [scRNA-seq](docs/authoring.md#scrna-seq) |
+</div>
 
-These are five independent assay products with common engineering contracts.
-They are not an integrated multiomics analysis. No package joins modalities,
-defines cross-assay identity, or produces a cross-assay scientific result.
+Gobble is a Go pipeline engine for local bioinformatics work. A coding agent or
+Go developer assembles the steps, inputs, outputs, and resources. Gobble runs the
+work, records what happened, and reuses compatible completed tasks when you resume.
+
+- **Composable pipelines** — connect reusable modules, branches, and parallel tasks.
+- **Local execution** — run tools in Docker with declared resources and local files.
+- **Visible progress** — follow the pipeline graph, search samples, and inspect failures.
+- **Recoverable work** — inspect attempts, validate outputs, and selectively rerun work.
+- **Shareable runners** — pack one pipeline into a binary an operator can use without Go.
+
+![Gobble terminal dashboard with a pipeline graph, sample progress, and failed tasks](docs/images/monitor-dashboard.png)
+
+*Actual terminal renderer with illustrative fixture data. See
+[Monitoring](docs/monitoring.md) for controls and state meanings.*
+
+> **Development preview:** this branch contains the pipeline family and terminal
+> monitor planned for the next release. Published `v0.1.0` predates those features.
+> Current execution support is **Linux/amd64**. Windows support and simpler
+> installation are being designed for [v0.2.0](docs/v0.2.0/design.md).
+
+## Get started
+
+Start with a tiny example that counts two FASTA sequences. It needs **Go 1.26+,
+Git, and a Linux/amd64 environment with `sh` and `awk`**. No Docker or sequencing
+reference download is needed for this example.
+
+From this checkout:
+
+```sh
+go build -o ./bin/gobble ./cmd/gobble
+mkdir -p ./runs/hello/inputs
+cp examples/hello/sequences.fasta ./runs/hello/inputs/sequences.fasta
+
+./bin/gobble plan ./examples/hello
+./bin/gobble run ./examples/hello --workspace ./runs/hello
+cat ./runs/hello/results/sequence-count.txt
+# 2
+
+./bin/gobble inspect run --workspace ./runs/hello
+./bin/gobble release --workspace ./runs/hello
+```
+
+Use a new workspace for the example and keep the same command binary for its
+lifecycle. [Hello Gobble](examples/hello/README.md) walks through the code,
+selective reruns, and packing a runner. For an agent-owned project outside this
+repository, follow [Installation and version selection](docs/installation.md).
+
+## Work with your coding agent
+
+Give your agent the analysis goal, sample files, reference organism/build,
+available CPU and memory, and desired outputs. Ask it to:
+
+1. Select or assemble a pipeline and explain its inputs and analysis choices.
+2. Validate it and show the execution plan before starting.
+3. Stage local inputs and check the required tools and resources.
+4. Run the pipeline, open its monitor, and explain any failed tasks.
+
+The agent writes ordinary Go using Gobble's library and invokes the CLI. Gobble
+currently does not bundle an AI agent. Customization belongs in your project's
+pipeline/configuration code. See [Authoring](docs/authoring.md).
+
+## Bioinformatics pipelines
+
+| Pipeline | What it runs | Guide |
+|---|---|---|
+| Whole-genome sequencing | BWA/GATK germline workflow through an unfiltered joint VCF | [WGS](assets/pipelines/wgs/README.md) |
+| Bulk RNA sequencing | STAR-Salmon, quantification, and cohort QC | [RNA-seq](assets/pipelines/rnaseq/README.md) |
+| DNA methylation sequencing | Directional Bismark/Bowtie2 workflow | [Methyl-seq](assets/pipelines/methylseq/README.md) |
+| Chromatin accessibility | BWA, MACS2 peaks, consensus counts, and cohort QC | [ATAC-seq](assets/pipelines/atacseq/README.md) |
+| Single-cell RNA sequencing | Simpleaf, QCatch, and matrix assembly | [scRNA-seq](assets/pipelines/scrnaseq/README.md) |
+
+These pipelines require Docker, prepared samplesheets, and staged reference/data
+files. Each guide describes configuration and outputs. The engineering tests do
+not establish scientific or clinical validity. Exact reference workflows,
+versions, and evidence are in [Products](docs/products.md) and
+[Provenance](docs/provenance.md).
+
+## See your run
+
+Open another terminal and use the same command that started the run:
+
+```sh
+./bin/gobble watch --workspace ./runs/hello
+```
+
+The dashboard starts with the graph and overall progress. Press `/` to search a
+sample, `!` for problems, and Enter to inspect tasks. Press `q` to close the
+monitor while execution continues. The small Hello example finishes quickly;
+longer pipelines make the live progress view useful.
+
+For agents and scripts, use structured output:
+
+```sh
+./bin/gobble inspect monitor --workspace ./runs/hello
+./bin/gobble inspect errors --workspace ./runs/hello
+```
+
+Local process logs can update while tasks run. **Docker task logs are currently
+collected after the container stops**; live Docker log collection is a v0.2.0
+improvement. The monitor itself is read-only.
+
+## Stop and resume
+
+In the terminal running `run` or `resume`, press **Ctrl+C** to request
+cancellation. Completed results remain available. There is currently no
+standalone `gobble stop` command.
+
+After the owning process exits, the current recovery sequence is:
+
+```sh
+./bin/gobble inspect run --workspace ./runs/hello
+./bin/gobble release --workspace ./runs/hello
+./bin/gobble resume ./examples/hello --workspace ./runs/hello
+./bin/gobble release --workspace ./runs/hello
+```
+
+Release checks backend state and closes the run lock; it does not delete results.
+Resume reuses valid completed work and reruns unfinished or changed tasks. It
+restarts tasks, rather than continuing inside an interrupted analysis tool.
+For a fully completed unchanged run, there may be nothing to resume.
+
+If backend state is unknown, restore Docker access and follow the
+[recovery guide](docs/operations.md#recovery). Closing the run terminal is not a
+supported detached-execution mode. The v0.2.0 review also identifies an
+[interrupted-checkpoint recovery gap](docs/v0.2.0/review.md#findings).
+
+## Share a pipeline
+
+From a clean, committed checkout:
+
+```sh
+./bin/gobble pack ./examples/hello --output ./bin/hello-runner
+```
+
+An operator can run `./bin/hello-runner run --workspace DIR` with staged inputs,
+without Go or a package operand. The runner targets Linux/amd64 and still needs
+the tools or Docker used by its pipeline. See the
+[example guide](examples/hello/README.md).
 
 ## Documentation
 
-- [Products](docs/products.md): exact product identities, ownership, package
-  roles, dated paths, and family boundary.
-- [Authoring](docs/authoring.md): samplesheets, typed configuration, selected
-  stages, outputs, defects, and scientific limits.
-- [Operations](docs/operations.md): installation, execution, trust, lifecycle,
-  migration, occupancy, and recovery.
-- [Monitoring](docs/monitoring.md): terminal dashboard, pipeline graph, exact
-  sample search, attention list, and live task log tails.
-- [Provenance](docs/provenance.md): benchmark and pin authority, fixture
-  staging, attribution, support, maintenance, and deferred routes.
-- [Changelog](CHANGELOG.md): released history and current unreleased state.
+| Start here | Details |
+|---|---|
+| [Installation](docs/installation.md) | Choose a revision and set up an agent-owned project |
+| [Authoring](docs/authoring.md) | Samplesheets, typed configuration, modules, and outputs |
+| [Operations](docs/operations.md) | Environment preparation, run lifecycle, and recovery |
+| [Monitoring](docs/monitoring.md) | Dashboard, sample search, task details, and shortcuts |
+| [Provenance](docs/provenance.md) | Pinned tools/data, reference workflows, and test evidence |
+| [v0.2.0 review and plan](docs/v0.2.0/review.md) | Findings, proposed designs, and sequential improvements |
 
-## Monitor a run
+## Development
 
-In another terminal, use the same command or packed runner that started the run:
+Resolve dependencies once, then run the local suite:
 
 ```sh
-gobble watch --workspace /path/to/workspace
-# or: ./rnaseq watch --workspace /path/to/workspace
-```
-
-The dashboard opens on the graph and global progress. Press `/` to find a
-sample, `!` to inspect problems, and Enter to open tasks and logs. `q` closes
-the monitor while execution continues. See [Monitoring](docs/monitoring.md)
-for authoring labels, state meanings, and keyboard controls. This command is
-available in this unreleased branch, not the published `v0.1.0` binary.
-
-## Release state
-
-The immutable `v0.1.0` tag is the published engine preview. It predates the
-five-product family and does not contain these product packages. The product
-execution baseline is recorded at commit
-`f21a858c66a2d95ce8eff469e6db2bfa3240c3a5` (tree
-`c90dfe77192c2528f8fd54d17f4d9547b09a6998`). No product-family release tag has
-been assigned. The monitoring changes add presentation labels without changing
-execution commands or artifact paths. Until release notes name these graph
-generations, use an exact trusted local checkout containing that baseline and
-build the command from the same selected revision.
-Do not expect `v0.1.0` or `@latest` to provide the products.
-
-## Agent install
-
-Agents, library consumers, and the machine creating a packed runner require Go
-1.26 or newer. For the unreleased product baseline, put an exact trusted checkout
-in the consumer module graph and build the command from that graph:
-
-```sh
-go mod edit -require=github.com/HahyeonJeon/gobble@v0.0.0
-go mod edit -replace=github.com/HahyeonJeon/gobble=/absolute/path/to/gobble
-go list -m github.com/HahyeonJeon/gobble
-mkdir -p .gobbin
-GOBIN="$PWD/.gobbin" go install github.com/HahyeonJeon/gobble/cmd/gobble
-export PATH="$PWD/.gobbin:$PATH"
-```
-
-The unsuffixed `go install` uses the consumer's selected local module. The
-`v0.0.0` requirement is only a local module-graph placeholder.
-
-The released engine-only `v0.1.0` install remains:
-
-```sh
-go get github.com/HahyeonJeon/gobble@v0.1.0
-GOBIN="$PWD/.gobbin" go install github.com/HahyeonJeon/gobble/cmd/gobble@v0.1.0
-```
-
-Keep the exact selected command on `PATH` for graph verbs. Consumer packages
-under `internal/` are unsupported.
-
-## First run
-
-Choose one package from [Products](docs/products.md), prepare its host
-samplesheet, and create an exclusive workspace. Stage each file input named by
-the sheet or typed reference config as a regular local file. A supplied ready
-`gobble.Tree` must be a complete directory with every expected member and a
-regular root `.gobble-tree.json`. Sheet cells and typed reference paths are
-workspace-relative. Product construction and tasks do not fetch these inputs.
-For a generated reference Tree, stage its declared source-file inputs instead;
-execution creates the Tree.
-
-Run and Resume require a usable local Docker client in `/usr/bin` or `/bin` and
-a reachable daemon. Before the first Run, the following command must succeed for
-the same local user: `env -i PATH=/usr/bin:/bin docker info`. Gobble inspects
-each exact Plan image and pulls it when it is absent from the daemon's local
-image store. Offline use requires pre-staging every exact
-`registry/repository:tag@sha256:digest` image before disconnecting. The
-task-container `--network=none` setting does not apply to image acquisition.
-
-```sh
-PIPELINE=github.com/HahyeonJeon/gobble/assets/pipelines/rnaseq
-SHEET=/absolute/path/to/rnaseq-samplesheet.csv
-WORKSPACE=/absolute/path/to/new-exclusive-workspace
-
-mkdir "$WORKSPACE"
-# Stage the sheet's reads and DefaultConfig's reference inputs in the workspace.
-gobble compose "$PIPELINE" --sample "$SHEET"
-gobble validate "$PIPELINE" --sample "$SHEET"
-gobble plan "$PIPELINE" --sample "$SHEET" > plan.json
-gobble run "$PIPELINE" --workspace "$WORKSPACE" --sample "$SHEET"
-gobble inspect run --workspace "$WORKSPACE"
-gobble release --workspace "$WORKSPACE"
-```
-
-Review Plan JSON before running. It exposes commands, parameters, resources,
-images, binds, and destinations. The default adapter uses `samplesheet.csv` in
-the process directory when `--sample` is omitted.
-
-A Run or Resume start-preflight defect rejects the start before workspace
-occupancy or task execution. Docker inspection or pull failure occurs later,
-during task submission and before that task's command starts. It records a
-contained failed task and leaves occupancy active. A task-command failure means
-the container started and its command exited unsuccessfully. Inspect the failed
-unit, then follow [Recovery](docs/operations.md#recovery).
-
-For typed customization, call the selected package's `Load`, `DefaultConfig`,
-and `Build` from a caller-owned Go package. Do not edit product source or use a
-serialized parameter overlay. See [Authoring](docs/authoring.md#entry-roles).
-
-## Human runner
-
-An agent with Go and the exact consumer module creates a runner at an explicit
-path:
-
-```sh
-gobble pack github.com/HahyeonJeon/gobble/assets/pipelines/rnaseq --output ./rnaseq-runner
-```
-
-The human uses the embedded package without Go, a package operand, or `pack`:
-
-```text
-./rnaseq-runner compose [--sample PATH]
-./rnaseq-runner validate [--sample PATH]
-./rnaseq-runner plan [--sample PATH]
-./rnaseq-runner run --workspace DIR [--cap N] [--sample PATH]
-./rnaseq-runner inspect VIEW --workspace DIR [--instance ID]
-./rnaseq-runner release --workspace DIR
-./rnaseq-runner resume --workspace DIR [--cap N] [--sample PATH]
-```
-
-Gobble portions are [MIT licensed](LICENSE). An embedded pipeline, its tools,
-images, and data can carry other licenses. Packing does not relicense them.
-
-## Engine contract
-
-Supported operations are `Compose`, `Validate`, `BuildPlan`, `Run`, `Inspect`,
-`Release`, and `Resume`. Composition uses `Module`, `Branch`, `Merge`, `Scatter`,
-`Gather`, and `When`. Artifacts use `PathSpec` and File, Group, or Tree binds.
-Failures use `Error`, `Defect`, and stable `DefectCode` values.
-
-`WriteTo` is the supported plan-option constructor. Graph readers `Name`,
-`TaskIDs`, `InputNames`, and `Edges`, plus Plan JSON, support inspection.
-`LoadSampleSheetFile(path)` is the explicit-path concurrent core samplesheet
-API. Other root-package exports remain provisional unless their own contract
-says otherwise.
-
-The caller supplies trusted pipeline code and an existing, exclusive workspace.
-Gobble copies staged inputs into task isolates and publishes outputs by copying.
-It does not hardlink or symlink staged or published data. Commands, parameters,
-scripts, stdout, and stderr may persist caller content. Do not place secrets in
-them. Inspect omits task environment values.
-
-## Recovery
-
-Occupancy remains active after success, failure, or cancellation. Recover with
-**Inspect → Release → Resume**. After its actor gate, Release performs backend
-reconciliation and closes occupancy only when every disposition is proved. If
-Release returns `unknown-backend`, it records the unresolved state, keeps
-occupancy active, and blocks Resume. Restore Docker client, daemon, and backend
-observability, then retry Release through its actor gate. Only a successful
-Release permits Resume. Release does not delete controls or artifacts. See
-[Operations](docs/operations.md#recovery) for the actor gates and full sequence
-before acting on a failed or interrupted workspace.
-
-## Checks
-
-The hermetic first check performs no fixture download:
-
-```sh
+go mod download all
 GOTOOLCHAIN=local GOPROXY=off go test -count=1 ./...
+go vet ./...
 ```
 
-Live suites have separate prerequisites and can fetch pinned public fixtures.
-The installed engine path is exercised by `go test -tags=live
-./tests/install-e2e`. Product-specific evidence and its limits are described in
-[Provenance](docs/provenance.md#evidence).
+[Docker tests](tests/docker/README.md) describe Linux userspace checks and the
+separate real-container smoke suite. Windows/WSL requires its own validation.
 
-## Exclusions
+Gobble is pre-1.0 and its public API may change. Current supported execution is
+trusted local Linux/amd64; cloud, cluster, and remote execution are future work.
+Pipeline code and container images must be trusted. Data and run state remain
+local; Gobble does not provide an account or hosted analysis service.
 
-There is no supported Slurm, cloud, Kubernetes, service, remote-execution,
-object-storage, or Podman backend. There is no GUI, Gobble DSL, YAML/JSON product
-parameter surface, component catalog, public Cancel/Retry/Diff/Repair/Clean
-verb, automatic retry or fallback, cross-workspace cache, hidden cleanup, or
-integrated cross-assay graph. No support is claimed for musl, Windows, macOS,
-or `linux/arm64`.
+Gobble is [MIT licensed](LICENSE). Pipeline tools, images, and datasets retain
+their own licenses. See [Changelog](CHANGELOG.md) for release history.

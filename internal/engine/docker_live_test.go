@@ -68,8 +68,17 @@ func TestRunDockerPublishes(t *testing.T) {
 	if st.Resources.CPU != 1 || st.Resources.Memory != "512m" {
 		t.Fatalf("recorded resources got cpu %v memory %q", st.Resources.CPU, st.Resources.Memory)
 	}
-	if st.RuntimeID == "" {
-		t.Fatalf("docker runtime_id empty")
+	if st.RuntimeID != "" {
+		t.Fatalf("successful Docker cleanup left runtime_id %q", st.RuntimeID)
+	}
+	if st.Reason == "log-copy-failed" {
+		t.Fatal("successful Docker task did not preserve its logs")
+	}
+	for _, name := range []string{"stdout", "stderr"} {
+		path := filepath.Join(dir, ControlDir, "tasks", "copy", "_", "0", "1", name)
+		if info, err := os.Stat(path); err != nil || !info.Mode().IsRegular() {
+			t.Fatalf("Docker %s log is not a regular file: %v", name, err)
+		}
 	}
 	if st.ImageDigest == "" {
 		t.Fatalf("docker image_digest empty")

@@ -5,12 +5,66 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/HahyeonJeon/gobble/internal/engine/exec"
 )
+
+func TestCancellationReportsCheckpointWriteFailure(t *testing.T) {
+	var stopped atomic.Bool
+	useExec(t, &fnExec{
+		submit: func(ctx context.Context, job exec.Job) (exec.Handle, exec.Report, error) {
+			h := exec.Handle{Identity: job.Identity, Backend: exec.BackendProcess, RuntimeID: "9"}
+			return h, exec.Report{Identity: job.Identity, RuntimeID: "9", Running: true}, nil
+		},
+		poll: func(ctx context.Context, h exec.Handle) (exec.Report, error) {
+			return exec.Report{Identity: h.Identity, RuntimeID: h.RuntimeID, Running: !stopped.Load()}, nil
+		},
+		cancel: func(ctx context.Context, h exec.Handle) error {
+			stopped.Store(true)
+			return nil
+		},
+	})
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	ctx, cancel := context.WithCancel(t.Context())
+	defer cancel()
+	done := make(chan []Defect, 1)
+	go func() {
+		done <- Run(ctx, Request{
+			Identity: testInstallIdentity(), Workspace: dir,
+			Document: sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
+		})
+	}()
+	waitRuntimeID(t, dir, "copy")
+	// A directory at the checkpoint destination deterministically makes the
+	// atomic replacement fail, including when tests execute as root.
+	plan := filepath.Join(dir, ControlDir, PlanFile)
+	if err := os.Rename(plan, plan+".before"); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(plan, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	cancel()
+	select {
+	case defects := <-done:
+		if !hasDefect(defects, DefectCanceled, "") {
+			t.Fatalf("Run() = %v, want canceled", defects)
+		}
+		for _, defect := range defects {
+			if defect.Code == DefectInvalidPath && strings.HasPrefix(defect.Message, "persist: ") {
+				return
+			}
+		}
+		t.Fatalf("Run() = %v, want checkpoint persistence failure as well as cancellation", defects)
+	case <-time.After(2 * time.Second):
+		t.Fatal("cancellation did not return after checkpoint failure")
+	}
+}
 
 func TestRunContextCancelPersistsIncomplete(t *testing.T) {
 	submitted := make(chan struct{})
