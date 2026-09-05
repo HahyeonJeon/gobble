@@ -10,21 +10,24 @@ receive one packed runner for one pipeline. Gobble is licensed under MIT.
 Docker is an isolation convenience, not a sandbox.
 
 Commands:
+  init       create a runnable project (generic CLI)
+  doctor     check local tools and Docker (generic CLI)
   compose    compose a pipeline from a Go package
   validate   compose then validate a pipeline package
   plan       write plan JSON for a pipeline package
   run        run a pipeline package in a workspace
   inspect    write a workspace view as JSON or JSONL
   watch      monitor pipeline progress in an interactive terminal
-  resume     resume a released run
-  release    close occupancy on a workspace
+  resume     reconcile and resume unfinished work
+  stop       stop the current run and preserve resumable work
+  release    reconcile and close a run lock (advanced)
   pack       write a standalone linux/amd64 runner
   help       print help
   version    print version JSON
 
 Use gobble help <command> for command help.
 
-Supported Go contract: Compose, Validate, BuildPlan, Run, Inspect, Release,
+Supported Go contract: Compose, Validate, BuildPlan, Run, Inspect, Stop, Release,
 Resume; Module, Branch, Merge, Scatter, Gather, When; PathSpec and File, Group,
 Tree binds; explicit-path samplesheet parsing; structured Error, Defect, and
 DefectCode values. Other exports are provisional.
@@ -43,7 +46,7 @@ or operational failure, and 2 invocation or input-shape failure. A spaced
 valued flag does not consume a following token that starts with '-'; use
 --flag=value.
 
-Recovery is inspect, then release, then resume remaining work. Later-process
+Resume reconciles a previous owner before restarting remaining work. Later-process
 release never signals an unproved process PID. Proved-stopped Docker leftovers
 do not wedge occupancy; unproved Docker stays unknown-backend and blocks
 resume. First-horizon installed-path evidence passed on linux/amd64 for
@@ -53,6 +56,8 @@ The published module version is v0.1.0.
 `
 
 var commandHelp = map[string]string{
+	"init":   "Usage: gobble init DIR\n\nCreate a new runnable project and its local Git history. DIR must not exist.\n",
+	"doctor": "Usage: gobble doctor\n\nCheck Go, Git, and Docker; in the runtime, verify sibling-container file access.\n",
 	"compose": `Usage: gobble compose [package] [--sample PATH]
 
 Compose the pipeline exported by package (default ".").
@@ -92,10 +97,16 @@ and q to exit the monitor; the pipeline keeps running in its owning process.
 `,
 	"resume": `Usage: gobble resume [package] --workspace DIR [--cap N] [--sample PATH]
 
-Compose then resume a released run of the pipeline exported by package (default ".") in DIR.
+Compose then reconcile and resume unfinished work of the pipeline exported by package (default ".") in DIR.
 --workspace is required and is not created. Omit --cap to pass 0.
 --sample PATH is the samplesheet CSV. When omitted, pipelines that read a
 sheet use samplesheet.csv in the process current directory.
+`,
+	"stop": `Usage: gobble stop --workspace DIR
+
+Request graceful termination of this run. Completed work is preserved.
+Waits up to 40 seconds; status requested means the owner has not yet settled.
+Repeat Stop or inspect the run to check; Resume reconciles before restarting.
 `,
 	"release": `Usage: gobble release --workspace DIR
 
@@ -162,15 +173,15 @@ Commands:
   run        run the embedded pipeline in a workspace
   inspect    write a workspace view as JSON or JSONL
   watch      monitor pipeline progress in an interactive terminal
-  resume     resume a released run
-  release    close occupancy on a workspace
+  resume     reconcile and resume unfinished work
+  stop       stop the current run and preserve resumable work
+  release    reconcile and close a run lock (advanced)
   help       print help
   version    print version JSON
 
 Use gobble help <command> for command help.
 
-The embedded identity must match the workspace identity. Recovery is inspect,
-then release, then resume remaining work. Proved-stopped Docker leftovers do
+The embedded identity must match the workspace identity. Resume reconciles the previous owner before restarting remaining work. Proved-stopped Docker leftovers do
 not wedge occupancy; unproved Docker stays unknown-backend and blocks resume.
 
 Watch renders on stderr and leaves stdout empty; q exits only the monitor.
@@ -224,8 +235,14 @@ and q to exit the monitor; the pipeline keeps running in its owning process.
 ` + packedLicenseSummary,
 	"resume": `Usage: gobble resume --workspace DIR [--cap N] [--sample PATH]
 
-Compose then resume a released run in DIR. --workspace is required and is not
+Compose then reconcile and resume unfinished work in DIR. --workspace is required and is not
 created. Omit --cap to pass 0. --sample PATH is the samplesheet CSV.
+` + packedLicenseSummary,
+	"stop": `Usage: gobble stop --workspace DIR
+
+Request graceful termination of this run. Completed work is preserved.
+Waits up to 40 seconds; status requested means the owner has not yet settled.
+Repeat Stop or inspect the run to check; Resume reconciles before restarting.
 ` + packedLicenseSummary,
 	"release": `Usage: gobble release --workspace DIR
 

@@ -2,8 +2,10 @@
 
 Status: accepted by the user. The default beginner route is a containerized
 runtime used through a coding agent and a small Gobble launcher. Direct Linux
-installation remains supported for advanced users. Release images, launchers,
-and platform support claims still require implementation and validation.
+installation remains supported for advanced users. A runtime Dockerfile,
+portable launcher, doctor, and init are implemented in this branch. Release
+artifacts and actual Docker/Desktop support still require validation. See the
+[preview setup](../../distribution/runtime/README.md).
 
 ## User experience
 
@@ -17,16 +19,17 @@ Keep direct Linux installation as a developer/advanced path. Initially validate
 Linux/amd64 and Windows x64 + Docker Desktop. A Linux image alone does not prove
 macOS, ARM, or other Windows backend support.
 
-Proposed commands, with the same interface on each supported host:
+Implemented commands after entering the project directory:
 
 ```sh
-gobble doctor
 gobble init rnaseq-demo
-gobble plan ./rnaseq-demo
-gobble run ./rnaseq-demo --workspace ./runs/first-run
-gobble watch --workspace ./runs/first-run
-gobble stop --workspace ./runs/first-run
-gobble resume ./rnaseq-demo --workspace ./runs/first-run
+cd rnaseq-demo
+gobble doctor
+gobble plan .
+gobble run . --workspace ./runs/hello
+gobble watch --workspace ./runs/hello
+gobble stop --workspace ./runs/hello
+gobble resume . --workspace ./runs/hello
 ```
 
 The launcher handles image selection, Docker invocation, directory mounts,

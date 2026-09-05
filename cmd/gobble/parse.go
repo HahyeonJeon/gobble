@@ -240,6 +240,15 @@ func interpret(raw rawArgs) (*request, *gobble.Error) {
 
 	req := &request{command: cmd}
 	switch cmd {
+	case "init":
+		if len(operands) != 1 {
+			return nil, inv("init requires one new project directory")
+		}
+		req.pkg = operands[0]
+	case "doctor":
+		if len(operands) != 0 {
+			return nil, inv("extra operand")
+		}
 	case "compose", "validate", "plan":
 		if len(operands) > 1 {
 			return nil, inv("extra operand")
@@ -294,7 +303,7 @@ func interpret(raw rawArgs) (*request, *gobble.Error) {
 		if raw.instanceSet {
 			req.instance = raw.instance
 		}
-	case "release", "watch":
+	case "release", "stop", "watch":
 		if len(operands) > 0 {
 			return nil, inv("extra operand")
 		}
@@ -335,7 +344,7 @@ func repeatedFlagError(op string, raw rawArgs) *gobble.Error {
 
 func isOperate(cmd string) bool {
 	switch cmd {
-	case "compose", "validate", "plan", "run", "inspect", "resume", "release", "pack", "watch":
+	case "compose", "validate", "plan", "run", "inspect", "resume", "release", "stop", "pack", "watch", "init", "doctor":
 		return true
 	default:
 		return false
@@ -350,7 +359,7 @@ func flagsFor(cmd string) (workspace, cap, instance, sample, output bool) {
 		return true, true, false, true, false
 	case "inspect":
 		return true, false, true, false, false
-	case "release", "watch":
+	case "release", "stop", "watch":
 		return true, false, false, false, false
 	case "pack":
 		return false, false, false, false, true

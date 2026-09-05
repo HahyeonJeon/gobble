@@ -142,67 +142,55 @@ yields `foreign-host`. Never signal or adopt an unproved process PID.
 
 ## Recovery
 
-Use **Inspect → Release → Resume** after a contained failure, cancellation, or
-controller death:
+Use `stop` to end active work and `resume` to reconcile and continue it:
 
-1. Run `inspect identity`. It remains available on identity mismatch and shows
-   `required`, `have`, `match`, `goos`, `goarch`, and `identity_mode`.
-2. With a matching identity, inspect `run`, `errors`, `logs`, `instances`, and
-   `remaining`. Use `reuse` and `lineage` to understand selective reruns. If
-   `run` reports `"unknown": true`, use `instances` to identify the affected
-   executor. An `unknown-backend` Docker identity has unproved backend
-   disposition. Treat it as unresolved, not as an ordinary failed task. Do not
-   Resume. Preserve the workspace state and continue to the actor gate and
-   Release steps below.
-3. Correct caller-owned inputs or configuration without deleting state or
-   artifacts. Keep the same accepted graph generation unless starting a new
-   workspace for a named graph break.
-4. Select the Release caller:
-   - An embedded Go process that called Run or Resume may call Release after
-     that call returns while it still holds occupancy. It does not wait for
-     either occupancy field to become `false`.
-   - A generic CLI or packed runner executes one command and exits. A separate
-     `release` invocation is therefore a different later process. Call it only
-     after `occupancy.live` becomes `false`; `occupancy.active` remains `true`
-     until Release succeeds.
-5. After the applicable actor gate passes, run Release. Release performs backend
-   reconciliation; backend disposition does not have to be proved before the
-   call. Apply the same actor gate before each subsequent Release attempt.
-   - If Release succeeds, confirm that `occupancy.active` and `occupancy.live`
-     are both `false`. Only then continue to Resume.
-   - If Release returns `unknown-backend`, it records the unresolved identity
-     and keeps occupancy active. Resume remains blocked. Restore Docker client,
-     daemon, and backend observability. Re-run the client check in
-     [Boundary](#boundary) against the same backend that owns any recorded
-     `runtime_id`, then retry Release. If disposition still cannot be proved,
-     Release returns `unknown-backend` again and the workspace remains blocked.
-6. Only after Release succeeds, Resume with the same package, compatible graph,
-   sheet meaning, typed config, and required execution identity. Inspect
-   `remaining` until it is empty.
-7. After Resume returns, inspect again and close its new occupancy through the
-   same actor and backend gates. An embedded Go owner may call Release in the
-   same process even while both occupancy fields remain `true`. A CLI `resume`
-   process exits first, so its later, separate `release` invocation waits for
-   `occupancy.live` to become `false`.
+```sh
+gobble stop --workspace runs/analysis
+gobble inspect run --workspace runs/analysis
+gobble resume . --workspace runs/analysis
+```
 
-Other Inspect views, Release, and Resume refuse an identity mismatch without
-mutating the workspace.
+Stop writes a durable request addressed to the current owner lease. It never
+signals an unproved PID. The owner stops admitting tasks, cancels active work,
+collects available logs, and records the outcome. A delayed request for a prior
+lease cannot stop a new Resume. Repeated Stop is safe.
 
-An `unknown-backend` result is a recorded safe state, not a released workspace.
-Occupancy remains active, and Resume is refused until a subsequent Release
-attempt successfully reconciles the backend and closes occupancy. Leave that
-state intact while restoring observability. Do not relabel the identity as an
-ordinary failed task, delete controls, force occupancy closed, or signal an
-unproved PID. For new Docker attempts, Release checks the recorded daemon and
-container ownership and removes the owned container before authorizing another
-attempt. Merely observing an unstarted container is not sufficient when a start
-request could still be in flight.
+| Result / state | Meaning and next action |
+|---|---|
+| Stop `settled` | Owned work is known stopped; successful results remain. |
+| Stop `requested` | The CLI's 40-second wait ended before settlement. The request remains; inspect or repeat Stop. |
+| Run `stopping` | The owner is settling active tasks. |
+| Run `stopped` | Cancellation completed; unfinished tasks can be retried. |
+| Run `interrupted` | The owner died or backend state could not be established. Resume reconciles before doing new work. |
+| `backend: recovery-required` / `unknown-backend` | Restore access to the recorded Docker daemon, then retry Resume. No task launches until reconciliation proves it is safe. |
+| `occupied-workspace` | A scheduler still holds the run lock. Use Watch or Stop; no second owner starts. |
 
-File destinations must be regular files. Every Group member must be regular.
-A Tree requires its directory and root manifest. Resume re-evaluates `When`,
-input fingerprints, task identity, and published destination checksums. Missing
-or changed outputs rerun through the normal dependency graph; no hidden repair
-or old-output acceptance occurs.
+Resume holds one continuous run lock across reconciliation and acquiring its
+new lease. A separate Release command is unnecessary for routine recovery.
+Completed work is reused only after checking task identity, inputs, and output
+checksums. Unfinished or changed tasks run as new attempts; Resume does not
+continue inside a bioinformatics tool's memory or promise tool-level checkpoints.
+
+For identity errors, `inspect identity` shows the required and current build.
+Use the same pinned runtime or matching direct/packed executable. Other views
+and mutations refuse a mismatching identity. A different host or Docker daemon
+cannot establish what happened to old jobs. Keep the recorded state intact.
+
+Advanced library callers can still use Release after Run/Resume returns to
+reconcile and close the retained run lock. A separate process may Release only
+when that owner is gone. Successful explicit Stop closes its own lock; Ctrl+C
+and normal Run/Resume retain the existing library lease contract until Release,
+auto-reconciling Resume, or process exit. Run outcome and ownership are separate.
+
+For Docker attempts, reconciliation checks the recorded endpoint, daemon ID,
+and ownership label, then removes the exact owned container to fence an
+outstanding start. An observation error is never interpreted as absence.
+See [Docker execution](docker-execution.md) and [checkpoints](checkpoints.md).
+
+File destinations and every Group member must be regular files. A Tree requires
+its directory and root manifest. Resume re-evaluates `When`, fingerprints,
+identity, and checksums. Missing or changed outputs rerun through the dependency
+graph; there is no hidden repair or unchecked acceptance of old output.
 
 ## Migration
 

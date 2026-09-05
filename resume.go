@@ -7,12 +7,12 @@ import (
 	"github.com/HahyeonJeon/gobble/internal/engine"
 )
 
-// Resume occupies a released existing run in workspace and continues
+// Resume reconciles and occupies an existing run in workspace and continues
 // remaining work. Topology and identity edits classify as Change:
 // Added, Removed, Rewired, Repathed, IdentityChanged, or Unchanged.
 // change is persisted on each classified identity after Resume.
-// A missing run is nothing-to-resume. Active occupy is
-// occupied-workspace. Occupancy stays active when Resume returns.
+// A missing run is nothing-to-resume. A live scheduler is
+// occupied-workspace. Recovery and reacquisition hold one continuous run lock. Occupancy stays active when Resume returns.
 //
 // cap follows Run: zero means 1; values below 1 or above 64 are refused.
 //

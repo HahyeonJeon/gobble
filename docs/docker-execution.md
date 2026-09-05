@@ -69,8 +69,9 @@ do not configure the client. Endpoint selection is consistent with Docker's
 
 New handles carry the controller's attempt directory. Log collection uses that
 local path instead of interpreting a daemon-host bind source as a controller
-path. Logs are still collected at settlement/completion; continuous collection
-is a later batch. Docker polling has a 500 ms interval to avoid launching client
+path. A following Docker log client writes stdout/stderr while the task runs;
+settlement joins that collector before gathering final logs and removing the
+container. The monitor only reads these files. Docker polling has a 500 ms interval to avoid launching client
 processes at 50 Hz per task; process-task polling remains independent.
 
 ## Validation boundary

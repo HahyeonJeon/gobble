@@ -196,3 +196,56 @@ Docker Desktop mount translation, Stop/Resume UX, live logs, doctor/init, and
 the runtime image/launcher remain subsequent implementation work. Real Docker
 and Windows results must be obtained before promoting installation support in
 the README.
+
+## Lifecycle and installation preview delivery record (batches 3–4)
+
+Implemented after batch 2b, using the accepted shared-engine design:
+
+- Public `Stop(ctx, workspace, ...)`, generic and packed `stop` commands, and
+  durable stop requests addressed to one owner lease. A settled explicit Stop
+  closes that owner's lock. A canceled wait reports requested, and repeated
+  requests are safe. A stale request cannot target a resumed owner.
+- Resume reconciles and acquires its new lease under one continuous mutation
+  lock. A live scheduler is refused; an exited scheduler no longer requires a
+  separate Release. Existing identity/backend proof gates remain enforced.
+- Run-level stopping/stopped/interrupted outcomes and a separate inspected
+  backend certainty field. Task-level outcomes retain their existing vocabulary
+  in this batch. Process death during a running/stopping outcome projects as
+  interrupted with recovery required.
+- One live Docker log collector per running attempt, separate stdout/stderr,
+  and collector shutdown before final collection/removal. The monitor stays
+  read-only. The real-Docker CI journey tests live output before Stop.
+- A Go runtime image build and a standalone Linux/Windows launcher. It binds a
+  selected local daemon, pins the exact runtime image ID per project, uses a
+  stable daemon-derived controller hostname, translates host path arguments,
+  and maps task mounts from Docker's actual controller mount descriptions.
+- Doctor checks tools and, in the runtime, sibling-container read/write access.
+  Init creates a teaching pipeline, input data, agent guidance, and a local Git
+  commit, refusing existing directories. A generated Linux project was run and
+  resumed without Release; output remained `2`.
+- README now leads with Docker as the default route and links the concrete
+  preview build/setup instructions. Direct Linux installation remains the
+  advanced route. No unavailable release download is presented as installable.
+
+Verification:
+
+| Check | Result |
+|---|---|
+| Full `go test -count=1 -timeout=5m ./...` | Passed: 80 packages with tests |
+| Engine/executor/monitor/TUI/launcher race checks | Passed; final Stop lease guard is rerun separately |
+| Generic CLI + setup + packed-template and launcher tests under race | Passed |
+| `go vet ./...` | Passed |
+| Native Windows x64 launcher cross-build | Passed; not execution on Windows |
+| Separate-process Stop of a live process task, repeated Stop, Resume attempt 2 | Passed |
+| Docker controller death followed directly by Resume | Passed at five boundaries using the persisted daemon model |
+| Generated project init/run/inspect/resume/stop | Passed on local Linux; result `2` |
+| Runtime Docker image builds and launcher integration script | Prepared in CI, not executed locally |
+| Docker Desktop, PowerShell interaction, Windows permissions/restart | Not executed |
+
+Remaining release gates: run the real Docker image/launcher journey and Windows
+Desktop journey; pin base/runtime image digests for publication; produce release
+checksums/installers; measure cached-command startup and realistic pipeline load.
+Remaining design work includes detached supervision, large external datasets
+without extra staging copies, cleanup of daemon-side late creates, and shared
+CLI/packed handler extraction. These records do not mark all v0.2.0 work complete
+or imply a release, merge, or push.

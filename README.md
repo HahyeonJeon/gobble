@@ -31,35 +31,36 @@ work, records what happened, and reuses compatible completed tasks when you resu
 > monitor planned for the next release. Published `v0.1.0` predates those features.
 > Current execution support is **Linux/amd64**. The accepted v0.2.0 default is
 > **Docker-based installation and agent-driven authoring**, with direct Linux
-> installation for advanced users. The launcher and Windows route are still
-> being implemented; see the [installation design](docs/v0.2.0/container-installation.md).
+> installation for advanced users. The launcher is implemented; Docker and Windows execution still
+> require validation; see the [installation design](docs/v0.2.0/container-installation.md).
 
 ## Get started
 
-Start with a tiny example that counts two FASTA sequences. It needs **Go 1.26+,
-Git, and a Linux/amd64 environment with `sh` and `awk`**. No Docker or sequencing
-reference download is needed for this example.
+| Installation | Who it is for | Setup |
+|---|---|---|
+| **Docker + Gobble launcher (default)** | Beginners and users working with a coding agent, including Windows | [Prepare the Docker preview](distribution/runtime/README.md) |
+| Direct Linux | Advanced users who manage Go, Git, and analysis tools themselves | [Linux installation](docs/installation.md) |
 
-From this checkout:
+The Docker runtime includes Go and Git. Your agent works with ordinary local
+files; Gobble runs the pipeline inside the selected runtime. Release images and
+installers are not published yet: the linked preview guide builds them with
+Docker. Windows Desktop execution remains a release validation gate.
+
+After preparing the launcher:
 
 ```sh
-go build -o ./bin/gobble ./cmd/gobble
-mkdir -p ./runs/hello/inputs
-cp examples/hello/sequences.fasta ./runs/hello/inputs/sequences.fasta
-
-./bin/gobble plan ./examples/hello
-./bin/gobble run ./examples/hello --workspace ./runs/hello
-cat ./runs/hello/results/sequence-count.txt
-# 2
-
-./bin/gobble inspect run --workspace ./runs/hello
-./bin/gobble release --workspace ./runs/hello
+gobble init my-pipeline
+cd my-pipeline
+gobble doctor
+gobble plan .
+gobble run . --workspace runs/hello
+gobble inspect run --workspace runs/hello
 ```
 
-Use a new workspace for the example and keep the same command binary for its
-lifecycle. [Hello Gobble](examples/hello/README.md) walks through the code,
-selective reruns, and packing a runner. For an agent-owned project outside this
-repository, follow [Installation and version selection](docs/installation.md).
+Open `runs/hello/results/sequence-count.txt`: it contains **2**. The generated
+project includes a tiny FASTA input and instructions for your coding agent.
+[Hello Gobble](examples/hello/README.md) explains inputs, outputs, selective
+reruns, and packing a runner.
 
 ## Work with your coding agent
 
@@ -96,7 +97,7 @@ versions, and evidence are in [Products](docs/products.md) and
 Open another terminal and use the same command that started the run:
 
 ```sh
-./bin/gobble watch --workspace ./runs/hello
+gobble watch --workspace runs/hello
 ```
 
 The dashboard starts with the graph and overall progress. Press `/` to search a
@@ -107,30 +108,30 @@ longer pipelines make the live progress view useful.
 For agents and scripts, use structured output:
 
 ```sh
-./bin/gobble inspect monitor --workspace ./runs/hello
-./bin/gobble inspect errors --workspace ./runs/hello
+gobble inspect monitor --workspace runs/hello
+gobble inspect errors --workspace runs/hello
 ```
 
-Local process logs can update while tasks run. **Docker task logs are currently
-collected after the container stops**; live Docker log collection is a v0.2.0
-improvement. The monitor itself is read-only.
+Process and Docker task logs are collected into attempt files while work runs.
+The monitor reads those files without owning the run. Docker collection is
+covered by hermetic tests; actual Docker execution remains a release gate.
 
 ## Stop and resume
 
-In the terminal running `run` or `resume`, press **Ctrl+C** to request
-cancellation. Completed results remain available. There is currently no
-standalone `gobble stop` command.
+Run `stop` from another terminal, or press **Ctrl+C** in the run terminal.
+Completed results remain available. Resume reconciles the previous owner and
+reuses valid completed tasks:
 
-After the owning process exits, the current recovery sequence is:
 
 ```sh
-./bin/gobble inspect run --workspace ./runs/hello
-./bin/gobble release --workspace ./runs/hello
-./bin/gobble resume ./examples/hello --workspace ./runs/hello
-./bin/gobble release --workspace ./runs/hello
+gobble stop --workspace runs/hello
+gobble inspect run --workspace runs/hello
+gobble resume . --workspace runs/hello
 ```
 
-Release checks backend state and closes the run lock; it does not delete results.
+Stop reports `settled` only after termination is known. A `requested` result
+means its wait ended before settlement; repeat Stop or inspect the run.
+Advanced users can still use Release to reconcile and close a run lock.
 Resume reuses valid completed work and reruns unfinished or changed tasks. It
 restarts tasks, rather than continuing inside an interrupted analysis tool.
 For a fully completed unchanged run, there may be nothing to resume.

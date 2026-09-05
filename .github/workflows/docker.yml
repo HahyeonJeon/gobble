@@ -12,6 +12,20 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  runtime-install:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build runtime and portable launchers
+        run: |
+          docker build -f distribution/runtime/Dockerfile --target runtime -t gobble-runtime:ci .
+          docker build -f distribution/runtime/Dockerfile --target launcher-artifacts --output ./dist .
+      - name: Launcher journey without host Go
+        env:
+          GOBBLE_RUNTIME_IMAGE: gobble-runtime:ci
+        run: python3 tests/runtime-e2e/smoke.py "$PWD/dist/linux-amd64/gobble"
+
   linux-userspace:
     runs-on: ubuntu-latest
     timeout-minutes: 20

@@ -24,8 +24,9 @@ var DockerCLI = runDockerCLI
 
 // Docker runs each job as a container.
 type Docker struct {
-	mu   sync.Mutex
-	done map[string]Report
+	mu      sync.Mutex
+	done    map[string]Report
+	streams map[string]*logStream
 }
 
 // NewDocker returns a docker adapter.
@@ -72,7 +73,12 @@ func (d *Docker) Submit(ctx context.Context, job Job) (Handle, Report, error) {
 		return Handle{}, Report{}, err
 	}
 	var idBuf, errBuf bytes.Buffer
-	args := dockerCreateArgs(job)
+	bindJob := job
+	bindJob.Isolate, err = daemonIsolate(ctx, job.Isolate)
+	if err != nil {
+		return h, Report{}, err
+	}
+	args := dockerCreateArgs(bindJob)
 	args = append(args[:1], append([]string{"--name", submissionName(submission.Token),
 		"--label", submissionLabel + "=" + submission.Token}, args[1:]...)...)
 	exit, err := dockerCLI(ctx, args, &idBuf, &errBuf)
@@ -145,6 +151,7 @@ func (d *Docker) Poll(ctx context.Context, h Handle) (Report, error) {
 		return Report{Identity: h.Identity, RuntimeID: h.RuntimeID}, err
 	}
 	if running {
+		d.followLogs(ctx, h)
 		return Report{Identity: h.Identity, RuntimeID: h.RuntimeID, Running: true}, nil
 	}
 	return d.finishStopped(ctx, h, exit)
@@ -159,6 +166,9 @@ func (d *Docker) Cancel(ctx context.Context, h Handle) error {
 		var err error
 		ctx, h, err = resolveSubmission(ctx, h)
 		if err != nil || h.RuntimeID == "" {
+			return err
+		}
+		if err := d.stopLogs(ctx, h.RuntimeID); err != nil {
 			return err
 		}
 		// Removing the exact owned container also fences an outstanding start
@@ -220,6 +230,9 @@ func (d *Docker) Reconcile(ctx context.Context, h Handle) (Report, error) {
 }
 
 func (d *Docker) finishStopped(ctx context.Context, h Handle, exit int) (Report, error) {
+	if err := d.stopLogs(ctx, h.RuntimeID); err != nil {
+		return Report{Identity: h.Identity, RuntimeID: h.RuntimeID}, err
+	}
 	msg := ""
 	if exit != 0 {
 		msg = "exit " + strconv.Itoa(exit)
@@ -458,6 +471,10 @@ func dockerCLI(ctx context.Context, args []string, stdout, stderr io.Writer) (in
 	if ctx == nil {
 		ctx = context.Background()
 	}
+	return DockerCLI(ctx, args, dockerEnvForContext(ctx), stdout, stderr)
+}
+
+func dockerEnvForContext(ctx context.Context) []string {
 	env := dockerClientEnv()
 	if endpoint, _ := ctx.Value(dockerEndpointKey{}).(string); endpoint != "" {
 		filtered := env[:0]
@@ -468,7 +485,7 @@ func dockerCLI(ctx context.Context, args []string, stdout, stderr io.Writer) (in
 		}
 		env = append(filtered, "DOCKER_HOST="+endpoint)
 	}
-	return DockerCLI(ctx, args, env, stdout, stderr)
+	return env
 }
 
 func runDockerCLI(ctx context.Context, args, env []string, stdout, stderr io.Writer) (int, error) {

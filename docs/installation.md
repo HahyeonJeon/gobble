@@ -1,15 +1,15 @@
 # Installation and version selection
 
-The current supported execution target is Linux/amd64. Windows/WSL setup is
-proposed for v0.2.0 and is not yet a validated installation path. See the
-[v0.2.0 design](v0.2.0/design.md).
+The **default v0.2.0 installation is Docker plus the Gobble launcher**. Go and
+Git live inside the runtime; the user works with a coding agent in an ordinary
+host project. Follow the [Docker preview guide](../distribution/runtime/README.md).
+The image/launcher implementation is present, but release artifacts and actual
+Docker Desktop/Windows validation are still pending.
 
-The accepted v0.2.0 default is Gobble and its Go toolchain inside Docker, with a
-small launcher for agent-driven authoring and execution. Advanced users retain
-direct Linux installation. WSL2 is not a Gobble dependency, and Docker Desktop's WSL2
-backend does not require a separate Ubuntu distribution. See the
-[container installation design](v0.2.0/container-installation.md) for the
-Windows backend choices and the implementation/validation still required.
+This page covers **direct Linux/amd64 installation for advanced users**. Keep Go,
+Git, Docker, and the selected Gobble source/binary compatible. WSL is an optional
+advanced Linux environment; a separate Ubuntu installation is unnecessary for
+the default Docker Desktop route.
 
 For a first local example, follow [Hello Gobble](../examples/hello/README.md).
 This guide explains exact revision selection for an agent-owned Go project.
@@ -29,7 +29,7 @@ generations, use an exact trusted local checkout containing that baseline and
 build the command from the same selected revision.
 Do not expect `v0.1.0` or `@latest` to provide the products.
 
-## Agent install
+## Direct Linux installation
 
 Agents, library consumers, and the machine creating a packed runner require Go
 1.26 or newer. For the unreleased product baseline, put an exact trusted checkout
@@ -56,3 +56,11 @@ GOBIN="$PWD/.gobbin" go install github.com/HahyeonJeon/gobble/cmd/gobble@v0.1.0
 
 Keep the exact selected command on `PATH` for graph verbs. Consumer packages
 under `internal/` are unsupported.
+
+## Start a project
+
+With the matching generic command installed, `gobble init my-pipeline` creates a
+small runnable project, starter data, agent instructions, and initial local Git
+history. If the build's source directory is unavailable, set `GOBBLE_SOURCE` to
+the exact checkout used to build the command. Existing directories are refused.
+Run `gobble doctor` to check Go, Git, and Docker before preparing an analysis.

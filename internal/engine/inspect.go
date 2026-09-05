@@ -312,6 +312,7 @@ type inspectRunDoc struct {
 	SchemaVersion int              `json:"schema_version"`
 	Occupancy     inspectOccupancy `json:"occupancy"`
 	Unknown       bool             `json:"unknown,omitempty"`
+	Backend       string           `json:"backend"`
 	Started       string           `json:"started"`
 	Ended         string           `json:"ended,omitempty"`
 }
@@ -338,12 +339,22 @@ func inspectRunView(workspace string, run jsonRun, tasks []jsonTaskState) inspec
 	if run.Occupancy != nil && len(run.Occupancy.Unknown) > 0 {
 		unknown = true
 	}
+	backend := "known"
+	if unknown {
+		backend = "recovery-required"
+	}
+	status := run.Status
+	if (status == StatusRunning || status == RunStopping) && occ.Active && !occ.Live {
+		status = RunInterrupted
+		backend = "recovery-required"
+	}
 	return inspectRunDoc{
 		ID:            run.ID,
-		Status:        run.Status,
+		Status:        status,
 		SchemaVersion: run.SchemaVersion,
 		Occupancy:     occ,
 		Unknown:       unknown,
+		Backend:       backend,
 		Started:       run.Started,
 		Ended:         run.Ended,
 	}

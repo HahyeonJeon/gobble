@@ -2,8 +2,8 @@
 
 Status: D1–D3 are accepted for implementation. The user selected
 [container installation](container-installation.md) as the default beginner
-route, with direct Linux installation for advanced users. Examples below are
-proposed CLI syntax, not commands available in the current implementation.
+route, with direct Linux installation for advanced users. Stop, automatic Resume reconciliation, doctor, init, and the runtime/launcher
+preview are implemented. Actual Docker and Windows journeys remain release gates.
 
 ## D1 — Local installation and Windows
 
@@ -126,10 +126,9 @@ gobble resume ./rnaseq-demo --workspace ./runs/first-run
 | Machine restart | Resume reconciles persisted attempts and Docker state before reuse/rerun. |
 | `run --detach` | Optional separate feature: a supervised local controller persists after CLI exit. Do not imply this exists merely because Docker tasks are detached. |
 
-Choose whether detached execution is a v0.2.0 requirement or a later milestone.
-For the first iteration, foreground execution plus explicit recovery is smaller;
-for a seamless long-running analysis experience, a supervised per-run controller
-is preferable. Neither requires a global always-running service.
+This iteration implements foreground execution and explicit recovery. Detached
+supervision remains a separate milestone; the launcher does not advertise it.
+No global always-running Gobble service is introduced.
 
 Use a per-run control channel or durable stop request addressed to the owner
 lease. Stop must be idempotent and acknowledge whether it was requested, settled,

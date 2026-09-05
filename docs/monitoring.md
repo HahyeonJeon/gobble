@@ -1,9 +1,10 @@
 # Pipeline monitoring
 
-Log availability depends on the executor. Local process logs can grow during
-execution. The current Docker adapter collects logs after a container stops,
-so running Docker tasks do not yet have live log tails in this view. Live Docker
-collection is tracked in the [v0.2.0 review](v0.2.0/review.md).
+The execution controller collects process and Docker stdout/stderr into
+persistent attempt files while tasks run. Docker uses one following log client
+per running task and gathers final logs during settlement. The monitor only
+reads files and state; closing it does not stop the run. Live Docker collection
+has hermetic coverage; the real-runtime CI journey is a separate validation gate.
 
 Start a pipeline as usual. In another terminal, use the same installed Gobble
 command or the same packed runner to watch its workspace:

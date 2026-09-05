@@ -103,7 +103,7 @@ func readSchemaFile(path string) (int, bool, error) {
 func occupiedDefect() []Defect {
 	return []Defect{{
 		Code:    DefectOccupiedWorkspace,
-		Message: "occupied workspace",
+		Message: "run already owned; use gobble watch --workspace DIR to monitor it",
 		Paths:   []string{ControlDir + "/" + RunIdentityFile},
 	}}
 }
@@ -362,4 +362,21 @@ func cloneIOs(in []IO) []IO {
 		out[i] = io
 	}
 	return out
+}
+
+// claimResume proves the old scheduler has exited without releasing its flock.
+// A competing Resume cannot enter between recovery and the new owner commit.
+func claimResume(root, workspace string) (*os.File, *heldLease, []Defect) {
+	if held := heldLeaseFor(workspace); held != nil {
+		if !held.mutator.TryLock() {
+			return nil, nil, occupiedDefect()
+		}
+		if heldLeaseFor(workspace) != held {
+			held.mutator.Unlock()
+			return nil, nil, occupiedDefect()
+		}
+		return held.file, held, nil
+	}
+	lock, d := claimOccupy(root)
+	return lock, nil, d
 }

@@ -150,7 +150,7 @@ func (m *model) header() []string {
 		lines = append(lines, m.style.bad.Render("STALE · "+oneLine(m.err.Error())))
 	} else if s.Run.Unknown {
 		lines = append(lines, m.style.warn.Render("BACKEND UNCONFIRMED · inspect affected work before recovery"))
-	} else if s.Run.Status == "running" && !s.Run.Occupancy.Live {
+	} else if (s.Run.Status == "running" || s.Run.Status == "interrupted") && !s.Run.Occupancy.Live {
 		lines = append(lines, m.style.warn.Render("OWNER NOT LIVE · showing recorded progress"))
 	}
 	if m.comfortable() {

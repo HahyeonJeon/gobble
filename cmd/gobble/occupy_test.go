@@ -115,13 +115,9 @@ func TestRunInspectReleaseResume(t *testing.T) {
 	requireOpSuccess(t, resume, "resume")
 	requireOccupied(t, dir)
 
-	g, err := gobble.Compose(hostpipe.Pipeline())
-	if err != nil {
-		t.Fatalf("Compose() error = %v", err)
-	}
-	libErr := gobble.Resume(t.Context(), g, dir, 0, testOccupyOption(t))
-	occupied := runCLI("resume", "./testdata/hostpipe", "--workspace", dir)
-	requireDomainError(t, occupied, libErr)
+	// The previous scheduler has exited: Resume reconciles without Release.
+	again := runCLI("resume", "./testdata/hostpipe", "--workspace", dir)
+	requireOpSuccess(t, again, "resume")
 }
 
 func TestResumeWorkspaceRefuse(t *testing.T) {
