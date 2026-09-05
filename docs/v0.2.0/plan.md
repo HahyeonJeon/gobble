@@ -142,6 +142,8 @@ Verification on local Linux/amd64 with Go 1.26.0:
 | `go vet ./...` | Passed |
 | Live engine and `tests/install-e2e` suites compiled | Passed; no real Docker execution claimed |
 | Process death during checkpoint publication, then Inspect/Release/Resume | Passed at all five boundaries |
+| Generic Hello from clean commit `ea60c6c`, workspace with spaces and Unicode | Passed Run/Release/Resume/Inspect/Release; output `2`, missing-output rerun on attempt 2, coherent state and two retained generations |
+| Packed Hello from `ea60c6c`, Go absent from PATH, workspace with spaces and Unicode | Passed the same lifecycle and state assertions |
 | Docker controller distribution / Windows / physical power loss | Not executed |
 
 See [checkpoint storage](../checkpoints.md) for the on-disk contract. The next
