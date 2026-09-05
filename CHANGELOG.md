@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+### Terminal monitoring
+
+- Add read-only `watch --workspace DIR` to the generic command and packed
+  runners, with a Bubble Tea dashboard, pipeline graph, global statistics,
+  exact sample selection, attention list, and live stdout/stderr tails.
+- Add coherent `inspect monitor` snapshots and optional copied `TaskDisplay`
+  labels. Bundled pipelines label sample, shared reference, and cohort work.
+  Labels do not change execution commands, artifact paths, or reuse decisions.
+- Keep terminal dependencies in `monitor/tui`; the engine only projects
+  existing controls. Quitting the monitor leaves pipeline execution running.
+- See [Monitoring](docs/monitoring.md) for controls and progress semantics.
+
 ### Multiomics product family
 
 - Current source contains five engineering-supported products: WGS joint

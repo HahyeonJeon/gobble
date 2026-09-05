@@ -9,9 +9,9 @@ import (
 	"os"
 
 	tea "charm.land/bubbletea/v2"
-	"github.com/charmbracelet/x/term"
 	"github.com/HahyeonJeon/gobble"
 	"github.com/HahyeonJeon/gobble/monitor"
+	"github.com/charmbracelet/x/term"
 )
 
 // Watch displays a workspace without owning or controlling its execution.

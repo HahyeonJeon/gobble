@@ -15,6 +15,7 @@ func TestInspectViewsMatchLibrary(t *testing.T) {
 	dir := occupiedWorkspace(t)
 	views := []gobble.View{
 		gobble.ViewRun,
+		gobble.ViewMonitor,
 		gobble.ViewInstances,
 		gobble.ViewErrors,
 		gobble.ViewLogs,

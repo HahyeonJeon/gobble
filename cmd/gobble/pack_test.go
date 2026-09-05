@@ -99,11 +99,11 @@ func TestPackInnerSourceContract(t *testing.T) {
 			t.Fatalf("generated inner imports internal package %q", path)
 		}
 	}
-	if !imports["example.test/pipeline"] || !imports[modulePath] {
+	if !imports["example.test/pipeline"] || !imports[modulePath] || !imports[modulePath+"/monitor/tui"] {
 		t.Fatalf("generated inner imports = %#v", imports)
 	}
 	for path := range imports {
-		if strings.HasPrefix(path, modulePath+"/") {
+		if strings.HasPrefix(path, modulePath+"/") && path != modulePath+"/monitor/tui" {
 			t.Fatalf("generated inner imports Gobble child package %q", path)
 		}
 	}
@@ -118,11 +118,11 @@ func TestPackInnerSourceContract(t *testing.T) {
 			return true
 		}
 		pkg, ok := sel.X.(*ast.Ident)
-		if !ok || pkg.Name != "gobble" {
+		if !ok || (pkg.Name != "gobble" && pkg.Name != "tui") {
 			return true
 		}
 		switch sel.Sel.Name {
-		case "Run", "Resume", "Inspect", "Release":
+		case "Run", "Resume", "Inspect", "Release", "Watch":
 			for _, arg := range call.Args {
 				option, ok := arg.(*ast.CallExpr)
 				if !ok {
@@ -136,7 +136,7 @@ func TestPackInnerSourceContract(t *testing.T) {
 		}
 		return true
 	})
-	for _, name := range []string{"Run", "Resume", "Inspect", "Release"} {
+	for _, name := range []string{"Run", "Resume", "Inspect", "Release", "Watch"} {
 		if !withIdentity[name] {
 			t.Fatalf("generated inner %s omits WithIdentity", name)
 		}
@@ -450,6 +450,10 @@ func main() {
 	if len(os.Args) < 2 {
 		return
 	}
+	if os.Getenv("GOBBLE_TEST_STDIN") == "1" {
+		var key [1]byte
+		if _, err := os.Stdin.Read(key[:]); err != nil || key[0] != 'q' { os.Exit(9) }
+	}
 	switch os.Args[1] {
 	case "jsonl":
 		_, _ = protocol.WriteString("{\"n\":1}\n{\"n\":2}\n")
@@ -474,6 +478,14 @@ func main() {
 	runner, err := buildPackedTrampoline(goBin, cwd, t.TempDir(), inner, true)
 	if err != nil {
 		t.Fatalf("build protocol-test trampoline: %v", err)
+	}
+	for _, args := range [][]string{{"watch", "--workspace=/tmp/workspace"}, {"--workspace=/tmp/workspace", "watch"}} {
+		cmd := exec.Command(runner, args...)
+		cmd.Stdin = strings.NewReader("q")
+		cmd.Env = append(os.Environ(), "GOBBLE_TEST_STDIN=1")
+		if output, err := cmd.CombinedOutput(); err != nil || len(output) != 0 {
+			t.Fatalf("watch terminal forwarding: %v %s", err, output)
+		}
 	}
 	jsonl := runPacked(runner, "jsonl")
 	if jsonl.code != 0 || string(jsonl.stdout) != "{\"n\":1}\n{\"n\":2}\n" || len(jsonl.stderr) != 0 {

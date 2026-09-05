@@ -28,29 +28,29 @@ type loadedMsg struct {
 }
 
 type model struct {
-	workspace string
-	read      readFunc
-	data      *monitor.Dashboard
-	style     theme
-	width     int
-	height    int
-	now       time.Time
-	err       error
-	reading   bool
-	screen    screen
-	previous  screen
+	workspace    string
+	read         readFunc
+	data         *monitor.Dashboard
+	style        theme
+	width        int
+	height       int
+	now          time.Time
+	err          error
+	reading      bool
+	screen       screen
+	previous     screen
 	detailReturn screen
-	sample    string
-	stage     string
-	task      string
-	stageFilter string
-	query       string
-	searchIndex int
-	listIndex   int
-	graphOffset int
-	logOffset   int
-	logStream   string
-	follow      bool
+	sample       string
+	stage        string
+	task         string
+	stageFilter  string
+	query        string
+	searchIndex  int
+	listIndex    int
+	graphOffset  int
+	logOffset    int
+	logStream    string
+	follow       bool
 }
 
 func newModel(workspace string, read readFunc, initial monitor.Snapshot, monochrome bool) (*model, error) {
@@ -203,7 +203,9 @@ func (m *model) key(key tea.KeyPressMsg) tea.Cmd {
 		case "2":
 			m.logStream, m.logOffset = "stderr", 0
 		case "f":
-			if m.follow { m.logOffset = m.logTailOffset() }
+			if m.follow {
+				m.logOffset = m.logTailOffset()
+			}
 			m.follow = !m.follow
 		case "up", "k", "pgup":
 			if m.follow {
@@ -212,7 +214,9 @@ func (m *model) key(key tea.KeyPressMsg) tea.Cmd {
 			m.follow = false
 			m.logOffset = max(0, m.logOffset-3)
 		case "down", "j", "pgdown":
-			if m.follow { m.logOffset = m.logTailOffset() }
+			if m.follow {
+				m.logOffset = m.logTailOffset()
+			}
 			m.follow = false
 			m.logOffset = min(m.logTailOffset(), m.logOffset+3)
 		case "end":

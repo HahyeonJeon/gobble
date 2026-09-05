@@ -5,7 +5,7 @@ package monitor
 type Counts struct {
 	Total, Succeeded, Running, Failed, Pending, Blocked int
 	Skipped, Incomplete, Unknown, Unfinalized, Reused   int
-	Templates, Unexpanded                             int
+	Templates, Unexpanded                               int
 }
 
 func (c *Counts) Add(t Task) {

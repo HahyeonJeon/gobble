@@ -103,7 +103,7 @@ func (r *resolver) buildGraph() *Graph {
 	}
 	for _, t := range r.p.tasks {
 		gt := graphTask{
-			display: cloneDisplay(t.spec.Display),
+			display:   cloneDisplay(t.spec.Display),
 			id:        t.id(),
 			name:      t.spec.Name,
 			module:    t.nearest(nodeModule),

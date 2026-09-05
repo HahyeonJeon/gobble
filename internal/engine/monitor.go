@@ -42,7 +42,7 @@ type monitorEdge struct {
 func inspectMonitorView(workspace string, run jsonRun, doc Document, tasks []jsonTaskState, instance string) ([]byte, []Defect) {
 	out := monitorDoc{
 		SchemaVersion: run.SchemaVersion, Snapshot: run.Snapshot, Pipeline: doc.Name,
-		Run: inspectRunView(workspace, run, tasks),
+		Run:   inspectRunView(workspace, run, tasks),
 		Tasks: make([]monitorTask, 0, len(tasks)), Edges: []monitorEdge{}, Logs: []inspectLog{},
 	}
 	byID := make(map[string]TaskPlan, len(doc.Tasks))

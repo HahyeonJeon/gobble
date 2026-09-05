@@ -56,7 +56,7 @@ type node struct {
 
 // Module is a named group of tasks, branches, and merges.
 type Module struct {
-	display TaskDisplay
+	display  TaskDisplay
 	pipe     *Pipeline
 	anc      []ancestor
 	name     string

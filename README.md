@@ -57,12 +57,13 @@ available in this unreleased branch, not the published `v0.1.0` binary.
 
 The immutable `v0.1.0` tag is the published engine preview. It predates the
 five-product family and does not contain these product packages. The product
-bytes documented here are frozen at commit
+execution baseline is recorded at commit
 `f21a858c66a2d95ce8eff469e6db2bfa3240c3a5` (tree
 `c90dfe77192c2528f8fd54d17f4d9547b09a6998`). No product-family release tag has
-been assigned. This documentation closure changes no executable file. Until
-release notes name these graph generations, use an exact trusted local checkout
-containing that baseline and build the command from the same selected revision.
+been assigned. The monitoring changes add presentation labels without changing
+execution commands or artifact paths. Until release notes name these graph
+generations, use an exact trusted local checkout containing that baseline and
+build the command from the same selected revision.
 Do not expect `v0.1.0` or `@latest` to provide the products.
 
 ## Agent install

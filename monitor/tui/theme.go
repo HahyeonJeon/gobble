@@ -10,7 +10,7 @@ import (
 
 type theme struct {
 	plain, dim, active, good, bad, warn, selected lipgloss.Style
-	monochrome bool
+	monochrome                                    bool
 }
 
 func newTheme(monochrome bool) theme {
@@ -19,12 +19,12 @@ func newTheme(monochrome bool) theme {
 		return theme{plain: base, dim: base, active: base.Bold(true), good: base, bad: base.Bold(true), warn: base, selected: base.Reverse(true), monochrome: true}
 	}
 	return theme{
-		plain: base.Foreground(lipgloss.Color("#DBE8EC")),
-		dim: base.Foreground(lipgloss.Color("#8FA7B3")),
-		active: base.Foreground(lipgloss.Color("#86CEDB")),
-		good: base.Foreground(lipgloss.Color("#8AC9AD")),
-		bad: base.Foreground(lipgloss.Color("#F19BAC")),
-		warn: base.Foreground(lipgloss.Color("#D5B78D")),
+		plain:    base.Foreground(lipgloss.Color("#DBE8EC")),
+		dim:      base.Foreground(lipgloss.Color("#8FA7B3")),
+		active:   base.Foreground(lipgloss.Color("#86CEDB")),
+		good:     base.Foreground(lipgloss.Color("#8AC9AD")),
+		bad:      base.Foreground(lipgloss.Color("#F19BAC")),
+		warn:     base.Foreground(lipgloss.Color("#D5B78D")),
 		selected: base.Foreground(lipgloss.Color("#DBE8EC")).Background(lipgloss.Color("#25414B")),
 	}
 }

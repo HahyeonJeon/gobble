@@ -24,9 +24,10 @@ const (
 // Inspect returns one read-only JSON or JSONL view of workspace.
 //
 // view is run, instances, errors, logs, timing, dag, lineage,
-// remaining, reuse, or identity. Unknown view is not-found. Empty instance
+// remaining, reuse, identity, or monitor. Unknown view is not-found. Empty instance
 // selects every reserved identity. A non-empty instance selects one
-// reserved identity. Each object or JSONL record includes schema_version.
+// reserved identity. For monitor, instance selects logs while task and graph
+// facts remain global. Each view or JSONL record includes schema_version.
 // Inspect does not occupy, create, or rewrite control files.
 // Omitted identity derives the module process identity from the workspace
 // identity mode. A supplied [WithIdentity] option is used instead.

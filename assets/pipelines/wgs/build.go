@@ -402,7 +402,7 @@ func sampleTaskParent(parent modules.Parent, sample Sample, lane string) modules
 }
 
 func cohortTaskParent(parent modules.Parent, cohort string) modules.Parent {
-	return parameterizedParent{parent: parent, params: []gobble.Param{{Name: "cohort", Value: cohort}}}
+	return parameterizedParent{parent: modules.WithDisplay(parent, gobble.TaskDisplay{Scope: gobble.DisplayCohort}), params: []gobble.Param{{Name: "cohort", Value: cohort}}}
 }
 
 func sampleIdentity(sample Sample) string {
