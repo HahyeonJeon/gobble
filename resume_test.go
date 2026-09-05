@@ -160,7 +160,7 @@ func TestResumeGraphDiffChangeClasses(t *testing.T) {
 		{
 			name:    "resources-only Unchanged",
 			setup:   func(t *testing.T) string { return readyReleasedRun(t, processCopyPipeline) },
-			resume:  processCopyResourcePipelineHeavy,
+			resume:  processCopyChangedResourcesPipeline,
 			ident:   "copy",
 			want:    "Unchanged",
 			wantDec: "reused",
@@ -447,7 +447,7 @@ func TestResumeFailedAttemptKeepsPriorDestThenReplace(t *testing.T) {
 
 func TestResumeResourceOnlyDoesNotRerun(t *testing.T) {
 	dir := readyReleasedRun(t, processCopyPipeline)
-	if err := gobble.Resume(t.Context(), mustCompose(processCopyResourcePipelineHeavy)(t), dir, 0, testOccupyOption(t)); err != nil {
+	if err := gobble.Resume(t.Context(), mustCompose(processCopyChangedResourcesPipeline)(t), dir, 0, testOccupyOption(t)); err != nil {
 		t.Fatalf("Resume() error = %v", err)
 	}
 	reuse := mustInspectJSONL(t, dir, "reuse", "")
@@ -762,7 +762,8 @@ func processCopyOtherInputPipeline() *gobble.Pipeline {
 	return p
 }
 
-func processCopyResourcePipelineHeavy() *gobble.Pipeline {
+// Keep the resource-only change within even a single-CPU test host budget.
+func processCopyChangedResourcesPipeline() *gobble.Pipeline {
 	p := gobble.NewPipeline("copy")
 	in := p.AddInput("reads", gobble.PathSpec{Dir: gobble.Dir("in"), Base: "sample", Ext: ".txt"})
 	p.AddTask(gobble.TaskSpec{
@@ -774,7 +775,7 @@ func processCopyResourcePipelineHeavy() *gobble.Pipeline {
 			{Name: "pwd", Spec: gobble.PathSpec{Dir: gobble.Dir("out"), Base: "pwd", Ext: ".txt"}},
 		},
 		Params:    []gobble.Param{{Name: "mode", Value: "fast"}},
-		Resources: gobble.Resources{CPU: 2, Memory: "1g"},
+		Resources: gobble.Resources{CPU: 0.5, Memory: "16m"},
 	})
 	return p
 }
