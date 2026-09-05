@@ -42,13 +42,27 @@ type Job struct {
 	CPU         float64
 	Memory      string
 	MemoryBytes int64
+	Submission  *Submission
+	// Record must durably acknowledge preparation and the created runtime ID.
+	// Docker never starts a container until this callback succeeds.
+	Record func(context.Context, Handle, Report) error
+}
+
+// Submission identifies an attempt before Docker creates or starts it.
+type Submission struct {
+	Token    string `json:"token"`
+	Endpoint string `json:"endpoint,omitempty"`
+	DaemonID string `json:"daemon_id,omitempty"`
+	Created  bool   `json:"created,omitempty"`
 }
 
 // Handle identifies a submitted backend job.
 type Handle struct {
-	Identity  string
-	Backend   string
-	RuntimeID string
+	Identity   string
+	Backend    string
+	RuntimeID  string
+	Isolate    string
+	Submission *Submission
 }
 
 // Report is an executor observation. Adapters leave Published false.
@@ -61,7 +75,10 @@ type Report struct {
 	Message     string
 	Reason      string
 	Running     bool
-	Published   bool
+	// NeedsRemoval requires a removal barrier before a new attempt may start,
+	// even if an outstanding start has not made the container run yet.
+	NeedsRemoval bool
+	Published    bool
 }
 
 // Executor submits, observes, cancels, and reconciles backend jobs.
@@ -85,6 +102,9 @@ type local struct {
 	process *Process
 	docker  *Docker
 }
+
+// DurableDocker marks the built-in two-phase Docker submission protocol.
+func (l *local) DurableDocker() bool { return true }
 
 func (l *local) Submit(ctx context.Context, job Job) (Handle, Report, error) {
 	return l.pickImage(job.Image).Submit(ctx, job)

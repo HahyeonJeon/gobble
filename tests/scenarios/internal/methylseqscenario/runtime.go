@@ -16,6 +16,7 @@ import (
 	"github.com/HahyeonJeon/gobble/assets/pipelines/methylseq"
 	executor "github.com/HahyeonJeon/gobble/internal/engine/exec"
 	pc "github.com/HahyeonJeon/gobble/tests/internal/plancheck"
+	"github.com/HahyeonJeon/gobble/tests/scenarios/internal/dockerfixture"
 )
 
 // Runtime executes the real composed Methyl graph through the public
@@ -48,8 +49,10 @@ func NewRuntime(t *testing.T, config methylseq.Config) *Runtime {
 		t.Fatalf("IdentityFromBuildInfo: %v", err)
 	}
 	r.docker = newFakeDocker(pc.AllTasks(t, raw), r)
+	t.Setenv("DOCKER_HOST", "")
+	t.Setenv("DOCKER_CONTEXT", "")
 	previous := executor.DockerCLI
-	executor.DockerCLI = r.docker.call
+	executor.DockerCLI = dockerfixture.Lifecycle(r.docker.call)
 	t.Cleanup(func() { executor.DockerCLI = previous })
 	stageRuntimeInputs(t, r.workspace, samples, config)
 	return r

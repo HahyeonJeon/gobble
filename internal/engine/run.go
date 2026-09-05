@@ -45,6 +45,9 @@ const (
 
 const pollInterval = 20 * time.Millisecond
 
+// Docker observations invoke a client process; avoid a 50 Hz loop per task.
+const dockerPollInterval = 500 * time.Millisecond
+
 const settlementBound = 30 * time.Second
 
 var errEngineBound = errors.New("engine bound")
@@ -249,6 +252,7 @@ type startEvent struct {
 	ident  string
 	handle exec.Handle
 	sub    exec.Report
+	ack    chan error
 }
 
 type settlementResult struct {
@@ -319,12 +323,15 @@ func (s *sched) loop(ctx context.Context, n int) []Defect {
 				backend = executorDocker
 			}
 			h := exec.Handle{Identity: r.ID, Backend: backend, RuntimeID: r.RuntimeID}
-			handles[r.ID] = h
 			if st := s.tasks[r.ID]; st != nil {
 				st.RuntimeID = r.RuntimeID
+				if durable, ok := backendHandle(s.workspace, r.ID, st); ok {
+					h = durable
+				}
 				st.Status = StatusRunning
 				s.notePersist(s.persistControl())
 			}
+			handles[r.ID] = h
 		}
 		if r.Canceled {
 			if h, ok := handles[r.ID]; ok {
@@ -355,7 +362,9 @@ func (s *sched) loop(ctx context.Context, n int) []Defect {
 			if id == "" {
 				break
 			}
-			s.launch(ctx, id, starts, reports)
+			if !s.launch(ctx, id, starts, reports) {
+				break
+			}
 			inflight[id] = true
 			running++
 		}
@@ -366,11 +375,17 @@ func (s *sched) loop(ctx context.Context, n int) []Defect {
 			select {
 			case st := <-starts:
 				if !inflight[st.ident] {
+					acknowledgeStart(st, context.Canceled)
 					continue
 				}
-				handles[st.ident] = st.handle
+				if st.handle.RuntimeID != "" {
+					handles[st.ident] = st.handle
+				}
 				s.persistStart(st)
-				settleHandle(st.ident, st.handle)
+				acknowledgeStart(st, context.Canceled)
+				if st.handle.RuntimeID != "" {
+					settleHandle(st.ident, st.handle)
+				}
 			case r := <-reports:
 				handleCanceledReport(r)
 			case result := <-settled:
@@ -394,10 +409,14 @@ func (s *sched) loop(ctx context.Context, n int) []Defect {
 		select {
 		case st := <-starts:
 			if !inflight[st.ident] {
+				acknowledgeStart(st, context.Canceled)
 				continue
 			}
-			handles[st.ident] = st.handle
+			if st.handle.RuntimeID != "" {
+				handles[st.ident] = st.handle
+			}
 			s.persistStart(st)
+			acknowledgeStart(st, s.persist)
 		case r := <-reports:
 			if !inflight[r.ID] {
 				continue
@@ -437,6 +456,14 @@ func (s *sched) persistStart(st startEvent) {
 	if task == nil {
 		return
 	}
+	if st.handle.Submission != nil {
+		cp := *st.handle.Submission
+		task.Submission = &cp
+		if !cp.Created {
+			s.notePersist(s.persistControl())
+			return
+		}
+	}
 	if st.handle.RuntimeID == "" || st.sub.RuntimeID == "" {
 		s.markUnknown(st.ident, "empty runtime id")
 		return
@@ -448,6 +475,12 @@ func (s *sched) persistStart(st startEvent) {
 		task.ImageDigest = st.sub.ImageDigest
 	}
 	s.notePersist(s.persistControl())
+}
+
+func acknowledgeStart(st startEvent, err error) {
+	if st.ack != nil {
+		st.ack <- err
+	}
 }
 
 func (s *sched) markIncomplete(ident string) {
@@ -511,7 +544,7 @@ func (s *sched) reapLive() {
 			s.markUnknown(ident, err.Error())
 			continue
 		}
-		if r.Running {
+		if r.Running || r.NeedsRemoval {
 			if err := settle.cancelHandle(ex, h); err != nil {
 				s.markUnknown(ident, err.Error())
 				continue
@@ -524,7 +557,7 @@ func (s *sched) reapLive() {
 					stopped = true
 					break
 				}
-				if !pr.Running {
+				if !pr.Running && !pr.NeedsRemoval {
 					stopped = true
 					break
 				}
@@ -558,6 +591,15 @@ func backendHandle(workspace, ident string, st *jsonTaskState) (exec.Handle, boo
 		} else {
 			backend = executorProcess
 		}
+	}
+	if st.Submission != nil && backend == executorDocker {
+		isolate, _, err := containedRel(workspace, isolateRel(taskPlanFromState(*st))+"/work", false)
+		if err != nil {
+			// Keep a handle that fails closed rather than treating it as absent.
+			isolate = ""
+		}
+		return exec.Handle{Identity: ident, Backend: backend, RuntimeID: st.RuntimeID,
+			Isolate: isolate, Submission: st.Submission}, true
 	}
 	if st.RuntimeID != "" {
 		return exec.Handle{Identity: ident, Backend: backend, RuntimeID: st.RuntimeID}, true
@@ -661,7 +703,7 @@ func settleBackend(ex exec.Executor, settle *settlement, ident string, h exec.Ha
 			out <- settlementResult{ident: ident, unknown: true, message: err.Error()}
 			return
 		}
-		if !report.Running {
+		if !report.Running && !report.NeedsRemoval {
 			out <- settlementResult{ident: ident}
 			return
 		}
@@ -929,7 +971,7 @@ func (s *sched) taskByID(id string) (TaskPlan, bool) {
 	return TaskPlan{}, false
 }
 
-func (s *sched) launch(ctx context.Context, ident string, starts chan startEvent, reports chan report) {
+func (s *sched) launch(ctx context.Context, ident string, starts chan startEvent, reports chan report) bool {
 	if s.resume != nil {
 		s.beginResumeAttempt(ident)
 	}
@@ -938,7 +980,12 @@ func (s *sched) launch(ctx context.Context, ident string, starts chan startEvent
 	st.Reason = "unknown-backend"
 	st.Started = time.Now().UTC().Format(time.RFC3339Nano)
 	st.RuntimeID = ""
+	st.Submission = nil
+	ex := s.executor()
 	task, _ := s.taskByIdent(ident)
+	if durable, ok := ex.(interface{ DurableDocker() bool }); ok && durable.DurableDocker() && task.Image != "" {
+		st.Submission = &exec.Submission{Token: newOccupancyID()}
+	}
 	if st != nil {
 		task.Attempt = st.Attempt
 		task.Instance = st.Instance
@@ -950,14 +997,23 @@ func (s *sched) launch(ctx context.Context, ident string, starts chan startEvent
 	}
 	s.budget.occupy(task)
 	s.notePersist(s.persistControl())
+	if s.persist != nil {
+		s.budget.release(task)
+		return false
+	}
 	ws := s.workspace
-	ex := s.executor()
+	var submission *exec.Submission
+	if st.Submission != nil {
+		cp := *st.Submission
+		submission = &cp
+	}
 	go func() {
-		s.runJob(ctx, ws, task, ex, starts, reports)
+		s.runJob(ctx, ws, task, ex, submission, starts, reports)
 	}()
+	return true
 }
 
-func (s *sched) runJob(ctx context.Context, workspace string, task TaskPlan, ex exec.Executor, starts chan startEvent, reports chan report) {
+func (s *sched) runJob(ctx context.Context, workspace string, task TaskPlan, ex exec.Executor, submission *exec.Submission, starts chan startEvent, reports chan report) {
 	applyReservedDefaults(&task)
 	ident := reservedIdentity(task)
 	rel := isolateRel(task)
@@ -1006,6 +1062,23 @@ func (s *sched) runJob(ctx context.Context, workspace string, task TaskPlan, ex 
 		CPU:         task.Resources.CPU,
 		Memory:      task.Resources.Memory,
 		MemoryBytes: memBytes,
+		Submission:  submission,
+	}
+	if submission != nil {
+		job.Record = func(ctx context.Context, h exec.Handle, sub exec.Report) error {
+			ack := make(chan error, 1)
+			select {
+			case starts <- startEvent{ident: ident, handle: h, sub: sub, ack: ack}:
+			case <-ctx.Done():
+				return ctx.Err()
+			}
+			select {
+			case err := <-ack:
+				return err
+			case <-ctx.Done():
+				return ctx.Err()
+			}
+		}
 	}
 	if task.Image == "" && len(argv) > 0 {
 		resolved, err := exec.ResolveArgv0(argv[0], task.Env)
@@ -1027,6 +1100,11 @@ func (s *sched) runJob(ctx context.Context, workspace string, task TaskPlan, ex 
 	h, sub, err := submitJob(ctx, workspace, ex, job)
 	if err != nil {
 		r.Message = err.Error()
+		r.Unknown = h.Submission != nil
+		if h.RuntimeID != "" {
+			r.RuntimeID = h.RuntimeID
+			r.Unknown = true
+		}
 		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 			r.Canceled = true
 		}
@@ -1045,7 +1123,9 @@ func (s *sched) runJob(ctx context.Context, workspace string, task TaskPlan, ex 
 	}
 	r.RuntimeID = sub.RuntimeID
 	r.ImageDigest = sub.ImageDigest
-	starts <- startEvent{ident: ident, handle: h, sub: sub}
+	if submission == nil {
+		starts <- startEvent{ident: ident, handle: h, sub: sub}
+	}
 	for {
 		pr, perr := ex.Poll(ctx, h)
 		if perr != nil {
@@ -1062,7 +1142,11 @@ func (s *sched) runJob(ctx context.Context, workspace string, task TaskPlan, ex 
 			return
 		}
 		if pr.Running {
-			timer := time.NewTimer(pollInterval)
+			interval := pollInterval
+			if task.Image != "" {
+				interval = dockerPollInterval
+			}
+			timer := time.NewTimer(interval)
 			select {
 			case <-timer.C:
 			case <-ctx.Done():

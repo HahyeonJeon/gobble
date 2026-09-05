@@ -13,12 +13,16 @@ workspace are trusted. Docker runs selected tasks with network disabled and the
 caller's UID/GID, but those flags are conveniences, not a sandbox. A hostile
 pipeline or image is outside the threat model.
 
-Run and Resume require a usable local Docker client and a reachable daemon. The
-engine invokes Docker with a client environment containing only
-`PATH=/usr/bin:/bin`. The command `env -i PATH=/usr/bin:/bin docker info` must
-succeed for the local user running Gobble. The task-container `--network=none`
-flag is applied by `docker run`. It does not disable registry access used by the
-Docker client before container launch.
+Docker-backed tasks require a usable local Docker client and reachable daemon.
+The engine honors the user's Docker context/configuration and selects a local
+Unix-socket endpoint. It records that endpoint and the daemon ID, then keeps
+submission and recovery on that endpoint. Run `docker info` as the local user
+who will run Gobble. See [Docker execution](docker-execution.md).
+
+The Docker client receives selected host configuration variables; task `Env`
+values are passed only to the task container. Its `--network=none` flag is set
+at container creation. That flag does not disable registry access used to
+prepare the selected image. Process-only pipelines do not require Docker.
 
 Inputs, outputs, task isolates, state, and logs stay in local caller-owned
 files. Gobble adds no account, upload, telemetry, remote analysis, object store,
@@ -189,7 +193,10 @@ Occupancy remains active, and Resume is refused until a subsequent Release
 attempt successfully reconciles the backend and closes occupancy. Leave that
 state intact while restoring observability. Do not relabel the identity as an
 ordinary failed task, delete controls, force occupancy closed, or signal an
-unproved PID.
+unproved PID. For new Docker attempts, Release checks the recorded daemon and
+container ownership and removes the owned container before authorizing another
+attempt. Merely observing an unstarted container is not sufficient when a start
+request could still be in flight.
 
 File destinations must be regular files. Every Group member must be regular.
 A Tree requires its directory and root manifest. Resume re-evaluates `When`,

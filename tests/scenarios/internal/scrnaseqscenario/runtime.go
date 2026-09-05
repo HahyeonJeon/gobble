@@ -20,6 +20,7 @@ import (
 	"github.com/HahyeonJeon/gobble/assets/pipelines/scrnaseq"
 	executor "github.com/HahyeonJeon/gobble/internal/engine/exec"
 	pc "github.com/HahyeonJeon/gobble/tests/internal/plancheck"
+	"github.com/HahyeonJeon/gobble/tests/scenarios/internal/dockerfixture"
 )
 
 // Runtime executes the pipeline-owned scRNA graph through the public
@@ -72,8 +73,10 @@ func newRuntime(t *testing.T, config scrnaseq.Config, workspace string, stage bo
 		t.Fatalf("IdentityFromBuildInfo: %v", err)
 	}
 	r.docker = newFakeDocker(pc.AllTasks(t, pc.MustPlanJSON(t, pipe)), r)
+	t.Setenv("DOCKER_HOST", "")
+	t.Setenv("DOCKER_CONTEXT", "")
 	previous := executor.DockerCLI
-	executor.DockerCLI = r.docker.call
+	executor.DockerCLI = dockerfixture.Lifecycle(r.docker.call)
 	t.Cleanup(func() { executor.DockerCLI = previous })
 	if stage {
 		stageInputs(t, r.workspace, samples, config)

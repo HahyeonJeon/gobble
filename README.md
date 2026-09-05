@@ -29,8 +29,10 @@ work, records what happened, and reuses compatible completed tasks when you resu
 
 > **Development preview:** this branch contains the pipeline family and terminal
 > monitor planned for the next release. Published `v0.1.0` predates those features.
-> Current execution support is **Linux/amd64**. Windows support and simpler
-> installation are being designed for [v0.2.0](docs/v0.2.0/design.md).
+> Current execution support is **Linux/amd64**. The accepted v0.2.0 default is
+> **Docker-based installation and agent-driven authoring**, with direct Linux
+> installation for advanced users. The launcher and Windows route are still
+> being implemented; see the [installation design](docs/v0.2.0/container-installation.md).
 
 ## Get started
 
@@ -135,9 +137,11 @@ For a fully completed unchanged run, there may be nothing to resume.
 
 If backend state is unknown, restore Docker access and follow the
 [recovery guide](docs/operations.md#recovery). Closing the run terminal is not a
-supported detached-execution mode. State is now published as
-[complete checkpoints](docs/checkpoints.md); recovery of a Docker submission
-interrupted before its runtime ID is recorded remains v0.2.0 work.
+supported detached-execution mode. State is published as
+[complete checkpoints](docs/checkpoints.md). Docker submissions now record the
+owning engine and container ID before starting work; see
+[Docker execution and recovery](docs/docker-execution.md) for the tested
+boundaries and remaining live validation.
 
 ## Share a pipeline
 

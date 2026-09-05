@@ -45,9 +45,9 @@ jobs:
       - name: Resolve dependencies
         run: go mod download all
       - name: Require engine-compatible Docker access
-        run: env -i PATH=/usr/bin:/bin docker info
-      - name: Run real Docker publication and failure tests
+        run: docker info
+      - name: Run real Docker publication, failure, and controller recovery tests
         env:
           GOTOOLCHAIN: local
           GOPROXY: off
-        run: go test -tags=live -count=1 -run '^TestRunDocker(Publishes|BadImageContained)$' ./internal/engine
+        run: go test -tags=live -count=1 -run '^(TestRunDocker(Publishes|BadImageContained)|TestDockerLiveControllerDeathRecovery)$' ./internal/engine

@@ -110,13 +110,13 @@ local results.
 
 ## Checkpoint publication delivery record (batch 2a)
 
-The recommended D2 and D3 designs are approved. D1's originally approved WSL
-route has a follow-up [container installation proposal](container-installation.md)
-for deciding the default beginner experience after the user's Docker question.
+The recommended D2 and D3 designs are approved. The user subsequently accepted
+[Docker installation](container-installation.md) as the default beginner route,
+with direct Linux installation for advanced users.
 
-Batch 2 is split at its two independent failure boundaries. **2a, checkpoint
-publication, is implemented. 2b, external-job submission recovery, is pending.**
-Batch 2 as a whole is not complete until both pass their scenarios.
+Batch 2 is split at its two independent failure boundaries. This section records
+2a, checkpoint publication. The later 2b implementation record follows below;
+the real Docker release gate remains separate from hermetic tests.
 
 Implemented in 2a:
 
@@ -146,8 +146,53 @@ Verification on local Linux/amd64 with Go 1.26.0:
 | Packed Hello from `ea60c6c`, Go absent from PATH, workspace with spaces and Unicode | Passed the same lifecycle and state assertions |
 | Docker controller distribution / Windows / physical power loss | Not executed |
 
-See [checkpoint storage](../checkpoints.md) for the on-disk contract. The next
-engineering step is durable submission intent and Docker ownership/daemon
-reconciliation, followed by Stop/Resume command simplification. The image,
-launcher, and primary installation route remain subject to the concrete D1
-follow-up; a checkpoint change alone does not deliver a Docker distribution.
+See [checkpoint storage](../checkpoints.md) for the on-disk contract. Neither
+checkpoint changes nor the Docker submission protocol alone delivers the image,
+native launcher, or a validated Windows installation.
+
+## Docker submission delivery record (batch 2b)
+
+The user has confirmed the installation contract: Docker plus a small launcher
+is the default for agent-driven pipeline design and execution; direct Linux
+CLI/library installation remains the advanced route. These routes share the
+engine rather than maintaining separate schedulers or pipeline formats.
+
+Implemented:
+
+- Durable attempt tokens and Docker endpoint/daemon identity. The scheduler
+  acknowledges a created container ID in a complete checkpoint before the
+  adapter may issue start. Failed admission checkpoints prevent all submission.
+- Separate Docker create/start operations, deterministic names and ownership
+  labels, bound endpoint selection, and refusal on daemon/ownership mismatch.
+- Reconciliation fences a possibly outstanding start by removing the exact
+  owned container. An observation error is not treated as container absence.
+- Recovery can retry removal of a container retained after a successful task,
+  preserving its successful outcome. This has a regression test.
+- New handles use controller-local log paths. Docker polling uses 500 ms rather
+  than the process adapter's 20 ms interval. Continuous logs remain batch 3.
+- A shared Docker lifecycle fixture for all five assay scenario suites. Assay
+  command matching, input facts, and expected outputs remain in their owners;
+  fixture execution occurs at start, not create.
+- Separate-process death/recovery cases at five submission boundaries, plus
+  acknowledgment failure, daemon replacement, lost observation, and removal
+  failure tests. Real-Docker controller death tests are added to the CI smoke
+  job and compile locally; execution requires an actual Docker host.
+
+See [Docker execution](../docker-execution.md) for the protocol and limitations.
+Verification on local Linux/amd64 with Go 1.26.0:
+
+| Check | Result |
+|---|---|
+| `go test -count=1 -timeout 5m ./...` | Passed: 79 packages with tests |
+| Final `go test -race -count=1 ./internal/engine/...` | Passed after separating actual running state from the removal barrier |
+| `go vet ./...` | Passed |
+| Live engine and installed-runner suites compiled with `-tags=live -run '^$'` | Passed; compilation only |
+| Local documentation links and `git diff --check` | Passed |
+| Real Docker, image builds, Docker Desktop, Windows | Not executed: no Docker daemon or Windows host in this environment |
+
+A daemon-side late create can leave a recorded, unstarted container; continuous
+cleanup of those leftovers is still pending. Stable controller identity,
+Docker Desktop mount translation, Stop/Resume UX, live logs, doctor/init, and
+the runtime image/launcher remain subsequent implementation work. Real Docker
+and Windows results must be obtained before promoting installation support in
+the README.

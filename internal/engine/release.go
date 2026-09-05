@@ -310,8 +310,20 @@ func retryDockerLeftover(workspace string, ex exec.Executor, settle *settlement,
 		// failure does not make that disposition unknown again.
 		return true
 	}
-	if r.Running {
-		return false
+	if r.Running || r.NeedsRemoval {
+		if h.Submission == nil {
+			return false
+		}
+		// A durable submission can require removal as a barrier even when its
+		// task outcome is already terminal. Retry that cleanup instead of
+		// leaving every later Release stuck on the same retained container.
+		if err := settle.cancelHandle(ex, h); err != nil {
+			return false
+		}
+		r, err = settle.poll(ex, h)
+		if err != nil || r.Running || r.NeedsRemoval {
+			return false
+		}
 	}
 	st.RuntimeID = r.RuntimeID
 	return true
@@ -361,7 +373,7 @@ func reconcileIdentity(workspace string, ex exec.Executor, settle *settlement, r
 		st.Error = &jsonTaskErr{Unit: ident, Message: err.Error()}
 		return false
 	}
-	if r.Running {
+	if r.Running || r.NeedsRemoval {
 		if err := settle.cancelHandle(ex, h); err != nil {
 			st.Status = StatusUnknown
 			st.Reason = "unknown-backend"
@@ -376,7 +388,7 @@ func reconcileIdentity(workspace string, ex exec.Executor, settle *settlement, r
 				st.Error = &jsonTaskErr{Unit: ident, Message: perr.Error()}
 				return false
 			}
-			if !pr.Running {
+			if !pr.Running && !pr.NeedsRemoval {
 				applyDockerStoppedReport(st, backend, pr)
 				return true
 			}
@@ -393,7 +405,7 @@ func reconcileIdentity(workspace string, ex exec.Executor, settle *settlement, r
 }
 
 func applyDockerStoppedReport(st *jsonTaskState, backend string, r exec.Report) {
-	if backend != executorDocker || r.Running {
+	if backend != executorDocker || r.Running || r.NeedsRemoval {
 		return
 	}
 	st.RuntimeID = r.RuntimeID

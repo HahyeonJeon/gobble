@@ -1,12 +1,13 @@
-# Proposal: run Gobble itself in Docker
+# Decision: Docker is the default installation
 
-Status: concrete follow-up to D1, pending agreement on the primary installation
-route. This is an implementation design, not an available release image or
-installation command.
+Status: accepted by the user. The default beginner route is a containerized
+runtime used through a coding agent and a small Gobble launcher. Direct Linux
+installation remains supported for advanced users. Release images, launchers,
+and platform support claims still require implementation and validation.
 
 ## User experience
 
-Recommend a **containerized Gobble runtime with a small native launcher** for
+Use a **containerized Gobble runtime with a small native launcher** for
 the beginner path. A Windows user installs Docker Desktop and the launcher,
 then works in PowerShell or their coding agent's terminal. The versioned runtime
 image contains Gobble, compatible Go, Git, and the Docker client. No manual Go

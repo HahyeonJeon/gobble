@@ -1,31 +1,30 @@
 # v0.2.0 design decisions
 
-Status: the user approved the recommended D1–D3 direction. D2 and D3 are accepted
-for implementation. Following the user's question about running Gobble itself
-in Docker, D1 has a concrete [container installation proposal](container-installation.md)
-for selecting the primary beginner installation route. Examples below are
+Status: D1–D3 are accepted for implementation. The user selected
+[container installation](container-installation.md) as the default beginner
+route, with direct Linux installation for advanced users. Examples below are
 proposed CLI syntax, not commands available in the current implementation.
 
 ## D1 — Local installation and Windows
 
 | Option | User experience | Engineering cost / limitation |
 |---|---|---|
-| **A. Windows through WSL2; Linux execution (recommended)** | A Windows bootstrap guides WSL2 and Docker Desktop setup, then runs Gobble and the coding agent in the same WSL distribution. | Retains Linux process/locking semantics. Requires real Windows/WSL validation; Windows ARM and native PowerShell execution are separate claims. |
+| A. Windows through a WSL distribution | Gobble and the coding agent run in the same user-managed WSL distribution. | An optional advanced arrangement, not the beginner installation. |
 | B. Native Windows CLI plus Docker Desktop | Gobble runs directly in PowerShell. | Requires Windows process ownership, locking, paths, signals, file handles, packed-runner IPC, terminal testing, and architecture handling. |
-| C. Gobble controller in Docker everywhere | A wrapper launches a development/runtime container containing Gobble and Go. | Shared Docker socket, host path mapping, persistent controller identity, and TUI attachment become part of normal use. A container image alone does not solve these. |
+| **C. Gobble controller in Docker (accepted default)** | A native launcher starts a versioned runtime containing Gobble and Go; the user's agent works on an ordinary local project. | The launcher/runtime must handle Docker selection, path mapping, persistent identity, terminal attachment, and recovery. |
 
-Recommend A for v0.2.0, while keeping runtime adapters replaceable. The Windows
-promise must say "Windows via WSL2", and the workspace should be on the WSL
-Linux filesystem. Installation should diagnose required restarts, missing
-virtualization, daemon availability, and permissions before the first analysis.
+Use C as the default and preserve direct Linux CLI/library installation for
+advanced users. The two routes share pipeline authoring and execution semantics.
+Installation diagnoses virtualization/backend setup, daemon availability, mount
+access, and permissions before the first analysis.
 
-**Follow-up:** A was the original recommendation for the smallest change to the
-existing Linux engine. C is technically feasible and can give beginners a
+**Decision history:** A was the original recommendation for the smallest change
+to the existing Linux engine. The user selected C to give beginners a
 smaller host setup: Docker Desktop and a launcher, with Go and Gobble inside a
 versioned Linux container. WSL2 is not a Gobble requirement. Docker Desktop can
 use WSL2 without the user installing a separate Ubuntu distribution; supported
-Windows configurations can instead use the Hyper-V backend. See the follow-up
-proposal before finalizing the primary installation path. Neither an image nor
+Windows configurations can instead use the Hyper-V backend. See the accepted
+installation design for the delivery gates. Neither an image nor
 Windows support is published or validated yet.
 
 Proposed setup roles:
@@ -88,11 +87,12 @@ complete new generation. Partial future generations are never interpreted as
 completed work. Changing schemas requires an explicit migration path for existing
 workspaces; old state remains available for rollback and diagnosis.
 
-The checkpoint publication portion is implemented in this branch. See
-[checkpoint storage](../checkpoints.md) for its compatibility boundary and
-validation. Automatic rollback is deliberately unavailable: a previous state
-cannot prove that later external jobs did not start. Submission intent and
-backend reconciliation remain the next part of D2.
+Checkpoint publication and the Docker create/record/start protocol are
+implemented in this branch. See [checkpoint storage](../checkpoints.md) and
+[Docker execution](../docker-execution.md) for their compatibility and
+validation boundaries. Automatic rollback is deliberately unavailable: a
+previous state cannot prove that later external jobs did not start. Real Docker
+recovery and containerized installation gates remain unexecuted locally.
 
 **Backend recovery is part of this decision.** A checkpoint alone cannot account
 for a container started after the last commit. Persist an execution intent before
