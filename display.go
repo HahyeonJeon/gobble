@@ -29,6 +29,12 @@ func cloneDisplay(d TaskDisplay) TaskDisplay {
 	return d
 }
 
+// WithDefaults fills empty fields from defaults and copies sample labels.
+// Explicit shared or cohort scope clears inherited sample ownership.
+func (d TaskDisplay) WithDefaults(defaults TaskDisplay) TaskDisplay {
+	return inheritDisplay(defaults, d)
+}
+
 func inheritDisplay(parent, child TaskDisplay) TaskDisplay {
 	result := cloneDisplay(parent)
 	if child.Stage != "" {

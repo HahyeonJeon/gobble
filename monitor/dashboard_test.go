@@ -105,3 +105,12 @@ func TestScatterInstancesShareAuthoredPosition(t *testing.T) {
 		t.Fatal("duplicate identity accepted")
 	}
 }
+
+func TestSkippedTemplateIsNotPendingExpansion(t *testing.T) {
+	var counts Counts
+	counts.Add(Task{Template: true, Status: "skipped"})
+	counts.Add(Task{Status: "succeeded"})
+	if counts.Unexpanded != 0 || counts.SkippedTemplates != 1 || counts.Total != 1 || counts.Successful() {
+		t.Fatalf("skipped template misreported: %+v", counts)
+	}
+}

@@ -117,7 +117,7 @@ func countsStatus(c monitor.Counts) string {
 		return "running"
 	case c.Successful():
 		return "succeeded"
-	case c.Skipped > 0 && c.Pending == 0 && c.Unexpanded == 0:
+	case (c.Skipped > 0 || c.SkippedTemplates > 0) && c.Pending == 0 && c.Unexpanded == 0:
 		return "skipped"
 	default:
 		return "not-started"
@@ -128,7 +128,7 @@ func nodeStatus(c monitor.Counts) string {
 	if c.Total == 0 && c.Templates == 0 {
 		return "No owned work"
 	}
-	if c.Total == 0 && c.Unexpanded == 0 {
+	if c.Total == 0 && c.Unexpanded == 0 && c.SkippedTemplates == 0 {
 		return "No executable instances"
 	}
 	parts := []string{}
@@ -139,6 +139,9 @@ func nodeStatus(c monitor.Counts) string {
 	}
 	if c.Unexpanded > 0 {
 		parts = append(parts, fmt.Sprintf("%d expanding", c.Unexpanded))
+	}
+	if c.SkippedTemplates > 0 {
+		parts = append(parts, fmt.Sprintf("%d templates skipped", c.SkippedTemplates))
 	}
 	if len(parts) == 0 {
 		return "All tasks succeeded"

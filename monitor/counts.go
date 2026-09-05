@@ -6,12 +6,15 @@ type Counts struct {
 	Total, Succeeded, Running, Failed, Pending, Blocked int
 	Skipped, Incomplete, Unknown, Unfinalized, Reused   int
 	Templates, Unexpanded                               int
+	SkippedTemplates                                    int
 }
 
 func (c *Counts) Add(t Task) {
 	if t.Template {
 		c.Templates++
-		if !t.Expanded {
+		if t.Status == "skipped" {
+			c.SkippedTemplates++
+		} else if !t.Expanded {
 			c.Unexpanded++
 		}
 		return
@@ -47,7 +50,7 @@ func (c Counts) Attention() int {
 }
 
 func (c Counts) Successful() bool {
-	return c.Total > 0 && c.Succeeded == c.Total && c.Unexpanded == 0
+	return c.Total > 0 && c.Succeeded == c.Total && c.Unexpanded == 0 && c.SkippedTemplates == 0
 }
 
 func (c Counts) Percent() float64 {

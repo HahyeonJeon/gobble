@@ -20,7 +20,11 @@ func buildPackedInner(goBin, cwd, dir, importPath string, install installIdentit
 		return "", err
 	}
 	output := filepath.Join(dir, packInnerName)
-	if err := buildPacked(goBin, cwd, sourcePath, output); err != nil {
+	moduleArgs, err := packedModuleArgs(goBin, cwd, dir)
+	if err != nil {
+		return "", err
+	}
+	if err := buildPacked(goBin, cwd, sourcePath, output, moduleArgs...); err != nil {
 		return "", err
 	}
 	return output, nil

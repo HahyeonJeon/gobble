@@ -14,6 +14,6 @@ type displayParent struct {
 }
 
 func (p displayParent) AddTask(spec gobble.TaskSpec) *gobble.Task {
-	spec.Display = p.display
+	spec.Display = spec.Display.WithDefaults(p.display)
 	return p.parent.AddTask(spec)
 }

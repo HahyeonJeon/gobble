@@ -88,8 +88,10 @@ func resolvePackOutput(cwd, output string) (string, error) {
 	return output, nil
 }
 
-func buildPacked(goBin, cwd, source, output string) error {
-	cmd := exec.Command(goBin, "build", "-o", output, source)
+func buildPacked(goBin, cwd, source, output string, moduleArgs ...string) error {
+	args := append([]string{"build"}, moduleArgs...)
+	args = append(args, "-o", output, source)
+	cmd := exec.Command(goBin, args...)
 	cmd.Dir = cwd
 	cmd.Env = packedBuildEnv(os.Environ())
 	out, err := cmd.CombinedOutput()

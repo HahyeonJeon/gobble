@@ -28,29 +28,33 @@ type loadedMsg struct {
 }
 
 type model struct {
-	workspace    string
-	read         readFunc
-	data         *monitor.Dashboard
-	style        theme
-	width        int
-	height       int
-	now          time.Time
-	err          error
-	reading      bool
-	screen       screen
-	previous     screen
-	detailReturn screen
-	sample       string
-	stage        string
-	task         string
-	stageFilter  string
-	query        string
-	searchIndex  int
-	listIndex    int
-	graphOffset  int
-	logOffset    int
-	logStream    string
-	follow       bool
+	workspace      string
+	read           readFunc
+	data           *monitor.Dashboard
+	style          theme
+	width          int
+	height         int
+	now            time.Time
+	err            error
+	reading        bool
+	screen         screen
+	previous       screen
+	searchReturn   screen
+	detailReturn   screen
+	sample         string
+	stage          string
+	task           string
+	stageFilter    string
+	query          string
+	searchIndex    int
+	listIndex      int
+	graphOffset    int
+	logOffset      int
+	metadataOffset int
+	helpOffset     int
+	showMetadata   bool
+	logStream      string
+	follow         bool
 }
 
 func newModel(workspace string, read readFunc, initial monitor.Snapshot, monochrome bool) (*model, error) {
@@ -79,7 +83,7 @@ func (m *model) refresh() tea.Cmd {
 	}
 	m.reading = true
 	read, instance := m.read, ""
-	if m.screen == detailScreen {
+	if m.contextScreen() == detailScreen {
 		instance = m.task
 	}
 	return func() tea.Msg {
@@ -97,12 +101,20 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.now = time.Time(msg)
 		return m, tea.Batch(clockTick(), m.refresh())
 	case loadedMsg:
+		oldStage := layout(m.data.Stages, m.graphWidth()).nodes[m.stage]
+		stageWasVisible := oldStage.y >= m.graphOffset && oldStage.y+oldStage.h <= m.graphOffset+m.graphViewportHeight()
 		focused := ""
-		if m.screen == tasksScreen || m.screen == attentionScreen {
+		if m.contextScreen() == detailScreen {
+			focused = m.task
+		} else if m.contextScreen() == tasksScreen || m.contextScreen() == attentionScreen {
 			items := m.listTasks()
 			if m.listIndex < len(items) {
 				focused = m.data.Snapshot.Tasks[items[m.listIndex]].Identity
 			}
+		}
+		searchFocus := ""
+		if matches := m.data.SearchSamples(m.query); m.screen == searchScreen && m.searchIndex < len(matches) {
+			searchFocus = matches[m.searchIndex].ID
 		}
 		m.reading = false
 		m.err = msg.err
@@ -112,10 +124,23 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.err == nil {
 				m.data = d
 				m.reconcileSelection(focused)
+				if stageWasVisible {
+					m.revealStage()
+				}
+				for i, sample := range m.data.SearchSamples(m.query) {
+					if sample.ID == searchFocus {
+						m.searchIndex = i
+						break
+					}
+				}
 			}
 		}
 	case tea.KeyPressMsg:
 		return m, m.key(msg)
+	case tea.PasteMsg:
+		if m.screen == searchScreen {
+			m.appendQuery(msg.Content)
+		}
 	}
 	return m, nil
 }
@@ -123,6 +148,9 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m *model) key(key tea.KeyPressMsg) tea.Cmd {
 	k := key.String()
 	if k == "ctrl+c" {
+		return tea.Quit
+	}
+	if k == "q" && (m.width < 44 || m.height < 20) {
 		return tea.Quit
 	}
 	if m.screen == searchScreen {
@@ -136,6 +164,7 @@ func (m *model) key(key tea.KeyPressMsg) tea.Cmd {
 			m.screen = m.previous
 		} else {
 			m.previous, m.screen = m.screen, helpScreen
+			m.helpOffset = 0
 		}
 		return nil
 	case "esc":
@@ -151,6 +180,7 @@ func (m *model) key(key tea.KeyPressMsg) tea.Cmd {
 		}
 		return nil
 	case "/", "s":
+		m.searchReturn = m.contextScreen()
 		m.query, m.searchIndex, m.screen = "", 0, searchScreen
 		return nil
 	case "!":
@@ -196,19 +226,31 @@ func (m *model) key(key tea.KeyPressMsg) tea.Cmd {
 			m.listIndex = min(max(0, len(items)-1), m.listIndex+taskPageSize(m.bodyHeight()-2))
 		case "pgup":
 			m.listIndex = max(0, m.listIndex-taskPageSize(m.bodyHeight()-2))
-		case "enter", "l":
+		case "enter", "l", "3":
 			if len(items) > 0 {
 				task := m.data.Snapshot.Tasks[items[m.listIndex]]
 				m.detailReturn = m.screen
 				m.task, m.screen, m.follow, m.logOffset = task.Identity, detailScreen, true, 0
+				m.showMetadata, m.metadataOffset = k == "3", 0
 				return m.refresh()
 			}
 		}
 	case detailScreen:
+		if k == "3" {
+			m.showMetadata = true
+			m.metadataOffset = 0
+			return nil
+		}
+		if m.showMetadata && k != "1" && k != "2" {
+			m.metadataOffset = scrollOffset(k, m.metadataOffset, m.metadataLineCount(), m.metadataHeight())
+			return nil
+		}
 		switch k {
 		case "1":
+			m.showMetadata = false
 			m.logStream, m.logOffset = "stdout", 0
 		case "2":
+			m.showMetadata = false
 			m.logStream, m.logOffset = "stderr", 0
 		case "f":
 			if m.follow {
@@ -230,6 +272,8 @@ func (m *model) key(key tea.KeyPressMsg) tea.Cmd {
 		case "end":
 			m.follow = true
 		}
+	case helpScreen:
+		m.helpOffset = scrollOffset(k, m.helpOffset, len(m.helpRows()), m.bodyHeight())
 	}
 	return nil
 }
@@ -238,7 +282,7 @@ func (m *model) searchKey(key tea.KeyPressMsg) tea.Cmd {
 	matches := m.data.SearchSamples(m.query)
 	switch key.String() {
 	case "esc":
-		m.screen = dashboardScreen
+		m.screen = m.searchReturn
 	case "up":
 		m.searchIndex = max(0, m.searchIndex-searchColumns(m.graphWidth()))
 	case "down":
@@ -255,7 +299,7 @@ func (m *model) searchKey(key tea.KeyPressMsg) tea.Cmd {
 		if len(matches) > 0 {
 			// Prefer an exact entered ID to a similarly named first result.
 			for i, match := range matches {
-				if strings.EqualFold(match.ID, strings.TrimSpace(m.query)) {
+				if match.ID == strings.TrimSpace(m.query) {
 					m.searchIndex = i
 					break
 				}
@@ -271,20 +315,44 @@ func (m *model) searchKey(key tea.KeyPressMsg) tea.Cmd {
 	case "ctrl+u":
 		m.query, m.searchIndex = "", 0
 	default:
-		text := clean(key.Key().Text)
-		if text != "" && utf8.RuneCountInString(m.query+text) <= 128 {
-			m.query += strings.ReplaceAll(text, "\n", "")
-			m.searchIndex = 0
-		}
+		m.appendQuery(key.Key().Text)
 	}
 	return nil
+}
+
+func (m *model) appendQuery(text string) {
+	text = strings.NewReplacer("\n", "", "\t", "").Replace(clean(text))
+	runes := []rune(text)
+	remaining := max(0, 128-utf8.RuneCountInString(m.query))
+	if len(runes) > 0 && remaining > 0 {
+		m.query += string(runes[:min(len(runes), remaining)])
+		m.searchIndex = 0
+	}
+}
+
+// Overlay screens retain the underlying inspector context while refreshing.
+func (m *model) contextScreen() screen {
+	if m.screen == helpScreen {
+		return m.previous
+	}
+	if m.screen == searchScreen {
+		return m.searchReturn
+	}
+	return m.screen
 }
 
 func (m *model) reconcileSelection(focused string) {
 	if _, ok := m.data.Task(m.task); m.task != "" && !ok {
 		m.task = ""
-		if m.screen == detailScreen {
-			m.screen = tasksScreen
+		if m.contextScreen() == detailScreen {
+			switch m.screen {
+			case helpScreen:
+				m.previous = m.detailReturn
+			case searchScreen:
+				m.searchReturn = m.detailReturn
+			default:
+				m.screen = m.detailReturn
+			}
 		}
 	}
 	if m.sample != "" && len(m.data.SampleTasks(m.sample)) == 0 {
@@ -295,7 +363,7 @@ func (m *model) reconcileSelection(focused string) {
 	}
 	items := m.listTasks()
 	// Identity preserves list focus when another task is inserted or removed.
-	if m.screen == tasksScreen || m.screen == attentionScreen {
+	if m.contextScreen() == tasksScreen || m.contextScreen() == attentionScreen || m.contextScreen() == detailScreen {
 		for i, index := range items {
 			if m.data.Snapshot.Tasks[index].Identity == focused {
 				m.listIndex = i
@@ -308,7 +376,7 @@ func (m *model) reconcileSelection(focused string) {
 }
 
 func (m *model) listTasks() []int {
-	if m.screen == attentionScreen || (m.screen == detailScreen && m.detailReturn == attentionScreen) {
+	if m.contextScreen() == attentionScreen || (m.contextScreen() == detailScreen && m.detailReturn == attentionScreen) {
 		return m.data.Attention
 	}
 	if m.stageFilter != "" {

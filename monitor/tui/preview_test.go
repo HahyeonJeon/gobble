@@ -137,4 +137,6 @@ func TestCaptureScreens(t *testing.T) {
 		m.Update(cmd())
 	}
 	save("05-task-logs")
+	press(m, '3', "3")
+	save("06-task-facts")
 }

@@ -24,11 +24,12 @@ resumes, or cancels work.
 | t | List tasks in the current sample scope |
 | ! | Open the global attention list |
 | 1 / 2 | Show stdout / stderr in task details |
+| 3 | Open full scrollable task facts from a task list or inspector |
 | f / End | Pause or resume following the newest log tail |
-| PgUp / PgDn | Pan the graph or scroll lists and logs |
+| PgUp / PgDn | Pan the graph or scroll lists, facts, help and logs |
 | Esc | Return; on the dashboard, clear sample scope |
 | r / ? | Refresh now / show help |
-| q / Ctrl+C | Exit the monitor |
+| q / Ctrl+C | Exit the monitor; in sample search, use Ctrl+C |
 
 The charcoal palette uses teal for active work, green for success, rose for
 failure, and amber for uncertain or blocked work. State labels remain visible
@@ -61,7 +62,7 @@ only work explicitly owned by that sample. Shared reference and cohort report
 tasks remain visible as graph context and have separate counts.
 
 The denominator is the number of currently known executable instances. Scatter
-templates are separate; unexpanded templates are labeled as expanding. New
+templates are separate; unexpanded templates are labeled as expanding; skipped templates are counted separately. New
 instances can increase the denominator. Reused successes are a subset of
 successes. Failed, blocked, skipped, incomplete, unknown, and
 published-unfinalized states remain distinct. The percentage is a task count,
@@ -74,13 +75,17 @@ Enter opens the exact task instances behind a node. Long graphs can be panned;
 the selected node's upstream and downstream stages appear in the wide layout.
 
 Task details include identity, attempt, executor, requested resources, command,
-failure reason, and logs. Each stream is bounded to its last 4 KiB. Pausing stops
+failure reason, and logs. Press `3` for full identity, argument boundaries,
+multiline scripts, timestamps, error location, reuse reason and full-file log
+paths; arrows, PgUp/PgDn and Home/End scroll these facts. Each stream is bounded to its last 4 KiB. Pausing stops
 automatic scrolling within that moving tail; it does not retain older history.
 Use the paths returned by `inspect logs` for full files. Terminal controls in
 task labels and logs are stripped before rendering.
 
 If a control snapshot cannot be read coherently, the last valid snapshot stays
-visible with a STALE message and its observation time. Elapsed time stops
+visible with a STALE message and its observation time. If only the selected log cannot be read, a separate
+global read repeats the same gates and keeps progress fresh while the log pane
+shows the error. Rejected log bytes are never read. Elapsed time stops
 advancing when the owner is no longer live or the snapshot is stale. Existing
 workspace identity and schema checks also apply to monitoring.
 
@@ -109,8 +114,12 @@ values; shared or cohort scope clears sample ownership. Sample IDs should
 include a patient or assay prefix when required for uniqueness. These copied
 labels do not affect commands, artifact paths, scheduling, or reuse decisions.
 
+Sample search supports pasted text. Discovery ignores case; an exact entered ID
+retains its case-sensitive identity. Cancelling search restores the prior view.
+
 For tasks registered through asset helpers, `modules.WithDisplay(parent,
-display)` provides the same metadata at their `Parent` boundary.
+display)` provides copied defaults at their `Parent` boundary; explicit task
+fields still override those defaults.
 
 ## Code boundaries
 
@@ -121,7 +130,7 @@ display)` provides the same metadata at their `Parent` boundary.
 | `monitor/snapshot.go` | Typed reader through the public Inspect API |
 | `monitor/counts.go`, `dashboard.go`, `topology.go` | Pure aggregation, sample indices, dependency-preserving stage grouping |
 | `monitor/tui/model.go` | Bubble Tea update loop, navigation, single-flight refresh |
-| `monitor/tui/view.go`, `dashboard_view.go`, `inspector_view.go` | Persistent summary, dashboard/search, and task/log layouts |
+| `monitor/tui/view.go`, `dashboard_view.go`, `inspector_view.go`, `metadata_view.go` | Persistent summary, dashboard/search, and task/log layouts |
 | `monitor/tui/components.go`, `graph.go`, `theme.go` | Cell sizing, state bars, graph routing, surfaces and safe text |
 | `cmd/gobble/watch.go`, packed templates | CLI and packed-runner integration |
 

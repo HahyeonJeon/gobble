@@ -37,7 +37,7 @@ func (m *model) inspectorView() []string {
 	}
 	hint := "↑↓ select task · Enter opens logs"
 	if m.screen == detailScreen {
-		hint = "1 / 2 stream · f follow · Esc back"
+		hint = "1 / 2 logs · 3 facts · Esc back"
 	}
 	lines := []string{ends(m.style.dim.Render(title), m.style.dim.Render(hint), width), ""}
 	paneHeight := max(1, height-len(lines))
@@ -84,8 +84,11 @@ func (m *model) taskList(width, height int, selected string) []string {
 		lines = append(lines, surface.Bold(active).Render(fit(prefix+name, width)))
 		state := stateLabel(task.Status)
 		if task.Template {
-			state = "◇ Scatter template"
-		} else if task.Decision == "reused" {
+			state = "◇ Template · " + state
+			if task.Expanded && task.Status != "skipped" {
+				state = "◇ Template · Expanded"
+			}
+		} else if task.Decision == "reused" || task.Decision == "reuse" {
 			state = "↺ Reused"
 		}
 		style := surface
@@ -164,20 +167,23 @@ func limitedWrap(text string, width, limit int) []string {
 }
 
 func (m *model) taskDetails(task monitor.Task, width, height int, withLogs bool) []string {
+	if withLogs && m.showMetadata {
+		return m.metadataView(task, width, height)
+	}
 	rows := m.detailHeader(task, width, height)
 	blank := m.surfaceLine("", width, m.style.plain)
 	rows = append(rows, blank)
 	if !withLogs {
 		rows = append(rows, m.surfaceLine("Enter  Open task logs", width, m.style.active))
-		rows = append(rows, m.surfaceLine("1 stdout  /  2 stderr", width, m.style.dim))
+		rows = append(rows, m.surfaceLine("3  Full task facts", width, m.style.dim))
 		for len(rows) < height {
 			rows = append(rows, blank)
 		}
 		return rows[:min(height, len(rows))]
 	}
-	tabs := "[1 STDOUT]    2 stderr"
+	tabs := "[1 STDOUT]  2 stderr  3 facts"
 	if m.logStream == "stderr" {
-		tabs = " 1 stdout   [2 STDERR]"
+		tabs = "1 stdout  [2 STDERR]  3 facts"
 	}
 	follow := "PAUSED"
 	if m.follow {
@@ -185,7 +191,11 @@ func (m *model) taskDetails(task monitor.Task, width, height int, withLogs bool)
 	}
 	rows = append(rows, m.surfaceLine(ends(tabs, follow, width-4), width, m.style.active))
 	_, size := m.currentLog()
-	rows = append(rows, m.surfaceLine(fmt.Sprintf("Last 4 KiB · %d bytes in stream", size), width, m.style.dim), m.surfaceLine(strings.Repeat("─", max(1, width-4)), width, m.style.line))
+	logInfo := fmt.Sprintf("Last 4 KiB · %d bytes in stream", size)
+	if m.logError() != "" {
+		logInfo = "Log unavailable · global progress available"
+	}
+	rows = append(rows, m.surfaceLine(logInfo, width, m.style.dim), m.surfaceLine(strings.Repeat("─", max(1, width-4)), width, m.style.line))
 	logs := m.logLines()
 	offset := min(m.logOffset, m.logTailOffset())
 	if m.follow {
@@ -212,11 +222,23 @@ func (m *model) currentLog() (string, int64) {
 
 func (m *model) logLines() []string {
 	_, width := m.inspectorWidths()
+	if err := m.logError(); err != "" {
+		return wrapWords("Log unavailable: "+err, max(1, width-4))
+	}
 	text, _ := m.currentLog()
 	if text == "" {
 		text = "No output available in this tail."
 	}
 	return wrapPlain(strings.ReplaceAll(clean(text), "\t", "    "), max(1, width-4))
+}
+
+func (m *model) logError() string {
+	for _, log := range m.data.Snapshot.Logs {
+		if log.Identity == m.task {
+			return log.Error
+		}
+	}
+	return ""
 }
 
 func (m *model) logTailOffset() int {

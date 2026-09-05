@@ -6,6 +6,7 @@ import (
 
 	"charm.land/lipgloss/v2"
 	"github.com/HahyeonJeon/gobble/monitor"
+	"github.com/charmbracelet/x/ansi"
 )
 
 const nodeHeight = 7
@@ -69,15 +70,26 @@ func (c *canvas) put(x, y int, text string, role int) {
 
 func (c *canvas) text(x, y int, text string, role, limit int) {
 	used := 0
-	for _, r := range clean(text) {
-		w := lipgloss.Width(string(r))
+	lastX := -1
+	text = clean(text)
+	var state byte
+	for text != "" {
+		cluster, w, n, next := ansi.DecodeSequence(text, state, nil)
+		text, state = text[n:], next
 		if used+w > limit {
 			break
 		}
 		if w == 0 {
+			// The ANSI decoder can return a combining mark separately after an
+			// ASCII fast path. Keep it attached to the previous visible cell.
+			row := y - c.offset
+			if lastX >= 0 && lastX < c.width && row >= 0 && row < c.height {
+				c.cells[row][lastX].text += cluster
+			}
 			continue
 		}
-		c.put(x+used, y, string(r), role)
+		lastX = x + used
+		c.put(x+used, y, cluster, role)
 		for j := 1; j < w; j++ {
 			c.put(x+used+j, y, "", role)
 		}

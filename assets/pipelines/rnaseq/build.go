@@ -418,13 +418,13 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 
 	txOptions := config.TxImport
 	txOptions.OutDir = gobble.Dir(config.Results.String() + "/matrices")
-	matrices, err := tximport.Add(pipeline.AddModule("cohort"), quants, sampleNames, gtf, txOptions)
+	matrices, err := tximport.Add(pipeline.AddModule("cohort").WithDisplay(gobble.TaskDisplay{Scope: gobble.DisplayCohort}), quants, sampleNames, gtf, txOptions)
 	if recordModuleError(pipeline, err) {
 		return pipeline
 	}
 	deseqOptions := config.DESeq2QC
 	deseqOptions.OutDir = gobble.Dir(config.Results.String() + "/deseq2-qc")
-	cohortQC, err := deseq2qc.Add(pipeline.AddModule("cohort_qc"), matrices.GeneLengthScaled, deseqOptions)
+	cohortQC, err := deseq2qc.Add(pipeline.AddModule("cohort_qc").WithDisplay(gobble.TaskDisplay{Scope: gobble.DisplayCohort}), matrices.GeneLengthScaled, deseqOptions)
 	if recordModuleError(pipeline, err) {
 		return pipeline
 	}

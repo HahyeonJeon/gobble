@@ -217,19 +217,19 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 		}
 		reports = append(reports, peakReports...)
 	}
-	peakQCModule := pipeline.AddModule("peak_qc")
+	peakQCModule := pipeline.AddModule("peak_qc").WithDisplay(gobble.TaskDisplay{Scope: gobble.DisplayCohort})
 	peakPlotReports, addErr := addPeakPlots(peakQCModule.AddModule("replicates"), "replicates", states, config)
 	if recordModuleError(pipeline, addErr) {
 		return pipeline
 	}
 	reports = append(reports, peakPlotReports...)
 
-	coverageReports, addErr := addCoverageQC(pipeline.AddModule("coverage_qc"), states, reference, config)
+	coverageReports, addErr := addCoverageQC(pipeline.AddModule("coverage_qc").WithDisplay(gobble.TaskDisplay{Scope: gobble.DisplayCohort}), states, reference, config)
 	if recordModuleError(pipeline, addErr) {
 		return pipeline
 	}
 	reports = append(reports, coverageReports...)
-	consensusModule := pipeline.AddModule("consensus")
+	consensusModule := pipeline.AddModule("consensus").WithDisplay(gobble.TaskDisplay{Scope: gobble.DisplayCohort})
 	replicateConsensus, replicateConsensusReports, addErr := addConsensus(consensusModule.AddModule("replicates"), "replicates", states, reference, config)
 	if recordModuleError(pipeline, addErr) {
 		return pipeline
@@ -306,12 +306,12 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 	}
 	mkarvOptions := config.Mkarv
 	mkarvOptions.OutDir = config.Results.Join("ataqv", "html")
-	if _, addErr = ataqvmkarv.Add(pipeline.AddModule("ataqv"), ataqvReports, mkarvOptions); recordModuleError(pipeline, addErr) {
+	if _, addErr = ataqvmkarv.Add(pipeline.AddModule("ataqv").WithDisplay(gobble.TaskDisplay{Scope: gobble.DisplayCohort}), ataqvReports, mkarvOptions); recordModuleError(pipeline, addErr) {
 		return pipeline
 	}
 	igvOptions := config.IGV
 	igvOptions.OutDir = config.Results.Join("igv")
-	if _, addErr = igvsession.Add(pipeline.AddModule("igv"), reference.fasta, reference.fai, igvResources, igvOptions); recordModuleError(pipeline, addErr) {
+	if _, addErr = igvsession.Add(pipeline.AddModule("igv").WithDisplay(gobble.TaskDisplay{Scope: gobble.DisplayCohort}), reference.fasta, reference.fai, igvResources, igvOptions); recordModuleError(pipeline, addErr) {
 		return pipeline
 	}
 	multiQCOptions := config.MultiQC

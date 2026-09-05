@@ -62,7 +62,7 @@ GOBBLE_UI_CAPTURE_DIR=/tmp/gobble-ui-review \
 ```
 
 This exports ANSI frames for the dashboard, search, sample scope, task inspector,
-and task logs. `GOBBLE_UI_PREVIEW=/tmp/gobble-terminal.ansi` retains the existing
+task logs, and full task facts. `GOBBLE_UI_PREVIEW=/tmp/gobble-terminal.ansi` retains the existing
 single-frame CI export. Validation covers reference layout, spatial navigation,
 exact sample selection, persistent global context, split inspection, terminal
 sizes, no-color rendering, and the existing real-PTY lifecycle checks.

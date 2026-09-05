@@ -211,5 +211,6 @@ do not describe observed changes as an authoritative event history.
 - [Lip Gloss](https://github.com/charmbracelet/lipgloss)
 - [Bubbles](https://github.com/charmbracelet/bubbles)
 
-No Go implementation or execution tests have been performed in this design
-pass. The initial environment does not expose a `go` executable on PATH.
+The initial design pass preceded implementation. Implementation, validation and
+remaining limits are recorded in [monitoring.md](monitoring.md) and the
+[pre-push review](ui-review.md).

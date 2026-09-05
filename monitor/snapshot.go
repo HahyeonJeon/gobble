@@ -50,12 +50,21 @@ type Task struct {
 		CPU    float64 `json:"cpu"`
 		Memory string  `json:"memory"`
 	} `json:"resources"`
-	Started  string `json:"started"`
-	Ended    string `json:"ended"`
-	Reason   string `json:"reason"`
-	Decision string `json:"decision"`
-	Template bool   `json:"template"`
-	Expanded bool   `json:"expanded"`
+	Started     string     `json:"started"`
+	Ended       string     `json:"ended"`
+	Reason      string     `json:"reason"`
+	Error       *TaskError `json:"error"`
+	Decision    string     `json:"decision"`
+	ReuseReason string     `json:"reuse_reason"`
+	Differing   []string   `json:"differing"`
+	Template    bool       `json:"template"`
+	Expanded    bool       `json:"expanded"`
+}
+
+// TaskError preserves the engine's recorded error location and message.
+type TaskError struct {
+	Unit    string `json:"unit"`
+	Message string `json:"message"`
 }
 
 // Edge connects authored task IDs (not the expanded instance identities).
@@ -66,6 +75,7 @@ type Edge struct {
 
 type Log struct {
 	Identity   string `json:"identity"`
+	Error      string `json:"error,omitempty"`
 	Stdout     string `json:"stdout"`
 	Stderr     string `json:"stderr"`
 	StdoutSize int64  `json:"stdout_size"`
@@ -78,10 +88,17 @@ type Log struct {
 // It applies the same identity, schema, and containment gates as Inspect.
 func Read(workspace, instance string, opts ...gobble.OccupyOption) (Snapshot, error) {
 	data, err := gobble.Inspect(workspace, gobble.ViewMonitor, instance, opts...)
-	// A resume may remove a previously selected dynamic member. Read the new
-	// global snapshot so the view can retire its selection instead of freezing.
-	if instance != "" && instanceGone(err, instance) {
-		data, err = gobble.Inspect(workspace, gobble.ViewMonitor, "", opts...)
+	logError := ""
+	// A missing member or unreadable selected log must not freeze all progress.
+	// The fallback repeats every workspace/schema/identity gate. The failed log
+	// remains unread and is shown explicitly as unavailable.
+	if instance != "" && err != nil {
+		if global, globalErr := gobble.Inspect(workspace, gobble.ViewMonitor, "", opts...); globalErr == nil {
+			if !instanceGone(err, instance) {
+				logError = err.Error()
+			}
+			data, err = global, nil
+		}
 	}
 	if err != nil {
 		return Snapshot{}, err
@@ -94,6 +111,9 @@ func Read(workspace, instance string, opts ...gobble.OccupyOption) (Snapshot, er
 		return Snapshot{}, fmt.Errorf("unsupported monitor schema %d", result.SchemaVersion)
 	}
 	result.ReadAt = time.Now()
+	if logError != "" {
+		result.Logs = []Log{{Identity: instance, Error: logError}}
+	}
 	return result, nil
 }
 

@@ -7,6 +7,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
+	"github.com/charmbracelet/x/ansi"
 )
 
 func (m *model) margin() int {
@@ -26,9 +27,9 @@ func (m *model) View() tea.View {
 	w := m.contentWidth()
 	var lines []string
 	if m.width < 44 || m.height < 20 {
-		lines = []string{m.style.active.Bold(true).Render("GOBBLE / pipeline monitor"), "", oneLine(m.data.Snapshot.Pipeline),
+		lines = []string{m.style.active.Bold(true).Render("GOBBLE / pipeline monitor"), oneLine(m.data.Snapshot.Pipeline), "Run: " + stateLabel(m.data.Snapshot.Run.Status),
 			fmt.Sprintf("Succeeded %d/%d · Failed %d", m.data.Total.Succeeded, m.data.Total.Total, m.data.Total.Failed),
-			fmt.Sprintf("Running %d · Attention %d", m.data.Total.Running, m.data.Total.Attention()), "", "Resize to at least 44 × 20", "q exits monitor; execution continues"}
+			fmt.Sprintf("Running %d · Attention %d", m.data.Total.Running, m.data.Total.Attention()), "Resize to at least 44 × 20", "q exits monitor; execution continues"}
 		if m.err != nil {
 			lines = append(lines, "STALE · "+oneLine(m.err.Error()))
 		}
@@ -89,6 +90,10 @@ func (m *model) header() []string {
 	}
 	title := ends(m.style.title.Render(oneLine(name)), m.style.state(s.Run.Status).Render(stateLabel(s.Run.Status))+m.style.dim.Render("  "+elapsed(s.Run.Started, s.Run.Ended, m.observationTime())+" elapsed"), w)
 	lines := []string{ends(m.style.active.Bold(true).Render("G O B B L E")+m.style.dim.Render(" / pipeline monitor"), m.style.dim.Render("READ ONLY"), w), title, m.style.dim.Render(oneLine(m.workspace))}
+	if w < 90 {
+		lines[1] = ends(m.style.title.Render(oneLine(name)), m.style.state(s.Run.Status).Render(stateLabel(s.Run.Status)), w)
+		lines[2] = m.style.dim.Render(elapsed(s.Run.Started, s.Run.Ended, m.observationTime()) + " elapsed · " + oneLine(m.workspace))
+	}
 	if m.comfortable() {
 		lines = append(lines, "")
 		lines = append(lines, m.metrics(w)...)
@@ -115,6 +120,9 @@ func (m *model) header() []string {
 	}
 	if c.Unexpanded > 0 {
 		legend = append(legend, m.style.warn.Render(fmt.Sprintf("%d expanding", c.Unexpanded)))
+	}
+	if c.SkippedTemplates > 0 {
+		legend = append(legend, m.style.dim.Render(fmt.Sprintf("%d templates skipped", c.SkippedTemplates)))
 	}
 	lines = append(lines, wrapStyledParts(legend, w)...)
 	if m.comfortable() {
@@ -207,7 +215,12 @@ func (m *model) metrics(width int) []string {
 func (m *model) footer() string {
 	left := "/ find sample   Enter inspect   ! attention   ? help   q quit"
 	if m.screen == detailScreen {
-		left = "1 stdout  2 stderr   ↑↓ scroll   f follow   Esc back   q quit"
+		left = "1 stdout  2 stderr  3 facts   ↑↓ scroll   f follow   Esc back   q quit"
+		if m.showMetadata {
+			left = "1 stdout  2 stderr  3 facts   ↑↓ scroll   Home/End   Esc back   q quit"
+		}
+	} else if m.screen == tasksScreen || m.screen == attentionScreen {
+		left = "↑↓ select   Enter logs   3 facts   / find sample   Esc back   q quit"
 	}
 	if m.screen == searchScreen {
 		left = "↑↓ choose   Enter select   Esc close search   Ctrl+C quit"
@@ -226,26 +239,20 @@ func (m *model) footer() string {
 }
 
 func wrapPlain(text string, width int) []string {
-	width = max(1, width)
-	lines := []string{}
-	for _, line := range strings.Split(clean(text), "\n") {
-		var out strings.Builder
-		used := 0
-		for _, r := range line {
-			w := lipgloss.Width(string(r))
-			if used+w > width {
-				lines = append(lines, out.String())
-				out.Reset()
-				used = 0
-			}
-			out.WriteRune(r)
-			used += w
-		}
-		lines = append(lines, out.String())
+	return strings.Split(ansi.Hardwrap(clean(text), max(1, width), true), "\n")
+}
+
+func (m *model) helpRows() []string {
+	lines := []string{"KEYBOARD · PgUp / PgDn scroll", "", "Arrows        Select a graph card, sample, or task", "j / k         Traverse stages or task lists", "Enter         Open stage tasks or task logs", "/ or s        Find a sample; paste is supported", "t             Tasks in the current sample scope", "!             Global attention list", "PgUp / PgDn   Pan graph or scroll lists and logs", "1 / 2         Switch stdout / stderr in task details", "3             Full task facts, commands, and errors", "f / End       Toggle follow / follow newest log tail", "r             Refresh now", "Esc           Back; on dashboard, clear sample scope", "q / Ctrl+C    Close monitor; pipeline keeps running", "", "Counts describe known tasks, not remaining compute time.", "Shared/cohort work is excluded from sample completion.", "Log history is bounded to the last 4 KiB per stream.", "NO_COLOR keeps symbols and selection without colors."}
+	var rows []string
+	for _, line := range lines {
+		rows = append(rows, wrapWords(line, m.contentWidth())...)
 	}
-	return lines
+	return rows
 }
 
 func (m *model) helpView() []string {
-	return []string{m.style.title.Render("KEYBOARD"), "", "↑ ↓ / j k     Select a stage, sample, or task", "Enter         Open stage tasks or task logs", "/ or s        Find a sample by its exact ID", "t             Tasks in the current sample scope", "!             Global attention list", "PgUp / PgDn   Pan graph or scroll lists and logs", "1 / 2         Switch stdout / stderr in task details", "f / End       Toggle follow / follow newest tail", "r             Refresh now", "Esc           Back; on dashboard, clear sample scope", "q / Ctrl+C    Close monitor; pipeline keeps running", "", "Counts describe known tasks, not remaining compute time.", "Shared/cohort work is excluded from sample completion.", "Log history is bounded to the last 4 KiB per stream.", "NO_COLOR keeps symbols and selection without colors."}
+	rows := m.helpRows()
+	offset := min(m.helpOffset, max(0, len(rows)-m.bodyHeight()))
+	return frame(rows[offset:], m.contentWidth(), m.bodyHeight())
 }

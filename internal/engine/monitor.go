@@ -14,24 +14,27 @@ type monitorDoc struct {
 }
 
 type monitorTask struct {
-	Identity  string        `json:"identity"`
-	TaskID    string        `json:"task_id"`
-	Name      string        `json:"name"`
-	Module    string        `json:"module"`
-	Display   *Display      `json:"display,omitempty"`
-	Status    string        `json:"status"`
-	Attempt   int           `json:"attempt"`
-	Executor  string        `json:"executor"`
-	Image     string        `json:"image"`
-	Command   []string      `json:"command"`
-	Script    string        `json:"script,omitempty"`
-	Resources jsonResources `json:"resources"`
-	Started   string        `json:"started,omitempty"`
-	Ended     string        `json:"ended,omitempty"`
-	Reason    string        `json:"reason,omitempty"`
-	Decision  string        `json:"decision,omitempty"`
-	Template  bool          `json:"template,omitempty"`
-	Expanded  bool          `json:"expanded,omitempty"`
+	Identity    string        `json:"identity"`
+	TaskID      string        `json:"task_id"`
+	Name        string        `json:"name"`
+	Module      string        `json:"module"`
+	Display     *Display      `json:"display,omitempty"`
+	Status      string        `json:"status"`
+	Attempt     int           `json:"attempt"`
+	Executor    string        `json:"executor"`
+	Image       string        `json:"image"`
+	Command     []string      `json:"command"`
+	Script      string        `json:"script,omitempty"`
+	Resources   jsonResources `json:"resources"`
+	Started     string        `json:"started,omitempty"`
+	Ended       string        `json:"ended,omitempty"`
+	Reason      string        `json:"reason,omitempty"`
+	Error       *jsonTaskErr  `json:"error,omitempty"`
+	Decision    string        `json:"decision,omitempty"`
+	ReuseReason string        `json:"reuse_reason,omitempty"`
+	Differing   []string      `json:"differing,omitempty"`
+	Template    bool          `json:"template,omitempty"`
+	Expanded    bool          `json:"expanded,omitempty"`
 }
 
 type monitorEdge struct {
@@ -58,7 +61,8 @@ func inspectMonitorView(workspace string, run jsonRun, doc Document, tasks []jso
 			Status: st.Status, Attempt: st.Attempt, Executor: st.Executor,
 			Image: st.Image, Command: jsonStrings(st.Command), Script: plan.Script,
 			Resources: st.Resources, Started: st.Started, Ended: st.Ended,
-			Reason: st.Reason, Decision: st.Decision,
+			Reason: st.Reason, Error: st.Error, Decision: st.Decision,
+			ReuseReason: st.ReuseReason, Differing: jsonStrings(st.Differing),
 			Template: isScatterTemplateState(&st), Expanded: st.Expansion != nil,
 		}
 		if st.Error != nil && st.Error.Message != "" {

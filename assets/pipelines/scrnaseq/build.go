@@ -131,7 +131,7 @@ func Build(inputSamples []Sample, inputConfig Config) *gobble.Pipeline {
 	concatOptions.Labels = append([]string(nil), labels...)
 	concatOptions.OutDir = config.Results.Join("matrices")
 	concatOptions.Prefix = "combined_raw_matrix"
-	if _, err = h5adconcat.Add(pipeline.AddModule("cohort"), rawH5ADs, concatOptions); recordModuleError(pipeline, err) {
+	if _, err = h5adconcat.Add(pipeline.AddModule("cohort").WithDisplay(gobble.TaskDisplay{Scope: gobble.DisplayCohort}), rawH5ADs, concatOptions); recordModuleError(pipeline, err) {
 		return pipeline
 	}
 	multiQCOptions := config.MultiQC
