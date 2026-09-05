@@ -59,6 +59,7 @@ func NewRuntimeWithWorkspaceInputs(t *testing.T, config atacseq.Config, workspac
 func newRuntime(t *testing.T, config atacseq.Config, workspace string, stage bool) *Runtime {
 	t.Helper()
 	samples, _ := Samples(t)
+	config = fixtureConfig(config)
 	pipe := atacseq.Build(samples, config)
 	graph, err := gobble.Compose(pipe)
 	if err != nil {
@@ -105,6 +106,7 @@ func (r *Runtime) Started() <-chan struct{} { return r.started }
 
 // ResumeWith composes changed typed values and resumes in the same workspace.
 func (r *Runtime) ResumeWith(ctx context.Context, samples []atacseq.Sample, config atacseq.Config) error {
+	config = fixtureConfig(config)
 	pipe := atacseq.Build(samples, config)
 	graph, err := gobble.Compose(pipe)
 	if err != nil {

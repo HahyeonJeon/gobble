@@ -62,6 +62,7 @@ func NewRuntimeWithWorkspaceInputs(t *testing.T, config scrnaseq.Config, workspa
 func newRuntime(t *testing.T, config scrnaseq.Config, workspace string, stage bool) *Runtime {
 	t.Helper()
 	samples, _ := Samples(t)
+	config = fixtureConfig(config)
 	pipe := scrnaseq.Build(samples, config)
 	graph, err := gobble.Compose(pipe)
 	if err != nil {
@@ -108,6 +109,7 @@ func (r *Runtime) Started() <-chan struct{} { return r.started }
 
 // ResumeWith composes changed typed values and resumes in the same workspace.
 func (r *Runtime) ResumeWith(ctx context.Context, samples []scrnaseq.Sample, config scrnaseq.Config) error {
+	config = fixtureConfig(config)
 	pipe := scrnaseq.Build(samples, config)
 	graph, err := gobble.Compose(pipe)
 	if err != nil {

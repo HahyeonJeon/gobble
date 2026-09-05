@@ -1,7 +1,6 @@
 package stop_test
 
 import (
-	"context"
 	"errors"
 	"testing"
 
@@ -29,16 +28,7 @@ func TestRNAStopIsInspectableAndRecoversByReleaseResume(t *testing.T) {
 	runtime := rnaseqscenario.NewRuntime(t, rnaseq.DefaultConfig())
 	const blocked = "WT_REP1.trim_galore"
 	runtime.Block(blocked)
-	ctx, cancel := context.WithCancel(t.Context())
-	done := make(chan error, 1)
-	go func() { done <- runtime.Run(ctx) }()
-	select {
-	case <-runtime.Started():
-		cancel()
-	case <-t.Context().Done():
-		t.Fatal("RNA blocked task did not start")
-	}
-	err := <-done
+	err := cancelStartedRun(t, runtime.Run, runtime.Started())
 	var structured *gobble.Error
 	if !errors.As(err, &structured) || !hasCanceledDefect(structured) {
 		t.Fatalf("Run cancellation error = %v, want canceled defect", err)

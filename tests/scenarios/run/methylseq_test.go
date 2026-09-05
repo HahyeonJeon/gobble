@@ -24,7 +24,7 @@ func TestMethylRunCandidateDeclaresRequiredFinalArtifacts(t *testing.T) {
 func TestMethylRunExecutesOfficialGraphAndPublishesFinals(t *testing.T) {
 	runtime := methylseqscenario.NewRuntime(t, methylseq.DefaultConfig())
 	if err := runtime.Run(t.Context()); err != nil {
-		t.Fatalf("Run(Methyl graph): %v\nerrors: %#v", err, runtime.InspectRecords(gobble.ViewErrors))
+		t.Fatalf("Run(Methyl graph): %#v", err)
 	}
 	if remaining := runtime.InspectRecords(gobble.ViewRemaining); len(remaining) != 0 {
 		t.Fatalf("remaining = %#v, want empty", remaining)

@@ -38,6 +38,7 @@ type Runtime struct {
 func NewRuntime(t *testing.T, config rnaseq.Config) *Runtime {
 	t.Helper()
 	samples, _ := Samples(t)
+	config = fixtureConfig(config)
 	pipe := rnaseq.Build(samples, config)
 	graph, err := gobble.Compose(pipe)
 	if err != nil {

@@ -37,6 +37,7 @@ type Runtime struct {
 func NewRuntime(t *testing.T, config methylseq.Config) *Runtime {
 	t.Helper()
 	samples, _ := Samples(t)
+	config = fixtureConfig(config)
 	pipe := methylseq.Build(samples, config)
 	graph, err := gobble.Compose(pipe)
 	if err != nil {
@@ -87,6 +88,7 @@ func (r *Runtime) Resume(ctx context.Context) error {
 // graph in the existing workspace. It stages only newly named fixture inputs.
 func (r *Runtime) ResumeWith(ctx context.Context, samples []methylseq.Sample, config methylseq.Config) error {
 	r.t.Helper()
+	config = fixtureConfig(config)
 	pipe := methylseq.Build(samples, config)
 	graph, err := gobble.Compose(pipe)
 	if err != nil {
