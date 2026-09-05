@@ -268,6 +268,10 @@ func translateArgs(root string, args []string) ([]string, []string, error) {
 		} else {
 			value = "/gobble/project/" + filepath.ToSlash(rel)
 		}
+		if projectDir {
+			// Keep user-facing project paths relative to the mounted host root.
+			value = "./" + filepath.ToSlash(rel)
+		}
 		if equals {
 			out[i] = name + "=" + value
 		} else {

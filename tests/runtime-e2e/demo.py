@@ -36,6 +36,9 @@ def command(cwd, *args, timeout=300):
 try:
     prepared = json.loads(command(root, "demo", assay, assay, timeout=900))
     command(project, "doctor")
+    if assay == "wgs":
+        from wgs_images import verify
+        verify(project, artifacts)
     command(project, "validate", ".")
     plan = command(project, "plan", ".")
     if artifacts:

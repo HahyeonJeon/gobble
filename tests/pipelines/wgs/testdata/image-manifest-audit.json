@@ -1,0 +1,55 @@
+{
+  "checked_at": "2026-09-05",
+  "source": "Registry V2 manifest bytes for the existing WGS tags; SHA-256 equals Docker-Content-Digest. Platform and tool versions are separately checked by tests/runtime-e2e/wgs_images.py.",
+  "reason": "Previously pinned WGS digests fail to pull. The existing tags resolve to different manifests; no tag or analysis command was changed.",
+  "images": [
+    {
+      "reference": "community.wave.seqera.io/library/bwa_htslib_samtools:83b50ff84ead50d0",
+      "old": "sha256:d7e24dc1e4d93ca4d3a76a78d4c834a7be3985b0e1e56fddd61662e047863a8a",
+      "manifest": "sha256:48812e48a9462145c065d1b8e15d996c4a2c4c69469f1249fb601f25939cd48e",
+      "config": "sha256:89d2d8a6e39927fb1e6c07831f73d3c912ac22451c90d34e6c5558cbd860c58d"
+    },
+    {
+      "reference": "community.wave.seqera.io/library/fastp:1.1.0--08aa7c5662a30d57",
+      "old": "sha256:556474e164daf5a5e218cd5d497681dcba0645047cf24698f88e3e078eacbd09",
+      "manifest": "sha256:6babb3aed64bb6e594df3b499dbc8696888fc1e06df4934b9505e801819475ec",
+      "config": "sha256:f398711e5495e767f654a9316f23dfd75ff5ed5844660920ee19651e21c2f409"
+    },
+    {
+      "reference": "community.wave.seqera.io/library/htslib_samtools:1.24--d697cfb9dce007cd",
+      "old": "sha256:e994bf4eb3731150511a14f5706b7bdfd64df1b6d40898fff334286c027e0859",
+      "manifest": "sha256:a55ddea590e567a91df592300a960aa534cfc1bd16e7623e3938ec21f4f3df15",
+      "config": "sha256:90b76df22c667ae28997a929d83dc6c93c4e18d6a33e65d1bf27ae4608c01d00"
+    },
+    {
+      "reference": "community.wave.seqera.io/library/gatk4_gcnvkernel_htslib_samtools:d3becb6465454c35",
+      "old": "sha256:e3d753d93f57969fe76b8628a8dfcd23ef44bccd08c4ced7089c1f94bf47c89f",
+      "manifest": "sha256:8d26ec8c48d73b028e066c8b8849fdf4fcbadf8a0f53820ac3d9e33c0aea4b17",
+      "config": "sha256:07c0294a8badb8c1de7a3b3b9f319ef091c86f211356f4b5e6533bac02a71388"
+    },
+    {
+      "reference": "community.wave.seqera.io/library/gatk4_gcnvkernel:edb12e4f0bf02cd3",
+      "old": "sha256:ced519873646379e287bc28738bdf88e975edd39a92e7bc6a34bccd37153d9d0",
+      "manifest": "sha256:f76352ed2666fa3da80a02792cde7af896da176e9b1835646829c27e4ca0d2d4",
+      "config": "sha256:55146d815c6ab46605877cf7f69a01a7454c3850c39df1dcbf10d20de9dd56ca"
+    },
+    {
+      "reference": "community.wave.seqera.io/library/htslib_mosdepth_gzip:4108dd38be84e40a",
+      "old": "sha256:a3dc5ea2ce788c24079d24d1721ed28086874152c43b5e7dde3f638dcf64336a",
+      "manifest": "sha256:426ef2ec8c93bc292862c2902a91f193ae336bdb84750581637d35f59017d2bc",
+      "config": "sha256:7faaa5d00dbbf6db7b1667ff2cdcbb78707eb8081206f831071abde5b04b1cf7"
+    },
+    {
+      "reference": "community.wave.seqera.io/library/bcftools_htslib:1.23.1--9f08ec665533d64a",
+      "old": "sha256:0b4d52ca9a56d07be3f78a12af654e5116f5112908dba277e6796fd9dfb83fe5",
+      "manifest": "sha256:9c0dea3c6d34d771912b4a2b0297d3e796db69d3c06620cb93b8ab41c072c613",
+      "config": "sha256:44d4dc5ad70a8f5608c25bd84f4896b707bf78af613f84020fd2a04fd7735aa2"
+    },
+    {
+      "reference": "community.wave.seqera.io/library/multiqc:1.35--c17fb751507e9dfc",
+      "old": "sha256:c8e346f4f6080eadf1253505e6ff09ef004454fc18e8d672006fd7b222cc412e",
+      "manifest": "sha256:ae074e961979ea85c72c6c67a8ed432fa3368c736b8fe37799f7223901ac84ab",
+      "config": "sha256:40377d4421606bf829f29b2e8f40f2ef31589624418d8de13456729f065f5e58"
+    }
+  ]
+}

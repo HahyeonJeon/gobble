@@ -9,7 +9,7 @@ import (
 )
 
 // DefaultImage is the Sarek 3.10.0 samtools image resolved for linux/amd64.
-const DefaultImage modules.Image = "community.wave.seqera.io/library/htslib_samtools:1.24--d697cfb9dce007cd@sha256:e994bf4eb3731150511a14f5706b7bdfd64df1b6d40898fff334286c027e0859"
+const DefaultImage modules.Image = "community.wave.seqera.io/library/htslib_samtools:1.24--d697cfb9dce007cd@sha256:a55ddea590e567a91df592300a960aa534cfc1bd16e7623e3938ec21f4f3df15"
 
 // Options controls one samtools flagstat command.
 type Options struct {

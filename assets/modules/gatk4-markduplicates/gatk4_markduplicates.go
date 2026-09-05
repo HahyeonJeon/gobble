@@ -8,7 +8,7 @@ import (
 
 // DefaultImage is the Sarek 3.10.0 MarkDuplicates image resolved for
 // linux/amd64.
-const DefaultImage modules.Image = "community.wave.seqera.io/library/gatk4_gcnvkernel_htslib_samtools:d3becb6465454c35@sha256:e3d753d93f57969fe76b8628a8dfcd23ef44bccd08c4ced7089c1f94bf47c89f"
+const DefaultImage modules.Image = "community.wave.seqera.io/library/gatk4_gcnvkernel_htslib_samtools:d3becb6465454c35@sha256:8d26ec8c48d73b028e066c8b8849fdf4fcbadf8a0f53820ac3d9e33c0aea4b17"
 
 // Options controls one GATK MarkDuplicates command.
 type Options struct {

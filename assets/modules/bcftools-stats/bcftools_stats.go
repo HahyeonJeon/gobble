@@ -7,7 +7,7 @@ import (
 )
 
 // DefaultImage is the Sarek 3.10.0 bcftools image resolved for linux/amd64.
-const DefaultImage modules.Image = "community.wave.seqera.io/library/bcftools_htslib:1.23.1--9f08ec665533d64a@sha256:0b4d52ca9a56d07be3f78a12af654e5116f5112908dba277e6796fd9dfb83fe5"
+const DefaultImage modules.Image = "community.wave.seqera.io/library/bcftools_htslib:1.23.1--9f08ec665533d64a@sha256:9c0dea3c6d34d771912b4a2b0297d3e796db69d3c06620cb93b8ab41c072c613"
 
 // Options controls one bcftools stats command.
 type Options struct {

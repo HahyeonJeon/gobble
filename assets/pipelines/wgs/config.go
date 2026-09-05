@@ -29,8 +29,8 @@ import (
 
 const (
 	wgsFastQCImage   modules.Image = "quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0@sha256:e194048df39c3145d9b4e0a14f4da20b59d59250465b6f2a9cb698445fd45900"
-	wgsSamtoolsImage modules.Image = "community.wave.seqera.io/library/htslib_samtools:1.24--d697cfb9dce007cd@sha256:e994bf4eb3731150511a14f5706b7bdfd64df1b6d40898fff334286c027e0859"
-	wgsMultiQCImage  modules.Image = "community.wave.seqera.io/library/multiqc:1.35--c17fb751507e9dfc@sha256:c8e346f4f6080eadf1253505e6ff09ef004454fc18e8d672006fd7b222cc412e"
+	wgsSamtoolsImage modules.Image = "community.wave.seqera.io/library/htslib_samtools:1.24--d697cfb9dce007cd@sha256:a55ddea590e567a91df592300a960aa534cfc1bd16e7623e3938ec21f4f3df15"
+	wgsMultiQCImage  modules.Image = "community.wave.seqera.io/library/multiqc:1.35--c17fb751507e9dfc@sha256:ae074e961979ea85c72c6c67a8ed432fa3368c736b8fe37799f7223901ac84ab"
 )
 
 // DefaultConfig returns a fresh Sarek 3.10.0-derived joint-germline config. It

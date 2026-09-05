@@ -9,7 +9,7 @@ import (
 )
 
 // DefaultImage is the Sarek 3.10.0 mosdepth image resolved for linux/amd64.
-const DefaultImage modules.Image = "community.wave.seqera.io/library/htslib_mosdepth_gzip:4108dd38be84e40a@sha256:a3dc5ea2ce788c24079d24d1721ed28086874152c43b5e7dde3f638dcf64336a"
+const DefaultImage modules.Image = "community.wave.seqera.io/library/htslib_mosdepth_gzip:4108dd38be84e40a@sha256:426ef2ec8c93bc292862c2902a91f193ae336bdb84750581637d35f59017d2bc"
 
 // Options controls one mosdepth command.
 type Options struct {

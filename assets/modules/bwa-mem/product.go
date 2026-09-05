@@ -9,7 +9,7 @@ import (
 )
 
 // DefaultImage is the Sarek 3.10.0 BWA image resolved for linux/amd64.
-const DefaultImage modules.Image = "community.wave.seqera.io/library/bwa_htslib_samtools:83b50ff84ead50d0@sha256:d7e24dc1e4d93ca4d3a76a78d4c834a7be3985b0e1e56fddd61662e047863a8a"
+const DefaultImage modules.Image = "community.wave.seqera.io/library/bwa_htslib_samtools:83b50ff84ead50d0@sha256:48812e48a9462145c065d1b8e15d996c4a2c4c69469f1249fb601f25939cd48e"
 
 // Options controls one lifted read-grouped bwa mem command.
 type Options struct {
