@@ -277,6 +277,7 @@ func dockerCreateArgs(job Job) []string {
 	}
 	args := []string{
 		"create",
+		"--platform", "linux/amd64",
 		"--user", strconv.Itoa(os.Getuid()) + ":" + strconv.Itoa(os.Getgid()),
 		"--network=none",
 		"--entrypoint", job.Argv[0],
@@ -308,7 +309,7 @@ func ensureImage(ctx context.Context, image string) error {
 		return ctx.Err()
 	}
 	var buf bytes.Buffer
-	exit, err = dockerCLI(ctx, []string{"pull", image}, discard(), &buf)
+	exit, err = dockerCLI(ctx, []string{"pull", "--platform", "linux/amd64", image}, discard(), &buf)
 	if err != nil {
 		return dockerErr(ctx, "docker pull", err)
 	}

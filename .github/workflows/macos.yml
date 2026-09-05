@@ -1,0 +1,36 @@
+name: macOS launchers
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: macos-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  launcher:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15-intel, macos-15]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Native launcher tests
+        run: go test -race -count=1 ./cmd/gobble-container
+      - name: Native executable and setup syntax
+        run: |
+          go build -o /tmp/gobble ./cmd/gobble-container
+          /tmp/gobble --help
+          bash -n distribution/runtime/setup.sh
+      # Hosted Apple Silicon runners cannot run nested Docker Desktop VMs.
+      # tests/runtime-e2e/{smoke,demo}.py are separate real-Mac acceptance gates.

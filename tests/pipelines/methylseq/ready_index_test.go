@@ -14,7 +14,7 @@ import (
 	"testing"
 
 	"github.com/HahyeonJeon/gobble/internal/engine"
-	"github.com/HahyeonJeon/gobble/tests/internal/fixture"
+	"github.com/HahyeonJeon/gobble/internal/fixture"
 )
 
 func TestOfficialReadyIndexArchiveIdentity(t *testing.T) {

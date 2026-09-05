@@ -14,7 +14,7 @@ import (
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
-	"github.com/HahyeonJeon/gobble/tests/internal/fixture"
+	"github.com/HahyeonJeon/gobble/internal/fixture"
 	pc "github.com/HahyeonJeon/gobble/tests/internal/plancheck"
 	methylseqevidence "github.com/HahyeonJeon/gobble/tests/pipelines/methylseq"
 )

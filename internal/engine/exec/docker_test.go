@@ -49,6 +49,7 @@ func TestDockerCreateArgs(t *testing.T) {
 	}
 	want := []string{
 		"create",
+		"--platform", "linux/amd64",
 		"--user", strconv.Itoa(os.Getuid()) + ":" + strconv.Itoa(os.Getgid()),
 		"--network=none",
 		"--entrypoint", "cp",

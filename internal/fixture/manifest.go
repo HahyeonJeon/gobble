@@ -2,6 +2,7 @@ package fixture
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -204,9 +205,14 @@ func (m Manifest) StagedInputs() []StagedInput {
 
 // StageManifest fetches, copies, and rechecks every staged manifest byte.
 func StageManifest(cacheDir, workspace string, manifest Manifest) ([]StagedInput, error) {
+	return StageManifestContext(context.Background(), cacheDir, workspace, manifest)
+}
+
+// StageManifestContext stages inputs into a caller-owned fresh workspace.
+func StageManifestContext(ctx context.Context, cacheDir, workspace string, manifest Manifest) ([]StagedInput, error) {
 	inputs := manifest.StagedInputs()
 	for _, input := range inputs {
-		source, err := Fetch(cacheDir, input.Pin)
+		source, err := FetchContext(ctx, cacheDir, input.Pin)
 		if err != nil {
 			return nil, fmt.Errorf("fetch fixture %s: %w", input.Pin.Name, err)
 		}

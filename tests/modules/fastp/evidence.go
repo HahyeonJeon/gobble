@@ -1,7 +1,7 @@
 // Package fastpevidence owns fastp command-only fixture facts.
 package fastpevidence
 
-import "github.com/HahyeonJeon/gobble/tests/internal/fixture"
+import "github.com/HahyeonJeon/gobble/internal/fixture"
 
 const CacheDir = "tests/modules/fastp/testdata/cache"
 

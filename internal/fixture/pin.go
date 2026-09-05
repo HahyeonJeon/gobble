@@ -3,6 +3,7 @@
 package fixture
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -59,6 +61,21 @@ func (p Pin) Check(path string) error {
 
 // Fetch returns the verified cache path for p, downloading it when absent.
 func Fetch(cacheDir string, p Pin) (string, error) {
+	return FetchContext(context.Background(), cacheDir, p)
+}
+
+// FetchContext verifies a download before publishing it to the shared cache.
+// Cancellation and failed verification leave no partially valid cache entry.
+func FetchContext(ctx context.Context, cacheDir string, p Pin) (string, error) {
+	if p.Name == "" || p.Name == "." || p.Name == ".." || strings.ContainsAny(p.Name, "/\\") || p.Bytes < 0 || len(p.SHA256) != 64 {
+		return "", fmt.Errorf("invalid fixture pin %q", p.Name)
+	}
+	if _, err := hex.DecodeString(p.SHA256); err != nil {
+		return "", err
+	}
+	if err := ctx.Err(); err != nil {
+		return "", err
+	}
 	dest := p.CachePath(cacheDir)
 	if err := p.Check(dest); err == nil {
 		return dest, nil
@@ -66,21 +83,26 @@ func Fetch(cacheDir string, p Pin) (string, error) {
 	if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
 		return "", fmt.Errorf("pin %s: mkdir: %w", p.Name, err)
 	}
-	client := &http.Client{Timeout: 60 * time.Second}
-	response, err := client.Get(p.URL)
+	client := &http.Client{Timeout: 2 * time.Minute}
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, p.URL, nil)
+	if err != nil {
+		return "", err
+	}
+	response, err := client.Do(request)
 	if err != nil {
 		return "", fmt.Errorf("pin %s: download %s: %w", p.Name, p.URL, err)
 	}
 	defer response.Body.Close()
 	if response.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("pin %s: download %s: %w", p.Name, p.URL, os.ErrNotExist)
+		return "", fmt.Errorf("pin %s: download %s: HTTP %d", p.Name, p.URL, response.StatusCode)
 	}
-	tmp := dest + ".tmp"
-	f, err := os.Create(tmp)
+	f, err := os.CreateTemp(filepath.Dir(dest), ".download-*")
 	if err != nil {
 		return "", err
 	}
-	_, copyErr := io.Copy(f, response.Body)
+	tmp := f.Name()
+	defer os.Remove(tmp)
+	_, copyErr := io.Copy(f, io.LimitReader(response.Body, p.Bytes+1))
 	closeErr := f.Close()
 	if copyErr != nil {
 		_ = os.Remove(tmp)
@@ -90,10 +112,13 @@ func Fetch(cacheDir string, p Pin) (string, error) {
 		_ = os.Remove(tmp)
 		return "", closeErr
 	}
-	if err := os.Rename(tmp, dest); err != nil {
+	if err := p.Check(tmp); err != nil {
 		return "", err
 	}
-	if err := p.Check(dest); err != nil {
+	if err := ctx.Err(); err != nil {
+		return "", err
+	}
+	if err := os.Rename(tmp, dest); err != nil {
 		return "", err
 	}
 	return dest, nil

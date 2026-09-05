@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/HahyeonJeon/gobble/tests/internal/fixture"
+	"github.com/HahyeonJeon/gobble/internal/fixture"
 	fastpevidence "github.com/HahyeonJeon/gobble/tests/modules/fastp"
 	fastqcevidence "github.com/HahyeonJeon/gobble/tests/modules/fastqc"
 	multiqcevidence "github.com/HahyeonJeon/gobble/tests/modules/multiqc"

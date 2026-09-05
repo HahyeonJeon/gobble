@@ -26,6 +26,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return writeVersion(stdout, stderr)
 	}
 	switch req.command {
+	case "demo":
+		return runDemo(req, stdout, stderr)
 	case "init":
 		return runInit(req, stdout, stderr)
 	case "doctor":
