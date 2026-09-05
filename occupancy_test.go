@@ -51,14 +51,16 @@ func TestOccupancyTable(t *testing.T) {
 		err := gobble.Run(t.Context(), g, dir, 0, testOccupyOption(t))
 		requireRunError(t, "second Run", err, gobble.DefectOccupiedWorkspace, "")
 	})
-	t.Run("Resume occupied-workspace", func(t *testing.T) {
+	t.Run("Resume after scheduler exit", func(t *testing.T) {
 		dir := readyRunWorkspace(t)
 		g := mustCompose(processCopyPipeline)(t)
 		if err := gobble.Run(t.Context(), g, dir, 0, testOccupyOption(t)); err != nil {
 			t.Fatalf("Run() error = %v", err)
 		}
 		err := gobble.Resume(t.Context(), g, dir, 0, testOccupyOption(t))
-		requireResumeError(t, "resume occupied", err, gobble.DefectOccupiedWorkspace, "")
+		if err != nil {
+			t.Fatalf("automatic reconciliation: %v", err)
+		}
 	})
 }
 

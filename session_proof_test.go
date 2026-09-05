@@ -18,8 +18,6 @@ func TestSessionProofCrashedOccupyReleaseResume(t *testing.T) {
 	forcePublicDeadOwner(t, dir)
 	markCopyRunning(t, dir)
 
-	err := gobble.Resume(t.Context(), g, dir, 0, testOccupyOption(t))
-	requireResumeError(t, "resume without release", err, gobble.DefectOccupiedWorkspace, "")
 	if occupancySnapshot(t, dir) != "active" {
 		t.Fatalf("crashed occupy occupancy got %s, want active", occupancySnapshot(t, dir))
 	}

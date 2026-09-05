@@ -269,6 +269,21 @@ func (s *sched) executor() exec.Executor {
 }
 
 func (s *sched) loop(ctx context.Context, n int) []Defect {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	controlTick := time.NewTicker(controlPollInterval)
+	defer controlTick.Stop()
+	durableStop := false
+	checkStop := func() {
+		requested, err := stopRequested(s.workspace, s.run.Occupancy.Lease)
+		durableStop = durableStop || requested
+		if err != nil {
+			s.notePersist(err)
+		}
+		if requested || err != nil {
+			cancel()
+		}
+	}
 	if s.lease != nil {
 		defer s.lease.mutator.Unlock()
 	}
@@ -307,6 +322,9 @@ func (s *sched) loop(ctx context.Context, n int) []Defect {
 			return
 		}
 		canceled = true
+		cancel()
+		s.run.Status = RunStopping
+		s.notePersist(s.persistControl())
 		settle = newSettlement()
 		settlementDone = settle.ctx.Done()
 		for ident, h := range handles {
@@ -350,10 +368,16 @@ func (s *sched) loop(ctx context.Context, n int) []Defect {
 		finishIdent(r.ID)
 	}
 	for {
+		checkStop()
 		if ctx.Err() != nil && !canceled {
 			startSettlement()
 		}
 		for !canceled && s.persist == nil && s.escape == nil && running < n {
+			checkStop()
+			if ctx.Err() != nil {
+				startSettlement()
+				break
+			}
 			id, d := s.nextReady()
 			if d != nil {
 				s.escape = d
@@ -430,12 +454,25 @@ func (s *sched) loop(ctx context.Context, n int) []Defect {
 			s.apply(r)
 		case <-ctx.Done():
 			startSettlement()
+		case <-controlTick.C:
 		}
 	}
 	if canceled {
 		settle.close()
 		s.syncUnknown()
+		s.run.Status = RunStopped
+		if len(s.unknownUnits()) > 0 {
+			s.run.Status = RunInterrupted
+		}
+		s.run.Ended = time.Now().UTC().Format(time.RFC3339Nano)
+		if durableStop && len(s.unknownUnits()) == 0 && s.persist == nil {
+			s.run.Occupancy.Active = false
+			s.run.Occupancy.Closed = s.run.Ended
+		}
 		s.notePersist(s.persistControl())
+		if !s.run.Occupancy.Active && s.persist == nil {
+			DropHeldLease(s.workspace)
+		}
 		out := s.cancelDefects()
 		if unknown := s.unknownUnits(); len(unknown) > 0 {
 			out = append(out, unknownBackendDefects(unknown)...)
@@ -1458,7 +1495,7 @@ func (s *sched) blockFrom(ident string) {
 func (s *sched) finish() {
 	s.syncUnknown()
 	if len(s.unknownUnits()) > 0 {
-		s.run.Status = StatusUnknown
+		s.run.Status = RunInterrupted
 		s.notePersist(s.persistControl())
 		return
 	}

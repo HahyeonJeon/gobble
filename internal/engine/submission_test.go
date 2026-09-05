@@ -82,17 +82,10 @@ func TestDockerSubmissionSurvivesControllerDeath(t *testing.T) {
 			if _, d := Inspect(workspace, viewRun, "", req.Identity); len(d) > 0 {
 				t.Fatalf("Inspect after death: %v", d)
 			}
-			if d := Release(workspace, req.Identity); len(d) > 0 {
-				t.Fatalf("Release after death: %v", d)
-			}
-			st, err := fake.State()
-			if err != nil || st.Exists || st.Running {
-				t.Fatalf("old container was not settled: %+v, %v", st, err)
-			}
 			if d := Resume(t.Context(), req); len(d) > 0 {
 				t.Fatalf("Resume after death: %v", d)
 			}
-			st, err = fake.State()
+			st, err := fake.State()
 			wantStarts := 1
 			if boundary == "after-start" || boundary == "after-rm" {
 				wantStarts++

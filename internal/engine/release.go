@@ -80,6 +80,20 @@ func Release(workspace string, supplied *InstallIdentity) []Defect {
 		lock = claimed
 		defer lock.Close()
 	}
+	d := reconcileWorkspaceLocked(workspace, supplied, owner)
+	if len(d) == 0 {
+		DropHeldLease(workspace)
+	}
+	return d
+}
+
+// Caller holds the run mutation lock throughout reconciliation and publication.
+// Resume retains that same lock when acquiring its new owner lease.
+func reconcileWorkspaceLocked(workspace string, supplied *InstallIdentity, owner bool) []Defect {
+	host, err := currentHost()
+	if err != nil {
+		return pathDefects(err)
+	}
 	run, plan, hasPlan, taskFile, _, d := readCoherentControl(workspace)
 	if len(d) > 0 {
 		return d
@@ -140,7 +154,9 @@ func Release(workspace string, supplied *InstallIdentity) []Defect {
 	occ.Unknown = nil
 	run.Occupancy = occ
 	latest := latestAttempts(tasks)
-	run.Status = runStatusFromTasks(latest)
+	if run.Status != RunStopped {
+		run.Status = runStatusFromTasks(latest)
+	}
 	if run.Ended == "" {
 		run.Ended = now
 	}
@@ -151,7 +167,6 @@ func Release(workspace string, supplied *InstallIdentity) []Defect {
 	if err := s.writeReleasedCheckpoint(plan); err != nil {
 		return pathDefects(err)
 	}
-	DropHeldLease(workspace)
 	return nil
 }
 
@@ -455,7 +470,12 @@ func runStatusFromTasks(tasks []jsonTaskState) string {
 	}
 	for _, st := range tasks {
 		if st.Status == StatusUnknown {
-			return StatusUnknown
+			return RunInterrupted
+		}
+	}
+	for _, st := range tasks {
+		if st.Status == StatusIncomplete || st.Status == StatusRunning {
+			return RunInterrupted
 		}
 	}
 	for _, st := range tasks {

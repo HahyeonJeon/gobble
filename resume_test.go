@@ -31,14 +31,16 @@ func TestResumeRequiresWithIdentity(t *testing.T) {
 	requireResumeError(t, "missing resume identity", err, gobble.DefectInvalidRequest, "identity")
 }
 
-func TestResumeActiveOccupy(t *testing.T) {
+func TestResumeAfterSchedulerExit(t *testing.T) {
 	dir := readyRunWorkspace(t)
 	g := mustCompose(processCopyPipeline)(t)
 	if err := gobble.Run(t.Context(), g, dir, 0, testOccupyOption(t)); err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
 	err := gobble.Resume(t.Context(), g, dir, 0, testOccupyOption(t))
-	requireResumeError(t, "active occupy", err, gobble.DefectOccupiedWorkspace, "")
+	if err != nil {
+		t.Fatalf("automatic reconciliation: %v", err)
+	}
 }
 
 func TestResumeUnsupportedSchemaNoOccupy(t *testing.T) {
@@ -263,7 +265,9 @@ func TestResumeAllSuccessReuses(t *testing.T) {
 		t.Fatalf("reuse executed a new attempt")
 	}
 	err := gobble.Resume(t.Context(), g, dir, 0, testOccupyOption(t))
-	requireResumeError(t, "second resume", err, gobble.DefectOccupiedWorkspace, "")
+	if err != nil {
+		t.Fatalf("second Resume: %v", err)
+	}
 	err = gobble.Run(t.Context(), g, dir, 0, testOccupyOption(t))
 	requireRunError(t, "run during resume occupy", err, gobble.DefectOccupiedWorkspace, "")
 }

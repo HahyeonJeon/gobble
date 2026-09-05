@@ -69,6 +69,7 @@ const packedInnerTemplate = `package main
 import (
 	"bytes"
 	"context"
+	"time"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -153,6 +154,12 @@ func run() int {
 			return writeFail("inspect", "stdout write failed")
 		}
 		return 0
+	case "stop":
+		ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
+		defer cancel()
+		result, err := gobble.Stop(ctx, req.workspace, gobble.WithIdentity(identity))
+		if err != nil { return writeLibErr(err) }
+		return writeJSON("stop", result)
 	case "release":
 		if err := gobble.Release(req.workspace, gobble.WithIdentity(identity)); err != nil {
 			return writeLibErr(err)
@@ -427,7 +434,7 @@ func interpret(raw rawArgs) (*request, *gobble.Error) {
 		if raw.instanceSet {
 			req.instance = raw.instance
 		}
-	case "release":
+	case "release", "stop":
 		if len(operands) > 0 {
 			return fail("extra operand")
 		}
@@ -466,7 +473,7 @@ func repeatedFlagError(op string, raw rawArgs) *gobble.Error {
 
 func isOperate(command string) bool {
 	switch command {
-	case "compose", "validate", "plan", "run", "inspect", "resume", "release":
+	case "compose", "validate", "plan", "run", "inspect", "resume", "release", "stop":
 		return true
 	default:
 		return false
@@ -481,7 +488,7 @@ func flagsFor(command string) (workspace, cap, instance, sample bool) {
 		return true, true, false, true
 	case "inspect":
 		return true, false, true, false
-	case "release":
+	case "release", "stop":
 		return true, false, false, false
 	default:
 		return false, false, false, false
