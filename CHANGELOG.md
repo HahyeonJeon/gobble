@@ -22,6 +22,8 @@
 - Preserve structured Scatter member paths and `DeriveReplaceExt` through
   planning, execution, Gather, and Resume. Earlier code could report missing
   output even after a bioinformatics tool completed successfully.
+- Let GenomicsDB initialize its own fresh workspace after removing only the
+  empty Tree root prepared by Gobble; reject implicit database overwrites.
 - Include failed task log tails in installed-assay CI diagnostics.
 
 ### Terminal monitoring

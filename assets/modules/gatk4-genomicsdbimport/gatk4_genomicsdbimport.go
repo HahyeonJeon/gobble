@@ -38,7 +38,7 @@ func Add(parent modules.Parent, variants []Variant, interval gobble.Handle, opti
 	if outDir.IsZero() {
 		outDir = gobble.Dir("work/gatk4-genomicsdbimport")
 	}
-	protected := []string{"--variant", "--genomicsdb-workspace-path", "--intervals", "--tmp-dir", "--sample-name-map", "--genomicsdb-update-workspace-path"}
+	protected := []string{"--variant", "--genomicsdb-workspace-path", "--intervals", "--tmp-dir", "--sample-name-map", "--genomicsdb-update-workspace-path", "--overwrite-existing-genomicsdb-workspace"}
 	extra, image, resources, err := modules.ResolveGATK4Options(unit, options.Options, gobble.Resources{CPU: 2, Memory: "6g"}, protected)
 	if err != nil {
 		return Ports{}, err
@@ -57,8 +57,12 @@ func Add(parent modules.Parent, variants []Variant, interval gobble.Handle, opti
 		inputs = append(inputs, gobble.Bind{Name: "gvcf_" + strconv.Itoa(i), From: variant.GVCF}, gobble.Bind{Name: "tbi_" + strconv.Itoa(i), From: variant.TBI})
 	}
 	command = append(command, "--tmp-dir", ".")
+	// Gobble prepares Tree roots; GenomicsDB's native workspace creator must
+	// initialize this directory itself. Remove only an empty, task-local root.
+	// rmdir fails on existing content instead of authorizing a database overwrite.
 	script := prelude +
 		"workspace=" + modules.ShellQuote(outDir.String()) + "/$stem\n" +
+		"if [ -d \"$workspace\" ]; then rmdir \"$workspace\"; fi\n" +
 		modules.ShellCommand(command) + " --genomicsdb-workspace-path \"$workspace\" --intervals \"$interval\""
 	if len(extra) > 0 {
 		script += " " + modules.ShellCommand(extra)
