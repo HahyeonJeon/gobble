@@ -39,12 +39,13 @@ The separate `docker-smoke` CI job executes the live engine smoke tests on a
 Linux host. To run the same tests on a configured host:
 
 ```sh
-env -i PATH=/usr/bin:/bin docker info
-go test -tags=live -count=1 -run '^TestRunDocker(Publishes|BadImageContained)$' ./internal/engine
+docker info
+go test -tags=live -count=1 -run '^(TestRunDocker(Publishes|BadImageContained)|TestDockerLiveControllerDeathRecovery)$' ./internal/engine
 ```
 
-This verifies Docker publication/log collection/cleanup and a contained image
-failure. Installed generic/packed recovery, live streaming logs, daemon loss,
+This suite covers Docker publication/log collection/cleanup, a contained image
+failure, and controller death around container creation/start followed by
+Release/Resume. Installed generic/packed Docker recovery, live streaming logs, daemon loss,
 and Windows/WSL are additional gates in the
 [v0.2.0 plan](../../docs/v0.2.0/plan.md). The existing broader installed suite is
 `go test -tags=live ./tests/install-e2e`; it has fixture/network prerequisites

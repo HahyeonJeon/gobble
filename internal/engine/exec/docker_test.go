@@ -14,13 +14,33 @@ import (
 
 const pinnedAlpine = "alpine:3.21"
 
-func TestDockerRunArgs(t *testing.T) {
-	job := Job{
-		Image:   pinnedAlpine,
-		Argv:    []string{"cp", "in/sample.txt", "out/docker/sample.txt"},
-		Isolate: "/iso",
+// Standard setup for adapter unit tests; submission-order and recovery tests
+// provide their own complete fake daemon instead.
+func dockerSetupFixture(args []string, out io.Writer) bool {
+	if len(args) == 0 {
+		return false
 	}
-	args := dockerRunArgs(job)
+	switch args[0] {
+	case "context":
+		_, _ = io.WriteString(out, "unix:///var/run/docker.sock\n")
+	case "info":
+		_, _ = io.WriteString(out, "test-daemon\n")
+	case "start":
+	default:
+		return false
+	}
+	return true
+}
+
+func TestDockerCreateArgs(t *testing.T) {
+	job := Job{
+		Submission: &Submission{Token: strings.Repeat("a", 32)},
+		Record:     func(context.Context, Handle, Report) error { return nil },
+		Image:      pinnedAlpine,
+		Argv:       []string{"cp", "in/sample.txt", "out/docker/sample.txt"},
+		Isolate:    "/iso",
+	}
+	args := dockerCreateArgs(job)
 	joined := strings.Join(args, " ")
 	for _, banned := range []string{"--cpus", "--memory"} {
 		if strings.Contains(joined, banned) {
@@ -28,7 +48,7 @@ func TestDockerRunArgs(t *testing.T) {
 		}
 	}
 	want := []string{
-		"run", "-d",
+		"create",
 		"--user", strconv.Itoa(os.Getuid()) + ":" + strconv.Itoa(os.Getgid()),
 		"--network=none",
 		"--entrypoint", "cp",
@@ -47,8 +67,10 @@ func TestDockerRunArgs(t *testing.T) {
 	}
 }
 
-func TestDockerRunArgsNonZeroResources(t *testing.T) {
+func TestDockerCreateArgsNonZeroResources(t *testing.T) {
 	job := Job{
+		Submission:  &Submission{Token: strings.Repeat("a", 32)},
+		Record:      func(context.Context, Handle, Report) error { return nil },
 		Image:       pinnedAlpine,
 		Argv:        []string{"true"},
 		CPU:         1.5,
@@ -56,7 +78,7 @@ func TestDockerRunArgsNonZeroResources(t *testing.T) {
 		Env:         map[string]string{"HOME": "/tmp", "FOO": "bar"},
 		Isolate:     "/iso",
 	}
-	args := dockerRunArgs(job)
+	args := dockerCreateArgs(job)
 	if !hasArgPair(args, "--cpus", "1.5") {
 		t.Fatalf("non-zero docker argv %v, want --cpus 1.5", args)
 	}
@@ -68,33 +90,37 @@ func TestDockerRunArgsNonZeroResources(t *testing.T) {
 	}
 }
 
-func TestDockerRunArgsMemory15g(t *testing.T) {
+func TestDockerCreateArgsMemory15g(t *testing.T) {
 	job := Job{
+		Submission:  &Submission{Token: strings.Repeat("a", 32)},
+		Record:      func(context.Context, Handle, Report) error { return nil },
 		Image:       pinnedAlpine,
 		Argv:        []string{"true"},
 		MemoryBytes: 1610612736,
 		Isolate:     "/iso",
 	}
-	args := dockerRunArgs(job)
+	args := dockerCreateArgs(job)
 	if !hasArgPair(args, "--memory", "1610612736") {
 		t.Fatalf("1.5g docker argv %v, want --memory 1610612736", args)
 	}
 }
 
-func TestDockerRunArgsZeroResourcesOmitFlags(t *testing.T) {
+func TestDockerCreateArgsZeroResourcesOmitFlags(t *testing.T) {
 	job := Job{
-		Image:   pinnedAlpine,
-		Argv:    []string{"true"},
-		Isolate: "/iso",
+		Submission: &Submission{Token: strings.Repeat("a", 32)},
+		Record:     func(context.Context, Handle, Report) error { return nil },
+		Image:      pinnedAlpine,
+		Argv:       []string{"true"},
+		Isolate:    "/iso",
 	}
-	args := dockerRunArgs(job)
+	args := dockerCreateArgs(job)
 	joined := strings.Join(args, " ")
 	if strings.Contains(joined, "--cpus") || strings.Contains(joined, "--memory") {
 		t.Fatalf("zero docker argv %v contains resource flags", args)
 	}
 	job.MemoryBytes = 0
 	job.Memory = "0m"
-	args = dockerRunArgs(job)
+	args = dockerCreateArgs(job)
 	if strings.Contains(strings.Join(args, " "), "--memory") {
 		t.Fatalf("zero-memory docker argv %v contains --memory", args)
 	}
@@ -118,6 +144,9 @@ func TestDockerOperationsUseEngineClientEnv(t *testing.T) {
 	}
 	var recs []rec
 	DockerCLI = func(ctx context.Context, args []string, env []string, stdout, stderr io.Writer) (int, error) {
+		if dockerSetupFixture(args, stdout) {
+			return 0, nil
+		}
 		recs = append(recs, rec{
 			args: append([]string(nil), args...),
 			env:  append([]string(nil), env...),
@@ -126,7 +155,7 @@ func TestDockerOperationsUseEngineClientEnv(t *testing.T) {
 		if len(args) > 0 && args[0] == "image" {
 			return 0, nil
 		}
-		if len(args) > 0 && args[0] == "run" {
+		if len(args) > 0 && args[0] == "create" {
 			_, _ = io.WriteString(stdout, "cid-submit\n")
 			return 0, nil
 		}
@@ -154,10 +183,12 @@ func TestDockerOperationsUseEngineClientEnv(t *testing.T) {
 		"TOKEN":          "task-token",
 	}
 	if _, _, err := d.Submit(context.Background(), Job{
-		Image:   pinnedAlpine,
-		Argv:    []string{"true"},
-		Isolate: t.TempDir(),
-		Env:     taskEnv,
+		Submission: &Submission{Token: strings.Repeat("a", 32)},
+		Record:     func(context.Context, Handle, Report) error { return nil },
+		Image:      pinnedAlpine,
+		Argv:       []string{"true"},
+		Isolate:    t.TempDir(),
+		Env:        taskEnv,
 	}); err != nil {
 		t.Fatalf("Submit() error = %v", err)
 	}
@@ -171,9 +202,12 @@ func TestDockerOperationsUseEngineClientEnv(t *testing.T) {
 		t.Fatalf("Reconcile() error = %v", err)
 	}
 
-	wantEnv := []string{"PATH=/usr/bin:/bin"}
 	seen := map[string]bool{}
 	for _, r := range recs {
+		wantEnv := dockerClientEnv()
+		if r.args[0] == "image" || r.args[0] == "create" || r.args[len(r.args)-1] == "cid-submit" {
+			wantEnv = append(wantEnv, "DOCKER_HOST=unix:///var/run/docker.sock")
+		}
 		if strings.Join(r.env, "\x00") != strings.Join(wantEnv, "\x00") {
 			t.Fatalf("docker client env for %v got %v, want %v", r.args, r.env, wantEnv)
 		}
@@ -184,7 +218,7 @@ func TestDockerOperationsUseEngineClientEnv(t *testing.T) {
 		}
 		joined := strings.Join(r.args, " ")
 		switch {
-		case len(r.args) > 0 && r.args[0] == "run":
+		case len(r.args) > 0 && r.args[0] == "create":
 			seen["Submit"] = true
 			if !contains(r.args, "--network=none") {
 				t.Fatalf("Submit docker argv %v lacks --network=none", r.args)
@@ -234,6 +268,9 @@ func TestDockerTerminalCleanupFailuresAreVisible(t *testing.T) {
 			t.Cleanup(func() { DockerCLI = orig })
 			calls := map[string]int{}
 			DockerCLI = func(ctx context.Context, args []string, env []string, stdout, stderr io.Writer) (int, error) {
+				if dockerSetupFixture(args, stdout) {
+					return 0, nil
+				}
 				joined := strings.Join(args, " ")
 				switch {
 				case strings.Contains(joined, "State.Running"):
@@ -313,6 +350,9 @@ func TestDockerCachedLeftoverRetriesRemoveAndClearsRuntimeID(t *testing.T) {
 	t.Cleanup(func() { DockerCLI = orig })
 	calls := map[string]int{}
 	DockerCLI = func(ctx context.Context, args []string, env []string, stdout, stderr io.Writer) (int, error) {
+		if dockerSetupFixture(args, stdout) {
+			return 0, nil
+		}
 		joined := strings.Join(args, " ")
 		switch {
 		case strings.Contains(joined, "State.Running"):
@@ -363,6 +403,9 @@ func TestDockerStoppedUnknownExitIsUnproved(t *testing.T) {
 			t.Cleanup(func() { DockerCLI = orig })
 			calls := 0
 			DockerCLI = func(ctx context.Context, args []string, env []string, stdout, stderr io.Writer) (int, error) {
+				if dockerSetupFixture(args, stdout) {
+					return 0, nil
+				}
 				calls++
 				if !strings.Contains(strings.Join(args, " "), "State.Running") {
 					t.Fatalf("unexpected docker argv: %v", args)
@@ -390,6 +433,9 @@ func TestDockerSubmitPersistsLaunchedContainerImage(t *testing.T) {
 	orig := DockerCLI
 	t.Cleanup(func() { DockerCLI = orig })
 	DockerCLI = func(ctx context.Context, args []string, env []string, stdout, stderr io.Writer) (int, error) {
+		if dockerSetupFixture(args, stdout) {
+			return 0, nil
+		}
 		joined := strings.Join(args, " ")
 		if strings.Contains(joined, "{{.Image}}") && strings.Contains(joined, "cid-launched") {
 			_, _ = io.WriteString(stdout, "sha256:launched-container\n")
@@ -399,7 +445,7 @@ func TestDockerSubmitPersistsLaunchedContainerImage(t *testing.T) {
 			_, _ = io.WriteString(stdout, "sha256:authored-tag\n")
 			return 0, nil
 		}
-		if len(args) > 0 && args[0] == "run" {
+		if len(args) > 0 && args[0] == "create" {
 			_, _ = io.WriteString(stdout, "cid-launched\n")
 			return 0, nil
 		}
@@ -409,9 +455,11 @@ func TestDockerSubmitPersistsLaunchedContainerImage(t *testing.T) {
 		return 0, nil
 	}
 	_, rep, err := NewDocker().Submit(context.Background(), Job{
-		Image:   pinnedAlpine,
-		Argv:    []string{"true"},
-		Isolate: t.TempDir(),
+		Submission: &Submission{Token: strings.Repeat("a", 32)},
+		Record:     func(context.Context, Handle, Report) error { return nil },
+		Image:      pinnedAlpine,
+		Argv:       []string{"true"},
+		Isolate:    t.TempDir(),
 	})
 	if err != nil {
 		t.Fatalf("Submit() error = %v", err)
@@ -438,9 +486,20 @@ func TestDockerPollLogCreateFailureMarksIncompleteLogs(t *testing.T) {
 	orig := DockerCLI
 	t.Cleanup(func() { DockerCLI = orig })
 	DockerCLI = func(ctx context.Context, args []string, env []string, stdout, stderr io.Writer) (int, error) {
+		if dockerSetupFixture(args, stdout) {
+			return 0, nil
+		}
 		joined := strings.Join(args, " ")
-		if len(args) > 0 && args[0] == "run" {
+		if len(args) > 0 && args[0] == "create" {
 			_, _ = io.WriteString(stdout, "cid-log\n")
+			return 0, nil
+		}
+		if args[0] == "container" {
+			_, _ = io.WriteString(stdout, "cid-log\n")
+			return 0, nil
+		}
+		if strings.Contains(joined, "Config.Labels") {
+			_, _ = io.WriteString(stdout, strings.Repeat("a", 32))
 			return 0, nil
 		}
 		if strings.Contains(joined, "State.Running") {
@@ -462,9 +521,11 @@ func TestDockerPollLogCreateFailureMarksIncompleteLogs(t *testing.T) {
 	}
 	d := NewDocker()
 	h, _, err := d.Submit(context.Background(), Job{
-		Image:   pinnedAlpine,
-		Argv:    []string{"true"},
-		Isolate: work,
+		Submission: &Submission{Token: strings.Repeat("a", 32)},
+		Record:     func(context.Context, Handle, Report) error { return nil },
+		Image:      pinnedAlpine,
+		Argv:       []string{"true"},
+		Isolate:    work,
 	})
 	if err != nil {
 		t.Fatalf("Submit() error = %v", err)
@@ -486,12 +547,15 @@ func TestDockerSubmitPreservesContextDeadline(t *testing.T) {
 	orig := DockerCLI
 	t.Cleanup(func() { DockerCLI = orig })
 	DockerCLI = func(ctx context.Context, args []string, env []string, stdout, stderr io.Writer) (int, error) {
+		if dockerSetupFixture(args, stdout) {
+			return 0, nil
+		}
 		<-ctx.Done()
 		return -1, ctx.Err()
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Millisecond)
 	defer cancel()
-	_, _, err := NewDocker().Submit(ctx, Job{Image: pinnedAlpine, Argv: []string{"true"}, Isolate: t.TempDir()})
+	_, _, err := NewDocker().Submit(ctx, Job{Submission: &Submission{Token: strings.Repeat("a", 32)}, Record: func(context.Context, Handle, Report) error { return nil }, Image: pinnedAlpine, Argv: []string{"true"}, Isolate: t.TempDir()})
 	if !errors.Is(err, context.DeadlineExceeded) {
 		t.Fatalf("Submit() error = %v, want context.DeadlineExceeded", err)
 	}
@@ -501,12 +565,15 @@ func TestDockerSubmitKilledCLIReturnsContextErr(t *testing.T) {
 	orig := DockerCLI
 	t.Cleanup(func() { DockerCLI = orig })
 	DockerCLI = func(ctx context.Context, args []string, env []string, stdout, stderr io.Writer) (int, error) {
+		if dockerSetupFixture(args, stdout) {
+			return 0, nil
+		}
 		<-ctx.Done()
 		return -1, nil
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Millisecond)
 	defer cancel()
-	_, _, err := NewDocker().Submit(ctx, Job{Image: pinnedAlpine, Argv: []string{"true"}, Isolate: t.TempDir()})
+	_, _, err := NewDocker().Submit(ctx, Job{Submission: &Submission{Token: strings.Repeat("a", 32)}, Record: func(context.Context, Handle, Report) error { return nil }, Image: pinnedAlpine, Argv: []string{"true"}, Isolate: t.TempDir()})
 	if !errors.Is(err, context.DeadlineExceeded) {
 		t.Fatalf("Submit() killed CLI error = %v, want context.DeadlineExceeded", err)
 	}
@@ -525,6 +592,9 @@ func TestEmptyImageNeverInvokesDockerAdapter(t *testing.T) {
 	orig := DockerCLI
 	t.Cleanup(func() { DockerCLI = orig })
 	DockerCLI = func(ctx context.Context, args []string, env []string, stdout, stderr io.Writer) (int, error) {
+		if dockerSetupFixture(args, stdout) {
+			return 0, nil
+		}
 		t.Fatalf("docker invoked for empty Image: %v", args)
 		return -1, nil
 	}

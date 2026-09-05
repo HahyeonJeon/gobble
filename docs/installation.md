@@ -4,10 +4,11 @@ The current supported execution target is Linux/amd64. Windows/WSL setup is
 proposed for v0.2.0 and is not yet a validated installation path. See the
 [v0.2.0 design](v0.2.0/design.md).
 
-Running Gobble and its Go toolchain inside Docker is also a proposed beginner
-installation route. WSL2 is not a Gobble dependency, and Docker Desktop's WSL2
+The accepted v0.2.0 default is Gobble and its Go toolchain inside Docker, with a
+small launcher for agent-driven authoring and execution. Advanced users retain
+direct Linux installation. WSL2 is not a Gobble dependency, and Docker Desktop's WSL2
 backend does not require a separate Ubuntu distribution. See the
-[container installation proposal](v0.2.0/container-installation.md) for the
+[container installation design](v0.2.0/container-installation.md) for the
 Windows backend choices and the implementation/validation still required.
 
 For a first local example, follow [Hello Gobble](../examples/hello/README.md).

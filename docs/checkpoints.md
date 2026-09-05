@@ -37,11 +37,11 @@ The previous generation is retained for diagnosis. It is **not an automatic
 rollback point**: rolling back state cannot roll back a process or container
 that has already started. Do not manually edit the pointer to authorize reruns.
 
-Atomic file publication fixes mixed plan/task/run snapshots. It does not yet
-close the separate window between a Docker submission and recording its runtime
-ID. Durable submission intents and backend identity reconciliation are the next
-part of the [v0.2.0 plan](v0.2.0/plan.md). The current public recovery sequence
-remains [Inspect → Release → Resume](operations.md#recovery).
+Atomic publication fixes mixed plan/task/run snapshots. Docker now uses these
+checkpoints to record its submission intent and created container ID before
+starting work. See [Docker execution](docker-execution.md) for that protocol and
+its validation boundary. The current public recovery sequence remains
+[Inspect → Release → Resume](operations.md#recovery).
 
 ## Legacy layout
 
