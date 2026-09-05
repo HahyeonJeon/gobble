@@ -1,7 +1,10 @@
 # v0.2.0 design decisions
 
-Status: proposals for discussion. Examples in this document are proposed CLI
-syntax, not commands available in the current implementation.
+Status: the user approved the recommended D1–D3 direction. D2 and D3 are accepted
+for implementation. Following the user's question about running Gobble itself
+in Docker, D1 has a concrete [container installation proposal](container-installation.md)
+for selecting the primary beginner installation route. Examples below are
+proposed CLI syntax, not commands available in the current implementation.
 
 ## D1 — Local installation and Windows
 
@@ -15,6 +18,15 @@ Recommend A for v0.2.0, while keeping runtime adapters replaceable. The Windows
 promise must say "Windows via WSL2", and the workspace should be on the WSL
 Linux filesystem. Installation should diagnose required restarts, missing
 virtualization, daemon availability, and permissions before the first analysis.
+
+**Follow-up:** A was the original recommendation for the smallest change to the
+existing Linux engine. C is technically feasible and can give beginners a
+smaller host setup: Docker Desktop and a launcher, with Go and Gobble inside a
+versioned Linux container. WSL2 is not a Gobble requirement. Docker Desktop can
+use WSL2 without the user installing a separate Ubuntu distribution; supported
+Windows configurations can instead use the Hyper-V backend. See the follow-up
+proposal before finalizing the primary installation path. Neither an image nor
+Windows support is published or validated yet.
 
 Proposed setup roles:
 
@@ -75,6 +87,12 @@ leaves the previous generation readable. A crash after publication exposes the
 complete new generation. Partial future generations are never interpreted as
 completed work. Changing schemas requires an explicit migration path for existing
 workspaces; old state remains available for rollback and diagnosis.
+
+The checkpoint publication portion is implemented in this branch. See
+[checkpoint storage](../checkpoints.md) for its compatibility boundary and
+validation. Automatic rollback is deliberately unavailable: a previous state
+cannot prove that later external jobs did not start. Submission intent and
+backend reconciliation remain the next part of D2.
 
 **Backend recovery is part of this decision.** A checkpoint alone cannot account
 for a container started after the last commit. Persist an execution intent before

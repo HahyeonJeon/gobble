@@ -8,6 +8,8 @@ import (
 	"runtime/debug"
 	"strings"
 	"testing"
+
+	"github.com/HahyeonJeon/gobble/internal/testutil"
 )
 
 func testInstallIdentity() *InstallIdentity {
@@ -171,7 +173,7 @@ func TestInspectIdentityMissingAndMismatch(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		writeCheckFile(t, filepath.Join(dir, ControlDir, RunIdentityFile), string(data))
+		writeCheckFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, RunIdentityFile)), string(data))
 		raw, defects := Inspect(dir, viewIdentity, "", testInstallIdentity())
 		if len(defects) != 0 {
 			t.Fatalf("Inspect(identity) defects = %v, want none", defects)
@@ -219,7 +221,7 @@ func TestInspectIdentityMissingAndMismatch(t *testing.T) {
 		if after := snapshotDir(t, dir); after != before {
 			t.Fatal("identity mismatch mutated workspace")
 		}
-		if _, err := os.Stat(filepath.Join(dir, ControlDir, RunIdentityFile)); err != nil {
+		if _, err := os.Stat(testutil.ControlPath(t, filepath.Join(dir, ControlDir, RunIdentityFile))); err != nil {
 			t.Fatalf("run identity disappeared: %v", err)
 		}
 	})

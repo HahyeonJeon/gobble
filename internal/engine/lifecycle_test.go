@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/HahyeonJeon/gobble/internal/engine/exec"
+	"github.com/HahyeonJeon/gobble/internal/testutil"
 )
 
 func useBound(t *testing.T, d time.Duration) {
@@ -370,7 +371,7 @@ func TestLaterProcessCrashBeforeHandle(t *testing.T) {
 		t.Fatal(err)
 	}
 	writeOccupancy(t, dir, jsonOccupancy{Active: true, Host: host, PID: deadPID(t), Lease: "lease", Started: "2026-01-01T00:00:00Z"})
-	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), `{
+	writeCheckFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, TasksFile)), `{
   "schema_version": 2,
   "tasks": [
     {
@@ -536,7 +537,7 @@ func TestInspectSnapshotMismatchRefused(t *testing.T) {
 	}); len(defects) != 0 {
 		t.Fatalf("Run() defects %v", defects)
 	}
-	path := filepath.Join(dir, ControlDir, TasksFile)
+	path := testutil.ControlPath(t, filepath.Join(dir, ControlDir, TasksFile))
 	data := mustJSONFile(t, path)
 	var file jsonTasksFile
 	if err := json.Unmarshal(data, &file); err != nil {

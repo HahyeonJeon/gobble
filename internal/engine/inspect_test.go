@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/HahyeonJeon/gobble/internal/testutil"
 )
 
 func TestInspectNoFingerprintsAffectsDownstream(t *testing.T) {
@@ -46,7 +48,7 @@ func TestInspectNoFingerprintsAffectsDownstream(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	writeCheckFile(t, filepath.Join(dir, ControlDir, PlanFile), string(plan))
+	writeCheckFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, PlanFile)), string(plan))
 	writeOccupancy(t, dir, jsonOccupancy{Active: false, Closed: "2026-01-01T00:00:01Z"})
 	tasks := jsonTasksFile{
 		SchemaVersion: SchemaVersion,
@@ -75,7 +77,7 @@ func TestInspectNoFingerprintsAffectsDownstream(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), string(append(taskBytes, '\n')))
+	writeCheckFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, TasksFile)), string(append(taskBytes, '\n')))
 	before := snapshotDir(t, dir)
 	raw, defects := Inspect(dir, viewRemaining, "", testInstallIdentity())
 	if len(defects) != 0 {
@@ -144,7 +146,7 @@ func TestInspectRemainingInstanceUsesFullSet(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	writeCheckFile(t, filepath.Join(dir, ControlDir, PlanFile), string(plan))
+	writeCheckFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, PlanFile)), string(plan))
 	writeOccupancy(t, dir, jsonOccupancy{Active: false, Closed: "2026-01-01T00:00:01Z"})
 	tasks := jsonTasksFile{
 		SchemaVersion: SchemaVersion,
@@ -173,7 +175,7 @@ func TestInspectRemainingInstanceUsesFullSet(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), string(append(taskBytes, '\n')))
+	writeCheckFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, TasksFile)), string(append(taskBytes, '\n')))
 
 	allRaw, defects := Inspect(dir, viewRemaining, "", testInstallIdentity())
 	if len(defects) != 0 {
@@ -222,7 +224,7 @@ func TestInspectRemainingEmptyExecIdentityMiss(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	writeCheckFile(t, filepath.Join(dir, ControlDir, PlanFile), string(plan))
+	writeCheckFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, PlanFile)), string(plan))
 	writeOccupancy(t, dir, jsonOccupancy{Active: false, Closed: "2026-01-01T00:00:01Z"})
 	tasks := jsonTasksFile{
 		SchemaVersion: SchemaVersion,
@@ -241,7 +243,7 @@ func TestInspectRemainingEmptyExecIdentityMiss(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), string(append(taskBytes, '\n')))
+	writeCheckFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, TasksFile)), string(append(taskBytes, '\n')))
 	raw, defects := Inspect(dir, viewRemaining, "", testInstallIdentity())
 	if len(defects) != 0 {
 		t.Fatalf("Inspect(remaining, testInstallIdentity()) defects %v", defects)
@@ -273,7 +275,7 @@ func TestInspectRemainingEmptyImageDigestMiss(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	writeCheckFile(t, filepath.Join(dir, ControlDir, PlanFile), string(plan))
+	writeCheckFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, PlanFile)), string(plan))
 	writeOccupancy(t, dir, jsonOccupancy{Active: false, Closed: "2026-01-01T00:00:01Z"})
 	tasks := jsonTasksFile{
 		SchemaVersion: SchemaVersion,
@@ -293,7 +295,7 @@ func TestInspectRemainingEmptyImageDigestMiss(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), string(append(taskBytes, '\n')))
+	writeCheckFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, TasksFile)), string(append(taskBytes, '\n')))
 	raw, defects := Inspect(dir, viewRemaining, "", testInstallIdentity())
 	if len(defects) != 0 {
 		t.Fatalf("Inspect(remaining, testInstallIdentity()) defects %v", defects)
@@ -319,7 +321,7 @@ func TestInspectLogsEscapedPathInvalid(t *testing.T) {
 	if err := os.Symlink(sentinel, filepath.Join(dir, filepath.FromSlash(rel), "stdout")); err != nil {
 		t.Fatal(err)
 	}
-	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), `{
+	writeCheckFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, TasksFile)), `{
   "schema_version": 2,
   "tasks": [
     {
@@ -382,7 +384,7 @@ func TestInspectSuccessfulRunNotAffected(t *testing.T) {
 func TestInspectReuseViewReadsDecisions(t *testing.T) {
 	dir := t.TempDir()
 	writeOccupancy(t, dir, jsonOccupancy{Active: false, Closed: "2026-01-01T00:00:01Z"})
-	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), `{
+	writeCheckFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, TasksFile)), `{
   "schema_version": 2,
   "tasks": [
     {
@@ -419,7 +421,7 @@ func TestInspectReuseViewReadsDecisions(t *testing.T) {
 func TestInspectReuseViewEmptyWithoutDecisions(t *testing.T) {
 	dir := t.TempDir()
 	writeOccupancy(t, dir, jsonOccupancy{Active: false, Closed: "2026-01-01T00:00:01Z"})
-	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), `{
+	writeCheckFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, TasksFile)), `{
   "schema_version": 2,
   "tasks": [
     {
@@ -449,7 +451,7 @@ func TestInspectLogTailBounded(t *testing.T) {
 	rel := isolateRel(TaskPlan{ID: "copy", Attempt: 1})
 	body := strings.Repeat("x", inspectLogTail+64)
 	writeCheckFile(t, filepath.Join(dir, filepath.FromSlash(rel), "stdout"), body)
-	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), `{
+	writeCheckFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, TasksFile)), `{
   "schema_version": 2,
   "tasks": [
     {

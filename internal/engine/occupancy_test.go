@@ -8,12 +8,14 @@ import (
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/HahyeonJeon/gobble/internal/testutil"
 )
 
 func TestCheckClosedOccupancyNotOccupied(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
-	writeCheckFile(t, filepath.Join(dir, ControlDir, RunIdentityFile), closedRunJSON("run-1"))
+	writeCheckFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, RunIdentityFile)), closedRunJSON("run-1"))
 	req := Request{
 		Identity:  testInstallIdentity(),
 		Workspace: dir,
@@ -28,7 +30,7 @@ func TestCheckClosedOccupancyOutputExists(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	writeCheckFile(t, filepath.Join(dir, "out", "sample.txt"), "leftover")
-	writeCheckFile(t, filepath.Join(dir, ControlDir, RunIdentityFile), closedRunJSON("run-1"))
+	writeCheckFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, RunIdentityFile)), closedRunJSON("run-1"))
 	defects := Check(Request{
 		Identity:  testInstallIdentity(),
 		Workspace: dir,
@@ -45,7 +47,7 @@ func TestCheckClosedOccupancyOutputExists(t *testing.T) {
 func TestOccupyClosedWorkspaceOneOwner(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
-	writeCheckFile(t, filepath.Join(dir, ControlDir, RunIdentityFile), closedRunJSON("run-1"))
+	writeCheckFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, RunIdentityFile)), closedRunJSON("run-1"))
 	req := Request{
 		Identity:  testInstallIdentity(),
 		Workspace: dir,
@@ -96,7 +98,7 @@ func TestOccupyClosedWorkspaceOneOwner(t *testing.T) {
 	if !occupancyIsActive(run) || run.Occupancy == nil || run.Occupancy.PID != ownerPID {
 		t.Fatalf("run occupancy got %#v, want one owner pid %d", run.Occupancy, ownerPID)
 	}
-	if _, err := os.Stat(filepath.Join(dir, ControlDir, RunIdentityFile)); err != nil {
+	if _, err := os.Stat(testutil.ControlPath(t, filepath.Join(dir, ControlDir, RunIdentityFile))); err != nil {
 		t.Fatalf("run.json missing after occupy: %v", err)
 	}
 }
@@ -135,7 +137,7 @@ func TestRunPersistsIdentityFacts(t *testing.T) {
 	if _, err := time.Parse(time.RFC3339Nano, run.Occupancy.Started); err != nil {
 		t.Fatalf("occupancy started %q: %v", run.Occupancy.Started, err)
 	}
-	planVer, planOK, err := readSchemaFile(filepath.Join(dir, ControlDir, PlanFile))
+	planVer, planOK, err := readSchemaFile(testutil.ControlPath(t, filepath.Join(dir, ControlDir, PlanFile)))
 	if err != nil || !planOK || planVer != SchemaVersion {
 		t.Fatalf("plan schema exists=%v version=%d err=%v, want %d", planOK, planVer, err, SchemaVersion)
 	}
@@ -313,7 +315,7 @@ func closedRunJSON(id string) string {
 func forceDeadOwner(t *testing.T, workspace string) {
 	t.Helper()
 	DropHeldLease(workspace)
-	path := filepath.Join(workspace, ControlDir, RunIdentityFile)
+	path := testutil.ControlPath(t, filepath.Join(workspace, ControlDir, RunIdentityFile))
 	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)

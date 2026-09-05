@@ -14,6 +14,7 @@ import (
 
 	"github.com/HahyeonJeon/gobble"
 	"github.com/HahyeonJeon/gobble/cmd/gobble/testdata/hostpipe"
+	"github.com/HahyeonJeon/gobble/internal/testutil"
 )
 
 var testIdentityOnce sync.Once
@@ -241,13 +242,14 @@ func requireOpSuccess(t *testing.T, res cliResult, op string) {
 
 func requireOccupied(t *testing.T, workspace string) {
 	t.Helper()
-	if !occupancyActive(workspace) {
+	if !occupancyActive(t, workspace) {
 		t.Fatalf("occupancy inactive in %s", workspace)
 	}
 }
 
-func occupancyActive(workspace string) bool {
-	data, err := os.ReadFile(filepath.Join(workspace, ".gobble", "run.json"))
+func occupancyActive(t *testing.T, workspace string) bool {
+	t.Helper()
+	data, err := os.ReadFile(testutil.ControlPath(t, filepath.Join(workspace, ".gobble", "run.json")))
 	if err != nil {
 		return false
 	}
@@ -266,7 +268,7 @@ func waitOccupancy(t *testing.T, workspace string) {
 	t.Helper()
 	deadline := time.Now().Add(30 * time.Second)
 	for time.Now().Before(deadline) {
-		if occupancyActive(workspace) {
+		if occupancyActive(t, workspace) {
 			return
 		}
 		time.Sleep(20 * time.Millisecond)

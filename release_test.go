@@ -10,6 +10,7 @@ import (
 
 	"github.com/HahyeonJeon/gobble"
 	"github.com/HahyeonJeon/gobble/internal/engine"
+	"github.com/HahyeonJeon/gobble/internal/testutil"
 )
 
 func TestReleaseMissingRun(t *testing.T) {
@@ -26,7 +27,7 @@ func TestReleaseLiveAndDeadOwner(t *testing.T) {
 	if err := gobble.Release(dir); err != nil {
 		t.Fatalf("occupying-process Release() error = %v, want nil", err)
 	}
-	if _, statErr := os.Stat(filepath.Join(dir, engine.ControlDir, engine.RunIdentityFile)); statErr != nil {
+	if _, statErr := os.Stat(testutil.ControlPath(t, filepath.Join(dir, engine.ControlDir, engine.RunIdentityFile))); statErr != nil {
 		t.Fatalf("Release deleted run.json: %v", statErr)
 	}
 	if _, statErr := os.Stat(filepath.Join(dir, "out", "sample.txt")); statErr != nil {
@@ -76,7 +77,7 @@ func requireReleaseError(t *testing.T, name string, err error, code gobble.Defec
 func forcePublicDeadOwner(t *testing.T, workspace string) {
 	t.Helper()
 	gobble.DropHeldLease(workspace)
-	path := filepath.Join(workspace, engine.ControlDir, engine.RunIdentityFile)
+	path := testutil.ControlPath(t, filepath.Join(workspace, engine.ControlDir, engine.RunIdentityFile))
 	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)

@@ -13,6 +13,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/HahyeonJeon/gobble/internal/testutil"
 )
 
 func TestEngineDoesNotImportGobble(t *testing.T) {
@@ -63,9 +65,9 @@ func TestRunProcessPublishesAndOccupies(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(dir, "work")); !os.IsNotExist(err) {
 		t.Fatalf("created workspace work/, want isolation under %s", ControlDir)
 	}
-	mustJSONFile(t, filepath.Join(dir, ControlDir, RunIdentityFile))
-	mustJSONFile(t, filepath.Join(dir, ControlDir, PlanFile))
-	tasks := mustJSONFile(t, filepath.Join(dir, ControlDir, TasksFile))
+	mustJSONFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, RunIdentityFile)))
+	mustJSONFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, PlanFile)))
+	tasks := mustJSONFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, TasksFile)))
 	if _, err := os.Stat(filepath.Join(dir, ControlDir, "tasks", "copy", "_", "0", "1", "stdout")); err != nil {
 		t.Fatalf("stdout: %v", err)
 	}
@@ -334,7 +336,7 @@ func TestScheduleCapTwoLaunchesTogether(t *testing.T) {
 	if !seen["left"] || !seen["right"] {
 		t.Fatalf("launched %v, want left and right", seen)
 	}
-	mustJSONFile(t, filepath.Join(dir, ControlDir, TasksFile))
+	mustJSONFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, TasksFile)))
 }
 
 func TestScheduleBlocksDependents(t *testing.T) {
@@ -371,7 +373,7 @@ func TestScheduleBlocksDependents(t *testing.T) {
 			t.Fatalf("launched blocked dependent: %v", got)
 		}
 	}
-	raw := mustJSONFile(t, filepath.Join(dir, ControlDir, TasksFile))
+	raw := mustJSONFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, TasksFile)))
 	var file jsonTasksFile
 	if err := json.Unmarshal(raw, &file); err != nil {
 		t.Fatalf("tasks.json: %v", err)
@@ -560,7 +562,7 @@ func relatedFileOutputFromDoc(alignCmd, indexCmd []string) Document {
 
 func taskStates(t *testing.T, workspace string) map[string]jsonTaskState {
 	t.Helper()
-	raw := mustJSONFile(t, filepath.Join(workspace, ControlDir, TasksFile))
+	raw := mustJSONFile(t, testutil.ControlPath(t, filepath.Join(workspace, ControlDir, TasksFile)))
 	var file jsonTasksFile
 	if err := json.Unmarshal(raw, &file); err != nil {
 		t.Fatalf("tasks.json: %v", err)
@@ -616,12 +618,12 @@ func TestRunPersistError(t *testing.T) {
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	doc := sampleDoc("", "", "in/sample.txt", "out/sample.txt")
 	useExec(t, blockingExec(doc.Tasks, func(workspace string, task TaskPlan) report {
-		p := filepath.Join(workspace, ControlDir, TasksFile)
+		p := filepath.Join(workspace, ControlDir, checkpointPointerFile)
 		if err := os.Remove(p); err != nil {
-			t.Errorf("remove tasks.json: %v", err)
+			t.Errorf("remove current.json: %v", err)
 		}
 		if err := os.Mkdir(p, 0o755); err != nil {
-			t.Errorf("mkdir tasks.json: %v", err)
+			t.Errorf("mkdir current.json: %v", err)
 		}
 		for _, out := range task.Outputs {
 			writeCheckFile(t, workspaceFile(workspace, out.Path), task.ID)
@@ -1176,7 +1178,7 @@ func TestSecretFreePlanTasksInspect(t *testing.T) {
 		t.Fatalf("canary Run() defects %v", defects)
 	}
 	for _, name := range []string{PlanFile, TasksFile} {
-		raw, err := os.ReadFile(filepath.Join(dir, ControlDir, name))
+		raw, err := os.ReadFile(testutil.ControlPath(t, filepath.Join(dir, ControlDir, name)))
 		if err != nil {
 			t.Fatal(err)
 		}

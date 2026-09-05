@@ -14,6 +14,7 @@ import (
 
 	"github.com/HahyeonJeon/gobble"
 	"github.com/HahyeonJeon/gobble/internal/engine"
+	"github.com/HahyeonJeon/gobble/internal/testutil"
 )
 
 func TestLOperatorsOnPipelineAndModule(t *testing.T) {
@@ -146,7 +147,7 @@ func TestRunScatterMembersAndGather(t *testing.T) {
 	if !strings.Contains(string(got), "one") || !strings.Contains(string(got), "two") {
 		t.Fatalf("gather dest got %q, want both members", got)
 	}
-	raw := mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile))
+	raw := mustJSONFile(t, testutil.ControlPath(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile)))
 	var file struct {
 		Tasks []struct {
 			ID       string `json:"id"`
@@ -199,7 +200,7 @@ func TestRunScatterFileFromOneMember(t *testing.T) {
 	if err := gobble.Run(t.Context(), g, dir, 0, testOccupyOption(t)); err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
-	raw := mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile))
+	raw := mustJSONFile(t, testutil.ControlPath(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile)))
 	if !bytes.Contains(raw, []byte("in/sample.txt")) {
 		t.Fatalf("tasks.json missing file dest key: %s", raw)
 	}
@@ -437,7 +438,7 @@ func TestResumeUnchangedPreservesScatterMembers(t *testing.T) {
 	if err := gobble.Resume(t.Context(), g, dir, 2, testOccupyOption(t)); err != nil {
 		t.Fatalf("Resume() error = %v", err)
 	}
-	raw := mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile))
+	raw := mustJSONFile(t, testutil.ControlPath(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile)))
 	if !bytes.Contains(raw, []byte("each.copy/s1/0")) || !bytes.Contains(raw, []byte("each.copy/s2/0")) {
 		t.Fatalf("Unchanged resume lost members: %s", raw)
 	}
@@ -469,7 +470,7 @@ func TestResumeIdentityChangedReexpands(t *testing.T) {
 		}
 		t.Fatalf("Resume() error = %v", err)
 	}
-	raw := mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile))
+	raw := mustJSONFile(t, testutil.ControlPath(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile)))
 	if memberAttempt(raw, "s1") < 2 && memberAttempt(raw, "s2") < 2 {
 		t.Fatalf("IdentityChanged did not re-expand members: %s", raw)
 	}
@@ -508,7 +509,7 @@ func TestRunScatterRestagedTreeExpandsProducer(t *testing.T) {
 			}
 		}
 	}
-	raw := mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile))
+	raw := mustJSONFile(t, testutil.ControlPath(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile)))
 	if !bytes.Contains(raw, []byte(`"s1.txt"`)) || !bytes.Contains(raw, []byte(`"s2.txt"`)) {
 		t.Fatalf("restaged Tree expansion missing producer members: %s", raw)
 	}
@@ -600,7 +601,7 @@ func TestResumeUnchangedRetriesFailedMember(t *testing.T) {
 		t.Fatalf("failed members not remaining: %s", rawRem)
 	}
 	_ = gobble.Resume(t.Context(), g, dir, 2, testOccupyOption(t))
-	raw := mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile))
+	raw := mustJSONFile(t, testutil.ControlPath(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile)))
 	if memberAttempt(raw, "s1") < 2 && memberAttempt(raw, "s2") < 2 {
 		t.Fatalf("Unchanged resume did not retry failed members: %s", raw)
 	}
@@ -688,7 +689,7 @@ func TestRunScatterAddModuleSameMemberFlow(t *testing.T) {
 		}
 		t.Fatalf("Run() error = %v", err)
 	}
-	raw := mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile))
+	raw := mustJSONFile(t, testutil.ControlPath(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile)))
 	if !bytes.Contains(raw, []byte("each.mod.copy/s1/0")) || !bytes.Contains(raw, []byte("each.mod.mark/s1/0")) {
 		t.Fatalf("AddModule members missing shared instanceSeg: %s", raw)
 	}
@@ -739,7 +740,7 @@ func TestRunScatterAddModuleThreeTaskChain(t *testing.T) {
 		}
 		t.Fatalf("Run() error = %v", err)
 	}
-	raw := mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile))
+	raw := mustJSONFile(t, testutil.ControlPath(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile)))
 	if !bytes.Contains(raw, []byte("each.mod.check/s1/0")) || !bytes.Contains(raw, []byte("each.mod.check/s2/0")) {
 		t.Fatalf("three-task AddModule missing check members: %s", raw)
 	}
@@ -787,7 +788,7 @@ func TestResumeFromChangeDoesNotSubmitLeftoverMembers(t *testing.T) {
 		}
 		t.Fatalf("Resume() error = %v", err)
 	}
-	raw := mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile))
+	raw := mustJSONFile(t, testutil.ControlPath(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile)))
 	if !bytes.Contains(raw, []byte(`"s1"`)) || !bytes.Contains(raw, []byte(`"s3"`)) {
 		t.Fatalf("From Change missing new expansion: %s", raw)
 	}
@@ -1072,7 +1073,7 @@ func waitTaskStatus(t *testing.T, dir, id string, want ...string) {
 	t.Helper()
 	deadline := time.Now().Add(8 * time.Second)
 	for time.Now().Before(deadline) {
-		raw, err := os.ReadFile(filepath.Join(dir, engine.ControlDir, engine.TasksFile))
+		raw, err := os.ReadFile(testutil.ControlPath(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile)))
 		if err == nil {
 			var file struct {
 				Tasks []taskRecord `json:"tasks"`
