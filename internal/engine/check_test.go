@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/HahyeonJeon/gobble/internal/testutil"
 )
 
 func TestDocumentCarriesExecutionFields(t *testing.T) {
@@ -123,7 +125,7 @@ func TestCheckRefuse(t *testing.T) {
 			prep: func(t *testing.T) (Request, string) {
 				dir := t.TempDir()
 				writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
-				writeCheckFile(t, filepath.Join(dir, ControlDir, RunIdentityFile), `{
+				writeCheckFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, RunIdentityFile)), `{
   "schema_version": 2,
   "id": "run-1",
   "status": "running",
@@ -142,7 +144,7 @@ func TestCheckRefuse(t *testing.T) {
 			prep: func(t *testing.T) (Request, string) {
 				dir := t.TempDir()
 				writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
-				writeCheckFile(t, filepath.Join(dir, ControlDir, RunIdentityFile), `{"id":"run-1"}`)
+				writeCheckFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, RunIdentityFile)), `{"id":"run-1"}`)
 				return Request{
 					Workspace: dir,
 					Document:  sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
@@ -155,7 +157,7 @@ func TestCheckRefuse(t *testing.T) {
 			prep: func(t *testing.T) (Request, string) {
 				dir := t.TempDir()
 				writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
-				writeCheckFile(t, filepath.Join(dir, ControlDir, RunIdentityFile), `{
+				writeCheckFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, RunIdentityFile)), `{
   "schema_version": 1,
   "id": "run-1",
   "status": "succeeded",
@@ -382,7 +384,7 @@ func TestCheckOccupiedNotOutputExists(t *testing.T) {
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
 	writeCheckFile(t, filepath.Join(dir, "out", "sample.txt"), "leftover")
-	writeCheckFile(t, filepath.Join(dir, ControlDir, RunIdentityFile), `{
+	writeCheckFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, RunIdentityFile)), `{
   "schema_version": 2,
   "id": "run-1",
   "status": "running",
@@ -691,7 +693,7 @@ func TestCheckControlChildSymlinkInvalidPath(t *testing.T) {
 	if err := os.Mkdir(filepath.Join(dir, ControlDir), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.Symlink(sentinel, filepath.Join(dir, ControlDir, RunIdentityFile)); err != nil {
+	if err := os.Symlink(sentinel, testutil.ControlPath(t, filepath.Join(dir, ControlDir, RunIdentityFile))); err != nil {
 		t.Fatal(err)
 	}
 	defects := Check(Request{

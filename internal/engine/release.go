@@ -80,6 +80,20 @@ func Release(workspace string, supplied *InstallIdentity) []Defect {
 		lock = claimed
 		defer lock.Close()
 	}
+	d := reconcileWorkspaceLocked(workspace, supplied, owner)
+	if len(d) == 0 {
+		DropHeldLease(workspace)
+	}
+	return d
+}
+
+// Caller holds the run mutation lock throughout reconciliation and publication.
+// Resume retains that same lock when acquiring its new owner lease.
+func reconcileWorkspaceLocked(workspace string, supplied *InstallIdentity, owner bool) []Defect {
+	host, err := currentHost()
+	if err != nil {
+		return pathDefects(err)
+	}
 	run, plan, hasPlan, taskFile, _, d := readCoherentControl(workspace)
 	if len(d) > 0 {
 		return d
@@ -129,13 +143,7 @@ func Release(workspace string, supplied *InstallIdentity) []Defect {
 		run.Snapshot = snapshot
 		s := releaseSched(workspace, run, tasks)
 		s.snapshot = snapshot
-		if err := rewritePlanSnapshot(workspace, snapshot); err != nil {
-			return pathDefects(err)
-		}
-		if err := s.writeTasks(); err != nil {
-			return pathDefects(err)
-		}
-		if err := s.writeRun(); err != nil {
+		if err := s.writeReleasedCheckpoint(plan); err != nil {
 			return pathDefects(err)
 		}
 		return unknownBackendDefects(unknown)
@@ -146,7 +154,9 @@ func Release(workspace string, supplied *InstallIdentity) []Defect {
 	occ.Unknown = nil
 	run.Occupancy = occ
 	latest := latestAttempts(tasks)
-	run.Status = runStatusFromTasks(latest)
+	if run.Status != RunStopped {
+		run.Status = runStatusFromTasks(latest)
+	}
 	if run.Ended == "" {
 		run.Ended = now
 	}
@@ -154,38 +164,20 @@ func Release(workspace string, supplied *InstallIdentity) []Defect {
 	run.Snapshot = snapshot
 	s := releaseSched(workspace, run, tasks)
 	s.snapshot = snapshot
-	if err := rewritePlanSnapshot(workspace, snapshot); err != nil {
+	if err := s.writeReleasedCheckpoint(plan); err != nil {
 		return pathDefects(err)
 	}
-	if err := s.writeTasks(); err != nil {
-		return pathDefects(err)
-	}
-	if err := s.writeRun(); err != nil {
-		return pathDefects(err)
-	}
-	DropHeldLease(workspace)
 	return nil
 }
 
-func rewritePlanSnapshot(workspace, snapshot string) error {
-	path := filepath.Join(workspace, ControlDir, PlanFile)
-	data, err := os.ReadFile(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil
-		}
-		return err
-	}
-	var plan jsonPlan
-	if err := json.Unmarshal(data, &plan); err != nil {
-		return err
-	}
-	plan.Snapshot = snapshot
+func (s *sched) writeReleasedCheckpoint(plan jsonPlan) error {
+	plan.Snapshot = s.snapshot
+	plan.SchemaVersion = SchemaVersion
 	out, err := json.MarshalIndent(plan, "", "  ")
 	if err != nil {
 		return err
 	}
-	return writeAtomic(path, append(out, '\n'))
+	return s.writeCheckpoint(append(out, '\n'))
 }
 
 func releaseSched(workspace string, run jsonRun, tasks []jsonTaskState) *sched {
@@ -207,6 +199,22 @@ func releaseSched(workspace string, run jsonRun, tasks []jsonTaskState) *sched {
 }
 
 func unsupportedControlSchema(workspace string, run jsonRun) []Defect {
+	lock, root, committed, err := openCheckpoint(workspace)
+	if err != nil {
+		return pathDefects(err)
+	}
+	defer closeCheckpointLock(lock)
+	if committed {
+		_, _, _, err := readCommittedControl(workspace, root)
+		if err != nil {
+			return checkpointDefects(err)
+		}
+		return nil
+	}
+	return unsupportedLegacyControlSchema(workspace, run)
+}
+
+func unsupportedLegacyControlSchema(workspace string, run jsonRun) []Defect {
 	if schemaUnsupported(run.SchemaVersion) || pidOnlyOccupancy(run) {
 		return schemaDefect(ControlDir + "/" + RunIdentityFile)
 	}
@@ -317,8 +325,20 @@ func retryDockerLeftover(workspace string, ex exec.Executor, settle *settlement,
 		// failure does not make that disposition unknown again.
 		return true
 	}
-	if r.Running {
-		return false
+	if r.Running || r.NeedsRemoval {
+		if h.Submission == nil {
+			return false
+		}
+		// A durable submission can require removal as a barrier even when its
+		// task outcome is already terminal. Retry that cleanup instead of
+		// leaving every later Release stuck on the same retained container.
+		if err := settle.cancelHandle(ex, h); err != nil {
+			return false
+		}
+		r, err = settle.poll(ex, h)
+		if err != nil || r.Running || r.NeedsRemoval {
+			return false
+		}
 	}
 	st.RuntimeID = r.RuntimeID
 	return true
@@ -368,7 +388,7 @@ func reconcileIdentity(workspace string, ex exec.Executor, settle *settlement, r
 		st.Error = &jsonTaskErr{Unit: ident, Message: err.Error()}
 		return false
 	}
-	if r.Running {
+	if r.Running || r.NeedsRemoval {
 		if err := settle.cancelHandle(ex, h); err != nil {
 			st.Status = StatusUnknown
 			st.Reason = "unknown-backend"
@@ -383,7 +403,7 @@ func reconcileIdentity(workspace string, ex exec.Executor, settle *settlement, r
 				st.Error = &jsonTaskErr{Unit: ident, Message: perr.Error()}
 				return false
 			}
-			if !pr.Running {
+			if !pr.Running && !pr.NeedsRemoval {
 				applyDockerStoppedReport(st, backend, pr)
 				return true
 			}
@@ -400,7 +420,7 @@ func reconcileIdentity(workspace string, ex exec.Executor, settle *settlement, r
 }
 
 func applyDockerStoppedReport(st *jsonTaskState, backend string, r exec.Report) {
-	if backend != executorDocker || r.Running {
+	if backend != executorDocker || r.Running || r.NeedsRemoval {
 		return
 	}
 	st.RuntimeID = r.RuntimeID
@@ -450,7 +470,12 @@ func runStatusFromTasks(tasks []jsonTaskState) string {
 	}
 	for _, st := range tasks {
 		if st.Status == StatusUnknown {
-			return StatusUnknown
+			return RunInterrupted
+		}
+	}
+	for _, st := range tasks {
+		if st.Status == StatusIncomplete || st.Status == StatusRunning {
+			return RunInterrupted
 		}
 	}
 	for _, st := range tasks {

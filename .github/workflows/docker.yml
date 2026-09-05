@@ -1,0 +1,67 @@
+name: Docker tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  runtime-install:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build runtime and portable launchers
+        run: |
+          docker build -f distribution/runtime/Dockerfile --target runtime -t gobble-runtime:ci .
+          docker build -f distribution/runtime/Dockerfile --target launcher-artifacts --output ./dist .
+      - name: Launcher journey without host Go
+        env:
+          GOBBLE_RUNTIME_IMAGE: gobble-runtime:ci
+        run: python3 tests/runtime-e2e/smoke.py "$PWD/dist/linux-amd64/gobble"
+
+  linux-userspace:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        image: [golang:1.26-bookworm, golang:1.26-trixie]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build test toolchain
+        env:
+          GO_IMAGE: ${{ matrix.image }}
+        run: docker build --build-arg "GO_IMAGE=$GO_IMAGE" -f tests/docker/Dockerfile -t gobble-tests .
+      - name: Hermetic suite without network or daemon access
+        run: >-
+          docker run --rm --network=none
+          --mount "type=bind,src=$PWD,dst=$PWD"
+          --env GIT_CONFIG_COUNT=1
+          --env GIT_CONFIG_KEY_0=safe.directory
+          --env "GIT_CONFIG_VALUE_0=$PWD"
+          --workdir "$PWD" gobble-tests
+
+  docker-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: Resolve dependencies
+        run: go mod download all
+      - name: Require engine-compatible Docker access
+        run: docker info
+      - name: Run real Docker publication, failure, and controller recovery tests
+        env:
+          GOTOOLCHAIN: local
+          GOPROXY: off
+        run: go test -tags=live -count=1 -run '^(TestRunDocker(Publishes|BadImageContained)|TestDockerLiveControllerDeathRecovery)$' ./internal/engine

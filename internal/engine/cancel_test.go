@@ -5,12 +5,67 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/HahyeonJeon/gobble/internal/engine/exec"
+	"github.com/HahyeonJeon/gobble/internal/testutil"
 )
+
+func TestCancellationReportsCheckpointWriteFailure(t *testing.T) {
+	var stopped atomic.Bool
+	useExec(t, &fnExec{
+		submit: func(ctx context.Context, job exec.Job) (exec.Handle, exec.Report, error) {
+			h := exec.Handle{Identity: job.Identity, Backend: exec.BackendProcess, RuntimeID: "9"}
+			return h, exec.Report{Identity: job.Identity, RuntimeID: "9", Running: true}, nil
+		},
+		poll: func(ctx context.Context, h exec.Handle) (exec.Report, error) {
+			return exec.Report{Identity: h.Identity, RuntimeID: h.RuntimeID, Running: !stopped.Load()}, nil
+		},
+		cancel: func(ctx context.Context, h exec.Handle) error {
+			stopped.Store(true)
+			return nil
+		},
+	})
+	dir := t.TempDir()
+	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
+	ctx, cancel := context.WithCancel(t.Context())
+	defer cancel()
+	done := make(chan []Defect, 1)
+	go func() {
+		done <- Run(ctx, Request{
+			Identity: testInstallIdentity(), Workspace: dir,
+			Document: sampleDoc("", "", "in/sample.txt", "out/sample.txt"),
+		})
+	}()
+	waitRuntimeID(t, dir, "copy")
+	// A directory at the checkpoint destination deterministically makes the
+	// atomic replacement fail, including when tests execute as root.
+	plan := filepath.Join(dir, ControlDir, checkpointPointerFile)
+	if err := os.Rename(plan, plan+".before"); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(plan, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	cancel()
+	select {
+	case defects := <-done:
+		if !hasDefect(defects, DefectCanceled, "") {
+			t.Fatalf("Run() = %v, want canceled", defects)
+		}
+		for _, defect := range defects {
+			if defect.Code == DefectInvalidPath && strings.HasPrefix(defect.Message, "persist: ") {
+				return
+			}
+		}
+		t.Fatalf("Run() = %v, want checkpoint persistence failure as well as cancellation", defects)
+	case <-time.After(2 * time.Second):
+		t.Fatal("cancellation did not return after checkpoint failure")
+	}
+}
 
 func TestRunContextCancelPersistsIncomplete(t *testing.T) {
 	submitted := make(chan struct{})
@@ -66,7 +121,7 @@ func TestRunContextCancelPersistsIncomplete(t *testing.T) {
 	if st.Status != StatusIncomplete {
 		t.Fatalf("canceled task status got %q, want incomplete", st.Status)
 	}
-	raw := mustJSONFile(t, filepath.Join(dir, ControlDir, RunIdentityFile))
+	raw := mustJSONFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, RunIdentityFile)))
 	var run jsonRun
 	if err := json.Unmarshal(raw, &run); err != nil {
 		t.Fatalf("run.json: %v", err)
@@ -233,7 +288,7 @@ func waitRuntimeID(t *testing.T, workspace, ident string) {
 	t.Helper()
 	deadline := time.Now().Add(2 * time.Second)
 	for time.Now().Before(deadline) {
-		path := filepath.Join(workspace, ControlDir, TasksFile)
+		path := testutil.ControlPath(t, filepath.Join(workspace, ControlDir, TasksFile))
 		data, err := os.ReadFile(path)
 		if err == nil {
 			var file jsonTasksFile
@@ -252,7 +307,7 @@ func waitRuntimeID(t *testing.T, workspace, ident string) {
 
 func patchAttempt(t *testing.T, workspace string, fn func(*jsonTaskState)) {
 	t.Helper()
-	path := filepath.Join(workspace, ControlDir, TasksFile)
+	path := testutil.ControlPath(t, filepath.Join(workspace, ControlDir, TasksFile))
 	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatalf("read tasks.json: %v", err)

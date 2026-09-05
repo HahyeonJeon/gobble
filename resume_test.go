@@ -9,6 +9,7 @@ import (
 
 	"github.com/HahyeonJeon/gobble"
 	"github.com/HahyeonJeon/gobble/internal/engine"
+	"github.com/HahyeonJeon/gobble/internal/testutil"
 )
 
 func TestResumeMissingRunDoesNotOccupy(t *testing.T) {
@@ -30,19 +31,21 @@ func TestResumeRequiresWithIdentity(t *testing.T) {
 	requireResumeError(t, "missing resume identity", err, gobble.DefectInvalidRequest, "identity")
 }
 
-func TestResumeActiveOccupy(t *testing.T) {
+func TestResumeAfterSchedulerExit(t *testing.T) {
 	dir := readyRunWorkspace(t)
 	g := mustCompose(processCopyPipeline)(t)
 	if err := gobble.Run(t.Context(), g, dir, 0, testOccupyOption(t)); err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
 	err := gobble.Resume(t.Context(), g, dir, 0, testOccupyOption(t))
-	requireResumeError(t, "active occupy", err, gobble.DefectOccupiedWorkspace, "")
+	if err != nil {
+		t.Fatalf("automatic reconciliation: %v", err)
+	}
 }
 
 func TestResumeUnsupportedSchemaNoOccupy(t *testing.T) {
 	dir := readyRunWorkspace(t)
-	writeRunFile(t, filepath.Join(dir, engine.ControlDir, engine.RunIdentityFile), `{
+	writeRunFile(t, testutil.ControlPath(t, filepath.Join(dir, engine.ControlDir, engine.RunIdentityFile)), `{
   "schema_version": 1,
   "id": "run-1",
   "status": "failed",
@@ -262,7 +265,9 @@ func TestResumeAllSuccessReuses(t *testing.T) {
 		t.Fatalf("reuse executed a new attempt")
 	}
 	err := gobble.Resume(t.Context(), g, dir, 0, testOccupyOption(t))
-	requireResumeError(t, "second resume", err, gobble.DefectOccupiedWorkspace, "")
+	if err != nil {
+		t.Fatalf("second Resume: %v", err)
+	}
 	err = gobble.Run(t.Context(), g, dir, 0, testOccupyOption(t))
 	requireRunError(t, "run during resume occupy", err, gobble.DefectOccupiedWorkspace, "")
 }
@@ -605,7 +610,7 @@ func processCopyChainRewiredPipeline() *gobble.Pipeline {
 
 func latestTaskChange(t *testing.T, dir, ident string) string {
 	t.Helper()
-	data, err := os.ReadFile(filepath.Join(dir, engine.ControlDir, engine.TasksFile))
+	data, err := os.ReadFile(testutil.ControlPath(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -793,7 +798,7 @@ func readyReleasedRun(t *testing.T, pipe func() *gobble.Pipeline) string {
 
 func occupancySnapshot(t *testing.T, dir string) string {
 	t.Helper()
-	path := filepath.Join(dir, engine.ControlDir, engine.RunIdentityFile)
+	path := testutil.ControlPath(t, filepath.Join(dir, engine.ControlDir, engine.RunIdentityFile))
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -821,7 +826,7 @@ func occupancySnapshotFrom(raw string) string {
 
 func markCopyRunning(t *testing.T, dir string) {
 	t.Helper()
-	path := filepath.Join(dir, engine.ControlDir, engine.TasksFile)
+	path := testutil.ControlPath(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile))
 	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)

@@ -1,0 +1,4 @@
+# The test image only caches module dependencies; source is mounted at runtime.
+**
+!go.mod
+!go.sum

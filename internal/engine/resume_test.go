@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/HahyeonJeon/gobble/internal/engine/exec"
+	"github.com/HahyeonJeon/gobble/internal/testutil"
 )
 
 func TestClassifyResumeChangeClasses(t *testing.T) {
@@ -309,7 +310,7 @@ func TestInspectRerunsWhenPlanScriptChanges(t *testing.T) {
 	}); len(defects) != 0 {
 		t.Fatalf("Run() defects %v", defects)
 	}
-	planPath := filepath.Join(dir, ControlDir, PlanFile)
+	planPath := testutil.ControlPath(t, filepath.Join(dir, ControlDir, PlanFile))
 	raw, err := os.ReadFile(planPath)
 	if err != nil {
 		t.Fatal(err)

@@ -2,8 +2,10 @@
 package main
 
 import (
+	"context"
 	"io"
 	"os"
+	"time"
 
 	"github.com/HahyeonJeon/gobble"
 )
@@ -24,12 +26,24 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return writeVersion(stdout, stderr)
 	}
 	switch req.command {
+	case "init":
+		return runInit(req, stdout, stderr)
+	case "doctor":
+		return runDoctor(stdout, stderr)
 	case "watch":
 		return runWatch(req, stderr)
 	case "pack":
 		return runPack(req, stderr)
 	case "inspect":
 		return runInspect(req, stdout, stderr)
+	case "stop":
+		ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
+		defer cancel()
+		result, err := gobble.Stop(ctx, req.workspace)
+		if err != nil {
+			return writeLibraryErr(stderr, err)
+		}
+		return writeJSON(stdout, stderr, "stop", result)
 	case "release":
 		return runRelease(req, stdout, stderr)
 	case "compose", "validate", "plan", "run", "resume":

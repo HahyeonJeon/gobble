@@ -1,5 +1,11 @@
 # Pipeline monitoring
 
+The execution controller collects process and Docker stdout/stderr into
+persistent attempt files while tasks run. Docker uses one following log client
+per running task and gathers final logs during settlement. The monitor only
+reads files and state; closing it does not stop the run. Live Docker collection
+has hermetic coverage; the real-runtime CI journey is a separate validation gate.
+
 Start a pipeline as usual. In another terminal, use the same installed Gobble
 command or the same packed runner to watch its workspace:
 

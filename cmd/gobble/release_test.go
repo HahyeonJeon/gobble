@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/HahyeonJeon/gobble"
+	"github.com/HahyeonJeon/gobble/internal/testutil"
 )
 
 func TestReleaseMissingRun(t *testing.T) {
@@ -44,7 +45,7 @@ func TestReleaseSuccess(t *testing.T) {
 
 func forceDeadOwner(t *testing.T, workspace string) {
 	t.Helper()
-	path := filepath.Join(workspace, ".gobble", "run.json")
+	path := testutil.ControlPath(t, filepath.Join(workspace, ".gobble", "run.json"))
 	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)

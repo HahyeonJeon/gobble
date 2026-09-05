@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// Resume occupies a released existing run after checks, classifies
+// Resume reconciles and occupies an existing run after checks, classifies
 // reserved identities for reuse or remaining work, executes reruns as
 // new attempts, and persists decisions. Published-unfinalized identities
 // are omitted from remaining work, never reused, and may satisfy downstream
@@ -39,9 +39,6 @@ func checkResume(req Request) []Defect {
 		return d
 	}
 	if d := emptyGraphDefects(req.Document); len(d) > 0 {
-		return d
-	}
-	if d := checkOccupied(req.Workspace); len(d) > 0 {
 		return d
 	}
 	if d := checkPlanPaths(req.Document); len(d) > 0 {
@@ -80,6 +77,10 @@ func checkResume(req Request) []Defect {
 	tasks := taskFile.Tasks
 	if len(latestAttempts(tasks)) == 0 {
 		return emptyTaskStateDefects()
+	}
+	if occupancyIsActive(run) {
+		// Only the locked recovery path may classify an interrupted attempt.
+		return nil
 	}
 	if unknown := unknownTaskUnits(tasks); len(unknown) > 0 {
 		return unknownBackendDefects(unknown)
@@ -200,13 +201,24 @@ func occupyResume(req Request) (*sched, []Defect) {
 		return nil, pathDefects(err)
 	}
 	root := workspaceFile(req.Workspace, ControlDir)
-	lock, defects := claimOccupy(root)
+	lock, previous, defects := claimResume(root, req.Workspace)
 	if len(defects) > 0 {
 		return nil, defects
 	}
+	transferred := false
+	reconciled := false
+	defer func() {
+		if previous != nil {
+			if reconciled && !transferred {
+				DropHeldLease(req.Workspace)
+			}
+			previous.mutator.Unlock()
+		} else if !transferred {
+			lock.Close()
+		}
+	}()
 	existing, recorded, hasPlan, taskFile, _, d := readCoherentControl(req.Workspace)
 	if len(d) > 0 {
-		lock.Close()
 		if hasDefectCode(d, DefectNotFound) {
 			return nil, []Defect{{
 				Code:    DefectNothingToResume,
@@ -216,21 +228,24 @@ func occupyResume(req Request) (*sched, []Defect) {
 		}
 		return nil, d
 	}
-	if occupancyIsActive(existing) {
-		lock.Close()
-		return nil, occupiedDefect()
-	}
 	if d := workspaceIdentityDefects(existing.Identity, req.Identity, identityResume); len(d) > 0 {
-		lock.Close()
 		return nil, d
+	}
+	if occupancyIsActive(existing) {
+		if d := reconcileWorkspaceLocked(req.Workspace, req.Identity, previous != nil); len(d) > 0 {
+			return nil, d
+		}
+		reconciled = true
+		existing, recorded, hasPlan, taskFile, _, d = readCoherentControl(req.Workspace)
+		if len(d) > 0 {
+			return nil, d
+		}
 	}
 	tasks := taskFile.Tasks
 	if len(latestAttempts(tasks)) == 0 {
-		lock.Close()
 		return nil, emptyTaskStateDefects()
 	}
 	if unknown := unknownTaskUnits(tasks); len(unknown) > 0 {
-		lock.Close()
 		return nil, unknownBackendDefects(unknown)
 	}
 	var recordedDoc Document
@@ -242,6 +257,9 @@ func occupyResume(req Request) (*sched, []Defect) {
 		applyReservedDefaults(&doc.Tasks[i])
 	}
 	class := classifyResume(req.Workspace, recordedDoc, doc, tasks)
+	if d := checkResumeOutputs(req.Workspace, recordedDoc, doc, tasks, class); len(d) > 0 {
+		return nil, d
+	}
 	latest := latestAttempts(tasks)
 	byIdent := make(map[string]jsonTaskState, len(latest))
 	for _, st := range latest {
@@ -384,10 +402,10 @@ func occupyResume(req Request) (*sched, []Defect) {
 		s.history = append(s.history, cp)
 	}
 	if err := s.writeControl(); err != nil {
-		lock.Close()
 		return nil, pathDefects(err)
 	}
 	s.lease = retainLease(req.Workspace, lock, ex)
+	transferred = true
 	return s, nil
 }
 

@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/HahyeonJeon/gobble/internal/engine/exec"
+	"github.com/HahyeonJeon/gobble/internal/testutil"
 )
 
 func TestReleaseMissingRun(t *testing.T) {
@@ -22,7 +23,7 @@ func TestReleaseMissingRun(t *testing.T) {
 
 func TestReleaseAlreadyReleased(t *testing.T) {
 	dir := t.TempDir()
-	writeCheckFile(t, filepath.Join(dir, ControlDir, RunIdentityFile), closedRunJSON("run-1"))
+	writeCheckFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, RunIdentityFile)), closedRunJSON("run-1"))
 	before := snapshotDir(t, dir)
 	defects := Release(dir, testInstallIdentity())
 	if !hasDefect(defects, DefectAlreadyReleased, "") {
@@ -108,7 +109,7 @@ func TestReleaseForeignHost(t *testing.T) {
 
 func TestReleaseUnsupportedSchema(t *testing.T) {
 	dir := t.TempDir()
-	writeCheckFile(t, filepath.Join(dir, ControlDir, RunIdentityFile), `{
+	writeCheckFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, RunIdentityFile)), `{
   "schema_version": 1,
   "id": "run-1",
   "status": "running",
@@ -135,7 +136,7 @@ func TestReleaseDeadOwnerEmptyRuntimeIDBecomesIncomplete(t *testing.T) {
 	}
 	writeOccupancy(t, dir, jsonOccupancy{Active: true, Host: host, PID: deadPID(t), Lease: "lease", Started: "2026-01-01T00:00:00Z"})
 	writeCheckFile(t, filepath.Join(dir, "out", "keep.txt"), "keep")
-	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), `{
+	writeCheckFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, TasksFile)), `{
   "schema_version": 2,
   "tasks": [
     {
@@ -188,7 +189,7 @@ func TestReleaseSchema0And1Unsupported(t *testing.T) {
 }
 `
 		}
-		writeCheckFile(t, filepath.Join(dir, ControlDir, RunIdentityFile), body)
+		writeCheckFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, RunIdentityFile)), body)
 		before := snapshotDir(t, dir)
 		defects := Release(dir, testInstallIdentity())
 		if !hasDefect(defects, DefectUnsupportedSchema, "") {
@@ -208,7 +209,7 @@ func TestReleaseMarksIncompleteWithSlots(t *testing.T) {
 		t.Fatal(err)
 	}
 	writeOccupancy(t, dir, jsonOccupancy{Active: true, Host: host, PID: deadPID(t), Lease: "lease", Started: "2026-01-01T00:00:00Z"})
-	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), `{
+	writeCheckFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, TasksFile)), `{
   "schema_version": 2,
   "tasks": [
     {
@@ -244,7 +245,7 @@ func TestReleaseMarksIncompleteWithSlots(t *testing.T) {
 	if len(defects) != 0 {
 		t.Fatalf("Release() defects %v, want none", defects)
 	}
-	raw := mustJSONFile(t, filepath.Join(dir, ControlDir, TasksFile))
+	raw := mustJSONFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, TasksFile)))
 	var file jsonTasksFile
 	if err := json.Unmarshal(raw, &file); err != nil {
 		t.Fatalf("tasks.json: %v", err)
@@ -837,7 +838,7 @@ func TestInspectAndReleaseZeroAttemptsNotSuccess(t *testing.T) {
 		t.Fatal(err)
 	}
 	writeOccupancy(t, dir, jsonOccupancy{Active: true, Host: host, PID: deadPID(t), Lease: "lease"})
-	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), `{"schema_version":2,"tasks":[]}`)
+	writeCheckFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, TasksFile)), `{"schema_version":2,"tasks":[]}`)
 	if _, defects := Inspect(dir, viewRun, "", testInstallIdentity()); !hasDefect(defects, DefectInvalidValue, "") {
 		t.Fatalf("Inspect zero attempts defects %v, want invalid-value", defects)
 	}
@@ -848,7 +849,7 @@ func TestInspectAndReleaseZeroAttemptsNotSuccess(t *testing.T) {
 
 func tamperTasksSnapshot(t *testing.T, workspace, snapshot string) {
 	t.Helper()
-	path := filepath.Join(workspace, ControlDir, TasksFile)
+	path := testutil.ControlPath(t, filepath.Join(workspace, ControlDir, TasksFile))
 	var file jsonTasksFile
 	if err := json.Unmarshal(mustJSONFile(t, path), &file); err != nil {
 		t.Fatal(err)
@@ -874,5 +875,5 @@ func writeOccupancy(t *testing.T, workspace string, occ jsonOccupancy) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	writeCheckFile(t, filepath.Join(workspace, ControlDir, RunIdentityFile), string(append(data, '\n')))
+	writeCheckFile(t, testutil.ControlPath(t, filepath.Join(workspace, ControlDir, RunIdentityFile)), string(append(data, '\n')))
 }

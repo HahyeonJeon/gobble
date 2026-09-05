@@ -10,6 +10,7 @@ import (
 
 	"github.com/HahyeonJeon/gobble"
 	"github.com/HahyeonJeon/gobble/internal/engine"
+	"github.com/HahyeonJeon/gobble/internal/testutil"
 )
 
 func TestOccupancyTable(t *testing.T) {
@@ -50,14 +51,16 @@ func TestOccupancyTable(t *testing.T) {
 		err := gobble.Run(t.Context(), g, dir, 0, testOccupyOption(t))
 		requireRunError(t, "second Run", err, gobble.DefectOccupiedWorkspace, "")
 	})
-	t.Run("Resume occupied-workspace", func(t *testing.T) {
+	t.Run("Resume after scheduler exit", func(t *testing.T) {
 		dir := readyRunWorkspace(t)
 		g := mustCompose(processCopyPipeline)(t)
 		if err := gobble.Run(t.Context(), g, dir, 0, testOccupyOption(t)); err != nil {
 			t.Fatalf("Run() error = %v", err)
 		}
 		err := gobble.Resume(t.Context(), g, dir, 0, testOccupyOption(t))
-		requireResumeError(t, "resume occupied", err, gobble.DefectOccupiedWorkspace, "")
+		if err != nil {
+			t.Fatalf("automatic reconciliation: %v", err)
+		}
 	})
 }
 
@@ -166,7 +169,7 @@ func TestConcurrentComposeRunWithProcessSampleSheet(t *testing.T) {
 
 func patchOccupancyHost(t *testing.T, dir, host string) {
 	t.Helper()
-	path := filepath.Join(dir, engine.ControlDir, engine.RunIdentityFile)
+	path := testutil.ControlPath(t, filepath.Join(dir, engine.ControlDir, engine.RunIdentityFile))
 	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)

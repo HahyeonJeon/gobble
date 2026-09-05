@@ -8,6 +8,7 @@ import (
 
 	"github.com/HahyeonJeon/gobble"
 	"github.com/HahyeonJeon/gobble/internal/engine"
+	"github.com/HahyeonJeon/gobble/internal/testutil"
 )
 
 func TestReuseReasonTable(t *testing.T) {
@@ -310,7 +311,7 @@ func processCopyIdentityPipeline(cmd, mode string) func() *gobble.Pipeline {
 
 func patchLatestTaskField(t *testing.T, dir, ident, key, value string) {
 	t.Helper()
-	path := filepath.Join(dir, engine.ControlDir, engine.TasksFile)
+	path := testutil.ControlPath(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile))
 	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)

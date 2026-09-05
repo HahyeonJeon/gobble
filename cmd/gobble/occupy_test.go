@@ -14,6 +14,7 @@ import (
 
 	"github.com/HahyeonJeon/gobble"
 	"github.com/HahyeonJeon/gobble/cmd/gobble/testdata/hostpipe"
+	"github.com/HahyeonJeon/gobble/internal/testutil"
 )
 
 var testIdentityOnce sync.Once
@@ -114,13 +115,9 @@ func TestRunInspectReleaseResume(t *testing.T) {
 	requireOpSuccess(t, resume, "resume")
 	requireOccupied(t, dir)
 
-	g, err := gobble.Compose(hostpipe.Pipeline())
-	if err != nil {
-		t.Fatalf("Compose() error = %v", err)
-	}
-	libErr := gobble.Resume(t.Context(), g, dir, 0, testOccupyOption(t))
-	occupied := runCLI("resume", "./testdata/hostpipe", "--workspace", dir)
-	requireDomainError(t, occupied, libErr)
+	// The previous scheduler has exited: Resume reconciles without Release.
+	again := runCLI("resume", "./testdata/hostpipe", "--workspace", dir)
+	requireOpSuccess(t, again, "resume")
 }
 
 func TestResumeWorkspaceRefuse(t *testing.T) {
@@ -241,13 +238,14 @@ func requireOpSuccess(t *testing.T, res cliResult, op string) {
 
 func requireOccupied(t *testing.T, workspace string) {
 	t.Helper()
-	if !occupancyActive(workspace) {
+	if !occupancyActive(t, workspace) {
 		t.Fatalf("occupancy inactive in %s", workspace)
 	}
 }
 
-func occupancyActive(workspace string) bool {
-	data, err := os.ReadFile(filepath.Join(workspace, ".gobble", "run.json"))
+func occupancyActive(t *testing.T, workspace string) bool {
+	t.Helper()
+	data, err := os.ReadFile(testutil.ControlPath(t, filepath.Join(workspace, ".gobble", "run.json")))
 	if err != nil {
 		return false
 	}
@@ -266,7 +264,7 @@ func waitOccupancy(t *testing.T, workspace string) {
 	t.Helper()
 	deadline := time.Now().Add(30 * time.Second)
 	for time.Now().Before(deadline) {
-		if occupancyActive(workspace) {
+		if occupancyActive(t, workspace) {
 			return
 		}
 		time.Sleep(20 * time.Millisecond)

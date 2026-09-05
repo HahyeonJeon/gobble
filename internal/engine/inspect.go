@@ -137,12 +137,12 @@ func inspectWorkspace(workspace string) []Defect {
 	return nil
 }
 
-func readInspectRun(workspace string) (jsonRun, []Defect) {
-	path, present, err := containedRel(workspace, ControlDir+"/"+RunIdentityFile, false)
+func readInspectRun(workspace, root string) (jsonRun, []Defect) {
+	data, present, err := readCheckpointMember(workspace, root, RunIdentityFile, false)
 	if err != nil {
 		return jsonRun{}, []Defect{{
 			Code:    DefectInvalidPath,
-			Message: "path escapes directory",
+			Message: "cannot read run identity: " + err.Error(),
 			Paths:   []string{ControlDir + "/" + RunIdentityFile},
 		}}
 	}
@@ -152,17 +152,6 @@ func readInspectRun(workspace string) (jsonRun, []Defect) {
 			Message: "run not found",
 			Paths:   []string{ControlDir + "/" + RunIdentityFile},
 		}}
-	}
-	data, err := os.ReadFile(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return jsonRun{}, []Defect{{
-				Code:    DefectNotFound,
-				Message: "run not found",
-				Paths:   []string{ControlDir + "/" + RunIdentityFile},
-			}}
-		}
-		return jsonRun{}, pathDefects(err)
 	}
 	var run jsonRun
 	if err := json.Unmarshal(data, &run); err != nil {
@@ -175,24 +164,17 @@ func readInspectRun(workspace string) (jsonRun, []Defect) {
 	return run, nil
 }
 
-func readInspectPlan(workspace string) (jsonPlan, bool, []Defect) {
-	path, present, err := containedRel(workspace, ControlDir+"/"+PlanFile, false)
+func readInspectPlan(workspace, root string) (jsonPlan, bool, []Defect) {
+	data, present, err := readCheckpointMember(workspace, root, PlanFile, false)
 	if err != nil {
 		return jsonPlan{}, false, []Defect{{
 			Code:    DefectInvalidPath,
-			Message: "path escapes directory",
+			Message: "cannot read plan: " + err.Error(),
 			Paths:   []string{ControlDir + "/" + PlanFile},
 		}}
 	}
 	if !present {
 		return jsonPlan{}, false, nil
-	}
-	data, err := os.ReadFile(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return jsonPlan{}, false, nil
-		}
-		return jsonPlan{}, false, pathDefects(err)
 	}
 	var plan jsonPlan
 	if err := json.Unmarshal(data, &plan); err != nil {
@@ -205,29 +187,17 @@ func readInspectPlan(workspace string) (jsonPlan, bool, []Defect) {
 	return plan, true, nil
 }
 
-func readInspectTasks(workspace string) ([]jsonTaskState, []Defect) {
-	file, _, d := readInspectTasksFile(workspace)
-	return file.Tasks, d
-}
-
-func readInspectTasksFile(workspace string) (jsonTasksFile, bool, []Defect) {
-	path, present, err := containedRel(workspace, ControlDir+"/"+TasksFile, false)
+func readInspectTasksFile(workspace, root string) (jsonTasksFile, bool, []Defect) {
+	data, present, err := readCheckpointMember(workspace, root, TasksFile, false)
 	if err != nil {
 		return jsonTasksFile{}, false, []Defect{{
 			Code:    DefectInvalidPath,
-			Message: "path escapes directory",
+			Message: "cannot read tasks: " + err.Error(),
 			Paths:   []string{ControlDir + "/" + TasksFile},
 		}}
 	}
 	if !present {
 		return jsonTasksFile{}, false, nil
-	}
-	data, err := os.ReadFile(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return jsonTasksFile{}, false, nil
-		}
-		return jsonTasksFile{}, false, pathDefects(err)
 	}
 	var file jsonTasksFile
 	if err := json.Unmarshal(data, &file); err != nil {
@@ -241,18 +211,31 @@ func readInspectTasksFile(workspace string) (jsonTasksFile, bool, []Defect) {
 }
 
 func readCoherentControl(workspace string) (jsonRun, jsonPlan, bool, jsonTasksFile, bool, []Defect) {
-	run, d := readInspectRun(workspace)
+	lock, root, committed, err := openCheckpoint(workspace)
+	if err != nil {
+		return jsonRun{}, jsonPlan{}, false, jsonTasksFile{}, false, pathDefects(err)
+	}
+	defer closeCheckpointLock(lock)
+	if committed {
+		run, plan, tasks, err := readCommittedControl(workspace, root)
+		if err != nil {
+			return run, plan, true, tasks, true, checkpointDefects(err)
+		}
+		return run, plan, true, tasks, true, nil
+	}
+
+	run, d := readInspectRun(workspace, root)
 	if len(d) > 0 {
 		return jsonRun{}, jsonPlan{}, false, jsonTasksFile{}, false, d
 	}
-	if d := unsupportedControlSchema(workspace, run); len(d) > 0 {
+	if d := unsupportedLegacyControlSchema(workspace, run); len(d) > 0 {
 		return jsonRun{}, jsonPlan{}, false, jsonTasksFile{}, false, d
 	}
-	plan, hasPlan, d := readInspectPlan(workspace)
+	plan, hasPlan, d := readInspectPlan(workspace, root)
 	if len(d) > 0 {
 		return jsonRun{}, jsonPlan{}, false, jsonTasksFile{}, false, d
 	}
-	tasks, hasTasks, d := readInspectTasksFile(workspace)
+	tasks, hasTasks, d := readInspectTasksFile(workspace, root)
 	if len(d) > 0 {
 		return jsonRun{}, jsonPlan{}, false, jsonTasksFile{}, false, d
 	}
@@ -329,6 +312,7 @@ type inspectRunDoc struct {
 	SchemaVersion int              `json:"schema_version"`
 	Occupancy     inspectOccupancy `json:"occupancy"`
 	Unknown       bool             `json:"unknown,omitempty"`
+	Backend       string           `json:"backend"`
 	Started       string           `json:"started"`
 	Ended         string           `json:"ended,omitempty"`
 }
@@ -355,12 +339,22 @@ func inspectRunView(workspace string, run jsonRun, tasks []jsonTaskState) inspec
 	if run.Occupancy != nil && len(run.Occupancy.Unknown) > 0 {
 		unknown = true
 	}
+	backend := "known"
+	if unknown {
+		backend = "recovery-required"
+	}
+	status := run.Status
+	if (status == StatusRunning || status == RunStopping) && occ.Active && !occ.Live {
+		status = RunInterrupted
+		backend = "recovery-required"
+	}
 	return inspectRunDoc{
 		ID:            run.ID,
-		Status:        run.Status,
+		Status:        status,
 		SchemaVersion: run.SchemaVersion,
 		Occupancy:     occ,
 		Unknown:       unknown,
+		Backend:       backend,
 		Started:       run.Started,
 		Ended:         run.Ended,
 	}
