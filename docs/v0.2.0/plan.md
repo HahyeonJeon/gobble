@@ -232,7 +232,7 @@ Verification:
 | Check | Result |
 |---|---|
 | Full `go test -count=1 -timeout=5m ./...` | Passed: 80 packages with tests |
-| Engine/executor/monitor/TUI/launcher race checks | Passed; final Stop lease guard is rerun separately |
+| Engine/executor/monitor/TUI/launcher race checks | Passed; engine/executor rerun after final stale-Stop and refused-Resume lock fixes |
 | Generic CLI + setup + packed-template and launcher tests under race | Passed |
 | `go vet ./...` | Passed |
 | Native Windows x64 launcher cross-build | Passed; not execution on Windows |
@@ -249,3 +249,19 @@ Remaining design work includes detached supervision, large external datasets
 without extra staging copies, cleanup of daemon-side late creates, and shared
 CLI/packed handler extraction. These records do not mark all v0.2.0 work complete
 or imply a release, merge, or push.
+
+### Installed lifecycle verification from `7b3c104`
+
+Built the generic CLI and packed runners from this clean commit. These checks
+use real Linux processes, temporary projects/workspaces with spaces and Korean
+characters, and actual checkpoint/output files:
+
+| Installed command | Demonstrated journey |
+|---|---|
+| Generic CLI, generated teaching project | Init; observe process stdout while running; Stop; repeated Stop; Resume without Release; successful attempt 2 and result `2` |
+| Packed Hello, no Go on PATH | Run; automatic Resume reusing completed work; remove one result; Resume on attempt 2 with result `2`; Stop and repeated Stop |
+| Packed long-running process, no Go on PATH | Run; Stop while active; Resume on attempt 2; Stop while active; both attempts recorded incomplete and both Stop calls settled |
+
+The example pipeline intentionally runs inside a local process. These installed
+results verify the CLI/packed protocol and lifecycle, not a Docker runtime or
+Windows host. The runtime integration gate remains unexecuted locally.
