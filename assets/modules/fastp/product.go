@@ -8,7 +8,7 @@ import (
 )
 
 // DefaultImage is the Sarek 3.10.0 FastP image resolved for linux/amd64.
-const DefaultImage modules.Image = "community.wave.seqera.io/library/fastp:1.1.0--08aa7c5662a30d57@sha256:556474e164daf5a5e218cd5d497681dcba0645047cf24698f88e3e078eacbd09"
+const DefaultImage modules.Image = "community.wave.seqera.io/library/fastp:1.1.0--08aa7c5662a30d57@sha256:6babb3aed64bb6e594df3b499dbc8696888fc1e06df4934b9505e801819475ec"
 
 // Options controls one lifted paired-end FastP command.
 type Options struct {

@@ -85,7 +85,7 @@ func TestScaffoldMustStayOnHostMount(t *testing.T) {
 	root := t.TempDir()
 	for _, args := range [][]string{{"init", "new"}, {"demo", "rnaseq", "new"}} {
 		translated, _, err := translateArgs(root, args)
-		if err != nil || translated[len(translated)-1] != "/gobble/project/new" {
+		if err != nil || translated[len(translated)-1] != "./new" {
 			t.Fatalf("%v: %v %v", args, translated, err)
 		}
 	}
@@ -110,7 +110,7 @@ func TestScaffoldHelpAndEndOfOptions(t *testing.T) {
 		t.Fatalf("help became a directory: %v %v", args, err)
 	}
 	args, _, err = translateArgs(root, []string{"demo", "--", "rnaseq", "--example"})
-	if err != nil || args[3] != "/gobble/project/--example" {
+	if err != nil || args[3] != "./--example" {
 		t.Fatalf("literal directory: %v %v", args, err)
 	}
 }

@@ -3,7 +3,7 @@ package modules
 import "github.com/HahyeonJeon/gobble"
 
 // GATK4Image is the Sarek 3.10.0 GATK image resolved for linux/amd64.
-const GATK4Image Image = "community.wave.seqera.io/library/gatk4_gcnvkernel:edb12e4f0bf02cd3@sha256:ced519873646379e287bc28738bdf88e975edd39a92e7bc6a34bccd37153d9d0"
+const GATK4Image Image = "community.wave.seqera.io/library/gatk4_gcnvkernel:edb12e4f0bf02cd3@sha256:f76352ed2666fa3da80a02792cde7af896da176e9b1835646829c27e4ca0d2d4"
 
 // ResolveGATK4Options applies the shared Sarek GATK image and rejects every
 // unique long-option prefix and documented short alias that could take
