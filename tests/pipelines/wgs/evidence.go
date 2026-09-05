@@ -2,13 +2,10 @@
 package wgsevidence
 
 import (
-	"bytes"
 	_ "embed"
 	"fmt"
-	"os"
-	"path/filepath"
 
-	"github.com/HahyeonJeon/gobble/tests/internal/fixture"
+	"github.com/HahyeonJeon/gobble/internal/fixture"
 )
 
 const (
@@ -66,23 +63,8 @@ func StageOfficial(cacheDir, workspace string) ([]fixture.StagedInput, error) {
 	if err != nil {
 		return nil, err
 	}
-	source := filepath.Join(workspace, "in", "reference", "genome.multi_intervals.bed")
-	data, err := os.ReadFile(source)
-	if err != nil {
-		return nil, fmt.Errorf("read WGS interval source: %w", err)
-	}
-	lines := bytes.Split(bytes.TrimSpace(data), []byte("\n"))
-	if len(lines) != 2 {
-		return nil, fmt.Errorf("WGS interval source has %d members, want 2", len(lines))
-	}
-	for i, line := range lines {
-		path := filepath.Join(workspace, "in", "reference", "intervals", fmt.Sprintf("interval_%03d.bed", i+1))
-		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-			return nil, err
-		}
-		if err := os.WriteFile(path, append(append([]byte(nil), line...), '\n'), 0o644); err != nil {
-			return nil, err
-		}
+	if err := fixture.SplitIntervals(workspace, "in/reference/genome.multi_intervals.bed", "in/reference/intervals", 2); err != nil {
+		return nil, err
 	}
 	return inputs, nil
 }

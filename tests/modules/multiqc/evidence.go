@@ -1,7 +1,7 @@
 // Package multiqcevidence owns MultiQC command-only fixture facts.
 package multiqcevidence
 
-import "github.com/HahyeonJeon/gobble/tests/internal/fixture"
+import "github.com/HahyeonJeon/gobble/internal/fixture"
 
 const CacheDir = "tests/modules/multiqc/testdata/cache"
 

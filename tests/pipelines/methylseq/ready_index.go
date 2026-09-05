@@ -16,7 +16,7 @@ import (
 	"strings"
 
 	"github.com/HahyeonJeon/gobble/internal/engine"
-	"github.com/HahyeonJeon/gobble/tests/internal/fixture"
+	"github.com/HahyeonJeon/gobble/internal/fixture"
 )
 
 const gobbleTreeManifestName = ".gobble-tree.json"

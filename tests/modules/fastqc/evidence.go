@@ -1,7 +1,7 @@
 // Package fastqcevidence owns FastQC command-only fixture facts.
 package fastqcevidence
 
-import "github.com/HahyeonJeon/gobble/tests/internal/fixture"
+import "github.com/HahyeonJeon/gobble/internal/fixture"
 
 const CacheDir = "tests/modules/fastqc/testdata/cache"
 

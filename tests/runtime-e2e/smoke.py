@@ -14,10 +14,8 @@ import tempfile
 import time
 
 launcher = str(Path(sys.argv[1]).resolve())
-env = os.environ.copy()
-if os.name != "nt":
-    # Docker and the launcher are the only relevant host execution dependencies.
-    env["PATH"] = "/usr/bin:/bin"
+from host import env
+
 if not env.get("GOBBLE_RUNTIME_IMAGE"):
     raise RuntimeError("GOBBLE_RUNTIME_IMAGE is required")
 

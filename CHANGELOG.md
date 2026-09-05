@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+### macOS and existing-assay walkthroughs
+
+- Add native Intel/Apple Silicon launchers, a Mac/Linux preview setup script,
+  and explicit linux/amd64 runtime and task selection for Docker Desktop.
+- Add `gobble demo NAME DIR` for all five existing assays, using their official
+  checksum-verified test data and unchanged pipeline defaults. Downloads can
+  be retried without replacing existing projects or publishing corrupt files.
+- Add an installation-to-results guide with resource requirements, agent
+  prompts, real assay outputs, monitoring, Stop, and Resume.
+- Add native Mac launcher CI and installed-runtime RNA-seq/WGS Docker checks.
+  Actual Mac/Windows Docker Desktop validation remains a release gate.
+
 ### Terminal monitoring
 
 - Add read-only `watch --workspace DIR` to the generic command and packed

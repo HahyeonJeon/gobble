@@ -13,3 +13,8 @@ runs/
 # Owner-local fixture caches (dataset bytes stay untracked)
 tests/pipelines/*/testdata/cache/
 tests/modules/*/testdata/cache/
+
+# Local runtime artifacts and verified tutorial downloads
+dist/
+.gobble-cache/
+.gobble-runtime.json

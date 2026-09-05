@@ -5,7 +5,7 @@ import (
 	_ "embed"
 	"fmt"
 
-	"github.com/HahyeonJeon/gobble/tests/internal/fixture"
+	"github.com/HahyeonJeon/gobble/internal/fixture"
 )
 
 const (

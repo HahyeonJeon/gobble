@@ -9,6 +9,7 @@ import (
 
 type request struct {
 	command   string
+	assay     string
 	pkg       string
 	view      string
 	workspace string
@@ -240,6 +241,14 @@ func interpret(raw rawArgs) (*request, *gobble.Error) {
 
 	req := &request{command: cmd}
 	switch cmd {
+	case "demo":
+		if len(operands) == 0 {
+			return req, nil
+		}
+		if len(operands) != 2 {
+			return nil, inv("demo requires an assay name and one new project directory")
+		}
+		req.assay, req.pkg = operands[0], operands[1]
 	case "init":
 		if len(operands) != 1 {
 			return nil, inv("init requires one new project directory")
@@ -344,7 +353,7 @@ func repeatedFlagError(op string, raw rawArgs) *gobble.Error {
 
 func isOperate(cmd string) bool {
 	switch cmd {
-	case "compose", "validate", "plan", "run", "inspect", "resume", "release", "stop", "pack", "watch", "init", "doctor":
+	case "compose", "validate", "plan", "run", "inspect", "resume", "release", "stop", "pack", "watch", "init", "demo", "doctor":
 		return true
 	default:
 		return false

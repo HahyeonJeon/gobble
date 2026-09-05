@@ -1,5 +1,5 @@
 // Command gobble-container is distributed as "gobble" for Docker installations.
-// It deliberately imports no Linux engine code and can run in PowerShell.
+// It deliberately imports no Linux engine code and runs natively on Linux, Windows, and macOS.
 package main
 
 import (
@@ -21,6 +21,7 @@ import (
 )
 
 const runtimeLock = ".gobble-runtime.json"
+const runtimePlatform = "linux/amd64"
 
 type runtimeConfig struct {
 	Format int    `json:"format"`
@@ -32,14 +33,14 @@ func main() { os.Exit(run(os.Args[1:])) }
 
 func run(args []string) int {
 	if len(args) == 0 || (args[0] == "help" && len(args) == 1) || args[0] == "--help" {
-		fmt.Println("Gobble · local pipelines with Docker\n\nUsage: gobble <command> [arguments]\n\n  init DIR     create a runnable project for your coding agent\n  doctor       check Docker and the runtime\n  plan         show the project pipeline\n  run          execute the pipeline (--workspace DIR)\n  watch        monitor a run (--workspace DIR)\n  stop         stop a run (--workspace DIR)\n  resume       reconcile and resume work (--workspace DIR)\n\nRun inside your project. Other arguments are passed to the runtime CLI.\nThe first invocation requires GOBBLE_RUNTIME_IMAGE; the exact local image ID\nis then saved per project. Keep that image for Stop and Resume.")
+		fmt.Println("Gobble · local pipelines with Docker\n\nUsage: gobble <command> [arguments]\n\n  init DIR     create a runnable project for your coding agent\n  demo NAME DIR prepare an existing assay with verified test data\n  doctor       check Docker and the runtime\n  plan         show the project pipeline\n  run          execute the pipeline (--workspace DIR)\n  watch        monitor a run (--workspace DIR)\n  stop         stop a run (--workspace DIR)\n  resume       reconcile and resume work (--workspace DIR)\n\nRun inside your project. Other arguments are passed to the runtime CLI.\nThe first invocation requires GOBBLE_RUNTIME_IMAGE; the exact local image ID\nis then saved per project. Keep that image for Stop and Resume.")
 		return 0
 	}
-	if runtime.GOOS != "linux" && runtime.GOOS != "windows" {
-		return fail(errors.New("this preview launcher targets Linux and Windows"))
+	if !supportedHost(runtime.GOOS, runtime.GOARCH) {
+		return fail(errors.New("supported launchers: Linux x64, Windows x64, and macOS Intel/Apple Silicon"))
 	}
-	if runtime.GOARCH != "amd64" {
-		return fail(errors.New("this preview requires an amd64 host"))
+	if err := findDocker(); err != nil {
+		return fail(err)
 	}
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -94,12 +95,9 @@ func run(args []string) int {
 	}
 	name := "gobble-controller-" + hex.EncodeToString(random[:])
 	host := sha256.Sum256([]byte(daemon))
-	socket := "/var/run/docker.sock"
-	if runtime.GOOS == "linux" {
-		socket = strings.TrimPrefix(endpoint, "unix://")
-	}
+	socket := controllerSocket(runtime.GOOS, endpoint)
 	projectID := sha256.Sum256([]byte(root))
-	create := []string{"create", "--name", name, "--hostname", "gobble-" + hex.EncodeToString(host[:12]),
+	create := []string{"create", "--platform", runtimePlatform, "--name", name, "--hostname", "gobble-" + hex.EncodeToString(host[:12]),
 		"--label", "io.gobble.project=" + hex.EncodeToString(projectID[:]),
 		"--label", "io.gobble.command=" + args[0],
 		"--init", "--stop-timeout", "40", "--workdir", "/gobble/project",
@@ -142,7 +140,9 @@ func run(args []string) int {
 	return fail(err)
 }
 
-func dockerOutput(ctx context.Context, args ...string) (string, error) {
+var dockerOutput = runDockerOutput
+
+func runDockerOutput(ctx context.Context, args ...string) (string, error) {
 	cmd := exec.CommandContext(ctx, "docker", args...)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &stdout, &stderr
@@ -163,7 +163,7 @@ func selectRuntime(ctx context.Context, root, daemon string) (runtimeConfig, err
 		if config.Format != 1 || !validImageID(config.Image) || config.Daemon != daemon {
 			return config, errors.New("runtime lock does not match this Docker engine; restore the recorded engine and image")
 		}
-		if _, err := dockerOutput(ctx, "image", "inspect", config.Image); err != nil {
+		if _, err := inspectRuntime(ctx, config.Image); err != nil {
 			return config, fmt.Errorf("restore the project's pinned runtime image %s: %w", config.Image, err)
 		}
 		return config, nil
@@ -175,12 +175,9 @@ func selectRuntime(ctx context.Context, root, daemon string) (runtimeConfig, err
 	if image == "" {
 		return runtimeConfig{}, errors.New("set GOBBLE_RUNTIME_IMAGE to the runtime image you built or downloaded; this preview has no published default image")
 	}
-	id, err := dockerOutput(ctx, "image", "inspect", "--format", "{{.Id}}", image)
+	id, err := inspectRuntime(ctx, image)
 	if err != nil {
 		return runtimeConfig{}, fmt.Errorf("prepare runtime image %s with docker pull or docker build first: %w", image, err)
-	}
-	if !validImageID(id) {
-		return runtimeConfig{}, errors.New("Docker returned an invalid image ID")
 	}
 	config := runtimeConfig{Format: 1, Image: id, Daemon: daemon}
 	data, err = json.MarshalIndent(config, "", "  ")
@@ -221,17 +218,26 @@ func bindMount(source, target string) string {
 }
 
 func translateArgs(root string, args []string) ([]string, []string, error) {
+	var err error
+	root, err = filepath.EvalSymlinks(root)
+	if err != nil {
+		return nil, nil, err
+	}
 	out := append([]string(nil), args...)
 	var mounts []string
+	projectIndex := projectOperandIndex(args)
 	for i := 1; i < len(out); i++ {
 		name, value, equals := strings.Cut(out[i], "=")
-		if name != "--workspace" && name != "--sample" && name != "--output" {
+		projectDir := i == projectIndex
+		if projectDir {
+			name, value, equals = "project directory", out[i], false
+		} else if name != "--workspace" && name != "--sample" && name != "--output" {
 			if filepath.IsAbs(out[i]) {
 				return nil, nil, errors.New("use a package path relative to the project directory")
 			}
 			continue
 		}
-		if !equals {
+		if !equals && !projectDir {
 			if i+1 >= len(out) {
 				return nil, nil, fmt.Errorf("%s requires a path", name)
 			}
@@ -242,12 +248,10 @@ func translateArgs(root string, args []string) ([]string, []string, error) {
 		if !filepath.IsAbs(abs) {
 			abs = filepath.Join(root, abs)
 		}
-		// Existing roots are resolved before mapping; symlinks cannot silently
-		// redirect a project-relative path to an unmounted host location.
-		resolved, err := filepath.EvalSymlinks(abs)
-		if err == nil {
-			abs = resolved
-		} else if !os.IsNotExist(err) {
+		// Resolve parents too: init/demo/output can name a new file under an
+		// existing symlink. It must not escape the mounted project directory.
+		abs, err = resolveExistingParent(abs)
+		if err != nil {
 			return nil, nil, err
 		}
 		rel, err := filepath.Rel(root, abs)
@@ -271,6 +275,47 @@ func translateArgs(root string, args []string) ([]string, []string, error) {
 		}
 	}
 	return out, mounts, nil
+}
+
+func projectOperandIndex(args []string) int {
+	if len(args) == 0 || (args[0] != "init" && args[0] != "demo") {
+		return -1
+	}
+	want := 1
+	if args[0] == "demo" {
+		want = 2
+	}
+	operands, endOpts := 0, false
+	for i := 1; i < len(args); i++ {
+		if args[i] == "--" && !endOpts {
+			endOpts = true
+			continue
+		}
+		if !endOpts && strings.HasPrefix(args[i], "-") {
+			continue
+		}
+		operands++
+		if operands == want {
+			return i
+		}
+	}
+	return -1
+}
+
+func resolveExistingParent(path string) (string, error) {
+	resolved, err := filepath.EvalSymlinks(path)
+	if err == nil || !os.IsNotExist(err) {
+		return resolved, err
+	}
+	parent := filepath.Dir(path)
+	if parent == path {
+		return "", err
+	}
+	resolved, err = resolveExistingParent(parent)
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(resolved, filepath.Base(path)), nil
 }
 
 func fail(err error) int { fmt.Fprintln(os.Stderr, "gobble:", err); return 1 }

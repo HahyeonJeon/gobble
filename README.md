@@ -8,7 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-7cc5c9)](LICENSE)
 [![Status: pre-release](https://img.shields.io/badge/status-pre--release-d5b67b)](CHANGELOG.md)
 
-[Get started](#get-started) · [Pipelines](#bioinformatics-pipelines) · [Monitoring](#see-your-run) · [Documentation](#documentation)
+[Get started](#get-started) · [Try test data](docs/tutorials.md) · [Pipelines](#bioinformatics-pipelines) · [Monitoring](#see-your-run) · [Documentation](#documentation)
 
 </div>
 
@@ -29,39 +29,44 @@ work, records what happened, and reuses compatible completed tasks when you resu
 
 > **Development preview:** this branch contains the pipeline family and terminal
 > monitor planned for the next release. Published `v0.1.0` predates those features.
-> Current execution support is **Linux/amd64**. The accepted v0.2.0 default is
-> **Docker-based installation and agent-driven authoring**, with direct Linux
-> installation for advanced users. The Docker launcher journey has passed Linux CI;
-> Windows Desktop execution remains a release gate. See the
-> [installation design](docs/v0.2.0/container-installation.md).
+> The v0.2.0 default is **Docker-based installation and agent-driven authoring**.
+> Native launchers are available for **macOS Intel/Apple Silicon, Windows x64,
+> and Linux x64**; execution uses **Linux/amd64** containers (emulated on Apple
+> Silicon). Linux Docker CI and native Mac launcher CI are separate from the
+> real Mac/Windows Docker Desktop acceptance still required before release.
 
 ## Get started
 
 | Installation | Who it is for | Setup |
 |---|---|---|
-| **Docker + Gobble launcher (default)** | Beginners and users working with a coding agent, including Windows | [Prepare the Docker preview](distribution/runtime/README.md) |
+| **Docker + Gobble launcher (default)** | Beginners and users working with a coding agent, on macOS, Windows, or Linux | [Prepare the Docker preview](distribution/runtime/README.md) |
 | Direct Linux | Advanced users who manage Go, Git, and analysis tools themselves | [Linux installation](docs/installation.md) |
 
 The Docker runtime includes Go and Git. Your agent works with ordinary local
 files; Gobble runs the pipeline inside the selected runtime. Release images and
 installers are not published yet: the linked preview guide builds them with
-Docker. Windows Desktop execution remains a release validation gate.
+Docker. On macOS and Linux, the preview setup script builds and installs the
+matching launcher without host Go.
 
-After preparing the launcher:
+After preparing the launcher, try an existing pipeline with official test data:
 
 ```sh
-gobble init my-pipeline
-cd my-pipeline
+gobble demo rnaseq my-rnaseq
+cd my-rnaseq
 gobble doctor
+gobble validate .
 gobble plan .
-gobble run . --workspace runs/hello
-gobble inspect run --workspace runs/hello
+gobble run . --workspace runs/demo --cap 1
 ```
 
-Open `runs/hello/results/sequence-count.txt`: it contains **2**. The generated
-project includes a tiny FASTA input and instructions for your coding agent.
-[Hello Gobble](examples/hello/README.md) explains inputs, outputs, selective
-reruns, and packing a runner.
+Open `runs/demo/results/rnaseq/multiqc/multiqc_report.html` after completion.
+The [test-data walkthrough](docs/tutorials.md) covers resource requirements,
+expected outputs, WGS and other assays, and Stop/Resume. `demo` verifies the
+existing assay's input checksums and prepares instructions for your agent.
+
+For a tiny installation check, `gobble init my-pipeline` creates a FASTA counter
+that runs with `gobble run . --workspace runs/hello` from the new project.
+Its result is `runs/hello/results/sequence-count.txt` (expected: **2**).
 
 ## Work with your coding agent
 
@@ -98,24 +103,23 @@ versions, and evidence are in [Products](docs/products.md) and
 Open another terminal and use the same command that started the run:
 
 ```sh
-gobble watch --workspace runs/hello
+gobble watch --workspace runs/demo
 ```
 
 The dashboard starts with the graph and overall progress. Press `/` to search a
 sample, `!` for problems, and Enter to inspect tasks. Press `q` to close the
-monitor while execution continues. The small Hello example finishes quickly;
-longer pipelines make the live progress view useful.
+monitor while execution continues. Use the RNA-seq or WGS test-data run to follow real analysis progress.
 
 For agents and scripts, use structured output:
 
 ```sh
-gobble inspect monitor --workspace runs/hello
-gobble inspect errors --workspace runs/hello
+gobble inspect monitor --workspace runs/demo
+gobble inspect errors --workspace runs/demo
 ```
 
 Process and Docker task logs are collected into attempt files while work runs.
-The monitor reads those files without owning the run. Docker collection is
-covered by hermetic tests; actual Docker execution remains a release gate.
+The monitor reads those files without owning the run. Live Docker collection and controller recovery are exercised in Linux Docker CI;
+Desktop hosts require their own acceptance run.
 
 ## Stop and resume
 
@@ -125,9 +129,9 @@ reuses valid completed tasks:
 
 
 ```sh
-gobble stop --workspace runs/hello
-gobble inspect run --workspace runs/hello
-gobble resume . --workspace runs/hello
+gobble stop --workspace runs/demo
+gobble inspect run --workspace runs/demo
+gobble resume . --workspace runs/demo --cap 1
 ```
 
 Stop reports `settled` only after termination is known. A `requested` result
@@ -162,6 +166,8 @@ the tools or Docker used by its pipeline. See the
 
 | Start here | Details |
 |---|---|
+| [Test-data walkthrough](docs/tutorials.md) | Run existing assays, inspect results, and practice recovery |
+| [Docker installation](distribution/runtime/README.md) | macOS, Windows, and Linux launchers |
 | [Installation](docs/installation.md) | Choose a revision and set up an agent-owned project |
 | [Authoring](docs/authoring.md) | Samplesheets, typed configuration, modules, and outputs |
 | [Operations](docs/operations.md) | Environment preparation, run lifecycle, and recovery |
@@ -180,10 +186,9 @@ go vet ./...
 ```
 
 [Docker tests](tests/docker/README.md) describe Linux userspace checks and the
-separate real-container smoke suite. Windows/WSL requires its own validation.
+separate real-container smoke suite. Mac and Windows Docker Desktop require their own validation.
 
-Gobble is pre-1.0 and its public API may change. Current supported execution is
-trusted local Linux/amd64; cloud, cluster, and remote execution are future work.
+Gobble is pre-1.0 and its public API may change. Execution uses trusted local Linux/amd64 (inside Docker on macOS/Windows); cloud, cluster, and remote execution are future work.
 Pipeline code and container images must be trusted. Data and run state remain
 local; Gobble does not provide an account or hosted analysis service.
 

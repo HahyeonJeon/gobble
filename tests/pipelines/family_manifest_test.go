@@ -11,7 +11,7 @@ import (
 	"github.com/HahyeonJeon/gobble/assets/pipelines/rnaseq"
 	"github.com/HahyeonJeon/gobble/assets/pipelines/scrnaseq"
 	"github.com/HahyeonJeon/gobble/assets/pipelines/wgs"
-	"github.com/HahyeonJeon/gobble/tests/internal/fixture"
+	"github.com/HahyeonJeon/gobble/internal/fixture"
 	pc "github.com/HahyeonJeon/gobble/tests/internal/plancheck"
 	atacseqevidence "github.com/HahyeonJeon/gobble/tests/pipelines/atacseq"
 	methylseqevidence "github.com/HahyeonJeon/gobble/tests/pipelines/methylseq"

@@ -18,11 +18,7 @@ import (
 	"time"
 )
 
-func runInit(req *request, stdout, stderr io.Writer) int {
-	path, err := filepath.Abs(req.pkg)
-	if err != nil {
-		return writeErr(stderr, invalidRequest("init", err.Error()), 2)
-	}
+func sourceCheckout() (string, error) {
 	source := os.Getenv("GOBBLE_SOURCE")
 	if source == "" {
 		_, file, _, ok := runtime.Caller(0)
@@ -31,54 +27,73 @@ func runInit(req *request, stdout, stderr io.Writer) int {
 		}
 	}
 	if _, err := os.Stat(filepath.Join(source, "go.mod")); err != nil {
-		return writeErr(stderr, invalidRequest("init", "set GOBBLE_SOURCE to the exact Gobble checkout used to build this command"), 1)
+		return "", errors.New("set GOBBLE_SOURCE to the exact Gobble checkout used to build this command")
 	}
-	if err := os.Mkdir(path, 0o755); err != nil {
+	return filepath.Abs(source)
+}
+
+func runInit(req *request, stdout, stderr io.Writer) int {
+	source, err := sourceCheckout()
+	if err == nil {
+		err = createProject(context.Background(), req.pkg, source, map[string]string{
+			"pipeline.go": starterPipeline, "README.md": starterReadme,
+			"runs/hello/inputs/sequences.fasta": ">sequence-one\nACGTACGT\n>sequence-two\nTGCATGCA\n",
+		}, nil)
+	}
+	if err != nil {
 		return writeErr(stderr, invalidRequest("init", err.Error()), 1)
 	}
-	// Never replace an existing project. Failed scaffolds remain available for
-	// inspection; users can correct a missing local dependency and retry setup.
-	module := "module gobble.local/pipeline\n\ngo 1.26\n\nrequire github.com/HahyeonJeon/gobble v0.0.0\n\nreplace github.com/HahyeonJeon/gobble => " + strconv.Quote(source) + "\n"
-	files := map[string]string{
-		"go.mod":                            module,
-		"pipeline.go":                       starterPipeline,
-		"README.md":                         starterReadme,
-		"AGENTS.md":                         starterAgentGuide,
-		".gitignore":                        "runs/\n.gobble-runtime.json\n.gobble-cache/\n",
-		"runs/hello/inputs/sequences.fasta": ">sequence-one\nACGTACGT\n>sequence-two\nTGCATGCA\n",
+	return writeJSON(stdout, stderr, "init", map[string]any{"op": "init", "project": req.pkg, "next": "cd into the project, then gobble plan . and gobble run . --workspace runs/hello"})
+}
+
+// createProject reserves a fresh directory before writing anything. Failed
+// scaffolds remain for diagnosis and can never overwrite an existing project.
+func createProject(ctx context.Context, path, source string, files map[string]string, stage func(string) error) error {
+	path, err := filepath.Abs(path)
+	if err != nil {
+		return err
 	}
+	if err := os.Mkdir(path, 0o755); err != nil {
+		return err
+	}
+	files["go.mod"] = "module gobble.local/pipeline\n\ngo 1.26\n\nrequire github.com/HahyeonJeon/gobble v0.0.0\n\nreplace github.com/HahyeonJeon/gobble => " + strconv.Quote(source) + "\n"
+	files["AGENTS.md"] = starterAgentGuide
+	files[".gitignore"] = "runs/\n.gobble-runtime.json\n.gobble-cache/\n"
 	if image := os.Getenv("GOBBLE_RUNTIME_IMAGE_ID"); image != "" {
 		config, err := json.MarshalIndent(map[string]any{"format": 1, "image": image, "daemon": os.Getenv("GOBBLE_DAEMON_ID")}, "", "  ")
 		if err != nil {
-			return writeErr(stderr, invalidRequest("init", err.Error()), 1)
+			return err
 		}
 		files[".gobble-runtime.json"] = string(config) + "\n"
 	}
 	for name, data := range files {
 		dest := filepath.Join(path, filepath.FromSlash(name))
 		if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
-			return writeErr(stderr, invalidRequest("init", err.Error()), 1)
+			return err
 		}
 		if err := os.WriteFile(dest, []byte(data), 0o644); err != nil {
-			return writeErr(stderr, invalidRequest("init", err.Error()), 1)
+			return err
 		}
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	if stage != nil {
+		if err := stage(path); err != nil {
+			return err
+		}
+	}
+	ctx, cancel := context.WithTimeout(ctx, time.Minute)
 	defer cancel()
 	commands := [][]string{
-		{"go", "mod", "tidy"},
-		{"git", "init", "--quiet"},
-		{"git", "add", "--all"},
+		{"go", "mod", "tidy"}, {"git", "init", "--quiet"}, {"git", "add", "--all"},
 		{"git", "-c", "user.name=Gobble", "-c", "user.email=gobble@localhost", "-c", "commit.gpgsign=false", "commit", "--quiet", "-m", "Initialize Gobble pipeline"},
 	}
 	for _, argv := range commands {
 		cmd := exec.CommandContext(ctx, argv[0], argv[1:]...)
 		cmd.Dir = path
 		if out, err := cmd.CombinedOutput(); err != nil {
-			return writeErr(stderr, invalidRequest("init", fmt.Sprintf("%s: %v: %s", argv[0], err, out)), 1)
+			return fmt.Errorf("%s: %w: %s", argv[0], err, out)
 		}
 	}
-	return writeJSON(stdout, stderr, "init", map[string]any{"op": "init", "project": req.pkg, "next": "cd into the project, then gobble plan . and gobble run . --workspace runs/hello"})
+	return nil
 }
 
 func runDoctor(stdout, stderr io.Writer) int {
@@ -153,7 +168,7 @@ func probeSiblingMount(ctx context.Context, controller string) error {
 	if image == "" {
 		return errors.New("runtime image identity is missing")
 	}
-	cmd = exec.CommandContext(ctx, "docker", "run", "--rm", "--network=none", "--user", strconv.Itoa(os.Getuid())+":"+strconv.Itoa(os.Getgid()), "--entrypoint", "sh", "-v", source+":/probe", image,
+	cmd = exec.CommandContext(ctx, "docker", "run", "--platform", "linux/amd64", "--rm", "--network=none", "--user", strconv.Itoa(os.Getuid())+":"+strconv.Itoa(os.Getgid()), "--entrypoint", "sh", "-v", source+":/probe", image,
 		"-c", `test "$(cat "/probe/$1")" = "$2" && printf ok > "/probe/$1.out"`, "sh", filepath.Base(file.Name()), token)
 	if out, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("sibling mount probe: %w: %s", err, out)

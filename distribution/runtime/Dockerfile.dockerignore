@@ -6,3 +6,6 @@ runs
 **/runs
 **/.gobble
 **/node_modules
+
+**/.gobble-cache
+**/testdata/cache

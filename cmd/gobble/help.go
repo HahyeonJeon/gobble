@@ -11,6 +11,7 @@ Docker is an isolation convenience, not a sandbox.
 
 Commands:
   init       create a runnable project (generic CLI)
+  demo       prepare an existing assay with verified test data
   doctor     check local tools and Docker (generic CLI)
   compose    compose a pipeline from a Go package
   validate   compose then validate a pipeline package
@@ -56,6 +57,7 @@ The published module version is v0.1.0.
 `
 
 var commandHelp = map[string]string{
+	"demo":   "Usage: gobble demo [NAME DIR]\n\nList examples, or create a fresh project with an existing pipeline and verified test data.\nNAME: rnaseq, wgs, methylseq, atacseq, scrnaseq. DIR must not exist.\nDownloads require internet; validated files are cached for retry. Analysis runs separately.\n",
 	"init":   "Usage: gobble init DIR\n\nCreate a new runnable project and its local Git history. DIR must not exist.\n",
 	"doctor": "Usage: gobble doctor\n\nCheck Go, Git, and Docker; in the runtime, verify sibling-container file access.\n",
 	"compose": `Usage: gobble compose [package] [--sample PATH]

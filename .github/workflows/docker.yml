@@ -19,8 +19,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build runtime and portable launchers
         run: |
-          docker build -f distribution/runtime/Dockerfile --target runtime -t gobble-runtime:ci .
-          docker build -f distribution/runtime/Dockerfile --target launcher-artifacts --output ./dist .
+          docker build --platform linux/amd64 -f distribution/runtime/Dockerfile --target runtime -t gobble-runtime:ci .
+          docker build --platform linux/amd64 -f distribution/runtime/Dockerfile --target launcher-artifacts --output ./dist .
       - name: Launcher journey without host Go
         env:
           GOBBLE_RUNTIME_IMAGE: gobble-runtime:ci
@@ -66,3 +66,28 @@ jobs:
           GOTOOLCHAIN: local
           GOPROXY: off
         run: go test -tags=live -count=1 -run '^(TestRunDocker(Publishes|BadImageContained)|TestDockerLiveControllerDeathRecovery)$' ./internal/engine
+
+  official-assays:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        assay: [rnaseq, wgs]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build installed runtime and launcher
+        run: |
+          docker build --platform linux/amd64 -f distribution/runtime/Dockerfile --target runtime -t gobble-runtime:ci .
+          docker build --platform linux/amd64 -f distribution/runtime/Dockerfile --target launcher-artifacts --output ./dist .
+      - name: Real assay with official data and unchanged Resume
+        env:
+          GOBBLE_RUNTIME_IMAGE: gobble-runtime:ci
+        run: python3 tests/runtime-e2e/demo.py "$PWD/dist/linux-amd64/gobble" "${{ matrix.assay }}" "$RUNNER_TEMP/assay-evidence"
+      - name: Assay diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-${{ matrix.assay }}
+          path: ${{ runner.temp }}/assay-evidence
+          retention-days: 7
