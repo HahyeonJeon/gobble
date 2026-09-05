@@ -69,13 +69,12 @@ func pidOnlyOccupancy(run jsonRun) bool {
 }
 
 func readRunIdentity(workspace string) (jsonRun, bool, error) {
-	path := filepath.Join(workspace, ControlDir, RunIdentityFile)
-	data, err := os.ReadFile(path)
+	data, exists, err := readControlFile(workspace, RunIdentityFile)
 	if err != nil {
-		if os.IsNotExist(err) {
-			return jsonRun{}, false, nil
-		}
 		return jsonRun{}, false, err
+	}
+	if !exists {
+		return jsonRun{}, false, nil
 	}
 	var r jsonRun
 	if err := json.Unmarshal(data, &r); err != nil {

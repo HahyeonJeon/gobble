@@ -107,3 +107,45 @@ and the remaining release gates require the design choices in D1–D3. In
 particular, the interrupted-checkpoint defect and missing live Docker logs are
 not fixed by this first batch. No release, merge, or push is implied by these
 local results.
+
+## Checkpoint publication delivery record (batch 2a)
+
+The recommended D2 and D3 designs are approved. D1's originally approved WSL
+route has a follow-up [container installation proposal](container-installation.md)
+for deciding the default beginner experience after the user's Docker question.
+
+Batch 2 is split at its two independent failure boundaries. **2a, checkpoint
+publication, is implemented. 2b, external-job submission recovery, is pending.**
+Batch 2 as a whole is not complete until both pass their scenarios.
+
+Implemented in 2a:
+
+- Immutable plan/tasks/run generations, file and directory sync, and one atomic
+  current pointer. Readers pin the selected generation while retention removes
+  obsolete generations. Current and previous generations are retained.
+- A compatible legacy-layout reader and conversion on the next allowed write.
+  Original flat controls are preserved as evidence. Identity compatibility
+  remains enforced; old files do not authorize a downgrade or stale fallback.
+- Scheduler writes and Release use the same checkpoint publication mechanism.
+  Corrupt committed records are refused even if valid old flat files remain.
+- Separate writer-process death tests at five publication boundaries, followed
+  by Inspect, Release, and Resume. Completed work remains on attempt 1 and is
+  reused. Returned write failures, concurrent reading/retention, legacy
+  conversion, and escaping/corrupt committed state are also exercised.
+
+Verification on local Linux/amd64 with Go 1.26.0:
+
+| Check | Result |
+|---|---|
+| Full `go test -count=1 ./...`, local toolchain, proxy disabled | Passed: 79 packages with tests |
+| Race checks for engine, executor, monitor, and TUI | Passed; checkpoint race cases rerun after final reader changes |
+| `go vet ./...` | Passed |
+| Live engine and `tests/install-e2e` suites compiled | Passed; no real Docker execution claimed |
+| Process death during checkpoint publication, then Inspect/Release/Resume | Passed at all five boundaries |
+| Docker controller distribution / Windows / physical power loss | Not executed |
+
+See [checkpoint storage](../checkpoints.md) for the on-disk contract. The next
+engineering step is durable submission intent and Docker ownership/daemon
+reconciliation, followed by Stop/Resume command simplification. The image,
+launcher, and primary installation route remain subject to the concrete D1
+follow-up; a checkpoint change alone does not deliver a Docker distribution.

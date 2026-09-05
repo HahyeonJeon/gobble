@@ -16,6 +16,9 @@ func writeAtomic(path string, data []byte) error {
 	}
 	tmp := f.Name()
 	_, werr := f.Write(data)
+	if werr == nil {
+		werr = f.Sync()
+	}
 	cerr := f.Close()
 	if werr != nil {
 		os.Remove(tmp)
@@ -29,5 +32,15 @@ func writeAtomic(path string, data []byte) error {
 		os.Remove(tmp)
 		return err
 	}
-	return nil
+	return syncDirectory(dir)
+}
+
+// Sync the directory entry after an atomic rename, not just the file contents.
+func syncDirectory(path string) error {
+	f, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	return f.Sync()
 }

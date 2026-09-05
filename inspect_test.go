@@ -11,6 +11,7 @@ import (
 
 	"github.com/HahyeonJeon/gobble"
 	"github.com/HahyeonJeon/gobble/internal/engine"
+	"github.com/HahyeonJeon/gobble/internal/testutil"
 )
 
 func TestInspectMissingWorkspace(t *testing.T) {
@@ -61,7 +62,7 @@ func TestInspectUnknownViewAndInstance(t *testing.T) {
 
 func TestInspectUnsupportedSchema(t *testing.T) {
 	dir := t.TempDir()
-	writeRunFile(t, filepath.Join(dir, engine.ControlDir, engine.RunIdentityFile), `{
+	writeRunFile(t, testutil.ControlPath(t, filepath.Join(dir, engine.ControlDir, engine.RunIdentityFile)), `{
   "schema_version": 0,
   "id": "run-1",
   "status": "running",
@@ -78,7 +79,7 @@ func TestInspectUnsupportedSchema(t *testing.T) {
 	}
 
 	dir = t.TempDir()
-	writeRunFile(t, filepath.Join(dir, engine.ControlDir, engine.RunIdentityFile), `{
+	writeRunFile(t, testutil.ControlPath(t, filepath.Join(dir, engine.ControlDir, engine.RunIdentityFile)), `{
   "schema_version": 1,
   "id": "run-1",
   "status": "running",

@@ -11,6 +11,7 @@ import (
 
 	"github.com/HahyeonJeon/gobble"
 	"github.com/HahyeonJeon/gobble/internal/engine"
+	"github.com/HahyeonJeon/gobble/internal/testutil"
 )
 
 var testIdentityOnce sync.Once
@@ -88,7 +89,7 @@ func TestPreflightRefuse(t *testing.T) {
 			code: gobble.DefectOccupiedWorkspace,
 			prep: func(t *testing.T) (*gobble.Graph, string, int) {
 				dir := readyRunWorkspace(t)
-				writeRunFile(t, filepath.Join(dir, engine.ControlDir, engine.RunIdentityFile), `{
+				writeRunFile(t, testutil.ControlPath(t, filepath.Join(dir, engine.ControlDir, engine.RunIdentityFile)), `{
   "schema_version": 2,
   "id": "run-1",
   "status": "running",
@@ -203,7 +204,7 @@ func TestPreflightRefuse(t *testing.T) {
 func TestPreflightOccupiedNotOutputExists(t *testing.T) {
 	dir := readyRunWorkspace(t)
 	writeRunFile(t, filepath.Join(dir, "out", "sample.txt"), "leftover")
-	writeRunFile(t, filepath.Join(dir, engine.ControlDir, engine.RunIdentityFile), `{
+	writeRunFile(t, testutil.ControlPath(t, filepath.Join(dir, engine.ControlDir, engine.RunIdentityFile)), `{
   "schema_version": 2,
   "id": "run-1",
   "status": "running",
@@ -356,9 +357,9 @@ func TestRunProcessGraph(t *testing.T) {
 	if gotCwd != wantCwd {
 		t.Fatalf("process cwd got %q, want isolated root %q", gotCwd, wantCwd)
 	}
-	mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.RunIdentityFile))
-	mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.PlanFile))
-	mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile))
+	mustJSONFile(t, testutil.ControlPath(t, filepath.Join(dir, engine.ControlDir, engine.RunIdentityFile)))
+	mustJSONFile(t, testutil.ControlPath(t, filepath.Join(dir, engine.ControlDir, engine.PlanFile)))
+	mustJSONFile(t, testutil.ControlPath(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile)))
 	if _, err := os.Stat(filepath.Join(dir, engine.ControlDir, "tasks", "copy", "_", "0", "1", "stdout")); err != nil {
 		t.Fatalf("stdout: %v", err)
 	}
@@ -454,7 +455,7 @@ func TestRunContainedFailure(t *testing.T) {
 	if _, statErr := os.Stat(filepath.Join(dir, engine.ControlDir, "tasks", "fail", "_", "0", "1", "work")); statErr != nil {
 		t.Fatalf("failed work directory: %v", statErr)
 	}
-	raw := mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile))
+	raw := mustJSONFile(t, testutil.ControlPath(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile)))
 	var file struct {
 		Tasks []struct {
 			ID     string `json:"id"`
@@ -689,7 +690,7 @@ func TestRunCapTwoIndependent(t *testing.T) {
 			t.Fatalf("published %s: %v", name, err)
 		}
 	}
-	mustJSONFile(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile))
+	mustJSONFile(t, testutil.ControlPath(t, filepath.Join(dir, engine.ControlDir, engine.TasksFile)))
 }
 
 func fromInPortPipeline() *gobble.Pipeline {

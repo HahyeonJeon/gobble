@@ -2,52 +2,39 @@ package engine
 
 import (
 	"encoding/json"
-	"path/filepath"
 	"sort"
 )
 
 func (s *sched) persistControl() error {
 	s.snapshot = newOccupancyID()
-	s.run.Snapshot = s.snapshot
-	s.run.SchemaVersion = SchemaVersion
-	if err := s.writePlan(); err != nil {
-		return err
-	}
-	if err := s.writeTasks(); err != nil {
-		return err
-	}
-	return s.writeRun()
+	return s.writeControl()
 }
 
 func (s *sched) writeControl() error {
 	s.run.Snapshot = s.snapshot
 	s.run.SchemaVersion = SchemaVersion
-	if err := s.writePlan(); err != nil {
-		return err
-	}
-	if err := s.writeTasks(); err != nil {
-		return err
-	}
-	return s.writeRun()
-}
-
-func (s *sched) writePlan() error {
 	plan, err := marshalControlPlan(s.doc, s.snapshot)
 	if err != nil {
 		return err
 	}
-	return writeAtomic(filepath.Join(s.workspace, ControlDir, PlanFile), plan)
+	return s.writeCheckpoint(plan)
 }
 
-func (s *sched) writeRun() error {
-	data, err := json.MarshalIndent(s.run, "", "  ")
+func (s *sched) writeCheckpoint(plan []byte) error {
+	s.run.Snapshot = s.snapshot
+	s.run.SchemaVersion = SchemaVersion
+	tasks, err := s.marshalTasks()
 	if err != nil {
 		return err
 	}
-	return writeAtomic(filepath.Join(s.workspace, ControlDir, RunIdentityFile), append(data, '\n'))
+	run, err := json.MarshalIndent(s.run, "", "  ")
+	if err != nil {
+		return err
+	}
+	return commitCheckpoint(s.workspace, s.snapshot, plan, tasks, append(run, '\n'))
 }
 
-func (s *sched) writeTasks() error {
+func (s *sched) marshalTasks() ([]byte, error) {
 	doc := jsonTasksFile{
 		SchemaVersion: SchemaVersion,
 		Snapshot:      s.snapshot,
@@ -76,7 +63,7 @@ func (s *sched) writeTasks() error {
 	}
 	data, err := json.MarshalIndent(doc, "", "  ")
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return writeAtomic(filepath.Join(s.workspace, ControlDir, TasksFile), append(data, '\n'))
+	return append(data, '\n'), nil
 }

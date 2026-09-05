@@ -18,7 +18,8 @@ var errInvalidPath = errors.New("invalid-path")
 // Authored plan paths must not start with this name.
 const ControlDir = ".gobble"
 
-// RunIdentityFile is the run identity document under ControlDir.
+// RunIdentityFile is the run identity member of a committed checkpoint.
+// Legacy workspaces keep it directly under ControlDir.
 // Occupancy is the owner record inside that file, not mere presence.
 const RunIdentityFile = "run.json"
 
@@ -664,6 +665,9 @@ func checkControlContainment(workspace string) []Defect {
 		ControlDir + "/" + PlanFile,
 		ControlDir + "/" + TasksFile,
 		ControlDir + "/" + occupyLockFile,
+		ControlDir + "/" + checkpointPointerFile,
+		ControlDir + "/" + checkpointDirectory,
+		ControlDir + "/" + checkpointLockFile,
 		ControlDir + "/tasks",
 	}
 	for _, rel := range children {

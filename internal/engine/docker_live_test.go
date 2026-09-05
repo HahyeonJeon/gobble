@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/HahyeonJeon/gobble/internal/testutil"
 )
 
 func requireDocker(t *testing.T) {
@@ -50,7 +52,7 @@ func TestRunDockerPublishes(t *testing.T) {
 	if strings.TrimSpace(string(pwd)) != containerWorkDir {
 		t.Fatalf("container cwd got %q, want %s", pwd, containerWorkDir)
 	}
-	raw := mustJSONFile(t, filepath.Join(dir, ControlDir, TasksFile))
+	raw := mustJSONFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, TasksFile)))
 	var file jsonTasksFile
 	if err := json.Unmarshal(raw, &file); err != nil {
 		t.Fatalf("tasks.json: %v", err)
@@ -104,7 +106,7 @@ func TestRunDockerBadImageContained(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(dir, ControlDir, "tasks", "copy", "_", "0", "1", "work")); err != nil {
 		t.Fatalf("work directory after docker failure: %v", err)
 	}
-	raw := mustJSONFile(t, filepath.Join(dir, ControlDir, TasksFile))
+	raw := mustJSONFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, TasksFile)))
 	var file jsonTasksFile
 	if err := json.Unmarshal(raw, &file); err != nil {
 		t.Fatalf("tasks.json: %v", err)

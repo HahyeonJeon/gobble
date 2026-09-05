@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/HahyeonJeon/gobble/internal/testutil"
 )
 
 func TestMonitorUsesGlobalLatestSnapshotWithSelectedLiveLogs(t *testing.T) {
@@ -18,7 +20,7 @@ func TestMonitorUsesGlobalLatestSnapshotWithSelectedLiveLogs(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	writeCheckFile(t, filepath.Join(dir, ControlDir, PlanFile), string(plan))
+	writeCheckFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, PlanFile)), string(plan))
 	writeOccupancy(t, dir, jsonOccupancy{Active: false})
 	states := []jsonTaskState{
 		{ID: "a", Attempt: 1, Status: StatusFailed, Executor: executorProcess, Command: []string{"true"}},
@@ -29,7 +31,7 @@ func TestMonitorUsesGlobalLatestSnapshotWithSelectedLiveLogs(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), string(data))
+	writeCheckFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, TasksFile)), string(data))
 	stdout, _ := taskLogPaths(states[1])
 	writeCheckFile(t, filepath.Join(dir, stdout), strings.Repeat("x", 5000)+"live output")
 	before := snapshotDir(t, dir)
@@ -92,7 +94,7 @@ func TestMonitorRejectsMixedControlRevisions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	writeCheckFile(t, filepath.Join(dir, ControlDir, TasksFile), string(data))
+	writeCheckFile(t, testutil.ControlPath(t, filepath.Join(dir, ControlDir, TasksFile)), string(data))
 	before := snapshotDir(t, dir)
 	if _, defects := Inspect(dir, viewMonitor, "", testInstallIdentity()); len(defects) == 0 {
 		t.Fatal("mixed revisions accepted")

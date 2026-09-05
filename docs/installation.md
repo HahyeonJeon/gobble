@@ -4,6 +4,12 @@ The current supported execution target is Linux/amd64. Windows/WSL setup is
 proposed for v0.2.0 and is not yet a validated installation path. See the
 [v0.2.0 design](v0.2.0/design.md).
 
+Running Gobble and its Go toolchain inside Docker is also a proposed beginner
+installation route. WSL2 is not a Gobble dependency, and Docker Desktop's WSL2
+backend does not require a separate Ubuntu distribution. See the
+[container installation proposal](v0.2.0/container-installation.md) for the
+Windows backend choices and the implementation/validation still required.
+
 For a first local example, follow [Hello Gobble](../examples/hello/README.md).
 This guide explains exact revision selection for an agent-owned Go project.
 Create the consumer module with `go mod init YOUR_MODULE` before using the
@@ -49,4 +55,3 @@ GOBIN="$PWD/.gobbin" go install github.com/HahyeonJeon/gobble/cmd/gobble@v0.1.0
 
 Keep the exact selected command on `PATH` for graph verbs. Consumer packages
 under `internal/` are unsupported.
-

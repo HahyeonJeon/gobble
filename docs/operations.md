@@ -199,6 +199,11 @@ or old-output acceptance occurs.
 
 ## Migration
 
+Run state now uses [atomic checkpoint generations](checkpoints.md). Compatible
+legacy flat controls remain readable and are converted on the next allowed
+state-changing operation. This storage transition does not bypass engine or
+pipeline identity checks.
+
 Migration has two historical boundaries. They must not be conflated:
 
 | Boundary | Preserved behavior | Current workspace rule |

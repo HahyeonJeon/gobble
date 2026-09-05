@@ -135,8 +135,9 @@ For a fully completed unchanged run, there may be nothing to resume.
 
 If backend state is unknown, restore Docker access and follow the
 [recovery guide](docs/operations.md#recovery). Closing the run terminal is not a
-supported detached-execution mode. The v0.2.0 review also identifies an
-[interrupted-checkpoint recovery gap](docs/v0.2.0/review.md#findings).
+supported detached-execution mode. State is now published as
+[complete checkpoints](docs/checkpoints.md); recovery of a Docker submission
+interrupted before its runtime ID is recorded remains v0.2.0 work.
 
 ## Share a pipeline
 

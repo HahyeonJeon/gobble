@@ -129,13 +129,7 @@ func Release(workspace string, supplied *InstallIdentity) []Defect {
 		run.Snapshot = snapshot
 		s := releaseSched(workspace, run, tasks)
 		s.snapshot = snapshot
-		if err := rewritePlanSnapshot(workspace, snapshot); err != nil {
-			return pathDefects(err)
-		}
-		if err := s.writeTasks(); err != nil {
-			return pathDefects(err)
-		}
-		if err := s.writeRun(); err != nil {
+		if err := s.writeReleasedCheckpoint(plan); err != nil {
 			return pathDefects(err)
 		}
 		return unknownBackendDefects(unknown)
@@ -154,38 +148,21 @@ func Release(workspace string, supplied *InstallIdentity) []Defect {
 	run.Snapshot = snapshot
 	s := releaseSched(workspace, run, tasks)
 	s.snapshot = snapshot
-	if err := rewritePlanSnapshot(workspace, snapshot); err != nil {
-		return pathDefects(err)
-	}
-	if err := s.writeTasks(); err != nil {
-		return pathDefects(err)
-	}
-	if err := s.writeRun(); err != nil {
+	if err := s.writeReleasedCheckpoint(plan); err != nil {
 		return pathDefects(err)
 	}
 	DropHeldLease(workspace)
 	return nil
 }
 
-func rewritePlanSnapshot(workspace, snapshot string) error {
-	path := filepath.Join(workspace, ControlDir, PlanFile)
-	data, err := os.ReadFile(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil
-		}
-		return err
-	}
-	var plan jsonPlan
-	if err := json.Unmarshal(data, &plan); err != nil {
-		return err
-	}
-	plan.Snapshot = snapshot
+func (s *sched) writeReleasedCheckpoint(plan jsonPlan) error {
+	plan.Snapshot = s.snapshot
+	plan.SchemaVersion = SchemaVersion
 	out, err := json.MarshalIndent(plan, "", "  ")
 	if err != nil {
 		return err
 	}
-	return writeAtomic(path, append(out, '\n'))
+	return s.writeCheckpoint(append(out, '\n'))
 }
 
 func releaseSched(workspace string, run jsonRun, tasks []jsonTaskState) *sched {
@@ -207,6 +184,22 @@ func releaseSched(workspace string, run jsonRun, tasks []jsonTaskState) *sched {
 }
 
 func unsupportedControlSchema(workspace string, run jsonRun) []Defect {
+	lock, root, committed, err := openCheckpoint(workspace)
+	if err != nil {
+		return pathDefects(err)
+	}
+	defer closeCheckpointLock(lock)
+	if committed {
+		_, _, _, err := readCommittedControl(workspace, root)
+		if err != nil {
+			return checkpointDefects(err)
+		}
+		return nil
+	}
+	return unsupportedLegacyControlSchema(workspace, run)
+}
+
+func unsupportedLegacyControlSchema(workspace string, run jsonRun) []Defect {
 	if schemaUnsupported(run.SchemaVersion) || pidOnlyOccupancy(run) {
 		return schemaDefect(ControlDir + "/" + RunIdentityFile)
 	}

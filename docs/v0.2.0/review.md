@@ -61,6 +61,12 @@ P2 concerns maintainability or usability. Locations refer to the baseline.
 
 ## Scope boundaries
 
+Implementation update: R01's mixed-snapshot publication defect is addressed by
+[checkpoint generations](../checkpoints.md) and process-death recovery tests.
+The separate Docker submit-to-runtime-ID gap still needs submission intent and
+reconciliation. See the [batch 2a delivery record](plan.md#checkpoint-publication-delivery-record-batch-2a)
+for current verification; the findings table above records the reviewed baseline.
+
 The public root Go package is an appropriate Go layout; moving it wholesale
 under `src/` would break imports without solving a user problem. Keep assay
 configuration and scientific facts owned by their pipeline packages. Deduplicate
