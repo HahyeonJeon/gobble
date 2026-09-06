@@ -11,8 +11,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/HahyeonJeon/gobble/internal/containerenv"
 	"github.com/HahyeonJeon/gobble/internal/engine/exec"
-"github.com/HahyeonJeon/gobble/internal/containerenv"
 )
 
 // occupyLockFile is the local exclusive used to claim occupancy
@@ -310,9 +310,9 @@ func newOccupancyID() string {
 }
 
 func currentHost() (string, error) {
-if os.Getenv("GOBBLE_CONTROLLER") != "" && os.Getenv("GOBBLE_DAEMON_ID") != "" {
-return containerenv.Host(os.Getenv("GOBBLE_DAEMON_ID")), nil
-}
+	if os.Getenv("GOBBLE_CONTROLLER") != "" && os.Getenv("GOBBLE_DAEMON_ID") != "" {
+		return containerenv.Host(os.Getenv("GOBBLE_DAEMON_ID")), nil
+	}
 	return os.Hostname()
 }
 

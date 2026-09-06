@@ -9,3 +9,7 @@ runs
 
 **/.gobble-cache
 **/testdata/cache
+
+# Source identity needs Git objects and HEAD, never local credentials or hooks.
+.git/config
+.git/hooks

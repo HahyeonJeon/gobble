@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
+	"encoding/csv"
 	"encoding/hex"
-"encoding/csv"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,14 +13,14 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
-"regexp"
 	"strconv"
 	"strings"
 	"time"
 
- distribution "github.com/HahyeonJeon/gobble/distribution/runtime"
-"github.com/HahyeonJeon/gobble/internal/containerenv"
+	distribution "github.com/HahyeonJeon/gobble/distribution/runtime"
+	"github.com/HahyeonJeon/gobble/internal/containerenv"
 )
 
 func sourceCheckout() (string, error) {
@@ -70,8 +70,10 @@ func createProject(ctx context.Context, path, source string, files map[string]st
 			return err
 		}
 		files[".gobble-runtime.json"] = string(config) + "\n"
-files["compose.yaml"] = distribution.Compose(containerenv.Current().PullReference())
-for _, name := range []string{"README.md", "AGENTS.md"} { files[name] = composeGuide(files[name]) }
+		files["compose.yaml"] = distribution.Compose(containerenv.Current().PullReference())
+		for _, name := range []string{"README.md", "AGENTS.md"} {
+			files[name] = composeGuide(files[name])
+		}
 	}
 	for name, data := range files {
 		dest := filepath.Join(path, filepath.FromSlash(name))
@@ -136,12 +138,18 @@ func probeSiblingMount(ctx context.Context, controller string) error {
 	if err != nil {
 		return fmt.Errorf("inspect runtime mounts: %w", err)
 	}
-var mounts []containerenv.Mount
-if err := json.Unmarshal(out, &mounts); err != nil { return err }
-cwd, err := os.Getwd()
-if err != nil { return err }
-source, err := containerenv.MapPath(cwd, mounts)
-if err != nil { return fmt.Errorf("runtime project mount: %w", err) }
+	var mounts []containerenv.Mount
+	if err := json.Unmarshal(out, &mounts); err != nil {
+		return err
+	}
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	source, err := containerenv.MapPath(cwd, mounts)
+	if err != nil {
+		return fmt.Errorf("runtime project mount: %w", err)
+	}
 	file, err := os.CreateTemp(".", ".gobble-probe-*")
 	if err != nil {
 		return err
@@ -239,20 +247,20 @@ Do not edit or remove .gobble-runtime.json to upgrade an existing run.
 `
 
 func probeBind(source string) string {
-var out bytes.Buffer
-w := csv.NewWriter(&out)
-_ = w.Write([]string{"type=bind", "src="+source, "dst=/probe"})
-w.Flush()
-return strings.TrimSuffix(out.String(), "\n")
+	var out bytes.Buffer
+	w := csv.NewWriter(&out)
+	_ = w.Write([]string{"type=bind", "src=" + source, "dst=/probe"})
+	w.Flush()
+	return strings.TrimSuffix(out.String(), "\n")
 }
 
 func composeGuide(text string) string {
-text = regexp.MustCompile(`(?m)^    gobble `).ReplaceAllString(text, "    docker compose run --rm gobble ")
-text = strings.ReplaceAll(text, "docker compose run --rm gobble run ", "docker compose run -d gobble run ")
-text = strings.ReplaceAll(text, "docker compose run --rm gobble resume ", "docker compose run -d gobble resume ")
-text = strings.ReplaceAll(text, "Use the installed gobble command from this directory.", "Use this project's pinned compose.yaml from this directory.")
-text = strings.ReplaceAll(text, "Go and Gobble are provided\nby the selected Docker runtime, or by a direct Linux installation.", "Go and Gobble are provided by the Docker runtime; no host Go or Gobble installation is needed.")
-text = strings.ReplaceAll(text, "Keep the run terminal open.", "Detached execution survives the calling terminal. Keep the returned container ID for docker logs and docker wait; a successful launch does not mean the analysis succeeded.")
-text = strings.ReplaceAll(text, "This is foreground execution: closing the run terminal requires\nrecovery through Resume.", "Detached execution survives closing the terminal. Use inspect to verify completion; use docker logs with the returned container ID if startup fails.")
-return text
+	text = regexp.MustCompile(`(?m)^    gobble `).ReplaceAllString(text, "    docker compose run --rm gobble ")
+	text = strings.ReplaceAll(text, "docker compose run --rm gobble run ", "docker compose run -d gobble run ")
+	text = strings.ReplaceAll(text, "docker compose run --rm gobble resume ", "docker compose run -d gobble resume ")
+	text = strings.ReplaceAll(text, "Use the installed gobble command from this directory.", "Use this project's pinned compose.yaml from this directory.")
+	text = strings.ReplaceAll(text, "Go and Gobble are provided\nby the selected Docker runtime, or by a direct Linux installation.", "Go and Gobble are provided by the Docker runtime; no host Go or Gobble installation is needed.")
+	text = strings.ReplaceAll(text, "Keep the run terminal open.", "Detached execution survives the calling terminal. Keep the returned container ID for docker logs and docker wait; a successful launch does not mean the analysis succeeded.")
+	text = strings.ReplaceAll(text, "This is foreground execution: closing the run terminal requires\nrecovery through Resume.", "Detached execution survives closing the terminal. Use inspect to verify completion; use docker logs with the returned container ID if startup fails.")
+	return text
 }

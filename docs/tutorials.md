@@ -149,8 +149,9 @@ Gobble does not continue inside an interrupted STAR, GATK, or other tool.
 Repeated Stop is safe. If the small run has already finished, Resume should
 reuse its completed work without rerunning it.
 
-If the run terminal closes or Docker restarts, restore Docker access, return to
-the same project, and Resume. Preserve the project's runtime lock, pinned image,
+Closing a terminal after detached launch leaves the analysis running. If Docker
+or the computer restarts, restore Docker access, return to the same project,
+and Resume. Preserve the project's runtime lock, pinned image,
 and workspace. An unknown backend must be reconciled before another run can own
 the workspace; follow [recovery](operations.md#recovery) if Resume reports it.
 
@@ -190,7 +191,7 @@ project as a baseline; scientific configuration changes require review.
 | Symptom | What to check |
 |---|---|
 | `Docker is unavailable` | Start Docker Desktop/Engine and select the same local Linux engine used by the project. |
-| Runtime image is `linux/arm64` | Rebuild with `--platform linux/amd64`; Apple Silicon needs working Docker Desktop emulation. |
+| Runtime image is `linux/arm64` | Use the official pinned linux/amd64 runtime; Apple Silicon needs working Docker Desktop emulation. |
 | SHA-256, HTTP, or download failure | Restore internet access and repeat `demo` from the parent directory. Never bypass verification. |
 | Resource validation rejects a task | Allocate enough CPUs/memory to Docker; lowering `--cap` does not shrink a task. |
 | Image pull or registry failure | Restore registry access and Resume. Preserve the failed attempt for diagnosis. |
@@ -200,8 +201,8 @@ project as a baseline; scientific configuration changes require review.
 For reproducible acceptance on a machine with Docker and Python 3:
 
 ```sh
-python3 tests/runtime-e2e/demo.py /absolute/path/to/gobble rnaseq
-python3 tests/runtime-e2e/demo.py /absolute/path/to/gobble wgs
+python3 tests/runtime-e2e/demo.py compose rnaseq
+python3 tests/runtime-e2e/demo.py compose wgs
 ```
 
 Run those from the Gobble checkout. They exclude host Go, prepare fresh projects,

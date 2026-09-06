@@ -1,9 +1,5 @@
 # Direct Linux development installation
 
-For the common installation on all supported hosts, use [Docker Compose](../distribution/runtime/README.md).
-This page covers working directly with the Go library and Linux engine.
-
-
 The common installation uses [Docker Compose](../distribution/runtime/README.md).
 This page covers direct Linux/amd64 development with Go, Git, and Docker managed
 on the host. WSL can provide such a Linux development environment on Windows;

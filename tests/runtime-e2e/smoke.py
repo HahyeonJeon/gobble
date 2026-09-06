@@ -69,15 +69,15 @@ with tempfile.TemporaryDirectory(prefix="Gobble 한글 space ") as temporary:
         shutil.copy(project / "runs/hello/inputs/sequences.fasta", workspace / "inputs/sequences.fasta")
         source.write_text(long_pipeline)
         with tempfile.TemporaryFile() as output:
-            process = subprocess.Popen(transport.argv(project, "run", ".", "--workspace", str(workspace)),
+            process = subprocess.Popen(transport.argv(project, "run", ".", "--workspace", workspace.relative_to(project).as_posix()),
                                        cwd=project, env=env, stdout=output, stderr=output)
             try:
                 wait_for(lambda: any("gobble-live-log" in p.read_text()
                                      for p in workspace.glob(".gobble/tasks/**/stdout")), process)
                 if scenario == "stop":
-                    result = json.loads(command(project, "stop", "--workspace", str(workspace)))
+                    result = json.loads(command(project, "stop", "--workspace", workspace.relative_to(project).as_posix()))
                     assert result["status"] == "settled", result
-                    assert json.loads(command(project, "stop", "--workspace", str(workspace)))["status"] == "settled"
+                    assert json.loads(command(project, "stop", "--workspace", workspace.relative_to(project).as_posix()))["status"] == "settled"
                 else:
                     ids = subprocess.check_output(["docker", "ps", "--quiet",
                         "--filter", transport.controller_filter(project)], env=env, text=True).split()
@@ -85,13 +85,13 @@ with tempfile.TemporaryDirectory(prefix="Gobble 한글 space ") as temporary:
                     subprocess.run(["docker", "kill", "--signal=KILL", ids[0]], env=env, check=True)
                 assert process.wait(timeout=60) != 0
                 source.write_text(docker_pipeline)
-                command(project, "resume", ".", "--workspace", str(workspace))
+                command(project, "resume", ".", "--workspace", workspace.relative_to(project).as_posix())
                 assert (workspace / "results/sequence-count.txt").read_text().strip() == "2"
-                tasks = [json.loads(line) for line in command(project, "inspect", "instances", "--workspace", str(workspace)).splitlines()]
+                tasks = [json.loads(line) for line in command(project, "inspect", "instances", "--workspace", workspace.relative_to(project).as_posix()).splitlines()]
                 assert len(tasks) == 1 and tasks[0]["status"] == "succeeded" and tasks[0]["attempt"] == 2, tasks
             finally:
                 if process.poll() is None:
-                    command(project, "stop", "--workspace", str(workspace))
+                    command(project, "stop", "--workspace", workspace.relative_to(project).as_posix())
                     process.wait(timeout=60)
                 output.seek(0)
                 print(output.read().decode(errors="replace"))
