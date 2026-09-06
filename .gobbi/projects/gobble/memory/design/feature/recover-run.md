@@ -69,6 +69,13 @@ not request pipeline Stop. Desktop monitoring and direct Stop/Resume remain
 available independently of provider authentication. Agent tool calls and direct
 UI actions share operation identity and duplicate-request protection.
 
+Closing an agent-opened view or dismissing a contextual question is also
+independent of pipeline Stop. Recovery previews and questions link to their
+evidence revision, with revalidation before applying an answer; see
+[Agent-centered workspace](agent-workspace.md). Preserve standalone Linux CLI
+recovery without the app/service. Verify compatible cross-interface control
+using the recorded workspace, runtime identity, and owner lease.
+
 A finish-active-tasks-and-wait action remains a separate future design. It is
 not current Stop, Docker pause, or a process-memory checkpoint.
 

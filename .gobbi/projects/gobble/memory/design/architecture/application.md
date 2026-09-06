@@ -1,25 +1,29 @@
-# Gobble — Application and Monitoring Design
+# Gobble — Agent Application and Monitoring Design
 
-Updated: 2026-09-06. Electron, React/TypeScript, desktop-first delivery, and
-ChatGPT subscription authentication as the first agent target are user-selected
-directions. Existing behavior and planned capabilities are distinguished below.
-Detailed contracts and release qualification remain implementation work.
+Updated: 2026-09-06. Electron, React/TypeScript, agent-centered interaction,
+ChatGPT subscription authentication as the first agent target, and continued
+Linux CLI support are user-selected directions. After reconsidering local web
+delivery, a thin desktop application remains the recommended first delivery.
+Detailed UX choices require discussion; contracts and release qualification
+remain implementation work. Existing and planned behavior are separated below.
 
 Related: [Project roadmap](../roadmap/project.md), [Engine architecture](system.md),
+[Agent-centered workspace](../feature/agent-workspace.md),
 [Inspection](../feature/inspect-run.md), [Recovery](../feature/recover-run.md).
 
 ## Vision
 
-Gobble is a desktop application for working with an agent to design a
-bioinformatics pipeline, review the analysis, execute it locally, understand
-progress and failures, and recover without losing valid work. Its first agent
-experience uses OpenAI models through the user's ChatGPT subscription sign-in.
-The initial integration route is the official Codex App Server.
+The first application goal is a local workspace where a user and an agent
+design, execute, control, and monitor bioinformatics pipelines together. The
+agent can open analysis views, inspect their evidence, and bring specific
+questions to the user. The first agent experience uses OpenAI models through
+the user's ChatGPT subscription sign-in and the official Codex App Server.
 
-The application makes the analysis understandable and manageable. The Go
-library remains the authoring foundation. The engine owns scheduling,
-execution, artifacts, and recovery. All five assay products use those shared
-contracts.
+Gobble is the core Go engine behind this application and remains a standalone
+Linux CLI tool. The application makes analysis understandable and manageable;
+the Go library supplies authoring, and the engine owns scheduling, execution,
+artifacts, and recovery. All five assay products use those shared contracts.
+Desktop delivery does not replace the engine or its headless command interface.
 
 Use one installation and execution model across user experience levels.
 The integrated agent and direct UI controls operate the same projects and runs.
@@ -37,7 +41,8 @@ The implementation baseline reviewed for this design is
 | Execution | Detached controller; tool containers are siblings on the local daemon | Durable run registration independent of client connections |
 | Inspection | Coherent JSON snapshots, sample-aware TUI, persistent logs | React/TypeScript desktop monitoring, multiple-run navigation, reconnectable updates, attempt history |
 | Recovery | Lease-addressed Stop and reconciliation before Resume | Shared command contract, request deduplication, resume impact preview |
-| Agents | External source editing and documented CLI operations | In-app agent using ChatGPT subscription sign-in and official Codex runtime integration |
+| Agents | External source editing and documented CLI operations | In-app subscription agent that opens/observes analysis surfaces, requests contextual input, and invokes Gobble operations |
+| Linux CLI | Standalone Go command, structured Inspect, TUI, and lifecycle operations | Maintained headless interface sharing engine behavior with the app, without a desktop or provider dependency |
 | Platforms | Linux/amd64 containers and cross-platform installation guidance | Electron installers and actual application plus Docker acceptance on supported hosts |
 
 Linux Docker CI has exercised installed WGS and RNA-seq runs and Resume reuse.
@@ -55,7 +60,7 @@ that extension without delaying the desktop product.
 | Layer | Selected direction |
 |---|---|
 | Desktop host | Electron; TypeScript main process and a narrow preload bridge |
-| Interface | React and TypeScript; project, agent, plan, monitoring, and result surfaces |
+| Interface | React and TypeScript; shared analysis workspace with agent-controlled surfaces and direct user interaction |
 | First agent target | OpenAI models available through the user's ChatGPT subscription, integrated through Codex App Server |
 | Agent transport | Host-managed official Codex runtime, initially using its stdio interface |
 | Application operations | Independent Go service with versioned query and command contracts |
@@ -69,14 +74,50 @@ Go; it is not moved into Electron's main process.
 
 The application should guide project-folder selection, Docker readiness,
 runtime acquisition, and agent sign-in. Users need not use a terminal for the
-first desktop journey. Existing Compose and direct Linux entry points remain
-usable for automation, compatibility, and development without audience tiers.
+first desktop journey. The standalone Linux CLI, Go API, and Compose route
+remain supported interfaces for operators, scripts, and external agents,
+without audience tiers or a dependency on the desktop app.
 
 A desktop installer does not eliminate the Linux environment required by
 analysis containers. Electron host architecture, Codex runtime architecture,
 Gobble controller architecture, and tool-image architecture have separate
 support matrices. Current analysis images remain linux/amd64, with emulation on
 Apple Silicon. Shipping an ARM desktop binary does not prove native ARM analysis.
+
+### Delivery recommendation: thin desktop first
+
+Agent-controlled panels, contextual questions, and observations can work inside
+a local browser application. Agent-centered UX does not itself require native
+windows. The recommendation to start with Electron follows this product's
+combined local runtime, installation, file-access, and lifecycle requirements.
+
+| Consideration | Electron first | Local web app first |
+|---|---|---|
+| Shared React workspace | Supports agent-opened tabs/panels and contextual interaction | Supports the same internal workspace model |
+| Local runtime and project access | A desktop host can manage native integration and the official agent process | Requires a separately started local backend/launcher for native capabilities |
+| Independent windows | Host manages app-owned windows when the UX needs them | New browser windows are subject to user-activation and popup rules; internal panels remain viable |
+| Delivery cost | Native packages, signing, updater decisions, and bundled runtime overhead | Less initial native packaging, but local startup, connection, and process lifecycle still need a solution |
+| First product evidence | Exercises the intended install/open/work/reopen journey early | Proves browser interaction first, with desktop-specific evidence still to collect |
+
+Electron's main process owns native windows and application integration;
+React views live in renderers. Browser popup policies constrain autonomous
+creation of new browser windows, and browser directory picking requires user
+interaction. A local service can supply native capabilities for a web client,
+so these are integration tradeoffs, not a claim that a web product is impossible.
+[Electron process model](https://www.electronjs.org/docs/latest/tutorial/process-model),
+[browser windows](https://developer.mozilla.org/en-US/docs/Web/API/Window/open),
+[directory picking](https://developer.mozilla.org/en-US/docs/Web/API/Window/showDirectoryPicker)
+
+Start with a small Electron host and one usable React workspace. Keep view
+components and typed application contracts independent of Electron, with a host
+adapter at the boundary. A browser development harness may accelerate layout
+work and component tests; it is not a separately released web MVP or an extra
+product prerequisite. Qualify basic native packaging early and defer advanced
+desktop features until the complete agent-driven journey works.
+
+Reconsider web-first delivery if browser/remote access becomes the first user
+need or measured desktop provisioning problems block the target hosts. Neither
+condition is currently a reason to postpone the local desktop integration.
 
 ## Architecture and ownership
 
@@ -85,6 +126,8 @@ flowchart TD
     UI["React and TypeScript interface"] --> Host["Electron host and preload bridge"]
     Host --> Codex["Official Codex App Server"]
     Host --> Service["Local Go application service"]
+    Codex --> Views["Workspace interaction tools"]
+    Views --> Host
     Codex --> Tools["Gobble tools adapter"]
     Tools --> Service
     Service --> Controller["Independent pinned run controller"]
@@ -99,14 +142,16 @@ pipeline run have different identities, state, and lifetimes.
 
 | Component | Responsibility and boundary |
 |---|---|
-| React renderer | Presents conversation, plans, progress, and results; has no direct provider credentials, Docker socket, or arbitrary process-launch interface |
-| Electron main/preload | Owns windows, native dialogs, browser sign-in handoff, notifications, and validated host calls |
+| React renderer | Presents shared conversation and analysis surfaces, returns scoped observations and user responses; has no direct provider credentials, Docker socket, or arbitrary process-launch interface |
+| Electron main/preload | Owns native windows, dialogs, sign-in handoff, notifications, and validated host calls |
+| Application workspace controller | Owns surface identity, layout, selection, pending questions, and acknowledgment of actual UI outcomes; accepts direct user actions and workspace interaction tools |
 | Codex adapter | Connects the UI to the official runtime; maps conversation events and tool calls without implementing a replacement model loop |
+| Workspace interaction tools | Open, update, observe, and release supported app surfaces and request contextual user input; independent of execution commands |
 | Gobble tools adapter | Exposes structured project and run operations to the agent; uses the same commands as direct UI actions |
 | Local Go service | Registers projects, discovers runs, serves queries, and routes commands; restart must not terminate controllers |
 | Run controller | Owns scheduling, settlement, checkpoints, and reconciliation with its pinned runtime and verified daemon |
 | Executors | Submit, observe, cancel, and reconcile analysis tasks on the local daemon |
-| Workspace and catalog | Workspace owns execution truth; catalog owns registration/preferences and rebuildable execution summaries |
+| Workspace and catalog | Run workspace owns execution truth; app state owns registration/preferences, surface references and decisions, alongside rebuildable execution summaries |
 
 Run the agent integration on the host so it can edit the selected local project
 and use the host's sign-in environment. Keep compilation and analysis in the
@@ -128,13 +173,35 @@ IPC. If the service exposes HTTP, publish only to loopback with a local session
 credential and origin checks. Provider credentials remain with the host-side
 agent runtime, outside renderer state, pipeline folders, logs, and images.
 
+### Engine and Linux CLI independence
+
+Keep `gobble` and `cmd/gobble` usable on supported Linux hosts without Electron,
+Node.js, a browser, a ChatGPT account, or a running application service. Normal
+compiler and executor requirements still apply. Retain Go authoring, validation,
+planning, execution, structured inspection, Watch, Stop, and Resume for headless
+operation, scripts, and external agents.
+
+The service and CLI must use shared Go lifecycle behavior, workspace identity,
+and owner/lease gates. Desktop-only concepts such as surface IDs and pending
+questions stay outside engine state. The application catalog must not become
+necessary to recover a run. Requests entering the application service use its
+durable operation contract; standalone CLI calls retain their direct engine
+path and the same ownership checks.
+
+Before promising cross-interface control, verify that a compatible Linux CLI
+can inspect, stop, and resume an app-started run, and that the app can discover
+a CLI-started run. Use its recorded workspace and pinned runtime identity;
+resolve container/host path mappings instead of bypassing identity checks.
+Keep CLI documentation, headless tests, and distribution acceptance in each
+engine-affecting release.
+
 ## First agent target: ChatGPT subscription sign-in
 
 Use OpenAI's subscription OAuth through the official **Sign in with ChatGPT**
 flow. This is the selected meaning of ChatGPT subscription authentication.
 OpenAI documents Codex App Server as a product integration surface for
 account authentication, conversation history, approvals, and streamed agent
-events. This is the initial integration route for Gobble's agent panel.
+events. This is the initial integration route for Gobble's shared agent workspace.
 [Official App Server documentation](https://learn.chatgpt.com/docs/app-server)
 
 Proposed sign-in flow: Electron requests ChatGPT login from App Server, opens
@@ -154,7 +221,9 @@ The following are Gobble product requirements, not claims of completed provider
 integration:
 
 - Expose account connection, model selection, conversation, tool activity,
-  reviewable source/plan changes, and run links in the desktop app.
+  reviewable source/plan changes, and run links in the desktop app. Connect the
+  agent to the workspace interaction tools so it can present and inspect views
+  and receive contextual user answers; account-connected chat alone is insufficient.
 - Keep provider thread/turn identifiers separate from Gobble run/operation IDs.
   Restore the association when reopening a project.
 - Preserve pending authorization and tool outcomes across UI reconnection;
@@ -196,7 +265,20 @@ must not rewrite already-executed definitions or provenance. For changed-source
 recovery, show plan differences and expected reuse. Whether it creates a new
 run or a revision within a run is an explicit compatibility decision.
 
-## User journey and monitoring
+## Agent-centered interaction and monitoring
+
+The defining UX is a shared workspace that the agent can use alongside the
+person. It opens a plan, selects a sample, reads a log, inspects a report, or
+presents alternatives while discussing the analysis. Structured observations
+and optional scoped captures let it check what the application actually shows.
+User responses are associated with the evidence and its revision.
+
+[Agent-centered workspace](../feature/agent-workspace.md) owns the proposed
+layouts, surface lifecycle, attention rules, presentation-versus-inspection
+behavior, contextual decisions, and concrete interaction examples. These require
+discussion before UI implementation. The starting recommendation is a shared
+work area with persistent conversation, tabs/splits for evidence, and always
+accessible run controls. Detached windows are a separate layout choice.
 
 The primary desktop journey is installation and dependency checks, ChatGPT
 sign-in, project registration, in-app agent authoring, plan review, execution,
@@ -206,7 +288,9 @@ needed for official sign-in, not as the Gobble application interface.
 | Surface | Main question | Required information |
 |---|---|---|
 | Setup and account | Can I start working? | Docker/runtime readiness, project-folder checks, account connection, available models |
-| Agent panel | What is being proposed or changed? | Conversation, tool activity, source/plan changes, authorization requests, linked runs |
+| Agent conversation and activity | What is being proposed, shown, or checked? | Conversation linked to analysis surfaces, tool outcomes, source/plan changes, questions, linked runs |
+| Shared work area | What evidence are we working with? | Agent- or user-opened views, selected context, comparison, freshness, pinning and view history |
+| Contextual decision | What input is needed from me? | Specific question, evidence/revision, proposed effects, and response status |
 | Projects and runs | What is active or needs attention? | Active, completed, interrupted, and actionable runs; observation freshness |
 | Plan review | What will the analysis do? | Inputs, stages, commands, images, requested resources, destinations, validation findings |
 | Run overview | What is happening now? | Preparation phase, active stages, counts, problems, available actions |
@@ -250,6 +334,7 @@ state cannot be established.
 | Scenario or action | Required application behavior |
 |---|---|
 | Window or agent closes | Accepted analysis continues while Docker and the computer remain running |
+| Analysis surface closes or UI observation fails | Record a UI outcome; leave run state unchanged and retain recoverable questions |
 | Agent interrupted, signed out, or limited | Agent activity stops or waits; direct local monitoring and pipeline controls remain usable |
 | Start accepted | Return durable identifiers; acceptance is not execution success |
 | Stop requested | Show request acceptance; report stopped only after settlement is proved |
@@ -280,6 +365,12 @@ schemas remain proposals. A Gobble MCP adapter is the initial candidate for
 exposing these shared operations to Codex; its local transport and registration
 are resolved during the integration work. It is distinct from the protocol
 between Electron and Codex App Server.
+
+The agent also receives application workspace tools for opening, observing, and
+updating supported views and receiving contextual answers. Their owner is the
+workspace controller, not the engine. Keep UI request identity separate from
+analysis operation identity and validate tool-result delivery, including any
+scoped images, against the pinned provider runtime.
 
 Long operations return durable identifiers and remain observable after a
 request or agent session ends. Transport cancellation must not silently become
@@ -313,26 +404,32 @@ Monitoring collection must not determine task success or block the scheduler.
 Timelines, run comparison, notifications, and reports follow the basic viewer.
 
 A catalog database, potentially SQLite, can support discovery and preferences.
-Its format and location remain open. Large artifacts and logs stay in files;
-catalog loss must not invalidate workspace recovery.
+Application-owned surface references, conversation associations, and pending
+decisions also need persistence; unlike execution summaries, they cannot all
+be rebuilt from run files. Their format and location remain open. Large
+artifacts and logs stay in files; catalog loss must not invalidate engine
+workspace recovery or standalone CLI use.
 
 ## Decisions still requiring discussion
 
 | Decision | Working recommendation | Resolve before |
 |---|---|---|
+| Agent workspace layout | Shared evidence area, persistent conversation, accessible run controls; compare with a conversation-led layout | First screen implementation, with user review |
+| Surface and attention policy | Managed tabs/splits, scoped observation, contextual decisions; separate native-window choice | Workspace tools implementation, with user review |
 | Codex distribution and compatibility | Official runtime with a pinned, tested host integration | First installer and agent integration |
 | Agent state and tool bridge | Separate provider thread/turn IDs from Gobble operation/run IDs | First complete agent-driven analysis |
 | Service and project registration | One local service with explicitly shared roots | Multi-project service implementation |
 | Run/revision identity | Preserve executed definitions and link recovery attempts | Application persistence schema |
 | API/runtime compatibility | Versioned operations routed to the pinned runtime | Application mutations |
 | Event durability | Checkpoint-led state and recoverable history | Durable event publication |
-| Catalog persistence | Rebuildable execution index; separately owned registration/preferences | Persistent catalog |
+| Catalog persistence | Rebuildable execution index; separately owned registration, preferences, surface references, and decisions | Persistent catalog |
 | Background recovery | Reconnect and reconcile; no silent automatic rerun | Automatic recovery features |
 | Finish-active-and-wait | Separate scheduling action | Adding a pause-like control |
 
-The desktop framework, frontend language, desktop-first sequence, and initial
-subscription-backed OpenAI provider are selected. The table above concerns their
-remaining implementation contracts, not reopening those product choices.
+The desktop framework, frontend language, agent-centered principle, initial
+subscription-backed OpenAI provider, and standalone Linux CLI are selected.
+The desktop-first recommendation was reconsidered against local web delivery
+above. The table keeps unresolved UX and implementation contracts visible.
 
 Standalone browser delivery, remote execution, HPC, cloud, native ARM analysis,
 cross-workspace caching, retention/deletion, additional providers, and

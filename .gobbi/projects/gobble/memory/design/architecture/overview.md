@@ -4,9 +4,11 @@
 
 Gobble gives coding agents and Go authors a typed pipeline engine with
 machine-readable planning, execution, inspection, failure, and recovery. It also
-provides five local assay products built on that engine. The next application
-direction provides Electron with React/TypeScript for local design, execution,
-monitoring, and recovery. The first integrated agent target is OpenAI through
+provides five local assay products built on that engine. The first application
+goal is a local workspace where users and agents design, execute, control, and
+monitor pipelines together. Gobble supplies the core engine and remains a
+standalone Linux CLI tool. The recommended first delivery uses a thin Electron
+host with React/TypeScript. The first integrated agent target is OpenAI through
 ChatGPT subscription sign-in using the official Codex runtime integration.
 
 Gobble is the shared engine and command surface. It is not a sixth assay. The
@@ -37,7 +39,7 @@ work through Resume.
 The common distribution uses Docker Compose for agents and people alike. Go,
 Gobble, and authoring dependencies are in the runtime image; project files stay
 local. A detached controller survives the initiating terminal or Agent session.
-Packed runners and direct Linux development remain compatible entry points.
+Packed runners and the standalone Linux CLI remain supported entry points.
 There is no separate beginner installation model.
 
 Current monitoring includes structured Inspect and a sample-aware TUI. The
@@ -46,6 +48,18 @@ and the same independent analysis controllers. Electron and React/TypeScript
 are selected; standalone browser delivery is later. See
 [Application and monitoring](application.md) for the selected direction and
 subscription integration boundary. These capabilities are not yet implemented.
+
+The agent can open analysis views to present evidence, ask contextual questions,
+or inspect results itself. Shared surfaces and direct user controls are central
+to the product; layout and attention behavior require discussion before UI
+implementation. See [Agent-centered workspace](../feature/agent-workspace.md).
+React views can be developed in a browser without making a separately shipped
+web app a prerequisite for the desktop outcome.
+
+The Linux CLI retains independent installation, structured inspection, Watch,
+and lifecycle operations without Electron, a provider login, or a running app
+service. App and CLI changes share Go engine behavior and preserve workspace
+identity and recovery guarantees.
 
 Agent sign-in enables assisted authoring and operation. Existing local runs
 must remain visible and controllable without an active provider session.
@@ -91,6 +105,8 @@ deliberate compatibility decision.
 | Term | Meaning |
 |---|---|
 | Gobble | The shared Go library, engine, generic command, workspace, and recovery model used by all five products. |
+| Gobble application | The planned local agent-centered workspace using Gobble as its core engine. |
+| Surface | A managed application view that a user or agent can open, select, observe, or discuss; it need not be an OS window. |
 | Product | One supported assay package, selected graph generation, typed contract, required outputs, pinned defaults, and lifecycle evidence. |
 | Module | One command or subcommand represented by one Gobble task. It is not a remote registry unit. |
 | Pipeline | One assay-owned typed graph under `assets/pipelines/<assay>`. |

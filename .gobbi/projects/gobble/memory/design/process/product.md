@@ -8,14 +8,29 @@ benchmarks, and selected paths are owned by
 [Assay product family and ownership](../feature/assets.md). Gobble is their
 shared engine, not another assay.
 
-## First useful outcome
+## Existing engine outcome
 
 An author or external agent selects an assay, loads its strict sheet, changes
 a fresh typed config, builds and reviews the graph, and runs it through the
 shared engine. The common Compose runtime supplies Go and Gobble without a
-host installation. Packed runners and direct Linux development remain
-compatible entry points. No actor must learn a proprietary language or rebuild
+host installation. Packed runners and standalone Linux CLI use remain
+supported entry points. No actor must learn a proprietary language or rebuild
 the supported assay graph from individual tasks.
+
+## First application outcome
+
+A user works locally with an agent to design, execute, control, and monitor a
+bioinformatics pipeline. The agent opens relevant views to show evidence,
+asks questions tied to that evidence, and observes results for its own checks.
+Users can interact with the same views and control runs directly. Gobble is the
+core engine behind this workspace and retains its independent Linux CLI role.
+
+The recommended sequence is a thin Electron/React/TypeScript app first, with
+portable React views and browser-based development where useful. A separately
+shipped local web product comes later. Review the new interaction model and
+layout with the user before implementing screens; see
+[Agent-centered workspace](../feature/agent-workspace.md) and the
+[delivery rationale](../architecture/application.md#delivery-recommendation-thin-desktop-first).
 
 ## Lifecycle
 
@@ -47,6 +62,11 @@ sign-in through the official Codex integration is the first agent target.
 Standalone browser delivery and additional providers come later. See
 [Application and monitoring](../architecture/application.md). This is selected
 direction, not a claim of shipped desktop or account integration.
+
+Linux CLI users retain headless setup, machine-readable commands, Watch, and
+recovery without installing the desktop or signing in to an agent provider.
+Preserve this path in documentation and release checks. App/CLI interoperability
+must honor the recorded runtime identity and mount mapping, not bypass them.
 
 ## Support unit
 

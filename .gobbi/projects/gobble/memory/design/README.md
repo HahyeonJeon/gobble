@@ -6,7 +6,7 @@ Current project design, grouped by its dominant subject.
 
 - [Project and product-family overview](architecture/overview.md)
 - [Shared system architecture](architecture/system.md)
-- [Electron desktop, integrated agent, and monitoring design](architecture/application.md)
+- [Agent application, desktop delivery, engine/CLI boundaries, and monitoring](architecture/application.md)
 
 ## Process
 
@@ -14,6 +14,7 @@ Current project design, grouped by its dominant subject.
 
 ## Feature
 
+- [Agent-centered workspace, shared views, and contextual decisions](feature/agent-workspace.md)
 - [Assay product family and ownership](feature/assets.md)
 - [Compose pipeline](feature/compose-pipeline.md)
 - [Validate and plan](feature/validate-plan.md)
@@ -23,4 +24,4 @@ Current project design, grouped by its dominant subject.
 
 ## Roadmap
 
-- [Project roadmap: desktop-first delivery and ChatGPT agent integration](roadmap/project.md)
+- [Project roadmap: agent workspace first, desktop delivery, and Linux CLI continuity](roadmap/project.md)

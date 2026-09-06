@@ -60,7 +60,12 @@ liveness is established through lock/lease evidence, not PID presence.
 
 Add the desktop and integrated-agent views through the same projections.
 Monitoring remains usable while the agent is signed out or unavailable.
-Event history,
-full log-range APIs, measured resources, and multiple-run catalogs are planned
-extensions, not current Inspect guarantees. Inspection itself remains read-only;
+The agent can open a view for discussion or inspect its structured observation
+and, when needed, a scoped rendered capture. View identity, selection, freshness,
+and user decisions belong to the [agent workspace](agent-workspace.md); engine
+inspection remains the factual source. Linux CLI Inspect and Watch remain
+independent of the application and provider.
+
+Event history, full log-range APIs, measured resources, and multiple-run catalogs
+are planned extensions, not current Inspect guarantees. Inspection remains read-only;
 [recovery](recover-run.md) owns execution changes.

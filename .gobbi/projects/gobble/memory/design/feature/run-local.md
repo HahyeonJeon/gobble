@@ -16,7 +16,9 @@ remain outside current support.
 The common installation is a Docker runtime containing Go, Git, Gobble, and
 authoring dependencies. Projects receive a pinned Compose file. No host Go or
 Gobble installation is required for this route. External agents edit local Go
-files. Direct Linux development and compatibility launchers remain available.
+files. Standalone Linux CLI installation and use remain supported alongside
+compatibility launchers. The CLI does not require Electron, Node.js, a provider
+account, or the planned app service; normal compiler/executor requirements apply.
 
 Run long analyses with `docker compose run -d gobble run ...`. Docker owns the
 detached controller, and analysis tools run as sibling containers on the same
@@ -60,6 +62,12 @@ Persistent attempt logs and coherent control snapshots feed Inspect and Watch.
 Monitoring never owns execution. The Electron desktop, integrated-agent, and
 service extension follows
 [Application and monitoring](../architecture/application.md).
+
+The first app goal is a shared local workspace where the agent opens analysis
+views, discusses decisions with the user, and invokes the core Gobble engine.
+Its [workspace interaction](agent-workspace.md) changes presentation and shared
+context; execution effects still use the engine's lifecycle contract. Opening
+or closing an analysis view does not start or stop the analysis.
 
 Hermetic tests prove contracts without running third-party analysis tools.
 Installed Linux Docker tests exercise the common Compose route, detached

@@ -18,6 +18,14 @@ subscription agent experience. The independent Go service and analysis
 controllers retain engine authority. Provider turns and pipeline runs have
 separate identities and cancellation rules. Browser delivery is a later option.
 
+The app is an agent-centered shared workspace: its controller manages views,
+observations, and contextual user decisions through separate workspace tools.
+These UI concepts do not enter the engine's execution state. Gobble remains
+the core engine and a standalone Linux CLI. Neither the Go library nor CLI
+requires Electron, Node.js, provider authentication, or the application service.
+The CLI and service use shared Go lifecycle behavior and the same workspace
+identity and owner gates. See [Agent-centered workspace](../feature/agent-workspace.md).
+
 Package `gobble` and `cmd/gobble` do not import product packages. The generic
 command selects a non-`internal` package, compiles a child, and calls its
 `Pipeline()` adapter. A packed runner embeds one selected package.
