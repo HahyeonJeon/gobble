@@ -76,7 +76,7 @@ func Prepare(ctx context.Context) error {
 	}
 	var self struct {
 		ID, Image string
-		Mounts []Mount
+		Mounts    []Mount
 	}
 	if err := json.Unmarshal(out, &self); err != nil {
 		return err
@@ -91,7 +91,7 @@ func Prepare(ctx context.Context) error {
 	}
 	var image struct {
 		Os, Architecture string
-		RepoDigests []string
+		RepoDigests      []string
 	}
 	out, err = docker(ctx, "image", "inspect", "--format", "{{json .}}", self.Image)
 	if err != nil {

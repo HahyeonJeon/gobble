@@ -1,5 +1,15 @@
 # Changelog
 
+## Container distribution (unreleased)
+
+- One Docker Compose installation and Agent guide across Linux, Windows, and macOS.
+- Runtime prepares its own daemon identity, project owner, and nested mount mapping.
+- Generated projects pin their Compose image and preserve Stop/Resume identity.
+- Detached controllers survive client exit; CI covers ownership and recovery.
+- RNA-seq and WGS acceptance uses Compose without host Go or a Gobble launcher.
+- Publish development images to GHCR after Docker gates and verify anonymous pulls.
+
+
 ## Unreleased
 
 ### macOS and existing-assay walkthroughs

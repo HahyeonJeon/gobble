@@ -17,6 +17,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Build runtime and compatibility launchers
         run: |
           docker build --platform linux/amd64 -f distribution/runtime/Dockerfile --target runtime -t gobble-runtime:ci .
@@ -39,6 +41,8 @@ jobs:
         image: [golang:1.26-bookworm, golang:1.26-trixie]
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Build test toolchain
         env:
           GO_IMAGE: ${{ matrix.image }}
@@ -58,6 +62,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
@@ -80,6 +86,8 @@ jobs:
         assay: [rnaseq, wgs]
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Build runtime
         run: docker build --platform linux/amd64 -f distribution/runtime/Dockerfile --target runtime -t gobble-runtime:ci .
       - name: Real assay with official data and unchanged Resume
@@ -104,6 +112,8 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: docker/login-action@v3
         with:
           registry: ghcr.io

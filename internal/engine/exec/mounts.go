@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-"github.com/HahyeonJeon/gobble/internal/containerenv"
+	"github.com/HahyeonJeon/gobble/internal/containerenv"
 )
 
 type controllerMount = containerenv.Mount
@@ -36,5 +36,5 @@ func daemonIsolate(ctx context.Context, isolate string) (string, error) {
 }
 
 func mapControllerPath(path string, mounts []controllerMount) (string, error) {
-return containerenv.MapPath(path, mounts)
+	return containerenv.MapPath(path, mounts)
 }

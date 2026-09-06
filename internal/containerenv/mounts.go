@@ -1,16 +1,16 @@
 package containerenv
 
 import (
-"errors"
-"path/filepath"
-"strings"
+	"errors"
+	"path/filepath"
+	"strings"
 )
 
 type Mount struct {
-Type string
-Source string
-Destination string
-RW bool
+	Type        string
+	Source      string
+	Destination string
+	RW          bool
 }
 
 func MapPath(path string, mounts []Mount) (string, error) {
