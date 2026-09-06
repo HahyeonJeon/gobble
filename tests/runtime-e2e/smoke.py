@@ -13,15 +13,16 @@ import sys
 import tempfile
 import time
 
-launcher = str(Path(sys.argv[1]).resolve())
 from host import env
+from transport import Transport
+transport = Transport(sys.argv[1], env)
 
 if not env.get("GOBBLE_RUNTIME_IMAGE"):
     raise RuntimeError("GOBBLE_RUNTIME_IMAGE is required")
 
 
 def command(cwd, *args):
-    result = subprocess.run([launcher, *args], cwd=cwd, env=env, text=True,
+    result = subprocess.run(transport.argv(cwd, *args), cwd=cwd, env=env, text=True,
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=180)
     if result.returncode:
         raise RuntimeError(f"{args}: {result.returncode}\n{result.stderr}")
@@ -68,7 +69,7 @@ with tempfile.TemporaryDirectory(prefix="Gobble 한글 space ") as temporary:
         shutil.copy(project / "runs/hello/inputs/sequences.fasta", workspace / "inputs/sequences.fasta")
         source.write_text(long_pipeline)
         with tempfile.TemporaryFile() as output:
-            process = subprocess.Popen([launcher, "run", ".", "--workspace", str(workspace)],
+            process = subprocess.Popen(transport.argv(project, "run", ".", "--workspace", str(workspace)),
                                        cwd=project, env=env, stdout=output, stderr=output)
             try:
                 wait_for(lambda: any("gobble-live-log" in p.read_text()
@@ -79,8 +80,7 @@ with tempfile.TemporaryDirectory(prefix="Gobble 한글 space ") as temporary:
                     assert json.loads(command(project, "stop", "--workspace", str(workspace)))["status"] == "settled"
                 else:
                     ids = subprocess.check_output(["docker", "ps", "--quiet",
-                        "--filter", "label=io.gobble.project="+project_id,
-                        "--filter", "label=io.gobble.command=run"], env=env, text=True).split()
+                        "--filter", transport.controller_filter(project)], env=env, text=True).split()
                     assert len(ids) == 1, ids
                     subprocess.run(["docker", "kill", "--signal=KILL", ids[0]], env=env, check=True)
                 assert process.wait(timeout=60) != 0
@@ -95,4 +95,44 @@ with tempfile.TemporaryDirectory(prefix="Gobble 한글 space ") as temporary:
                     process.wait(timeout=60)
                 output.seek(0)
                 print(output.read().decode(errors="replace"))
-    print("PASS: init, doctor, sibling mounts, live logs, Stop, controller death, Resume")
+    if transport.compose:
+        # A returned Docker client is not the owner. The detached controller
+        # remains live, rejects another owner, and is stopped via shared state.
+        workspace = project / "runs/detached"
+        (workspace / "inputs").mkdir(parents=True)
+        shutil.copy(project / "runs/hello/inputs/sequences.fasta", workspace / "inputs/sequences.fasta")
+        source.write_text(long_pipeline)
+        container = subprocess.check_output(transport.argv(project, "run", ".", "--workspace", "runs/detached", detached=True),
+                                            cwd=project, env=env, text=True, timeout=60).strip()
+        try:
+            wait_for(lambda: any("gobble-live-log" in p.read_text() for p in workspace.glob(".gobble/tasks/**/stdout")))
+            assert subprocess.check_output(["docker", "inspect", "--format", "{{.State.Running}}", container], env=env, text=True).strip() == "true"
+            duplicate = subprocess.run(transport.argv(project, "run", ".", "--workspace", "runs/detached"), cwd=project, env=env, capture_output=True, timeout=180)
+            assert duplicate.returncode != 0, "A second owner was admitted"
+            command(project, "inspect", "monitor", "--workspace", "runs/detached")
+            assert json.loads(command(project, "stop", "--workspace", "runs/detached"))["status"] == "settled"
+            subprocess.run(["docker", "wait", container], env=env, check=True, timeout=60)
+            source.write_text(docker_pipeline)
+            command(project, "resume", ".", "--workspace", "runs/detached")
+            assert (workspace / "results/sequence-count.txt").read_text().strip() == "2"
+        finally:
+            subprocess.run(["docker", "rm", "-f", container], env=env, check=True)
+        # Nested working directories use the actual mounted subdirectory.
+        command(root, "doctor")
+        nested = subprocess.run(["docker", "compose", "--project-name", transport.project_name(root),
+            "run", "--rm", "-T", "--workdir", "/gobble/project/demo", "gobble", "doctor"],
+            cwd=root, env=env, text=True, capture_output=True, timeout=180)
+        assert nested.returncode == 0, nested.stderr
+        # An existing lock must survive an incorrect image/daemon selection.
+        lock_path = project / ".gobble-runtime.json"
+        previous = lock_path.read_bytes()
+        changed = json.loads(previous)
+        changed["daemon"] = "different-daemon"
+        lock_path.write_text(json.dumps(changed))
+        try:
+            bad = subprocess.run(transport.argv(project, "doctor"), cwd=project, env=env, text=True, capture_output=True, timeout=60)
+            assert bad.returncode != 0 and "mismatch" in bad.stderr, bad
+            assert json.loads(lock_path.read_text())["daemon"] == "different-daemon"
+        finally:
+            lock_path.write_bytes(previous)
+    print("PASS: init, doctor, sibling mounts, live logs, Stop, controller death, Resume; Compose adds detach, duplicate owner, nested paths, lock mismatch")

@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+"encoding/csv"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,9 +14,13 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+ distribution "github.com/HahyeonJeon/gobble/distribution/runtime"
+"github.com/HahyeonJeon/gobble/internal/containerenv"
 )
 
 func sourceCheckout() (string, error) {
@@ -60,11 +65,13 @@ func createProject(ctx context.Context, path, source string, files map[string]st
 	files["AGENTS.md"] = starterAgentGuide
 	files[".gitignore"] = "runs/\n.gobble-runtime.json\n.gobble-cache/\n"
 	if image := os.Getenv("GOBBLE_RUNTIME_IMAGE_ID"); image != "" {
-		config, err := json.MarshalIndent(map[string]any{"format": 1, "image": image, "daemon": os.Getenv("GOBBLE_DAEMON_ID")}, "", "  ")
+		config, err := json.MarshalIndent(containerenv.Current(), "", "  ")
 		if err != nil {
 			return err
 		}
 		files[".gobble-runtime.json"] = string(config) + "\n"
+files["compose.yaml"] = distribution.Compose(containerenv.Current().PullReference())
+for _, name := range []string{"README.md", "AGENTS.md"} { files[name] = composeGuide(files[name]) }
 	}
 	for name, data := range files {
 		dest := filepath.Join(path, filepath.FromSlash(name))
@@ -129,22 +136,12 @@ func probeSiblingMount(ctx context.Context, controller string) error {
 	if err != nil {
 		return fmt.Errorf("inspect runtime mounts: %w", err)
 	}
-	var mounts []struct {
-		Source, Destination, Type string
-		RW                        bool
-	}
-	if err := json.Unmarshal(out, &mounts); err != nil {
-		return err
-	}
-	source := ""
-	for _, m := range mounts {
-		if m.Destination == "/gobble/project" && m.Type == "bind" && m.RW {
-			source = m.Source
-		}
-	}
-	if source == "" {
-		return errors.New("runtime project mount is not writable")
-	}
+var mounts []containerenv.Mount
+if err := json.Unmarshal(out, &mounts); err != nil { return err }
+cwd, err := os.Getwd()
+if err != nil { return err }
+source, err := containerenv.MapPath(cwd, mounts)
+if err != nil { return fmt.Errorf("runtime project mount: %w", err) }
 	file, err := os.CreateTemp(".", ".gobble-probe-*")
 	if err != nil {
 		return err
@@ -168,7 +165,7 @@ func probeSiblingMount(ctx context.Context, controller string) error {
 	if image == "" {
 		return errors.New("runtime image identity is missing")
 	}
-	cmd = exec.CommandContext(ctx, "docker", "run", "--platform", "linux/amd64", "--rm", "--network=none", "--user", strconv.Itoa(os.Getuid())+":"+strconv.Itoa(os.Getgid()), "--entrypoint", "sh", "-v", source+":/probe", image,
+	cmd = exec.CommandContext(ctx, "docker", "run", "--platform", "linux/amd64", "--rm", "--network=none", "--user", strconv.Itoa(os.Getuid())+":"+strconv.Itoa(os.Getgid()), "--entrypoint", "sh", "--mount", probeBind(source), image,
 		"-c", `test "$(cat "/probe/$1")" = "$2" && printf ok > "/probe/$1.out"`, "sh", filepath.Base(file.Name()), token)
 	if out, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("sibling mount probe: %w: %s", err, out)
@@ -217,8 +214,7 @@ For longer analyses, open another terminal in this directory:
     gobble stop --workspace runs/hello
     gobble resume . --workspace runs/hello
 
-The example uses tools in the Gobble runtime (or local sh/awk for direct Linux
-installation). Ask your coding agent to adapt pipeline.go. Real analysis tools
+The example uses sh/awk provided by the execution environment. Ask your coding agent to adapt pipeline.go. Real analysis tools
 should use explicit Docker images. Keep the runtime lock and pinned image for
 existing runs. State and data remain under runs; removing a controller does not
 remove them. This is foreground execution: closing the run terminal requires
@@ -228,7 +224,7 @@ recovery through Resume. Stop ends a task; Resume retries unfinished tasks.
 const starterAgentGuide = `# Working on this pipeline
 
 Use the installed gobble command from this directory. Go and Gobble are provided
-by the selected Docker runtime, or by the advanced user's Linux installation.
+by the selected Docker runtime, or by a direct Linux installation.
 First ask for the analysis goal, samples, reference organism/build, available
 resources, and expected outputs. Explain scientific choices before changing
 them. Never guess the reference build or mix incompatible reference resources.
@@ -241,3 +237,22 @@ active run and resume to reconcile and retry unfinished work. Never delete run
 state to bypass an error, and never start another owner to bypass a run lock.
 Do not edit or remove .gobble-runtime.json to upgrade an existing run.
 `
+
+func probeBind(source string) string {
+var out bytes.Buffer
+w := csv.NewWriter(&out)
+_ = w.Write([]string{"type=bind", "src="+source, "dst=/probe"})
+w.Flush()
+return strings.TrimSuffix(out.String(), "\n")
+}
+
+func composeGuide(text string) string {
+text = regexp.MustCompile(`(?m)^    gobble `).ReplaceAllString(text, "    docker compose run --rm gobble ")
+text = strings.ReplaceAll(text, "docker compose run --rm gobble run ", "docker compose run -d gobble run ")
+text = strings.ReplaceAll(text, "docker compose run --rm gobble resume ", "docker compose run -d gobble resume ")
+text = strings.ReplaceAll(text, "Use the installed gobble command from this directory.", "Use this project's pinned compose.yaml from this directory.")
+text = strings.ReplaceAll(text, "Go and Gobble are provided\nby the selected Docker runtime, or by a direct Linux installation.", "Go and Gobble are provided by the Docker runtime; no host Go or Gobble installation is needed.")
+text = strings.ReplaceAll(text, "Keep the run terminal open.", "Detached execution survives the calling terminal. Keep the returned container ID for docker logs and docker wait; a successful launch does not mean the analysis succeeded.")
+text = strings.ReplaceAll(text, "This is foreground execution: closing the run terminal requires\nrecovery through Resume.", "Detached execution survives closing the terminal. Use inspect to verify completion; use docker logs with the returned container ID if startup fails.")
+return text
+}

@@ -3,14 +3,22 @@ package main
 
 import (
 	"context"
+"fmt"
 	"io"
 	"os"
 	"time"
 
 	"github.com/HahyeonJeon/gobble"
+"github.com/HahyeonJeon/gobble/internal/containerenv"
 )
 
 func main() {
+if os.Getenv("GOBBLE_CONTAINER_BOOTSTRAP") == "1" && needsContainer(os.Args[1:]) {
+ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+err := containerenv.Prepare(ctx)
+cancel()
+if err != nil { fmt.Fprintln(os.Stderr, "gobble runtime:", err); os.Exit(1) }
+}
 	os.Exit(run(os.Args[1:], os.Stdout, os.Stderr))
 }
 
@@ -73,4 +81,10 @@ func runRelease(req *request, stdout, stderr io.Writer) int {
 	return writeJSON(stdout, stderr, "release", struct {
 		Op string `json:"op"`
 	}{Op: "release"})
+}
+
+func needsContainer(args []string) bool {
+if len(args) == 0 { return false }
+for _, arg := range args { if arg == "--help" || arg == "-h" { return false } }
+return args[0] != "help" && args[0] != "version" && args[0] != "--version"
 }

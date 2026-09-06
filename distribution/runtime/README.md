@@ -1,180 +1,148 @@
-# Install Gobble with Docker
+# Run Gobble with Docker
 
-The default installation is a native **Gobble launcher + Docker**. Your coding
-agent edits local files and calls `gobble`; Go, Git, and the pipeline engine run
-inside the selected Linux runtime. Analysis tools run in sibling containers.
-You do not need Go or bioinformatics tools installed on the host.
+Use one container workflow on Linux, Windows, and macOS. Your coding agent edits
+local files; Go, Git, Gobble, and compilation run inside the runtime. Analysis
+tools run in separate containers on the same local Docker engine.
 
-This is a development preview built from an exact Git checkout. Release images,
-signed installers, and checksummed release downloads are not yet published.
+You need Docker with Compose v2. No host Go, Git, or Gobble installation is
+required for this path. An AI agent is optional and is not bundled in the image.
 
-| Computer | Launcher | Runtime and analysis tools |
-|---|---|---|
-| macOS, Apple Silicon | Native `darwin/arm64` | `linux/amd64` through Docker Desktop emulation |
-| macOS, Intel | Native `darwin/amd64` | `linux/amd64` in Docker Desktop |
-| Windows, x64 | Native `windows/amd64` | `linux/amd64` in Docker Desktop |
-| Linux, x64 | Native `linux/amd64` | `linux/amd64` in local Docker Engine |
+## Prepare Docker
 
-Native Mac launcher tests run on both architectures. Linux Docker CI covers the
-installed launcher, file sharing, logs, Stop, controller loss, and Resume.
-**Real Mac and Windows Docker Desktop acceptance is still a release gate.**
-Cross-compiling a launcher or passing Linux CI does not establish Desktop support.
+- Windows: install and start [Docker Desktop](https://docs.docker.com/desktop/setup/install/windows-install/)
+  with Linux containers. Use PowerShell; a separate Ubuntu terminal is unnecessary.
+- macOS: install [Docker Desktop](https://docs.docker.com/desktop/setup/install/mac-install/)
+  for Intel or Apple Silicon and start it.
+- Linux: install Docker Engine and the Compose plugin. Your user must be able to
+  access the local Docker socket.
 
-## macOS: Apple Silicon and Intel
+Check `docker info` and `docker compose version`. Use a local engine: remote
+contexts cannot share the files on your computer through this configuration.
+Both the runtime and current analysis images target **linux/amd64**. Apple
+Silicon uses emulation; native ARM analysis support is not implied.
 
-1. Install [Docker Desktop for Mac](https://docs.docker.com/desktop/setup/install/mac-install/)
-   for your processor and open it. Wait for the engine to start. macOS uses
-   Docker's Linux VM and does not need WSL2.
-2. Install Git if needed (`git --version` prompts for Apple's command line tools),
-   then obtain this branch:
+## Download the common configuration
 
-   ```sh
-   git clone --branch develop https://github.com/HahyeonJeon/gobble.git
-   cd gobble
-   bash distribution/runtime/setup.sh
-   ```
-
-3. Activate the installed launcher in this terminal:
-
-   ```sh
-   source "$HOME/.local/share/gobble/env.sh"
-   gobble demo rnaseq my-rnaseq
-   cd my-rnaseq
-   gobble doctor
-   ```
-
-Continue with the [actual pipeline walkthrough](../../docs/tutorials.md).
-Use the same `source` command in each new terminal. If desired, add that line to
-your shell startup file after checking its contents. The setup script does not
-edit shell startup files or require administrator access.
-
-The script detects Intel/Apple Silicon, builds inside Docker, checks that the
-amd64 runtime starts, and installs the matching launcher in `~/.local/bin`.
-It finds Docker in PATH or Docker Desktop's usual Mac CLI locations. The runtime
-is always amd64; building the launcher natively does not change analysis-tool
-architecture. Emulation can be slower, especially on first compilation or large
-analyses. If the runtime smoke check fails, check Docker Desktop's amd64
-emulation configuration before retrying.
-
-Allocate Docker enough CPU, memory, and disk for your chosen assay; see the
-[resource table](../../docs/tutorials.md#choose-an-example). Keep active projects
-in a local folder shared with Docker. Doctor checks actual sibling-container
-read and write access, including paths resolved through macOS symlinks.
-
-## Linux x64
-
-Install and start a local Docker Engine, ensure your user can run `docker info`,
-then use the same checkout and setup commands:
+Create a local folder for projects and save the official
+[compose.yaml](https://raw.githubusercontent.com/HahyeonJeon/gobble/develop/distribution/runtime/compose.yaml)
+there as `compose.yaml`. Your agent can download this file for you. Then, from
+that folder, run these same commands in PowerShell, macOS, or Linux:
 
 ```sh
-git clone --branch develop https://github.com/HahyeonJeon/gobble.git
-cd gobble
-bash distribution/runtime/setup.sh
-source "$HOME/.local/share/gobble/env.sh"
-gobble demo rnaseq my-rnaseq
+docker compose pull
+docker compose run --rm gobble doctor
+docker compose run --rm gobble demo rnaseq my-rnaseq
 cd my-rnaseq
-gobble doctor
+docker compose run --rm gobble doctor
+docker compose run --rm gobble validate .
+docker compose run --rm gobble plan .
 ```
 
-The controller uses your UID/GID and socket group. Advanced users can instead
-use the [direct Linux installation](../../docs/installation.md).
+The development image is `ghcr.io/hahyeonjeon/gobble:develop`. Its publication is
+conditional on Docker CI, including real RNA-seq and WGS runs. A failed or not-yet
+completed publication is not a release; check the **publish** job in
+[Docker tests](https://github.com/HahyeonJeon/gobble/actions/workflows/docker.yml).
+The workflow's distribution artifact contains a Compose file pinned to that
+build's registry digest. Prefer that artifact when sharing an exact version.
 
-## Windows x64: PowerShell
+`demo` creates a project with a pinned `compose.yaml`, Go source, official test
+data, README, and AGENTS.md. Continue from the **new project directory** so its
+Compose file selects the original runtime even after `develop` changes. Start a
+new project from a fresh parent folder when choosing a newer runtime.
 
-Install Git and [Docker Desktop](https://docs.docker.com/desktop/setup/install/windows-install/),
-then start Docker with Linux containers. A separate Ubuntu terminal is
-unnecessary. Docker Desktop itself requires its supported WSL2 or Hyper-V setup.
+For a small installation exercise without analysis-image downloads, use
+`docker compose run --rm gobble init my-pipeline`, enter `my-pipeline`, and run
+`docker compose run --rm gobble run . --workspace runs/hello`. The result
+`runs/hello/results/sequence-count.txt` must contain `2`.
 
-```powershell
-git clone --branch develop https://github.com/HahyeonJeon/gobble.git
-Set-Location gobble
-docker build --platform linux/amd64 -f distribution/runtime/Dockerfile --target runtime -t gobble-runtime:preview .
-docker build --platform linux/amd64 -f distribution/runtime/Dockerfile --target launcher-artifacts --output ./dist .
-$env:PATH = "$PWD\dist\windows-amd64;$env:PATH"
-$env:GOBBLE_RUNTIME_IMAGE = "gobble-runtime:preview"
-gobble demo rnaseq my-rnaseq
-Set-Location my-rnaseq
-gobble doctor
-```
+## Execute and reconnect
 
-In each new PowerShell terminal, set PATH using the absolute path to
-`gobble\dist\windows-amd64`. Existing projects remember their runtime image;
-`GOBBLE_RUNTIME_IMAGE` selects the initial image for new project roots.
-
-## Build artifacts manually
-
-From a clean, committed checkout:
+For a long analysis, let Docker own the controller in the background:
 
 ```sh
-docker build --platform linux/amd64 -f distribution/runtime/Dockerfile --target runtime -t gobble-runtime:preview .
-docker build --platform linux/amd64 -f distribution/runtime/Dockerfile --target launcher-artifacts --output ./dist .
+docker compose run -d gobble run . --workspace runs/demo --cap 1
 ```
 
-Artifacts are `dist/{linux-amd64,windows-amd64,darwin-amd64,darwin-arm64}/gobble`
-(`gobble.exe` on Windows). Add your platform's directory to PATH and set
-`GOBBLE_RUNTIME_IMAGE=gobble-runtime:preview` in your shell. Keep `.git` in the
-build context: the runtime checks the exact source identity. The Dockerfile
-excludes run data, downloads, and output binaries from the image.
-
-## Your first results
-
-The [test-data guide](../../docs/tutorials.md) walks through existing RNA-seq and
-WGS pipelines, monitoring, Stop, Resume, and additional assays. For a very small
-installation check that does not download analysis images:
+Save the returned container ID. A successful launch only means Docker started
+the controller; it does **not** prove the pipeline succeeded. Check startup with
+`docker logs CONTAINER_ID` and pipeline state with:
 
 ```sh
-gobble init my-pipeline
-cd my-pipeline
-gobble doctor
-gobble plan .
-gobble run . --workspace runs/hello
+docker compose run --rm gobble inspect run --workspace runs/demo
+docker compose run --rm gobble inspect errors --workspace runs/demo
+docker compose run --rm gobble watch --workspace runs/demo
 ```
 
-`runs/hello/results/sequence-count.txt` should contain `2`. This small check uses
-`sh` and `awk` in the runtime; `demo` runs the actual assay tools.
-
-## Runtime identity and recovery
-
-The launcher saves the exact local runtime image ID and daemon ID in the
-project. It checks `linux/amd64` before selecting or reusing the image. Keep that
-image and `.gobble-runtime.json` for existing runs. A tag change or reinstall
-does not upgrade an existing project's runtime. A different daemon is refused
-because it cannot prove the state of previous tasks.
-
-The Mac client socket may live in `~/.docker/run/docker.sock`; the controller
-mounts the socket inside Desktop's Linux VM. No host `/var/run/docker.sock`
-symlink or socket permission workaround is required by the launcher.
-
-| Concern | Behavior |
-|---|---|
-| Local paths | Run commands from the same project directory. External existing workspaces can be passed with `--workspace`; samplesheets and packed outputs stay inside the project. |
-| Input staging | Each attempt keeps Gobble's existing input-copy semantics. Large external dataset roots do not yet have a no-copy mode. |
-| Terminal close | Execution is foreground. Ctrl+C requests cancellation; Resume recovers unexpected controller loss. Keep the run terminal open. |
-| Dependencies | Gobble dependencies are cached. New Go dependencies require another matching prepared runtime; no toolchain is silently downloaded. |
-| Offline use | Prepare test data and tool images while online first. Missing analysis images may be pulled during a run. |
-| Trust | The controller has the Docker socket and executes trusted pipeline code. Analysis containers do not receive that socket. |
-
-## Platform acceptance
-
-Contributors with Docker and Python 3 can run:
+The terminal or Agent session can close after detached launch. The controller
+continues while Docker and the computer remain running. `q` closes the monitor
+without stopping the analysis. For scripts, add `-T` before the `gobble` service.
+`docker wait CONTAINER_ID` prints the controller exit code; its own shell exit
+status does not represent the pipeline outcome.
 
 ```sh
-python3 tests/runtime-e2e/smoke.py /absolute/path/to/gobble
-python3 tests/runtime-e2e/demo.py /absolute/path/to/gobble rnaseq
-python3 tests/runtime-e2e/demo.py /absolute/path/to/gobble wgs
+docker compose run --rm gobble stop --workspace runs/demo
+docker compose run -d gobble resume . --workspace runs/demo --cap 1
 ```
 
-Set `GOBBLE_RUNTIME_IMAGE` first. The scripts exclude host Go and exercise actual
-containers in fresh projects with spaces and Unicode paths. `smoke.py` checks
-live logs, Stop, repeated Stop, controller death, and Resume; `demo.py` checks
-real assay outputs and reuse. Record host/processor, Docker version, commit,
-and elapsed times. On real Desktop hosts also test interactive watch, Ctrl+C,
-Docker restart, external workspace sharing, and reopening terminals.
+Wait for Stop to report `settled` before resuming. Resume verifies completed
+outputs and retries unfinished or changed tasks. A killed controller or Docker
+restart requires reconciliation; there is no automatic rerun on restart. If
+state is unknown, restore the original Docker engine and use the
+[recovery guide](../../docs/operations.md#recovery).
 
-GitHub's hosted Apple Silicon runners do not support nested virtualization;
-the native Mac CI job is deliberately separate from these Desktop gates.
+After confirming completion, remove only your stopped controller with
+`docker rm CONTAINER_ID`. Keep the project and `runs/`. Do not use Compose down,
+image pruning, or deletion of run locks as substitutes for Gobble Stop.
 
-Docker references: [Mac permissions](https://docs.docker.com/desktop/setup/install/mac-permission-requirements/),
-[multi-platform execution](https://docs.docker.com/build/building/multi-platform/),
-[Windows setup](https://docs.docker.com/desktop/setup/install/windows-install/),
-[bind mounts](https://docs.docker.com/engine/storage/bind-mounts/).
+## Files and permissions
+
+Keep projects in writable local folders shared with Docker Desktop. Project
+source, input files, checkpoints, and results remain on your computer. Container
+paths are Linux paths; use relative paths in samplesheets and pipeline code.
+The runtime translates shared paths for sibling containers using Docker's mount
+metadata. An external workspace must be explicitly mounted too.
+
+On Linux the runtime creates files as the bind mount's owner and retains access
+to the Docker socket group. On Desktop, Docker translates host file access. If
+Linux uses a non-default socket, set `GOBBLE_DOCKER_SOCKET` to its local path
+before invoking Compose. Desktop uses the VM's `/var/run/docker.sock` in this
+configuration, not the macOS client socket under your home directory.
+
+The container uses the host daemon's API to launch tasks. Run trusted pipeline
+code and images. The image does not contain an independent Docker daemon.
+
+## Runtime identity
+
+A project's `.gobble-runtime.json` records the exact local image ID, Docker
+engine ID, and registry digest when available. Its generated `compose.yaml`
+uses that digest (or the local image ID for source builds). Never edit the lock
+to force an upgrade. If the image was removed, `docker compose pull` restores the
+pinned registry image; locally built images need the original exact build.
+A different engine or factory reset is not automatic migration of an old run.
+
+## Development and compatibility
+
+To test uncommitted implementation work, first commit it on a development branch;
+the runtime deliberately verifies source identity. Build with:
+
+```sh
+docker build --platform linux/amd64 -f distribution/runtime/Dockerfile --target runtime -t gobble-runtime:local .
+```
+
+Copy the common Compose configuration into a **fresh** project folder and change
+its image to `gobble-runtime:local`. Then use the same doctor/init/demo/run flow.
+This build step is for developing Gobble, not normal installation.
+
+The old `setup.sh` and `cmd/gobble-container` launcher remain compatible entry
+points for existing projects. New installations use Compose. The
+[direct Linux build](../../docs/installation.md) remains available for library
+and engine development, without a separate beginner/advanced classification.
+
+## Acceptance status
+
+Linux Docker CI tests Compose without host Go or a launcher, detached execution,
+Stop, controller death, Resume, nested paths, runtime mismatch, and actual
+RNA-seq/WGS outputs. Native launcher tests cover the compatibility command.
+Real Mac/Windows Docker Desktop, interactive Ctrl+C, and Desktop restart still
+require host-specific acceptance. See [test data](../../docs/tutorials.md) and
+[Agent installation and operation](../../docs/agent-guide.md).

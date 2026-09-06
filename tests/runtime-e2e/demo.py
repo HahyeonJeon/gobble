@@ -13,7 +13,8 @@ import tempfile
 import time
 from host import env
 
-launcher = str(Path(sys.argv[1]).resolve())
+from transport import Transport
+transport = Transport(sys.argv[1], env)
 assay = sys.argv[2]
 artifacts = Path(sys.argv[3]).resolve() if len(sys.argv) > 3 else None
 if artifacts:
@@ -25,7 +26,7 @@ print(f"Assay: {assay}; project: {project}", flush=True)
 
 
 def command(cwd, *args, timeout=300):
-    result = subprocess.run([launcher, *args], cwd=cwd, env=env, text=True,
+    result = subprocess.run(transport.argv(cwd, *args), cwd=cwd, env=env, text=True,
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout)
     print(result.stderr, end="", flush=True)
     if result.returncode:
@@ -58,10 +59,10 @@ try:
 finally:
     if (project / "runs/demo/.gobble").is_dir():
         # A timeout must stop our run before leaving its workspace for diagnosis.
-        subprocess.run([launcher, "stop", "--workspace", "runs/demo"], cwd=project, env=env, timeout=90)
+        subprocess.run(transport.argv(project, "stop", "--workspace", "runs/demo"), cwd=project, env=env, timeout=90)
         if artifacts:
             for view in ("run", "errors", "instances"):
-                result = subprocess.run([launcher, "inspect", view, "--workspace", "runs/demo"], cwd=project, env=env,
+                result = subprocess.run(transport.argv(project, "inspect", view, "--workspace", "runs/demo"), cwd=project, env=env,
                                         text=True, capture_output=True, timeout=90)
                 (artifacts / (view + ".jsonl")).write_text(result.stdout + result.stderr)
                 if view == "instances" and result.returncode == 0:

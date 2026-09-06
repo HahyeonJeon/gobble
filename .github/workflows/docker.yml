@@ -17,11 +17,15 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      - name: Build runtime and portable launchers
+      - name: Build runtime and compatibility launchers
         run: |
           docker build --platform linux/amd64 -f distribution/runtime/Dockerfile --target runtime -t gobble-runtime:ci .
           docker build --platform linux/amd64 -f distribution/runtime/Dockerfile --target launcher-artifacts --output ./dist .
-      - name: Launcher journey without host Go
+      - name: Common Compose journey without host Go or Gobble
+        env:
+          GOBBLE_RUNTIME_IMAGE: gobble-runtime:ci
+        run: python3 tests/runtime-e2e/smoke.py compose
+      - name: Compatibility launcher journey without host Go
         env:
           GOBBLE_RUNTIME_IMAGE: gobble-runtime:ci
         run: python3 tests/runtime-e2e/smoke.py "$PWD/dist/linux-amd64/gobble"
@@ -76,14 +80,12 @@ jobs:
         assay: [rnaseq, wgs]
     steps:
       - uses: actions/checkout@v4
-      - name: Build installed runtime and launcher
-        run: |
-          docker build --platform linux/amd64 -f distribution/runtime/Dockerfile --target runtime -t gobble-runtime:ci .
-          docker build --platform linux/amd64 -f distribution/runtime/Dockerfile --target launcher-artifacts --output ./dist .
+      - name: Build runtime
+        run: docker build --platform linux/amd64 -f distribution/runtime/Dockerfile --target runtime -t gobble-runtime:ci .
       - name: Real assay with official data and unchanged Resume
         env:
           GOBBLE_RUNTIME_IMAGE: gobble-runtime:ci
-        run: python3 tests/runtime-e2e/demo.py "$PWD/dist/linux-amd64/gobble" "${{ matrix.assay }}" "$RUNNER_TEMP/assay-evidence"
+        run: python3 tests/runtime-e2e/demo.py compose "${{ matrix.assay }}" "$RUNNER_TEMP/assay-evidence"
       - name: Assay diagnostics
         if: always()
         uses: actions/upload-artifact@v4
@@ -91,3 +93,61 @@ jobs:
           name: official-${{ matrix.assay }}
           path: ${{ runner.temp }}/assay-evidence
           retention-days: 7
+
+  publish:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    needs: [runtime-install, linux-userspace, docker-smoke, official-assays]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@v3
+      - name: Publish tested development runtime
+        id: publish
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: distribution/runtime/Dockerfile
+          target: runtime
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ghcr.io/hahyeonjeon/gobble:sha-${{ github.sha }}
+            ghcr.io/hahyeonjeon/gobble:develop
+          labels: |
+            org.opencontainers.image.source=https://github.com/HahyeonJeon/gobble
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.licenses=MIT
+      - name: Require anonymous download access
+        env:
+          RUNTIME_REF: ghcr.io/hahyeonjeon/gobble@${{ steps.publish.outputs.digest }}
+        run: |
+          docker logout ghcr.io
+          docker pull --platform linux/amd64 "$RUNTIME_REF"
+          docker run --rm "$RUNTIME_REF" --help
+      - name: Save exact distribution reference
+        env:
+          RUNTIME_REF: ghcr.io/hahyeonjeon/gobble@${{ steps.publish.outputs.digest }}
+        run: |
+          python3 - <<'PYTHON'
+          import os
+          from pathlib import Path
+          source = Path('distribution/runtime/compose.yaml').read_text()
+          Path('compose.yaml').write_text(source.replace('ghcr.io/hahyeonjeon/gobble:develop', os.environ['RUNTIME_REF']))
+          Path('runtime-image.txt').write_text(os.environ['RUNTIME_REF'] + '\n')
+          PYTHON
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gobble-container-distribution
+          path: |
+            compose.yaml
+            runtime-image.txt
+          retention-days: 30

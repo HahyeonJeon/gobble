@@ -29,34 +29,36 @@ work, records what happened, and reuses compatible completed tasks when you resu
 
 > **Development preview:** this branch contains the pipeline family and terminal
 > monitor planned for the next release. Published `v0.1.0` predates those features.
-> The v0.2.0 default is **Docker-based installation and agent-driven authoring**.
-> Native launchers are available for **macOS Intel/Apple Silicon, Windows x64,
-> and Linux x64**; execution uses **Linux/amd64** containers (emulated on Apple
-> Silicon). Linux Docker CI and native Mac launcher CI are separate from the
-> real Mac/Windows Docker Desktop acceptance still required before release.
+> The common installation uses **Docker Compose** on macOS, Windows, and Linux.
+> Go and Gobble run in Linux/amd64 containers, emulated on Apple Silicon.
+> Real Mac/Windows Docker Desktop acceptance remains a release gate.
 
 ## Get started
 
-| Installation | Who it is for | Setup |
-|---|---|---|
-| **Docker + Gobble launcher (default)** | Beginners and users working with a coding agent, on macOS, Windows, or Linux | [Prepare the Docker preview](distribution/runtime/README.md) |
-| Direct Linux | Advanced users who manage Go, Git, and analysis tools themselves | [Linux installation](docs/installation.md) |
-
-The Docker runtime includes Go and Git. Your agent works with ordinary local
-files; Gobble runs the pipeline inside the selected runtime. Release images and
-installers are not published yet: the linked preview guide builds them with
-Docker. On macOS and Linux, the preview setup script builds and installs the
-matching launcher without host Go.
-
-After preparing the launcher, try an existing pipeline with official test data:
+Install Docker with Compose and save the official
+[compose.yaml](https://raw.githubusercontent.com/HahyeonJeon/gobble/develop/distribution/runtime/compose.yaml)
+in a local project folder. Then download the prebuilt runtime:
 
 ```sh
-gobble demo rnaseq my-rnaseq
+docker compose pull
+docker compose run --rm gobble doctor
+```
+
+No host Go, Git, or Gobble installation is needed. Your coding agent follows the
+same [installation guide](distribution/runtime/README.md) and
+[Agent procedure](docs/agent-guide.md). Go files, data, and results stay local.
+Development images are published only after Docker CI; see its **publish** job
+for availability and the exact digest-pinned distribution artifact.
+
+After preparing Docker, try an existing pipeline with official test data:
+
+```sh
+docker compose run --rm gobble demo rnaseq my-rnaseq
 cd my-rnaseq
-gobble doctor
-gobble validate .
-gobble plan .
-gobble run . --workspace runs/demo --cap 1
+docker compose run --rm gobble doctor
+docker compose run --rm gobble validate .
+docker compose run --rm gobble plan .
+docker compose run -d gobble run . --workspace runs/demo --cap 1
 ```
 
 Open `runs/demo/results/rnaseq/multiqc/multiqc_report.html` after completion.
@@ -64,8 +66,8 @@ The [test-data walkthrough](docs/tutorials.md) covers resource requirements,
 expected outputs, WGS and other assays, and Stop/Resume. `demo` verifies the
 existing assay's input checksums and prepares instructions for your agent.
 
-For a tiny installation check, `gobble init my-pipeline` creates a FASTA counter
-that runs with `gobble run . --workspace runs/hello` from the new project.
+For a tiny installation check, use `docker compose run --rm gobble init my-pipeline`,
+enter the new project, then run `docker compose run --rm gobble run . --workspace runs/hello`.
 Its result is `runs/hello/results/sequence-count.txt` (expected: **2**).
 
 ## Work with your coding agent
@@ -100,10 +102,10 @@ versions, and evidence are in [Products](docs/products.md) and
 
 ## See your run
 
-Open another terminal and use the same command that started the run:
+From the generated project directory, open the monitor:
 
 ```sh
-gobble watch --workspace runs/demo
+docker compose run --rm gobble watch --workspace runs/demo
 ```
 
 The dashboard starts with the graph and overall progress. Press `/` to search a
@@ -113,8 +115,8 @@ monitor while execution continues. Use the RNA-seq or WGS test-data run to follo
 For agents and scripts, use structured output:
 
 ```sh
-gobble inspect monitor --workspace runs/demo
-gobble inspect errors --workspace runs/demo
+docker compose run --rm gobble inspect monitor --workspace runs/demo
+docker compose run --rm gobble inspect errors --workspace runs/demo
 ```
 
 Process and Docker task logs are collected into attempt files while work runs.
@@ -123,15 +125,15 @@ Desktop hosts require their own acceptance run.
 
 ## Stop and resume
 
-Run `stop` from another terminal, or press **Ctrl+C** in the run terminal.
+Use `stop` to end the detached analysis. Closing the Agent or terminal leaves it running.
 Completed results remain available. Resume reconciles the previous owner and
 reuses valid completed tasks:
 
 
 ```sh
-gobble stop --workspace runs/demo
-gobble inspect run --workspace runs/demo
-gobble resume . --workspace runs/demo --cap 1
+docker compose run --rm gobble stop --workspace runs/demo
+docker compose run --rm gobble inspect run --workspace runs/demo
+docker compose run -d gobble resume . --workspace runs/demo --cap 1
 ```
 
 Stop reports `settled` only after termination is known. A `requested` result
@@ -142,8 +144,10 @@ restarts tasks, rather than continuing inside an interrupted analysis tool.
 For a fully completed unchanged run, there may be nothing to resume.
 
 If backend state is unknown, restore Docker access and follow the
-[recovery guide](docs/operations.md#recovery). Closing the run terminal is not a
-supported detached-execution mode. State is published as
+[recovery guide](docs/operations.md#recovery). The `-d` commands above use detached Docker controllers. Save the returned
+container ID and check `docker logs CONTAINER_ID` if startup fails. A successful
+launch is not successful pipeline completion. Docker or computer restart still
+requires reconciliation through Resume. State is published as
 [complete checkpoints](docs/checkpoints.md). Docker submissions now record the
 owning engine and container ID before starting work; see
 [Docker execution and recovery](docs/docker-execution.md) for the tested
@@ -167,8 +171,9 @@ the tools or Docker used by its pipeline. See the
 | Start here | Details |
 |---|---|
 | [Test-data walkthrough](docs/tutorials.md) | Run existing assays, inspect results, and practice recovery |
-| [Docker installation](distribution/runtime/README.md) | macOS, Windows, and Linux launchers |
-| [Installation](docs/installation.md) | Choose a revision and set up an agent-owned project |
+| [Docker installation](distribution/runtime/README.md) | Common Compose setup on macOS, Windows, and Linux |
+| [Agent guide](docs/agent-guide.md) | Installation, execution, diagnosis, and recovery |
+| [Direct Linux development](docs/installation.md) | Build and use the Go library and engine |
 | [Authoring](docs/authoring.md) | Samplesheets, typed configuration, modules, and outputs |
 | [Operations](docs/operations.md) | Environment preparation, run lifecycle, and recovery |
 | [Monitoring](docs/monitoring.md) | Dashboard, sample search, task details, and shortcuts |

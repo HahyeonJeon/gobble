@@ -6,9 +6,9 @@ and the official test inputs; it does not substitute fake analysis commands.
 Your agent can then inspect, run, and adapt that project.
 
 Complete the [Docker installation](../distribution/runtime/README.md) first.
-These commands work in macOS/Linux terminals and Windows PowerShell. Advanced
-[direct Linux](installation.md) users can use the same commands with
-`GOBBLE_SOURCE` pointing to the exact checkout used to build Gobble.
+These commands work with Docker Compose in macOS/Linux terminals and Windows
+PowerShell. No host Gobble or Go installation is needed. Use the project's own
+Compose file after entering its directory.
 
 ## Choose an example
 
@@ -42,12 +42,12 @@ does not establish Docker Desktop behavior on Mac or Windows.
 
 ## 1. Prepare RNA-seq
 
-From a directory where you want to keep projects:
+From a directory containing the downloaded common `compose.yaml`:
 
 ```sh
-gobble demo rnaseq my-rnaseq
+docker compose run --rm gobble demo rnaseq my-rnaseq
 cd my-rnaseq
-gobble doctor
+docker compose run --rm gobble doctor
 ```
 
 `demo` downloads inputs from the existing assay's immutable upstream URLs,
@@ -55,6 +55,7 @@ checks their exact sizes and SHA-256 hashes, and creates:
 
 | File or directory | Purpose |
 |---|---|
+| `compose.yaml` | Selects the exact runtime image that created this project |
 | `pipeline.go` | Calls the existing RNA-seq pipeline with its default configuration |
 | `samplesheet.csv` | Sample names, paired/single read paths, and strandedness |
 | `fixture-manifest.json` | Data checksums, provenance, licenses, and tool-image references |
@@ -87,12 +88,15 @@ Open `my-rnaseq` in your coding agent and give it this prompt:
 You can run the same preparation yourself:
 
 ```sh
-gobble validate .
-gobble plan .
-gobble run . --workspace runs/demo --cap 1
+docker compose run --rm gobble validate .
+docker compose run --rm gobble plan .
+docker compose run -d gobble run . --workspace runs/demo --cap 1
 ```
 
-Keep that terminal open. Gobble runs the real tools in pinned Docker images.
+Save the returned controller ID and check `docker logs CONTAINER_ID` for startup errors.
+Detached execution continues after the terminal closes. Use inspect to establish
+success; a successful Docker launch is not a completed analysis. Gobble runs the
+real tools in pinned Docker images.
 The samplesheet uses paths relative to `runs/demo`; do not prepend the project
 path or change them to macOS/Windows host paths.
 
@@ -102,15 +106,15 @@ In another terminal, activate the Gobble installation environment, change to
 the **same project directory**, and run:
 
 ```sh
-gobble watch --workspace runs/demo
+docker compose run --rm gobble watch --workspace runs/demo
 ```
 
 Press `/` to find a sample, `!` for problems, and `q` to close the monitor.
 Closing the monitor leaves the analysis running. For an agent or a text report:
 
 ```sh
-gobble inspect run --workspace runs/demo
-gobble inspect errors --workspace runs/demo
+docker compose run --rm gobble inspect run --workspace runs/demo
+docker compose run --rm gobble inspect errors --workspace runs/demo
 ```
 
 After a successful RNA-seq run, open these local files:
@@ -129,15 +133,15 @@ files alone do not establish biological accuracy or suitability for real data.
 While the run is active, from another terminal:
 
 ```sh
-gobble stop --workspace runs/demo
-gobble inspect run --workspace runs/demo
+docker compose run --rm gobble stop --workspace runs/demo
+docker compose run --rm gobble inspect run --workspace runs/demo
 ```
 
 Wait for Stop to report `settled`. If it reports `requested`, repeat Stop or
 inspect until the owner has settled. Then:
 
 ```sh
-gobble resume . --workspace runs/demo --cap 1
+docker compose run -d gobble resume . --workspace runs/demo --cap 1
 ```
 
 Completed compatible tasks are reused. Interrupted tasks start a new attempt;
@@ -155,12 +159,12 @@ the workspace; follow [recovery](operations.md#recovery) if Resume reports it.
 From the parent directory, create a separate project:
 
 ```sh
-gobble demo wgs my-wgs
+docker compose run --rm gobble demo wgs my-wgs
 cd my-wgs
-gobble doctor
-gobble validate .
-gobble plan .
-gobble run . --workspace runs/demo --cap 1
+docker compose run --rm gobble doctor
+docker compose run --rm gobble validate .
+docker compose run --rm gobble plan .
+docker compose run -d gobble run . --workspace runs/demo --cap 1
 ```
 
 WGS preparation also splits the pinned interval BED into the two existing
