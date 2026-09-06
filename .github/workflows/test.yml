@@ -29,6 +29,12 @@ jobs:
           gofmt -w .
           git diff --binary > /tmp/gobble-format.patch
           git diff --exit-code
+      - name: Submit cancellation boundary under contention
+        env:
+          GOTOOLCHAIN: local
+          GOPROXY: off
+          GOMAXPROCS: "1"
+        run: go test -race -count=50 -run 'Test(Caller|WrappedCaller)DeadlineDuringSubmitPersistsIncomplete$' ./internal/engine
       - name: Hermetic suite
         env:
           GOTOOLCHAIN: local
