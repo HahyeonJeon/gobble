@@ -64,6 +64,11 @@ identities, request deduplication, and resume impact preview through one shared
 API. Those contracts are proposed in
 [Application and monitoring](../architecture/application.md).
 
+The integrated agent's turn interruption, sign-out, usage limit, or crash does
+not request pipeline Stop. Desktop monitoring and direct Stop/Resume remain
+available independently of provider authentication. Agent tool calls and direct
+UI actions share operation identity and duplicate-request protection.
+
 A finish-active-tasks-and-wait action remains a separate future design. It is
 not current Stop, Docker pause, or a process-memory checkpoint.
 

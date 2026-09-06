@@ -1,176 +1,214 @@
 # Gobble — Project Roadmap
 
-Updated: 2026-09-06. This roadmap records direction and acceptance boundaries,
-not dates or promised release numbers. Detailed designs are discussed before
-implementation. The canonical app design is
-[Application and monitoring](../architecture/application.md).
+Updated: 2026-09-06. Electron, React/TypeScript, desktop-first delivery, and
+ChatGPT subscription sign-in as the first agent target are selected directions.
+This roadmap defines sequence and acceptance, not dates or release promises.
+The canonical design is [Application and monitoring](../architecture/application.md).
 
 ## Direction and its evolution
 
-Keep one backend-independent Go engine, one structured lifecycle, and a bounded
-family of five assay products. Extend that foundation into a local application
-that people and external agents use to design, execute, monitor, and recover
-analyses.
+Keep one backend-independent Go engine, a structured lifecycle, and five
+bounded assay products. Build an Electron desktop application where people
+work with an integrated agent to design, execute, monitor, and recover analysis.
 
-The engine came first, followed by the five-product family. Current distribution
-uses one common Docker workflow without beginner and advanced installation
-categories. The next direction is a browser application and shared operations,
-followed by an optional desktop shell.
+The engine and assay family are already implemented. Current distribution uses
+one common Docker workflow without beginner/advanced categories. The desktop
+app will manage that execution foundation through native setup and project
+flows. Compose, the Go API, and direct Linux development remain available.
 
-Earlier horizons placed service work after HPC. The current direction moves the
-**local application service** ahead of remote execution because it directly
-improves local observability and recovery. HPC and cloud remain separately
-designed later backend capabilities.
+The earlier browser-first plan and optional Wails shell are superseded.
+**Electron with React and TypeScript is the first application**, with an
+integrated OpenAI agent accessed through ChatGPT subscription authentication.
+Standalone browser delivery moves to a later horizon. A browser may still be
+used for official sign-in; that is not the Gobble application interface.
+
+A local application service remains ahead of HPC and cloud. Its purpose is to
+support durable analysis independent of the desktop window and agent session.
+The agent runtime and pipeline scheduler remain separate authorities.
 
 ## Current position
 
-The reviewed implementation baseline is
+The reviewed executable baseline remains
 [`39584ce`](https://github.com/HahyeonJeon/gobble/tree/39584ce8785aa66c14788c7d484e6ef088b58c2a).
-It is a development baseline, not a stable v0.2.0 release.
+Subsequent design-memory edits do not implement the app or authentication.
+This development baseline is not a stable v0.2.0 release.
 
-| Area | Established baseline | Remaining boundary |
+| Area | Existing evidence | Work required for the desktop product |
 |---|---|---|
-| Engine | Go authoring, structured planning, scheduling, artifact identity, inspection, Stop, and Resume | Application run/revision and operation contracts |
-| Assays | WGS, RNA-seq, Methyl-seq, ATAC-seq, and scRNA-seq typed graphs | Preserve assay-specific scope and evidence; no integrated multiomics claim |
-| Distribution | Public runtime image, common Compose entry, generated project pins | Stable release and real Desktop acceptance |
-| Operations | Detached controllers, duplicate-owner refusal, Stop, interruption recovery | Application-level discovery and request deduplication |
-| Monitoring | Sample-aware TUI, coherent JSON state, persistent logs | Web interface, multiple-run navigation, events, measured resources |
-| Installed analysis evidence | Linux Docker WGS/RNA-seq outputs and unchanged Resume reuse | Other full installed assays and platform-specific evidence |
+| Engine | Go authoring, plans, scheduling, artifacts, Inspect, Stop, and Resume | Application run/revision and operation contracts |
+| Assays | WGS, RNA-seq, Methyl-seq, ATAC-seq, and scRNA-seq typed graphs | Preserve assay contracts and evidence |
+| Distribution | Public runtime, common Compose entry, generated project pins | Desktop dependency setup, installers, and host-specific acceptance |
+| Operations | Detached controllers, duplicate-owner refusal, interruption recovery | Application discovery and request deduplication |
+| Monitoring | Sample-aware TUI, JSON state, persistent logs | React desktop UI, run navigation, events, measured resources |
+| Agents | External coding agents using the documented CLI | In-app ChatGPT sign-in and Codex integration; not yet tested in Gobble |
+| Analysis evidence | Installed Linux Docker WGS/RNA-seq outputs and Resume reuse | Desktop-driven analysis and remaining platform/assay coverage |
 
-Native macOS launcher tests cover Intel and Apple Silicon compatibility
-launchers, not Docker Desktop execution. Current analysis targets linux/amd64;
-Apple Silicon relies on emulation. The immutable v0.1.0 tag is the earlier
-engine preview and does not carry this development baseline.
+Native macOS launcher tests cover compatibility launchers, not the Electron app
+or Docker Desktop execution. Current analysis images target linux/amd64, using
+emulation on Apple Silicon. Electron and Codex host architecture support require
+their own evidence. The immutable v0.1.0 tag is the earlier engine preview.
 
 ## Delivery order
 
 | Phase | Outcome | Dependency | Exit evidence |
 |---|---|---|---|
-| 0. Distribution acceptance | Repeatable local installation and recovery | Existing runtime | Actual Linux, Windows Desktop, and macOS Desktop install/recovery matrix with limits recorded |
-| 1. Application contracts | Shared meaning for projects, runs, revisions, requests, and recovery | Current lifecycle and app direction | Accepted normal, interrupted, duplicate, stale, and incompatible operation examples |
-| 2. Read-only web application | Find runs and understand progress, issues, and results | Phase 1 read contract | Browser agrees with Inspect; viewer/service restart leaves execution intact |
-| 3. Shared control and MCP | UI, CLI, and agents control the same durable runs | Phase 1 write contract and Phase 2 viewer | Cross-client start/stop/resume and crash/retry journeys without duplicate execution |
-| 4. Operational monitoring | History, measured resources, comparison, notifications | Stable run and operation identities | Reconnectable history, bounded collection, explainable failure/reuse views |
-| 5. Optional desktop application | Native folders, tray, notifications, updates | Stable shared frontend/API and demonstrated native needs | Actual OS install/update/close/reopen checks preserving pinned runs |
+| 0. Execution baseline | Repeatable local container installation and recovery | Current runtime | Actual host/Docker matrix with limits recorded |
+| 1. Desktop foundation and agent integration proof | Electron/React/TypeScript shell, setup, project registration, sign-in, and run viewing | Focused application contract review | Official account login and an agent turn in the desktop app; run view agrees with Inspect |
+| 2. First complete desktop workflow | Agent-assisted design, plan review, Run, monitoring, Stop, and Resume | Phase 1 plus accepted write-operation contracts | Actual fixture-backed analysis from the app, including interruption and recovery |
+| 3. Distribution and reliability | Qualified native installation, updates, and reconnection | Phase 2 workflow | OS-specific installer/update/recovery evidence without changing active analysis pins |
+| 4. Explanatory monitoring | Events, measured resources, attempt timelines, comparison, reports | Stable run and operation identities | Reconnectable history and bounded collection overhead |
+| Later. Additional delivery and backends | Browser client, further providers, remote execution | Separate accepted designs | Capability-specific evidence; not prerequisites for the first desktop app |
 
-Phase 0 acceptance and Phase 1 design can proceed independently. A browser
-prototype may run on verified Linux while Desktop acceptance is open, but must
-not be advertised as verified across all three host platforms.
+Phase 0 acceptance can proceed alongside desktop development. Native packaging
+begins in Phase 1 so sign-in, paths, and process behavior are tested early;
+Phase 3 qualifies distribution rather than introducing Electron for the first
+time. Full event history and a separately shipped web app do not block Phase 2.
 
-## Phase 0 — Complete distribution evidence
+## Phase 0 — Complete execution evidence
 
-Use the published image and actual fixture-backed pipelines users receive.
-Keep the tiny installation check as the quick first result, followed by WGS and
-RNA-seq execution. Expand full installed assay coverage according to available
-resources; graph tests alone are not analysis proof.
+Use the published runtime and actual fixture-backed pipelines users receive.
+Keep the tiny installation check, then WGS/RNA-seq execution. Expand full
+installed assay coverage according to resources; graph tests are not analysis
+execution evidence.
 
-Verify folder sharing, writable outputs, path translation, pinned runtime
-restoration, detached execution, Stop, controller death, Docker restart, and
-Resume. Cover Windows and macOS Intel/Apple Silicon separately, including
-spaces and non-ASCII project names. Record OS, architecture, Docker version,
-image digest, resources, outputs, and recovery outcome.
+Verify shared folders, writable outputs, path translation, image restoration,
+detached execution, Stop, controller death, Docker restart, and Resume. Cover
+Windows and macOS Intel/Apple Silicon explicitly, including spaces and non-ASCII
+project names. Record OS, architecture, Docker version, runtime digest,
+resources, outputs, and recovery outcomes.
 
-A stable release requires named compatibility effects and a support matrix.
-Development-image publication is separate from that release decision.
+A development image is not a stable release. Stable claims require named
+compatibility effects and a truthful support matrix.
 
-## Phase 1 — Agree on application contracts
+## Phase 1 — Build the desktop foundation and prove agent integration
 
-Define project registration, run/workspace identity, source revision capture,
-task attempts, and command acceptance versus completion. Decide changed-source
-Resume semantics without erasing previously executed definitions.
+Before implementation, review a compact domain/API contract and desktop screen
+structure. Define registered roots, run/workspace identity, source revision
+capture, task attempts, request acceptance, and outcome. Separate UI connection,
+agent turn, controller liveness, backend observability, and pipeline status.
 
-Specify the local service boundary, pinned-runtime routing, protocol versions,
-request identity, and action eligibility. Separate connection freshness,
-controller liveness, backend uncertainty, and execution outcome.
+Build the Electron main process, narrow preload interface, and React/TypeScript
+renderer. Provide setup checks, native folder selection, project registration,
+a run list, sample progress, selected DAG context, logs, and results. Use bounded
+reads from existing engine projections; maintain their identity and containment
+rules. A basic installer or native packaged build is part of this phase.
 
-Review concrete examples before implementation: successful start, lost start
-response after acceptance, repeated Stop, delayed Stop after Resume, service
-restart, Docker unavailability, and application/runtime mismatch.
+Implement a host adapter for the official Codex App Server and prove ChatGPT
+subscription sign-in, a model selection, an agent turn, and reconnectable
+conversation state. The exact runtime provisioning and tool bridge are resolved
+here, with pinned compatibility and native host tests. The provider behavior is
+specified in [the agent design](../architecture/application.md#first-agent-target-chatgpt-subscription-sign-in).
 
-## Phase 2 — Deliver the first useful web monitor
+Review packaging versus managed acquisition of the official Codex binary,
+notices, credential handling, native availability, and upgrade behavior before
+committing the first distributable. App Server is the chosen integration route;
+a general-purpose model proxy is not a required architecture component.
 
-Register explicitly shared project roots and discover runs. Show run lists,
-overviews, sample progress, selected DAG context, task logs, errors, and results.
-Reuse engine projections and aggregation rules.
+Exit requires desktop facts matching Inspect/TUI, graceful missing-log/stale
+state handling, a verified sign-in and agent response, and proof that closing
+the app or agent does not stop an existing analysis. Record account, model, and
+runtime compatibility without retaining credential material in test artifacts.
 
-Begin with bounded polling, observation times, and stale-state presentation.
-Read selected logs by attempt and bounded range. Keep large graphs and task
-lists searchable and bounded. Result access stays within registered project
-authority.
+## Phase 2 — Deliver the first complete agent-driven analysis
 
-Exit requires an actual pipeline visible through Inspect/TUI and the browser,
-consistent sample/shared counts, missing-log behavior, reconnection, and proof
-that viewer restart does not stop the controller. Measure and agree initial
-performance budgets using representative runs instead of inventing scale or
-ETA claims.
+Add an agent panel for conversation, tool activity, proposed source changes,
+plan review, and links to runs. Source files remain versionable Go and typed
+configuration. The displayed DAG is derived from Gobble's validated plan.
 
-## Phase 3 — Add shared control and agent tools
+Expose shared start, stop, resume, and resume-preview operations to direct UI
+controls and the Gobble agent tools adapter. Resolve its MCP transport and
+registration during implementation; it calls the same Go service operations.
+Long analysis returns durable identifiers, and a lost response must not cause
+an automatic duplicate start.
 
-Introduce start, stop, resume, and resume-preview operations behind the agreed
-contract. MCP and application CLI adapters expose the same operations. Long
-analyses return durable identifiers; request cancellation or an agent session
-ending must not implicitly cancel an accepted pipeline.
+The first end-to-end desktop journey is: install/open, check dependencies, sign
+in, choose a project, ask the agent to prepare a real test pipeline, review the
+plan, run, inspect progress/results, stop when needed, preview recovery, and
+resume. Use the existing tiny check and actual assay fixtures instead of
+presenting a mock workflow as acceptance evidence.
 
-Exercise control across different clients. Repeated requests, concurrent
-clients, lost responses, crashes, and delayed commands must not launch duplicate
-schedulers or control a newer owner. Resume reconciles and verifies reusable
-outputs before admitting new work.
+| Scenario | Required evidence |
+|---|---|
+| Agent request and direct UI action overlap | One authoritative operation and one controller owner |
+| Start response is lost or a tool call is retried | Existing operation can be recovered without duplicate execution |
+| User interrupts the agent turn | Accepted analysis continues; pipeline Stop remains a separate action |
+| Login expires, user signs out, or provider usage is limited | Existing runs remain visible and controllable locally |
+| Agent proposes changed pipeline source | Executed revision is preserved; reuse/re-execution impact is visible |
+| Stop is repeated or arrives after a new Resume | Correct owner lease is addressed; the newer run owner is protected |
+| Controller or Docker fails | Unknown state is preserved; reconciliation precedes new work |
+| Application closes and reopens | The same project, linked run, and recorded conversation association can be recovered |
 
-The first agent journey is: edit source, validate, inspect the plan, start,
-reconnect by run ID, inspect a failure, preview recovery, and resume. An embedded
-chat product or a new model runtime is unnecessary for this phase.
+An account-connected chat pane alone does not satisfy this phase. The agent
+must author/review a pipeline and use the shared Gobble operations successfully.
+No implicit switch from subscription access to separately billed API calls is
+part of the first workflow.
+
+## Phase 3 — Qualify distribution and reliability
+
+Qualify Electron installers, signing/notarization where applicable, dependency
+setup, callback handling, credential-store behavior, folder access, tray status,
+notifications, and update/rollback behavior on supported host platforms. Choose
+an explicit Linux update strategy; cross-platform packaging does not imply one
+identical updater on every OS.
+
+Keep app, Codex runtime, and analysis-runtime versions independently compatible.
+An update must preserve active run controllers and their pinned images. Test
+native app failure, service failure, provider-process failure, Docker restart,
+and machine restart separately. Automatic analysis rerun remains a separate
+policy decision.
+
+Measure startup, idle memory, large-list/graph rendering, and log throughput on
+representative machines. Set budgets from measurements and product needs.
+Qualify additional installed assays and architectures before expanding claims.
 
 ## Phase 4 — Make monitoring explanatory
 
-Add ordered history with a defined checkpoint consistency rule, followed by
-streaming with cursor recovery and snapshot fallback. Add measured resource
-use, attempt timelines, provenance comparison, report export, and run-specific
-notifications. Separate recorded evidence from diagnosis and estimates.
+Add ordered event history with a checkpoint consistency rule, then streaming
+with cursor recovery and snapshot fallback. Add measured resource use, attempt
+timelines, provenance comparison, report export, and run-specific notifications.
+Keep execution events and provider conversation/tool events distinguishable.
 
-Verify event gaps, duplicate delivery, log rotation/truncation, collector
-failure, and bounded overhead. Notifications deduplicate and open the relevant
-run. Add ETA only after comparable execution evidence can validate usefulness.
-
-## Phase 5 — Evaluate the desktop shell
-
-Reuse the frontend and API. Evaluate Wails against native folder access,
-packaging, signing, updates, tray behavior, and notifications on supported OSes.
-Keep browser operation viable. The window process must not own long analyses.
-
-Application updates preserve runtimes needed by existing runs. Opening the app
-does not imply Docker or every analysis image is available or native to the
-host CPU.
+Verify gaps, duplicate delivery, log rotation/truncation, collector failure,
+and bounded overhead. Notifications open the relevant run. Add ETA only when
+comparable execution evidence supports it. Keep recorded errors, agent diagnosis,
+and scientific QC interpretation distinct.
 
 ## Later horizons
 
-- **Finish active tasks and wait:** Separately designed admission control,
-  distinct from Stop and process suspension.
-- **HPC:** A first adapter such as Slurm, including queue mapping, shared and
-  node-local storage, and backend reconciliation; keep the core independent.
-- **Cloud and remote operation:** Batch or Kubernetes, object storage,
-  authentication, transfer, and remote workspace ownership.
-- **Native ARM analysis:** Per-image and per-pipeline evidence with explicit
-  emulation/fallback policy.
-- **Ecosystem:** Discovery, richer plan comparison, and assisted diagnosis
-  without replacing Go authoring or inventing cross-assay semantics.
+- **Browser application:** Reuse React components and service contracts after
+  the desktop workflow is useful; not a prerequisite for desktop delivery.
+- **Additional agent access:** Explicitly selected API-key billing and other
+  providers, while preserving the initial ChatGPT subscription experience.
+- **Finish active tasks and wait:** Separate admission control, distinct from
+  pipeline Stop and agent-turn interruption.
+- **HPC:** An adapter such as Slurm, including queue/storage mapping and backend
+  reconciliation, without making the core scheduler backend-specific.
+- **Cloud and remote operation:** Authentication, data transfer, remote workspace
+  authority, object storage, and batch/Kubernetes execution.
+- **Native ARM analysis:** Per-image and per-pipeline qualification, independent
+  of native Electron or Codex availability.
+- **Ecosystem:** Discovery, plan comparison, and assisted diagnosis while
+  retaining Go authoring and assay-specific semantics.
 
-Retention/deletion, cross-workspace caching, integrated multiomics, extra
-assays, and bidirectional visual authoring remain separate decisions. Existing
-durable deferrals stay in [Backlog Memory](../../backlogs/README.md). This
-roadmap does not create implementation tickets for every possible feature.
+Retention/deletion, cross-workspace caching, integrated multiomics, extra assays,
+and bidirectional visual authoring remain separate decisions. Existing durable
+deferrals stay in [Backlog Memory](../../backlogs/README.md).
 
 ## Next scope and replan rules
 
-The next slice is **Phase 1 followed by the read-only web monitor in Phase 2**,
-with outstanding platform acceptance tracked in parallel. Review domain/API
-examples and screen structure before implementing application mutations or
-choosing a desktop framework.
+The next slice is **the contract/screen review and Phase 1 Electron desktop
+foundation with official subscription-login integration proof**, followed by
+Phase 2's complete analysis journey. Track outstanding execution acceptance
+alongside that work. Electron and React/TypeScript are selected, not open
+framework evaluations.
 
-Replan if a service duplicates execution authority, changes old run identity,
-treats uncertainty as success/failure, or hides incompatible runtime selection.
-Return to user discussion for new execution semantics, persistence-schema
-changes, automatic rerun, remote access, retention, and desktop framework choice.
+Replan if the app duplicates execution authority, silently changes runtime
+identity or billing mode, couples provider availability to pipeline control,
+or treats backend uncertainty as a terminal outcome. Return to discussion for
+new execution semantics, persistence migration, automatic rerun, remote access,
+and retention policy. Report unsupported provider capabilities explicitly
+rather than promising every ChatGPT model or unlimited subscription usage.
 
-Maintain product contracts, graph generations, artifact identity, required
-outputs, image pins, fixture provenance, and recovery evidence throughout.
-A user interface does not expand an assay's scientific claims.
+Maintain graph generations, artifact identity, required outputs, image pins,
+fixture provenance, and recovery evidence throughout. A desktop UI or agent
+does not expand an assay's scientific claims.

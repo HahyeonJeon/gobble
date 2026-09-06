@@ -5,8 +5,9 @@
 Gobble gives coding agents and Go authors a typed pipeline engine with
 machine-readable planning, execution, inspection, failure, and recovery. It also
 provides five local assay products built on that engine. The next application
-direction makes local design, execution, monitoring, and recovery accessible
-through a browser and the same operations used by external agents.
+direction provides Electron with React/TypeScript for local design, execution,
+monitoring, and recovery. The first integrated agent target is OpenAI through
+ChatGPT subscription sign-in using the official Codex runtime integration.
 
 Gobble is the shared engine and command surface. It is not a sixth assay. The
 five products are WGS joint germline, bulk RNA-seq, Methyl-seq, ATAC-seq, and
@@ -40,8 +41,15 @@ Packed runners and direct Linux development remain compatible entry points.
 There is no separate beginner installation model.
 
 Current monitoring includes structured Inspect and a sample-aware TUI. The
-planned local web application, common API, MCP integration, and optional
-desktop shell are defined in [Application and monitoring](application.md).
+next product is a desktop app with an integrated agent, shared Go operations,
+and the same independent analysis controllers. Electron and React/TypeScript
+are selected; standalone browser delivery is later. See
+[Application and monitoring](application.md) for the selected direction and
+subscription integration boundary. These capabilities are not yet implemented.
+
+Agent sign-in enables assisted authoring and operation. Existing local runs
+must remain visible and controllable without an active provider session.
+Pipeline data stays local; prompts and selected agent context use the provider.
 
 ## Scope and non-goals
 
@@ -59,8 +67,9 @@ production-scale validity. It does not imply nf-core support or endorsement.
 WGS ends at an indexed, unfiltered joint callset. Integrated cross-assay
 analysis, optional nf-core routes, extra assays, serialized product parameters,
 a component registry, remote execution, HPC, cloud, and a persistent application
-service remain outside the implemented result. A local application service is
-now the next product direction, ahead of remote backends.
+service remain outside the implemented result. The Electron desktop app,
+integrated agent, and local service are now the next product direction, ahead
+of remote backends.
 
 ## Release position
 

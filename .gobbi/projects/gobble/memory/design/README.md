@@ -6,7 +6,7 @@ Current project design, grouped by its dominant subject.
 
 - [Project and product-family overview](architecture/overview.md)
 - [Shared system architecture](architecture/system.md)
-- [Application and monitoring design](architecture/application.md)
+- [Electron desktop, integrated agent, and monitoring design](architecture/application.md)
 
 ## Process
 
@@ -23,4 +23,4 @@ Current project design, grouped by its dominant subject.
 
 ## Roadmap
 
-- [Project roadmap: local application, monitoring, and agent integration](roadmap/project.md)
+- [Project roadmap: desktop-first delivery and ChatGPT agent integration](roadmap/project.md)

@@ -41,10 +41,12 @@ can also use the library. Graph verbs accept `--sample PATH`; Inspect, Watch,
 Stop, and Release do not use it. Structured commands return JSON or JSONL.
 Watch is a sample-aware, read-only TUI.
 
-A local browser application, common API, and MCP integration are the next
-direction; a desktop shell is optional later. See
-[Application and monitoring](../architecture/application.md). They are planned
-interfaces over the same engine, not shipped service capabilities.
+The next product is an Electron desktop application with React/TypeScript,
+an in-app agent, and shared Go application operations. ChatGPT subscription
+sign-in through the official Codex integration is the first agent target.
+Standalone browser delivery and additional providers come later. See
+[Application and monitoring](../architecture/application.md). This is selected
+direction, not a claim of shipped desktop or account integration.
 
 ## Support unit
 
@@ -55,8 +57,11 @@ lifecycle outcomes.
 
 Support is engineering-only on trusted-local `linux/amd64` Docker execution.
 Pipeline source, config, OS user, and workspace are trusted. Docker is not a
-sandbox. Gobble adds no account, service, upload, telemetry, or secret store.
-The caller owns local permissions, retention, and deletion. Real Windows and
+sandbox. The current engine adds no account, service, upload, telemetry, or
+secret store. The planned agent feature introduces provider authentication and
+transmission of selected conversation context; local analysis and direct run
+controls remain independent of that account. The caller owns local permissions,
+retention, and deletion. Real Windows and
 macOS Docker Desktop acceptance is still outstanding; current linux/amd64
 images require emulation on Apple Silicon.
 
@@ -70,8 +75,8 @@ Release operation still observes its owner/liveness gate.
 An unresolved Docker identity is `unknown-backend`, not a failed task or a
 released workspace. It keeps occupancy active and blocks Resume. The operator
 restores the recorded Docker daemon's observability and retries Resume or the
-lower-level Release operation. Gobble never signals or adopts an unproved PID. Release does not delete
-controls or artifacts.
+lower-level Release operation. Gobble never signals or adopts an unproved PID.
+Release does not delete controls or artifacts.
 
 ## Release and compatibility
 

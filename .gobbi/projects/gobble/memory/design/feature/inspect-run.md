@@ -4,8 +4,9 @@
 
 Let agents and people read execution facts without changing a run. The run
 workspace is authoritative. Library inspection, structured CLI output, and the
-sample-aware TUI share the same read path. The planned browser application is
-specified in [Application and monitoring](../architecture/application.md).
+sample-aware TUI share the same read path. The planned Electron desktop
+application uses React/TypeScript over these facts; browser delivery follows
+later. See [Application and monitoring](../architecture/application.md).
 
 ## Current interfaces
 
@@ -57,7 +58,9 @@ liveness is established through lock/lease evidence, not PID presence.
 
 ## Extension boundary
 
-Add browser and agent interfaces through the same projections. Event history,
+Add the desktop and integrated-agent views through the same projections.
+Monitoring remains usable while the agent is signed out or unavailable.
+Event history,
 full log-range APIs, measured resources, and multiple-run catalogs are planned
 extensions, not current Inspect guarantees. Inspection itself remains read-only;
 [recovery](recover-run.md) owns execution changes.

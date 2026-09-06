@@ -57,7 +57,8 @@ resource scheduling does not imply measured utilization, fairness, or quotas.
 ## Monitoring and evidence
 
 Persistent attempt logs and coherent control snapshots feed Inspect and Watch.
-Monitoring never owns execution. The browser/service extension follows
+Monitoring never owns execution. The Electron desktop, integrated-agent, and
+service extension follows
 [Application and monitoring](../architecture/application.md).
 
 Hermetic tests prove contracts without running third-party analysis tools.

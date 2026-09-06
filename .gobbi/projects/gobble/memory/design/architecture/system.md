@@ -12,8 +12,11 @@ direction is acyclic:
 | Tests | The module, pipeline, or lifecycle boundary under test |
 
 The intended application layer is defined in
-[Application and monitoring](application.md). Its service and clients reuse
-engine contracts and must not introduce another execution authority.
+[Application and monitoring](application.md). Electron and React/TypeScript
+provide the first UI; a host-side Codex adapter supplies the initial ChatGPT
+subscription agent experience. The independent Go service and analysis
+controllers retain engine authority. Provider turns and pipeline runs have
+separate identities and cancellation rules. Browser delivery is a later option.
 
 Package `gobble` and `cmd/gobble` do not import product packages. The generic
 command selects a non-`internal` package, compiles a child, and calls its
@@ -70,8 +73,9 @@ The public lifecycle verbs are `Compose`, `Validate`, `BuildPlan`, `Run`,
 `Inspect`, `Stop`, `Release`, and `Resume`. Composition uses `Module`, `Branch`,
 `Merge`, `Scatter`, `Gather`, and `When`. Failures use structured `Error`,
 `Defect`, and `DefectCode` values. Structured CLI success is JSON or JSONL;
-failure stdout is empty; exits are 0, 1, or 2. Interactive Watch is a separate read-only TUI. The monitor view
-projects coherent state and selected log tails without occupying the run.
+failure stdout is empty; exits are 0, 1, or 2. Interactive Watch is a separate
+read-only TUI. The monitor view projects coherent state and selected log tails
+without occupying the run.
 
 `Run` and `Resume` require one effective execution identity. `inspect identity`
 remains readable on mismatch; other reads and mutations fail closed. The
@@ -84,8 +88,9 @@ common Compose image contains the compiler and Gobble. Project pins preserve
 runtime identity, and analysis containers are siblings on the host daemon.
 Desktop host acceptance and CPU emulation are separate validation concerns.
 
-An empty task image selects the process executor; an exact non-empty image selects Docker. Docker
-uses the caller UID/GID and `--network=none` for the task container, but this is
+An empty task image selects the process executor; an exact non-empty image
+selects Docker. Docker uses the caller UID/GID and `--network=none` for the task
+container, but this is
 not a sandbox. Image inspection and acquisition occur through the local Docker
 client before task command launch and may require registry network access.
 
@@ -112,8 +117,8 @@ are not a uniform image license or redistribution authority.
 The reviewed product baseline is available as a public development runtime,
 with project-level digest pinning. No stable v0.2.0 release is implied;
 `v0.1.0` is the earlier engine-only release. Product support is engineering-only
-and does not include scientific validity, nf-core endorsement, realistic cohort scale, remote
-backends, or arbitrary replacement software.
+and does not include scientific validity, nf-core endorsement, realistic cohort
+scale, remote backends, or arbitrary replacement software.
 
 ## Stack and checks
 
