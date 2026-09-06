@@ -264,15 +264,19 @@ func TestUncancelledLongTaskExceedsSettlementBound(t *testing.T) {
 
 func TestCallerDeadlineDuringSubmitPersistsIncomplete(t *testing.T) {
 	useBound(t, 40*time.Millisecond)
+	// Inject the caller's deadline cause only after Submit is entered. A wall
+	// clock timeout could expire during filesystem preparation on slow hosts.
+	ctx, cancel := context.WithCancelCause(t.Context())
+	defer cancel(context.Canceled)
 	useExec(t, &fnExec{
 		submit: func(ctx context.Context, job exec.Job) (exec.Handle, exec.Report, error) {
-			return exec.Handle{}, exec.Report{}, waitCtx(ctx)
+			cancel(context.DeadlineExceeded)
+			<-ctx.Done()
+			return exec.Handle{}, exec.Report{}, context.Cause(ctx)
 		},
 	})
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
-	ctx, cancel := context.WithTimeout(t.Context(), 40*time.Millisecond)
-	defer cancel()
 	defects := Run(ctx, Request{
 		Identity:  testInstallIdentity(),
 		Workspace: dir,
@@ -295,15 +299,19 @@ func TestCallerDeadlineDuringSubmitPersistsIncomplete(t *testing.T) {
 
 func TestWrappedCallerDeadlineDuringSubmitPersistsIncomplete(t *testing.T) {
 	useBound(t, 40*time.Millisecond)
+	// Inject the caller's deadline cause only after Submit is entered. A wall
+	// clock timeout could expire during filesystem preparation on slow hosts.
+	ctx, cancel := context.WithCancelCause(t.Context())
+	defer cancel(context.Canceled)
 	useExec(t, &fnExec{
 		submit: func(ctx context.Context, job exec.Job) (exec.Handle, exec.Report, error) {
-			return exec.Handle{}, exec.Report{}, fmt.Errorf("docker: %w", waitCtx(ctx))
+			cancel(context.DeadlineExceeded)
+			<-ctx.Done()
+			return exec.Handle{}, exec.Report{}, fmt.Errorf("docker: %w", context.Cause(ctx))
 		},
 	})
 	dir := t.TempDir()
 	writeCheckFile(t, filepath.Join(dir, "in", "sample.txt"), "reads")
-	ctx, cancel := context.WithTimeout(t.Context(), 40*time.Millisecond)
-	defer cancel()
 	defects := Run(ctx, Request{
 		Identity:  testInstallIdentity(),
 		Workspace: dir,
