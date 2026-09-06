@@ -24,6 +24,6 @@ COPY --from=docker-client /usr/local/bin/docker /usr/local/bin/docker
 RUN git config --system --add safe.directory /opt/gobble \
  && git config --system --add safe.directory /gobble/project \
  && mkdir -p /gobble/project
-ENV GOTOOLCHAIN=local GOPROXY=off GOBBLE_SOURCE=/opt/gobble
+ENV GOTOOLCHAIN=local GOPROXY=off GOBBLE_SOURCE=/opt/gobble GOBBLE_CONTAINER_BOOTSTRAP=1
 WORKDIR /gobble/project
 ENTRYPOINT ["/usr/local/bin/gobble"]

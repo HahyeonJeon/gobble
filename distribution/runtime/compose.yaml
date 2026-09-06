@@ -1,0 +1,19 @@
+services:
+  gobble:
+    image: ghcr.io/hahyeonjeon/gobble:develop
+    platform: linux/amd64
+    init: true
+    restart: "no"
+    stop_grace_period: 45s
+    working_dir: /gobble/project
+    environment:
+      DOCKER_HOST: unix:///var/run/docker.sock
+    volumes:
+      - type: bind
+        source: .
+        target: /gobble/project
+      - type: bind
+        source: ${GOBBLE_DOCKER_SOCKET:-/var/run/docker.sock}
+        target: /var/run/docker.sock
+        bind:
+          create_host_path: false

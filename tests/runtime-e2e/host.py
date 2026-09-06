@@ -42,3 +42,13 @@ if sys.platform == "darwin":
     # Keychain helpers may invoke macOS system utilities (e.g. security).
     env["PATH"] += ":/usr/bin:/bin:/usr/sbin:/sbin"
 assert shutil.which("go", path=env["PATH"]) is None
+
+# Compose is normally found in Docker's plugin directories; explicitly record
+# those directories for installations that keep plugins beside the CLI.
+plugin_dirs = [Path(docker).resolve().parent / "cli-plugins",
+               Path(docker).resolve().parent.parent / "cli-plugins"]
+plugin_dirs += [Path("/usr/libexec/docker/cli-plugins"), Path("/usr/local/lib/docker/cli-plugins")]
+existing = env.get("DOCKER_CLI_PLUGIN_EXTRA_DIRS", "")
+found = [str(p) for p in plugin_dirs if p.is_dir()]
+if found:
+    env["DOCKER_CLI_PLUGIN_EXTRA_DIRS"] = os.pathsep.join(([existing] if existing else []) + found)

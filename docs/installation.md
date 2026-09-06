@@ -1,20 +1,13 @@
-# Installation and version selection
+# Direct Linux development installation
 
-The **default v0.2.0 installation is Docker plus the Gobble launcher**. Go and
-Git live inside the runtime; the user works with a coding agent in an ordinary
-host project. Follow the [Docker preview guide](../distribution/runtime/README.md).
-The image/launcher implementation is present, but release artifacts and actual
-Docker Desktop/Windows validation are still pending.
+For the common installation on all supported hosts, use [Docker Compose](../distribution/runtime/README.md).
+This page covers working directly with the Go library and Linux engine.
 
-This page covers **direct Linux/amd64 installation for advanced users**. Keep Go,
-Git, Docker, and the selected Gobble source/binary compatible. WSL is an optional
-advanced Linux environment; a separate Ubuntu installation is unnecessary for
-the default Docker Desktop route.
 
-For a first local example, follow [Hello Gobble](../examples/hello/README.md).
-This guide explains exact revision selection for an agent-owned Go project.
-Create the consumer module with `go mod init YOUR_MODULE` before using the
-module-graph commands below.
+The common installation uses [Docker Compose](../distribution/runtime/README.md).
+This page covers direct Linux/amd64 development with Go, Git, and Docker managed
+on the host. WSL can provide such a Linux development environment on Windows;
+the common Docker installation does not require using an Ubuntu terminal.
 
 ## Release state
 

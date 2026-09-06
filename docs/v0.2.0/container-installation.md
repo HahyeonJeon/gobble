@@ -1,3 +1,5 @@
+> Superseded for new installations by [Common container distribution](container-distribution.md) and the [Compose guide](../../distribution/runtime/README.md). The launcher design below records the earlier implementation.
+
 # Decision: Docker is the default installation
 
 Status: accepted by the user. The default beginner route is a containerized
