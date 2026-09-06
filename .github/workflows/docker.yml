@@ -143,6 +143,10 @@ jobs:
           docker logout ghcr.io
           docker pull --platform linux/amd64 "$RUNTIME_REF"
           docker run --rm "$RUNTIME_REF" --help
+      - name: Verify installed published image
+        env:
+          GOBBLE_RUNTIME_IMAGE: ghcr.io/hahyeonjeon/gobble@${{ steps.publish.outputs.digest }}
+        run: python3 tests/runtime-e2e/smoke.py compose
       - name: Save exact distribution reference
         env:
           RUNTIME_REF: ghcr.io/hahyeonjeon/gobble@${{ steps.publish.outputs.digest }}
