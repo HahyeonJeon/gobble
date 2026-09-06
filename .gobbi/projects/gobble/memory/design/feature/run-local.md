@@ -1,110 +1,69 @@
-# run-local — Feature
+# Gobble — Run Locally
 
-Derive every heading from accepted interview topic ids. Never invent a lifecycle
-answer. Fill each heading, write `Not applicable — {reason}`, or write
-`Open — {what would resolve it}`. A refused use is not a feature file.
+## Purpose and scope
 
-Open Actors, Scope, or Behavior on a feature that can sit in the first horizon
-is blocking. Ask before leaving those Open.
+Schedule a valid graph on the local machine using dependencies, requested CPU
+and memory, and a run-level concurrency cap. Persist task attempts, state,
+logs, inputs, outputs, and provenance in a caller-owned workspace.
 
-## Purpose
+Agents and people choose a graph and execution limits. The scheduler decides
+readiness. Tasks with images use Docker; tasks with an empty image use the
+process executor. Slurm, cloud batch, Kubernetes, quotas, and remote scheduling
+remain outside current support.
 
-- Statement: Schedule and execute a valid plan on the local machine. Each task runs itself, normally in its declared Docker image. Ship a local-process executor for tasks that do not require a container. Persist run state and artifacts.
-- Source: `core-tasks`
+## Distribution and lifetime
 
-## Actors
+The common installation is a Docker runtime containing Go, Git, Gobble, and
+authoring dependencies. Projects receive a pinned Compose file. No host Go or
+Gobble installation is required for this route. External agents edit local Go
+files. Direct Linux development and compatibility launchers remain available.
 
-- Actor: Agent operator
-- Role: Starts a local run. Does not decide task readiness.
-- Actor: Human operator
-- Role: Same as the agent operator.
-- Actor: Gobble scheduler
-- Role: Decides readiness from the DAG, per-task CPU and memory, and run-level concurrency.
-- Actor: Docker
-- Role: Executes a task that declares a container image.
-- Source: `task-actors`
+Run long analyses with `docker compose run -d gobble run ...`. Docker owns the
+detached controller, and analysis tools run as sibling containers on the same
+local daemon. A terminal or Agent can close after launch. Docker or computer
+shutdown interrupts this lifetime and requires reconciliation before recovery.
 
-## Scope
+Current containers target linux/amd64. Apple Silicon uses emulation. Linux
+Docker evidence and native launcher tests must be distinguished from actual
+Windows/macOS Docker Desktop acceptance, which remains outstanding.
 
-- In scope: Local schedule and execute using per-task CPU and memory and a run-level concurrency cap; run each task itself, normally in its declared Docker image; local-process executor for tasks that do not require a container; persist run state; manage task work directories and artifacts. First-horizon success requires at least one real Docker task.
-- Out of scope: Slurm, cloud batch, Kubernetes, fairness, quotas, job arrays, and treating a process-only stand-in as first-horizon success.
-- Source: `task-scope`, `refused-use`
+## Engine and workspace contract
 
-## Behavior
+Run requires an effective execution identity and exclusive workspace ownership.
+Preflight defects prevent task launch. Exact image inspection/acquisition can
+still fail during task submission. The engine records structured task failures;
+analysis-command failure and image preparation failure remain distinguishable.
 
-### Normal
+Scheduler/executor integration uses Submit, Poll, Cancel, and Reconcile. Docker
+tasks use the configured user identity and disabled task networking. Registry
+access during image acquisition is separate. These conveniences are not an
+untrusted-code sandbox. Task environment values do not become host Docker
+client configuration.
 
-- Execute a valid plan locally. Each task runs itself. A bioinformatics task such as `bwa` runs in its own declared image. Persist state until completion or a contained failure.
-- Source: `task-behavior`
+Ready files must be regular files. Group members stage and publish by name.
+Ready Trees require a directory and their regular root manifest. Run copies
+staged inputs into isolates and publishes declared outputs by copy. It records
+runtime identity, staged-input fingerprints, and published-output checksums.
+Missing digest/hash evidence cannot establish reuse.
 
-### Alternate
+A second Run cannot acquire an occupied workspace. Stop requests settlement;
+Resume reconciles before continuing. Unknown backend disposition blocks new
+work. [Recovery](recover-run.md) owns the detailed lifetime and reuse contract.
 
-- Reuse valid cached outputs and run only changed work, or run one named task by itself. Until `cache-inputs` is accepted, Resume reuses only when reservedIdentity, command or script, params, env digest, authored image plus image digest for docker or resolved executable SHA for process, and content hashes of consumed inputs and published dests all match; otherwise treat that task and its downstream dependents as affected. Changed work is tasks whose reuse check failed. Cheap keys are diagnostic. Inspect remaining may skip hashing when recorded hashes exist. Resources are not identity. Missing digest or hash is a reuse miss.
-- Source: `task-behavior`
+Cap 0 selects the default of one; explicit positive caps are 1 through 64.
+The cap limits concurrency, not each task's CPU or memory request. Current
+resource scheduling does not imply measured utilization, fairness, or quotas.
 
-### Invalid
+## Monitoring and evidence
 
-- Submit to a non-local backend, start when required local inputs are missing, or treat a process-only stand-in as the first-horizon success pipeline. Missing inputs or a refused backend are structured pre-execution errors. No backend job starts for the refused unit.
-- Source: `task-behavior`
+Persistent attempt logs and coherent control snapshots feed Inspect and Watch.
+Monitoring never owns execution. The browser/service extension follows
+[Application and monitoring](../architecture/application.md).
 
-## Failure / Recovery
+Hermetic tests prove contracts without running third-party analysis tools.
+Installed Linux Docker tests exercise the common Compose route, detached
+controllers, Stop/Resume, and actual WGS/RNA-seq outputs. Supported-platform and
+assay claims require their own execution evidence.
 
-### Failure
-
-- One task or executor failure does not take down the scheduler, other tasks, or persisted run state. The consumer sees structured task state naming the failed unit.
-- Source: `failure-recovery`, `failure-containment`
-
-### Recovery
-
-- Use recover-run to Inspect, Release occupancy, then Resume remaining work. If Docker is down, container tasks fail contained; they are not reported successful.
-- Source: `failure-recovery`
-
-## Structure
-
-### Parts
-
-- Statement: Scheduler and executors (local process and Docker), plus run state and artifact files.
-- Source: `shape`
-
-### Data
-
-- Statement: Creates and updates run state, task work directories, intermediates, and published outputs in the local run workspace. That workspace is authoritative for the run.
-- Source: `data`
-
-### Interfaces
-
-- Statement: Library run operation. CLI for the same operation is required at first-horizon exit. Shipped `gobble run --workspace DIR [--cap N] [--sample PATH] [PKG]`; SIGINT/SIGTERM cancel ctx; occupancy stays; contract in [architecture/system.md](../architecture/system.md) Interfaces Current. Scheduler-to-executor seam is `Executor` Submit/Poll/Cancel/Reconcile.
-- Current: `Run(ctx, *Graph, workspace, cap, opts ...OccupyOption)` requires one effective `WithIdentity`, occupies an existing exclusive caller-owned workspace after checks, writes `.gobble/run.json`, isolates tasks, copies staged inputs, runs process or Docker tasks, publishes by copy, and persists state. Empty Image is process; non-empty Image is Docker. Docker `--network=none` and UID/GID are conveniences, not a sandbox. Task Env reaches the task but not the host Docker client. Input fingerprints cover staged isolate bytes; destination checksums follow successful publication. Missing digests or hashes miss; Resume re-evaluates `When`. Ordinary execution is bounded only by caller context. Settlement begins after stop or cancellation and during Release Reconcile or Poll. A Docker task whose stopped state and exit code were proved may retain a RuntimeID when log copy or removal fails; that terminal leftover can be retried without becoming unknown or wedging occupancy. If stop is unproved, `unknown-backend` keeps occupancy active. Unproved PIDs are never signaled. Readiness uses plan wait paths. File waits require a regular file; Group members stage and publish by name; Tree waits require the directory and `.gobble-tree.json`. A second Run while occupied is `occupied-workspace`. Release closes occupancy but does not delete. Cap `0` means 1; values above 64 are refused. First-horizon real-Docker run and recovery is proved for API, installed CLI, and packed WGS paths by `go test -tags=live ./tests/install-e2e`. The published agent install is `github.com/HahyeonJeon/gobble@v0.1.0`.
-- Source: `interfaces`
-
-## Constraints and qualities
-
-- Statement: Local machines and containers only. Docker is required for first-horizon success. Agent-operability and recoverability win. Resource awareness is CPU, memory, and concurrency only.
-- Source: `constraints`, `quality-priority`
-
-## Open questions
-
-| Id | Question | Blocking | What would resolve it |
-|---|---|---|---|
-| cache-inputs | Which long-term inputs participate in reuse? First-horizon workspace rule is recorded under Alternate. | no | An accepted long-term cache fingerprint rule |
-| dependency-unavailable | What structured status is shown while Docker is down? | no | A recorded Docker-down status shape |
-
-- Source: open ids used above
-
-## Interview sources
-
-- `core-tasks`
-- `task-actors`
-- `task-scope`
-- `task-behavior`
-- `refused-use`
-- `failure-recovery`
-- `failure-containment`
-- `shape`
-- `data`
-- `interfaces`
-- `constraints`
-- `quality-priority`
-- `cache-inputs`
-- `dependency-unavailable`
-- Source: the topic ids actually cited
+See [Container distribution](../../../../../../distribution/runtime/README.md)
+for setup, relative-path requirements, mounts, pinning, and recovery limits.

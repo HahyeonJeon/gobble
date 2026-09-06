@@ -10,11 +10,12 @@ shared engine, not another assay.
 
 ## First useful outcome
 
-An author selects one assay package, loads its strict sheet, changes a fresh
-typed config, builds and reviews the graph, and runs it through the Go API or
-generic command. A human may receive one packed runner for the same selected
-package. No actor must learn a proprietary language or rebuild the supported
-assay graph from individual tasks.
+An author or external agent selects an assay, loads its strict sheet, changes
+a fresh typed config, builds and reviews the graph, and runs it through the
+shared engine. The common Compose runtime supplies Go and Gobble without a
+host installation. Packed runners and direct Linux development remain
+compatible entry points. No actor must learn a proprietary language or rebuild
+the supported assay graph from individual tasks.
 
 ## Lifecycle
 
@@ -25,18 +26,25 @@ assay graph from individual tasks.
 | Customize | Named typed fields or safe argv extras have visible graph and command effects without mutating defaults. |
 | Run | Required artifacts and reports are complete only after strict dependencies and fan-in succeed. |
 | Resume | Matching work may be reused; changed and downstream work reruns under the compatible graph generation. |
-| Stop | Context cancellation is structured and leaves state inspectable and occupancy active. |
+| Stop | A durable lease-addressed request distinguishes acceptance from confirmed settlement and preserves inspectable state. |
 | Failure | The failed unit, logs, reusable successes, and blocked descendants remain distinguishable without route fallback. |
 
-Stop and failure are distinct outcomes. Both use the shared Inspect, Release,
-and Resume recovery model. Assay packages add no recovery verbs.
+Stop and failure are distinct outcomes. Inspect establishes the facts, Stop
+settles active work, and Resume reconciles before admitting more work. Release
+remains available for lower-level reconciliation but is unnecessary for routine
+recovery. Assay packages add no recovery verbs.
 
 ## Audience and interfaces
 
-Coding agents and Go authors use the library and generic `gobble` command.
-Humans may use a packed `linux/amd64` runner. Both expose the same seven verbs.
-Graph verbs accept `--sample PATH`; Inspect and Release do not. Success output
-is JSON or JSONL. There is no TUI or GUI.
+Coding agents and people use the same Compose command contract. Go authors
+can also use the library. Graph verbs accept `--sample PATH`; Inspect, Watch,
+Stop, and Release do not use it. Structured commands return JSON or JSONL.
+Watch is a sample-aware, read-only TUI.
+
+A local browser application, common API, and MCP integration are the next
+direction; a desktop shell is optional later. See
+[Application and monitoring](../architecture/application.md). They are planned
+interfaces over the same engine, not shipped service capabilities.
 
 ## Support unit
 
@@ -48,27 +56,30 @@ lifecycle outcomes.
 Support is engineering-only on trusted-local `linux/amd64` Docker execution.
 Pipeline source, config, OS user, and workspace are trusted. Docker is not a
 sandbox. Gobble adds no account, service, upload, telemetry, or secret store.
-The caller owns local permissions, retention, and deletion.
+The caller owns local permissions, retention, and deletion. Real Windows and
+macOS Docker Desktop acceptance is still outstanding; current linux/amd64
+images require emulation on Apple Silicon.
 
 ## Failure and recovery
 
-Run and Resume retain occupancy after return. The operator inspects identity,
-run state, errors, logs, instances, remaining work, reuse, and lineage. Release
-is allowed only through the owner-process or later-process actor gate and
-reconciles backend state before closing occupancy.
+The operator inspects identity, run state, errors, logs, instances, remaining
+work, reuse, and lineage. A live scheduler excludes another owner. Stop and
+Resume apply the shared settlement and reconciliation rules; the lower-level
+Release operation still observes its owner/liveness gate.
 
 An unresolved Docker identity is `unknown-backend`, not a failed task or a
 released workspace. It keeps occupancy active and blocks Resume. The operator
-restores the same Docker client's backend observability and retries actor-gated
-Release. Gobble never signals or adopts an unproved PID. Release does not delete
+restores the recorded Docker daemon's observability and retries Resume or the
+lower-level Release operation. Gobble never signals or adopts an unproved PID. Release does not delete
 controls or artifacts.
 
 ## Release and compatibility
 
 The immutable `v0.1.0` tag is the earlier engine preview. It does not contain
-the five product packages. The product family is local and unreleased. A future
-release that carries it must name all current graph generations and their Go
-API, CLI, workspace, image, and recovery effects.
+the five product packages. The product family is available in the public
+development runtime, with exact project pins, but has no stable v0.2.0 release.
+A stable release carrying it must name all current graph generations and their
+Go API, CLI, workspace, image, and recovery effects.
 
 Release tags are immutable and supported instructions never use `@latest`. A
 pre-1.0 patch intends no break to the Go API, CLI protocol, workspace schema,
@@ -80,13 +91,15 @@ top-level constructor shims preserve source names only. Old proof workspaces
 require new workspaces. ATAC-seq and scRNA-seq begin with their current first
 generations.
 
-## Refused and unsupported uses
+## Current unsupported uses
 
 The product family does not support scientific or clinical conclusions,
 nf-core endorsement, untrusted or multi-user execution, integrated cross-assay
 analysis, serialized product configuration, route fallback, partial required
 fan-in, public Cancel/Retry/Diff/Repair/Clean, remote execution, HPC, cloud,
-services, or automatic artifact deletion.
+a shipped application service, or automatic artifact deletion. The planned
+local service does not expand the assay products into scientific validation
+or remote execution.
 
 ## Maintenance
 

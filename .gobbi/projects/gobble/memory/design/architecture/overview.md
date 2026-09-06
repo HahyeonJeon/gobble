@@ -4,7 +4,9 @@
 
 Gobble gives coding agents and Go authors a typed pipeline engine with
 machine-readable planning, execution, inspection, failure, and recovery. It also
-provides five supported local assay products built on that engine.
+provides five local assay products built on that engine. The next application
+direction makes local design, execution, monitoring, and recovery accessible
+through a browser and the same operations used by external agents.
 
 Gobble is the shared engine and command surface. It is not a sixth assay. The
 five products are WGS joint germline, bulk RNA-seq, Methyl-seq, ATAC-seq, and
@@ -28,34 +30,45 @@ missing-modality policy, or combined scientific result.
 An author can load assay data, change typed command policy, build and inspect a
 plan, and use either the Go API or generic command. An operator can run the
 selected graph in an exclusive local workspace, inspect structured state,
-release occupancy when safe, and resume only work whose identity no longer
-matches.
+stop active work, reuse verified successes, and retry unfinished or affected
+work through Resume.
 
-A human operator may instead receive one packed runner containing one selected
-pipeline. The packed runner removes the package operand; it does not add a
-second pipeline model.
+The common distribution uses Docker Compose for agents and people alike. Go,
+Gobble, and authoring dependencies are in the runtime image; project files stay
+local. A detached controller survives the initiating terminal or Agent session.
+Packed runners and direct Linux development remain compatible entry points.
+There is no separate beginner installation model.
+
+Current monitoring includes structured Inspect and a sample-aware TUI. The
+planned local web application, common API, MCP integration, and optional
+desktop shell are defined in [Application and monitoring](application.md).
 
 ## Scope and non-goals
 
-Current support is engineering-only on trusted-local `linux/amd64` with local
-files and Docker. It covers graph construction, declared command execution,
-artifacts, provenance, structured failure, and recovery. Docker isolation is a
+Current analysis execution is engineering-only on trusted-local `linux/amd64`
+with local files and Docker. Windows and macOS use the common container route;
+actual Docker Desktop acceptance remains outstanding. Native launcher checks
+do not prove Desktop execution. Apple Silicon uses amd64 emulation.
+
+Gobble covers graph construction, declared command execution, artifacts,
+provenance, structured failure, and recovery. Docker isolation is a
 convenience, not a sandbox.
 
 The family does not claim scientific, clinical, diagnostic, regulatory, or
 production-scale validity. It does not imply nf-core support or endorsement.
 WGS ends at an indexed, unfiltered joint callset. Integrated cross-assay
 analysis, optional nf-core routes, extra assays, serialized product parameters,
-a component registry, remote execution, HPC, cloud, and services remain outside
-the current result.
+a component registry, remote execution, HPC, cloud, and a persistent application
+service remain outside the implemented result. A local application service is
+now the next product direction, ahead of remote backends.
 
 ## Release position
 
-The published `v0.1.0` tag contains the engine preview and predates the product
-family. The five executable product graphs are local and unreleased at baseline
-commit `f21a858c66a2d95ce8eff469e6db2bfa3240c3a5`, tree
-`c90dfe77192c2528f8fd54d17f4d9547b09a6998`. A consumer must use an exact
-trusted checkout and a command built from the same selected module graph.
+The immutable `v0.1.0` tag is the earlier engine preview. The current reviewed
+development baseline is `39584ce8785aa66c14788c7d484e6ef088b58c2a`. A public
+`ghcr.io/hahyeonjeon/gobble:develop` runtime is available; generated projects pin
+the exact runtime digest. This development distribution is not a stable v0.2.0
+release. See the [roadmap](../roadmap/project.md) for acceptance boundaries.
 
 ## Constraints and authority
 

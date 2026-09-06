@@ -1,105 +1,78 @@
-# recover-run — Feature
+# Gobble — Stop and Recover a Run
 
-Derive every heading from accepted interview topic ids. Never invent a lifecycle
-answer. Fill each heading, write `Not applicable — {reason}`, or write
-`Open — {what would resolve it}`. A refused use is not a feature file.
+## Purpose and actors
 
-Open Actors, Scope, or Behavior on a feature that can sit in the first horizon
-is blocking. Ask before leaving those Open.
+Agents and human operators can inspect, stop, and resume local analysis using
+structured state and reusable outputs. Recovery preserves workspace authority,
+exclusive ownership, software identity, and backend uncertainty.
 
-## Purpose
+## Current public behavior
 
-- Statement: Let an agent or human operator inspect structured run state, release occupancy, resume remaining work, or cancel in-flight work through the Run/Resume context after a contained failure, using structured state and reusable outputs.
-- Source: `core-tasks`
+Use `gobble stop --workspace DIR` to request termination of active work, then
+`gobble resume PACKAGE --workspace DIR` to reconcile and continue. The common
+container workflow uses short Compose commands for Stop/Inspect and a detached
+controller for Resume. A separate Release is unnecessary for routine recovery.
 
-## Actors
+| Operation or result | Meaning |
+|---|---|
+| Stop | Writes a durable request addressed to the current owner lease; never signals an unproved PID |
+| Stop requested | The caller stopped waiting before settlement; the request remains durable |
+| Stop settled | Owned work is proved stopped; valid completed results remain |
+| Run stopping / stopped | Settlement is in progress / cancellation has completed |
+| Run interrupted | The controller died or backend disposition requires reconciliation |
+| Resume | Holds one continuous run lock across reconciliation and acquiring the new owner lease |
+| Release | Lower-level reconciliation and occupancy release, subject to owner/liveness gates; not data deletion |
 
-- Actor: Agent operator
-- Role: Inspects, releases occupancy, resumes remaining work, or cancels through context from structured state without a person translating logs.
-- Actor: Human operator
-- Role: Same as the agent operator.
-- Source: `task-actors`
+Repeated Stop is safe. A delayed request for an old lease cannot stop a new
+Resume. A live scheduler prevents a second owner. An interrupted API context
+can also cancel its own Run/Resume; that is distinct from disconnecting a
+read-only monitor or closing an Agent after a detached launch.
 
-## Scope
+## Reuse and change
 
-- In scope: Inspect, release occupancy, resume remaining work using reusable outputs, and context cancel on Run/Resume.
-- Out of scope: Named retry, backoff, public cancel, and guarded cleanup; unguarded artifact deletion; resume onto HPC or cloud; silent skip of validation after the pipeline changed.
-- Source: `task-scope`, `refused-use`
+Resume revalidates the graph and classifies identity/graph changes. Successful
+reuse requires matching reserved task identity, command or script, parameters,
+environment digest, runtime software identity, staged-input fingerprints, and
+published-destination checksums. Missing proof is a reuse miss. Affected work
+and its downstream dependencies rerun. Resume reevaluates When conditions.
 
-## Behavior
+Unfinished work receives a new attempt. Resume does not restore process memory
+or promise automatic execution after Docker or computer restart. Changing the
+Docker daemon or forcing a runtime lock is not a supported migration.
 
-### Normal
+## Uncertainty and settlement
 
-- After a contained failure, resume remaining work using reusable outputs. Remaining work is unsuccessful latest attempts excluding skipped. Reusable outputs follow the dest and input content-hash rule on run-local until `cache-inputs` is accepted. Affected work is the unmatched task plus its downstream dependents. Topology edits classify as Change instead of `plan-drift`.
-- Source: `task-behavior`
+Mixed control revisions, incompatible identity, or unproved backend state
+block unsafe mutation. An unresolved Docker identity remains unknown-backend;
+restore access to the recorded daemon before trying recovery again. Never
+signal or adopt an unproved PID.
 
-### Alternate
+A Docker task with proved stop and exit status can retain its runtime ID when
+final log collection or container removal fails. Later reconciliation retries
+those terminal actions without treating the task as running again. Unproved
+process work with published outputs can remain published-unfinalized; incomplete
+work must be retried according to the engine's recovery decision.
 
-- Cancel in-flight work through a done Run/Resume context, then Inspect, Release, and Resume remaining work. Occupying-process Release is live-owner Release. A later process may invoke Release; while the occupying process is live that is `live-occupancy`.
-- Source: `task-behavior`
+Recovery and Release preserve controls and artifacts. There is no general
+public Retry, Clean, process checkpoint, or automatic retention policy.
 
-### Invalid
+## Application extension
 
-- Unguarded cleanup that deletes artifacts, resume that silently skips validation after the pipeline changed, or a public Cancel, named retry, or guarded Clean. A destructive clean or an invalid resume target is rejected with a structured error and no deletion.
-- Source: `task-behavior`
+The planned application separates request acceptance, execution outcome,
+connection freshness, and backend observability. It adds durable operation
+identities, request deduplication, and resume impact preview through one shared
+API. Those contracts are proposed in
+[Application and monitoring](../architecture/application.md).
 
-## Failure / Recovery
+A finish-active-tasks-and-wait action remains a separate future design. It is
+not current Stop, Docker pause, or a process-memory checkpoint.
 
-### Failure
+## Evidence and references
 
-- The consumer sees structured task and run state, an error that names the failed unit, and which outputs remain reusable.
-- Source: `failure-recovery`
+Current Linux Docker installation tests exercise Stop, repeated Stop,
+controller interruption, duplicate ownership refusal, and Resume. WGS and
+RNA-seq installed runs check actual outputs and unchanged-work reuse. These do
+not establish real Windows/macOS Docker Desktop restart acceptance.
 
-### Recovery
-
-- Inspect, Release occupancy, then Resume remaining work, or inspect-then-modify the Go pipeline and Resume. Deletion is not a recover-run verb. Consumers may delete their own files. Guarded clean stays designed and not shipped.
-- Source: `failure-recovery`
-
-## Structure
-
-### Parts
-
-- Statement: Engine control over persisted run state. Release closes occupancy. Cleanup is not a public verb.
-- Source: `shape`
-
-### Data
-
-- Statement: Reads run state and artifacts and updates task and run state. Does not delete artifacts. The run workspace is authoritative.
-- Source: `data`
-
-### Interfaces
-
-- Statement: Library inspect, release, resume, and context-cancel operations. CLI for the same operations is required at first-horizon exit. Shipped `gobble resume --workspace DIR [--cap N] [--sample PATH] [PKG]` and `gobble release --workspace DIR`; no `cancel` verb; SIGINT/SIGTERM cancel ctx; occupancy stays; contract in [architecture/system.md](../architecture/system.md) Interfaces Current.
-- Current: Recovery is Inspect, Release occupancy, then Resume remaining work. `Resume(ctx, *Graph, workspace, cap, opts ...OccupyOption)` requires one effective `WithIdentity`, re-validates, and classifies each reserved identity as Added, Removed, Rewired, Repathed, IdentityChanged, or Unchanged. `Release(workspace, opts ...OccupyOption)` may omit identity and then binds the current executable. Remaining is unsuccessful latest work excluding skipped and `published-unfinalized`. A reuse miss affects the identity plus downstream work. Succeeded reuse requires reservedIdentity, command or script, params, env digest, Docker image digest or process executable SHA, staged-input fingerprints, and published-destination checksums. Missing digests or hashes miss; Resume re-evaluates `When`. Mixed control snapshot tokens fail Resume and Release. Cancellation leaves occupancy active. A Docker task whose stopped state and exit code were proved may retain a RuntimeID when log copy or container removal fails; later Poll, Reconcile, or Release retries removal. That leftover is terminal, does not reopen `unknown-backend`, and does not keep occupancy active. If disposition remains unproved, `unknown-backend` keeps occupancy active and Resume refuses. A later process must acquire the occupancy lock; a live occupier is `live-occupancy`. Release never signals an unproved PID and performs no PID adoption. Dest-complete unproved process work persists `published-unfinalized`; incomplete process work reruns. Release is not deletion. There is no public Cancel, named retry, repair verb, PID adoption, or guarded Clean. First-horizon remaining-work recovery is proved on API, installed CLI, and packed WGS paths by `go test -tags=live ./tests/install-e2e`. The published agent install is `github.com/HahyeonJeon/gobble@v0.1.0`.
-- Source: `interfaces`
-
-## Constraints and qualities
-
-- Statement: Recoverability wins. Artifacts may be valuable consumer-owned files. Secrets must not appear in logs. No Gobble identity system.
-- Source: `constraints`, `quality-priority`
-
-## Open questions
-
-| Id | Question | Blocking | What would resolve it |
-|---|---|---|---|
-| cache-inputs | Which long-term inputs decide reusable versus affected work? First-horizon content-hash rule is recorded on run-local. | no | An accepted long-term cache fingerprint rule |
-| retention-deletion | How long is run state kept beyond explicit clean? | no | An accepted retention policy |
-
-- Source: open ids used above
-
-## Interview sources
-
-- `core-tasks`
-- `task-actors`
-- `task-scope`
-- `task-behavior`
-- `refused-use`
-- `failure-recovery`
-- `shape`
-- `data`
-- `interfaces`
-- `constraints`
-- `quality-priority`
-- `cache-inputs`
-- `retention-deletion`
-- Source: the topic ids actually cited
+See the [runtime guide](../../../../../../distribution/runtime/README.md) and
+[operations recovery](../../../../../../docs/operations.md#recovery).
