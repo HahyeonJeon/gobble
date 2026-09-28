@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/HahyeonJeon/gobble/internal/engine/exec"
+	"github.com/HahyeonJeon/gobble/internal/preparation"
 	"os"
 	"path/filepath"
 	"sort"
@@ -111,23 +112,26 @@ func Run(ctx context.Context, req Request) []Defect {
 }
 
 type sched struct {
-	workspace string
-	doc       Document
-	run       jsonRun
-	snapshot  string
-	tasks     map[string]*jsonTaskState
-	history   []jsonTaskState
-	resume    map[string]reuseDecision
-	whenDown  map[string]bool
-	launched  map[string]bool
-	persist   error
-	escape    *Defect
-	budget    resourceBudget
-	exec      exec.Executor
-	lease     *heldLease
+	continuationInputs map[string]string // Immutable reviewed contents, checked after staging.
+	workspace          string
+	doc                Document
+	run                jsonRun
+	snapshot           string
+	tasks              map[string]*jsonTaskState
+	history            []jsonTaskState
+	resume             map[string]reuseDecision
+	whenDown           map[string]bool
+	launched           map[string]bool
+	persist            error
+	escape             *Defect
+	budget             resourceBudget
+	exec               exec.Executor
+	lease              *heldLease
 }
 
-func occupy(req Request) (*sched, []Defect) {
+func occupy(req Request) (*sched, []Defect) { return occupyAdmission(req, nil) }
+
+func occupyAdmission(req Request, admission *preparation.Admission) (*sched, []Defect) {
 	now := time.Now().UTC().Format(time.RFC3339Nano)
 	host, err := currentHost()
 	if err != nil {
@@ -144,6 +148,10 @@ func occupy(req Request) (*sched, []Defect) {
 	} else if exists && occupancyIsActive(existing) {
 		lock.Close()
 		return nil, occupiedDefect()
+	}
+	if admission != nil && existingAdmissionPresent(req.Workspace) {
+		lock.Close()
+		return nil, []Defect{{Code: DefectConflict, Message: "This workspace already has a Run; reconcile the original launch."}}
 	}
 	doc := cloneDocument(req.Document)
 	for i := range doc.Tasks {
@@ -178,6 +186,14 @@ func occupy(req Request) (*sched, []Defect) {
 	for _, t := range doc.Tasks {
 		st := initialTask(t)
 		s.tasks[reservedIdentity(t)] = &st
+	}
+	if admission != nil {
+		cp := *admission
+		cp.Lease = lease
+		s.run.Admission = &cp
+		if cp.SchemaVersion == 2 {
+			s.run.ExecutionHistory = &preparation.ExecutionHistory{SchemaVersion: 1, Continuations: []preparation.ContinuationAdmission{}}
+		}
 	}
 	if err := s.writeControl(); err != nil {
 		lock.Close()
@@ -1029,7 +1045,9 @@ func (s *sched) launch(ctx context.Context, ident string, starts chan startEvent
 		task.ShardIndex = st.ShardIndex
 		task.ShardCount = st.ShardCount
 	}
-	if s.resume != nil {
+	// Reviewed continuation requires absent unfinished outputs. Keep exclusive
+	// publication even if another writer creates a destination after review.
+	if s.resume != nil && s.continuationInputs == nil {
 		task.Replace = true
 	}
 	s.budget.occupy(task)
@@ -1086,6 +1104,13 @@ func (s *sched) runJob(ctx context.Context, workspace string, task TaskPlan, ex 
 		r.Message = err.Error()
 		reports <- r
 		return
+	}
+	for _, fingerprint := range fingerprints {
+		if expected, pinned := s.continuationInputs[fingerprint.Path]; pinned && fingerprint.SHA256 != expected {
+			r.Message = "reviewed input changed before task execution"
+			reports <- r
+			return
+		}
 	}
 	r.Fingerprints = fingerprints
 	memBytes, _ := parseMemory(task.Resources.Memory)

@@ -459,6 +459,7 @@ func (p *Pipeline) newTask(anc []ancestor, spec TaskSpec) *Task {
 func copyTaskSpec(spec TaskSpec) TaskSpec {
 	out := spec
 	out.Display = cloneDisplay(spec.Display)
+	out.InspectionSettings = cloneIntegerSettings(spec.InspectionSettings)
 	out.Command = copyStrings(spec.Command)
 	out.Inputs = copyBinds(spec.Inputs)
 	out.Outputs = copyBinds(spec.Outputs)

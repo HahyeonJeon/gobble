@@ -16,7 +16,13 @@ Commands:
   compose    compose a pipeline from a Go package
   validate   compose then validate a pipeline package
   plan       write plan JSON for a pipeline package
+  flow       write checked pipeline flow JSON (no Run)
+  review     write checked flow and bounded change-review facts (no Run)
+  creation-scaffold  export fixed single-end authoring setup (no files written)
+  creation-review    check a complete first single-end design (no Run)
   run        run a pipeline package in a workspace
+  prepare    seal a private execution review (qualified single-end design)
+  prepared-run/status/stop  operate on an exact host-authorized prepared Run
   inspect    write a workspace view as JSON or JSONL
   watch      monitor pipeline progress in an interactive terminal
   resume     reconcile and resume unfinished work
@@ -57,9 +63,22 @@ The published module version is v0.1.0.
 `
 
 var commandHelp = map[string]string{
-	"demo":   "Usage: gobble demo [NAME DIR]\n\nList examples, or create a fresh project with an existing pipeline and verified test data.\nNAME: rnaseq, wgs, methylseq, atacseq, scrnaseq. DIR must not exist.\nDownloads require internet; validated files are cached for retry. Analysis runs separately.\n",
-	"init":   "Usage: gobble init DIR\n\nCreate a new runnable project and its local Git history. DIR must not exist.\n",
-	"doctor": "Usage: gobble doctor\n\nCheck Go, Git, and Docker; in the runtime, verify sibling-container file access.\n",
+	"output-capabilities":           "Usage: gobble output-capabilities\n\nRead versioned output evidence support. No execution.\n",
+	"output-evidence":               "Usage: gobble output-evidence --workspace DIR RUN INSTANCE ATTEMPT PORT\n\nRead exact output attribution using the host-mounted launch bundle. No execution.\n",
+	"prepared-capabilities":         "Usage: gobble prepared-capabilities\n\nRead versioned prepared execution support. No Project evaluation.\n",
+	"prepared-continuation-review":  "Usage: gobble prepared-continuation-review --workspace DIR\n\nReview the exact saved Run using the host-mounted launch bundle. No execution.\n",
+	"prepared-continue":             "Usage: gobble prepared-continue --workspace DIR\n\nAdmit the exact host-confirmed continuation.json before scheduling.\n",
+	"prepared-continuation-receipt": "Usage: gobble prepared-continuation-receipt --workspace DIR\n\nRead the exact continuation receipt. Never schedule or repair.\n",
+	"prepared-run":                  "Usage: gobble prepared-run --workspace DIR\n\nExecute the exact host-authorized /gobble/launch payload and intent. No Project evaluation.\n",
+	"prepared-status":               "Usage: gobble prepared-status --workspace DIR\n\nRead the committed prepared admission and owner state. Never launch or retry.\n",
+	"prepared-stop":                 "Usage: gobble prepared-stop --workspace DIR\n\nRead the exact expected owner in /gobble/launch/stop.json and request settlement.\n",
+	"prepared-review":               "Usage: gobble prepared-review\n\nRead private payload.json and intent.json in the current folder, validate exact engine-owned bytes and write a safe review. No Project evaluation or execution.\n",
+	"prepare":                       "Usage: gobble prepare [package] [--sample PATH]\n\nRead the bounded gobble-preparation.json binding and emit a PRIVATE executable payload plus safe review. Supports single-end Trim Galore then FastQC only. Never starts a Run. Keep stdout private.\n",
+	"creation-scaffold":             "Usage: gobble creation-scaffold\n\nExport the installed /opt/gobble setup and bounded single-end source as JSON. No Project or Git writes.\n",
+	"creation-review":               "Usage: gobble creation-review [package] [--sample PATH]\n\nCheck the complete single-end Trim Galore then FastQC design. Gaps forbid acceptance; no Run is authorized.\n",
+	"demo":                          "Usage: gobble demo [NAME DIR]\n\nList examples, or create a fresh project with an existing pipeline and verified test data.\nNAME: rnaseq, wgs, methylseq, atacseq, scrnaseq. DIR must not exist.\nDownloads require internet; validated files are cached for retry. Analysis runs separately.\n",
+	"init":                          "Usage: gobble init DIR\n\nCreate a new runnable project and its local Git history. DIR must not exist.\n",
+	"doctor":                        "Usage: gobble doctor\n\nCheck Go, Git, and Docker; in the runtime, verify sibling-container file access.\n",
 	"compose": `Usage: gobble compose [package] [--sample PATH]
 
 Compose the pipeline exported by package (default ".").
@@ -71,6 +90,18 @@ sheet use samplesheet.csv in the process current directory.
 Compose then validate the pipeline exported by package (default ".").
 --sample PATH is the samplesheet CSV. When omitted, pipelines that read a
 sheet use samplesheet.csv in the process current directory.
+`,
+	"review": `Usage: gobble review [package] [--sample PATH]
+
+Write checked flow and versioned processing-review identities without starting a Run.
+Requires the same bounded Project-code evaluation as flow.
+`,
+	"flow": `Usage: gobble flow [package] [--sample PATH]
+
+Compose, validate and write versioned pipeline inspection JSON, including input edges.
+This evaluates package initialization and Pipeline(), but does not execute tasks.
+The output is a read model, not executable serialization or Run authority.
+--sample defaults to samplesheet.csv.
 `,
 	"plan": `Usage: gobble plan [package] [--sample PATH]
 
@@ -173,6 +204,7 @@ Commands:
   validate   compose then validate the embedded pipeline
   plan       write plan JSON for the embedded pipeline
   run        run the embedded pipeline in a workspace
+  prepare    seal a private execution review (qualified single-end design)
   inspect    write a workspace view as JSON or JSONL
   watch      monitor pipeline progress in an interactive terminal
   resume     reconcile and resume unfinished work
@@ -210,6 +242,18 @@ directory.
 Compose then validate the embedded pipeline. --sample PATH is the samplesheet
 CSV. When omitted, pipelines that read a sheet use samplesheet.csv in the
 process current directory.
+` + packedLicenseSummary,
+	"review": `Usage: gobble review [--sample PATH]
+
+Write checked flow and versioned processing-review identities without starting a Run.
+Evaluates the embedded pipeline without executing its tasks.
+` + packedLicenseSummary,
+	"flow": `Usage: gobble flow [--sample PATH]
+
+Compose, validate and write versioned pipeline inspection JSON, including input edges.
+This evaluates package initialization and Pipeline(), but does not execute tasks.
+The output is a read model, not executable serialization or Run authority.
+--sample defaults to samplesheet.csv.
 ` + packedLicenseSummary,
 	"plan": `Usage: gobble plan [--sample PATH]
 

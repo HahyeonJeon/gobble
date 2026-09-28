@@ -1,16 +1,19 @@
 package engine
 
 import "github.com/HahyeonJeon/gobble/internal/engine/exec"
+import "github.com/HahyeonJeon/gobble/internal/preparation"
 
 type jsonRun struct {
-	SchemaVersion int              `json:"schema_version"`
-	Identity      *InstallIdentity `json:"identity,omitempty"`
-	Snapshot      string           `json:"snapshot,omitempty"`
-	ID            string           `json:"id"`
-	Status        string           `json:"status"`
-	Started       string           `json:"started"`
-	Ended         string           `json:"ended,omitempty"`
-	Occupancy     *jsonOccupancy   `json:"occupancy"`
+	ExecutionHistory *preparation.ExecutionHistory `json:"executionHistory,omitempty"`
+	Admission        *preparation.Admission        `json:"admission,omitempty"`
+	SchemaVersion    int                           `json:"schema_version"`
+	Identity         *InstallIdentity              `json:"identity,omitempty"`
+	Snapshot         string                        `json:"snapshot,omitempty"`
+	ID               string                        `json:"id"`
+	Status           string                        `json:"status"`
+	Started          string                        `json:"started"`
+	Ended            string                        `json:"ended,omitempty"`
+	Occupancy        *jsonOccupancy                `json:"occupancy"`
 }
 
 type jsonTaskState struct {

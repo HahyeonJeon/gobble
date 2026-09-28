@@ -8,17 +8,18 @@ import (
 )
 
 type request struct {
-	command   string
-	assay     string
-	pkg       string
-	view      string
-	workspace string
-	cap       int
-	instance  string
-	sample    string
-	output    string
-	help      bool
-	version   bool
+	outputRequest gobble.OutputRequest
+	command       string
+	assay         string
+	pkg           string
+	view          string
+	workspace     string
+	cap           int
+	instance      string
+	sample        string
+	output        string
+	help          bool
+	version       bool
 }
 
 type rawArgs struct {
@@ -254,11 +255,11 @@ func interpret(raw rawArgs) (*request, *gobble.Error) {
 			return nil, inv("init requires one new project directory")
 		}
 		req.pkg = operands[0]
-	case "doctor":
+	case "doctor", "creation-scaffold", "prepared-review", "prepared-capabilities", "output-capabilities":
 		if len(operands) != 0 {
 			return nil, inv("extra operand")
 		}
-	case "compose", "validate", "plan":
+	case "compose", "validate", "plan", "flow", "review", "creation-review", "prepare":
 		if len(operands) > 1 {
 			return nil, inv("extra operand")
 		}
@@ -312,7 +313,17 @@ func interpret(raw rawArgs) (*request, *gobble.Error) {
 		if raw.instanceSet {
 			req.instance = raw.instance
 		}
-	case "release", "stop", "watch":
+	case "output-evidence":
+		if len(operands) != 4 || !raw.workspaceSet || raw.workspace == "" {
+			return nil, inv("output-evidence requires --workspace and Run, instance, attempt, port")
+		}
+		attempt, err := strconv.Atoi(operands[2])
+		if err != nil || attempt < 1 {
+			return nil, inv("invalid output attempt")
+		}
+		req.workspace = raw.workspace
+		req.outputRequest = gobble.OutputRequest{RunID: operands[0], Instance: operands[1], Attempt: attempt, Port: operands[3]}
+	case "release", "stop", "watch", "prepared-run", "prepared-status", "prepared-stop", "prepared-continuation-review", "prepared-continue", "prepared-continuation-receipt":
 		if len(operands) > 0 {
 			return nil, inv("extra operand")
 		}
@@ -323,7 +334,7 @@ func interpret(raw rawArgs) (*request, *gobble.Error) {
 	default:
 		return nil, invalidRequest("cli", "unknown command")
 	}
-	if cmd == "compose" || cmd == "validate" || cmd == "plan" || cmd == "run" || cmd == "resume" {
+	if cmd == "compose" || cmd == "validate" || cmd == "plan" || cmd == "flow" || cmd == "review" || cmd == "creation-review" || cmd == "run" || cmd == "resume" {
 		if raw.sampleSet {
 			if strings.TrimSpace(raw.sample) == "" {
 				return nil, inv("empty --sample")
@@ -353,7 +364,7 @@ func repeatedFlagError(op string, raw rawArgs) *gobble.Error {
 
 func isOperate(cmd string) bool {
 	switch cmd {
-	case "compose", "validate", "plan", "run", "inspect", "resume", "release", "stop", "pack", "watch", "init", "demo", "doctor":
+	case "compose", "validate", "plan", "flow", "review", "creation-review", "prepare", "run", "inspect", "resume", "release", "stop", "pack", "watch", "init", "demo", "doctor", "creation-scaffold", "prepared-review", "prepared-capabilities", "prepared-run", "prepared-status", "prepared-stop", "prepared-continuation-review", "prepared-continue", "prepared-continuation-receipt", "output-capabilities", "output-evidence":
 		return true
 	default:
 		return false
@@ -362,13 +373,13 @@ func isOperate(cmd string) bool {
 
 func flagsFor(cmd string) (workspace, cap, instance, sample, output bool) {
 	switch cmd {
-	case "compose", "validate", "plan":
+	case "compose", "validate", "plan", "flow", "review", "creation-review", "prepare":
 		return false, false, false, true, false
 	case "run", "resume":
 		return true, true, false, true, false
 	case "inspect":
 		return true, false, true, false, false
-	case "release", "stop", "watch":
+	case "release", "stop", "watch", "prepared-run", "prepared-status", "prepared-stop", "prepared-continuation-review", "prepared-continue", "prepared-continuation-receipt", "output-evidence":
 		return true, false, false, false, false
 	case "pack":
 		return false, false, false, false, true

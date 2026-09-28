@@ -29,6 +29,18 @@ type stopRequest struct {
 // Stop addresses a durable request to exactly one owner. It never signals a PID.
 // A canceled wait leaves the request intact and returns status "requested".
 func Stop(ctx context.Context, workspace string, supplied *InstallIdentity) (StopResult, []Defect) {
+	return stopOwner(ctx, workspace, supplied, "")
+}
+
+// StopOwner refuses a stale observed owner before writing any durable request.
+func StopOwner(ctx context.Context, workspace string, supplied *InstallIdentity, expectedLease string) (StopResult, []Defect) {
+	if !validCheckpointID(expectedLease) {
+		return StopResult{}, []Defect{{Code: DefectInvalidRequest, Message: "An exact owner lease is required."}}
+	}
+	return stopOwner(ctx, workspace, supplied, expectedLease)
+}
+
+func stopOwner(ctx context.Context, workspace string, supplied *InstallIdentity, expectedLease string) (StopResult, []Defect) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -46,6 +58,9 @@ func Stop(ctx context.Context, workspace string, supplied *InstallIdentity) (Sto
 	}
 	if d := workspaceIdentityDefects(run.Identity, installIdentityForWorkspace(run.Identity, supplied), identityRelease); len(d) > 0 {
 		return StopResult{}, d
+	}
+	if expectedLease != "" && (run.Occupancy == nil || run.Occupancy.Lease != expectedLease) {
+		return StopResult{Status: "owner-changed"}, nil
 	}
 	if !occupancyIsActive(run) {
 		return StopResult{Status: "settled"}, nil

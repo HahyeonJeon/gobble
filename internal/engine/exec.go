@@ -88,16 +88,25 @@ func inspectOutputs(isolate string, task TaskPlan) error {
 }
 
 func publishAll(workspace, isolate string, task TaskPlan) error {
+	return publishAllUsing(workspace, isolate, task, exec.InstallExclusive)
+}
+
+// install is a per-call publication boundary, allowing deterministic collision
+// tests without replacing the executor or changing global filesystem hooks.
+func publishAllUsing(workspace, isolate string, task TaskPlan, install func(string, string) error) error {
 	type prepared struct {
-		tmp string
-		dst string
+		tmp       string
+		dst       string
+		installed bool
 	}
 	var files []prepared
 	var trees []string
 	rollback := func() {
 		for _, p := range files {
 			os.Remove(p.tmp)
-			os.Remove(p.dst)
+			if p.installed {
+				os.Remove(p.dst)
+			}
 		}
 		for _, p := range trees {
 			os.RemoveAll(p)
@@ -135,13 +144,15 @@ func publishAll(workspace, isolate string, task TaskPlan) error {
 			files = append(files, prepared{tmp: tmp, dst: dstAbs})
 		}
 	}
-	for _, p := range files {
-		if err := exec.InstallExclusive(p.tmp, p.dst); err != nil {
+	for i := range files {
+		p := &files[i]
+		if err := install(p.tmp, p.dst); err != nil {
 			os.Remove(p.tmp)
 			rollback()
 			return err
 		}
 		p.tmp = ""
+		p.installed = true
 	}
 	return nil
 }

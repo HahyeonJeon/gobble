@@ -37,6 +37,20 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return writeVersion(stdout, stderr)
 	}
 	switch req.command {
+	case "output-capabilities":
+		return writeJSON(stdout, stderr, req.command, map[string]int{"schemaVersion": 1, "outputEvidenceVersion": 1})
+	case "output-evidence":
+		return runOutputEvidence(req, stdout, stderr)
+	case "prepared-run", "prepared-status", "prepared-stop":
+		return runPreparedControl(req, stdout, stderr)
+	case "prepared-capabilities":
+		return writeJSON(stdout, stderr, req.command, map[string]int{"schemaVersion": 1, "launchSchemaVersion": 2, "continuationVersion": 1})
+	case "prepared-continuation-review", "prepared-continue", "prepared-continuation-receipt":
+		return runPreparedContinuation(req, stdout, stderr)
+	case "prepared-review":
+		return runPreparedReview(stdout, stderr)
+	case "creation-scaffold":
+		return runCreationScaffold(stdout, stderr)
 	case "demo":
 		return runDemo(req, stdout, stderr)
 	case "init":
@@ -59,7 +73,7 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return writeJSON(stdout, stderr, "stop", result)
 	case "release":
 		return runRelease(req, stdout, stderr)
-	case "compose", "validate", "plan", "run", "resume":
+	case "compose", "validate", "plan", "flow", "review", "creation-review", "prepare", "run", "resume":
 		return runDriver(req, stdout, stderr)
 	default:
 		return writeErr(stderr, invalidRequest("cli", "unknown command"), 2)

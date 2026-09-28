@@ -1,0 +1,8 @@
+package pipelinereview
+
+// AuthoringGuide describes only constructors qualified by this review version.
+// Actual acceptance still uses checked TaskPlan fingerprints, never this prose.
+const AuthoringGuide = `Return complete replacement content for the existing source files in this scope. Preserve the Pipeline function, declared inputs and existing steps. Do not modify dependency/runtime/setup/sample files. No Run is authorized.
+Supported refinement: the real assets/modules/trim-galore Options.Quality and Options.Length integer fields; preserve all other options and source behavior. UI labels are Quality threshold (Phred) and Minimum length (bp). A zero option is an unknown tool default, not a known effective value.
+Supported addition: import "github.com/HahyeonJeon/gobble/assets/modules/fastqc" and call fastqc.Add(p, existingOutputHandle, fastqc.Options{}), which returns (fastqc.Ports, error). Check the error. Use an existing step output, such as trimmed.Read1, as the input. To set its UI label, pass modules.WithDisplay(p, gobble.TaskDisplay{Stage: "Inspect trimmed read quality"}) instead of p; the modules package is github.com/HahyeonJeon/gobble/assets/modules. Keep default image/resources/options. The new step declares html and zip outputs. It does not generate a report until a separately authorized Run.
+Other processing edits, removed steps, rewired existing connections, external dependencies, runtime changes or unexplained behavior cannot be adopted in this review version. Use the checked comparison and explicit gaps, never claim a candidate is current until the User adopts it.`

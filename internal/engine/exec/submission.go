@@ -126,3 +126,22 @@ func missingSubmissionReport(h Handle) Report {
 	return Report{Identity: h.Identity, Exit: -1, Reason: "container-missing",
 		Message: "no container remains for the recorded submission"}
 }
+
+// VerifySubmissionAbsent proves that the exact recorded Docker submission no
+// longer exists. Unlike Reconcile, it never copies logs or removes a container.
+func VerifySubmissionAbsent(ctx context.Context, h Handle) error {
+	if h.Submission == nil {
+		if h.RuntimeID != "" {
+			return errors.New("docker: submission identity unavailable")
+		}
+		return nil
+	}
+	_, resolved, err := resolveSubmission(ctx, h)
+	if err != nil {
+		return err
+	}
+	if resolved.RuntimeID != "" {
+		return errors.New("docker: recorded submission has not settled")
+	}
+	return nil
+}

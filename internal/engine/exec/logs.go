@@ -2,12 +2,15 @@ package exec
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"path/filepath"
 )
 
 type logStream struct {
 	cancel context.CancelFunc
 	done   chan struct{}
+	err    error // Published by closing done; read only after joining.
 }
 
 // The controller owns the collector. A monitor only reads attempt files.
@@ -40,11 +43,32 @@ func (d *Docker) followLogs(ctx context.Context, h Handle) {
 	cli, env := DockerCLI, dockerEnvForContext(ctx)
 	go func() {
 		defer close(stream.done)
-		defer out.Close()
-		defer stderr.Close()
 		defer cancel()
-		_, _ = cli(ctx, []string{"logs", "--follow", h.RuntimeID}, env, out, stderr)
+		code, err := cli(ctx, []string{"logs", "--follow", h.RuntimeID}, env, out, stderr)
+		if err == nil && code != 0 {
+			err = fmt.Errorf("docker logs: exit %d", code)
+		}
+		stream.err = errors.Join(err, out.Close(), stderr.Close())
 	}()
+}
+
+// finishLogs drains an owned collector after Docker proves the task stopped.
+// Creating the same files again would reject the collector's own exclusive files.
+// A failed stream is not treated as complete and never authorizes an overwrite.
+func (d *Docker) finishLogs(ctx context.Context, h Handle) error {
+	d.mu.Lock()
+	stream := d.streams[h.RuntimeID]
+	d.mu.Unlock()
+	if stream == nil {
+		return writeDockerLogs(ctx, h)
+	}
+	select {
+	case <-stream.done:
+		return stream.err
+	case <-ctx.Done():
+		stream.cancel()
+		return ctx.Err()
+	}
 }
 
 func (d *Docker) stopLogs(ctx context.Context, id string) error {

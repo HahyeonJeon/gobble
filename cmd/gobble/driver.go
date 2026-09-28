@@ -35,9 +35,14 @@ func runDriver(req *request, stdout, stderr io.Writer) int {
 	if hasInternalImport(importPath) {
 		return writeErr(stderr, invalidRequest(req.command, "consumer internal/ packages are unsupported for CLI graph verbs and pack; export Pipeline from a non-internal package"), 2)
 	}
-	install, err := resolveInstallIdentity(goBin, cwd, importPath, req.command)
-	if err != nil {
-		return writeDriverSetupError(stderr, req.command, err)
+	// Flow is inspection only: retained source and the pinned evaluator own its
+	// identity. Execution verbs keep their stricter installed-command identity.
+	var install installIdentityResult
+	if req.command != "flow" && req.command != "review" && req.command != "creation-review" && req.command != "prepare" {
+		install, err = resolveInstallIdentity(goBin, cwd, importPath, req.command)
+		if err != nil {
+			return writeDriverSetupError(stderr, req.command, err)
+		}
 	}
 	dir, err := os.MkdirTemp("", driverTempPrefix)
 	if err != nil {
@@ -225,9 +230,13 @@ func main() {
 }
 
 func run() int {
-	identity, err := linkedIdentity()
-	if err != nil {
-		return writeIdentityFail(err)
+	var identity gobble.Identity
+	if verb != "flow" && verb != "review" && verb != "creation-review" && verb != "prepare" {
+		var err error
+		identity, err = linkedIdentity()
+		if err != nil {
+			return writeIdentityFail(err)
+		}
 	}
 	gobble.SetSampleSheetPath(sample)
 	g, err := gobble.Compose(userpipe.Pipeline())
@@ -247,6 +256,28 @@ func run() int {
 		return writeJSON(struct {
 			Op string ` + "`json:\"op\"`" + `
 		}{Op: "validate"})
+	case "flow":
+		flow, err := gobble.InspectPipeline(g)
+		if err != nil {
+			return writeLibErr(err)
+		}
+		return writeJSON(flow)
+	case "prepare":
+		binding, err := gobble.ReadPreparationBinding()
+		if err != nil { return writeLibErr(err) }
+		prepared, err := gobble.PreparePipeline(g, binding)
+		if err != nil { return writeLibErr(err) }
+		return writeJSON(prepared)
+	case "creation-review":
+		inputPath, err := gobble.ReadCreationInput()
+		if err != nil { return writeLibErr(err) }
+		review, err := gobble.InspectPipelineCreation(g, inputPath)
+		if err != nil { return writeLibErr(err) }
+		return writeJSON(review)
+	case "review":
+		review, err := gobble.InspectPipelineReview(g)
+		if err != nil { return writeLibErr(err) }
+		return writeJSON(review)
 	case "plan":
 		p, err := gobble.BuildPlan(g)
 		if err != nil {

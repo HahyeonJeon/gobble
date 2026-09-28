@@ -215,7 +215,7 @@ func unsupportedControlSchema(workspace string, run jsonRun) []Defect {
 }
 
 func unsupportedLegacyControlSchema(workspace string, run jsonRun) []Defect {
-	if schemaUnsupported(run.SchemaVersion) || pidOnlyOccupancy(run) {
+	if schemaUnsupported(run.SchemaVersion) || pidOnlyOccupancy(run) || run.ExecutionHistory != nil {
 		return schemaDefect(ControlDir + "/" + RunIdentityFile)
 	}
 	root := filepath.Join(workspace, ControlDir)

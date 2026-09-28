@@ -3,15 +3,15 @@ package trimgalore
 
 import (
 	"path"
-	"strconv"
 
 	"github.com/HahyeonJeon/gobble"
 	"github.com/HahyeonJeon/gobble/assets/modules"
+	"github.com/HahyeonJeon/gobble/internal/modulecommand"
 )
 
 // DefaultImage is the nf-core/rnaseq 3.26.0 Trim Galore image resolved for
 // linux/amd64.
-const DefaultImage modules.Image = "community.wave.seqera.io/library/trim-galore:2.1.0--27e6376b8f6c1872@sha256:9d747504e44dbf5dfa8a2d66cbbd3bd80f897cc2e17ebe406821b4809b34a3a4"
+const DefaultImage modules.Image = modulecommand.TrimImage
 
 // Options controls one single- or paired-end Trim Galore command.
 type Options struct {
@@ -83,28 +83,7 @@ func Add(parent modules.Parent, read1, read2 gobble.Handle, options Options) (Po
 	if cores > 8 {
 		cores = 8
 	}
-	command := []string{"trim_galore", "--cores", strconv.Itoa(cores), "--gzip", "--output_dir", outDir.String(), "--basename", prefix}
-	if !read2.IsZero() {
-		command = append(command, "--paired")
-	}
-	for _, value := range []struct {
-		flag string
-		set  int
-	}{{"--clip_R1", options.ClipR1}, {"--clip_R2", options.ClipR2}, {"--three_prime_clip_R1", options.ThreePrimeClipR1}, {"--three_prime_clip_R2", options.ThreePrimeClipR2}, {"--quality", options.Quality}, {"--length", options.Length}} {
-		if value.set > 0 {
-			command = append(command, value.flag, strconv.Itoa(value.set))
-		}
-	}
-	if options.Adapter != "" {
-		command = append(command, "--adapter", options.Adapter)
-	}
-	if options.Adapter2 != "" {
-		command = append(command, "--adapter2", options.Adapter2)
-	}
-	command = append(command, read1Path)
-	if read2Path != "" {
-		command = append(command, read2Path)
-	}
+	command := modulecommand.Trim(modulecommand.TrimOptions{Read1: read1Path, Read2: read2Path, OutDir: outDir.String(), Prefix: prefix, Cores: cores, ClipR1: options.ClipR1, ClipR2: options.ClipR2, ThreePrimeClipR1: options.ThreePrimeClipR1, ThreePrimeClipR2: options.ThreePrimeClipR2, Quality: options.Quality, Length: options.Length, Adapter: options.Adapter, Adapter2: options.Adapter2})
 	base := options.Options
 	base.Resources = resources
 	command, image, resources, err := modules.ResolveOptions(unit, base, DefaultImage, resources, command, []string{"--cores", "--gzip", "--output_dir", "--basename", "--paired", "--clip_R1", "--clip_R2", "--three_prime_clip_R1", "--three_prime_clip_R2", "--quality", "--length", "--adapter", "--adapter2"})
@@ -124,7 +103,8 @@ func Add(parent modules.Parent, read1, read2 gobble.Handle, options Options) (Po
 		report2 := gobble.Literal(path.Base(read2Path) + "_trimming_report.txt").WithDir(outDir)
 		outputs = append(outputs, gobble.Bind{Name: "trimmed_read2", Spec: read2Out}, gobble.Bind{Name: "report2", Spec: report2})
 	}
-	task := parent.AddTask(gobble.TaskSpec{Name: unit, Command: command, Image: image, Resources: resources, Inputs: inputs, Outputs: outputs})
+	settings := []gobble.IntegerSetting{integerSetting("quality", "Quality threshold", "Phred", options.Quality), integerSetting("length", "Minimum length", "bp", options.Length)}
+	task := parent.AddTask(gobble.TaskSpec{InspectionSettings: settings, Name: unit, Command: command, Image: image, Resources: resources, Inputs: inputs, Outputs: outputs})
 	ports := Ports{Read1: task.Out("trimmed_read1"), Report1: task.Out("report1")}
 	if !read2.IsZero() {
 		ports.Read2 = task.Out("trimmed_read2")
@@ -151,4 +131,13 @@ func Pipeline(read1, read2 gobble.PathSpec, options Options) *gobble.Pipeline {
 
 func pathSpecUnset(spec gobble.PathSpec) bool {
 	return spec.Dir.IsZero() && spec.Prefix == "" && spec.Base == "" && len(spec.Suffixes) == 0 && spec.Ext == ""
+}
+
+// Zero is omitted by command construction, so preserve the unknown tool default.
+func integerSetting(key, label, unit string, value int) gobble.IntegerSetting {
+	setting := gobble.IntegerSetting{Key: key, Label: label, Unit: unit}
+	if value > 0 {
+		setting.Value = &value
+	}
+	return setting
 }

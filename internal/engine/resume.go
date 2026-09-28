@@ -35,6 +35,10 @@ func Resume(ctx context.Context, req Request) []Defect {
 }
 
 func checkResume(req Request) []Defect {
+	if run, exists, err := readRunIdentity(req.Workspace); err == nil && exists && run.Admission != nil {
+		return []Defect{{Code: DefectUnsupportedSchema, Message: "Prepared Run Resume requires a separately reviewed admission."}}
+	}
+
 	if d := CheckResumeStart(req.Workspace, req.Cap); len(d) > 0 {
 		return d
 	}

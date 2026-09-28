@@ -181,3 +181,56 @@ func TestDockerSubmissionPinsSelectedEndpoint(t *testing.T) {
 		t.Fatalf("submission did not complete: %+v, %v", st, err)
 	}
 }
+
+func TestVerifySubmissionAbsentIsReadOnly(t *testing.T) {
+	fake, job := useSubmissionDaemon(t)
+	job.Record = func(context.Context, Handle, Report) error { return nil }
+	h, _, err := NewDocker().Submit(t.Context(), job)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fake.Before = func(args []string) {
+		switch args[0] {
+		case "info", "context", "container", "inspect":
+		default:
+			t.Errorf("review issued mutating command: %v", args)
+		}
+	}
+	if err := VerifySubmissionAbsent(t.Context(), h); err == nil {
+		t.Fatal("remaining container accepted")
+	}
+	fake.Before = nil
+	if err := NewDocker().Cancel(t.Context(), h); err != nil {
+		t.Fatal(err)
+	}
+	fake.Before = func(args []string) {
+		switch args[0] {
+		case "info", "context", "container", "inspect":
+		default:
+			t.Errorf("review issued mutating command: %v", args)
+		}
+	}
+	if err := VerifySubmissionAbsent(t.Context(), h); err != nil {
+		t.Fatal(err)
+	}
+	state, err := fake.State()
+	if err != nil {
+		t.Fatal(err)
+	}
+	state.DaemonID = "replacement-daemon"
+	if err := fake.Save(state); err != nil {
+		t.Fatal(err)
+	}
+	if err := VerifySubmissionAbsent(t.Context(), h); err == nil {
+		t.Fatal("different daemon proved absence")
+	}
+	if err := VerifySubmissionAbsent(t.Context(), Handle{RuntimeID: "unbound"}); err == nil {
+		t.Fatal("unbound runtime accepted")
+	}
+	if err := VerifySubmissionAbsent(t.Context(), Handle{}); err != nil {
+		t.Fatal(err)
+	}
+	if err := VerifySubmissionAbsent(t.Context(), Handle{Submission: &Submission{Token: strings.Repeat("c", 32)}}); err != nil {
+		t.Fatal("never authorized creation", err)
+	}
+}

@@ -2,17 +2,14 @@
 package fastqc
 
 import (
-	"path"
-	"strconv"
-	"strings"
-
 	"github.com/HahyeonJeon/gobble"
 	"github.com/HahyeonJeon/gobble/assets/modules"
+	"github.com/HahyeonJeon/gobble/internal/modulecommand"
 )
 
 // DefaultImage is the nf-core/rnaseq 3.26.0 FastQC image resolved for
 // linux/amd64.
-const DefaultImage modules.Image = "quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0@sha256:e194048df39c3145d9b4e0a14f4da20b59d59250465b6f2a9cb698445fd45900"
+const DefaultImage modules.Image = modulecommand.FastQCImage
 
 var protectedExtraArgs = []string{
 	"--outdir", "-o", "--threads", "--noextract", "--extract",
@@ -52,15 +49,11 @@ func Add(parent modules.Parent, reads gobble.Handle, options Options) (Ports, er
 	stem := fastqcStem(readPath)
 	html := gobble.PathSpec{Dir: outDir, Base: stem, Ext: ".html"}
 	zip := gobble.PathSpec{Dir: outDir, Base: stem, Ext: ".zip"}
-	command := []string{"fastqc", "--outdir", outDir.String(), "--noextract"}
 	resources := options.Resources
 	if resources.CPU == 0 && resources.Memory == "" {
 		resources = gobble.Resources{CPU: 2, Memory: "1g"}
 	}
-	if n := modules.ThreadCount(resources.CPU); n > 0 {
-		command = append(command, "--threads", strconv.Itoa(n))
-	}
-	command = append(command, readPath)
+	command := modulecommand.FastQC(readPath, outDir.String(), modules.ThreadCount(resources.CPU))
 	base := options.Options
 	base.Resources = resources
 	if err := modules.RejectExtraArgPrefixes(unit, options.ExtraArgs, protectedExtraArgs); err != nil {
@@ -86,21 +79,4 @@ func Pipeline(reads gobble.PathSpec, options Options) *gobble.Pipeline {
 	})
 }
 
-func fastqcStem(readPath string) string {
-	base := path.Base(readPath)
-	lower := strings.ToLower(base)
-	for _, suffix := range []string{".gz", ".bz2", ".xz"} {
-		if strings.HasSuffix(lower, suffix) {
-			base = base[:len(base)-len(suffix)]
-			lower = strings.ToLower(base)
-			break
-		}
-	}
-	for _, suffix := range []string{".fastq", ".fq", ".sam", ".bam", ".txt"} {
-		if strings.HasSuffix(lower, suffix) {
-			base = base[:len(base)-len(suffix)]
-			break
-		}
-	}
-	return base + "_fastqc"
-}
+func fastqcStem(readPath string) string { return modulecommand.FastQCStem(readPath) }

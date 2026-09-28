@@ -28,6 +28,15 @@ func importHits(t *testing.T, root string) []string {
 			return err
 		}
 		if d.IsDir() {
+			// Nested modules and generated dependencies are not this module's product source.
+			if path != root {
+				if _, err := os.Stat(filepath.Join(path, "go.mod")); err == nil {
+					return fs.SkipDir
+				}
+				if d.Name() == "node_modules" || d.Name() == "vendor" || path == filepath.Join(root, "app", "test-results") {
+					return fs.SkipDir
+				}
+			}
 			if path == assetsDir {
 				return fs.SkipDir
 			}
@@ -39,7 +48,7 @@ func importHits(t *testing.T, root string) []string {
 			}
 			return nil
 		}
-		if !strings.HasSuffix(path, ".go") {
+		if !strings.HasSuffix(path, ".go") || strings.HasSuffix(path, "_test.go") {
 			return nil
 		}
 		for _, imp := range fileImports(t, path) {
@@ -87,5 +96,29 @@ func moduleRoot(t *testing.T) string {
 			t.Fatalf("go.mod not found from %s", dir)
 		}
 		dir = parent
+	}
+}
+
+func TestImportBanProductionScope(t *testing.T) {
+	root := t.TempDir()
+	files := map[string]string{
+		"core.go":                              "package core\nimport _ \"" + bannedImport + "/modules\"\n",
+		"core_test.go":                         "package core_test\nimport _ \"" + bannedImport + "/modules\"\n",
+		"fixture/go.mod":                       "module fixture\n",
+		"fixture/pipeline.go":                  "package main\nimport _ \"" + bannedImport + "/modules\"\n",
+		"app/test-results/project/pipeline.go": "package main\nimport _ \"" + bannedImport + "/modules\"\n",
+	}
+	for name, content := range files {
+		path := filepath.Join(root, name)
+		if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, []byte(content), 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	hits := importHits(t, root)
+	if len(hits) != 1 || hits[0] != filepath.Join(root, "core.go") {
+		t.Fatalf("production reverse import must remain rejected, got %v", hits)
 	}
 }

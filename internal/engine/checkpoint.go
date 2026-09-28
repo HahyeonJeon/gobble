@@ -58,7 +58,7 @@ func checkpointRoot(workspace string) (string, bool, error) {
 	if err := json.Unmarshal(raw, &ptr); err != nil {
 		return "", true, fmt.Errorf("invalid checkpoint pointer: %w", err)
 	}
-	if ptr.Format != checkpointFormat || !validCheckpointID(ptr.Current) || (ptr.Previous != "" && !validCheckpointID(ptr.Previous)) {
+	if (ptr.Format != checkpointFormat && ptr.Format != 2 && ptr.Format != 3) || !validCheckpointID(ptr.Current) || (ptr.Previous != "" && !validCheckpointID(ptr.Previous)) {
 		return "", true, errors.New("unsupported or invalid checkpoint pointer")
 	}
 	rel := ControlDir + "/" + checkpointDirectory + "/" + ptr.Current
@@ -76,6 +76,15 @@ func checkpointRoot(workspace string) (string, bool, error) {
 	if !info.IsDir() {
 		return "", true, errors.New("committed checkpoint is not a directory")
 	}
+	var run jsonRun
+	rawRun, err := os.ReadFile(filepath.Join(path, RunIdentityFile))
+	if err != nil || json.Unmarshal(rawRun, &run) != nil {
+		return "", true, errors.New("invalid checkpoint run identity")
+	}
+	format, formatErr := admissionCheckpointFormat(run)
+	if formatErr != nil || ptr.Format != format {
+		return "", true, errCheckpointSchema
+	}
 	return rel, true, nil
 }
 
@@ -92,7 +101,7 @@ func checkpointLock(workspace string, write bool) (*os.File, error) {
 	if write {
 		flag = os.O_CREATE | os.O_RDWR
 	}
-	f, err := os.OpenFile(path, flag|syscall.O_NOFOLLOW, 0o600)
+	f, err := openLockFile(path, flag|syscall.O_NOFOLLOW, 0o600)
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +162,14 @@ func readControlFile(workspace, name string) ([]byte, bool, error) {
 		return nil, false, err
 	}
 	defer closeCheckpointLock(lock)
-	return readCheckpointMember(workspace, root, name, committed)
+	raw, present, err := readCheckpointMember(workspace, root, name, committed)
+	if err == nil && present && !committed && name == RunIdentityFile {
+		var run jsonRun
+		if json.Unmarshal(raw, &run) == nil && (run.Admission != nil || run.ExecutionHistory != nil) {
+			return nil, true, errCheckpointSchema
+		}
+	}
+	return raw, present, err
 }
 
 func readCheckpointMember(workspace, root, name string, required bool) ([]byte, bool, error) {
@@ -205,6 +221,14 @@ func commitCheckpoint(workspace, snapshot string, plan, tasks, run []byte) error
 
 // after is a per-call fault boundary used by recovery tests, never a global seam.
 func commitCheckpointAt(workspace, snapshot string, plan, tasks, run []byte, after func(string) error) error {
+	var runHeader jsonRun
+	if err := json.Unmarshal(run, &runHeader); err != nil {
+		return err
+	}
+	format, err := admissionCheckpointFormat(runHeader)
+	if err != nil {
+		return err
+	}
 	if !validCheckpointID(snapshot) {
 		return errors.New("invalid checkpoint identity")
 	}
@@ -219,6 +243,21 @@ func commitCheckpointAt(workspace, snapshot string, plan, tasks, run []byte, aft
 	oldRoot, hasOld, err := checkpointRoot(workspace)
 	if err != nil {
 		return err
+	}
+	if hasOld {
+		var oldRun jsonRun
+		raw, _, err := readCheckpointMember(workspace, oldRoot, RunIdentityFile, true)
+		if err != nil {
+			return err
+		}
+		if err := json.Unmarshal(raw, &oldRun); err != nil {
+			return err
+		}
+		if err := validateAdmissionTransition(oldRun, runHeader); err != nil {
+			return err
+		}
+	} else if runHeader.ExecutionHistory != nil && len(runHeader.ExecutionHistory.Continuations) != 0 {
+		return errors.New("initial checkpoint cannot contain continuations")
 	}
 	base := filepath.Join(workspace, ControlDir, checkpointDirectory)
 	if err := os.MkdirAll(base, 0o700); err != nil {
@@ -264,7 +303,7 @@ func commitCheckpointAt(workspace, snapshot string, plan, tasks, run []byte, aft
 	if err := step("generation"); err != nil {
 		return err
 	}
-	ptr := checkpointPointer{Format: checkpointFormat, Current: snapshot}
+	ptr := checkpointPointer{Format: format, Current: snapshot}
 	if hasOld {
 		ptr.Previous = filepath.Base(oldRoot)
 	}
