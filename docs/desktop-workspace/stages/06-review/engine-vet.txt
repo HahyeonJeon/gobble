@@ -1,0 +1,5 @@
+Final verification checkout: f83b18d3b7d20514358a1b2f7c0d319bdf6bf17b
+Go 1.26.8 linux/amd64, dedicated unprivileged Docker test image, network none
+Command: go vet ./...
+Exit code: 0
+stdout/stderr: empty

@@ -1,0 +1,71 @@
+
+Running 6 tests using 1 worker
+
+(node:66635) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 desktop/tests/electron/admitted-runs.spec.ts:7:1 › Run navigation refreshes when a confirmed admission arrives, not on every status poll (12.2s)
+  ✓  2 desktop/tests/electron/continuation-restored.spec.ts:7:1 › completed actual continuation restores its latest attempt and original review without executing (2.5s)
+  ✘  3 desktop/tests/electron/continuation-restored.spec.ts:67:1 › completed Run keeps its Flow and exact task actions reachable in stacked compact Panes (11.4s)
+(node:66965) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  4 desktop/tests/electron/continuation-review.spec.ts:7:1 › continuation Flow, exact capture, compact draft and explicit native confirmation (10.8s)
+  ✓  5 desktop/tests/electron/continuation-review.spec.ts:98:1 › older engine, blocked recheck, historical capture and unknown confirmation never silently resubmit (13.5s)
+  ✘  6 desktop/tests/electron/continuation-review.spec.ts:179:1 › Agent points to the same continuation plan without changing User selection or starting work (11.4s)
+
+
+  1) desktop/tests/electron/continuation-restored.spec.ts:67:1 › completed Run keeps its Flow and exact task actions reachable in stacked compact Panes 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: locator('.attachment-chip').last()
+    Expected substring: "Task · fastqc · Attempt 3"
+    Received string:    "Analysis 1Task · fastqc · Attempt 1Preview"
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toContainText" locator('.attachment-chip').last() with timeout 5000ms
+      - waiting for locator('.attachment-chip').last()
+        14 × locator resolved to <div class="attachment-chip">…</div>
+           - unexpected value "Analysis 1Task · fastqc · Attempt 1Preview"
+
+
+      109 |     await page.getByRole('button', { name: 'Discuss task', exact: true }).click();
+      110 |     await page.getByRole('button', { name: 'Chat', exact: true }).click();
+    > 111 |     await expect(page.locator('.attachment-chip').last()).toContainText(
+          |                                                           ^
+      112 |       'Task · fastqc · Attempt 3',
+      113 |     );
+      114 |     await expect(page.getByRole('textbox', { name: 'Message draft' })).toHaveValue(
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/continuation-restored.spec.ts:111:59
+
+    Error Context: ../docs/desktop-workspace/stages/completed-run-presentation/final-evidence/continuation-restored-comp-83249-le-in-stacked-compact-Panes/error-context.md
+
+  2) desktop/tests/electron/continuation-review.spec.ts:179:1 › Agent points to the same continuation plan without changing User selection or starting work 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('.shared-reference-event').filter({ hasText: 'This checked step restarts from its beginning.' })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" locator('.shared-reference-event').filter({ hasText: 'This checked step restarts from its beginning.' }) with timeout 5000ms
+      - waiting for locator('.shared-reference-event').filter({ hasText: 'This checked step restarts from its beginning.' })
+
+
+      216 |       .locator('.shared-reference-event')
+      217 |       .filter({ hasText: 'This checked step restarts from its beginning.' });
+    > 218 |     await expect(event).toBeVisible();
+          |                         ^
+      219 |     await expect(selected).toHaveAttribute('aria-pressed', 'true');
+      220 |     await expect(flow.locator('.pipeline-node[data-agent-mark="true"]')).toHaveCount(1);
+      221 |     await event.getByRole('button', { name: 'Show in view', exact: true }).click();
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/continuation-review.spec.ts:218:25
+
+    Error Context: ../docs/desktop-workspace/stages/completed-run-presentation/final-evidence/continuation-review-Agent--1bd4e--selection-or-starting-work/error-context.md
+
+  2 failed
+    desktop/tests/electron/continuation-restored.spec.ts:67:1 › completed Run keeps its Flow and exact task actions reachable in stacked compact Panes 
+    desktop/tests/electron/continuation-review.spec.ts:179:1 › Agent points to the same continuation plan without changing User selection or starting work 
+  4 passed (1.0m)

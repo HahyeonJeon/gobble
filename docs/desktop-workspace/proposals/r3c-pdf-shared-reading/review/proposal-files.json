@@ -1,0 +1,21 @@
+{
+  "concept-a.png": "cf615132ee1f50b03a086139454e74bd58077eee8a9dddbe657b2534746203df",
+  "contract-sketch.md": "77d329f90ec7b490a481692a0cf39d1d8940e0885233f0935ea08c8de9b4a47f",
+  "design.md": "1229e64947fd61e688a6f2b1097359a54f24f9f411cfe563214245be4abbb3c9",
+  "image-prompt.md": "6ab4176e48b67417374caed0aae685f00776658e57443c250beb35bb205fd80b",
+  "implementation-plan.md": "d589326338df8d06d9439cd26418e9c9c5c3663897e8cde43d6557e7d191fa31",
+  "research.md": "8ffd8d3841e8976307457b0f6fa7c13f5409262c440220cd07009e7bd8e4c632",
+  "review/captured-region-1280.png": "032f9185856eb08ef64c95720464c8161ccad0b7c034bafa44a6e78bcf281111",
+  "review/chat-736.png": "29a0f17b83e635a589b5ce28e7b2912b95eccbe3000217baa583e2a44633f6b1",
+  "review/inline-1280.png": "7407081694e5e9080ea0ea0891f10db9d2b93ffbfb65aba1e1722eba6964b6b3",
+  "review/page-rail-1280.png": "4cf51eebcdccf4da24b323b0cc08e9b1583910265166e75b87a81996b49d177c",
+  "review/production-baseline.json": "80cc1f80d25a1292e4c6e5ca26b60487b7c2268f083d8370dd4c69458be95c54",
+  "review/reference-1280.png": "9df68cf7145a12562d3dfd3ae780bb25d572b58f5daba4fa3e2f13ea274ae3a0",
+  "review/region-900.png": "799925abbca2a158e72bb9bda7a9685795d1b98847eede8dabe1dd1a715574b2",
+  "review/sketch-checks.json": "2aef3f12073719d6f03ae123b7c7e3ba59f6c07741e31188de198088475f5d68",
+  "review/verification.md": "e956118c39b69bdbb7d02f52d546932e5c8a64bf3b1f822f44b0059fde3282e1",
+  "review/workspace-736.png": "215bffe8daac9d1dccd45902af91aed5e59cbf48dcad909ddad3017f5226d64a",
+  "sketch.css": "9b093523e39a6fd9fd8c74587415443843737abf7ae57de827376ad197162d78",
+  "sketch.html": "df1d8dffd5e3374ab06166ed1fc1f25564971830cff6194cee3e5f85633ce7da",
+  "sketch.js": "9123c74b7ac475b375811b330132d0621b5c3b32041ae714e8dbfc8fb7597958"
+}

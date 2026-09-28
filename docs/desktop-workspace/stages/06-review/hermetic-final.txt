@@ -1,0 +1,193 @@
+ok  	github.com/HahyeonJeon/gobble	22.621s
+ok  	github.com/HahyeonJeon/gobble/assets	0.187s
+ok  	github.com/HahyeonJeon/gobble/assets/modules	0.043s
+?   	github.com/HahyeonJeon/gobble/assets/modules/anndatar-convert	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/atac-consensus-peaks	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/atac-frip-score	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/atac-reference-intervals	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/ataqv	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/ataqv-mkarv	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/bcftools-sort	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/bcftools-stats	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/bedgraph-scale	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/bedtools-genomecov	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/bedtools-intersect	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/bismark-align	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/bismark-deduplicate	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/bismark-genome	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/bismark-methylation-extractor	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/bismark-report	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/bismark-summary	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/bwa-index	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/bwa-mem	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/cat-fastq	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/cut-chrom-sizes	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/deeptools-compute-matrix	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/deeptools-plot-fingerprint	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/deeptools-plot-profile	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/deseq2-qc	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/dupradar	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/fastp	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/fastqc	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/featurecounts	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/featurecounts-merge-matrices	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/fq-lint	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/gatk4-applybqsr	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/gatk4-baserecalibrator	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/gatk4-gather-bqsr-reports	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/gatk4-genomicsdbimport	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/gatk4-genotypegvcfs	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/gatk4-haplotypecaller	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/gatk4-markduplicates	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/gatk4-mergevcfs	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/gffread	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/gffread-transcriptome	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/gtf-filter	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/gtf-gene-filter	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/gtf-to-t2g	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/gunzip	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/h5ad-concat	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/homer-annotate-peaks	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/igv-session	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/macs2-callpeak	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/matrix-to-h5ad	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/mosdepth	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/multiqc	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/picard-collect-multiple-metrics	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/picard-markduplicates	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/picard-merge-sam-files	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/plot-homer-annotatepeaks	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/plot-macs2-qc	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/qcatch	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/qualimap-bamqc	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/rseqc-inferexperiment	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/salmon-index	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/salmon-quant	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/sample-retention-mapped	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/sample-retention-trimmed	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/samtools-faidx	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/samtools-flagstat	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/samtools-idxstats	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/samtools-index	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/samtools-merge	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/samtools-sort	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/samtools-stats	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/samtools-view	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/samtools-view-count	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/simpleaf-index	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/simpleaf-quant	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/star-align	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/star-genome-generate	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/stringtie	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/trim-galore	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/tximport	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/ucsc-bedclip	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/ucsc-bedgraphtobigwig	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/wc-lines	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/pipelines	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/pipelines/atacseq	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/pipelines/methylseq	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/pipelines/rnaseq	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/pipelines/scrnaseq	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/pipelines/wgs	[no test files]
+--- FAIL: TestPackPrintpipeArtifact (2.70s)
+    pack_test.go:269: packed compose = code 1 stderr 
+--- FAIL: TestPackHostpipeEmptyInspectProtocol (2.75s)
+    pack_test.go:364: exit = 1
+        stderr: 
+FAIL
+FAIL	github.com/HahyeonJeon/gobble/cmd/gobble	81.204s
+ok  	github.com/HahyeonJeon/gobble/cmd/gobble-container	0.041s
+?   	github.com/HahyeonJeon/gobble/distribution/runtime	[no test files]
+?   	github.com/HahyeonJeon/gobble/examples/hello	[no test files]
+ok  	github.com/HahyeonJeon/gobble/internal/containerenv	0.043s
+ok  	github.com/HahyeonJeon/gobble/internal/engine	8.411s
+ok  	github.com/HahyeonJeon/gobble/internal/engine/exec	0.101s
+ok  	github.com/HahyeonJeon/gobble/internal/fixture	0.073s
+?   	github.com/HahyeonJeon/gobble/internal/path	[no test files]
+?   	github.com/HahyeonJeon/gobble/internal/testutil	[no test files]
+ok  	github.com/HahyeonJeon/gobble/monitor	1.116s
+ok  	github.com/HahyeonJeon/gobble/monitor/tui	1.149s
+ok  	github.com/HahyeonJeon/gobble/tests/cli-valid	2.865s
+?   	github.com/HahyeonJeon/gobble/tests/cli-valid/runlocal	[no test files]
+?   	github.com/HahyeonJeon/gobble/tests/cli-valid/workflowcase	[no test files]
+?   	github.com/HahyeonJeon/gobble/tests/internal/plancheck	[no test files]
+?   	github.com/HahyeonJeon/gobble/tests/internal/sourcecheck	[no test files]
+ok  	github.com/HahyeonJeon/gobble/tests/modules	0.486s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/anndatar-convert	0.056s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/bedtools-genomecov	0.079s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/bismark-align	0.080s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/bismark-deduplicate	0.057s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/bismark-genome	0.058s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/bismark-methylation-extractor	0.059s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/bismark-report	0.060s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/bismark-summary	0.058s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/bwa-index	0.057s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/bwa-mem	0.061s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/cat-fastq	0.057s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/cut-chrom-sizes	0.058s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/deseq2-qc	0.057s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/dupradar	0.058s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/fastp	0.058s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/fastqc	0.059s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/featurecounts	0.059s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/fq-lint	0.057s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/gatk4-genomicsdbimport	0.235s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/gatk4-genotypegvcfs	0.061s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/gatk4-haplotypecaller	0.058s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/gffread	0.060s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/gffread-transcriptome	0.058s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/gtf-filter	0.057s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/gtf-gene-filter	0.057s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/gtf-to-t2g	0.055s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/gunzip	0.056s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/h5ad-concat	0.059s
+?   	github.com/HahyeonJeon/gobble/tests/modules/internal/commandcheck	[no test files]
+ok  	github.com/HahyeonJeon/gobble/tests/modules/macs2-callpeak	0.061s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/matrix-to-h5ad	0.055s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/multiqc	0.060s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/picard-markduplicates	0.055s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/plot-homer-annotatepeaks	0.056s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/plot-macs2-qc	0.056s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/qcatch	0.057s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/qualimap-bamqc	0.056s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/rseqc-inferexperiment	0.056s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/salmon-index	0.057s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/salmon-quant	0.322s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/sample-retention-mapped	0.057s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/sample-retention-trimmed	0.057s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/samtools-faidx	0.056s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/samtools-index	0.058s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/samtools-merge	0.060s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/samtools-sort	0.055s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/samtools-stats	0.057s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/simpleaf-index	0.060s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/simpleaf-quant	0.060s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/star-align	0.058s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/star-genome-generate	0.056s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/stringtie	0.056s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/trim-galore	0.058s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/tximport	0.057s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/ucsc-bedclip	0.057s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/ucsc-bedgraphtobigwig	0.057s
+ok  	github.com/HahyeonJeon/gobble/tests/pipelines	0.277s
+ok  	github.com/HahyeonJeon/gobble/tests/pipelines/atacseq	0.717s
+ok  	github.com/HahyeonJeon/gobble/tests/pipelines/methylseq	0.554s
+ok  	github.com/HahyeonJeon/gobble/tests/pipelines/rnaseq	0.721s
+ok  	github.com/HahyeonJeon/gobble/tests/pipelines/scrnaseq	0.615s
+ok  	github.com/HahyeonJeon/gobble/tests/pipelines/wgs	0.235s
+ok  	github.com/HahyeonJeon/gobble/tests/scenarios	0.039s
+ok  	github.com/HahyeonJeon/gobble/tests/scenarios/build	0.227s
+ok  	github.com/HahyeonJeon/gobble/tests/scenarios/customize	0.195s
+ok  	github.com/HahyeonJeon/gobble/tests/scenarios/design	0.074s
+ok  	github.com/HahyeonJeon/gobble/tests/scenarios/failure	55.262s
+?   	github.com/HahyeonJeon/gobble/tests/scenarios/internal/atacseqscenario	[no test files]
+?   	github.com/HahyeonJeon/gobble/tests/scenarios/internal/dockerfixture	[no test files]
+?   	github.com/HahyeonJeon/gobble/tests/scenarios/internal/methylseqscenario	[no test files]
+?   	github.com/HahyeonJeon/gobble/tests/scenarios/internal/rnaseqscenario	[no test files]
+?   	github.com/HahyeonJeon/gobble/tests/scenarios/internal/scrnaseqscenario	[no test files]
+?   	github.com/HahyeonJeon/gobble/tests/scenarios/internal/wgsscenario	[no test files]
+ok  	github.com/HahyeonJeon/gobble/tests/scenarios/resume	93.186s
+ok  	github.com/HahyeonJeon/gobble/tests/scenarios/run	46.208s
+ok  	github.com/HahyeonJeon/gobble/tests/scenarios/stop	49.496s
+FAIL

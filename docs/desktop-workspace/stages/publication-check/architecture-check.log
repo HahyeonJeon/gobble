@@ -1,0 +1,5 @@
+# github.com/HahyeonJeon/gobble/internal/containerenv
+internal/containerenv/runtime.go:113:12: undefined: useProjectOwner
+FAIL	github.com/HahyeonJeon/gobble/assets [build failed]
+FAIL	github.com/HahyeonJeon/gobble/tests/scenarios/design [build failed]
+FAIL

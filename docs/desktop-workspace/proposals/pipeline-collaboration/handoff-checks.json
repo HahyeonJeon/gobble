@@ -1,0 +1,45 @@
+{
+  "subjectFileCount": 523,
+  "subjectHash": "ec2b38e675f9b6e535839b8fd9a436f7402f6a71ab970ebfff19f9f9ee6d1821",
+  "subjectUnchanged": true,
+  "changedSourceFiles": [],
+  "addedDependencyFilesUnchanged": true,
+  "changedDependencyFiles": [],
+  "unaidedRecordPreserved": true,
+  "reviewBaseItemCount": 180,
+  "planFiles": [
+    "plan-01.md",
+    "plan-index.md",
+    "tasks/tasks-01.md",
+    "tasks/tasks-index.md"
+  ],
+  "planClosed": true,
+  "taskLeafCount": 10,
+  "taskGroupCount": 5,
+  "eachLeafCoveredExactlyOnce": true,
+  "hierarchyAndGroupContentAgree": true,
+  "contentMismatch": [],
+  "dependenciesAcyclicAndOrdered": true,
+  "localLinksChecked": 119,
+  "missingLocalLinks": [],
+  "scope": "Document integrity and preserved source; not product acceptance.",
+  "handoffArtifactHashes": {
+    "README.md": "c22934f6aa05b778781dc9237f05da70859d82572592cfe47467c42fe0955feb",
+    "architecture-review.md": "e7f4bb489205ade1a4943786a03810f33420219cf8ce7ddd4d55d040ada69a75",
+    "dependency-evidence.json": "7066c3c3ba62f9794d676ef9206b2dc3070f6135ba03b9f407b3b6b096a92f41",
+    "design.md": "ef9f424f46a9663f804a61ccaf7479eae379fa37c00d0146fbcc2242a05363a0",
+    "linux-compile.json": "a57946063f606a3aaf6a15105a345fccb3144258b61cf6c7afc8f3164f494702",
+    "plan/plan-01.md": "11f07970c8807955d89389f3f61bbbd445d75669179d3dc3d8987f87635ffdff",
+    "plan/plan-index.md": "1f57802428dfb0ea904ada5043b3b42538a94bb6d2dd7db410819755d90c30ee",
+    "plan/tasks/tasks-01.md": "6b81d787c0432b8e162601c65a83f089f518be6bc4d670ea23f5201c6253c0ec",
+    "plan/tasks/tasks-index.md": "3b299bd91f477c81bcd4fc34c892c47e268b1afa8913319cf9a1839fcdf0ac6b",
+    "review-method.json": "b72255b9e86a153203f78fa09a5d9b6c34d36afca3eec8ac98f2da169d005164",
+    "study.md": "26c7f7a25ddfdcc951cffef5eb61025be3797ee614273f9c839465d5e39d011b",
+    "subject.json": "64594efbf106e9021632b74f1d77515bc60a5191e90532025c81b3fac0f56232",
+    "verification.md": "436fdcd31a05e46cb7734c7fcaf3f64bf764fe2361526d4c6f4024c3431fafe9"
+  },
+  "navigationDocumentHashes": {
+    "docs/desktop-workspace/README.md": "58c2ad0b4ff29c64c5981314a71fcb7213f2704e287e38ccf87e5a6e72736865",
+    "docs/desktop-workspace/remaining-work.md": "95ce05034156f04fadd08308b425a1f809a26cb1ba7c1f953da1b705e90fa5e5"
+  }
+}

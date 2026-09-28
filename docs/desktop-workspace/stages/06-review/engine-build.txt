@@ -1,0 +1,196 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 1.89kB done
+#1 WARN: FromPlatformFlagConstDisallowed: FROM --platform flag should not use constant value "linux/amd64" (line 5)
+#1 WARN: FromPlatformFlagConstDisallowed: FROM --platform flag should not use constant value "linux/amd64" (line 19)
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/golang:1.26-bookworm
+#2 ...
+
+#3 [auth] library/golang:pull token for registry-1.docker.io
+#3 DONE 0.0s
+
+#4 [auth] library/docker:pull token for registry-1.docker.io
+#4 DONE 0.0s
+
+#5 [internal] load metadata for docker.io/library/docker:28-cli
+#5 DONE 6.8s
+
+#6 [internal] load metadata for docker.io/library/golang:1.26-bookworm
+#6 DONE 6.8s
+
+#2 [internal] load metadata for docker.io/library/golang:1.26-bookworm
+#2 DONE 7.5s
+
+#7 [docker-client 1/1] FROM docker.io/library/docker:28-cli@sha256:625d9431a9f54c5a2bc90f24f0e1c3d55b1349fd857dd85035f98c2c9acbdd4d
+#7 resolve docker.io/library/docker:28-cli@sha256:625d9431a9f54c5a2bc90f24f0e1c3d55b1349fd857dd85035f98c2c9acbdd4d 0.0s done
+#7 DONE 0.0s
+
+#8 [runtime 1/7] FROM docker.io/library/golang:1.26-bookworm@sha256:9fdc884aacc3bec89b20ffc69f4bb369c78210e3e4f600387b5128b12c199f81
+#8 resolve docker.io/library/golang:1.26-bookworm@sha256:9fdc884aacc3bec89b20ffc69f4bb369c78210e3e4f600387b5128b12c199f81 0.0s done
+#8 CACHED
+
+#9 [build 1/6] FROM docker.io/library/golang:1.26-bookworm@sha256:9fdc884aacc3bec89b20ffc69f4bb369c78210e3e4f600387b5128b12c199f81
+#9 resolve docker.io/library/golang:1.26-bookworm@sha256:9fdc884aacc3bec89b20ffc69f4bb369c78210e3e4f600387b5128b12c199f81 0.0s done
+#9 DONE 0.1s
+
+#10 [internal] load build context
+#10 transferring context: 27B
+#10 transferring context: 5.48MB 0.1s done
+#10 DONE 0.1s
+
+#9 [build 1/6] FROM docker.io/library/golang:1.26-bookworm@sha256:9fdc884aacc3bec89b20ffc69f4bb369c78210e3e4f600387b5128b12c199f81
+#9 sha256:3e35da6b5d7d5d76536a207570cdc891aa2bb390ca5dd4cab0c2a3b9a67ea581 0B / 127B 0.2s
+#9 sha256:3e35da6b5d7d5d76536a207570cdc891aa2bb390ca5dd4cab0c2a3b9a67ea581 127B / 127B 0.2s done
+#9 sha256:51fb0b9b10a77a100f12ca35704e0bf2e54f625945c6087b132491dec45b4ed6 0B / 64.22MB 0.3s
+#9 sha256:2f7d4123c6cd993c53921e2aa65ed88793bca37fc8b812d3b5c1079b9562cebe 0B / 86.63MB 0.2s
+#9 sha256:742d423df6ec83a05afd11c678f055935985f615115c46681d670810438c3732 0B / 64.50MB 0.2s
+#9 sha256:7fea2228218a869ae6619766dc4aae2d5e251700ebac01541d63cafea4bc7fc7 0B / 23.63MB 0.2s
+#9 sha256:51fb0b9b10a77a100f12ca35704e0bf2e54f625945c6087b132491dec45b4ed6 4.19MB / 64.22MB 0.8s
+#9 sha256:51fb0b9b10a77a100f12ca35704e0bf2e54f625945c6087b132491dec45b4ed6 8.39MB / 64.22MB 1.2s
+#9 sha256:51fb0b9b10a77a100f12ca35704e0bf2e54f625945c6087b132491dec45b4ed6 12.58MB / 64.22MB 1.7s
+#9 sha256:51fb0b9b10a77a100f12ca35704e0bf2e54f625945c6087b132491dec45b4ed6 16.78MB / 64.22MB 2.1s
+#9 sha256:51fb0b9b10a77a100f12ca35704e0bf2e54f625945c6087b132491dec45b4ed6 20.97MB / 64.22MB 2.6s
+#9 sha256:2f7d4123c6cd993c53921e2aa65ed88793bca37fc8b812d3b5c1079b9562cebe 5.24MB / 86.63MB 2.7s
+#9 sha256:7fea2228218a869ae6619766dc4aae2d5e251700ebac01541d63cafea4bc7fc7 2.10MB / 23.63MB 2.6s
+#9 sha256:51fb0b9b10a77a100f12ca35704e0bf2e54f625945c6087b132491dec45b4ed6 25.17MB / 64.22MB 3.0s
+#9 sha256:742d423df6ec83a05afd11c678f055935985f615115c46681d670810438c3732 4.19MB / 64.50MB 3.3s
+#9 sha256:51fb0b9b10a77a100f12ca35704e0bf2e54f625945c6087b132491dec45b4ed6 29.36MB / 64.22MB 3.6s
+#9 sha256:51fb0b9b10a77a100f12ca35704e0bf2e54f625945c6087b132491dec45b4ed6 34.60MB / 64.22MB 4.2s
+#9 sha256:51fb0b9b10a77a100f12ca35704e0bf2e54f625945c6087b132491dec45b4ed6 38.80MB / 64.22MB 4.7s
+#9 sha256:7fea2228218a869ae6619766dc4aae2d5e251700ebac01541d63cafea4bc7fc7 4.19MB / 23.63MB 4.4s
+#9 sha256:51fb0b9b10a77a100f12ca35704e0bf2e54f625945c6087b132491dec45b4ed6 42.99MB / 64.22MB 5.1s
+#9 sha256:2f7d4123c6cd993c53921e2aa65ed88793bca37fc8b812d3b5c1079b9562cebe 10.49MB / 86.63MB 5.3s
+#9 sha256:51fb0b9b10a77a100f12ca35704e0bf2e54f625945c6087b132491dec45b4ed6 48.23MB / 64.22MB 5.6s
+#9 sha256:51fb0b9b10a77a100f12ca35704e0bf2e54f625945c6087b132491dec45b4ed6 52.43MB / 64.22MB 6.0s
+#9 sha256:7fea2228218a869ae6619766dc4aae2d5e251700ebac01541d63cafea4bc7fc7 6.29MB / 23.63MB 5.9s
+#9 sha256:51fb0b9b10a77a100f12ca35704e0bf2e54f625945c6087b132491dec45b4ed6 56.62MB / 64.22MB 6.5s
+#9 sha256:742d423df6ec83a05afd11c678f055935985f615115c46681d670810438c3732 8.39MB / 64.50MB 6.3s
+#9 sha256:51fb0b9b10a77a100f12ca35704e0bf2e54f625945c6087b132491dec45b4ed6 61.87MB / 64.22MB 6.9s
+#9 sha256:51fb0b9b10a77a100f12ca35704e0bf2e54f625945c6087b132491dec45b4ed6 64.22MB / 64.22MB 7.2s done
+#9 sha256:2f7d4123c6cd993c53921e2aa65ed88793bca37fc8b812d3b5c1079b9562cebe 15.73MB / 86.63MB 7.2s
+#9 sha256:7fea2228218a869ae6619766dc4aae2d5e251700ebac01541d63cafea4bc7fc7 8.39MB / 23.63MB 7.1s
+#9 sha256:db86109db3a878cad2671ab822c9b43afbab6a5e1a67658d760dc0b15e7b75d5 0B / 48.38MB 0.2s
+#9 sha256:db86109db3a878cad2671ab822c9b43afbab6a5e1a67658d760dc0b15e7b75d5 4.19MB / 48.38MB 0.8s
+#9 sha256:db86109db3a878cad2671ab822c9b43afbab6a5e1a67658d760dc0b15e7b75d5 8.39MB / 48.38MB 1.2s
+#9 sha256:7fea2228218a869ae6619766dc4aae2d5e251700ebac01541d63cafea4bc7fc7 10.49MB / 23.63MB 8.4s
+#9 sha256:742d423df6ec83a05afd11c678f055935985f615115c46681d670810438c3732 12.58MB / 64.50MB 8.9s
+#9 sha256:db86109db3a878cad2671ab822c9b43afbab6a5e1a67658d760dc0b15e7b75d5 12.58MB / 48.38MB 1.7s
+#9 sha256:2f7d4123c6cd993c53921e2aa65ed88793bca37fc8b812d3b5c1079b9562cebe 20.97MB / 86.63MB 9.0s
+#9 sha256:db86109db3a878cad2671ab822c9b43afbab6a5e1a67658d760dc0b15e7b75d5 16.78MB / 48.38MB 2.1s
+#9 sha256:7fea2228218a869ae6619766dc4aae2d5e251700ebac01541d63cafea4bc7fc7 12.58MB / 23.63MB 9.5s
+#9 sha256:db86109db3a878cad2671ab822c9b43afbab6a5e1a67658d760dc0b15e7b75d5 20.97MB / 48.38MB 2.6s
+#9 sha256:db86109db3a878cad2671ab822c9b43afbab6a5e1a67658d760dc0b15e7b75d5 25.17MB / 48.38MB 3.0s
+#9 sha256:2f7d4123c6cd993c53921e2aa65ed88793bca37fc8b812d3b5c1079b9562cebe 26.21MB / 86.63MB 10.5s
+#9 sha256:7fea2228218a869ae6619766dc4aae2d5e251700ebac01541d63cafea4bc7fc7 14.68MB / 23.63MB 10.5s
+#9 sha256:742d423df6ec83a05afd11c678f055935985f615115c46681d670810438c3732 16.78MB / 64.50MB 10.8s
+#9 sha256:db86109db3a878cad2671ab822c9b43afbab6a5e1a67658d760dc0b15e7b75d5 28.31MB / 48.38MB 3.8s
+#9 sha256:7fea2228218a869ae6619766dc4aae2d5e251700ebac01541d63cafea4bc7fc7 16.78MB / 23.63MB 11.4s
+#9 sha256:db86109db3a878cad2671ab822c9b43afbab6a5e1a67658d760dc0b15e7b75d5 31.46MB / 48.38MB 4.4s
+#9 sha256:2f7d4123c6cd993c53921e2aa65ed88793bca37fc8b812d3b5c1079b9562cebe 31.46MB / 86.63MB 11.7s
+#9 sha256:db86109db3a878cad2671ab822c9b43afbab6a5e1a67658d760dc0b15e7b75d5 34.60MB / 48.38MB 4.8s
+#9 sha256:742d423df6ec83a05afd11c678f055935985f615115c46681d670810438c3732 20.97MB / 64.50MB 12.3s
+#9 sha256:7fea2228218a869ae6619766dc4aae2d5e251700ebac01541d63cafea4bc7fc7 18.87MB / 23.63MB 12.2s
+#9 sha256:db86109db3a878cad2671ab822c9b43afbab6a5e1a67658d760dc0b15e7b75d5 37.75MB / 48.38MB 5.4s
+#9 sha256:2f7d4123c6cd993c53921e2aa65ed88793bca37fc8b812d3b5c1079b9562cebe 36.70MB / 86.63MB 12.8s
+#9 sha256:7fea2228218a869ae6619766dc4aae2d5e251700ebac01541d63cafea4bc7fc7 20.97MB / 23.63MB 12.9s
+#9 sha256:db86109db3a878cad2671ab822c9b43afbab6a5e1a67658d760dc0b15e7b75d5 40.89MB / 48.38MB 5.9s
+#9 sha256:742d423df6ec83a05afd11c678f055935985f615115c46681d670810438c3732 25.17MB / 64.50MB 13.7s
+#9 sha256:db86109db3a878cad2671ab822c9b43afbab6a5e1a67658d760dc0b15e7b75d5 44.04MB / 48.38MB 6.5s
+#9 sha256:2f7d4123c6cd993c53921e2aa65ed88793bca37fc8b812d3b5c1079b9562cebe 41.94MB / 86.63MB 13.8s
+#9 sha256:7fea2228218a869ae6619766dc4aae2d5e251700ebac01541d63cafea4bc7fc7 23.07MB / 23.63MB 13.7s
+#9 sha256:7fea2228218a869ae6619766dc4aae2d5e251700ebac01541d63cafea4bc7fc7 23.63MB / 23.63MB 13.8s done
+#9 sha256:db86109db3a878cad2671ab822c9b43afbab6a5e1a67658d760dc0b15e7b75d5 48.23MB / 48.38MB 7.1s
+#9 sha256:db86109db3a878cad2671ab822c9b43afbab6a5e1a67658d760dc0b15e7b75d5 48.38MB / 48.38MB 7.1s done
+#9 extracting sha256:db86109db3a878cad2671ab822c9b43afbab6a5e1a67658d760dc0b15e7b75d5
+#9 sha256:2f7d4123c6cd993c53921e2aa65ed88793bca37fc8b812d3b5c1079b9562cebe 47.19MB / 86.63MB 14.9s
+#9 sha256:742d423df6ec83a05afd11c678f055935985f615115c46681d670810438c3732 29.36MB / 64.50MB 14.7s
+#9 extracting sha256:db86109db3a878cad2671ab822c9b43afbab6a5e1a67658d760dc0b15e7b75d5 0.6s done
+#9 extracting sha256:7fea2228218a869ae6619766dc4aae2d5e251700ebac01541d63cafea4bc7fc7
+#9 extracting sha256:7fea2228218a869ae6619766dc4aae2d5e251700ebac01541d63cafea4bc7fc7 0.2s done
+#9 sha256:2f7d4123c6cd993c53921e2aa65ed88793bca37fc8b812d3b5c1079b9562cebe 52.43MB / 86.63MB 15.5s
+#9 sha256:742d423df6ec83a05afd11c678f055935985f615115c46681d670810438c3732 33.55MB / 64.50MB 15.3s
+#9 sha256:2f7d4123c6cd993c53921e2aa65ed88793bca37fc8b812d3b5c1079b9562cebe 57.67MB / 86.63MB 16.1s
+#9 sha256:742d423df6ec83a05afd11c678f055935985f615115c46681d670810438c3732 37.75MB / 64.50MB 15.9s
+#9 sha256:2f7d4123c6cd993c53921e2aa65ed88793bca37fc8b812d3b5c1079b9562cebe 62.91MB / 86.63MB 16.7s
+#9 sha256:742d423df6ec83a05afd11c678f055935985f615115c46681d670810438c3732 41.94MB / 64.50MB 16.5s
+#9 sha256:2f7d4123c6cd993c53921e2aa65ed88793bca37fc8b812d3b5c1079b9562cebe 68.16MB / 86.63MB 17.3s
+#9 sha256:742d423df6ec83a05afd11c678f055935985f615115c46681d670810438c3732 46.14MB / 64.50MB 17.1s
+#9 sha256:742d423df6ec83a05afd11c678f055935985f615115c46681d670810438c3732 51.38MB / 64.50MB 17.6s
+#9 sha256:742d423df6ec83a05afd11c678f055935985f615115c46681d670810438c3732 55.57MB / 64.50MB 18.0s
+#9 sha256:2f7d4123c6cd993c53921e2aa65ed88793bca37fc8b812d3b5c1079b9562cebe 73.40MB / 86.63MB 18.3s
+#9 sha256:742d423df6ec83a05afd11c678f055935985f615115c46681d670810438c3732 60.82MB / 64.50MB 18.6s
+#9 sha256:2f7d4123c6cd993c53921e2aa65ed88793bca37fc8b812d3b5c1079b9562cebe 79.69MB / 86.63MB 19.1s
+#9 sha256:742d423df6ec83a05afd11c678f055935985f615115c46681d670810438c3732 64.50MB / 64.50MB 19.1s done
+#9 extracting sha256:742d423df6ec83a05afd11c678f055935985f615115c46681d670810438c3732
+#9 sha256:2f7d4123c6cd993c53921e2aa65ed88793bca37fc8b812d3b5c1079b9562cebe 84.93MB / 86.63MB 19.5s
+#9 sha256:2f7d4123c6cd993c53921e2aa65ed88793bca37fc8b812d3b5c1079b9562cebe 86.63MB / 86.63MB 19.7s done
+#9 extracting sha256:742d423df6ec83a05afd11c678f055935985f615115c46681d670810438c3732 0.8s done
+#9 DONE 20.0s
+
+#9 [build 1/6] FROM docker.io/library/golang:1.26-bookworm@sha256:9fdc884aacc3bec89b20ffc69f4bb369c78210e3e4f600387b5128b12c199f81
+#9 extracting sha256:2f7d4123c6cd993c53921e2aa65ed88793bca37fc8b812d3b5c1079b9562cebe
+#9 extracting sha256:2f7d4123c6cd993c53921e2aa65ed88793bca37fc8b812d3b5c1079b9562cebe 0.9s done
+#9 DONE 20.9s
+
+#9 [build 1/6] FROM docker.io/library/golang:1.26-bookworm@sha256:9fdc884aacc3bec89b20ffc69f4bb369c78210e3e4f600387b5128b12c199f81
+#9 extracting sha256:51fb0b9b10a77a100f12ca35704e0bf2e54f625945c6087b132491dec45b4ed6
+#9 extracting sha256:51fb0b9b10a77a100f12ca35704e0bf2e54f625945c6087b132491dec45b4ed6 1.5s done
+#9 DONE 22.4s
+
+#9 [build 1/6] FROM docker.io/library/golang:1.26-bookworm@sha256:9fdc884aacc3bec89b20ffc69f4bb369c78210e3e4f600387b5128b12c199f81
+#9 extracting sha256:3e35da6b5d7d5d76536a207570cdc891aa2bb390ca5dd4cab0c2a3b9a67ea581 done
+#9 extracting sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1 done
+#9 DONE 22.5s
+
+#11 [build 2/6] WORKDIR /opt/gobble
+#11 DONE 0.5s
+
+#12 [build 3/6] COPY . .
+#12 DONE 0.1s
+
+#13 [build 4/6] RUN test -d .git && go mod download all
+#13 DONE 2.0s
+
+#14 [build 5/6] RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /usr/local/bin/gobble ./cmd/gobble
+#14 DONE 5.2s
+
+#15 [build 6/6] RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /launchers/linux-amd64/gobble ./cmd/gobble-container  && CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o /launchers/windows-amd64/gobble.exe ./cmd/gobble-container  && CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o /launchers/darwin-amd64/gobble ./cmd/gobble-container  && CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o /launchers/darwin-arm64/gobble ./cmd/gobble-container
+#15 DONE 7.1s
+
+#16 [runtime 2/7] COPY --from=build /opt/gobble /opt/gobble
+#16 DONE 0.1s
+
+#7 [docker-client 1/1] FROM docker.io/library/docker:28-cli@sha256:625d9431a9f54c5a2bc90f24f0e1c3d55b1349fd857dd85035f98c2c9acbdd4d
+#7 CACHED
+
+#17 [runtime 3/7] COPY --from=build /go/pkg/mod /go/pkg/mod
+#17 DONE 0.2s
+
+#18 [runtime 4/7] COPY --from=build /usr/local/bin/gobble /usr/local/bin/gobble
+#18 DONE 0.1s
+
+#19 [runtime 5/7] COPY --from=docker-client /usr/local/bin/docker /usr/local/bin/docker
+#19 DONE 0.2s
+
+#20 [runtime 6/7] RUN git config --system --add safe.directory /opt/gobble  && git config --system --add safe.directory /gobble/project  && mkdir -p /gobble/project
+#20 DONE 0.4s
+
+#21 [runtime 7/7] WORKDIR /gobble/project
+#21 DONE 0.0s
+
+#22 exporting to image
+#22 exporting layers
+#22 exporting layers 1.1s done
+#22 exporting manifest sha256:ea7146873c80419bd3f666394266333165f2bc746ba68818453ca105cd377380 done
+#22 exporting config sha256:49d27fa057da2c0c83f4e421cab0b1daacb92fa91df85bf4f8c5200657c0aa0f done
+#22 exporting attestation manifest sha256:fb779cb75b54ff0596b6fb5adf684d58673e090191fb9fc83e550f33040868b7 done
+#22 exporting manifest list sha256:ebbc987ef351361afdc2c82accb115a579be2cbde71073fdd8ff6d3712201df0 done
+#22 naming to docker.io/library/gobble-runtime:stage6-7fe3d5c done
+#22 DONE 1.1s
+
+ [33m2 warnings found (use docker --debug to expand):
+[0m - FromPlatformFlagConstDisallowed: FROM --platform flag should not use constant value "linux/amd64" (line 5)
+ - FromPlatformFlagConstDisallowed: FROM --platform flag should not use constant value "linux/amd64" (line 19)

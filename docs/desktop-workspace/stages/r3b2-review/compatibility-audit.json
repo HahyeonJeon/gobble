@@ -1,0 +1,36 @@
+{
+  "frozenSchemaFiles": {
+    "app/contracts/schema/v10.json": true,
+    "app/contracts/schema/v1.json": true,
+    "app/contracts/schema/v6.json": true,
+    "app/contracts/schema/v7.json": true,
+    "app/contracts/schema/v8.json": true,
+    "app/contracts/schema/v4.json": true,
+    "app/contracts/schema/v5.json": true,
+    "app/contracts/schema/v9.json": true,
+    "app/contracts/schema/v2.json": true,
+    "app/contracts/schema/v3.json": true
+  },
+  "unchangedPublishedShapes": {
+    "RunPresentationSchema": true,
+    "ObservedEvidenceSchema": true,
+    "SharedToolRequestSchema": true,
+    "SharedToolRequestV4Schema": true,
+    "SharedToolRequestV5Schema": true
+  },
+  "baselineNonAppSourcesChecked": 78,
+  "changedNonAppSources": [],
+  "unchangedProductManifests": {
+    "app/package.json": true,
+    "app/desktop/package.json": true,
+    "app/contracts/package.json": true,
+    "app/package-lock.json": true
+  },
+  "absentProductDependencies": {
+    "plotly": true,
+    "@xyflow/react": true,
+    "@dagrejs/dagre": true
+  },
+  "note": "Comparison covers this checkpoint against a baseline containing pre-existing changes. v8 nested-reader exact shape is also tested against published v10. New exports do not rewrite old bundles.",
+  "status": "passed"
+}

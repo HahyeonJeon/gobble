@@ -1,0 +1,14 @@
+
+> gobble-app-workspace@0.1.0 typecheck
+> tsc -p contracts/tsconfig.json && npm run typecheck --workspace @gobble/desktop && tsc -p tsconfig.tools.json
+
+
+> @gobble/desktop@0.1.0 typecheck
+> tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && tsc -p tsconfig.renderer.json
+
+desktop/tests/dependency-reference.test.ts(103,55): error TS2322: Type '{ schemaVersion: 4; selection: { kind: "run-group"; coordinateSpace: "observed-authored-task-group"; taskId: string; }; projectId: string; resource: { kind: "run"; runRef: string; }; dataRevision: string; } | { ...; } | { ...; }' is not assignable to type '{ projectId: string; resource: { kind: "run"; runRef: string; }; dataRevision: string; schemaVersion: 4; selection: { kind: "run-group"; taskId: string; coordinateSpace: "observed-authored-task-group"; } | { ...; }; } | { ...; } | { ...; }'.
+  Type '{ schemaVersion: 4; selection: { kind: "run-group"; coordinateSpace: "observed-authored-task-group"; taskId: string; }; origin?: { surfaceId: string; }; projectId: string; resource: { kind: "file"; resourceId: string; } | { ...; } | { ...; }; dataRevision: string; }' is not assignable to type '{ projectId: string; resource: { kind: "run"; runRef: string; }; dataRevision: string; schemaVersion: 4; selection: { kind: "run-group"; taskId: string; coordinateSpace: "observed-authored-task-group"; } | { ...; }; } | { ...; } | { ...; }'.
+    Type '{ schemaVersion: 4; selection: { kind: "run-group"; coordinateSpace: "observed-authored-task-group"; taskId: string; }; origin?: { surfaceId: string; }; projectId: string; resource: { kind: "file"; resourceId: string; } | { ...; } | { ...; }; dataRevision: string; }' is not assignable to type '{ projectId: string; resource: { kind: "run"; runRef: string; }; dataRevision: string; schemaVersion: 4; selection: { kind: "run-group"; taskId: string; coordinateSpace: "observed-authored-task-group"; } | { ...; }; }'.
+      Types of property 'resource' are incompatible.
+        Type '{ kind: "file"; resourceId: string; } | { kind: "run"; runRef: string; } | { kind: "log"; runRef: string; taskId: string; attempt: number; }' is not assignable to type '{ kind: "run"; runRef: string; }'.
+          Property 'runRef' is missing in type '{ kind: "file"; resourceId: string; }' but required in type '{ kind: "run"; runRef: string; }'.

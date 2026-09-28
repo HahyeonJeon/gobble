@@ -1,0 +1,14 @@
+
+Running 7 tests using 1 worker
+
+(node:12875) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 desktop/tests/electron/foundation.spec.ts:69:1 › built app renders in English through a sandboxed named bridge (2.5s)
+  ✓  2 desktop/tests/electron/foundation.spec.ts:113:1 › native folder selection registers a real Project and serves its files (895ms)
+  ✓  3 desktop/tests/electron/foundation.spec.ts:152:1 › real IPC rejects bad payloads and an unregistered window (1.1s)
+  ✓  4 desktop/tests/electron/foundation.spec.ts:178:1 › blocks renderer code injection, frames, external navigation and new windows (876ms)
+  ✓  5 desktop/tests/electron/foundation.spec.ts:202:1 › macOS window close preserves the host and activation recreates an isolated window (1.4s)
+  ✓  6 desktop/tests/electron/foundation.spec.ts:216:1 › a second launch reuses the current profile owner (991ms)
+  ✓  7 desktop/tests/electron/run-launch-restored.spec.ts:6:1 › Run launch: retained Flow, exact task discussion and compact Chat survive App restart (2.5s)
+
+  7 passed (10.8s)

@@ -1,0 +1,38 @@
+
+Running 1 test using 1 worker
+
+(node:4069) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 desktop/tests/electron/workspace.spec.ts:394:1 › selection overview finds hidden sources, More returns keyboard focus, and empty panes target navigation (6.5s)
+
+
+  1) desktop/tests/electron/workspace.spec.ts:394:1 › selection overview finds hidden sources, More returns keyboard focus, and empty panes target navigation 
+
+    Error: expect(locator).toHaveAttribute(expected) failed
+
+    Locator: getByRole('region', { name: 'Secondary pane', exact: true }).locator('.surface-view')
+    Expected: "true"
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toHaveAttribute" getByRole('region', { name: 'Secondary pane', exact: true }).locator('.surface-view') with timeout 5000ms
+      - waiting for getByRole('region', { name: 'Secondary pane', exact: true }).locator('.surface-view')
+
+
+       at support.ts:64
+
+      62 | export async function readyView(page: Page, pane = 'Primary pane') {
+      63 |   const scope = page.getByRole('region', { name: pane, exact: true });
+    > 64 |   await expect(scope.locator('.surface-view')).toHaveAttribute('data-ready', 'true');
+         |                                                ^
+      65 |   return scope;
+      66 | }
+      67 |
+        at readyView (/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/support.ts:64:48)
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/workspace.spec.ts:442:9
+
+    Error Context: test-results/electron/workspace-selection-overvi-5aaff-pty-panes-target-navigation/error-context.md
+
+  1 failed
+    desktop/tests/electron/workspace.spec.ts:394:1 › selection overview finds hidden sources, More returns keyboard focus, and empty panes target navigation 

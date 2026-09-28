@@ -1,0 +1,13 @@
+{
+  "state": "completed",
+  "model": "gpt-6-astra",
+  "toolset": "shared-views-v8",
+  "referenceCount": 1,
+  "questionCount": 1,
+  "arrivalPreservesUserState": true,
+  "showPreservesUserState": true,
+  "returnPreservesUserState": true,
+  "returnedPage": "2",
+  "profile": "/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-r3c3-live-5OgbjM/profile",
+  "runtime": "real pinned Codex 0.153.4 with a byte-forwarding diagnostic wrapper; no scripted provider replies"
+}

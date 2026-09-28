@@ -1,0 +1,12 @@
+ok  	github.com/HahyeonJeon/gobble/internal/engine	13.571s
+ok  	github.com/HahyeonJeon/gobble/internal/engine/exec	0.210s
+--- FAIL: TestPackPrintpipeArtifact (3.24s)
+    pack_test.go:269: packed compose = code 1 stderr 
+--- FAIL: TestPackHostpipeEmptyInspectProtocol (3.29s)
+    pack_test.go:364: exit = 1
+        stderr: 
+FAIL
+FAIL	github.com/HahyeonJeon/gobble/cmd/gobble	148.037s
+?   	github.com/HahyeonJeon/gobble/internal/preparation	[no test files]
+ok  	github.com/HahyeonJeon/gobble/internal/containerenv	0.081s
+FAIL

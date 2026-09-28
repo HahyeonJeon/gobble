@@ -1,0 +1,9 @@
+{
+  "date": "2026-09-08",
+  "head": "7fe3d5c9e10d0cc104a15b6e7aa3def0d15b98f1",
+  "baseline": "R3a3 baseline plus accepted implementation subject",
+  "verifiedFiles": 245,
+  "hashMismatches": [],
+  "brokenProposalLinks": [],
+  "scope": "Only design/status documents and a standalone synthetic sketch changed for R3b. No production App, engine, runtime profile or dependency changes."
+}

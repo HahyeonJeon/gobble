@@ -1,0 +1,51 @@
+
+Running 1 test using 1 worker
+
+(node:19907) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 desktop/tests/electron/pipeline-creation.spec.ts:10:3 › Creation: chosen data, exact discussion, restart and launch (1.5m)
+
+
+  1) desktop/tests/electron/pipeline-creation.spec.ts:10:3 › Creation: chosen data, exact discussion, restart and launch 
+
+    Error: electron.launch: Process failed to launch!
+    Call log:
+      - <launching> /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron -r /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/node_modules/playwright-core/lib/server/electron/loader.js --inspect=0 --remote-debugging-port=0 /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop --gobble-profile=/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-creation-ui-d6U9YJ/profile
+      - <launched> pid=19915
+      - [pid=19915][err] Debugger listening on ws://127.0.0.1:57351/c9c26ba3-a337-4fa1-b2b4-1a5608998a8d
+      - [pid=19915][err] For help, see: https://nodejs.org/learn/getting-started/debugging
+      - <ws connecting> ws://127.0.0.1:57351/c9c26ba3-a337-4fa1-b2b4-1a5608998a8d
+      - [pid=19915][err] Debugger attached.
+      - <ws connected> ws://127.0.0.1:57351/c9c26ba3-a337-4fa1-b2b4-1a5608998a8d
+      - [pid=19915][err] App threw an error during load
+      - [pid=19915][err] ReferenceError: Cannot access 'PipelineReviewContextSchema' before initialization
+      - [pid=19915][err]     at file:///Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/out/main/index.js:5236:35
+      - [pid=19915][err]     at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+      - [pid=19915][err]     at async node:internal/modules/esm/loader:647:26
+      - [pid=19915][err]     at async loadApplicationPackage (file:///Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/node_modules/electron/dist/Electron.app/Contents/Resources/default_app.asar/main.js:133:9)
+      - [pid=19915][err]     at async file:///Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/node_modules/electron/dist/Electron.app/Contents/Resources/default_app.asar/main.js:277:9
+      - [pid=19915] <kill>
+      - [pid=19915] <will force kill>
+      - [pid=19915] exception while trying to kill process: Error: kill EPERM
+      - <ws disconnected> ws://127.0.0.1:57351/c9c26ba3-a337-4fa1-b2b4-1a5608998a8d code=1006 reason=
+      - [pid=19915] <process did exit: exitCode=null, signal=SIGTERM>
+      - [pid=19915] starting temporary directories cleanup
+      - [pid=19915] finished temporary directories cleanup
+
+
+       at support.ts:19
+
+      17 |     ),
+      18 |   );
+    > 19 |   const application = await electron.launch({
+         |                       ^
+      20 |     args: [resolve('desktop'), '--gobble-profile=' + profile],
+      21 |     env: { ...env, ...extraEnv },
+      22 |   });
+        at launch (/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/support.ts:19:23)
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/pipeline-creation.spec.ts:46:33
+
+    Error Context: test-results/p5a-feedback-2/pipeline-creation-Creation-63435-scussion-restart-and-launch/error-context.md
+
+  1 failed
+    desktop/tests/electron/pipeline-creation.spec.ts:10:3 › Creation: chosen data, exact discussion, restart and launch 

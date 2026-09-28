@@ -1,0 +1,33 @@
+
+Running 1 test using 1 worker
+
+(node:21667) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 desktop/tests/electron/pipeline-creation.spec.ts:10:3 › Creation: chosen data, exact discussion, restart and launch (5.2m)
+
+
+  1) desktop/tests/electron/pipeline-creation.spec.ts:10:3 › Creation: chosen data, exact discussion, restart and launch 
+
+    TimeoutError: locator.click: Timeout 30000ms exceeded.
+    Call log:
+      - waiting for getByRole('region', { name: 'Run preparation' }).getByRole('button', { name: 'Prepare run', exact: true })
+
+
+       at run-feedback-scenario.ts:58
+
+      56 |   await review.getByRole('button', { name: 'Review a new analysis →', exact: true }).click();
+      57 |   const prep = page.getByRole('region', { name: 'Run preparation' });
+    > 58 |   await prep.getByRole('button', { name: 'Prepare run', exact: true }).click();
+         |                                                                        ^
+      59 |   await expect(prep.getByRole('button', { name: 'Check data and tools', exact: true })).toBeVisible(
+      60 |     { timeout: 150000 },
+      61 |   );
+        at verifyRunFollowUp (/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/run-feedback-scenario.ts:58:72)
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/pipeline-creation.spec.ts:277:15
+
+    Error Context: test-results/p5a-feedback-4/pipeline-creation-Creation-63435-scussion-restart-and-launch/error-context.md
+
+  Slow test file: desktop/tests/electron/pipeline-creation.spec.ts (5.2m)
+  Consider running tests from slow files in parallel. See: https://playwright.dev/docs/test-parallel
+  1 failed
+    desktop/tests/electron/pipeline-creation.spec.ts:10:3 › Creation: chosen data, exact discussion, restart and launch 

@@ -5,8 +5,9 @@
 Gobble gives coding agents and Go authors a typed pipeline engine with
 machine-readable planning, execution, inspection, failure, and recovery. It also
 provides five local assay products built on that engine. The first application
-goal is a local workspace where users and agents design, execute, control, and
-monitor pipelines together. Gobble supplies the core engine and remains a
+goal is a Project-centered local workspace where users and multiple attached
+agents design, execute, control, and monitor pipelines together. Files, plans,
+runs, results, shared views and decisions belong to the Project. Gobble supplies the core engine and remains a
 standalone Linux CLI tool. The recommended first delivery uses a thin Electron
 host with React/TypeScript. The first integrated agent target is OpenAI through
 ChatGPT subscription sign-in using the official Codex runtime integration.
@@ -51,8 +52,8 @@ subscription integration boundary. These capabilities are not yet implemented.
 
 The agent can open analysis views to present evidence, ask contextual questions,
 or inspect results itself. Shared surfaces and direct user controls are central
-to the product; layout and attention behavior require discussion before UI
-implementation. See [Agent-centered workspace](../feature/agent-workspace.md).
+to the product; the Project-centered concept, shared panels and selection-based discussion are
+user-approved; detailed contracts and interactive evidence precede UI acceptance. See [Agent-centered workspace](../feature/agent-workspace.md).
 React views can be developed in a browser without making a separately shipped
 web app a prerequisite for the desktop outcome.
 

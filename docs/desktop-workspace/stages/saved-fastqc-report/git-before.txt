@@ -1,0 +1,85 @@
+ M ../.gobbi/projects/gobble/memory/design/README.md
+ M ../.gobbi/projects/gobble/memory/design/architecture/application.md
+ M ../.gobbi/projects/gobble/memory/design/architecture/overview.md
+ M ../.gobbi/projects/gobble/memory/design/architecture/system.md
+ M ../.gobbi/projects/gobble/memory/design/feature/agent-workspace.md
+ M ../.gobbi/projects/gobble/memory/design/process/product.md
+ M ../.gobbi/projects/gobble/memory/design/roadmap/project.md
+ M ../assets/modules/fastqc/product.go
+ M ../assets/modules/trim-galore/trim_galore.go
+ M ../cmd/gobble/driver.go
+ M ../cmd/gobble/help.go
+ M ../cmd/gobble/main.go
+ M ../cmd/gobble/parse.go
+ M ../compose.go
+ M ../distribution/runtime/Dockerfile
+ M ../docs/docker-execution.md
+ M ../graph.go
+ M ../internal/engine/checkpoint.go
+ M ../internal/engine/exec.go
+ M ../internal/engine/exec/docker.go
+ M ../internal/engine/exec/logs.go
+ M ../internal/engine/exec/logs_test.go
+ M ../internal/engine/exec/submission.go
+ M ../internal/engine/exec/submission_test.go
+ M ../internal/engine/occupancy.go
+ M ../internal/engine/release.go
+ M ../internal/engine/resume.go
+ M ../internal/engine/run.go
+ M ../internal/engine/state.go
+ M ../internal/engine/stop.go
+ M ../pipeline.go
+ M ../spec.go
+?? ../.github/workflows/desktop.yml
+?? ../.gobbi/projects/gobble/memory/design/architecture/project-workspace-contract.md
+?? ../.gobbi/projects/gobble/memory/design/architecture/workspace-domain.md
+?? ./
+?? ../assets/modules/trim-galore/inspection_test.go
+?? ../cmd/gobble-service/
+?? ../cmd/gobble/creation.go
+?? ../cmd/gobble/creation_test.go
+?? ../cmd/gobble/output_evidence.go
+?? ../cmd/gobble/output_evidence_test.go
+?? ../cmd/gobble/prepared_continuation.go
+?? ../cmd/gobble/prepared_continuation_test.go
+?? ../cmd/gobble/prepared_review.go
+?? ../cmd/gobble/prepared_run.go
+?? ../docs/desktop-workspace/
+?? ../inspection_settings.go
+?? ../internal/appservice/
+?? ../internal/engine/admission.go
+?? ../internal/engine/admission_test.go
+?? ../internal/engine/continuation_admission.go
+?? ../internal/engine/continuation_history.go
+?? ../internal/engine/continuation_history_test.go
+?? ../internal/engine/continuation_lifecycle_test.go
+?? ../internal/engine/continuation_review.go
+?? ../internal/engine/continuation_test.go
+?? ../internal/engine/exec/installed_images.go
+?? ../internal/engine/exec/installed_images_test.go
+?? ../internal/engine/filelock.go
+?? ../internal/engine/filelock_test.go
+?? ../internal/engine/output_evidence.go
+?? ../internal/engine/output_evidence_test.go
+?? ../internal/engine/pipeline_creation.go
+?? ../internal/engine/pipeline_creation_test.go
+?? ../internal/engine/pipeline_review.go
+?? ../internal/engine/pipeline_review_test.go
+?? ../internal/engine/prepared.go
+?? ../internal/engine/prepared_test.go
+?? ../internal/engine/publication_collision_test.go
+?? ../internal/modulecommand/
+?? ../internal/pipelinereview/
+?? ../internal/preparation/
+?? ../launch.go
+?? ../launch_test.go
+?? ../output_evidence.go
+?? ../pipeline_creation.go
+?? ../pipeline_creation_input.go
+?? ../pipeline_creation_input_test.go
+?? ../pipeline_creation_test.go
+?? ../pipeline_inspection.go
+?? ../pipeline_inspection_test.go
+?? ../pipeline_review.go
+?? ../pipeline_review_test.go
+?? ../preparation.go

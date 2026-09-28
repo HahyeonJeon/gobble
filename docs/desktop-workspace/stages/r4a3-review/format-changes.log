@@ -1,0 +1,57 @@
+contracts/scripts/export-schema.ts 32ms (unchanged)
+contracts/src/notebook.ts 33ms
+contracts/src/workspace-migration.ts 14ms
+contracts/src/shared-context.ts 3ms (unchanged)
+contracts/src/shared-tools.ts 4ms (unchanged)
+contracts/src/workspace-document-v13.ts 1ms (unchanged)
+contracts/src/observed-reference.ts 5ms
+contracts/src/notebook-viewport.ts 3ms
+contracts/src/workspace-document.ts 11ms (unchanged)
+contracts/src/index.ts 2ms (unchanged)
+contracts/src/workspace-bridge.ts 13ms
+contracts/src/shared-tools-v8.ts 3ms (unchanged)
+contracts/src/storage/workspace-v13.json 86ms
+desktop/tests/notebook-contracts.test.ts 26ms
+desktop/tests/plot-evidence.test.ts 16ms (unchanged)
+desktop/tests/design.test.ts 9ms (unchanged)
+desktop/tests/dependency-navigation.test.ts 22ms (unchanged)
+desktop/tests/collaboration.test.ts 28ms (unchanged)
+desktop/tests/pdf-evidence.test.ts 27ms (unchanged)
+desktop/tests/dependency-reference.test.ts 18ms (unchanged)
+desktop/tests/notebook-host.test.ts 15ms
+desktop/tests/observed-evidence.test.ts 36ms (unchanged)
+desktop/tests/shared-context.test.ts 44ms
+desktop/tests/linked-interaction.test.ts 12ms (unchanged)
+desktop/tests/workspace-migration.test.ts 20ms (unchanged)
+desktop/tests/fixtures/codex.cjs 30ms
+desktop/tests/fixtures/notebook-tools.cjs 5ms
+desktop/tests/electron/questions.spec.ts 18ms (unchanged)
+desktop/tests/electron/notebook-shared.spec.ts 14ms
+desktop/tests/electron/evidence.spec.ts 23ms (unchanged)
+desktop/src/renderer/selections/SelectionToolbar.tsx 6ms
+desktop/src/renderer/workspace/views/ObservedReferencePanel.tsx 7ms
+desktop/src/renderer/workspace/views/SurfaceView.tsx 29ms (unchanged)
+desktop/src/renderer/workspace/views/notebook/NotebookSurface.tsx 2ms
+desktop/src/renderer/workspace/views/notebook/NotebookTextHighlights.tsx 3ms
+desktop/src/renderer/workspace/views/notebook/useNotebookViewport.ts 8ms
+desktop/src/renderer/workspace/views/notebook/NotebookReferenceContent.tsx 2ms
+desktop/src/renderer/workspace/views/notebook/NotebookText.tsx 5ms
+desktop/src/renderer/workspace/views/notebook/NotebookCell.tsx 7ms
+desktop/src/renderer/workspace/views/notebook/NotebookImage.tsx 9ms
+desktop/src/renderer/workspace/views/notebook/NotebookView.tsx 5ms
+desktop/src/renderer/styles/notebook.css 24ms
+desktop/src/main/index.ts 9ms
+desktop/src/main/evidence/notebook-evidence.ts 3ms
+desktop/src/main/workspace/model.ts 13ms (unchanged)
+desktop/src/main/workspace/render-session.ts 14ms
+desktop/src/main/workspace/ipc.ts 4ms (unchanged)
+desktop/src/main/workspace/observed-reference-views.ts 6ms
+desktop/src/main/workspace/controller.ts 41ms
+desktop/src/main/workspace/service.ts 7ms
+desktop/src/main/workspace/notebook-views.ts 7ms
+desktop/src/main/shared-context/notebook-observation.ts 3ms
+desktop/src/main/shared-context/observed.ts 7ms
+desktop/src/main/shared-context/host.ts 18ms
+desktop/src/main/shared-context/catalog.ts 2ms (unchanged)
+desktop/src/main/questions/service.ts 9ms
+desktop/src/preload/index.ts 6ms

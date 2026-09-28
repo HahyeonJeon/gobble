@@ -1,0 +1,12 @@
+=== RUN   TestLivePreparedLaunch
+    launch_live_test.go:117: launch=accepted run= status= issue=
+    launch_live_test.go:117: launch=reconciling run= status= issue=The execution observation is unavailable. Check the same Run; do not start another.
+    launch_live_test.go:117: launch=admitted run=run_OAPIPTNF4J6CN6IKWYMBHBHAQI status=running issue=
+    launch_live_test.go:139: native service restarted; original controller remains independent
+    launch_live_test.go:117: launch=admitted run=run_OAPIPTNF4J6CN6IKWYMBHBHAQI status=running issue=
+    launch_live_test.go:175: completed snapshot={"schema_version":2,"snapshot":"eb031b636075c03bf2aa5274490cb02f","pipeline":"read_quality","run":{"id":"read_quality","status":"stopped","schema_version":2,"occupancy":{"active":false,"host":"gobble-237637978b6080dc2ea448b0","pid":7,"started":"2026-09-12T14:17:58.120997878Z","closed":"2026-09-12T14:18:01.543889171Z","live":false},"backend":"known","started":"2026-09-12T14:17:58.120997878Z","ended":"2026-09-12T14:18:01.543889171Z"},"tasks":[{"identity":"trim_galore","task_id":"trim_galore","name":"trim_galore","module":"","display":{"stage":"Trim adapters and low-quality bases"},"status":"succeeded","attempt":1,"executor":"docker","image":"community.wave.seqera.io/library/trim-galore:2.1.0--27e6376b8f6c1872@sha256:9d747504e44dbf5dfa8a2d66cbbd3bd80f897cc2e17ebe406821b4809b34a3a4","command":["trim_galore","--cores","1","--gzip","--output_dir","work/trim-galore","--basename","sample","inputs/reads.fastq.gz"],"resources":{"cpu":4,"memory":"2g"},"started":"2026-09-12T14:17:58.132826461Z","ended":"2026-09-12T14:18:00.691062921Z","reason":"ready"},{"identity":"fastqc","task_id":"fastqc","name":"fastqc","module":"","display":{"stage":"Inspect trimmed read quality"},"status":"incomplete","attempt":1,"executor":"docker","image":"quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0@sha256:e194048df39c3145d9b4e0a14f4da20b59d59250465b6f2a9cb698445fd45900","command":["fastqc","--outdir","work/fastqc","--noextract","--threads","2","work/trim-galore/sample_trimmed.fq.gz"],"resources":{"cpu":2,"memory":"1g"},"started":"2026-09-12T14:18:00.707760671Z","ended":"2026-09-12T14:18:01.537962546Z","reason":"canceled"}],"edges":[{"from":"trim_galore","to":"fastqc"}],"logs":[]}
+    catalog_test.go:19: close /var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/TestLivePreparedLaunch1885682775/001/service/catalog.lock: file already closed
+--- FAIL: TestLivePreparedLaunch (152.89s)
+FAIL
+FAIL	github.com/HahyeonJeon/gobble/internal/appservice	153.460s
+FAIL

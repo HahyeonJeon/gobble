@@ -1,0 +1,46 @@
+
+> gobble-app-workspace@0.1.0 test:electron
+> npm run build && playwright test --grep 500 real CSV|invalid scatter
+
+
+> gobble-app-workspace@0.1.0 build
+> npm run build:service && npm run build --workspace @gobble/desktop
+
+
+> gobble-app-workspace@0.1.0 build:service
+> tsx scripts/build-service.ts
+
+
+> @gobble/desktop@0.1.0 build
+> electron-vite build
+
+vite v7.3.6 building ssr environment for production...
+transforming...
+✓ 334 modules transformed.
+rendering chunks...
+out/main/index.js  393.57 kB
+✓ built in 583ms
+vite v7.3.6 building ssr environment for production...
+transforming...
+✓ 292 modules transformed.
+rendering chunks...
+out/preload/index.cjs  189.95 kB
+✓ built in 260ms
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 378 modules transformed.
+rendering chunks...
+../../out/renderer/index.html                     0.48 kB
+../../out/renderer/assets/index-nEZqeXXo.css     36.93 kB
+../../out/renderer/assets/index-DNyuRJLK.js     911.09 kB
+../../out/renderer/assets/chunk-DZLsuOxH.js   1,773.95 kB
+✓ built in 2.55s
+
+Running 2 tests using 1 worker
+
+(node:32777) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 desktop/tests/electron/scatter.spec.ts:134:1 › 500 real CSV points preserve row identity through pointer/keyboard selection, resize and reopen under production CSP (4.4s)
+  ✓  2 desktop/tests/electron/scatter.spec.ts:223:1 › an invalid scatter specification is contained while its linked table remains usable (2.6s)
+
+  2 passed (7.7s)

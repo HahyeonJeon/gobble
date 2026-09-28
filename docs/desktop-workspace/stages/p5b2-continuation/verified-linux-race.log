@@ -1,0 +1,7 @@
+ok  	github.com/HahyeonJeon/gobble/internal/engine	19.271s
+ok  	github.com/HahyeonJeon/gobble/internal/engine/exec	1.180s
+?   	github.com/HahyeonJeon/gobble/internal/preparation	[no test files]
+ok  	github.com/HahyeonJeon/gobble	19.940s
+ok  	github.com/HahyeonJeon/gobble/internal/appservice	3.920s
+?   	github.com/HahyeonJeon/gobble/cmd/gobble-service	[no test files]
+ok  	github.com/HahyeonJeon/gobble/cmd/gobble-container	1.091s

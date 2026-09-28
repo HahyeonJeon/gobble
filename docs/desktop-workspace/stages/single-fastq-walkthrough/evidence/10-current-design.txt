@@ -1,0 +1,76 @@
+Skip to workspace
+Read quality study
+Workspace
+Chat
+Selections
+1
+Account
+Workspace ready
+New pipeline
+Read quality study
+Analysis 1
+sample_trimmed_fastqc.html
+More
+Pipeline flow
+Managed current · Checked Sep 27, 05:00 PM
+Changes
+Discuss changes
+Refresh
+Check flow
+2 steps · 1 input · 2 connections
+Flow
+Step list
+Fit
+−
+50%
++
+reads
+file
+Trim adapters and low-quality bases
+1 input · 2 outputs
+Inspect trimmed read quality
+1 input · 2 outputs
+Input
+Step
+Selected
+Design view · select to inspect
+▸ Run review
+Prepared · No Run started
+Local engine · c7f3c4aa3576
+Local engine · 5d7b7247b407
+Local engine · 9145e5f6ecc2
+↻
+Prepare again
+fastqc · attempt 3
+More
+stderr
+stdout
+fastqc · Attempt 3
+Refresh
+Observed · 5:21:31 PM
+Started analysis of sample_trimmed.fq.gz
+Approx 5% complete for sample_trimmed.fq.gz
+Approx 10% complete for sample_trimmed.fq.gz
+Approx 15% complete for sample_trimmed.fq.gz
+Approx 20% complete for sample_trimmed.fq.gz
+Approx 25% complete for sample_trimmed.fq.gz
+Approx 30% complete for sample_trimmed.fq.gz
+Approx 35% complete for sample_trimmed.fq.gz
+Approx 40% complete for sample_trimmed.fq.gz
+Approx 45% complete for sample_trimmed.fq.gz
+Approx 50% complete for sample_trimmed.fq.gz
+Approx 55% complete for sample_trimmed.fq.gz
+Approx 60% complete for sample_trimmed.fq.gz
+Approx 65% complete for sample_trimmed.fq.gz
+Approx 70% complete for sample_trimmed.fq.gz
+Approx 75% complete for sample_trimmed.fq.gz
+Approx 80% complete for sample_trimmed.fq.gz
+Approx 85% complete for sample_trimmed.fq.gz
+Approx 90% complete for sample_trimmed.fq.gz
+Approx 95% complete for sample_trimmed.fq.gz
+Approx 100% complete for sample_trimmed.fq.gz
+
+
+Select text to discuss this stderr preview.
+Discuss selection
+Up to 4096 bytes per stream · Observation details

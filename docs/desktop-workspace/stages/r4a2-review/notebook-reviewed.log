@@ -1,0 +1,15 @@
+
+Running 8 tests using 1 worker
+
+(node:14935) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 desktop/tests/electron/notebook.spec.ts:93:1 › saved source and output attach through the existing composer, preview offline and survive source changes and restart (3.0s)
+  ✓  2 desktop/tests/electron/notebook.spec.ts:161:1 › native text drag uses exact display offsets and rejects stale or foreign image requests (995ms)
+  ✓  3 desktop/tests/electron/notebook.spec.ts:218:1 › native pointer and keyboard image selection at 150 percent captures the exact original pixels (1.2s)
+  ✓  4 desktop/tests/electron/notebook.spec.ts:283:1 › two Notebook Panes remain independent and compact and enlarged layouts retain the composer (1.7s)
+  ✓  5 desktop/tests/electron/notebook.spec.ts:327:1 › malformed sources recover explicitly and renderer replacement preserves draft and captured attachments (1.7s)
+  ✓  6 desktop/tests/electron/notebook.spec.ts:397:1 › one MiB text stays bounded, continuation keeps absolute offsets and oversized capture leaves the draft intact (1.1s)
+  ✓  7 desktop/tests/electron/notebook.spec.ts:418:1 › embedded image above generic text limits opens on demand and bounded exact capture succeeds (1.5s)
+  ✓  8 desktop/tests/electron/notebook.spec.ts:446:1 › explicit Send delivers captured Notebook text and image through the existing addressed path (2.8s)
+
+  8 passed (14.4s)

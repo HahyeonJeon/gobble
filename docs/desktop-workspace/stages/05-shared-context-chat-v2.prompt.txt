@@ -1,0 +1,37 @@
+Built-in Imagegen — Stage 5 revised Project chat concept
+Revision date: 2026-09-07
+Reference: 05-shared-context-sketch.png (earlier design concept)
+Final image: 05-shared-context-chat-v2.png
+User direction: stacked central resource Panes, right-side chat, one composer for ordinary messages and replies; no separate question/answer form.
+The image contains illustrative data and unimplemented Agent interactions.
+
+INITIAL LAYOUT REVISION
+
+Use case: product-mockup
+Asset type: Revised Gobble desktop UI design for user approval, all content illustrative.
+Primary request: Recompose the supplied Gobble concept into a Project-centered workbench with CENTRAL VERTICALLY STACKED RESOURCE PANES and a FULL-HEIGHT CHAT COLUMN ON THE RIGHT. The user explicitly rejects a separate question/answer form or panel. Use the existing screenshot only for branding, colors and visual language, not its layout.
+Composition: wide front-on desktop mockup, about 1600 by 1000. Three clear columns: left Project sidebar 12%, center resource workspace 53%, right chat 35%. No chat across the bottom of the app. The center has its own compact Project header and TWO WIDE PANES ONE ABOVE THE OTHER, separated by a horizontal resize divider. The right chat spans the entire app height and has one scrolling conversation plus ONE sticky message input at its bottom.
+Style: polished practical Electron/React app, airy but efficient, warm off-white, thin pale gray borders, dark green typography, restrained teal accents. No heavy dashboard cards, no extraneous controls. English only, legible default-state buttons, pointer not over any button. All text and labels must be crisp.
+Left sidebar: Gobble brand, Projects, Review Project selected, Files entries samples.csv and quality.png, Runs with No runs attached, Agents Researcher and Reviewer (Reviewer selected), and Account footer with ChatGPT connected. NO Questions item or questions counter.
+CENTER header: PROJECT, Review Project, small Open folder button. Upper resource pane: samples.csv tab, pin/close controls; a compact wide table Sample / Group / Read 1 with S01 Control S01_R1.fastq.gz, S02 Treatment S02_R1.fastq.gz, S03 Treatment S03_R1.fastq.gz. S02 selected with pale teal row highlight and checkbox. Footer 1 row selected, simple outlined Add to message button.
+Lower resource pane: quality.png tab with small Opened by Researcher label, a WIDE landscape gray Read quality line chart with axes; a teal rectangular selected region on the falling right part. Footer Region selected and Add to message. Pane widths equal, stacked vertically. Center contains only resource previews, never a question/answer form.
+RIGHT CHAT HEADER: Project chat, subtle 2 agents label and collapse icon. Right column uses recognizable chat conversation styling: agent messages left aligned with small letter avatar and name; user messages right aligned in softly teal-tinted bubbles; human readable timestamps and small recipient annotations. No conversation sidebar, tab bar, Questions tab or separate questions panel.
+Chat transcript (top to bottom):
+- You to Researcher: Show the samples and quality plot.
+- Researcher: I've opened both views.
+- Small quiet inline activity text: Opened samples.csv and quality.png
+- You to Reviewer: Please review this sample and region. Include two tiny attached-source chips samples.csv · S02 and quality.png · region under this user message.
+- Reviewer: Should we focus on S02 or compare the full group?
+- Under that ordinary Reviewer message, small inline Reply action, evidence links, and Awaiting your reply status. This is an ORDINARY CHAT MESSAGE, no boxed question card, no radio buttons, no option buttons, no second text field, no Send answer control.
+SINGLE CHAT COMPOSER at the bottom of the right column: a slim quoted reply strip Replying to Reviewer with a close x, then the quoted text Focus on S02 or compare the full group?; two small removable evidence chips samples.csv · S02 and quality.png · region; one multiline input containing Compare the full group, focusing on S02.; bottom controls To Reviewer, GPT-5.6-Luna and ONE teal Send button. Small footer Draft saved locally. The input is comfortably large for natural conversation and entirely contained within right chat. No other user text inputs anywhere in the screenshot.
+Constraints: This is an intentional layout redesign. Do not preserve the old bottom discussion, old side-by-side previews, old question card, old answer form or separate preview dialog. Do not invent an additional pane/window for questions, answers or attachments. Keep content and Agent membership owned by Review Project. All controls visible before hover. No credentials, email, raw IDs, protocol/debugging labels, execution controls, broad upload claims or unrelated decoration.
+
+TARGETED CHAT REFINEMENT
+
+Use case: precise-object-edit
+Refine ONLY the right Project chat column in this Gobble concept. Preserve the left sidebar, central vertically stacked resource Panes, all chart/table data, colors, sizes, controls and all other text exactly.
+1. Make the two USER messages look clearly like chat: move each "You" header, its small recipient annotation, avatar, message bubble and attached evidence chips to the RIGHT side of the chat timeline, right-aligned together, with a comfortable left inset. Keep their soft teal bubble backgrounds. Researcher and Reviewer messages stay left-aligned with their avatars on the left. Preserve the order and spacing so all messages remain visible.
+2. In the bottom single composer, the quoted question beneath "Replying to Reviewer" must be PLAIN SMALL READ-ONLY TEXT next to the teal quote line. Remove its rounded rectangular border/background so it cannot be mistaken for another input field. Keep the close x for canceling the quote.
+3. There must be exactly ONE textbox in the chat: the existing composer containing "Compare the full group, focusing on S02." Keep the attachment chips, recipient/model controls and the one Send button.
+Do not add questions panels, radio buttons, second inputs, modals, footers, annotations or any other elements. This is a design concept, not an implemented screenshot.
+

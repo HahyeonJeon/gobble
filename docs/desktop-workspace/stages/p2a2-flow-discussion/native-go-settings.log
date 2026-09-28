@@ -1,0 +1,5 @@
+=== RUN   TestLivePipelineModuleSettings
+    pipeline_inspection_test.go:332: Real Trim Galore metadata: quality 25 Phred, minimum length 40 bp; no Run.
+--- PASS: TestLivePipelineModuleSettings (62.84s)
+PASS
+ok  	github.com/HahyeonJeon/gobble/internal/appservice	63.405s

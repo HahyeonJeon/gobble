@@ -1,0 +1,18 @@
+{
+  "originalLogs": {
+    "trim_galore/_/0/1/stderr": "69cd8fc99f83e87c73389d452f5af5521d382eb4aa0daf2f7afa861d59b0a536",
+    "trim_galore/_/0/1/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "fastqc/_/0/1/stderr": "edee13b5bfe69d080b3b8e820c76176bf1f82149c2179d135951d06e4f2c93dc",
+    "fastqc/_/0/1/stdout": "d7975f9c4659719489631815dfb8831e4e9a2b65ad3a997bb32ee0a740b5e05d"
+  },
+  "finalLogs": {
+    "trim_galore/_/0/1/stderr": "69cd8fc99f83e87c73389d452f5af5521d382eb4aa0daf2f7afa861d59b0a536",
+    "trim_galore/_/0/1/stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "fastqc/_/0/3/stderr": "e9df47cc696d5f648b9a7a145ca56f0ad80fdcc9d108ee4820349c5b719f5adc",
+    "fastqc/_/0/3/stdout": "c0cf4f72e2cf07ca586fb428187a50f491bbfdb11b88e9d16eaf92d6a93930b4",
+    "fastqc/_/0/2/stderr": "87a3499bee83e773ec6ab8d43d03e1a6a367818757ce49b972b3f2780ea92bb6",
+    "fastqc/_/0/2/stdout": "d7975f9c4659719489631815dfb8831e4e9a2b65ad3a997bb32ee0a740b5e05d",
+    "fastqc/_/0/1/stderr": "edee13b5bfe69d080b3b8e820c76176bf1f82149c2179d135951d06e4f2c93dc",
+    "fastqc/_/0/1/stdout": "d7975f9c4659719489631815dfb8831e4e9a2b65ad3a997bb32ee0a740b5e05d"
+  }
+}

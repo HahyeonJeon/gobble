@@ -1,0 +1,121 @@
+{
+  "date": "2026-09-08T05:39:12.590Z",
+  "status": "passed",
+  "candidates": {
+    "simple": {
+      "measurements": [
+        {
+          "groups": 8,
+          "mountMs": 8
+        },
+        {
+          "groups": 80,
+          "mountMs": 53
+        }
+      ],
+      "heapBefore": 4701288,
+      "heapAfter": 4954772,
+      "heapDelta": 253484,
+      "cycles": 15
+    },
+    "flow": {
+      "measurements": [
+        {
+          "groups": 8,
+          "mountMs": 11
+        },
+        {
+          "groups": 80,
+          "mountMs": 74
+        }
+      ],
+      "heapBefore": 6773548,
+      "heapAfter": 7065580,
+      "heapDelta": 292032,
+      "cycles": 15
+    }
+  },
+  "scenarios": [
+    "simple/8: exact group and directed-pair keyboard selection; Delete leaves read-only topology intact.",
+    "simple/80: exact group and directed-pair keyboard selection; Delete leaves read-only topology intact.",
+    "simple: 81-group fallback; 900×650 at native 150% keeps selected target reachable; 15 unmount/remount cycles remain within 15 MiB retained-heap growth.",
+    "flow/8: exact group and directed-pair keyboard selection; Delete leaves read-only topology intact.",
+    "flow/80: exact group and directed-pair keyboard selection; Delete leaves read-only topology intact.",
+    "flow: 81-group fallback; 900×650 at native 150% keeps selected target reachable; 15 unmount/remount cycles remain within 15 MiB retained-heap growth."
+  ],
+  "errors": [],
+  "limits": "Synthetic source-checkout Electron qualification on one macOS host. No Agent, Project integration, assistive-user study, installed lifecycle or release claim.",
+  "typecheck": "passed",
+  "environment": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "versions": {
+      "node": "24.20.0",
+      "acorn": "8.18.0",
+      "ada": "4.0.0",
+      "amaro": "1.1.11",
+      "ares": "1.34.8",
+      "brotli": "1.2.0",
+      "cldr": "48.0",
+      "icu": "78.2",
+      "llhttp": "9.4.3",
+      "merve": "1.2.2",
+      "modules": "149",
+      "napi": "10",
+      "nbytes": "0.1.4",
+      "ncrypto": "0.0.1",
+      "nghttp2": "1.70.0",
+      "nghttp3": "",
+      "ngtcp2": "",
+      "openssl": "0.0.0",
+      "simdjson": "4.6.6",
+      "simdutf": "7.7.0",
+      "sqlite": "3.53.4",
+      "tz": "2025c",
+      "undici": "7.29.0",
+      "unicode": "17.0",
+      "uv": "1.52.1",
+      "uvwasi": "0.0.23",
+      "v8": "15.2.124.19-electron.0",
+      "zlib": "1.3.2.1-motley",
+      "zstd": "1.6.0",
+      "electron": "44.2.0",
+      "chrome": "152.0.7977.76"
+    },
+    "preferences": {
+      "allowRunningInsecureContent": false,
+      "contextIsolation": true,
+      "disableDialogs": false,
+      "disablePopups": false,
+      "enableBlinkFeatures": "",
+      "experimentalFeatures": false,
+      "javascript": true,
+      "nodeIntegration": false,
+      "nodeIntegrationInSubFrames": false,
+      "nodeIntegrationInWorker": false,
+      "safeDialogs": false,
+      "safeDialogsMessage": "",
+      "sandbox": true,
+      "webSecurity": true,
+      "webviewTag": false
+    },
+    "appVersion": "44.2.0"
+  },
+  "cspViolations": [],
+  "packages": {
+    "@xyflow/react": "12.11.6",
+    "@dagrejs/dagre": "3.1.1"
+  },
+  "bundleBytes": {
+    "renderer.js": 584295,
+    "renderer.css": 17745
+  },
+  "subjectHashes": {
+    "main.ts": "9dbf27f55a5db97e34a25466520f933718c67d74c5f5e2c8b7976f55e38404e3",
+    "renderer.tsx": "633503560a02212f470b7a9a50cd1fd1eb463e65d0e1fa73cee1de62cb5a660a",
+    "renderers.tsx": "d6f2dd104f197beffb54990acd09683e4440b591297d2638c1df87bc1abf399b",
+    "fixture.ts": "1882e29b24cdc7cb16b19c82cb12306b8cc24ccb1489217f477715c406456b45",
+    "style.css": "9029ac94a50e2596bcf683779d652e07d491fc2a87fe11afc21fefbe00128b3c",
+    "qualify.cjs": "abfb96f1a4d641e8525431c59f4470328f828156fec4a46a4596e31e4ea25e77"
+  }
+}

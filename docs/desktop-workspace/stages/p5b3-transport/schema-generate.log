@@ -1,0 +1,9 @@
+
+> gobble-app-workspace@0.1.0 schema:generate
+> tsx contracts/scripts/export-schema.ts
+
+npm notice
+npm notice New minor version of npm available! 11.10.1 -> 11.20.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.20.0
+npm notice To update run: npm install -g npm@11.20.0
+npm notice

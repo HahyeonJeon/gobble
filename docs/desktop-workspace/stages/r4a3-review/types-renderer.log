@@ -1,0 +1,17 @@
+
+> gobble-app-workspace@0.1.0 typecheck
+> tsc -p contracts/tsconfig.json && npm run typecheck --workspace @gobble/desktop && tsc -p tsconfig.tools.json
+
+
+> @gobble/desktop@0.1.0 typecheck
+> tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && tsc -p tsconfig.renderer.json
+
+src/renderer/workspace/views/notebook/useNotebookViewport.ts(38,39): error TS2550: Property 'findLast' does not exist on type '{ node: Node; offset: number; }[]'. Do you need to change your target library? Try changing the 'lib' compiler option to 'es2023' or later.
+src/renderer/workspace/views/notebook/useNotebookViewport.ts(38,48): error TS7006: Parameter 'item' implicitly has an 'any' type.
+npm error Lifecycle script `typecheck` failed with error:
+npm error code 2
+npm error path /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop
+npm error workspace @gobble/desktop@0.1.0
+npm error location /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop
+npm error command failed
+npm error command sh -c tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && tsc -p tsconfig.renderer.json

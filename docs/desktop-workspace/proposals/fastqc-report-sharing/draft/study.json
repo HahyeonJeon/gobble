@@ -1,0 +1,282 @@
+{
+  "reportBytes": 530039,
+  "modules": 10,
+  "scriptElements": 0,
+  "imageCount": 29,
+  "images": [
+    {
+      "alt": "FastQC",
+      "bytes": 1035,
+      "pixels": [
+        32,
+        32
+      ],
+      "embedded": true
+    },
+    {
+      "alt": "[PASS]",
+      "bytes": 1539,
+      "pixels": [
+        32,
+        32
+      ],
+      "embedded": true
+    },
+    {
+      "alt": "[FAIL]",
+      "bytes": 1284,
+      "pixels": [
+        32,
+        32
+      ],
+      "embedded": true
+    },
+    {
+      "alt": "[FAIL]",
+      "bytes": 1284,
+      "pixels": [
+        32,
+        32
+      ],
+      "embedded": true
+    },
+    {
+      "alt": "[FAIL]",
+      "bytes": 1284,
+      "pixels": [
+        32,
+        32
+      ],
+      "embedded": true
+    },
+    {
+      "alt": "[WARNING]",
+      "bytes": 1299,
+      "pixels": [
+        32,
+        32
+      ],
+      "embedded": true
+    },
+    {
+      "alt": "[PASS]",
+      "bytes": 1539,
+      "pixels": [
+        32,
+        32
+      ],
+      "embedded": true
+    },
+    {
+      "alt": "[PASS]",
+      "bytes": 1539,
+      "pixels": [
+        32,
+        32
+      ],
+      "embedded": true
+    },
+    {
+      "alt": "[FAIL]",
+      "bytes": 1284,
+      "pixels": [
+        32,
+        32
+      ],
+      "embedded": true
+    },
+    {
+      "alt": "[FAIL]",
+      "bytes": 1284,
+      "pixels": [
+        32,
+        32
+      ],
+      "embedded": true
+    },
+    {
+      "alt": "[PASS]",
+      "bytes": 1539,
+      "pixels": [
+        32,
+        32
+      ],
+      "embedded": true
+    },
+    {
+      "alt": "[OK]",
+      "bytes": 1539,
+      "pixels": [
+        32,
+        32
+      ],
+      "embedded": true
+    },
+    {
+      "alt": "[FAIL]",
+      "bytes": 1284,
+      "pixels": [
+        32,
+        32
+      ],
+      "embedded": true
+    },
+    {
+      "alt": "Per base quality graph",
+      "bytes": 35319,
+      "pixels": [
+        800,
+        600
+      ],
+      "embedded": true
+    },
+    {
+      "alt": "[FAIL]",
+      "bytes": 1284,
+      "pixels": [
+        32,
+        32
+      ],
+      "embedded": true
+    },
+    {
+      "alt": "Per Sequence quality graph",
+      "bytes": 6900,
+      "pixels": [
+        800,
+        600
+      ],
+      "embedded": true
+    },
+    {
+      "alt": "[FAIL]",
+      "bytes": 1284,
+      "pixels": [
+        32,
+        32
+      ],
+      "embedded": true
+    },
+    {
+      "alt": "Per base sequence content",
+      "bytes": 85122,
+      "pixels": [
+        800,
+        600
+      ],
+      "embedded": true
+    },
+    {
+      "alt": "[WARN]",
+      "bytes": 1299,
+      "pixels": [
+        32,
+        32
+      ],
+      "embedded": true
+    },
+    {
+      "alt": "Per sequence GC content graph",
+      "bytes": 80802,
+      "pixels": [
+        800,
+        600
+      ],
+      "embedded": true
+    },
+    {
+      "alt": "[OK]",
+      "bytes": 1539,
+      "pixels": [
+        32,
+        32
+      ],
+      "embedded": true
+    },
+    {
+      "alt": "N content graph",
+      "bytes": 40899,
+      "pixels": [
+        800,
+        600
+      ],
+      "embedded": true
+    },
+    {
+      "alt": "[OK]",
+      "bytes": 1539,
+      "pixels": [
+        32,
+        32
+      ],
+      "embedded": true
+    },
+    {
+      "alt": "Sequence length distribution",
+      "bytes": 23829,
+      "pixels": [
+        800,
+        600
+      ],
+      "embedded": true
+    },
+    {
+      "alt": "[FAIL]",
+      "bytes": 1284,
+      "pixels": [
+        32,
+        32
+      ],
+      "embedded": true
+    },
+    {
+      "alt": "Duplication level graph",
+      "bytes": 30888,
+      "pixels": [
+        800,
+        600
+      ],
+      "embedded": true
+    },
+    {
+      "alt": "[FAIL]",
+      "bytes": 1284,
+      "pixels": [
+        32,
+        32
+      ],
+      "embedded": true
+    },
+    {
+      "alt": "[OK]",
+      "bytes": 1539,
+      "pixels": [
+        32,
+        32
+      ],
+      "embedded": true
+    },
+    {
+      "alt": "Adapter graph",
+      "bytes": 59871,
+      "pixels": [
+        1035,
+        600
+      ],
+      "embedded": true
+    }
+  ],
+  "plainTextBytes": 926,
+  "externalLinks": [
+    "http://www.bioinformatics.babraham.ac.uk/projects/fastqc/"
+  ],
+  "parsedSource": "Prior sketch copy; only injected CSP differs from original report. Structural counts apply to original.",
+  "originalReport": {
+    "source": "/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-creation-ui-vJBahc/Read quality study/runs/analysis-c92704dc-27a9-4860-82db-d8ad41aa02e2/work/fastqc/sample_trimmed_fastqc.html",
+    "bytes": 529856,
+    "sha256": "55fef6b48e050ae7ebb974740f11c1b2f165b8fdeb50e11bd00f479916086f8c",
+    "data": "synthetic qualification sample, not representative research evidence"
+  },
+  "substantiveCharts": 8,
+  "substantiveChartBytes": 363630
+}

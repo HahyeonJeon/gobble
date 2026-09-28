@@ -1,0 +1,21 @@
+{
+  "base": "sha256:9145e5f6ecc26e8c8d61b7df6855d15a54371fc5f517a38029fdee4b5af5b19f",
+  "dockerClientSource": "sha256:5f3d800dd82d3bea4474b562aad5ec3dd34133b2d251da99948faa15318f55f7",
+  "imageId": "sha256:5d7b7247b407844149bc80173e8da2bf656077b827dd3f2ae9149ee490258e76",
+  "sourceFiles": [
+    "cmd/gobble/help.go",
+    "cmd/gobble/main.go",
+    "cmd/gobble/parse.go",
+    "cmd/gobble/prepared_run.go",
+    "internal/engine/admission.go",
+    "internal/engine/checkpoint.go",
+    "internal/engine/exec/docker.go",
+    "internal/engine/exec/installed_images.go",
+    "internal/engine/resume.go",
+    "internal/engine/run.go",
+    "internal/engine/state.go",
+    "internal/engine/stop.go",
+    "internal/preparation/launch.go",
+    "launch.go"
+  ]
+}

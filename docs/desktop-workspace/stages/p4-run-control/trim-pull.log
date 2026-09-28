@@ -1,0 +1,44 @@
+community.wave.seqera.io/library/trim-galore@sha256:9d747504e44dbf5dfa8a2d66cbbd3bd80f897cc2e17ebe406821b4809b34a3a4: Pulling from library/trim-galore
+202f924ed879: Pulling fs layer
+403f74b0f85e: Pulling fs layer
+bb36d6c3110d: Pulling fs layer
+0ea1a16bbe82: Pulling fs layer
+dafa2b0c44d2: Pulling fs layer
+5c0920263695: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+dec6b097362e: Pulling fs layer
+f88da01cff0b: Pulling fs layer
+92dc97a3ef36: Pulling fs layer
+10b8c00c10a5: Pulling fs layer
+17dc7ea432cc: Pulling fs layer
+030a47592a0a: Pulling fs layer
+4f4fb700ef54: Already exists
+0ea1a16bbe82: Download complete
+92dc97a3ef36: Download complete
+5c0920263695: Download complete
+030a47592a0a: Download complete
+10b8c00c10a5: Download complete
+bb36d6c3110d: Download complete
+403f74b0f85e: Download complete
+dec6b097362e: Download complete
+17dc7ea432cc: Download complete
+f88da01cff0b: Download complete
+202f924ed879: Download complete
+dafa2b0c44d2: Download complete
+dec6b097362e: Pull complete
+dafa2b0c44d2: Pull complete
+4f4fb700ef54: Pull complete
+92dc97a3ef36: Pull complete
+10b8c00c10a5: Pull complete
+bb36d6c3110d: Pull complete
+403f74b0f85e: Pull complete
+17dc7ea432cc: Pull complete
+f88da01cff0b: Pull complete
+0ea1a16bbe82: Pull complete
+5c0920263695: Pull complete
+030a47592a0a: Pull complete
+202f924ed879: Pull complete
+Digest: sha256:9d747504e44dbf5dfa8a2d66cbbd3bd80f897cc2e17ebe406821b4809b34a3a4
+Status: Downloaded newer image for community.wave.seqera.io/library/trim-galore@sha256:9d747504e44dbf5dfa8a2d66cbbd3bd80f897cc2e17ebe406821b4809b34a3a4
+community.wave.seqera.io/library/trim-galore:2.1.0--27e6376b8f6c1872@sha256:9d747504e44dbf5dfa8a2d66cbbd3bd80f897cc2e17ebe406821b4809b34a3a4

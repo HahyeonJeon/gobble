@@ -1,0 +1,8 @@
+{
+  "date": "2026-09-28",
+  "go": "go version go1.27.1 darwin/arm64",
+  "node": "v25.7.0",
+  "docker": "28.3.0 / 28.3.0",
+  "imageId": "sha256:f5f69ad6d965fcbb2217dd89a621effc4b3a60f13a113781571915fee4b0c971",
+  "nativeBinarySHA256": "b57d065cb7373ef8255e39fb95f7a39c25e6f6a49ee2f53551dcd959a55bd52b"
+}

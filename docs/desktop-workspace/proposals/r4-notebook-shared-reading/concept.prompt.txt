@@ -1,0 +1,13 @@
+Use case: ui-mockup
+Asset type: review-only Gobble desktop concept, high fidelity product interface, wide 1536x1024.
+Primary request: Show a calm, compact Project-centered bioinformatics desktop app where a User and Agent discuss exact parts of a saved Jupyter notebook. All UI English. Not a whole IDE, no landing page.
+Visual reference: preserve the existing Gobble app's restrained light UI: canvas #f6f7f4, white panels, ink #25372f, muted #65736a, teal #176967, subtle #dce2dc borders, system sans serif. Use screenshot composition proportions but Notebook content.
+Composition: 44px slim top Project bar 'RNA-seq review'. Narrow Files navigator (14% width), wide central work area (56%), right Chat (30%) with a single composer fixed at bottom. Central area two vertically stacked panes. No big page title, no left Agents list, no selection inspector sidebar, no floating modal.
+Upper central pane tab 'qc_review.ipynb'. Compact toolbar: 'Saved notebook', 'Cells', 'Focus', 'Refresh'. Notebook page consists of small markdown introduction 'Sample quality review', then code cell headed 'Cell 3 · Python' with simple code lines:
+keep = qc["mapped_pct"] >= 80
+qc.loc[keep, ["sample", "mapped_pct"]]
+Teal highlight on first line, small visible button 'Discuss selection'. Below it a fixed-width saved text output with rows S01 94.2, S02 72.4, S03 91.7 and label 'Saved output'. No run triangles or execution controls.
+Lower central pane tab 'methods.pdf', quiet compact excerpt reading 'Quality threshold' with short paragraph 'Confirm the mapping threshold before excluding samples.' No charts.
+Chat header 'Chat' and compact 'Agents 2' button. A short User bubble 'Should we revisit this threshold?' with attachment chip 'Cell 3 · Source · Line 1'. Agent bubble with text 'This line applies the cutoff. Check the saved output alongside the method.' Small authored reference card 'Researcher · Cell 3 · Line 1', action 'Show in view'. At bottom single comfortable composer with placeholder 'Discuss the notebook…', recipient 'Researcher', teal 'Send'. Chat has real breathing room.
+State communication: small top right label 'Concept preview'. Small inline note in notebook footer 'Saved outputs · Execution not verified'. Accurate legible labels prioritized. Notebook code, saved results and conversation are visual focus.
+Avoid: kernel controls, Run all, chart builders, editing toolbar, enormous agent cards, dark mode, gradient backgrounds, decorative artwork, extra windows, duplicate composer.

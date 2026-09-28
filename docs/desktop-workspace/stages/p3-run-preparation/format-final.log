@@ -1,0 +1,3 @@
+Changed App source, including the new frozen storage snapshot. Generated bundle JSON is validated by schema:check.
+Checking formatting...
+All matched files use Prettier code style!

@@ -1,0 +1,65 @@
+{
+  "date": "2026-09-08",
+  "scope": "HTML sketch only; synthetic content and Agent messages",
+  "checks": [
+    {
+      "scenario": "text attachment and Show/Return",
+      "result": {
+        "attachment": "PDF · p. 3 · Selected text",
+        "draft": "Keep this unsent note while I inspect the reference.",
+        "messages": 2,
+        "page": "3",
+        "selection": "PDF · p. 3 · Selected text"
+      },
+      "pass": true
+    },
+    {
+      "scenario": "persistent page rail alternative",
+      "pass": true
+    },
+    {
+      "scenario": "historical capture shows only retained region",
+      "pass": true
+    },
+    {
+      "scenario": "missing capture does not substitute current source",
+      "pass": true
+    },
+    {
+      "scenario": "scanned page supports keyboard region and disables text",
+      "pass": true
+    },
+    {
+      "scenario": "900 width contains shell",
+      "pass": true
+    },
+    {
+      "scenario": "compact Discuss opens Chat with same attachment",
+      "pass": true
+    },
+    {
+      "scenario": "native HTML text drag exposes Discuss",
+      "pass": true
+    },
+    {
+      "scenario": "pointer draws a region",
+      "pass": true
+    },
+    {
+      "scenario": "Escape cancels region mode",
+      "pass": true
+    },
+    {
+      "scenario": "page navigation and whole-page selection",
+      "pass": true
+    },
+    {
+      "scenario": "page rail collapses at compact width",
+      "pass": true
+    },
+    {
+      "scenario": "compact Pages opens temporary navigation",
+      "pass": true
+    }
+  ]
+}

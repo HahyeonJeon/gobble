@@ -1,0 +1,4 @@
+
+> gobble-app-workspace@0.1.0 build:service
+> tsx scripts/build-service.ts
+

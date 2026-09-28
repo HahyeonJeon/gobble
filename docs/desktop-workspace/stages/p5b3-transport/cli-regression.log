@@ -1,0 +1,193 @@
+=== RUN   TestCreationCommandsKeepExecutionSeparate
+--- PASS: TestCreationCommandsKeepExecutionSeparate (0.01s)
+=== RUN   TestHelp
+=== RUN   TestHelp/bare
+=== RUN   TestHelp/help
+=== RUN   TestHelp/short
+=== RUN   TestHelp/long
+=== RUN   TestHelp/help_compose
+=== RUN   TestHelp/compose_help
+=== RUN   TestHelp/inspect_help
+=== RUN   TestHelp/run_help
+=== RUN   TestHelp/release_help
+=== RUN   TestHelp/help_pack
+=== RUN   TestHelp/pack_help
+=== RUN   TestHelp/inspect_help_skips_view
+--- PASS: TestHelp (0.01s)
+    --- PASS: TestHelp/bare (0.00s)
+    --- PASS: TestHelp/help (0.00s)
+    --- PASS: TestHelp/short (0.00s)
+    --- PASS: TestHelp/long (0.00s)
+    --- PASS: TestHelp/help_compose (0.00s)
+    --- PASS: TestHelp/compose_help (0.00s)
+    --- PASS: TestHelp/inspect_help (0.00s)
+    --- PASS: TestHelp/run_help (0.00s)
+    --- PASS: TestHelp/release_help (0.00s)
+    --- PASS: TestHelp/help_pack (0.00s)
+    --- PASS: TestHelp/pack_help (0.00s)
+    --- PASS: TestHelp/inspect_help_skips_view (0.00s)
+=== RUN   TestVersion
+=== RUN   TestVersion/--version
+=== RUN   TestVersion/version
+--- PASS: TestVersion (0.12s)
+    --- PASS: TestVersion/--version (0.07s)
+    --- PASS: TestVersion/version (0.05s)
+=== RUN   TestInvocationFailures
+=== RUN   TestInvocationFailures/unknown_verb
+=== RUN   TestInvocationFailures/unknown_flag
+=== RUN   TestInvocationFailures/extra_compose_operands
+=== RUN   TestInvocationFailures/extra_plan_operands
+=== RUN   TestInvocationFailures/extra_validate_operands
+=== RUN   TestInvocationFailures/missing_view
+=== RUN   TestInvocationFailures/missing_inspect_workspace
+=== RUN   TestInvocationFailures/missing_inspect_args
+=== RUN   TestInvocationFailures/missing_release_workspace
+=== RUN   TestInvocationFailures/missing_run_workspace
+=== RUN   TestInvocationFailures/missing_resume_workspace
+=== RUN   TestInvocationFailures/non-integer_cap
+=== RUN   TestInvocationFailures/empty_cap
+=== RUN   TestInvocationFailures/repeated_workspace
+=== RUN   TestInvocationFailures/repeated_cap
+=== RUN   TestInvocationFailures/repeated_instance
+=== RUN   TestInvocationFailures/help_and_version_flags
+=== RUN   TestInvocationFailures/compose_help_and_version
+=== RUN   TestInvocationFailures/run_version
+=== RUN   TestInvocationFailures/inspect_version
+=== RUN   TestInvocationFailures/version_then_run
+=== RUN   TestInvocationFailures/inspect_extra_package
+=== RUN   TestInvocationFailures/release_extra_package
+=== RUN   TestInvocationFailures/unknown_--view
+=== RUN   TestInvocationFailures/cap_on_inspect
+=== RUN   TestInvocationFailures/instance_on_run
+=== RUN   TestInvocationFailures/workspace_on_compose
+=== RUN   TestInvocationFailures/repeated_sample
+=== RUN   TestInvocationFailures/empty_sample
+=== RUN   TestInvocationFailures/whitespace_sample
+=== RUN   TestInvocationFailures/missing_sample_value
+=== RUN   TestInvocationFailures/unknown_--samples
+=== RUN   TestInvocationFailures/unknown_--constructor
+=== RUN   TestInvocationFailures/unknown_--no-sample
+=== RUN   TestInvocationFailures/sample_on_inspect
+=== RUN   TestInvocationFailures/sample_on_release
+=== RUN   TestInvocationFailures/sample_on_help
+=== RUN   TestInvocationFailures/sample_on_version
+=== RUN   TestInvocationFailures/sample_on_inspect_help
+=== RUN   TestInvocationFailures/sample_equals_form_on_release
+=== RUN   TestInvocationFailures/help_unknown_command
+=== RUN   TestInvocationFailures/version_extra
+=== RUN   TestInvocationFailures/missing_workspace_value
+=== RUN   TestInvocationFailures/workspace_cannot_consume_sample_flag
+=== RUN   TestInvocationFailures/sample_cannot_consume_workspace_flag
+=== RUN   TestInvocationFailures/cap_cannot_consume_workspace_flag
+=== RUN   TestInvocationFailures/cap_cannot_consume_negative_token
+=== RUN   TestInvocationFailures/empty_workspace
+=== RUN   TestInvocationFailures/help_with_version_flag
+=== RUN   TestInvocationFailures/unknown_short_flag
+=== RUN   TestInvocationFailures/pack_missing_output
+=== RUN   TestInvocationFailures/pack_missing_output_value
+=== RUN   TestInvocationFailures/pack_empty_output
+=== RUN   TestInvocationFailures/pack_repeated_output
+=== RUN   TestInvocationFailures/pack_extra_package
+=== RUN   TestInvocationFailures/pack_short_output
+=== RUN   TestInvocationFailures/pack_short_output_with_value
+=== RUN   TestInvocationFailures/pack_single_dash_output
+=== RUN   TestInvocationFailures/output_on_compose
+=== RUN   TestInvocationFailures/workspace_on_pack
+=== RUN   TestInvocationFailures/sample_on_pack
+--- PASS: TestInvocationFailures (0.04s)
+    --- PASS: TestInvocationFailures/unknown_verb (0.00s)
+    --- PASS: TestInvocationFailures/unknown_flag (0.00s)
+    --- PASS: TestInvocationFailures/extra_compose_operands (0.00s)
+    --- PASS: TestInvocationFailures/extra_plan_operands (0.00s)
+    --- PASS: TestInvocationFailures/extra_validate_operands (0.00s)
+    --- PASS: TestInvocationFailures/missing_view (0.00s)
+    --- PASS: TestInvocationFailures/missing_inspect_workspace (0.00s)
+    --- PASS: TestInvocationFailures/missing_inspect_args (0.00s)
+    --- PASS: TestInvocationFailures/missing_release_workspace (0.00s)
+    --- PASS: TestInvocationFailures/missing_run_workspace (0.00s)
+    --- PASS: TestInvocationFailures/missing_resume_workspace (0.00s)
+    --- PASS: TestInvocationFailures/non-integer_cap (0.00s)
+    --- PASS: TestInvocationFailures/empty_cap (0.00s)
+    --- PASS: TestInvocationFailures/repeated_workspace (0.00s)
+    --- PASS: TestInvocationFailures/repeated_cap (0.00s)
+    --- PASS: TestInvocationFailures/repeated_instance (0.00s)
+    --- PASS: TestInvocationFailures/help_and_version_flags (0.00s)
+    --- PASS: TestInvocationFailures/compose_help_and_version (0.00s)
+    --- PASS: TestInvocationFailures/run_version (0.00s)
+    --- PASS: TestInvocationFailures/inspect_version (0.00s)
+    --- PASS: TestInvocationFailures/version_then_run (0.00s)
+    --- PASS: TestInvocationFailures/inspect_extra_package (0.00s)
+    --- PASS: TestInvocationFailures/release_extra_package (0.00s)
+    --- PASS: TestInvocationFailures/unknown_--view (0.00s)
+    --- PASS: TestInvocationFailures/cap_on_inspect (0.00s)
+    --- PASS: TestInvocationFailures/instance_on_run (0.00s)
+    --- PASS: TestInvocationFailures/workspace_on_compose (0.00s)
+    --- PASS: TestInvocationFailures/repeated_sample (0.00s)
+    --- PASS: TestInvocationFailures/empty_sample (0.00s)
+    --- PASS: TestInvocationFailures/whitespace_sample (0.00s)
+    --- PASS: TestInvocationFailures/missing_sample_value (0.00s)
+    --- PASS: TestInvocationFailures/unknown_--samples (0.00s)
+    --- PASS: TestInvocationFailures/unknown_--constructor (0.00s)
+    --- PASS: TestInvocationFailures/unknown_--no-sample (0.00s)
+    --- PASS: TestInvocationFailures/sample_on_inspect (0.00s)
+    --- PASS: TestInvocationFailures/sample_on_release (0.00s)
+    --- PASS: TestInvocationFailures/sample_on_help (0.00s)
+    --- PASS: TestInvocationFailures/sample_on_version (0.00s)
+    --- PASS: TestInvocationFailures/sample_on_inspect_help (0.00s)
+    --- PASS: TestInvocationFailures/sample_equals_form_on_release (0.00s)
+    --- PASS: TestInvocationFailures/help_unknown_command (0.00s)
+    --- PASS: TestInvocationFailures/version_extra (0.00s)
+    --- PASS: TestInvocationFailures/missing_workspace_value (0.00s)
+    --- PASS: TestInvocationFailures/workspace_cannot_consume_sample_flag (0.00s)
+    --- PASS: TestInvocationFailures/sample_cannot_consume_workspace_flag (0.00s)
+    --- PASS: TestInvocationFailures/cap_cannot_consume_workspace_flag (0.00s)
+    --- PASS: TestInvocationFailures/cap_cannot_consume_negative_token (0.00s)
+    --- PASS: TestInvocationFailures/empty_workspace (0.00s)
+    --- PASS: TestInvocationFailures/help_with_version_flag (0.00s)
+    --- PASS: TestInvocationFailures/unknown_short_flag (0.00s)
+    --- PASS: TestInvocationFailures/pack_missing_output (0.00s)
+    --- PASS: TestInvocationFailures/pack_missing_output_value (0.00s)
+    --- PASS: TestInvocationFailures/pack_empty_output (0.00s)
+    --- PASS: TestInvocationFailures/pack_repeated_output (0.00s)
+    --- PASS: TestInvocationFailures/pack_extra_package (0.00s)
+    --- PASS: TestInvocationFailures/pack_short_output (0.00s)
+    --- PASS: TestInvocationFailures/pack_short_output_with_value (0.00s)
+    --- PASS: TestInvocationFailures/pack_single_dash_output (0.00s)
+    --- PASS: TestInvocationFailures/output_on_compose (0.00s)
+    --- PASS: TestInvocationFailures/workspace_on_pack (0.00s)
+    --- PASS: TestInvocationFailures/sample_on_pack (0.00s)
+=== RUN   TestParsePack
+=== RUN   TestParsePack/default_package
+=== RUN   TestParsePack/package_before_output
+=== RUN   TestParsePack/output_before_package
+=== RUN   TestParsePack/equals_output
+--- PASS: TestParsePack (0.00s)
+    --- PASS: TestParsePack/default_package (0.00s)
+    --- PASS: TestParsePack/package_before_output (0.00s)
+    --- PASS: TestParsePack/output_before_package (0.00s)
+    --- PASS: TestParsePack/equals_output (0.00s)
+=== RUN   TestParseSampleFlag
+=== RUN   TestParseSampleFlag/compose_default
+=== RUN   TestParseSampleFlag/validate_default
+=== RUN   TestParseSampleFlag/plan_default
+=== RUN   TestParseSampleFlag/run_default
+=== RUN   TestParseSampleFlag/resume_default
+=== RUN   TestParseSampleFlag/compose_space_form
+=== RUN   TestParseSampleFlag/compose_equals_form
+=== RUN   TestParseSampleFlag/relative_not_cleaned
+=== RUN   TestParseSampleFlag/run_explicit
+=== RUN   TestParseSampleFlag/resume_equals
+--- PASS: TestParseSampleFlag (0.02s)
+    --- PASS: TestParseSampleFlag/compose_default (0.00s)
+    --- PASS: TestParseSampleFlag/validate_default (0.00s)
+    --- PASS: TestParseSampleFlag/plan_default (0.00s)
+    --- PASS: TestParseSampleFlag/run_default (0.00s)
+    --- PASS: TestParseSampleFlag/resume_default (0.00s)
+    --- PASS: TestParseSampleFlag/compose_space_form (0.00s)
+    --- PASS: TestParseSampleFlag/compose_equals_form (0.00s)
+    --- PASS: TestParseSampleFlag/relative_not_cleaned (0.00s)
+    --- PASS: TestParseSampleFlag/run_explicit (0.00s)
+    --- PASS: TestParseSampleFlag/resume_equals (0.00s)
+=== RUN   TestPreparedContinuationCommandsNeverLoadProject
+--- PASS: TestPreparedContinuationCommandsNeverLoadProject (0.00s)
+PASS

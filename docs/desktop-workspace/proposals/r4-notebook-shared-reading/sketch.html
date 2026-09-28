@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gobble · Notebook concepts</title>
+    <link rel="stylesheet" href="sketch.css" />
+    <script src="sketch.js" defer></script>
+  </head>
+  <body>
+    <a class="skip" href="#draft">Skip to composer</a>
+    <header class="review-bar">
+      <div>
+        <strong>Notebook concepts</strong
+        ><small
+          >Interactive sketch · Synthetic data · No live Agent or kernel</small
+        >
+      </div>
+      <div class="review-actions">
+        <button id="concept-a" aria-pressed="true">A · Saved reader</button>
+        <button id="concept-b" aria-pressed="false">
+          B · Connected workspace
+        </button>
+        <button
+          id="source-change"
+          title="Simulate an external edit to the file"
+        >
+          Change source
+        </button>
+        <button id="reset">Reset demo</button>
+      </div>
+    </header>
+    <p id="concept-description" class="concept-description">
+      A · Read saved cells and outputs in Gobble. Discuss exact parts through
+      the existing Chat.
+    </p>
+    <main class="app" aria-label="Gobble concept workspace">
+      <header class="project-bar">
+        <button
+          id="explorer-toggle"
+          aria-label="Toggle Project files"
+          aria-expanded="true"
+        >
+          ☰
+        </button>
+        <strong>RNA-seq review <span class="muted">⌄</span></strong>
+        <span class="grow"></span
+        ><span class="project-note">Project workspace</span
+        ><span class="account">● Account</span>
+      </header>
+      <div class="workspace">
+        <nav id="explorer" aria-label="Project files">
+          <div class="nav-heading">Files <span class="count">4</span></div>
+          <button class="file active" data-file="notebook">
+            ▤ <span>qc_review.ipynb</span>
+          </button>
+          <button class="file" data-file="method">
+            ▧ <span>methods.pdf</span>
+          </button>
+          <div class="file quiet">▦ <span>samples.csv</span></div>
+          <div class="file quiet">▤ <span>notes.md</span></div>
+          <div class="nav-heading runs">Runs <span class="count">0</span></div>
+          <p class="muted nav-note">No attached runs</p>
+        </nav>
+        <section class="panes" aria-label="Research views">
+          <section class="pane notebook-pane" aria-label="Notebook view">
+            <header class="pane-tabs">
+              <strong>qc_review.ipynb</strong><span class="grow"></span
+              ><button id="focus-pane">Focus</button>
+            </header>
+            <div id="reader-toolbar" class="reader-toolbar">
+              <span class="badge">Saved notebook</span>
+              <details id="cell-jump">
+                <summary>Cells <span class="muted">3</span></summary>
+                <div class="jump-menu">
+                  <button data-jump="1">1 · Review notes</button
+                  ><button data-jump="2">2 · Read quality data</button
+                  ><button data-jump="3">3 · Mapping threshold</button>
+                </div>
+              </details>
+              <span class="grow"></span><button id="refresh">Refresh</button>
+            </div>
+            <div id="changed-banner" class="notice" hidden>
+              The file changed. This view keeps the saved version.
+              <button id="refresh-banner">Load new version</button>
+            </div>
+            <div id="reference-banner" class="reference-banner" hidden>
+              <div>
+                <strong id="reference-heading"
+                  >Reference view · Researcher</strong
+                ><small id="reference-subtitle"
+                  >Your view and selection are saved.</small
+                >
+              </div>
+              <button id="return-view">Return to my view</button>
+            </div>
+            <div
+              id="reader"
+              class="reader"
+              tabindex="0"
+              aria-label="Saved Notebook cells"
+            >
+              <article
+                id="cell-1"
+                class="cell markdown-cell"
+                aria-label="Cell 1, Markdown"
+              >
+                <div class="cell-header">
+                  <span>1 <span class="muted">· Markdown</span></span
+                  ><button data-selection="notes">Select cell</button>
+                </div>
+                <h1>Sample quality review</h1>
+                <p>
+                  Inspect mapping quality before choosing a filter. Compare the
+                  saved result with the method below.
+                </p>
+              </article>
+              <article
+                id="cell-2"
+                class="cell"
+                aria-label="Cell 2, Python source"
+              >
+                <div class="cell-header">
+                  <span>2 <span class="muted">· Python</span></span
+                  ><button data-selection="load">Select source</button>
+                </div>
+                <pre><span class="line-number">1</span><span class="code-keyword">import</span> pandas <span class="code-keyword">as</span> pd
+<span class="line-number">2</span>qc = pd.read_csv(<span class="code-string">"mapping_quality.csv"</span>)</pre>
+              </article>
+              <article
+                id="cell-3"
+                class="cell"
+                aria-label="Cell 3, Python source and saved outputs"
+              >
+                <div class="cell-header">
+                  <span>3 <span class="muted">· Python</span></span
+                  ><button data-selection="source">Select line 1</button>
+                </div>
+                <pre><span id="filter-line"><span class="line-number">1</span>keep = qc[<span class="code-string">"mapped_pct"</span>] &gt;= <span id="threshold">80</span></span>
+<span class="line-number">2</span>qc.loc[keep, [<span class="code-string">"sample"</span>, <span class="code-string">"mapped_pct"</span>]]</pre>
+                <div class="output-heading">
+                  <span
+                    >Saved output
+                    <span class="muted">· 1 · Plain text</span></span
+                  ><button data-selection="output">Select output</button>
+                </div>
+                <pre id="output-text">
+  sample  mapped_pct
+0 S01           94.2
+2 S03           91.7</pre>
+                <details class="output-details">
+                  <summary>About this output</summary>
+                  <p>
+                    Saved in the file. Execution is not verified. The saved code
+                    and output may not represent the same execution.
+                  </p>
+                </details>
+                <div class="unsupported">
+                  <strong>Output 2 · Interactive widget</strong>
+                  <p>
+                    Preview unavailable. No saved image or plain-text
+                    alternative.
+                  </p>
+                </div>
+              </article>
+            </div>
+            <div id="captured-view" class="captured-view" hidden>
+              <span class="badge">Captured evidence · Earlier version</span>
+              <h2>Cell 3 · Source · Line 1</h2>
+              <pre>keep = qc["mapped_pct"] &gt;= 80</pre>
+              <p>
+                The file has changed. This is the original captured text; no
+                highlight was applied to the new version.
+              </p>
+            </div>
+            <div id="connected-view" class="connected-view" hidden>
+              <span class="badge">Concept B · Future integration</span>
+              <h1>Connect a Notebook workspace</h1>
+              <p>
+                Use a Jupyter document and kernel through a scoped connection.
+                Gobble Chat stays beside the working document.
+              </p>
+              <label
+                >Environment<select id="environment">
+                  <option>Local Jupyter environment</option>
+                  <option>Existing remote Jupyter server</option>
+                </select></label
+              >
+              <div class="connection-state">
+                <strong>Not connected</strong>
+                <p>
+                  Choose and validate an environment before editing or running
+                  cells.
+                </p>
+                <button id="connection-preview">
+                  Preview disconnected state
+                </button>
+              </div>
+              <div id="disconnected" class="notice" hidden>
+                <strong>Connection lost · Outcome unknown</strong>
+                <p>
+                  A submitted cell may still be running. Reconcile its status
+                  before retrying; reopening this view will not resubmit it.
+                </p>
+              </div>
+              <p class="muted">
+                This comparison illustrates the ownership and recovery model. It
+                does not connect to a server or offer executable commands.
+              </p>
+            </div>
+            <footer id="selection-bar" class="selection-bar">
+              <span id="selection-label" role="status"
+                >Select a cell, source line or output</span
+              ><button id="clear-selection" hidden>Clear</button
+              ><button id="attach" class="primary" disabled>
+                Discuss selection
+              </button>
+            </footer>
+          </section>
+          <section class="pane method-pane" aria-label="Method comparison view">
+            <header class="pane-tabs">
+              <strong>methods.pdf</strong><span class="grow"></span
+              ><span class="muted">Page 2 of 4</span>
+            </header>
+            <div class="method-content">
+              <small>METHODS · QUALITY CONTROL</small>
+              <h2>Mapping threshold</h2>
+              <p>
+                Review sample mapping rates before excluding samples. Document
+                the chosen threshold and inspect outliers alongside other
+                quality measures.
+              </p>
+              <p class="muted">
+                Synthetic method excerpt for the concept walkthrough.
+              </p>
+            </div>
+          </section>
+        </section>
+        <aside class="chat" aria-label="Project Chat">
+          <header class="chat-header">
+            <strong>Chat</strong><span class="grow"></span>
+            <details class="agents">
+              <summary>Agents <span class="count">2</span></summary>
+              <div class="agent-menu">
+                <span>● Researcher</span><span class="muted">○ Reviewer</span>
+              </div>
+            </details>
+          </header>
+          <div id="timeline" class="timeline" aria-label="Conversation">
+            <article class="message">
+              <div class="author">
+                <span class="avatar">R</span><strong>Researcher</strong>
+              </div>
+              <p>Let's review the filtering step alongside the method.</p>
+              <p class="muted">
+                The notebook contains saved outputs. Their execution has not
+                been verified.
+              </p>
+              <small>Example conversation</small>
+            </article>
+            <article class="reference-card">
+              <strong>Researcher <span class="muted">pointed to</span></strong>
+              <p>Cell 3 · Source · Line 1</p>
+              <p>Check this threshold against the method.</p>
+              <div class="reference-actions">
+                <button id="show-reference">Show in view</button
+                ><button id="show-captured">Captured evidence</button>
+              </div>
+              <small>Simulated reference · Saved version 1</small>
+            </article>
+            <div id="sent-messages"></div>
+          </div>
+          <div class="composer">
+            <div id="attachment" class="attachment" hidden>
+              <div>
+                <strong id="attachment-label"></strong
+                ><small id="attachment-version"></small>
+              </div>
+              <button id="remove-attachment" aria-label="Remove attachment">
+                ×
+              </button>
+            </div>
+            <label class="sr-only" for="draft">Message to Researcher</label
+            ><textarea id="draft" placeholder="Discuss the notebook…">
+Should we revisit this threshold?</textarea>
+            <div class="composer-actions">
+              <span class="recipient">To Researcher</span
+              ><span class="grow"></span
+              ><button id="send" class="primary">Send in demo →</button>
+            </div>
+            <small id="delivery-status" role="status"
+              >Local sketch only · Nothing is sent to an Agent</small
+            >
+          </div>
+        </aside>
+      </div>
+    </main>
+    <footer class="review-footer">
+      Try: select → attach → change selection → Show / Return → change source →
+      captured evidence. <a href="design.md">Design &amp; ownership</a>
+    </footer>
+  </body>
+</html>

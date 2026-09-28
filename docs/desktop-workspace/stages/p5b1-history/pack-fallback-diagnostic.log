@@ -1,0 +1,10 @@
+=== RUN   TestPackPrintpipeArtifact
+    pack_test.go:287: packed pack stderr = {"op":"cli","defects":[{"code":"invalid-request","unit":"","message":"unknown command","paths":null}]}
+        {"defects":[{"code":"invalid-request","message":"invalid child protocol"}],"op":"pack"}
+        , error invalid character '{' after top-level value
+--- FAIL: TestPackPrintpipeArtifact (4.34s)
+=== RUN   TestPackHostpipeEmptyInspectProtocol
+--- PASS: TestPackHostpipeEmptyInspectProtocol (4.80s)
+FAIL
+FAIL	github.com/HahyeonJeon/gobble/cmd/gobble	9.190s
+FAIL

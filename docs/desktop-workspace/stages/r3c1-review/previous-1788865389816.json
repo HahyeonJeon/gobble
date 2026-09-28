@@ -1,0 +1,9 @@
+{
+  "date": "2026-09-08T10:58:43.976Z",
+  "status": "failed",
+  "scope": "Synthetic source-checkout qualification; no production PDF integration or release claim.",
+  "cases": [],
+  "renders": [],
+  "errors": [],
+  "failure": "Error: Command failed: /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/node_modules/.bin/tsc -p /var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-r3c1-bKFV5A/tsconfig.json\n    at genericNodeError (node:internal/errors:998:15)\n    at wrappedFn (node:internal/errors:543:14)\n    at checkExecSyncError (node:child_process:925:11)\n    at execFileSync (node:child_process:961:15)\n    at prepare (/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/qualification/pdf/build.cjs:43:7)\n    at async /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/qualification/pdf/qualify.cjs:34:11"
+}

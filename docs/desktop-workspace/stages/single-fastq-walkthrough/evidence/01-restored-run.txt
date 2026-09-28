@@ -1,0 +1,126 @@
+Skip to workspace
+Read quality study
+Selections
+0
+Account
+Pipelines
+1
+＋ New pipeline
+Read quality study
+Import pipeline
+Files
+Project files
+runs
+sample.fastq.gz
+Runs
+Existing analyses
+Analysis 1
+Workspace ready
+New pipeline
+Read quality study
+Analysis 1
+More
+Run flow
+succeeded · Saved design
+Choose a step to discuss it or inspect its logs below.
+
+Discuss the observed result first. Open Current to request a checked design change.
+
+Open current design
+Continue this analysis
+
+This analysis is complete. Open Current to discuss a new analysis.
+
+Recheck continuation
+Fit
+−
+64%
++
+reads
+file
+Trim adapters and low-quality bases
+1 input · 2 outputs
+Succeeded
+Inspect trimmed read quality
+1 input · 2 outputs
+Succeeded
+Tasks
+Dependencies
+Observed · 5:18:08 PM
+Tasks
+All states
+succeeded
+Refresh
+Task instance	State	Attempt
+
+fastqc
+fastqc
+	succeeded	3
+
+trim_galore
+trim_galore
+	succeeded	1
+Select a task to discuss it or open its logs.
+Open logs
+Discuss task
+2 shown · 2 loaded · Run details
+Chat
+Agents
+1
+Opened a Project view.
+You → Researcher
+04:59 PM
+New pipeline · Selected data · Proposal allowed
+
+pipeline-creation
+
+R
+Researcher
+In reply to: pipeline-creation
+
+Fixture response from Researcher.
+
+Completed
+You → Researcher
+05:00 PM
+Proposed addition · Quality threshold · 25 Phred · Discussion only
+
+pipeline-creation-review
+
+R
+Researcher
+In reply to: pipeline-creation-review
+
+Fixture response from Researcher.
+
+Completed
+2 view updates
+Continuation confirmed
+
+Keep 1 result · Restart 1 step
+
+Saved confirmation plan · Execution status is shown below.
+Trim adapters and low-quality bases · Can reuse · Attempt 1
+Inspect trimmed read quality · Will restart · Attempt 3
+
+Uses this Run’s saved design and checked data. Restarted steps run from their beginning.
+
+sample.fastq.gz
+
+Last checked execution: succeeded
+
+Open Run
+Check continuation status
+Analysis 1
+Task · fastqc · Attempt 1
+Preview
+Connect your ChatGPT account before sending.
+Prepare again
+Conversation recipient
+Choose recipient
+To Researcher
+Message model
+fixture-model · unavailable
+Send
+Draft saved locally
+Enter to send · Shift+Enter for a new line

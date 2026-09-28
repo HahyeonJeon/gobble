@@ -1,0 +1,13 @@
+
+Running 6 tests using 1 worker
+
+(node:67661) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 desktop/tests/electron/admitted-runs.spec.ts:7:1 › Run navigation refreshes when a confirmed admission arrives, not on every status poll (11.2s)
+  ✓  2 desktop/tests/electron/continuation-restored.spec.ts:7:1 › completed actual continuation restores its latest attempt and original review without executing (2.5s)
+  ✓  3 desktop/tests/electron/continuation-restored.spec.ts:67:1 › completed Run keeps its Flow and exact task actions reachable in stacked compact Panes (4.9s)
+  ✓  4 desktop/tests/electron/continuation-review.spec.ts:7:1 › continuation Flow, exact capture, compact draft and explicit native confirmation (11.2s)
+  ✓  5 desktop/tests/electron/continuation-review.spec.ts:98:1 › older engine, blocked recheck, historical capture and unknown confirmation never silently resubmit (12.8s)
+  ✓  6 desktop/tests/electron/continuation-review.spec.ts:179:1 › Agent points to the same continuation plan without changing User selection or starting work (6.5s)
+
+  6 passed (49.5s)

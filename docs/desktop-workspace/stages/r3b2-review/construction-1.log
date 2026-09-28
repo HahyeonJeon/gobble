@@ -1,0 +1,6 @@
+
+> gobble-app-workspace@0.1.0 typecheck
+> tsc -p contracts/tsconfig.json && npm run typecheck --workspace @gobble/desktop && tsc -p tsconfig.tools.json
+
+contracts/src/workspace-document-v8.ts(1,21): error TS6133: 'Static' is declared but its value is never read.
+contracts/src/workspace-document-v8.ts(2,48): error TS6133: 'ProjectIdSchema' is declared but its value is never read.

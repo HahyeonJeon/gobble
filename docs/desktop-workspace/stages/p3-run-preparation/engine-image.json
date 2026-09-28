@@ -1,0 +1,5 @@
+{
+  "base": "sha256:25fee86458e0c8df45293cfd6dcaa992256d3da2cfcdbef62e3c992bc2ac71f1",
+  "imageId": "sha256:9145e5f6ecc26e8c8d61b7df6855d15a54371fc5f517a38029fdee4b5af5b19f",
+  "scope": "single-end-trim-fastqc-v1"
+}

@@ -1,0 +1,59 @@
+desktop/tests/workspace-migration.test.ts 77ms (unchanged)
+desktop/tests/linked-interaction.test.ts 21ms (unchanged)
+desktop/tests/report-sharing.test.ts 27ms
+desktop/tests/pipeline-flow.test.ts 21ms (unchanged)
+desktop/tests/collaboration.test.ts 26ms (unchanged)
+desktop/tests/dependency-navigation.test.ts 14ms (unchanged)
+desktop/tests/run-preparation.test.ts 10ms (unchanged)
+desktop/tests/design.test.ts 7ms (unchanged)
+desktop/tests/pipeline-discussion.test.ts 10ms (unchanged)
+desktop/tests/plot-evidence.test.ts 15ms (unchanged)
+desktop/tests/pipeline-proposal.test.ts 16ms (unchanged)
+desktop/tests/notebook-contracts.test.ts 22ms (unchanged)
+desktop/tests/electron/saved-reports.spec.ts 15ms
+desktop/tests/dependency-reference.test.ts 16ms (unchanged)
+desktop/tests/creation-host.test.ts 5ms (unchanged)
+desktop/tests/pdf-evidence.test.ts 17ms (unchanged)
+desktop/tests/electron/evidence.spec.ts 20ms (unchanged)
+desktop/tests/electron/questions.spec.ts 15ms (unchanged)
+desktop/tests/shared-context.test.ts 34ms (unchanged)
+desktop/tests/report-evidence.test.ts 21ms
+desktop/src/renderer/shared-context/marks.tsx 7ms (unchanged)
+desktop/src/main/questions/service.ts 12ms
+desktop/tests/fixtures/codex.cjs 30ms
+desktop/tests/observed-evidence.test.ts 28ms (unchanged)
+desktop/src/main/codex/policy.ts 2ms
+desktop/src/main/workspace/controller.ts 40ms
+desktop/src/main/workspace/render-session.ts 12ms (unchanged)
+desktop/src/main/workspace/model.ts 10ms (unchanged)
+desktop/src/main/workspace/storage.ts 7ms
+desktop/src/main/index.ts 8ms (unchanged)
+desktop/src/renderer/styles/report.css 20ms
+desktop/src/main/evidence/service.ts 9ms
+desktop/src/main/evidence/references.ts 1ms
+desktop/src/main/evidence/materialize.ts 6ms
+desktop/src/main/evidence/capture.ts 4ms (unchanged)
+desktop/src/main/evidence/report.ts 6ms
+contracts/src/reference-target.ts 1ms (unchanged)
+contracts/src/evidence-validation.ts 5ms
+contracts/src/run-report.ts 5ms
+contracts/src/workspace-document.ts 7ms (unchanged)
+desktop/src/renderer/evidence/EvidencePreview.tsx 12ms
+contracts/src/workspace-document-v20.ts 1ms (unchanged)
+desktop/src/main/shared-context/catalog.ts 2ms
+desktop/src/main/shared-context/host.ts 21ms
+desktop/src/main/shared-context/observed.ts 7ms
+desktop/src/main/shared-context/report.ts 3ms
+desktop/src/main/collaboration/coordinator.ts 18ms
+contracts/src/reference-resolution.ts 5ms
+contracts/src/evidence.ts 5ms
+contracts/src/validation.ts 4ms
+contracts/src/storage/workspace-v20.json 79ms
+contracts/src/question-validation.ts 2ms
+contracts/src/observed-reference.ts 3ms (unchanged)
+contracts/src/shared-tools.ts 3ms
+contracts/scripts/export-schema.ts 1ms (unchanged)
+contracts/src/shared-context.ts 1ms (unchanged)
+contracts/src/workspace-migration.ts 6ms
+desktop/src/renderer/workspace/views/SurfaceView.tsx 17ms
+desktop/src/renderer/workspace/views/ReportView.tsx 8ms

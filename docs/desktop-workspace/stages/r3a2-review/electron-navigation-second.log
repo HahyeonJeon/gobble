@@ -1,0 +1,35 @@
+
+Running 1 test using 1 worker
+
+(node:58567) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 desktop/tests/electron/runtime.spec.ts:15:1 › task navigation and stream selections survive refresh failures and normal restart (12.9s)
+
+
+  1) desktop/tests/electron/runtime.spec.ts:15:1 › task navigation and stream selections survive refresh failures and normal restart 
+
+    Error: expect(locator).toBeInViewport() failed
+
+    Locator: getByRole('region', { name: 'Secondary pane', exact: true }).getByRole('button', { name: 'Refresh', exact: true })
+    Expected: in viewport
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeInViewport" getByRole('region', { name: 'Secondary pane', exact: true }).getByRole('button', { name: 'Refresh', exact: true }) with timeout 5000ms
+      - waiting for getByRole('region', { name: 'Secondary pane', exact: true }).getByRole('button', { name: 'Refresh', exact: true })
+
+
+      215 |       await expect(
+      216 |         secondary.getByRole('button', { name: 'Refresh', exact: true }),
+    > 217 |       ).toBeInViewport();
+          |         ^
+      218 |       await expect(secondary.getByRole('textbox', { name: 'stdout log text' })).toBeInViewport();
+      219 |       await captureWindow(application, info.outputPath('r3a2-' + size.name + '.png'));
+      220 |     }
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/runtime.spec.ts:217:9
+
+    Error Context: test-results/electron/runtime-task-navigation-an-7319a-failures-and-normal-restart/error-context.md
+
+  1 failed
+    desktop/tests/electron/runtime.spec.ts:15:1 › task navigation and stream selections survive refresh failures and normal restart 

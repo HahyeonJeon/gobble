@@ -1,0 +1,12 @@
+
+> gobble-app-workspace@0.1.0 typecheck
+> tsc -p contracts/tsconfig.json && npm run typecheck --workspace @gobble/desktop && tsc -p tsconfig.tools.json
+
+
+> @gobble/desktop@0.1.0 typecheck
+> tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && tsc -p tsconfig.renderer.json
+
+desktop/tests/electron/evidence.spec.ts(313,13): error TS2339: Property 'coordinateSpace' does not exist on type '{ kind: "notebook"; profile: "notebook-passive-1"; cell: { kind: "id"; id: string; } | { kind: "ordinal"; index: number; }; part: { kind: "source"; } | { kind: "output"; index: number; mime: string; digest: string; }; selector: { ...; } | { ...; }; } | ... 5 more ... | { ...; }'.
+desktop/tests/electron/workspace.spec.ts(362,15): error TS2339: Property 'coordinateSpace' does not exist on type '{ kind: "notebook"; profile: "notebook-passive-1"; cell: { kind: "id"; id: string; } | { kind: "ordinal"; index: number; }; part: { kind: "source"; } | { kind: "output"; index: number; mime: string; digest: string; }; selector: { ...; } | { ...; }; } | ... 5 more ... | { ...; }'.
+desktop/tests/workspace-migration.test.ts(164,67): error TS2339: Property 'coordinateSpace' does not exist on type '{ kind: "notebook"; profile: "notebook-passive-1"; cell: { kind: "id"; id: string; } | { kind: "ordinal"; index: number; }; part: { kind: "source"; } | { kind: "output"; index: number; mime: string; digest: string; }; selector: { ...; } | { ...; }; } | ... 7 more ... | { ...; }'.
+  Property 'coordinateSpace' does not exist on type '{ kind: "notebook"; profile: "notebook-passive-1"; cell: { kind: "id"; id: string; } | { kind: "ordinal"; index: number; }; part: { kind: "source"; } | { kind: "output"; index: number; mime: string; digest: string; }; selector: { ...; } | { ...; }; }'.

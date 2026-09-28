@@ -1,0 +1,28 @@
+
+Running 1 test using 1 worker
+
+(node:55451) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 desktop/tests/electron/pipeline-creation.spec.ts:11:3 › Creation: chosen data, exact discussion, restart and launch (2.9m)
+
+
+  1) desktop/tests/electron/pipeline-creation.spec.ts:11:3 › Creation: chosen data, exact discussion, restart and launch 
+
+    Error: EACCES: permission denied, open '/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-creation-ui-B916gT/Read quality study/runs/analysis-08fb76b2-8493-464d-a93c-0954cbec4ec4/inputs/reads.fastq.gz'
+
+       at continuation-live-scenario.ts:128
+
+      126 |     const inputPath = join(output, first.review!.files[0]!.path);
+      127 |     const savedInput = await readFile(inputPath);
+    > 128 |     await writeFile(inputPath, Buffer.concat([savedInput, Buffer.from('changed')]));
+          |     ^
+      129 |     try {
+      130 |       expect((await review()).state).toBe('blocked');
+      131 |     } finally {
+        at verifyLiveContinuation (/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/continuation-live-scenario.ts:128:5)
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/pipeline-creation.spec.ts:259:15
+
+    Error Context: test-results/p5b5-live-2/pipeline-creation-Creation-63435-scussion-restart-and-launch/error-context.md
+
+  1 failed
+    desktop/tests/electron/pipeline-creation.spec.ts:11:3 › Creation: chosen data, exact discussion, restart and launch 

@@ -1,0 +1,129 @@
+{
+  "host": "macOS-27.0-arm64-arm-64bit",
+  "head": "7fe3d5c9e10d0cc104a15b6e7aa3def0d15b98f1",
+  "branch": "codex/project-workspace-design",
+  "node": "v25.7.0",
+  "go": "go version go1.27.1 darwin/arm64",
+  "docker": {
+    "Client": {
+      "Version": "28.3.0",
+      "ApiVersion": "1.51",
+      "DefaultAPIVersion": "1.51",
+      "GitCommit": "38b7060",
+      "GoVersion": "go1.24.4",
+      "Os": "darwin",
+      "Arch": "arm64",
+      "BuildTime": "Tue Jun 24 15:41:51 2025",
+      "Context": "desktop-linux"
+    },
+    "Server": {
+      "Platform": {
+        "Name": "Docker Desktop 4.43.1 (198352)"
+      },
+      "Components": [
+        {
+          "Name": "Engine",
+          "Version": "28.3.0",
+          "Details": {
+            "ApiVersion": "1.51",
+            "Arch": "arm64",
+            "BuildTime": "Tue Jun 24 15:44:06 2025",
+            "Experimental": "false",
+            "GitCommit": "265f709",
+            "GoVersion": "go1.24.4",
+            "KernelVersion": "6.10.14-linuxkit",
+            "MinAPIVersion": "1.24",
+            "Os": "linux"
+          }
+        },
+        {
+          "Name": "containerd",
+          "Version": "1.7.27",
+          "Details": {
+            "GitCommit": "05044ec0a9a75232cad458027ca83437aae3f4da"
+          }
+        },
+        {
+          "Name": "runc",
+          "Version": "1.2.5",
+          "Details": {
+            "GitCommit": "v1.2.5-0-g59923ef"
+          }
+        },
+        {
+          "Name": "docker-init",
+          "Version": "0.19.0",
+          "Details": {
+            "GitCommit": "de40ad0"
+          }
+        }
+      ],
+      "Version": "28.3.0",
+      "ApiVersion": "1.51",
+      "MinAPIVersion": "1.24",
+      "GitCommit": "265f709",
+      "GoVersion": "go1.24.4",
+      "Os": "linux",
+      "Arch": "arm64",
+      "KernelVersion": "6.10.14-linuxkit",
+      "BuildTime": "2025-06-24T15:44:06.000000000+00:00"
+    }
+  },
+  "daemonId": "bfc24268-2f66-46d9-a1d1-969af8291bec",
+  "images": [
+    {
+      "id": "sha256:c7f3c4aa35767297db1f0acc84bc08477673f5f7429692ca594d06ba6e0c74e3",
+      "digests": [
+        "gobble-p5b5-continuation@sha256:c7f3c4aa35767297db1f0acc84bc08477673f5f7429692ca594d06ba6e0c74e3"
+      ],
+      "labels": {
+        "desktop.docker.io/ports.scheme": "v2",
+        "io.gobble.continuation.scope": "single-end-trim-fastqc-v1",
+        "io.gobble.creation.scope": "single-end-trim-fastqc-v1",
+        "io.gobble.launch.scope": "single-end-trim-fastqc-v1",
+        "io.gobble.preparation.scope": "single-end-trim-fastqc-v1"
+      },
+      "architecture": "amd64"
+    },
+    {
+      "id": "sha256:9d747504e44dbf5dfa8a2d66cbbd3bd80f897cc2e17ebe406821b4809b34a3a4",
+      "digests": [
+        "community.wave.seqera.io/library/trim-galore@sha256:9d747504e44dbf5dfa8a2d66cbbd3bd80f897cc2e17ebe406821b4809b34a3a4"
+      ],
+      "labels": {
+        "org.opencontainers.image.created": "2024-09-23T16:10:59.098Z",
+        "org.opencontainers.image.description": "Rapid builds of small Conda-based containers using micromamba.",
+        "org.opencontainers.image.licenses": "Apache-2.0",
+        "org.opencontainers.image.ref.name": "ubuntu",
+        "org.opencontainers.image.revision": "37bfa82a0fc1d2085e4b722fac4f747d0fa132c5",
+        "org.opencontainers.image.source": "https://github.com/mamba-org/micromamba-docker",
+        "org.opencontainers.image.title": "micromamba-docker",
+        "org.opencontainers.image.url": "https://github.com/mamba-org/micromamba-docker",
+        "org.opencontainers.image.version": "noble"
+      },
+      "architecture": "amd64"
+    },
+    {
+      "id": "sha256:e194048df39c3145d9b4e0a14f4da20b59d59250465b6f2a9cb698445fd45900",
+      "digests": [
+        "quay.io/biocontainers/fastqc@sha256:e194048df39c3145d9b4e0a14f4da20b59d59250465b6f2a9cb698445fd45900"
+      ],
+      "labels": {
+        "busybox": "BusyBox v1.32.1 (2021-04-13 11:15:36 UTC) multi-call binary.",
+        "deb-list": "gcc-8-base_8.3.0-6_amd64.deb\nlibc6_2.28-10_amd64.deb\nlibgcc1_1%3a8.3.0-6_amd64.deb\nbash_5.0-4_amd64.deb\nlibc-bin_2.28-10_amd64.deb\nlibtinfo6_6.1+20181013-2+deb10u2_amd64.deb\nncurses-base_6.1+20181013-2+deb10u2_all.deb\nbase-files_10.3+deb10u9_amd64.deb",
+        "glibc": "GNU C Library (Debian GLIBC 2.28-10) stable release version 2.28.",
+        "io.buildah.version": "1.19.6",
+        "pkg-list": "gcc-8-base\nlibc6\nlibgcc1\nbash\nlibc-bin\nlibtinfo6\nncurses-base\nbase-files"
+      },
+      "architecture": "amd64"
+    }
+  ],
+  "engineGo": "go version go1.26.8 linux/amd64",
+  "appDependencies": {
+    "electron": "44.2.0",
+    "@playwright/test": "1.63.0",
+    "react": "19.2.8",
+    "typescript": "5.9.3",
+    "vitest": "4.1.11"
+  }
+}

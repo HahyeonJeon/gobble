@@ -1,0 +1,124 @@
+
+> gobble-app-workspace@0.1.0 check
+> npm run format:check && npm run typecheck && npm run schema:check && npm test && npm run test:electron
+
+
+> gobble-app-workspace@0.1.0 format:check
+> prettier --check .
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> gobble-app-workspace@0.1.0 typecheck
+> tsc -p contracts/tsconfig.json && npm run typecheck --workspace @gobble/desktop && tsc -p tsconfig.tools.json
+
+
+> @gobble/desktop@0.1.0 typecheck
+> tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && tsc -p tsconfig.renderer.json
+
+
+> gobble-app-workspace@0.1.0 schema:check
+> tsx contracts/scripts/export-schema.ts --check
+
+
+> gobble-app-workspace@0.1.0 test
+> npm run build:service && vitest run
+
+
+> gobble-app-workspace@0.1.0 build:service
+> tsx scripts/build-service.ts
+
+
+ RUN  v4.1.11 /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app
+
+
+ Test Files  17 passed (17)
+      Tests  188 passed (188)
+   Start at  02:09:47
+   Duration  7.79s (transform 2.10s, setup 0ms, import 3.93s, tests 29.41s, environment 1ms)
+
+
+> gobble-app-workspace@0.1.0 test:electron
+> npm run build && playwright test
+
+
+> gobble-app-workspace@0.1.0 build
+> npm run build:service && npm run build --workspace @gobble/desktop
+
+
+> gobble-app-workspace@0.1.0 build:service
+> tsx scripts/build-service.ts
+
+
+> @gobble/desktop@0.1.0 build
+> electron-vite build
+
+vite v7.3.6 building ssr environment for production...
+transforming...
+✓ 334 modules transformed.
+rendering chunks...
+out/main/index.js  395.34 kB
+✓ built in 439ms
+vite v7.3.6 building ssr environment for production...
+transforming...
+✓ 292 modules transformed.
+rendering chunks...
+out/preload/index.cjs  190.39 kB
+✓ built in 241ms
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 378 modules transformed.
+rendering chunks...
+../../out/renderer/index.html                     0.48 kB
+../../out/renderer/assets/index-RWZiceWe.css     37.02 kB
+../../out/renderer/assets/index-fOF1wJun.js     917.52 kB
+../../out/renderer/assets/chunk-DZLsuOxH.js   1,773.95 kB
+✓ built in 2.27s
+
+Running 41 tests using 1 worker
+
+(node:36167) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 desktop/tests/electron/agents.spec.ts:53:1 › two peer agents share panes but keep their streams and Stop controls separate (2.6s)
+  ✓   2 desktop/tests/electron/agents.spec.ts:76:1 › lost acknowledgment survives restart and Check status recovers the original response without resending (2.9s)
+  ✓   3 desktop/tests/electron/agents.spec.ts:146:1 › account and agent actions are readable before hover, on hover and with keyboard focus (2.2s)
+  ✓   4 desktop/tests/electron/agents.spec.ts:168:1 › the shared composer protects IME input and the timeline preserves the reading position (2.4s)
+  ✓   5 desktop/tests/electron/agents.spec.ts:221:1 › interleaved responses retain reading position through growth, collapse, compact mode and restoration (3.4s)
+  ✓   6 desktop/tests/electron/agents.spec.ts:328:1 › a refused Send stays visible in compact Chat and preserves its recipient and draft (2.8s)
+  ✓   7 desktop/tests/electron/agents.spec.ts:361:1 › compact project chrome and chat-side Agents preserve draft, focus and work across navigation (2.9s)
+  ✓   8 desktop/tests/electron/agents.spec.ts:444:1 › empty Agent roster explains connection and returns keyboard focus (753ms)
+  ✓   9 desktop/tests/electron/evidence.spec.ts:77:1 › addresses exact row and cropped image in one composer, retaining immutable history after restart (4.2s)
+  ✓  10 desktop/tests/electron/evidence.spec.ts:183:1 › retains draft attachments across restart and blocks stale, unsupported and foreign sends (4.7s)
+  ✓  11 desktop/tests/electron/evidence.spec.ts:224:1 › sends an explicit whole preview without typed text and reports missing saved evidence (2.6s)
+  ✓  12 desktop/tests/electron/evidence.spec.ts:285:1 › migrates v2 shared marks and captured evidence, reopens without origin, and distinguishes changed or missing sources (5.4s)
+  ✓  13 desktop/tests/electron/foundation.spec.ts:69:1 › built app renders in English through a sandboxed named bridge (677ms)
+  ✓  14 desktop/tests/electron/foundation.spec.ts:94:1 › native folder selection registers a real Project and serves its files (608ms)
+  ✓  15 desktop/tests/electron/foundation.spec.ts:133:1 › real IPC rejects bad payloads and an unregistered window (745ms)
+  ✓  16 desktop/tests/electron/foundation.spec.ts:159:1 › blocks renderer code injection, frames, external navigation and new windows (710ms)
+  ✓  17 desktop/tests/electron/foundation.spec.ts:183:1 › macOS window close preserves the host and activation recreates an isolated window (1.3s)
+  ✓  18 desktop/tests/electron/foundation.spec.ts:197:1 › a second launch reuses the current profile owner (782ms)
+  ✓  19 desktop/tests/electron/linked-views.spec.ts:69:1 › normal CSV opening links exact rows through filter, sort, axes and viewport; Discuss focuses one composer without Send (2.8s)
+  ✓  20 desktop/tests/electron/linked-views.spec.ts:179:1 › linked refresh resets changed-source selection and keeps old attachments; counterpart reopen and compact Discuss preserve work (1.8s)
+  ✓  21 desktop/tests/electron/linked-views.spec.ts:245:1 › Shift box adds exact members, mouse and keyboard zoom preserve them, and invalid rows remain selectable in a zero-point plot (1.7s)
+  ✓  22 desktop/tests/electron/questions.spec.ts:77:1 › question arrival preserves a peer draft; Reply/Cancel and Enter use one composer with immutable evidence and one addressed answer (3.5s)
+  ✓  23 desktop/tests/electron/questions.spec.ts:157:1 › pending reply restores without replay; changed source invalidates Send while historical question preview and draft remain (3.1s)
+  ✓  24 desktop/tests/electron/questions.spec.ts:199:1 › image questions block text-only reply and dismissal sends nothing; older shared tool bindings require explicit new conversation (3.5s)
+  ✓  25 desktop/tests/electron/runtime.spec.ts:7:1 › Run and current-attempt logs render through the real service with a substituted Docker CLI (4.1s)
+  ✓  26 desktop/tests/electron/scatter.spec.ts:134:1 › 500 real CSV points preserve row identity through pointer/keyboard selection, resize and reopen under production CSP (3.3s)
+  ✓  27 desktop/tests/electron/scatter.spec.ts:222:1 › an invalid scatter specification is contained while its linked table remains usable (2.6s)
+  ✓  28 desktop/tests/electron/shared-context.spec.ts:58:1 › User and Agent share table/image pointers while local selection and composer focus stay independent (3.2s)
+  ✓  29 desktop/tests/electron/shared-context.spec.ts:105:1 › text pointing overlays a revision-bound range without replacing native local selection (2.3s)
+  ✓  30 desktop/tests/electron/shared-context.spec.ts:145:1 › explicit shared-view opt-in starts a new conversation and retains earlier messages (2.2s)
+  ✓  31 desktop/tests/electron/ux-review.spec.ts:95:1 › C1: long names and 0, 1, 5, 12 Agents stay navigable with enlarged text (3.4s)
+  ✓  32 desktop/tests/electron/ux-review.spec.ts:142:1 › C2: long resources and multiple attachments retain a usable workspace at 100–150% zoom (3.9s)
+  ✓  33 desktop/tests/electron/ux-review.spec.ts:217:1 › C3: a pending reply and attachment error stay actionable in a small enlarged-text chat (3.1s)
+  ✓  34 desktop/tests/electron/workspace.spec.ts:27:1 › real files, split, selection and draft survive a normal app relaunch (1.8s)
+  ✓  35 desktop/tests/electron/workspace.spec.ts:66:1 › keyboard tabs, duplicate, move and close preserve the remaining views (1.2s)
+  ✓  36 desktop/tests/electron/workspace.spec.ts:96:1 › narrow windows retain both panes and keyboard image and text context (1.2s)
+  ✓  37 desktop/tests/electron/workspace.spec.ts:133:1 › changed and missing files remain explicit while other Projects stay separate (1.2s)
+  ✓  38 desktop/tests/electron/workspace.spec.ts:173:1 › a failed draft save preserves the Project and honors Keep Open on window close (717ms)
+  ✓  39 desktop/tests/electron/workspace.spec.ts:218:1 › stacked panes, fitted image and one composer retain their identity across resizing and compact chat (1.6s)
+  ✓  40 desktop/tests/electron/workspace.spec.ts:341:1 › the real app migrates saved v1 geometry on the first change and retains the original archive (1.7s)
+  ✓  41 desktop/tests/electron/workspace.spec.ts:402:1 › selection overview finds hidden sources, More returns keyboard focus, and empty panes target navigation (1.4s)
+
+  41 passed (1.6m)

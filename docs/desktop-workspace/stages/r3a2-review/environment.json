@@ -1,0 +1,13 @@
+{
+  "electron": "44.2.0",
+  "react": "19.2.8",
+  "typescript": "5.9.3",
+  "vitest": "4.1.11",
+  "@playwright/test": "1.63.0",
+  "@openai/codex": "0.153.4",
+  "macOS": "26.5.2",
+  "architecture": "arm64",
+  "node": "v25.7.0",
+  "go": "go version go1.27.1 darwin/arm64",
+  "runtimeBoundary": "Real Electron and built Go service; test-local Docker/Codex executable fixtures"
+}

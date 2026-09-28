@@ -1,0 +1,12 @@
+{
+  "os": "macOS 26.5.2 (25F84)",
+  "arch": "arm64",
+  "electron": "44.2.0",
+  "chromium": "152.0.7977.76",
+  "electronNode": "24.20.0",
+  "buildNode": "v25.7.0",
+  "go": "go1.27.1 darwin/arm64",
+  "react": "19.2.8",
+  "typescript": "5.9.3",
+  "playwright": "1.63.0"
+}

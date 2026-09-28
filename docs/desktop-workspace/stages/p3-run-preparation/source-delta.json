@@ -1,0 +1,347 @@
+[
+  {
+    "path": "app/contracts/schema/v24.json",
+    "before": null,
+    "after": "e2be0437744677d4304c173cbd0ae26681a7a54857f7886c79cc35e065a0c8a4"
+  },
+  {
+    "path": "app/contracts/scripts/export-schema.ts",
+    "before": "9e0fa06045d94e2f66eb79600254375804d24cc015bbe5e5c9f790b42d3e50a5",
+    "after": "342c55baa117a582d9df93741efe5072dc9f0e2e079626bba5572b16fd450dec"
+  },
+  {
+    "path": "app/contracts/src/index.ts",
+    "before": "aeb116c6f6d80dbd86aa0cef5eaac6fc2d8d58891a50e6ef4290af86cef48503",
+    "after": "eac9833bc49f20dc6b9555e37e902b4a8c68d74e9244fccdaa17ffe9e0aecc8a"
+  },
+  {
+    "path": "app/contracts/src/pipeline-proposal.ts",
+    "before": "5731a2d1e300615fb9f532cb727fbf2de760b9a7f1a413283d1e72916c4ecb12",
+    "after": "f9db115ce783225e263b59b7540dbbef32dbea51b754b014f258f917efd01f8c"
+  },
+  {
+    "path": "app/contracts/src/run-preparation.ts",
+    "before": null,
+    "after": "e24987c11793483e4cf3a4af622e8daa46fcbf67e2e6e9c93a415c12b676f06d"
+  },
+  {
+    "path": "app/contracts/src/service.ts",
+    "before": "4966fb72862cd5a6ef6f411f1c101b360123e276c83e333456a0b45a6463c21c",
+    "after": "ba3d831f3b1eb274e222b862fa1b2b315574e0ddcd7371a309b5ff2699799938"
+  },
+  {
+    "path": "app/contracts/src/shared-context.ts",
+    "before": "0558106d7b0d0fc8d57640f3981ba7fce8cf85a5271f8190784fc6b7cfad078f",
+    "after": "19a1a0f9d5a511d14ca57765ddc348e40a36e23d774f88120c8a3fc885322906"
+  },
+  {
+    "path": "app/contracts/src/storage/workspace-v18.json",
+    "before": null,
+    "after": "8a9aa94470d9ac18a07e8ee53dff36a931b9e0885c4719126fca54d4ffe0eeec"
+  },
+  {
+    "path": "app/contracts/src/workspace-document-v18.ts",
+    "before": null,
+    "after": "4b8b7671af9be73ec80ada2b031a63db97517efc6f2e36b5585e7c235bc0eb6c"
+  },
+  {
+    "path": "app/contracts/src/workspace-document.ts",
+    "before": "2bdfc89078156db134721d1fe0492fc0d3c804b18f980a2187a547dea4f02e1e",
+    "after": "5a9effda7d01bbd98b842d1a3b045bb9198c8a556c38df97ac8791d602015385"
+  },
+  {
+    "path": "app/contracts/src/workspace-migration.ts",
+    "before": "684cbf5ee920fb7ce94fb8da17b52140c20dc089a7017bd1af7d3b7d0e552a59",
+    "after": "465379f8807d6ab56279ce0f8a6853b848d9ace0fb93b849bff249ff2fa0d6d9"
+  },
+  {
+    "path": "app/desktop/src/main/pipeline-review/host.ts",
+    "before": "6405cd1aa5de034db17d48b358b496213619c5821d495fa9387c551f1848c292",
+    "after": "f31b29266cf9df9c98cf9124f9c8cbeadfe4f8e59d4a530023b0da1d4db6cb40"
+  },
+  {
+    "path": "app/desktop/src/main/service/ipc.ts",
+    "before": "c7f5e3cf4097bcee074bba37033a0024a825838f65999269f898348621cdc17c",
+    "after": "8312c8b35dacffcb5f10429bcfd7025fdc882ace8508d3e368622722975c1ec1"
+  },
+  {
+    "path": "app/desktop/src/main/service/project-service.ts",
+    "before": "59f86e67fdc0890f90e8d0d3090995c00e0749c15689426b2dd6d8637e650c23",
+    "after": "a8d44bedfd30864d682c0714734678e47daa84843a36cc80090aaab97c48a0be"
+  },
+  {
+    "path": "app/desktop/src/main/service/run-preparation.ts",
+    "before": null,
+    "after": "2b82d1b5d0d43005d5255c9b871890ea45a2351f470955816717096b76b2edd0"
+  },
+  {
+    "path": "app/desktop/src/main/shared-context/catalog.ts",
+    "before": "ea474e8b344912ce8055f97989ad7b9967a8a5480635262d5020b0873c771051",
+    "after": "d153ea85bde83074ef1640fdaaf71908f621fbd6b1a999faf9ec0279cd1bc464"
+  },
+  {
+    "path": "app/desktop/src/main/workspace/model.ts",
+    "before": "3570eb914ab2f8b1a949748be56e6afa77bf09128b199dbd4a12dca1a0a61e27",
+    "after": "23ec65a03dce4b8bd5d0c39d112c08fab9c8b5127a8796228af17f5e05b3c126"
+  },
+  {
+    "path": "app/desktop/src/main/workspace/storage.ts",
+    "before": "ff3dcea586a1cea0f50a86854bbd0f1af64aa7e2cab9394688b01857458b83f5",
+    "after": "eb84be0f5814e256e9744e87d5df4237392c0e9f642ff4e1983ca9c2ef4cf187"
+  },
+  {
+    "path": "app/desktop/src/preload/index.ts",
+    "before": "82ece7e2d82e7a31283d2a8b705b329ae61469b23fca406b00659977f30402de",
+    "after": "02d5f37dcbdd3f9d1aaadc1957b2baf9b39e0e867bf9c1bc5eececf89a731c8e"
+  },
+  {
+    "path": "app/desktop/src/renderer/chat/ChatComposer.tsx",
+    "before": "87307f865912397d90e7bbf516fea01cec458fcd4da3ff778e2fab34366fab18",
+    "after": "0237f95e0db81460bbf696e07f1db75eacd2d2671495b6fd4215fd4efdcac9bc"
+  },
+  {
+    "path": "app/desktop/src/renderer/chat/PreparationReferenceLabel.tsx",
+    "before": null,
+    "after": "4c0659e3a537a8efd4b1cb65eabf850020599b0593ed7b0f81ca56450cb4d633"
+  },
+  {
+    "path": "app/desktop/src/renderer/chat/SubmissionMessage.tsx",
+    "before": "0dd1b3d69aaee2a5a8d74716d67897ef5f8722805c037984ff7c688a4fd68f19",
+    "after": "3b93fbf35e7132a4b7139e0eec690e7a3c5ee4841ae2db557ecb609858b161fa"
+  },
+  {
+    "path": "app/desktop/src/renderer/styles/run-preparation.css",
+    "before": null,
+    "after": "39c7d52e15aa737138ba4877e6452e7907cbfa2d4b1f4644508982b09b5d7142"
+  },
+  {
+    "path": "app/desktop/src/renderer/workspace/views/pipeline/PipelineView.tsx",
+    "before": "e981779e4ffc4ec0d9de2f8353bdfef30aa0c97f5079c9093da8473ed2dba071",
+    "after": "bff98a554b252d681fda867d9c4f2eb8ebfd1bc5b2bbe7beed4b277204df53d2"
+  },
+  {
+    "path": "app/desktop/src/renderer/workspace/views/pipeline/RunPreparation.tsx",
+    "before": null,
+    "after": "8155ec540be607ca69652508a97f315df09b24fbaba91b950c5a1f308d0aa2d8"
+  },
+  {
+    "path": "app/desktop/src/renderer/workspace/views/pipeline/useRunPreparation.ts",
+    "before": null,
+    "after": "0e74dcca67a02acd8dbeb246e1e171afeeaa7784a5cc7f75593271502d7f5918"
+  },
+  {
+    "path": "app/desktop/tests/collaboration.test.ts",
+    "before": "069f37b8f0611381748aeb9a05ecf937786cad51844ded7332b4523ce248ee31",
+    "after": "aca1007d7b619e71bf0866376e54615dfa43bbf6a7a78ead6dfacdfccbc9382f"
+  },
+  {
+    "path": "app/desktop/tests/creation-host.test.ts",
+    "before": "900ccbbd19e3d7cc7e2d717757e5d81854c7e40bc752dbee48fce6c53a1a7fc7",
+    "after": "0b4184d94732589bea20c0b9264e3b87f4fdeac1b7b02c437011f616dfcf2ce7"
+  },
+  {
+    "path": "app/desktop/tests/dependency-navigation.test.ts",
+    "before": "5792ee62b816c30c6fdccff3be7b59472f88231f627add516c5f7a3152d5a009",
+    "after": "4320d08e3f5c2a76cb5cdb0f3d9ae2e23db9b34024f5513a2a7c5f6305630a5e"
+  },
+  {
+    "path": "app/desktop/tests/dependency-reference.test.ts",
+    "before": "0ef029c2a1083fbee42c6d4a75d9153fe6226732fd03747beabcec864d514973",
+    "after": "833a0a4c35f7cfada57f4365518964170f7cf1a76f4f53f6cdf6be176a14e1bf"
+  },
+  {
+    "path": "app/desktop/tests/design.test.ts",
+    "before": "4365a17548f0cb8f2ff8dde91e5949b6467dbe98d45d169d6bb34750caf57092",
+    "after": "fd4422529681dc979e069e4d0aa25d616c42ea6ed0804f7fc2fc97c8baf53b0e"
+  },
+  {
+    "path": "app/desktop/tests/electron/evidence.spec.ts",
+    "before": "349ca6aa537e4516d1fd28dc0f955187a1596e856e0dc8959662df1e66ba4ffc",
+    "after": "2de56f08e1063a80030635a0de08f8016c96d1bad6492f9ba93606421be4f34d"
+  },
+  {
+    "path": "app/desktop/tests/electron/pipeline-creation.spec.ts",
+    "before": "41e2428c079183544002a37c3c7112ddaa4fb3082a4d81ccbd421d4e9df2eead",
+    "after": "79f01d7ea40c30cc5e56e3a3f9379b5a13d0a7f9e08d7ecb526f0c7cd2792d60"
+  },
+  {
+    "path": "app/desktop/tests/electron/questions.spec.ts",
+    "before": "98ba55a1e1bf184d242919c3b963bf715563bc76c57c5c6110f5d8b6518b4192",
+    "after": "a6a37ff11c90c746becdf6bc0b44932bddabc3fcbc1feecaa3841851c8ddb062"
+  },
+  {
+    "path": "app/desktop/tests/fixtures/codex.cjs",
+    "before": "3cff1f22198b5d90d0446495811c47f3a09df0ec3526a5d62acfbe9e29749936",
+    "after": "11879905581b29d8baccf9f702f9e5e2000054a1d61b93293fb2d0c57a7e9eb5"
+  },
+  {
+    "path": "app/desktop/tests/fixtures/pipeline-creation-tools.cjs",
+    "before": "ed6b7f4532a1eadba3cafeeecebecd9a60707d6f349e664b6fb40269d694be7f",
+    "after": "c11f0ef8099afd39c5de75b3e0e998b157c221b65f1506fa7b0627cdd93264b1"
+  },
+  {
+    "path": "app/desktop/tests/linked-interaction.test.ts",
+    "before": "fdb7623df9a477badd6a63a025a1527bd224c3ddc06a7f3a2bb10b0f6fd4af3a",
+    "after": "ffba342d1e62fd3c8da363a412a3a120fd9e8cc1975a819afafa8a653b7d561e"
+  },
+  {
+    "path": "app/desktop/tests/notebook-contracts.test.ts",
+    "before": "bf7b3ca640b6c95545061f7a94dc49507dd9d0c3036eef2865dd3bfd4c88de11",
+    "after": "fc7b17f581e5e54e9bf25a8b465f3537e64d2cac596358ad72c9fd1c4f18775e"
+  },
+  {
+    "path": "app/desktop/tests/observed-evidence.test.ts",
+    "before": "2168f82566c5ae0478bad6248a6a10477da3434875c97335f917553cd0eaf35d",
+    "after": "5a77fffea7dc7ebc0929da1282e6f2ac8ada25cd90bf67bcc751ff914ddd9d49"
+  },
+  {
+    "path": "app/desktop/tests/pdf-evidence.test.ts",
+    "before": "2b50c2ed1974f0a5958f9bc8d2cbb368716fc46e43441434128931d7d6cd934c",
+    "after": "61f4aa70880511dc74e102023fc32faa4cfa68099fbde522b9c91ff9e5497978"
+  },
+  {
+    "path": "app/desktop/tests/pipeline-discussion.test.ts",
+    "before": "1eda60a225607ad6930cefe321502e3e029b30b207ef3e468a12efcc522ade47",
+    "after": "049c328fe94339d83608a8d536d5719679bfcd1674306af97ecb3abf5dfeda28"
+  },
+  {
+    "path": "app/desktop/tests/pipeline-flow.test.ts",
+    "before": "1487050a997976bef5f7571e384e8512de39f98c37548982a4177fb64ca3809d",
+    "after": "59cecfd2dfb21b985604e70c7326f4331063a50f8d728215c027ff32afe811e9"
+  },
+  {
+    "path": "app/desktop/tests/pipeline-proposal.test.ts",
+    "before": "9bfc6c198119f92853a113109c5e1093df5777530a362c60c058ce5a7b645cfa",
+    "after": "96eb3ecddbc5082c4361832c11429fdfc8b7dc3867a1488f820520c0cf7d3902"
+  },
+  {
+    "path": "app/desktop/tests/plot-evidence.test.ts",
+    "before": "ef5c5c0f82601d43700b562ab965da31570b3651ad74ba56f52771584b0fe53d",
+    "after": "d8267d71c3ad42d5180bd3c77f0766f548c2ef9f277d6b28272322479f9ad5bd"
+  },
+  {
+    "path": "app/desktop/tests/run-preparation.test.ts",
+    "before": null,
+    "after": "1efd29e0f50c36a7f51a7e86aa1f8924478f39fd90c56c5bf2c69e5772d2f65d"
+  },
+  {
+    "path": "app/desktop/tests/service.test.ts",
+    "before": "f19d0f858a2a9b8dd9cc37881a14fb3805862d461f524c0fd53d2e48271b1450",
+    "after": "78c073be6fb491e190daa451fa34e98c1087784c9a6a529a86a1049e3b580959"
+  },
+  {
+    "path": "app/desktop/tests/workspace-migration.test.ts",
+    "before": "b3320bb29ffe6d0e20f9e53aac717169e806b220968fdacfef03054ac6c39be7",
+    "after": "0e7aca346841d793e8009ae4509e665734be5d262679874cf6caacd7c9ee353a"
+  },
+  {
+    "path": "cmd/gobble/creation_test.go",
+    "before": "b61c902c11a010caccea2136129bf3b26ee5dd3278a0953be9cadf54e0a0de79",
+    "after": "6747a7044189cb545a975c0c64123004c89df5d0d7ee68f852f456a097aa45e1"
+  },
+  {
+    "path": "cmd/gobble/driver.go",
+    "before": "0eb3761b31ec02234d5ea66466a0925b2f9ac6c4159ee5e702b1975671ce032c",
+    "after": "8bfd744d4ede986a324ea7a90b14040579d952f109422c82e98abba85186890f"
+  },
+  {
+    "path": "cmd/gobble/help.go",
+    "before": "67bd8d1b43370fa30a2a836eee2951b698d135c5195ad7768cd4012ebdc6ac3d",
+    "after": "39b0110b96b8102fc858e607ef56bd0415b5144a54f4887e930c7be3d8934092"
+  },
+  {
+    "path": "cmd/gobble/main.go",
+    "before": "7e7ff842303933c990b2c2e73763b26189ef42ba30d4298dcc496e00eff51442",
+    "after": "9c8409d8b01795dcf52c63ac9fd8b969d0a1109334c3599b9242b3d48c6bb364"
+  },
+  {
+    "path": "cmd/gobble/parse.go",
+    "before": "09d88c884b6371340b2e2fadeedb383d66d3dfbd5eb59c5fe424d04cbf13bdb0",
+    "after": "f7f54929b9757b42d6c053390cc7571908205e2b54618fed7b2beb10dd430596"
+  },
+  {
+    "path": "cmd/gobble/prepared_review.go",
+    "before": null,
+    "after": "b06862a125f0c70b0ae10ea4528e3b7c3914ffd40cdcb027d53cd9ec19ae84d1"
+  },
+  {
+    "path": "internal/appservice/boundaries_test.go",
+    "before": "3a72684fffdb2688409605e52e2bd4831be96e121ff67fde21aebe7228d5fc27",
+    "after": "b23642f8754916751163db7317f102bf761d350760e58a2bb398b79a52060840"
+  },
+  {
+    "path": "internal/appservice/creation_adoption_live_test.go",
+    "before": "87c308b6cce9477ed3c8c9744042a8a97d479fca41419b4f62ebe5388202807a",
+    "after": "e49607c370274b1964a2b33624445e524a46c4c54dfc887272b5a94a2f2bd42f"
+  },
+  {
+    "path": "internal/appservice/creation_candidate.go",
+    "before": "00ddfff1d632f31c7ea7d354357977094c29c85b447a17c6186205ed36cb2f6f",
+    "after": "2a36462e75368464d0277a6ff6a6f60d9a5a807fd09e50ce1cae67856eb0f6e5"
+  },
+  {
+    "path": "internal/appservice/creation_engines.go",
+    "before": "2ecca2a69a636a4968e8db036f9c4122e81fb3b72e5411536bd4aae4235b311b",
+    "after": "6ec38685a0aa5f0b08851c9325dff4d50e72f4a5bf4628ab43fe30789d54f552"
+  },
+  {
+    "path": "internal/appservice/pipeline_runtime.go",
+    "before": "42234a4e9c8b876f1c9e49f51efbe268740a6c4525b15365f240888b38641fa0",
+    "after": "c8905feb21f81d883792a3752db4cc4e27e40622971159f30c566f5fa34da692"
+  },
+  {
+    "path": "internal/appservice/preparation.go",
+    "before": null,
+    "after": "e448bc0f88873d8ab9147f566c07b0cade951d6a358460dde688a0887a53d2dd"
+  },
+  {
+    "path": "internal/appservice/preparation_reader.go",
+    "before": null,
+    "after": "e00da4ef6657337d8de9738d337fe2cae76e68d77b8b8c08834b7cc4e391fad6"
+  },
+  {
+    "path": "internal/appservice/preparation_routes.go",
+    "before": null,
+    "after": "ac77231601f6fa50cd1ab95045e09c1b84c483ef82f556e0b2ffe9a7967e1311"
+  },
+  {
+    "path": "internal/appservice/preparation_source.go",
+    "before": null,
+    "after": "5cc8007106f8c30a88ae517bb8fa38d9993369018fcb3fbe79a50c251ed32335"
+  },
+  {
+    "path": "internal/appservice/preparation_test.go",
+    "before": null,
+    "after": "120aa68fd6842c95c4865a7143d418612f9ee65ae9b61d498d5e36abf6a08438"
+  },
+  {
+    "path": "internal/appservice/service.go",
+    "before": "513ac394dcecb6cbe687c86dfa922655d942bd5c584522a7d8d8ffe02541e318",
+    "after": "7930b66bd9f1979f01cb7f6aabd6c3645efd6e9faedcc349d2c81e5d90aacd3e"
+  },
+  {
+    "path": "internal/engine/prepared.go",
+    "before": null,
+    "after": "dfc30dd7e31662e931d71744bd27a7aef1e0a511301fc9f10c2845baf3e058c4"
+  },
+  {
+    "path": "internal/engine/prepared_test.go",
+    "before": null,
+    "after": "5d8fb7f978d8e2d9ede5a1881a5fe607bd92a8d2c50585a6aa13e8c391d9440b"
+  },
+  {
+    "path": "internal/preparation/contract.go",
+    "before": null,
+    "after": "9791de5f36f018db8cbaee0d41c9d22c5ce7f030fd39698f56a2f22c0284d08a"
+  },
+  {
+    "path": "pipeline_creation_test.go",
+    "before": "4bf0e063e5171c727234b25b103781533dc1e594b320e692926e1da0167b0cec",
+    "after": "5db615dbd9ffe1e614cec1a9f3c58beecdafb09a0effa40522c5fc50ccdce991"
+  },
+  {
+    "path": "preparation.go",
+    "before": null,
+    "after": "e8c2c3e0e27f7a1a3228f697b242d6a901fbd33fd845a13be2e42f9e04e784b8"
+  }
+]

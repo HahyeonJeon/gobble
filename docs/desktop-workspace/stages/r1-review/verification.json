@@ -1,0 +1,43 @@
+{
+  "completedDate": "2026-09-08",
+  "command": "npm run check",
+  "exitCode": 0,
+  "checks": {
+    "format": "passed",
+    "types": "passed",
+    "generatedSchema": "passed",
+    "unitAndContract": {
+      "files": 14,
+      "tests": 166,
+      "result": "passed"
+    },
+    "electron": {
+      "tests": 36,
+      "result": "passed"
+    }
+  },
+  "profile": "isolated temporary test profiles; synthetic resources and fixture provider",
+  "limitations": [
+    "No live model invocation or scientific computation was verified in R1.",
+    "No packaging, deployment or full engine test result is claimed.",
+    "Original user profile and research datasets were not migrated during tests."
+  ],
+  "screenshots": [
+    {
+      "file": "r1-captured-evidence.png",
+      "sha256": "9613872c58a7f12ba8384b6d0f58c9aecaae4f5b6712de148edef9a447ebced0"
+    },
+    {
+      "file": "r1-historical.png",
+      "sha256": "9daad809b64b1e28073a9347b31d2b4cfde212abd4fcd31859308dfcb9c47609"
+    },
+    {
+      "file": "r1-migrated-exact.png",
+      "sha256": "06e2082f1e898f4f55d280b7d57b07e71cd7fec70d3529db12168944c6c88f60"
+    },
+    {
+      "file": "r1-source-unavailable.png",
+      "sha256": "14a0aaa1681e9884ca91c2b1ae80b5eb902587842d079638258baac2a24a28f7"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+
+Running 8 tests using 1 worker
+
+(node:6230) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 desktop/tests/electron/pdf-reference.spec.ts:86:1 › Agent PDF marks and immutable question capture preserve User state across Show, Return, changed source and restart (5.6s)
+  ✓  2 desktop/tests/electron/pdf-reference.spec.ts:197:1 › PDF tool scopes reject scroll-stale, source-preview, off-page, outside-visible and missing receipts (2.7s)
+  ✓  3 desktop/tests/electron/pdf-reference.spec.ts:239:1 › User PDF mark needs no Agent turn; text-only models cannot observe PDF pixels (2.5s)
+  ✓  4 desktop/tests/electron/pdf-reference.spec.ts:256:1 › Agent opens a PDF beside a protected User view without taking focus (2.6s)
+  ✓  5 desktop/tests/electron/pdf.spec.ts:64:1 › PDF page and pointer/keyboard region become immutable draft and sent evidence across refresh and restart (6.8s)
+  ✓  6 desktop/tests/electron/pdf.spec.ts:179:1 › PDF readers isolate navigation, reject stale or cross-Pane capture and dispose when hidden or switched (2.4s)
+  ✓  7 desktop/tests/electron/pdf.spec.ts:285:1 › unsupported PDFs fail locally and recover through the existing Pane retry (1.5s)
+  ✓  8 desktop/tests/electron/pdf.spec.ts:300:1 › closing a loading PDF discards late work and leaves the Project usable (806ms)
+
+  8 passed (25.5s)

@@ -1,0 +1,6 @@
+
+> gobble-app-workspace@0.1.0 typecheck
+> tsc -p contracts/tsconfig.json && npm run typecheck --workspace @gobble/desktop && tsc -p tsconfig.tools.json
+
+contracts/src/reference-presentation.ts(37,10): error TS2304: Cannot find name 'structuredClone'.
+contracts/src/reference-presentation.ts(46,16): error TS2304: Cannot find name 'structuredClone'.

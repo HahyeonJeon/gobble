@@ -1,0 +1,48 @@
+=== RUN   TestContinuationStaleReviewAndCanceledIntent
+=== RUN   TestContinuationStaleReviewAndCanceledIntent/stale
+=== RUN   TestContinuationStaleReviewAndCanceledIntent/canceled
+=== RUN   TestContinuationStaleReviewAndCanceledIntent/occupied
+=== RUN   TestContinuationStaleReviewAndCanceledIntent/schema1
+=== RUN   TestContinuationStaleReviewAndCanceledIntent/payload
+=== RUN   TestContinuationStaleReviewAndCanceledIntent/workspace
+--- PASS: TestContinuationStaleReviewAndCanceledIntent (1.50s)
+    --- PASS: TestContinuationStaleReviewAndCanceledIntent/stale (0.30s)
+    --- PASS: TestContinuationStaleReviewAndCanceledIntent/canceled (0.24s)
+    --- PASS: TestContinuationStaleReviewAndCanceledIntent/occupied (0.24s)
+    --- PASS: TestContinuationStaleReviewAndCanceledIntent/schema1 (0.24s)
+    --- PASS: TestContinuationStaleReviewAndCanceledIntent/payload (0.24s)
+    --- PASS: TestContinuationStaleReviewAndCanceledIntent/workspace (0.24s)
+=== RUN   TestContinuationCompetingIntentAndStopEpoch
+    continuation_lifecycle_test.go:82: no new owner
+--- FAIL: TestContinuationCompetingIntentAndStopEpoch (0.25s)
+=== RUN   TestContinuationChecksStagedReviewedInputBeforeSubmit
+--- PASS: TestContinuationChecksStagedReviewedInputBeforeSubmit (0.24s)
+=== RUN   TestContinuationReceiptSurvivesUncertainPublication
+=== RUN   TestContinuationReceiptSurvivesUncertainPublication/generation
+=== RUN   TestContinuationReceiptSurvivesUncertainPublication/pointer
+--- PASS: TestContinuationReceiptSurvivesUncertainPublication (0.49s)
+    --- PASS: TestContinuationReceiptSurvivesUncertainPublication/generation (0.24s)
+    --- PASS: TestContinuationReceiptSurvivesUncertainPublication/pointer (0.24s)
+=== RUN   TestContinuationReviewAndSameRunExecution
+--- PASS: TestContinuationReviewAndSameRunExecution (0.28s)
+=== RUN   TestContinuationRefusesChangedEvidence
+=== RUN   TestContinuationRefusesChangedEvidence/not_canceled
+=== RUN   TestContinuationRefusesChangedEvidence/saved_input
+=== RUN   TestContinuationRefusesChangedEvidence/completed_output
+=== RUN   TestContinuationRefusesChangedEvidence/missing_output
+=== RUN   TestContinuationRefusesChangedEvidence/partial_output
+=== RUN   TestContinuationRefusesChangedEvidence/tool_changed
+=== RUN   TestContinuationRefusesChangedEvidence/backend_uncertain
+=== RUN   TestContinuationRefusesChangedEvidence/failed
+--- PASS: TestContinuationRefusesChangedEvidence (2.15s)
+    --- PASS: TestContinuationRefusesChangedEvidence/not_canceled (0.45s)
+    --- PASS: TestContinuationRefusesChangedEvidence/saved_input (0.24s)
+    --- PASS: TestContinuationRefusesChangedEvidence/completed_output (0.24s)
+    --- PASS: TestContinuationRefusesChangedEvidence/missing_output (0.24s)
+    --- PASS: TestContinuationRefusesChangedEvidence/partial_output (0.25s)
+    --- PASS: TestContinuationRefusesChangedEvidence/tool_changed (0.24s)
+    --- PASS: TestContinuationRefusesChangedEvidence/backend_uncertain (0.24s)
+    --- PASS: TestContinuationRefusesChangedEvidence/failed (0.25s)
+=== RUN   TestContinuationRestartAndNeverStarted
+--- PASS: TestContinuationRestartAndNeverStarted (0.48s)
+FAIL

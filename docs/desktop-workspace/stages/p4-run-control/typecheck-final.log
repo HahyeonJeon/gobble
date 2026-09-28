@@ -1,0 +1,17 @@
+
+> gobble-app-workspace@0.1.0 typecheck
+> tsc -p contracts/tsconfig.json && npm run typecheck --workspace @gobble/desktop && tsc -p tsconfig.tools.json
+
+
+> @gobble/desktop@0.1.0 typecheck
+> tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && tsc -p tsconfig.renderer.json
+
+src/renderer/chat/ProjectChat.tsx(91,40): error TS2339: Property 'projectId' does not exist on type '{ collaboration?: { submissions: { evidence?: { capture?: { kind: "pipeline"; capturedAt: number; representation: { kind: "pipeline"; truncated: false; }; asset: { mediaType: "application/json"; hash: string; byteLength: number; }; } | { ...; } | { ...; } | { ...; }; ... 7 more ...; asset: { ...; }; }[]; ... 17 more...'.
+src/renderer/run-launch/LaunchActionCards.tsx(14,55): error TS2339: Property 'projectId' does not exist on type '{ collaboration?: { submissions: { evidence?: { capture?: { kind: "pipeline"; capturedAt: number; representation: { kind: "pipeline"; truncated: false; }; asset: { mediaType: "application/json"; hash: string; byteLength: number; }; } | { ...; } | { ...; } | { ...; }; ... 7 more ...; asset: { ...; }; }[]; ... 17 more...'.
+npm error Lifecycle script `typecheck` failed with error:
+npm error code 2
+npm error path /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop
+npm error workspace @gobble/desktop@0.1.0
+npm error location /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop
+npm error command failed
+npm error command sh -c tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && tsc -p tsconfig.renderer.json

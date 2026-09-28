@@ -1,0 +1,19 @@
+{
+  "command": [
+    "go",
+    "test",
+    "-c",
+    "-o",
+    "/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-pipeline-compile-6qxfm8et/gobble.test",
+    "."
+  ],
+  "environment": {
+    "GOOS": "linux",
+    "GOARCH": "amd64",
+    "CGO_ENABLED": "0"
+  },
+  "exitCode": 0,
+  "stdout": "",
+  "stderr": "",
+  "claim": "Compile only; no Linux test execution. Owned temporary artifact removed after inspection."
+}

@@ -1,0 +1,20 @@
+{
+  "date": "2026-09-08",
+  "branch": "codex/project-workspace-design",
+  "head": "7fe3d5c9e10d0cc104a15b6e7aa3def0d15b98f1",
+  "sourceManifest": "source-changes.json",
+  "platform": "macOS 26.5.2 arm64",
+  "node": "25.7.0",
+  "electron": "44.2.0",
+  "typescript": "5.9.3",
+  "react": "19.2.8",
+  "plotlyBasic": "4.0.0",
+  "contractVersions": {
+    "document": 6,
+    "renderAcknowledgment": 3,
+    "sharedToolset": "shared-views-v4"
+  },
+  "checks": "final-accepted-check.log",
+  "lockfileSha256": "4e70a653ae9705683145c134631326dcfa9bcceb3a99448f7f9bd0c952489118",
+  "scope": "R2c development/testing; no package or release claim"
+}

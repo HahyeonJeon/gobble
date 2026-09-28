@@ -1,0 +1,4 @@
+# github.com/HahyeonJeon/gobble/internal/appservice [github.com/HahyeonJeon/gobble/internal/appservice.test]
+internal/appservice/continuation_runtime.go:10:2: "time" imported and not used
+FAIL	github.com/HahyeonJeon/gobble/internal/appservice [build failed]
+FAIL

@@ -1,0 +1,10 @@
+{
+  "host": {
+    "os": "Darwin",
+    "macOS": "26.5.2",
+    "architecture": "arm64"
+  },
+  "head": "7fe3d5c9e10d0cc104a15b6e7aa3def0d15b98f1",
+  "branch": "codex/project-workspace-design",
+  "engineImage": "sha256:5d7b7247b407844149bc80173e8da2bf656077b827dd3f2ae9149ee490258e76"
+}

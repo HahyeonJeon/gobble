@@ -1,0 +1,20 @@
+
+> gobble-app-workspace@0.1.0 typecheck
+> tsc -p contracts/tsconfig.json && npm run typecheck --workspace @gobble/desktop && tsc -p tsconfig.tools.json
+
+
+> @gobble/desktop@0.1.0 typecheck
+> tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && tsc -p tsconfig.renderer.json
+
+desktop/tests/evidence.test.ts(378,11): error TS2322: Type '"utf16-line-column"' is not assignable to type '"observed-instance-attempt" | "decoded-preview-utf16-line-column"'.
+desktop/tests/evidence.test.ts(379,11): error TS2322: Type '"text"' is not assignable to type '"run-task" | "log-text"'.
+desktop/tests/evidence.test.ts(404,9): error TS2375: Type '{ selection: { coordinateSpace: "utf16-line-column"; kind: "text"; start: { line: number; column: number; }; end: { line: number; column: number; }; }; origin?: { surfaceId: string; }; projectId: string; resource: { ...; } | ... 1 more ... | { ...; }; dataRevision: string; schemaVersion: 3; }' is not assignable to type '{ selection?: { kind: "table"; columns: string[]; rowKeys: string[]; coordinateSpace: "revision-row-column-keys"; } | { start: { line: number; column: number; }; end: { line: number; column: number; }; kind: "text"; coordinateSpace: "utf16-line-column"; } | { ...; }; ... 4 more ...; schemaVersion: 2; } | { ...; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'selection' are incompatible.
+    Type '{ coordinateSpace: "utf16-line-column"; kind: "text"; start: { line: number; column: number; }; end: { line: number; column: number; }; }' is not assignable to type '{ kind: "run-task"; attempt: number; coordinateSpace: "observed-instance-attempt"; instanceId: string; } | { start: { line: number; column: number; }; end: { line: number; column: number; }; kind: "log-text"; coordinateSpace: "decoded-preview-utf16-line-column"; stream: "stdout" | "stderr"; } | undefined'.
+      Types of property 'coordinateSpace' are incompatible.
+        Type '"utf16-line-column"' is not assignable to type '"observed-instance-attempt" | "decoded-preview-utf16-line-column"'.
+desktop/tests/evidence.test.ts(562,11): error TS2375: Type '{ dataRevision: string; selection: { coordinateSpace: "utf16-line-column"; kind: "text"; start: { line: number; column: number; }; end: { line: number; column: number; }; }; origin?: { surfaceId: string; }; projectId: string; resource: { ...; } | ... 1 more ... | { ...; }; schemaVersion: 3; }' is not assignable to type '{ selection?: { kind: "table"; columns: string[]; rowKeys: string[]; coordinateSpace: "revision-row-column-keys"; } | { start: { line: number; column: number; }; end: { line: number; column: number; }; kind: "text"; coordinateSpace: "utf16-line-column"; } | { ...; }; ... 4 more ...; schemaVersion: 2; } | { ...; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'selection' are incompatible.
+    Type '{ coordinateSpace: "utf16-line-column"; kind: "text"; start: { line: number; column: number; }; end: { line: number; column: number; }; }' is not assignable to type '{ kind: "run-task"; attempt: number; coordinateSpace: "observed-instance-attempt"; instanceId: string; } | { start: { line: number; column: number; }; end: { line: number; column: number; }; kind: "log-text"; coordinateSpace: "decoded-preview-utf16-line-column"; stream: "stdout" | "stderr"; } | undefined'.
+      Types of property 'coordinateSpace' are incompatible.
+        Type '"utf16-line-column"' is not assignable to type '"observed-instance-attempt" | "decoded-preview-utf16-line-column"'.

@@ -1,0 +1,32 @@
+{
+  "projects": {
+    "prj_DXT6JIS3LZCPFX6BEA7ZMUURGS.json": {
+      "unchanged": true
+    },
+    "prj_AMLEPCTL2UZFXLADH2ZA5KGNV4.json": {
+      "unchangedContent": true,
+      "migration": [
+        8,
+        10
+      ],
+      "changedFields": [
+        "schemaVersion"
+      ],
+      "exactOriginalBackup": "/Users/hahyeon/Library/Application Support/Gobble-stage4-review/workspace/projects/prj_AMLEPCTL2UZFXLADH2ZA5KGNV4.json.v8.backup"
+    },
+    "prj_ALUMSMHXKYBDHDMJRB6M27ZQLN.json": {
+      "unchanged": true
+    },
+    "prj_BMNZSOZGRIUGDEMROC2XSUUIGS.json": {
+      "unchanged": true
+    },
+    "prj_BLTEOBDGRONGZGKXPNPFK6P2WI.json": {
+      "unchanged": true
+    }
+  },
+  "allUserContentPreserved": true,
+  "windowRestored": true,
+  "trialProjectRetained": true,
+  "trialProcessClosed": true,
+  "normalRuntimeRestored": true
+}

@@ -1,0 +1,43 @@
+{
+  "kind": "real-signed-in-agent",
+  "model": "gpt-6-astra",
+  "effort": "medium",
+  "profile": "/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-creation-agent-BHTeiE/profile",
+  "project": "/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-creation-agent-BHTeiE/Read quality acceptance",
+  "pipelines": [
+    {
+      "projectId": "prj_ENHB52OPUU65FUDKTZYTUK3ESG",
+      "pipelineId": "pip_6XH3J722FTOYLJKAJSFMFPNOHQ",
+      "name": "Read quality acceptance",
+      "origin": {
+        "kind": "managed"
+      }
+    }
+  ],
+  "birth": [
+    {
+      "adoption": {
+        "requestId": "req_create_4ba5a3c07b23d772d789b01474b45ef7a451391241ee88d28a7c9a2837cad6a5",
+        "pipelineId": "pip_6XH3J722FTOYLJKAJSFMFPNOHQ",
+        "candidateId": "req_4ba5a3c07b23d772d789b01474b45ef7a451391241ee88d28a7c9a2837cad6a5",
+        "artifactId": "sha256:b2be456f6f9e809d260ec7432b85d3828dafd19c642278c5b437651b1fa28b05",
+        "generation": 2,
+        "name": "Read quality acceptance"
+      },
+      "projectId": "prj_ENHB52OPUU65FUDKTZYTUK3ESG",
+      "draftId": "drf_PONLLHGRYPHBHU6IJS2FULRF5R",
+      "generation": 3,
+      "state": "adopted",
+      "brief": "",
+      "input": {
+        "resourceId": "res_678192b640722103feedc0085c4fe38d574f7386185e098c43562d540cdcca2f",
+        "relativePath": "sample.fastq.gz",
+        "readLayout": "single-end",
+        "size": 39,
+        "modifiedAt": "2026-09-12T11:18:28.165639783Z",
+        "identity": "sha256:dabcdc7e8337b556e48ec7893627427fca916202312c1bd71854fd89d41fd2cc"
+      }
+    }
+  ],
+  "runs": []
+}

@@ -1,0 +1,14 @@
+
+Running 3 tests using 1 worker
+
+(node:44716) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 desktop/tests/electron/linked-views.spec.ts:256:1 › Shift box adds exact members, mouse and keyboard zoom preserve them, and invalid rows remain selectable in a zero-point plot (2.4s)
+(node:44723) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  2 desktop/tests/electron/linked-views.spec.ts:256:1 › Shift box adds exact members, mouse and keyboard zoom preserve them, and invalid rows remain selectable in a zero-point plot (1.8s)
+(node:44729) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  3 desktop/tests/electron/linked-views.spec.ts:256:1 › Shift box adds exact members, mouse and keyboard zoom preserve them, and invalid rows remain selectable in a zero-point plot (1.9s)
+
+  3 passed (7.2s)

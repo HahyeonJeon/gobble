@@ -1,0 +1,6 @@
+=== RUN   TestLiveCreationAdoptionAndRefinement
+    creation_adoption_live_test.go:52: live preparation: {CreatedAt:2026-09-12T12:13:07.583308Z ProjectID:prj_PHBHEMVDKGNOS7RX3HPXTKTUUM PipelineID:pip_2U6W2FFDQOH2UBNNETFVD2L55M RequestID:req_prepare_birth ArtifactID:sha256:7c54ae41736ee38a5b3318b2c6ab475a290d45884fd9e7becb20cc367e2c726d State:failed Issue:The analysis could not be checked. Ask the Agent to check its inputs and confirm that the pinned runtime supports pipeline inspection. Prepared:<nil> Fresh:false}
+--- FAIL: TestLiveCreationAdoptionAndRefinement (129.84s)
+FAIL
+FAIL	github.com/HahyeonJeon/gobble/internal/appservice	130.410s
+FAIL

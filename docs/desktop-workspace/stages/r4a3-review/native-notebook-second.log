@@ -1,0 +1,18 @@
+
+Running 11 tests using 1 worker
+
+(node:27848) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 desktop/tests/electron/notebook-shared.spec.ts:35:1 › Agent text and immutable question evidence preserve User state through Show/Return and missing-source fallback (3.5s)
+  ✓   2 desktop/tests/electron/notebook-shared.spec.ts:58:1 › only explicit painted image observation receives pixels and preserves an unfinished User region through Show/Return (2.6s)
+  ✓   3 desktop/tests/electron/notebook-shared.spec.ts:73:1 › actual scrolling revokes old Notebook receipts and clipped source-preview cannot authorize a mark (2.2s)
+  ✓   4 desktop/tests/electron/notebook.spec.ts:93:1 › saved source and output attach through the existing composer, preview offline and survive source changes and restart (2.4s)
+  ✓   5 desktop/tests/electron/notebook.spec.ts:161:1 › native text drag uses exact display offsets and rejects stale or foreign image requests (994ms)
+  ✓   6 desktop/tests/electron/notebook.spec.ts:218:1 › native pointer and keyboard image selection at 150 percent captures the exact original pixels (1.2s)
+  ✓   7 desktop/tests/electron/notebook.spec.ts:283:1 › two Notebook Panes remain independent and compact and enlarged layouts retain the composer (2.4s)
+  ✓   8 desktop/tests/electron/notebook.spec.ts:337:1 › malformed sources recover explicitly and renderer replacement preserves draft and captured attachments (1.7s)
+  ✓   9 desktop/tests/electron/notebook.spec.ts:407:1 › one MiB text stays bounded, continuation keeps absolute offsets and oversized capture leaves the draft intact (1.4s)
+  ✓  10 desktop/tests/electron/notebook.spec.ts:428:1 › embedded image above generic text limits opens on demand and bounded exact capture succeeds (1.5s)
+  ✓  11 desktop/tests/electron/notebook.spec.ts:456:1 › explicit Send delivers captured Notebook text and image through the existing addressed path (2.9s)
+
+  11 passed (23.4s)

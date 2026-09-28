@@ -1,0 +1,130 @@
+{
+  "projectId": "prj_RHZGMRPODFSPKEVNYJMW4LLEHH",
+  "model": "gpt-6-astra",
+  "toolset": "shared-views-v7",
+  "state": "completed",
+  "referenceCount": 2,
+  "crossModeShow": true,
+  "returnPreservesUserState": true,
+  "arrivalFocusPreserved": "observed in native accessibility state",
+  "capturedEvidenceOpened": true,
+  "before": {
+    "surfaces": [
+      {
+        "projectId": "prj_RHZGMRPODFSPKEVNYJMW4LLEHH",
+        "surfaceId": "srf_74736cb8-bee1-41c9-b18c-01c51360ae9c",
+        "resource": {
+          "kind": "run",
+          "runRef": "run_4ULBLJVTTRWMJA6WF32CKYZ75K"
+        },
+        "view": "run",
+        "pinned": false,
+        "openedBy": {
+          "kind": "user"
+        },
+        "runView": {
+          "query": "S03",
+          "status": null,
+          "viewRevision": 3,
+          "mode": "tasks",
+          "dependencies": {
+            "representation": "graph",
+            "query": "",
+            "camera": {
+              "zoom": 1.25,
+              "x": 0,
+              "y": 0
+            }
+          }
+        }
+      }
+    ],
+    "selections": [
+      {
+        "surfaceId": "srf_74736cb8-bee1-41c9-b18c-01c51360ae9c",
+        "evidence": {
+          "schemaVersion": 4,
+          "projectId": "prj_RHZGMRPODFSPKEVNYJMW4LLEHH",
+          "resource": {
+            "kind": "run",
+            "runRef": "run_4ULBLJVTTRWMJA6WF32CKYZ75K"
+          },
+          "dataRevision": "sha256:d9d1eea08fedfd817f01e9d50b9bb20bb63e3df5b171a73cf4010e2fcbdc09e0",
+          "selection": {
+            "kind": "run-group",
+            "coordinateSpace": "observed-authored-task-group",
+            "taskId": "prepare"
+          }
+        }
+      }
+    ],
+    "chat": {
+      "collapsed": false,
+      "width": 420,
+      "draft": "My next instruction stays local during this review.",
+      "recipientAgentId": "agt_55e385fa-3d30-4591-a56a-7a6f7ef2f0a1",
+      "attachments": [],
+      "attachmentRevision": 4
+    }
+  },
+  "after": {
+    "surfaces": [
+      {
+        "projectId": "prj_RHZGMRPODFSPKEVNYJMW4LLEHH",
+        "surfaceId": "srf_74736cb8-bee1-41c9-b18c-01c51360ae9c",
+        "resource": {
+          "kind": "run",
+          "runRef": "run_4ULBLJVTTRWMJA6WF32CKYZ75K"
+        },
+        "view": "run",
+        "pinned": false,
+        "openedBy": {
+          "kind": "user"
+        },
+        "runView": {
+          "query": "S03",
+          "status": null,
+          "viewRevision": 3,
+          "mode": "tasks",
+          "dependencies": {
+            "representation": "graph",
+            "query": "",
+            "camera": {
+              "zoom": 1.25,
+              "x": 0,
+              "y": 0
+            }
+          }
+        }
+      }
+    ],
+    "selections": [
+      {
+        "surfaceId": "srf_74736cb8-bee1-41c9-b18c-01c51360ae9c",
+        "evidence": {
+          "schemaVersion": 4,
+          "projectId": "prj_RHZGMRPODFSPKEVNYJMW4LLEHH",
+          "resource": {
+            "kind": "run",
+            "runRef": "run_4ULBLJVTTRWMJA6WF32CKYZ75K"
+          },
+          "dataRevision": "sha256:d9d1eea08fedfd817f01e9d50b9bb20bb63e3df5b171a73cf4010e2fcbdc09e0",
+          "selection": {
+            "kind": "run-group",
+            "coordinateSpace": "observed-authored-task-group",
+            "taskId": "prepare"
+          }
+        }
+      }
+    ],
+    "chat": {
+      "collapsed": false,
+      "width": 420,
+      "draft": "My next instruction stays local during this review.",
+      "recipientAgentId": "agt_55e385fa-3d30-4591-a56a-7a6f7ef2f0a1",
+      "attachments": [],
+      "attachmentRevision": 4
+    }
+  },
+  "method": "native UI using CUA; actual signed-in Codex; synthetic monitor process"
+}

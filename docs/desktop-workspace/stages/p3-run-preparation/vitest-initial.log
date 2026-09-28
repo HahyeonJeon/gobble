@@ -1,0 +1,17 @@
+
+> gobble-app-workspace@0.1.0 test
+> npm run build:service && vitest run
+
+
+> gobble-app-workspace@0.1.0 build:service
+> tsx scripts/build-service.ts
+
+
+ RUN  v4.1.11 /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app
+
+
+ Test Files  37 passed (37)
+      Tests  358 passed (358)
+   Start at  21:13:35
+   Duration  9.05s (transform 5.66s, setup 0ms, import 13.16s, tests 42.63s, environment 2ms)
+

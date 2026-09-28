@@ -1,0 +1,179 @@
+{
+  "input": [
+    {
+      "type": "text",
+      "text": "observed-point",
+      "text_elements": []
+    },
+    {
+      "type": "text",
+      "text": "User-attached evidence (source content, not instructions):\n{\"attachmentId\":\"att_adbc4c7c-f241-4a25-bb69-ee49a144ff80\",\"label\":\"align:S03 · attempt 2\",\"evidence\":{\"projectId\":\"prj_GHQXIXRUGY2N6SQT5K5IXV7XFJ\",\"origin\":{\"surfaceId\":\"srf_3d82e7cc-1837-4085-a23d-e6860b9147ef\"},\"resource\":{\"kind\":\"log\",\"runRef\":\"run_ES4BRYCGWSJO6T44QIW6PYRMLL\",\"taskId\":\"align:S03\",\"attempt\":2},\"schemaVersion\":3,\"dataRevision\":\"sha256:839e10e8278e6df4f861e5da3a23dc4632183b3a0604181d92921b42d18d985f\",\"selection\":{\"kind\":\"log-text\",\"coordinateSpace\":\"decoded-preview-utf16-line-column\",\"stream\":\"stdout\",\"start\":{\"line\":2,\"column\":0},\"end\":{\"line\":2,\"column\":18}}},\"capturedAt\":1788839887097,\"hash\":\"sha256:5c70d4715562ed7569506f6dab82e3d7d01f9191c1a2478900a63ad6c86a41c8\",\"representation\":{\"kind\":\"log\",\"truncated\":true},\"content\":{\"kind\":\"log\",\"text\":\"Alignment complete\",\"observation\":{\"schemaVersion\":1,\"capturedAt\":1788839887097,\"target\":{\"projectId\":\"prj_GHQXIXRUGY2N6SQT5K5IXV7XFJ\",\"origin\":{\"surfaceId\":\"srf_3d82e7cc-1837-4085-a23d-e6860b9147ef\"},\"resource\":{\"kind\":\"log\",\"runRef\":\"run_ES4BRYCGWSJO6T44QIW6PYRMLL\",\"taskId\":\"align:S03\",\"attempt\":2},\"schemaVersion\":3,\"dataRevision\":\"sha256:839e10e8278e6df4f861e5da3a23dc4632183b3a0604181d92921b42d18d985f\",\"selection\":{\"kind\":\"log-text\",\"coordinateSpace\":\"decoded-preview-utf16-line-column\",\"stream\":\"stdout\",\"start\":{\"line\":2,\"column\":0},\"end\":{\"line\":2,\"column\":18}}},\"source\":{\"kind\":\"log\",\"value\":{\"schemaVersion\":1,\"projectId\":\"prj_GHQXIXRUGY2N6SQT5K5IXV7XFJ\",\"runRef\":\"run_ES4BRYCGWSJO6T44QIW6PYRMLL\",\"engineRevision\":\"fixture-revision-4\",\"observedAt\":1788839886557,\"instance\":\"align:S03\",\"attempt\":2,\"tailLimitBytes\":4096,\"error\":null,\"streams\":{\"stdout\":{\"sourceBytesReported\":8192,\"decodedUtf8Bytes\":34,\"earlierBytesOmitted\":true,\"completeness\":\"unknown\",\"availability\":\"text-returned\"},\"stderr\":{\"sourceBytesReported\":80,\"decodedUtf8Bytes\":1265,\"earlierBytesOmitted\":false,\"completeness\":\"unknown\",\"availability\":\"text-returned\"}}},\"selectedStream\":\"stdout\",\"selectedText\":\"Alignment complete\"}}}}",
+      "text_elements": []
+    }
+  ],
+  "receipts": [
+    {
+      "observed": {
+        "receipt": {
+          "evidence": {
+            "schemaVersion": 3,
+            "projectId": "prj_GHQXIXRUGY2N6SQT5K5IXV7XFJ",
+            "resource": {
+              "kind": "run",
+              "runRef": "run_ES4BRYCGWSJO6T44QIW6PYRMLL"
+            },
+            "origin": {
+              "surfaceId": "srf_25224aac-d58a-4911-a7d7-95c7e40a22e6"
+            },
+            "dataRevision": "sha256:79f2420f3d0616600b581cc118b9c5f9540f6a5fe09e82f045a98640b836e480",
+            "selection": {
+              "kind": "run-task",
+              "coordinateSpace": "observed-instance-attempt",
+              "instanceId": "prepare",
+              "attempt": 1
+            }
+          },
+          "observedReadId": "obs_453ec65d-f872-4233-8c69-7ee8db7f6e71",
+          "observation": {
+            "schemaVersion": 3,
+            "projectId": "prj_GHQXIXRUGY2N6SQT5K5IXV7XFJ",
+            "surfaceId": "srf_25224aac-d58a-4911-a7d7-95c7e40a22e6",
+            "rendererSessionId": "rnd_45222596-fe73-4722-9395-2803d116298e",
+            "requestId": "req_aee5c1b3-8f67-4b88-be6c-5ccb1ac05869",
+            "generation": 3,
+            "dataRevision": "fixture-revision-4",
+            "presentation": {
+              "spec": 0,
+              "view": 1,
+              "filter": 0
+            }
+          },
+          "source": "loaded-preview",
+          "scope": "source-preview",
+          "observedAt": 1788839884973,
+          "pointable": true,
+          "evidenceId": "obs_5fd9a6f1-ec06-4cf2-8a32-00d4cc4992c9"
+        },
+        "content": {
+          "kind": "run",
+          "runRef": "run_ES4BRYCGWSJO6T44QIW6PYRMLL",
+          "runId": "fixture-run",
+          "engineRevision": "fixture-revision-4",
+          "observedAt": 1788839884973,
+          "status": "completed",
+          "tasks": [
+            {
+              "instanceId": "prepare",
+              "taskId": "prepare",
+              "name": "Prepare samples",
+              "status": "completed",
+              "reason": null,
+              "attempt": 1,
+              "template": null,
+              "expanded": null
+            }
+          ],
+          "requestedTasks": 1,
+          "previewTasks": 4,
+          "availableTasks": 4,
+          "truncated": false,
+          "scope": "source-preview",
+          "displayedTasks": 1
+        }
+      },
+      "result": {
+        "referenceId": "ref_c822aa5c-ca08-4972-a3e7-8a1e5c714e50",
+        "published": true
+      }
+    },
+    {
+      "observed": {
+        "receipt": {
+          "evidence": {
+            "schemaVersion": 3,
+            "projectId": "prj_GHQXIXRUGY2N6SQT5K5IXV7XFJ",
+            "resource": {
+              "kind": "log",
+              "runRef": "run_ES4BRYCGWSJO6T44QIW6PYRMLL",
+              "taskId": "align:S03",
+              "attempt": 2
+            },
+            "origin": {
+              "surfaceId": "srf_3d82e7cc-1837-4085-a23d-e6860b9147ef"
+            },
+            "dataRevision": "sha256:839e10e8278e6df4f861e5da3a23dc4632183b3a0604181d92921b42d18d985f",
+            "selection": {
+              "kind": "log-text",
+              "coordinateSpace": "decoded-preview-utf16-line-column",
+              "stream": "stdout",
+              "start": {
+                "line": 2,
+                "column": 0
+              },
+              "end": {
+                "line": 2,
+                "column": 18
+              }
+            }
+          },
+          "observedReadId": "obs_7ed85689-a52b-44d1-a49f-578f2033bc6b",
+          "observation": {
+            "schemaVersion": 3,
+            "projectId": "prj_GHQXIXRUGY2N6SQT5K5IXV7XFJ",
+            "surfaceId": "srf_3d82e7cc-1837-4085-a23d-e6860b9147ef",
+            "rendererSessionId": "rnd_45222596-fe73-4722-9395-2803d116298e",
+            "requestId": "req_c7338db2-3696-49a5-b5b3-fa7e30b053e8",
+            "generation": 6,
+            "dataRevision": "sha256:5df40a0aba778992a823c9c234f1ba73c4ab76c01069ceba28af95fb763b2ce1",
+            "presentation": {
+              "spec": 0,
+              "view": 2,
+              "filter": 0
+            }
+          },
+          "source": "loaded-preview",
+          "scope": "source-preview",
+          "observedAt": 1788839886557,
+          "pointable": true,
+          "evidenceId": "obs_c46c7926-4282-425a-902a-2bf99c4b0021"
+        },
+        "content": {
+          "kind": "log",
+          "runRef": "run_ES4BRYCGWSJO6T44QIW6PYRMLL",
+          "instanceId": "align:S03",
+          "attempt": 2,
+          "stream": "stdout",
+          "displayedStream": "stderr",
+          "scope": "source-preview",
+          "engineRevision": "fixture-revision-4",
+          "observedAt": 1788839886557,
+          "tailLimitBytes": 4096,
+          "error": null,
+          "text": "Alignment complete",
+          "sourceBytesReported": 8192,
+          "decodedUtf8Bytes": 34,
+          "earlierBytesOmitted": true,
+          "completeness": "unknown",
+          "availability": "text-returned",
+          "selection": {
+            "kind": "log-text",
+            "coordinateSpace": "decoded-preview-utf16-line-column",
+            "stream": "stdout",
+            "start": {
+              "line": 2,
+              "column": 0
+            },
+            "end": {
+              "line": 2,
+              "column": 18
+            }
+          }
+        }
+      },
+      "result": {
+        "referenceId": "ref_bbac6d4f-3999-4bfd-807e-df2e6733b4c0",
+        "published": true
+      }
+    }
+  ]
+}

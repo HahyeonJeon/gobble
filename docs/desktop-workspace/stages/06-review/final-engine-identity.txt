@@ -1,0 +1,13 @@
+commit f83b18d3b7d20514358a1b2f7c0d319bdf6bf17b
+Author:     HAHYEON JEON <jeonhh0061@gmail.com>
+AuthorDate: Mon Sep 7 21:53:22 2026 +0900
+Commit:     HAHYEON JEON <jeonhh0061@gmail.com>
+CommitDate: Mon Sep 7 21:53:22 2026 +0900
+
+    fix(engine): retain completed live log collection results
+
+ docs/docker-execution.md          | 11 +++++--
+ internal/engine/exec/docker.go    |  8 ++---
+ internal/engine/exec/logs.go      | 30 ++++++++++++++++--
+ internal/engine/exec/logs_test.go | 64 +++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 103 insertions(+), 10 deletions(-)

@@ -1,0 +1,6 @@
+const draft=page.getByRole('textbox',{name:'Message draft'});
+await draft.fill('This is synthetic UI acceptance-test data. Briefly report the exact two attached log excerpts with their stream, instance, attempt and recorded engine revision. Then use workspace_list and workspace_observe to read the displayed Run and its source-preview, identify the completed preparation task excluded by my S03 filter, and publish a pointer to that exact instance and attempt. Also observe only the stdout line "Alignment complete" in the log view using source-preview while my displayed stream remains stderr, and publish a pointer to that exact line using its observedReadId and full observation receipt. Keep all output in English and under 180 words. Keep my filters, stream, selection and draft unchanged. Use only the shared workspace tools; no files, execution or external resources are needed.');
+await page.getByRole('button',{name:'Send',exact:true}).click();
+await page.waitForFunction(() => document.querySelector('[aria-label="Message draft"]').value === '');
+await draft.fill('Keep this draft local while reviewing Agent references.');
+return {sent: true, draftFocused: await draft.evaluate(el=>el===document.activeElement)};

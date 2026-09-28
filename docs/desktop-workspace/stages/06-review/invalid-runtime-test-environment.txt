@@ -1,0 +1,580 @@
+--- FAIL: TestInspectRemainingCheapNoHash (0.14s)
+    inspect_test.go:269: input is readable, chmod 000 did not block reads
+FAIL
+FAIL	github.com/HahyeonJeon/gobble	42.201s
+ok  	github.com/HahyeonJeon/gobble/assets	0.429s
+ok  	github.com/HahyeonJeon/gobble/assets/modules	0.094s
+?   	github.com/HahyeonJeon/gobble/assets/modules/anndatar-convert	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/atac-consensus-peaks	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/atac-frip-score	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/atac-reference-intervals	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/ataqv	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/ataqv-mkarv	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/bcftools-sort	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/bcftools-stats	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/bedgraph-scale	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/bedtools-genomecov	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/bedtools-intersect	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/bismark-align	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/bismark-deduplicate	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/bismark-genome	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/bismark-methylation-extractor	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/bismark-report	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/bismark-summary	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/bwa-index	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/bwa-mem	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/cat-fastq	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/cut-chrom-sizes	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/deeptools-compute-matrix	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/deeptools-plot-fingerprint	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/deeptools-plot-profile	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/deseq2-qc	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/dupradar	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/fastp	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/fastqc	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/featurecounts	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/featurecounts-merge-matrices	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/fq-lint	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/gatk4-applybqsr	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/gatk4-baserecalibrator	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/gatk4-gather-bqsr-reports	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/gatk4-genomicsdbimport	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/gatk4-genotypegvcfs	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/gatk4-haplotypecaller	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/gatk4-markduplicates	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/gatk4-mergevcfs	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/gffread	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/gffread-transcriptome	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/gtf-filter	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/gtf-gene-filter	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/gtf-to-t2g	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/gunzip	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/h5ad-concat	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/homer-annotate-peaks	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/igv-session	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/macs2-callpeak	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/matrix-to-h5ad	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/mosdepth	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/multiqc	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/picard-collect-multiple-metrics	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/picard-markduplicates	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/picard-merge-sam-files	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/plot-homer-annotatepeaks	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/plot-macs2-qc	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/qcatch	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/qualimap-bamqc	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/rseqc-inferexperiment	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/salmon-index	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/salmon-quant	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/sample-retention-mapped	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/sample-retention-trimmed	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/samtools-faidx	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/samtools-flagstat	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/samtools-idxstats	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/samtools-index	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/samtools-merge	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/samtools-sort	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/samtools-stats	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/samtools-view	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/samtools-view-count	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/simpleaf-index	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/simpleaf-quant	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/star-align	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/star-genome-generate	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/stringtie	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/trim-galore	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/tximport	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/ucsc-bedclip	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/ucsc-bedgraphtobigwig	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/modules/wc-lines	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/pipelines	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/pipelines/atacseq	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/pipelines/methylseq	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/pipelines/rnaseq	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/pipelines/scrnaseq	[no test files]
+?   	github.com/HahyeonJeon/gobble/assets/pipelines/wgs	[no test files]
+--- FAIL: TestSignalCancel (61.33s)
+    --- FAIL: TestSignalCancel/interrupt (30.01s)
+        occupy_test.go:174: timeout waiting for occupancy
+    --- FAIL: TestSignalCancel/terminated (30.02s)
+        occupy_test.go:174: timeout waiting for occupancy
+SIGQUIT: quit
+PC=0x494c01 m=0 sigcode=0
+
+goroutine 0 gp=0xec75a0 m=0 mp=0xec8780 [idle]:
+runtime.futex(0xec88d8, 0x80, 0x0, 0x0, 0x0, 0x0)
+	/usr/local/go/src/runtime/sys_linux_amd64.s:569 +0x21 fp=0x7ffffffca6a8 sp=0x7ffffffca6a0 pc=0x494c01
+runtime.futexsleep(0xec8780?, 0xfffca720?, 0x4632a8?)
+	/usr/local/go/src/runtime/os_linux.go:73 +0x30 fp=0x7ffffffca6f8 sp=0x7ffffffca6a8 pc=0x44ddd0
+runtime.notesleep(0xec88d8)
+	/usr/local/go/src/runtime/lock_futex.go:47 +0x87 fp=0x7ffffffca730 sp=0x7ffffffca6f8 pc=0x4214c7
+runtime.mPark(...)
+	/usr/local/go/src/runtime/proc.go:1967
+runtime.stopm()
+	/usr/local/go/src/runtime/proc.go:3008 +0x8c fp=0x7ffffffca760 sp=0x7ffffffca730 pc=0x4593ec
+runtime.findRunnable()
+	/usr/local/go/src/runtime/proc.go:3796 +0xec8 fp=0x7ffffffca930 sp=0x7ffffffca760 pc=0x45afa8
+runtime.schedule()
+	/usr/local/go/src/runtime/proc.go:4164 +0xb1 fp=0x7ffffffca970 sp=0x7ffffffca930 pc=0x45c0f1
+runtime.park_m(0x173feb0aa780)
+	/usr/local/go/src/runtime/proc.go:4304 +0x285 fp=0x7ffffffca9d0 sp=0x7ffffffca970 pc=0x45c585
+runtime.mcall()
+	/usr/local/go/src/runtime/asm_amd64.s:496 +0x55 fp=0x7ffffffca9e8 sp=0x7ffffffca9d0 pc=0x491455
+
+goroutine 1 gp=0x173feab041e0 m=nil [chan receive]:
+runtime.gopark(0x300ffff5a46d8?, 0x300ffff5ada80?, 0x80?, 0xda?, 0x7fffff5a46d8?)
+	/usr/local/go/src/runtime/proc.go:462 +0xce fp=0x173feabef990 sp=0x173feabef970 pc=0x48b44e
+runtime.chanrecv(0x173feab90380, 0x173feabefa77, 0x1)
+	/usr/local/go/src/runtime/chan.go:667 +0x4ae fp=0x173feabefa08 sp=0x173feabef990 pc=0x41b02e
+runtime.chanrecv1(0xec66e0?, 0xa5ccc0?)
+	/usr/local/go/src/runtime/chan.go:509 +0x12 fp=0x173feabefa30 sp=0x173feabefa08 pc=0x41ab52
+testing.(*T).Run(0x173feac66488, {0xa17300?, 0x0?}, 0xa40920)
+	/usr/local/go/src/testing/testing.go:2109 +0x4e5 fp=0x173feabefb08 sp=0x173feabefa30 pc=0x52d405
+testing.runTests.func1(0x173feac66488)
+	/usr/local/go/src/testing/testing.go:2585 +0x3e fp=0x173feabefb50 sp=0x173feabefb08 pc=0x52f81e
+testing.tRunner(0x173feac66488, 0x173feabefc58)
+	/usr/local/go/src/testing/testing.go:2036 +0xea fp=0x173feabefba0 sp=0x173feabefb50 pc=0x52c3ea
+testing.runTests({0xa1a6f2, 0x1d}, {0xa22d8b, 0x28}, 0x173feac12078, {0xebcc40, 0x47, 0x47}, {0xc29fca56066b8eda, 0x8bb469fe30, ...})
+	/usr/local/go/src/testing/testing.go:2583 +0x505 fp=0x173feabefc88 sp=0x173feabefba0 pc=0x52f6e5
+testing.(*M).Run(0x173feac02780)
+	/usr/local/go/src/testing/testing.go:2443 +0x6ac fp=0x173feabefec8 sp=0x173feabefc88 pc=0x52e06c
+main.main()
+	_testmain.go:186 +0x9b fp=0x173feabeff48 sp=0x173feabefec8 pc=0x8b4dfb
+runtime.main()
+	/usr/local/go/src/runtime/proc.go:290 +0x2d5 fp=0x173feabeffe0 sp=0x173feabeff48 pc=0x4545d5
+runtime.goexit({})
+	/usr/local/go/src/runtime/asm_amd64.s:1771 +0x1 fp=0x173feabeffe8 sp=0x173feabeffe0 pc=0x4930a1
+
+goroutine 2 gp=0x173feab04d20 m=nil [force gc (idle), 2 minutes]:
+runtime.gopark(0x0?, 0x0?, 0x0?, 0x0?, 0x0?)
+	/usr/local/go/src/runtime/proc.go:462 +0xce fp=0x173feab66fa8 sp=0x173feab66f88 pc=0x48b44e
+runtime.goparkunlock(...)
+	/usr/local/go/src/runtime/proc.go:468
+runtime.forcegchelper()
+	/usr/local/go/src/runtime/proc.go:375 +0xb3 fp=0x173feab66fe0 sp=0x173feab66fa8 pc=0x4548f3
+runtime.goexit({})
+	/usr/local/go/src/runtime/asm_amd64.s:1771 +0x1 fp=0x173feab66fe8 sp=0x173feab66fe0 pc=0x4930a1
+created by runtime.init.7 in goroutine 1
+	/usr/local/go/src/runtime/proc.go:363 +0x1a
+
+goroutine 3 gp=0x173feab052c0 m=nil [GC sweep wait]:
+runtime.gopark(0xec6401?, 0x0?, 0x0?, 0x0?, 0x0?)
+	/usr/local/go/src/runtime/proc.go:462 +0xce fp=0x173feab67788 sp=0x173feab67768 pc=0x48b44e
+runtime.goparkunlock(...)
+	/usr/local/go/src/runtime/proc.go:468
+runtime.bgsweep(0x173feab90000)
+	/usr/local/go/src/runtime/mgcsweep.go:324 +0x151 fp=0x173feab677c8 sp=0x173feab67788 pc=0x43bdd1
+runtime.gcenable.gowrap1()
+	/usr/local/go/src/runtime/mgc.go:214 +0x17 fp=0x173feab677e0 sp=0x173feab677c8 pc=0x42d117
+runtime.goexit({})
+	/usr/local/go/src/runtime/asm_amd64.s:1771 +0x1 fp=0x173feab677e8 sp=0x173feab677e0 pc=0x4930a1
+created by runtime.gcenable in goroutine 1
+	/usr/local/go/src/runtime/mgc.go:214 +0x66
+
+goroutine 4 gp=0x173feab054a0 m=nil [GC scavenge wait]:
+runtime.gopark(0x1597ff?, 0xc654c?, 0x0?, 0x0?, 0x0?)
+	/usr/local/go/src/runtime/proc.go:462 +0xce fp=0x173feab67f78 sp=0x173feab67f58 pc=0x48b44e
+runtime.goparkunlock(...)
+	/usr/local/go/src/runtime/proc.go:468
+runtime.(*scavengerState).park(0xec6e20)
+	/usr/local/go/src/runtime/mgcscavenge.go:425 +0x49 fp=0x173feab67fa8 sp=0x173feab67f78 pc=0x439829
+runtime.bgscavenge(0x173feab90000)
+	/usr/local/go/src/runtime/mgcscavenge.go:658 +0x59 fp=0x173feab67fc8 sp=0x173feab67fa8 pc=0x439db9
+runtime.gcenable.gowrap2()
+	/usr/local/go/src/runtime/mgc.go:215 +0x17 fp=0x173feab67fe0 sp=0x173feab67fc8 pc=0x42d0d7
+runtime.goexit({})
+	/usr/local/go/src/runtime/asm_amd64.s:1771 +0x1 fp=0x173feab67fe8 sp=0x173feab67fe0 pc=0x4930a1
+created by runtime.gcenable in goroutine 1
+	/usr/local/go/src/runtime/mgc.go:215 +0xa5
+
+goroutine 5 gp=0x173feab05a40 m=nil [GOMAXPROCS updater (idle), 2 minutes]:
+runtime.gopark(0x0?, 0x0?, 0x0?, 0x0?, 0x0?)
+	/usr/local/go/src/runtime/proc.go:462 +0xce fp=0x173feab68788 sp=0x173feab68768 pc=0x48b44e
+runtime.goparkunlock(...)
+	/usr/local/go/src/runtime/proc.go:468
+runtime.updateMaxProcsGoroutine()
+	/usr/local/go/src/runtime/proc.go:7095 +0xe7 fp=0x173feab687e0 sp=0x173feab68788 pc=0x462f67
+runtime.goexit({})
+	/usr/local/go/src/runtime/asm_amd64.s:1771 +0x1 fp=0x173feab687e8 sp=0x173feab687e0 pc=0x4930a1
+created by runtime.defaultGOMAXPROCSUpdateEnable in goroutine 1
+	/usr/local/go/src/runtime/proc.go:7083 +0x37
+
+goroutine 6 gp=0x173feaba81e0 m=nil [finalizer wait, 2 minutes]:
+runtime.gopark(0x463fb5?, 0x1c8?, 0xa0?, 0x40?, 0x173feab66601?)
+	/usr/local/go/src/runtime/proc.go:462 +0xce fp=0x173feab66620 sp=0x173feab66600 pc=0x48b44e
+runtime.runFinalizers()
+	/usr/local/go/src/runtime/mfinal.go:210 +0x107 fp=0x173feab667e0 sp=0x173feab66620 pc=0x42c087
+runtime.goexit({})
+	/usr/local/go/src/runtime/asm_amd64.s:1771 +0x1 fp=0x173feab667e8 sp=0x173feab667e0 pc=0x4930a1
+created by runtime.createfing in goroutine 1
+	/usr/local/go/src/runtime/mfinal.go:172 +0x3d
+
+goroutine 18 gp=0x173feac3e000 m=nil [cleanup wait, 2 minutes]:
+runtime.gopark(0x0?, 0x0?, 0x0?, 0x0?, 0x0?)
+	/usr/local/go/src/runtime/proc.go:462 +0xce fp=0x173feab62768 sp=0x173feab62748 pc=0x48b44e
+runtime.goparkunlock(...)
+	/usr/local/go/src/runtime/proc.go:468
+runtime.(*cleanupQueue).dequeue(0xec7380)
+	/usr/local/go/src/runtime/mcleanup.go:522 +0xd4 fp=0x173feab627a0 sp=0x173feab62768 pc=0x428dd4
+runtime.runCleanups()
+	/usr/local/go/src/runtime/mcleanup.go:718 +0x45 fp=0x173feab627e0 sp=0x173feab627a0 pc=0x429445
+runtime.goexit({})
+	/usr/local/go/src/runtime/asm_amd64.s:1771 +0x1 fp=0x173feab627e8 sp=0x173feab627e0 pc=0x4930a1
+created by runtime.(*cleanupQueue).createGs in goroutine 1
+	/usr/local/go/src/runtime/mcleanup.go:672 +0xa5
+
+goroutine 870 gp=0x173feac3e1e0 m=11 mp=0x173fead01008 [syscall]:
+syscall.Syscall6(0xf7, 0x1, 0x4253, 0x173fead289c8, 0x1000004, 0x0, 0x0)
+	/usr/local/go/src/syscall/syscall_linux.go:96 +0x39 fp=0x173fead28948 sp=0x173fead288e8 pc=0x4ab9f9
+internal/syscall/unix.Waitid(0x173feabe7040?, 0x173feae7c2d0?, 0x173fead28a0e?, 0x173fead28b38?, 0x56a3ed?)
+	/usr/local/go/src/internal/syscall/unix/waitid_linux.go:18 +0x39 fp=0x173fead289a0 sp=0x173fead28948 pc=0x4c64f9
+os.(*Process).blockUntilWaitable.func1(...)
+	/usr/local/go/src/os/wait_waitid.go:24
+os.ignoringEINTR(...)
+	/usr/local/go/src/os/file_posix.go:263
+os.(*Process).blockUntilWaitable(0x173feb026480)
+	/usr/local/go/src/os/wait_waitid.go:23 +0x73 fp=0x173fead28a68 sp=0x173fead289a0 pc=0x4d5133
+os.(*Process).pidWait(0x173feb026480)
+	/usr/local/go/src/os/exec_unix.go:45 +0x31 fp=0x173fead28ac8 sp=0x173fead28a68 pc=0x4cd9d1
+os.(*Process).wait(0x56a6c0?)
+	/usr/local/go/src/os/exec_unix.go:28 +0x26 fp=0x173fead28ae0 sp=0x173fead28ac8 pc=0x4cd986
+os.(*Process).Wait(...)
+	/usr/local/go/src/os/exec.go:346
+os/exec.(*Cmd).Wait(0x173feabe7040)
+	/usr/local/go/src/os/exec/exec.go:930 +0x45 fp=0x173fead28b48 sp=0x173fead28ae0 pc=0x56adc5
+os/exec.(*Cmd).Run(0x173feabe7040)
+	/usr/local/go/src/os/exec/exec.go:632 +0x2d fp=0x173fead28b60 sp=0x173fead28b48 pc=0x569aad
+os/exec.(*Cmd).CombinedOutput(0x173feabe7040)
+	/usr/local/go/src/os/exec/exec.go:1047 +0x85 fp=0x173fead28b88 sp=0x173fead28b60 pc=0x56b685
+github.com/HahyeonJeon/gobble/cmd/gobble.buildPacked({0x173feaf460f0, 0x14}, {0x173feab2804c, 0x12}, {0x173feabd6730, 0x50}, {0x173feabd6780, 0x4e}, {0x173feae7c2a0, 0x2, ...})
+	/source/cmd/gobble/pack.go:97 +0x25e fp=0x173fead28c18 sp=0x173fead28b88 pc=0x888bbe
+github.com/HahyeonJeon/gobble/cmd/gobble.buildPackedInner({_, _}, {_, _}, {_, _}, {_, _}, {{{0x173feafbe100, 0x1d}, ...}, ...})
+	/source/cmd/gobble/pack_inner.go:27 +0x266 fp=0x173fead28dd0 sp=0x173fead28c18 pc=0x88a626
+github.com/HahyeonJeon/gobble/cmd/gobble.runPack(0x173feac52240, {0xa47ce0, 0x173feafc6360})
+	/source/cmd/gobble/pack.go:51 +0xa25 fp=0x173fead293e8 sp=0x173fead28dd0 pc=0x888145
+github.com/HahyeonJeon/gobble/cmd/gobble.run({0x173feaf4fa38?, 0x0?, 0x0?}, {0xa47ce0, 0x173feafc6330}, {0xa47ce0, 0x173feafc6360})
+	/source/cmd/gobble/main.go:49 +0x2e5 fp=0x173fead29480 sp=0x173fead293e8 pc=0x887105
+github.com/HahyeonJeon/gobble/cmd/gobble.runCLI({0x173feaf4fa38, 0x4, 0x4})
+	/source/cmd/gobble/main_test.go:20 +0x99 fp=0x173fead29510 sp=0x173fead29480 pc=0x89ee59
+github.com/HahyeonJeon/gobble/cmd/gobble.TestPackPrintpipeArtifact(0x173feaf34008)
+	/source/cmd/gobble/pack_test.go:225 +0x20b fp=0x173fead29f70 sp=0x173fead29510 pc=0x8a9dab
+testing.tRunner(0x173feaf34008, 0xa40920)
+	/usr/local/go/src/testing/testing.go:2036 +0xea fp=0x173fead29fc0 sp=0x173fead29f70 pc=0x52c3ea
+testing.(*T).Run.gowrap1()
+	/usr/local/go/src/testing/testing.go:2101 +0x1b fp=0x173fead29fe0 sp=0x173fead29fc0 pc=0x52d57b
+runtime.goexit({})
+	/usr/local/go/src/runtime/asm_amd64.s:1771 +0x1 fp=0x173fead29fe8 sp=0x173fead29fe0 pc=0x4930a1
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0x4c5
+
+goroutine 114 gp=0x173feb0aa000 m=nil [GC worker (idle), 2 minutes]:
+runtime.gopark(0x173fead027c8?, 0x173feaceff60?, 0xb8?, 0xff?, 0x56a60c?)
+	/usr/local/go/src/runtime/proc.go:462 +0xce fp=0x173feaceff40 sp=0x173feaceff20 pc=0x48b44e
+runtime.gcBgMarkWorker(0x173feb0a8000)
+	/usr/local/go/src/runtime/mgc.go:1791 +0xeb fp=0x173feaceffc8 sp=0x173feaceff40 pc=0x42fbeb
+runtime.gcBgMarkStartWorkers.gowrap1()
+	/usr/local/go/src/runtime/mgc.go:1695 +0x17 fp=0x173feaceffe0 sp=0x173feaceffc8 pc=0x42fad7
+runtime.goexit({})
+	/usr/local/go/src/runtime/asm_amd64.s:1771 +0x1 fp=0x173feaceffe8 sp=0x173feaceffe0 pc=0x4930a1
+created by runtime.gcBgMarkStartWorkers in goroutine 99
+	/usr/local/go/src/runtime/mgc.go:1695 +0x105
+
+goroutine 115 gp=0x173feb0aa1e0 m=nil [GC worker (idle), 2 minutes]:
+runtime.gopark(0x0?, 0x0?, 0x0?, 0x0?, 0x0?)
+	/usr/local/go/src/runtime/proc.go:462 +0xce fp=0x173feaf80740 sp=0x173feaf80720 pc=0x48b44e
+runtime.gcBgMarkWorker(0x173feb0a8000)
+	/usr/local/go/src/runtime/mgc.go:1791 +0xeb fp=0x173feaf807c8 sp=0x173feaf80740 pc=0x42fbeb
+runtime.gcBgMarkStartWorkers.gowrap1()
+	/usr/local/go/src/runtime/mgc.go:1695 +0x17 fp=0x173feaf807e0 sp=0x173feaf807c8 pc=0x42fad7
+runtime.goexit({})
+	/usr/local/go/src/runtime/asm_amd64.s:1771 +0x1 fp=0x173feaf807e8 sp=0x173feaf807e0 pc=0x4930a1
+created by runtime.gcBgMarkStartWorkers in goroutine 99
+	/usr/local/go/src/runtime/mgc.go:1695 +0x105
+
+goroutine 116 gp=0x173feb0aa3c0 m=nil [GC worker (idle), 2 minutes]:
+runtime.gopark(0x0?, 0x0?, 0x0?, 0x0?, 0x0?)
+	/usr/local/go/src/runtime/proc.go:462 +0xce fp=0x173feaf80f40 sp=0x173feaf80f20 pc=0x48b44e
+runtime.gcBgMarkWorker(0x173feb0a8000)
+	/usr/local/go/src/runtime/mgc.go:1791 +0xeb fp=0x173feaf80fc8 sp=0x173feaf80f40 pc=0x42fbeb
+runtime.gcBgMarkStartWorkers.gowrap1()
+	/usr/local/go/src/runtime/mgc.go:1695 +0x17 fp=0x173feaf80fe0 sp=0x173feaf80fc8 pc=0x42fad7
+runtime.goexit({})
+	/usr/local/go/src/runtime/asm_amd64.s:1771 +0x1 fp=0x173feaf80fe8 sp=0x173feaf80fe0 pc=0x4930a1
+created by runtime.gcBgMarkStartWorkers in goroutine 99
+	/usr/local/go/src/runtime/mgc.go:1695 +0x105
+
+goroutine 117 gp=0x173feb0aa5a0 m=nil [GC worker (idle)]:
+runtime.gopark(0x18171dea37d?, 0x1?, 0xb?, 0xc1?, 0x0?)
+	/usr/local/go/src/runtime/proc.go:462 +0xce fp=0x173feaf81740 sp=0x173feaf81720 pc=0x48b44e
+runtime.gcBgMarkWorker(0x173feb0a8000)
+	/usr/local/go/src/runtime/mgc.go:1791 +0xeb fp=0x173feaf817c8 sp=0x173feaf81740 pc=0x42fbeb
+runtime.gcBgMarkStartWorkers.gowrap1()
+	/usr/local/go/src/runtime/mgc.go:1695 +0x17 fp=0x173feaf817e0 sp=0x173feaf817c8 pc=0x42fad7
+runtime.goexit({})
+	/usr/local/go/src/runtime/asm_amd64.s:1771 +0x1 fp=0x173feaf817e8 sp=0x173feaf817e0 pc=0x4930a1
+created by runtime.gcBgMarkStartWorkers in goroutine 99
+	/usr/local/go/src/runtime/mgc.go:1695 +0x105
+
+goroutine 118 gp=0x173feb0aa780 m=nil [GC worker (idle)]:
+runtime.gopark(0x18171de45e6?, 0x1?, 0xc1?, 0x35?, 0x0?)
+	/usr/local/go/src/runtime/proc.go:462 +0xce fp=0x173feaf81f40 sp=0x173feaf81f20 pc=0x48b44e
+runtime.gcBgMarkWorker(0x173feb0a8000)
+	/usr/local/go/src/runtime/mgc.go:1791 +0xeb fp=0x173feaf81fc8 sp=0x173feaf81f40 pc=0x42fbeb
+runtime.gcBgMarkStartWorkers.gowrap1()
+	/usr/local/go/src/runtime/mgc.go:1695 +0x17 fp=0x173feaf81fe0 sp=0x173feaf81fc8 pc=0x42fad7
+runtime.goexit({})
+	/usr/local/go/src/runtime/asm_amd64.s:1771 +0x1 fp=0x173feaf81fe8 sp=0x173feaf81fe0 pc=0x4930a1
+created by runtime.gcBgMarkStartWorkers in goroutine 99
+	/usr/local/go/src/runtime/mgc.go:1695 +0x105
+
+goroutine 119 gp=0x173feb0aa960 m=nil [GC worker (idle)]:
+runtime.gopark(0x17d55431642?, 0x1?, 0xd5?, 0x6c?, 0x0?)
+	/usr/local/go/src/runtime/proc.go:462 +0xce fp=0x173feaf82740 sp=0x173feaf82720 pc=0x48b44e
+runtime.gcBgMarkWorker(0x173feb0a8000)
+	/usr/local/go/src/runtime/mgc.go:1791 +0xeb fp=0x173feaf827c8 sp=0x173feaf82740 pc=0x42fbeb
+runtime.gcBgMarkStartWorkers.gowrap1()
+	/usr/local/go/src/runtime/mgc.go:1695 +0x17 fp=0x173feaf827e0 sp=0x173feaf827c8 pc=0x42fad7
+runtime.goexit({})
+	/usr/local/go/src/runtime/asm_amd64.s:1771 +0x1 fp=0x173feaf827e8 sp=0x173feaf827e0 pc=0x4930a1
+created by runtime.gcBgMarkStartWorkers in goroutine 99
+	/usr/local/go/src/runtime/mgc.go:1695 +0x105
+
+goroutine 120 gp=0x173feb0aab40 m=nil [GC worker (idle)]:
+runtime.gopark(0x18171dc2c24?, 0x1?, 0x44?, 0x83?, 0x0?)
+	/usr/local/go/src/runtime/proc.go:462 +0xce fp=0x173feaf82f40 sp=0x173feaf82f20 pc=0x48b44e
+runtime.gcBgMarkWorker(0x173feb0a8000)
+	/usr/local/go/src/runtime/mgc.go:1791 +0xeb fp=0x173feaf82fc8 sp=0x173feaf82f40 pc=0x42fbeb
+runtime.gcBgMarkStartWorkers.gowrap1()
+	/usr/local/go/src/runtime/mgc.go:1695 +0x17 fp=0x173feaf82fe0 sp=0x173feaf82fc8 pc=0x42fad7
+runtime.goexit({})
+	/usr/local/go/src/runtime/asm_amd64.s:1771 +0x1 fp=0x173feaf82fe8 sp=0x173feaf82fe0 pc=0x4930a1
+created by runtime.gcBgMarkStartWorkers in goroutine 99
+	/usr/local/go/src/runtime/mgc.go:1695 +0x105
+
+goroutine 121 gp=0x173feb0aad20 m=nil [GC worker (idle)]:
+runtime.gopark(0xee9e80?, 0x1?, 0xdd?, 0xb5?, 0x0?)
+	/usr/local/go/src/runtime/proc.go:462 +0xce fp=0x173feaf83740 sp=0x173feaf83720 pc=0x48b44e
+runtime.gcBgMarkWorker(0x173feb0a8000)
+	/usr/local/go/src/runtime/mgc.go:1791 +0xeb fp=0x173feaf837c8 sp=0x173feaf83740 pc=0x42fbeb
+runtime.gcBgMarkStartWorkers.gowrap1()
+	/usr/local/go/src/runtime/mgc.go:1695 +0x17 fp=0x173feaf837e0 sp=0x173feaf837c8 pc=0x42fad7
+runtime.goexit({})
+	/usr/local/go/src/runtime/asm_amd64.s:1771 +0x1 fp=0x173feaf837e8 sp=0x173feaf837e0 pc=0x4930a1
+created by runtime.gcBgMarkStartWorkers in goroutine 99
+	/usr/local/go/src/runtime/mgc.go:1695 +0x105
+
+goroutine 122 gp=0x173feb0aaf00 m=nil [GC worker (idle)]:
+runtime.gopark(0x18171d6ca89?, 0x0?, 0x0?, 0x0?, 0x0?)
+	/usr/local/go/src/runtime/proc.go:462 +0xce fp=0x173feaf83f40 sp=0x173feaf83f20 pc=0x48b44e
+runtime.gcBgMarkWorker(0x173feb0a8000)
+	/usr/local/go/src/runtime/mgc.go:1791 +0xeb fp=0x173feaf83fc8 sp=0x173feaf83f40 pc=0x42fbeb
+runtime.gcBgMarkStartWorkers.gowrap1()
+	/usr/local/go/src/runtime/mgc.go:1695 +0x17 fp=0x173feaf83fe0 sp=0x173feaf83fc8 pc=0x42fad7
+runtime.goexit({})
+	/usr/local/go/src/runtime/asm_amd64.s:1771 +0x1 fp=0x173feaf83fe8 sp=0x173feaf83fe0 pc=0x4930a1
+created by runtime.gcBgMarkStartWorkers in goroutine 99
+	/usr/local/go/src/runtime/mgc.go:1695 +0x105
+
+goroutine 123 gp=0x173feb0ab0e0 m=nil [GC worker (idle)]:
+runtime.gopark(0x18171de521b?, 0x3?, 0xcd?, 0x47?, 0x0?)
+	/usr/local/go/src/runtime/proc.go:462 +0xce fp=0x173feb0b4740 sp=0x173feb0b4720 pc=0x48b44e
+runtime.gcBgMarkWorker(0x173feb0a8000)
+	/usr/local/go/src/runtime/mgc.go:1791 +0xeb fp=0x173feb0b47c8 sp=0x173feb0b4740 pc=0x42fbeb
+runtime.gcBgMarkStartWorkers.gowrap1()
+	/usr/local/go/src/runtime/mgc.go:1695 +0x17 fp=0x173feb0b47e0 sp=0x173feb0b47c8 pc=0x42fad7
+runtime.goexit({})
+	/usr/local/go/src/runtime/asm_amd64.s:1771 +0x1 fp=0x173feb0b47e8 sp=0x173feb0b47e0 pc=0x4930a1
+created by runtime.gcBgMarkStartWorkers in goroutine 99
+	/usr/local/go/src/runtime/mgc.go:1695 +0x105
+
+goroutine 479 gp=0x173feb1feb40 m=nil [select, 1 minutes, locked to thread]:
+runtime.gopark(0x173feaea3fa8?, 0x2?, 0x1?, 0xeb?, 0x173feaea3f94?)
+	/usr/local/go/src/runtime/proc.go:462 +0xce fp=0x173feaea3e28 sp=0x173feaea3e08 pc=0x48b44e
+runtime.selectgo(0x173feaea3fa8, 0x173feaea3f90, 0x0?, 0x0, 0x173feb0ac0e0?, 0x1)
+	/usr/local/go/src/runtime/select.go:351 +0xaa5 fp=0x173feaea3f58 sp=0x173feaea3e28 pc=0x467da5
+runtime.ensureSigM.func1()
+	/usr/local/go/src/runtime/signal_unix.go:1091 +0x188 fp=0x173feaea3fe0 sp=0x173feaea3f58 pc=0x4859a8
+runtime.goexit({})
+	/usr/local/go/src/runtime/asm_amd64.s:1771 +0x1 fp=0x173feaea3fe8 sp=0x173feaea3fe0 pc=0x4930a1
+created by runtime.ensureSigM in goroutine 424
+	/usr/local/go/src/runtime/signal_unix.go:1074 +0xc5
+
+goroutine 480 gp=0x173feb1fed20 m=4 mp=0x173feab6b808 [syscall, 2 minutes]:
+runtime.notetsleepg(0xee9160, 0xffffffffffffffff)
+	/usr/local/go/src/runtime/lock_futex.go:123 +0x29 fp=0x173feaea4fa0 sp=0x173feaea4f78 pc=0x4217a9
+os/signal.signal_recv()
+	/usr/local/go/src/runtime/sigqueue.go:152 +0x98 fp=0x173feaea4fc0 sp=0x173feaea4fa0 pc=0x48d998
+os/signal.loop()
+	/usr/local/go/src/os/signal/signal_unix.go:23 +0x13 fp=0x173feaea4fe0 sp=0x173feaea4fc0 pc=0x58f813
+runtime.goexit({})
+	/usr/local/go/src/runtime/asm_amd64.s:1771 +0x1 fp=0x173feaea4fe8 sp=0x173feaea4fe0 pc=0x4930a1
+created by os/signal.Notify.func1.1 in goroutine 424
+	/usr/local/go/src/os/signal/signal.go:152 +0x1f
+
+goroutine 832 gp=0x173feaf22780 m=nil [IO wait]:
+runtime.gopark(0xa41058?, 0x7fffb8b1c420?, 0x2?, 0x2?, 0x5?)
+	/usr/local/go/src/runtime/proc.go:462 +0xce fp=0x173feb043ba8 sp=0x173feb043b88 pc=0x48b44e
+runtime.netpollblock(0x4aa198?, 0x417d46?, 0x0?)
+	/usr/local/go/src/runtime/netpoll.go:575 +0xf7 fp=0x173feb043be0 sp=0x173feb043ba8 pc=0x44d077
+internal/poll.runtime_pollWait(0x7fffb8b1c400, 0x72)
+	/usr/local/go/src/runtime/netpoll.go:351 +0x85 fp=0x173feb043c00 sp=0x173feb043be0 pc=0x48a625
+internal/poll.(*pollDesc).wait(0x173feadb2780?, 0x173feadac200?, 0x1)
+	/usr/local/go/src/internal/poll/fd_poll_runtime.go:84 +0x27 fp=0x173feb043c28 sp=0x173feb043c00 pc=0x4c7867
+internal/poll.(*pollDesc).waitRead(...)
+	/usr/local/go/src/internal/poll/fd_poll_runtime.go:89
+internal/poll.(*FD).Read(0x173feadb2780, {0x173feadac200, 0x200, 0x200})
+	/usr/local/go/src/internal/poll/fd_unix.go:165 +0x2ae fp=0x173feb043cc0 sp=0x173feb043c28 pc=0x4c830e
+os.(*File).read(...)
+	/usr/local/go/src/os/file_posix.go:30
+os.(*File).Read(0x173fead02430, {0x173feadac200?, 0xeb2ea0?, 0x0?})
+	/usr/local/go/src/os/file.go:144 +0x4f fp=0x173feb043d00 sp=0x173feb043cc0 pc=0x4ce10f
+os.fileWithoutWriteTo.Read({{}, 0x173feb190e10?}, {0x173feadac200?, 0x42085f?, 0x9727c0?})
+	<autogenerated>:1 +0x18 fp=0x173feb043d30 sp=0x173feb043d00 pc=0x4d7058
+bytes.(*Buffer).ReadFrom(0x173feb190e10, {0xa47b40, 0x173fead02430})
+	/usr/local/go/src/bytes/buffer.go:229 +0x98 fp=0x173feb043d88 sp=0x173feb043d30 pc=0x50e578
+io.copyBuffer({0xa47ce0, 0x173feb190e10}, {0xa47b40, 0x173fead02430}, {0x0, 0x0, 0x0})
+	/usr/local/go/src/io/io.go:415 +0x151 fp=0x173feb043e00 sp=0x173feb043d88 pc=0x4c0bb1
+io.Copy(...)
+	/usr/local/go/src/io/io.go:388
+os.genericWriteTo(0x173fead02430?, {0xa47ce0?, 0x173feb190e10?})
+	/usr/local/go/src/os/file.go:295 +0x35 fp=0x173feb043e48 sp=0x173feb043e00 pc=0x4ce815
+os.(*File).WriteTo(0x173fead02430, {0xa47ce0, 0x173feb190e10})
+	/usr/local/go/src/os/file.go:273 +0x9c fp=0x173feb043e88 sp=0x173feb043e48 pc=0x4ce75c
+io.copyBuffer({0xa47ce0, 0x173feb190e10}, {0xa47bc0, 0x173fead02430}, {0x0, 0x0, 0x0})
+	/usr/local/go/src/io/io.go:411 +0x9d fp=0x173feb043f00 sp=0x173feb043e88 pc=0x4c0afd
+io.Copy(...)
+	/usr/local/go/src/io/io.go:388
+os/exec.(*Cmd).writerDescriptor.func1()
+	/usr/local/go/src/os/exec/exec.go:602 +0x34 fp=0x173feb043f60 sp=0x173feb043f00 pc=0x569a34
+os/exec.(*Cmd).Start.func2(0x0?)
+	/usr/local/go/src/os/exec/exec.go:757 +0x2c fp=0x173feb043fc8 sp=0x173feb043f60 pc=0x56a60c
+os/exec.(*Cmd).Start.gowrap1()
+	/usr/local/go/src/os/exec/exec.go:769 +0x1b fp=0x173feb043fe0 sp=0x173feb043fc8 pc=0x56a5bb
+runtime.goexit({})
+	/usr/local/go/src/runtime/asm_amd64.s:1771 +0x1 fp=0x173feb043fe8 sp=0x173feb043fe0 pc=0x4930a1
+created by os/exec.(*Cmd).Start in goroutine 870
+	/usr/local/go/src/os/exec/exec.go:756 +0x92e
+
+rax    0xca
+rbx    0x0
+rcx    0xffffffffffffffff
+rdx    0x0
+rdi    0xec88d8
+rsi    0x80
+rbp    0x7ffffffca6e8
+rsp    0x7ffffffca6a0
+r8     0x0
+r9     0x0
+r10    0x0
+r11    0x2
+r12    0x173feab5a008
+r13    0x1
+r14    0xec75a0
+r15    0x9
+rip    0x494c01
+rflags 0x286
+cs     0x33
+fs     0x0
+gs     0xec
+FAIL	github.com/HahyeonJeon/gobble/cmd/gobble	193.207s
+ok  	github.com/HahyeonJeon/gobble/cmd/gobble-container	0.067s
+?   	github.com/HahyeonJeon/gobble/distribution/runtime	[no test files]
+?   	github.com/HahyeonJeon/gobble/examples/hello	[no test files]
+ok  	github.com/HahyeonJeon/gobble/internal/containerenv	0.133s
+--- FAIL: TestInspectRemainingDoesNotReadFileBytes (0.16s)
+    fingerprint_test.go:39: input is readable, chmod 000 did not block reads
+FAIL
+FAIL	github.com/HahyeonJeon/gobble/internal/engine	22.411s
+ok  	github.com/HahyeonJeon/gobble/internal/engine/exec	0.224s
+ok  	github.com/HahyeonJeon/gobble/internal/fixture	0.112s
+?   	github.com/HahyeonJeon/gobble/internal/path	[no test files]
+?   	github.com/HahyeonJeon/gobble/internal/testutil	[no test files]
+ok  	github.com/HahyeonJeon/gobble/monitor	4.508s
+ok  	github.com/HahyeonJeon/gobble/monitor/tui	3.053s
+--- FAIL: TestWorkflowCaseCLIPlan (5.02s)
+    plan_test.go:15: gobble plan exit = 1, want 0
+        stderr: gobble runtime: discover runtime container (keep Docker's default hostname): docker inspect: exit status 1: Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?
+FAIL
+FAIL	github.com/HahyeonJeon/gobble/tests/cli-valid	5.092s
+?   	github.com/HahyeonJeon/gobble/tests/cli-valid/runlocal	[no test files]
+?   	github.com/HahyeonJeon/gobble/tests/cli-valid/workflowcase	[no test files]
+?   	github.com/HahyeonJeon/gobble/tests/internal/plancheck	[no test files]
+?   	github.com/HahyeonJeon/gobble/tests/internal/sourcecheck	[no test files]
+ok  	github.com/HahyeonJeon/gobble/tests/modules	1.578s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/anndatar-convert	0.127s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/bedtools-genomecov	0.074s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/bismark-align	0.123s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/bismark-deduplicate	0.089s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/bismark-genome	0.082s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/bismark-methylation-extractor	0.100s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/bismark-report	0.106s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/bismark-summary	0.081s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/bwa-index	0.078s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/bwa-mem	0.092s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/cat-fastq	0.077s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/cut-chrom-sizes	0.084s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/deseq2-qc	0.089s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/dupradar	0.081s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/fastp	0.076s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/fastqc	0.093s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/featurecounts	0.137s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/fq-lint	0.086s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/gatk4-genomicsdbimport	0.367s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/gatk4-genotypegvcfs	0.079s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/gatk4-haplotypecaller	0.110s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/gffread	0.121s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/gffread-transcriptome	0.109s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/gtf-filter	0.080s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/gtf-gene-filter	0.090s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/gtf-to-t2g	0.098s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/gunzip	0.119s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/h5ad-concat	0.115s
+?   	github.com/HahyeonJeon/gobble/tests/modules/internal/commandcheck	[no test files]
+ok  	github.com/HahyeonJeon/gobble/tests/modules/macs2-callpeak	0.114s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/matrix-to-h5ad	0.096s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/multiqc	0.111s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/picard-markduplicates	0.105s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/plot-homer-annotatepeaks	0.097s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/plot-macs2-qc	0.102s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/qcatch	0.092s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/qualimap-bamqc	0.100s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/rseqc-inferexperiment	0.123s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/salmon-index	0.117s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/salmon-quant	0.606s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/sample-retention-mapped	0.083s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/sample-retention-trimmed	0.087s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/samtools-faidx	0.115s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/samtools-index	0.123s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/samtools-merge	0.121s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/samtools-sort	0.131s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/samtools-stats	0.121s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/simpleaf-index	0.089s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/simpleaf-quant	0.115s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/star-align	0.098s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/star-genome-generate	0.092s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/stringtie	0.096s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/trim-galore	0.094s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/tximport	0.097s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/ucsc-bedclip	0.090s
+ok  	github.com/HahyeonJeon/gobble/tests/modules/ucsc-bedgraphtobigwig	0.084s
+ok  	github.com/HahyeonJeon/gobble/tests/pipelines	0.545s
+ok  	github.com/HahyeonJeon/gobble/tests/pipelines/atacseq	1.196s
+ok  	github.com/HahyeonJeon/gobble/tests/pipelines/methylseq	2.123s
+ok  	github.com/HahyeonJeon/gobble/tests/pipelines/rnaseq	1.088s
+ok  	github.com/HahyeonJeon/gobble/tests/pipelines/scrnaseq	2.261s
+ok  	github.com/HahyeonJeon/gobble/tests/pipelines/wgs	0.357s
+ok  	github.com/HahyeonJeon/gobble/tests/scenarios	0.075s
+ok  	github.com/HahyeonJeon/gobble/tests/scenarios/build	0.377s
+ok  	github.com/HahyeonJeon/gobble/tests/scenarios/customize	0.286s
+ok  	github.com/HahyeonJeon/gobble/tests/scenarios/design	0.227s
+ok  	github.com/HahyeonJeon/gobble/tests/scenarios/failure	93.469s
+?   	github.com/HahyeonJeon/gobble/tests/scenarios/internal/atacseqscenario	[no test files]
+?   	github.com/HahyeonJeon/gobble/tests/scenarios/internal/dockerfixture	[no test files]
+?   	github.com/HahyeonJeon/gobble/tests/scenarios/internal/methylseqscenario	[no test files]
+?   	github.com/HahyeonJeon/gobble/tests/scenarios/internal/rnaseqscenario	[no test files]
+?   	github.com/HahyeonJeon/gobble/tests/scenarios/internal/scrnaseqscenario	[no test files]
+?   	github.com/HahyeonJeon/gobble/tests/scenarios/internal/wgsscenario	[no test files]
+ok  	github.com/HahyeonJeon/gobble/tests/scenarios/resume	148.210s
+ok  	github.com/HahyeonJeon/gobble/tests/scenarios/run	92.752s
+ok  	github.com/HahyeonJeon/gobble/tests/scenarios/stop	96.663s
+FAIL

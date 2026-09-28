@@ -1,0 +1,46 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 422B done
+#1 WARN: InvalidDefaultArgInFrom: Default value for ARG ${BASE_IMAGE} results in empty or invalid base image name (line 3)
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/gobble-p2a1-toolchain:local
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [1/4] FROM docker.io/library/gobble-p2a1-toolchain:local@sha256:bccd458a724b795ac507e3dd0be43e8431269db2819fa544784d73dc751ba22b
+#4 resolve docker.io/library/gobble-p2a1-toolchain:local@sha256:bccd458a724b795ac507e3dd0be43e8431269db2819fa544784d73dc751ba22b done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 1.86MB 0.0s done
+#5 DONE 0.1s
+
+#4 [1/4] FROM docker.io/library/gobble-p2a1-toolchain:local@sha256:bccd458a724b795ac507e3dd0be43e8431269db2819fa544784d73dc751ba22b
+#4 CACHED
+
+#6 [2/4] COPY gobble /opt/gobble
+#6 DONE 0.0s
+
+#7 [3/4] WORKDIR /opt/gobble
+#7 DONE 0.0s
+
+#8 [4/4] RUN CGO_ENABLED=0 GOMAXPROCS=1 go build -buildvcs=false -o /usr/local/bin/gobble ./cmd/gobble
+#8 DONE 93.6s
+
+#9 exporting to image
+#9 exporting layers
+#9 exporting layers 3.4s done
+#9 exporting manifest sha256:fd7cbf13ab8e7ebaf274a8d62d832e08d77423b9b0401df2ffc7d2091ac7a92b done
+#9 exporting config sha256:a7de84e898f8a3084e1c99cb5c8f3cb3d59cafcf50507f815166dbe61ef336c7 done
+#9 exporting attestation manifest sha256:ae6a76979d654771f96b458ff9299f25ce73ab877246f7ac8de0a6a598abf0b3 0.0s done
+#9 exporting manifest list sha256:1d4dccd578363c104aa65127e33a4d924f1f2e4a15ae3d9e6ee8ab4c46695adb done
+#9 naming to docker.io/library/gobble-p2a2-inspection:local done
+#9 DONE 3.4s
+
+ [33m1 warning found (use docker --debug to expand):
+[0m - InvalidDefaultArgInFrom: Default value for ARG ${BASE_IMAGE} results in empty or invalid base image name (line 3)

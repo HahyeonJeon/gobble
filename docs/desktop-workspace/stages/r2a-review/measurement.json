@@ -1,0 +1,1 @@
+{"points":500,"emptyLaunchToReadyMs":495.08374999999995,"linkedLaunchToReadyMs":689.271416,"pointerToCommitMs":50.6697079999999,"scope":"One local macOS run including Electron launch, focus and native service. Empty and linked workspaces differ; this is not isolated chart overhead or a general latency budget."}

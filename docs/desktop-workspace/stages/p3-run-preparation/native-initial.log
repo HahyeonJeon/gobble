@@ -1,0 +1,6 @@
+--- FAIL: TestServiceHasNoEngineOrThirdPartyImports (0.00s)
+    boundaries_test.go:31: preparation.go imports github.com/HahyeonJeon/gobble/internal/preparation; the native service must remain independent of engine/provider code
+    boundaries_test.go:31: preparation_source.go imports github.com/HahyeonJeon/gobble/internal/preparation; the native service must remain independent of engine/provider code
+FAIL
+FAIL	github.com/HahyeonJeon/gobble/internal/appservice	5.531s
+FAIL

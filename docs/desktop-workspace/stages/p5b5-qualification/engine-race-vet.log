@@ -1,0 +1,3 @@
+ok  	github.com/HahyeonJeon/gobble/internal/engine	9.213s
+internal/engine/prepared.go:89:21: github.com/HahyeonJeon/gobble/internal/preparation.Step struct literal uses unkeyed fields
+internal/engine/prepared_test.go:15:9: github.com/HahyeonJeon/gobble/internal/preparation.Binding struct literal uses unkeyed fields

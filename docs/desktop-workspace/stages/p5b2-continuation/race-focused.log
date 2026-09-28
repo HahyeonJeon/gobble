@@ -1,0 +1,54 @@
+=== RUN   TestContinuationStaleReviewAndCanceledIntent
+=== RUN   TestContinuationStaleReviewAndCanceledIntent/stale
+=== RUN   TestContinuationStaleReviewAndCanceledIntent/canceled
+=== RUN   TestContinuationStaleReviewAndCanceledIntent/occupied
+=== RUN   TestContinuationStaleReviewAndCanceledIntent/schema1
+=== RUN   TestContinuationStaleReviewAndCanceledIntent/payload
+=== RUN   TestContinuationStaleReviewAndCanceledIntent/workspace
+--- PASS: TestContinuationStaleReviewAndCanceledIntent (1.64s)
+    --- PASS: TestContinuationStaleReviewAndCanceledIntent/stale (0.32s)
+    --- PASS: TestContinuationStaleReviewAndCanceledIntent/canceled (0.26s)
+    --- PASS: TestContinuationStaleReviewAndCanceledIntent/occupied (0.27s)
+    --- PASS: TestContinuationStaleReviewAndCanceledIntent/schema1 (0.27s)
+    --- PASS: TestContinuationStaleReviewAndCanceledIntent/payload (0.26s)
+    --- PASS: TestContinuationStaleReviewAndCanceledIntent/workspace (0.27s)
+=== RUN   TestContinuationCompetingIntentAndStopEpoch
+    continuation_lifecycle_test.go:107: old Stop accepted
+--- FAIL: TestContinuationCompetingIntentAndStopEpoch (0.31s)
+=== RUN   TestContinuationChecksStagedReviewedInputBeforeSubmit
+--- PASS: TestContinuationChecksStagedReviewedInputBeforeSubmit (0.25s)
+=== RUN   TestContinuationReceiptSurvivesUncertainPublication
+=== RUN   TestContinuationReceiptSurvivesUncertainPublication/generation
+=== RUN   TestContinuationReceiptSurvivesUncertainPublication/pointer
+--- PASS: TestContinuationReceiptSurvivesUncertainPublication (0.55s)
+    --- PASS: TestContinuationReceiptSurvivesUncertainPublication/generation (0.27s)
+    --- PASS: TestContinuationReceiptSurvivesUncertainPublication/pointer (0.28s)
+=== RUN   TestContinuationReviewAndSameRunExecution
+--- PASS: TestContinuationReviewAndSameRunExecution (0.33s)
+=== RUN   TestContinuationRefusesChangedEvidence
+=== RUN   TestContinuationRefusesChangedEvidence/partial_output
+=== RUN   TestContinuationRefusesChangedEvidence/tool_changed
+=== RUN   TestContinuationRefusesChangedEvidence/backend_uncertain
+=== RUN   TestContinuationRefusesChangedEvidence/failed
+=== RUN   TestContinuationRefusesChangedEvidence/not_canceled
+=== RUN   TestContinuationRefusesChangedEvidence/saved_input
+=== RUN   TestContinuationRefusesChangedEvidence/completed_output
+=== RUN   TestContinuationRefusesChangedEvidence/missing_output
+--- PASS: TestContinuationRefusesChangedEvidence (2.24s)
+    --- PASS: TestContinuationRefusesChangedEvidence/partial_output (0.27s)
+    --- PASS: TestContinuationRefusesChangedEvidence/tool_changed (0.28s)
+    --- PASS: TestContinuationRefusesChangedEvidence/backend_uncertain (0.28s)
+    --- PASS: TestContinuationRefusesChangedEvidence/failed (0.29s)
+    --- PASS: TestContinuationRefusesChangedEvidence/not_canceled (0.28s)
+    --- PASS: TestContinuationRefusesChangedEvidence/saved_input (0.28s)
+    --- PASS: TestContinuationRefusesChangedEvidence/completed_output (0.28s)
+    --- PASS: TestContinuationRefusesChangedEvidence/missing_output (0.28s)
+=== RUN   TestContinuationRestartAndNeverStarted
+--- PASS: TestContinuationRestartAndNeverStarted (0.53s)
+FAIL
+FAIL	github.com/HahyeonJeon/gobble/internal/engine	5.947s
+=== RUN   TestVerifySubmissionAbsentIsReadOnly
+--- PASS: TestVerifySubmissionAbsentIsReadOnly (0.02s)
+PASS
+ok  	github.com/HahyeonJeon/gobble/internal/engine/exec	1.105s
+FAIL

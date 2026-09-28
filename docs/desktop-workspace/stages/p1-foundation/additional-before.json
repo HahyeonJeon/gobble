@@ -1,0 +1,10 @@
+{
+  "path": "app/.prettierignore",
+  "sha256": "b655c3926964e9f8fbe80d35b0013f489d1f6337b8096ee25615f34e1d2252a5",
+  "content": "node_modules/\ndesktop/out/\ntest-results/\nplaywright-report/\ncontracts/schema/\npackage-lock.json\n",
+  "reason": "Complete check traversed the existing Jupyter qualification virtualenv. Exclude only that third-party environment; keep owned qualification source in checks.",
+  "documentationBefore": {
+    "docs/desktop-workspace/README.md": "58c2ad0b4ff29c64c5981314a71fcb7213f2704e287e38ccf87e5a6e72736865",
+    "docs/desktop-workspace/remaining-work.md": "95ce05034156f04fadd08308b425a1f809a26cb1ba7c1f953da1b705e90fa5e5"
+  }
+}

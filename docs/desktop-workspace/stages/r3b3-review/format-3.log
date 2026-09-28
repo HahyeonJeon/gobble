@@ -1,0 +1,7 @@
+contracts/src/index.ts 19ms
+contracts/src/workspace-bridge.ts 32ms
+contracts/src/workspace-document-v7.ts 6ms
+contracts/src/workspace-document-v8.ts 3ms
+contracts/src/workspace-migration.ts 13ms
+desktop/src/main/workspace/storage.ts 17ms
+desktop/tests/dependency-navigation.test.ts 18ms

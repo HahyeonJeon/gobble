@@ -1,0 +1,6 @@
+=== RUN   TestLivePipelineModuleSettings
+    pipeline_inspection_test.go:302: {prj_H55EM3VOSVMATIIV3JQLP7IYVR pip_7WMD2Y6V2BGEBA32TM255AH5JX failed req_live The analysis could not be checked. Ask the Agent to check its inputs and confirm that the pinned runtime supports pipeline inspection. <nil>} <nil>
+--- FAIL: TestLivePipelineModuleSettings (63.57s)
+FAIL
+FAIL	github.com/HahyeonJeon/gobble/internal/appservice	64.044s
+FAIL

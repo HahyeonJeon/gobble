@@ -1,0 +1,47 @@
+{
+  "projectId": "prj_TVUVRCQXLLO56YOBBN4JK4UXE7",
+  "pipelineId": "pip_QOSM25BB6JZAPPVOM5QC6TE3QM",
+  "launchReviewId": "req_c92704dc-27a9-4860-82db-d8ad41aa02e2",
+  "runRef": "run_FQYGQ344DFXXEJL2UCHJ3OISR6",
+  "requestId": "req_0002b324-381f-4e99-92f3-20ad6fbd8242",
+  "createdAt": "2026-09-27T08:02:27.120239Z",
+  "state": "ready",
+  "issue": "",
+  "review": {
+    "schemaVersion": 1,
+    "workspaceId": "req_c92704dc-27a9-4860-82db-d8ad41aa02e2",
+    "originDigest": "sha256:a54e1035050454b50241291df7693a75b5999007848669fb0ab1b8836b959184",
+    "previousHead": "sha256:706a66f91894ecad2fabf8abdc5601d95b14dcd4f460ff1fe4cfbd990194074d",
+    "snapshot": "2339728a8fcc2d26a548ba6ec03e9887",
+    "stateDigest": "sha256:8d70525fe41a321e01f4bbfa555d61cfe71e1dc136e7759507d0e736e234c30f",
+    "steps": [
+      {
+        "taskId": "trim_galore",
+        "priorAttempt": 1,
+        "plannedAttempt": 1,
+        "action": "reuse"
+      },
+      {
+        "taskId": "fastqc",
+        "priorAttempt": 2,
+        "plannedAttempt": 3,
+        "action": "restart"
+      }
+    ],
+    "files": [
+      {
+        "path": "inputs/reads.fastq.gz",
+        "sha256": "bc0f9ea353d8a9d9a2499d13aa0e1cd21712e4cfbb02e71800e22e9798c413ef"
+      },
+      {
+        "path": "work/trim-galore/sample_trimmed.fq.gz",
+        "sha256": "1278cead35d5417d594cec80cd1c25fc31c7e04859347d9f24271fc2db89537e"
+      },
+      {
+        "path": "work/trim-galore/reads.fastq.gz_trimming_report.txt",
+        "sha256": "b706ece861090a1d8c004e9a57d5329d11f01878c3fc68a15580101d4bba8681"
+      }
+    ],
+    "digest": "sha256:1b73b327265a252e6a09f0275c94a36eb5b49142ae55474ecb5b277d8f9b5d90"
+  }
+}

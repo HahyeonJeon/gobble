@@ -1,0 +1,7 @@
+{
+  "reportLoaded": true,
+  "attachmentInteraction": true,
+  "focusAndRestore": true,
+  "compactChat": true,
+  "scope": "Prototype only, no production integration"
+}

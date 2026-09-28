@@ -1,0 +1,62 @@
+contracts/tests/fixtures.ts 37ms
+contracts/scripts/export-schema.ts 8ms (unchanged)
+contracts/src/validation.ts 17ms (unchanged)
+contracts/src/evidence.ts 13ms
+contracts/src/surface-v8.ts 3ms
+contracts/src/reference-resolution.ts 10ms
+contracts/src/selection.ts 3ms
+contracts/src/workspace-migration.ts 7ms
+contracts/src/shared-context.ts 3ms (unchanged)
+contracts/src/reference-v3.ts 3ms (unchanged)
+contracts/src/run-navigation.ts 12ms
+contracts/src/shared-tools-v5.ts 4ms (unchanged)
+contracts/src/dependency-navigation.ts 3ms
+contracts/src/document-content-v8.ts 3ms
+contracts/src/shared-tools.ts 3ms (unchanged)
+contracts/src/decision.ts 2ms (unchanged)
+contracts/src/evidence-v8.ts 2ms
+contracts/src/workspace-document.ts 7ms
+contracts/src/workspace-document-v8.ts 2ms
+contracts/src/index.ts 2ms (unchanged)
+contracts/src/workspace-document-v7.ts 2ms (unchanged)
+contracts/src/evidence-validation.ts 5ms
+contracts/src/workspace-bridge.ts 9ms (unchanged)
+contracts/src/reference-target.ts 1ms
+contracts/src/observed-evidence.ts 5ms (unchanged)
+contracts/src/surface-data.ts 2ms
+desktop/tests/plot-evidence.test.ts 12ms (unchanged)
+desktop/tests/design.test.ts 10ms (unchanged)
+desktop/tests/questions.test.ts 32ms (unchanged)
+desktop/tests/dependency-navigation.test.ts 13ms
+desktop/tests/workspace.test.ts 28ms (unchanged)
+desktop/tests/observed-evidence.test.ts 33ms (unchanged)
+desktop/tests/dependencies.test.ts 16ms (unchanged)
+desktop/tests/linked-interaction.test.ts 8ms (unchanged)
+desktop/tests/workspace-migration.test.ts 15ms (unchanged)
+desktop/tests/electron/workspace.spec.ts 25ms (unchanged)
+desktop/tests/electron/evidence.spec.ts 25ms
+desktop/tests/electron/dependencies.spec.ts 16ms
+desktop/src/renderer/evidence/EvidencePreview.tsx 13ms
+desktop/src/renderer/evidence/DependencyEvidence.tsx 3ms
+desktop/src/renderer/workspace/WorkspaceApp.tsx 11ms (unchanged)
+desktop/src/renderer/workspace/views/RunView.tsx 3ms
+desktop/src/renderer/workspace/views/RunTasksView.tsx 13ms
+desktop/src/renderer/workspace/views/SurfaceView.tsx 16ms
+desktop/src/renderer/workspace/views/dependencies/DependencyDetails.tsx 6ms
+desktop/src/renderer/workspace/views/dependencies/dependency-layout.ts 3ms
+desktop/src/renderer/workspace/views/dependencies/DependencyView.tsx 9ms
+desktop/src/renderer/workspace/views/dependencies/DependencyGraph.tsx 7ms
+desktop/src/renderer/styles/run-dependencies.css 22ms
+desktop/src/renderer/shared-context/marks.tsx 5ms
+desktop/src/main/evidence/capture.ts 5ms
+desktop/src/main/evidence/materialize.ts 7ms
+desktop/src/main/evidence/dependency-evidence.ts 2ms
+desktop/src/main/workspace/selection.ts 2ms
+desktop/src/main/workspace/storage.ts 9ms
+desktop/src/main/workspace/model.ts 12ms
+desktop/src/main/workspace/render-session.ts 10ms
+desktop/src/main/workspace/controller.ts 38ms
+desktop/src/main/workspace/service.ts 3ms
+desktop/src/main/shared-context/observed.ts 6ms
+desktop/src/main/shared-context/tabular.ts 2ms (unchanged)
+desktop/src/main/shared-context/host.ts 15ms

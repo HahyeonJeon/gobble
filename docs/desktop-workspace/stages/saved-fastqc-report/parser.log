@@ -1,0 +1,11 @@
+
+Running 4 tests using 1 worker
+
+(node:83995) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 desktop/tests/electron/report-reader.spec.ts:28:1 › qualified FastQC source preserves ordered text, tables, status variants and all original charts (263ms)
+  ✓  2 desktop/tests/electron/report-reader.spec.ts:47:1 › rejects active, external, malformed, unknown and oversized content without a partial rendition (1.5s)
+  ✓  3 desktop/tests/electron/report-reader.spec.ts:66:1 › uses a hidden sandbox without a preload or privileged bridge, and a closed reader refuses more jobs (171ms)
+  ✓  4 desktop/tests/electron/report-reader.spec.ts:82:1 › close and the finite deadline dispose a stalled parser job (10.1s)
+
+  4 passed (12.7s)

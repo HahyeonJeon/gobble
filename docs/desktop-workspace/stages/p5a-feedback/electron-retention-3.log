@@ -1,0 +1,8 @@
+
+Running 1 test using 1 worker
+
+(node:25012) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 desktop/tests/electron/run-feedback-retention.spec.ts:7:1 › Follow-up: historical design, missing capture and compact restored UI (5.1s)
+
+  1 passed (5.5s)

@@ -1,0 +1,13 @@
+{
+  "fileCount": 200,
+  "sha256": "66da48d30c9f586652351c00a64c9130d6eae5973503091cdf7dc2c5eb01e0b3",
+  "changedAppServiceFiles": [
+    "app/README.md",
+    "app/desktop/tests/codex.test.ts",
+    "app/desktop/tests/live/runtime-fixture.ts",
+    "app/desktop/tests/live/runtime.spec.ts",
+    "app/package.json",
+    "app/playwright.live.config.ts",
+    "app/tsconfig.tools.json"
+  ]
+}

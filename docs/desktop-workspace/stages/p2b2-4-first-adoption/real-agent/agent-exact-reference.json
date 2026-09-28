@@ -1,0 +1,18 @@
+{
+  "context": {
+    "kind": "candidate",
+    "base": "none",
+    "draftId": "drf_HA3TQUUGI3DAFTCEAXFLQAWXRF",
+    "generation": 2,
+    "candidateId": "req_82bb79a18278a31d3e60991aaf9e37225e9aecebc978373f98127793f189407e",
+    "artifactId": "sha256:0058f0c08d162ae2cc8f3d23a755dea1d4964140645757a689cf5195ab7ea484",
+    "target": {
+      "kind": "setting",
+      "id": "trim_galore",
+      "name": "quality"
+    }
+  },
+  "agentId": "agt_877e9416-6ffa-4531-a2e4-c8e8c57c2c19",
+  "submissionId": "req_e954097a-e40c-4fcc-87ea-5ce54811e3d7",
+  "note": "Quality threshold reviewed: Trim Galore uses a cutoff of 25 Phred for quality trimming. Q25 corresponds to an estimated base-call error probability of about 0.32% (1 in 316). This guides trimming of low-quality read ends; it does not guarantee every retained base is Q25 or higher. Proposal unchanged."
+}

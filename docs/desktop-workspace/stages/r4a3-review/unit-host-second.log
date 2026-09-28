@@ -1,0 +1,47 @@
+
+ RUN  v4.1.11 /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app
+
+ ❯ desktop/tests/notebook-host.test.ts (7 tests | 1 failed) 286ms
+   × opens an exact temporary reference without replacing the retained User reader 40ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  desktop/tests/notebook-host.test.ts > opens an exact temporary reference without replacing the retained User reader
+AssertionError: expected { kind: 'file', value: { …(6) } } to match object { kind: 'file', …(1) }
+(13 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -4,12 +4,12 @@
+      "content": {
+        "kind": "notebook",
+        "reference": {
+          "content": {
+            "kind": "text",
+-           "text": "import pandas as pd
+- qc = ",
++           "text": "# Unicode 🧬 and CRLF
++ im",
+          },
+          "target": {
+            "dataRevision": "sha256:0f7f80252f94fef60a2489f24b74a049d757dee5d84db33e43232b772cea9595",
+            "origin": {
+              "surfaceId": "srf_notebook",
+
+ ❯ desktop/tests/notebook-host.test.ts:257:15
+    255|   const views=owner(),original=file(),data=await views.read(surface,as…
+    256|   const ref=await views.reference(t,async()=>original);
+    257|   expect(ref).toMatchObject({kind:'file',value:{content:{kind:'noteboo…
+       |               ^
+    258|   expect(()=>views.validate(surface.surfaceId,t,data)).not.toThrow();
+    259|   await expect(views.reference(t,async()=>file('changed'))).rejects.to…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 27 passed (28)
+   Start at  07:08:10
+   Duration  4.61s (transform 738ms, setup 0ms, import 1.05s, tests 4.21s, environment 0ms)
+

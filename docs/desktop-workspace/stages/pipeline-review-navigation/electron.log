@@ -1,0 +1,19 @@
+
+Running 12 tests using 1 worker
+
+(node:135) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 desktop/tests/electron/pipeline-review-navigation.spec.ts:9:1 › comparison location survives presentation changes without retaining authority or confirmation (9.8s)
+  ✓   2 desktop/tests/electron/shared-context.spec.ts:61:1 › User and Agent share table/image pointers while local selection and composer focus stay independent (3.1s)
+  ✓   3 desktop/tests/electron/shared-context.spec.ts:108:1 › text pointing overlays a revision-bound range without replacing native local selection (2.2s)
+  ✓   4 desktop/tests/electron/shared-context.spec.ts:148:1 › explicit shared-view opt-in starts a new conversation and retains earlier messages (2.3s)
+  ✓   5 desktop/tests/electron/workspace.spec.ts:27:1 › real files, split, selection and draft survive a normal app relaunch (1.8s)
+  ✓   6 desktop/tests/electron/workspace.spec.ts:66:1 › keyboard tabs, duplicate, move and close preserve the remaining views (1.2s)
+  ✓   7 desktop/tests/electron/workspace.spec.ts:96:1 › narrow windows retain both panes and keyboard image and text context (1.1s)
+  ✓   8 desktop/tests/electron/workspace.spec.ts:133:1 › changed and missing files remain explicit while other Projects stay separate (1.2s)
+  ✓   9 desktop/tests/electron/workspace.spec.ts:173:1 › a failed draft save preserves the Project and honors Keep Open on window close (863ms)
+  ✓  10 desktop/tests/electron/workspace.spec.ts:218:1 › stacked panes, fitted image and one composer retain their identity across resizing and compact chat (1.6s)
+  ✓  11 desktop/tests/electron/workspace.spec.ts:341:1 › the real app migrates saved v1 geometry on the first change and retains the original archive (1.9s)
+  ✓  12 desktop/tests/electron/workspace.spec.ts:408:1 › selection overview finds hidden sources, More returns keyboard focus, and empty panes target navigation (1.4s)
+
+  12 passed (29.0s)

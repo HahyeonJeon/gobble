@@ -2,8 +2,9 @@
 
 Updated: 2026-09-06. Electron, React/TypeScript, agent-centered interaction,
 ChatGPT subscription sign-in as the first agent target, and standalone Linux
-CLI support are selected directions. Thin desktop-first delivery remains the
-recommendation after comparing it with a local web application.
+CLI support are selected directions. The user has approved Project-centered navigation, multiple attached agents,
+shared main-area panels and selection-based discussion. Thin desktop-first
+delivery remains the recommendation.
 This roadmap defines sequence and acceptance, not dates or release promises.
 The canonical design is [Application and monitoring](../architecture/application.md).
 
@@ -17,8 +18,8 @@ Linux CLI tool.
 
 Agent-centered UX is a first-product requirement: the agent opens relevant
 analysis views, uses them to inspect evidence, asks contextual questions, and
-continues from the user's answers. Review this interaction and the layout with
-the user before implementing screens. The canonical UX proposal lives in
+continues from the user's answers. The Project-centered concept is now user-approved. Review its detailed contract
+and first implementation scope before implementing screens. The canonical UX proposal lives in
 [Agent-centered workspace](../feature/agent-workspace.md).
 
 The engine and assay family are already implemented. Current distribution uses
@@ -79,7 +80,7 @@ their own evidence. The immutable v0.1.0 tag is the earlier engine preview.
 | Phase | Outcome | Dependency | Exit evidence |
 |---|---|---|---|
 | 0. Execution baseline | Repeatable local container installation and recovery | Current runtime | Actual host/Docker matrix with limits recorded |
-| 1. Shared workspace and agent integration proof | Reviewed UX, thin Electron/React/TypeScript app, setup, sign-in, and agent-controlled analysis surfaces | User review of layout/attention rules and focused application contracts | Agent opens a real surface, consumes its observation, asks a question, and receives the user's answer; facts agree with Gobble |
+| 1. Project workspace and agent collaboration | Approved Project UX, thin Electron app, two agent attachments, shared views/context and restore | Detailed contract review and compatible local runtime | Agents open/observe real surfaces and consume scoped context; questions/answers restore and facts agree with Gobble |
 | 2. First complete desktop workflow | Agent-assisted design, plan review, Run, monitoring, Stop, and Resume | Phase 1 plus accepted write-operation contracts | Actual fixture-backed analysis from the app, including interruption and recovery |
 | 3. Distribution and reliability | Qualified native installation, updates, and reconnection | Phase 2 workflow | OS-specific installer/update/recovery evidence without changing active analysis pins |
 | 4. Explanatory monitoring | Events, measured resources, attempt timelines, comparison, reports | Stable run and operation identities | Reconnectable history and bounded collection overhead |
@@ -112,50 +113,57 @@ resources, outputs, and recovery outcomes.
 A development image is not a stable release. Stable claims require named
 compatibility effects and a truthful support matrix.
 
-## Phase 1 — Review the workspace UX and prove agent interaction
+## Phase 1 — Implement the approved Project workspace and prove collaboration
 
-Before implementation, show the user low-fidelity workspace layouts and a
-concrete design-to-recovery interaction. Compare the recommended shared work
-area with a conversation-led alternative. Decide the starting layout, how the
-agent opens views without disrupting user attention, how questions attach to
-evidence, and which surface types are initially needed. Keep a separate decision
-for detachable OS windows. Implement screens after this discussion.
+The user reviewed the earlier workbench/conversation concepts, requested Project
+as the primary unit with multiple agents/resources, and approved the revised
+Project workspace image. Keep the Project as owner of shared views when agents
+change. The [workspace design](../feature/agent-workspace.md) records interaction;
+the [Project contract](../architecture/project-workspace-contract.md) records
+processes, identities, storage and communication. The
+[desktop review and first-slice criteria](../../../../../../docs/desktop-workspace/README.md)
+make the implementation scope concrete; the
+[indexed session plan](../../../../../../docs/desktop-workspace/session-plan/plan-index.md)
+defines its dependency order.
 
-Review a compact domain/API contract. Define registered roots, run/workspace
-identity, source revision capture, task attempts, request acceptance, and outcome.
-Separate UI connection,
-agent turn, surface readiness, user decision, controller liveness, backend
-observability, and pipeline status. Keep UI state out of engine workspaces.
+Deliver one Electron/React/TypeScript primary window with Project registration,
+resource navigation, two-pane shared views, a bottom addressed discussion dock,
+and persistence. User and agent actions use one Project workspace controller.
+Files/CSV, static images, a real Gobble-derived plan/run view and selected task/log
+context form the initial evidence surfaces. A generated concept is not a
+production report viewer or a promised assay result.
 
-Build the Electron main process, narrow preload interface, and React/TypeScript
-renderer. Provide setup checks, native folder selection, project registration,
-persistent conversation, and the minimum shared surfaces needed for the proof,
-such as a real plan/run view and its selected task/log context. Use bounded
-reads from existing engine projections; maintain identity and containment.
-Keep React views independent of host APIs and use a browser development harness
-where useful. A basic installer or native packaged build is part of this phase.
+Connect two peer agent attachments through the official Codex App Server with
+ChatGPT managed login, available models, separate threads and explicit recipient
+selection. Bind tools to the correct Project and agent identity. Prove open,
+arrange, observe, scoped capture, question and answer delivery. Keep provider
+history separate from the shared Project discussion and app-owned pending
+questions. Repeated or uncertain submission must not create duplicate effects.
 
-Implement a host adapter for the official Codex App Server and prove ChatGPT
-subscription sign-in, a model selection, an agent turn, and reconnectable
-conversation state. Add workspace tools to open/reuse a surface, observe its
-actual state, request contextual input, and receive the response. Demonstrate
-agent consumption of structured observations and, for a visual inspection case,
-a scoped rendered capture. Do not assume App Server supplies Gobble-specific
-UI tools. The exact runtime provisioning and tool bridge are resolved here,
-with pinned compatibility and native host tests. The provider behavior is
-specified in [the agent design](../architecture/application.md#first-agent-target-chatgpt-subscription-sign-in).
+A host Go service owns project registration and routes reads into the existing
+compatible pinned runtime. It preserves engine identity, mount mapping and
+schema gates. Project browsing remains available without Docker or a provider
+account; current execution facts are unavailable/stale when their runtime cannot
+be reached. The service does not infer success from client connection state.
 
-Review packaging versus managed acquisition of the official Codex binary,
-notices, credential handling, native availability, and upgrade behavior before
-committing the first distributable. App Server is the chosen integration route;
-a general-purpose model proxy is not a required architecture component.
+The first slice uses read-only agent source access and existing-run queries.
+New plan generation, source apply, Start, Stop, Resume and resume-preview are
+Phase 2 operations. Do not expose working-looking controls for capabilities
+that have not been implemented. Linux CLI remains independently usable.
 
-Exit requires desktop facts matching Inspect/TUI, graceful missing-log/stale
-state handling, and a complete open/observe/ask/answer interaction. Test repeated
-surface requests, delayed or failed rendering, pinned/dismissed views, and
-answers after relevant source changes. Prove that closing a surface, the app,
-or the agent does not stop an existing detached analysis. Record account, model,
-and runtime compatibility without retaining credential material in test artifacts.
+Begin native packaging in this phase: produce a current-host local Mac app with
+its required executable resources and explicit compatibility limits. Provider
+binary acquisition, digest and notices belong to that artifact. A development
+path into another app's installation is not a distribution solution.
+
+Exit requires two actual agent bindings, a real two-view/selected-context
+interaction, factual agreement with Inspect, explicit unavailable/stale states,
+and safe restoration of Project, surfaces, attachments and pending questions.
+Keyboard operation, repeated requests, render failure, pinned/dismissed views,
+changed evidence and agent interruption are part of this outcome. Prove an
+accepted detached analysis survives app quit. Live Docker and the user's browser
+sign-in are prerequisites for their respective evidence; mock results cannot
+close those items. Signed cross-platform distribution remains Phase 3.
 
 ## Phase 2 — Deliver the first complete agent-driven analysis
 
@@ -256,12 +264,16 @@ deferrals stay in [Backlog Memory](../../backlogs/README.md).
 
 ## Next scope and replan rules
 
-The next slice is **a user-reviewed agent workspace layout and interaction
-storyboard, then Phase 1's thin Electron app with official subscription login
-and open/observe/ask/answer proof**. Phase 2 delivers the complete local analysis
-journey. Track outstanding execution acceptance and Linux CLI compatibility
-alongside that work. Electron and React/TypeScript are selected; precise UX
-behavior remains a design discussion before screen implementation.
+The next slice is **the detailed design review and implementation of the approved
+Project workspace: two agent attachments, shared views, selection-based
+open/observe/ask/answer interaction, restore and compatible existing-run
+queries**. The first concept decision is complete. Its implementation plan and
+acceptance are linked from Phase 1. Phase 2 adds the complete source-to-recovery
+analysis journey; it does not change Project-centered navigation.
+
+Track outstanding execution acceptance and Linux CLI compatibility alongside
+this work. The initial Mac artifact does not prove Windows/Linux app support or
+native ARM analysis.
 
 Replan if the app duplicates execution authority, silently changes runtime
 identity or billing mode, couples provider availability to pipeline control,

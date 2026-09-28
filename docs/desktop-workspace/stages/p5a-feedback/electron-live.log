@@ -1,0 +1,45 @@
+
+Running 1 test using 1 worker
+
+(node:18627) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 desktop/tests/electron/pipeline-creation.spec.ts:10:3 › Creation: chosen data, exact discussion, restart and launch (3.2m)
+
+
+  1) desktop/tests/electron/pipeline-creation.spec.ts:10:3 › Creation: chosen data, exact discussion, restart and launch 
+
+    TimeoutError: locator.click: Timeout 30000ms exceeded.
+    Call log:
+      - waiting for getByRole('button', { name: 'Send', exact: true })
+        - locator resolved to <button disabled class="primary-button send-button">…</button>
+      - attempting click action
+        2 × waiting for element to be visible, enabled and stable
+          - element is not enabled
+        - retrying click action
+        - waiting 20ms
+        2 × waiting for element to be visible, enabled and stable
+          - element is not enabled
+        - retrying click action
+          - waiting 100ms
+        58 × waiting for element to be visible, enabled and stable
+           - element is not enabled
+         - retrying click action
+           - waiting 500ms
+
+
+       at run-feedback-scenario.ts:15
+
+      13 |  await page.getByRole('checkbox',{name:'Allow a Pipeline proposal for this message'}).check();
+      14 |  await page.getByRole('textbox',{name:'Message draft'}).fill('pipeline-feedback');
+    > 15 |  await page.getByRole('button',{name:'Send',exact:true}).click();
+         |                                                          ^
+      16 |  const deliveryPath=join(profile,'codex/home/feedback-delivery.json');
+      17 |  await expect.poll(()=>readFile(deliveryPath,'utf8').catch(()=>''),{timeout:60000}).not.toBe('');
+      18 |  const delivery=JSON.parse(await readFile(deliveryPath,'utf8'));
+        at verifyRunFollowUp (/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/run-feedback-scenario.ts:15:58)
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/pipeline-creation.spec.ts:276:59
+
+    Error Context: test-results/p5a-feedback/pipeline-creation-Creation-63435-scussion-restart-and-launch/error-context.md
+
+  1 failed
+    desktop/tests/electron/pipeline-creation.spec.ts:10:3 › Creation: chosen data, exact discussion, restart and launch 

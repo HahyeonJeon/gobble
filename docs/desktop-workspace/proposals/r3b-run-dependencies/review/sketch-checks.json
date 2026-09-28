@@ -1,0 +1,18 @@
+{
+  "date": "2026-09-08",
+  "browser": "152.0.7977.76",
+  "status": "passed",
+  "scenarioCount": 8,
+  "scenarios": [
+    "Exact S03 attempt 2 opens its synthetic log; excerpt capture has matching UTF-8 byte bounds.",
+    "Keyboard dependency list selects the directed pair; Discuss captures A without sending; simulated Agent arrival preserves selection and draft.",
+    "Show marks only the Agent pair; Return restores User dependency-list mode, selected pair, keyboard focus and draft.",
+    "Advancing to B refuses an A pointer; immutable A attachment and existing A log remain labelled with their captured source.",
+    "Unavailable topology does not invent a selected group; exact Tasks/logs remain usable with the selected instance identity.",
+    "Alternative B uses the companion pane for instances; opening logs replaces that list, exposing its navigation tradeoff.",
+    "900×650: no page horizontal overflow; exact logs, Discuss, Show and Return reachable; compact Chat state and draft restored.",
+    "640×840: no page horizontal overflow; exact logs, Discuss, Show and Return reachable; compact Chat state and draft restored."
+  ],
+  "pageErrors": [],
+  "limits": "Standalone synthetic HTML sketch in headless Chrome. Not production Electron, a qualified graph library, screen-reader research, native 150% zoom or real Agent/engine integration."
+}

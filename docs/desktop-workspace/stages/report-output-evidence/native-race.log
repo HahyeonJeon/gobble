@@ -1,0 +1,5 @@
+--- FAIL: TestServiceHasNoEngineOrThirdPartyImports (0.00s)
+    boundaries_test.go:31: platform_unix.go imports golang.org/x/sys/unix; the native service must remain independent of engine/provider code
+FAIL
+FAIL	github.com/HahyeonJeon/gobble/internal/appservice	18.664s
+FAIL

@@ -18,3 +18,6 @@ tests/modules/*/testdata/cache/
 dist/
 .gobble-cache/
 .gobble-runtime.json
+
+# Incidental local Playwright runner state in retained qualification folders
+docs/desktop-workspace/**/.last-run.json

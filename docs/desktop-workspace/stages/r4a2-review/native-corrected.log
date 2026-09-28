@@ -1,0 +1,36 @@
+
+Running 5 tests using 1 worker
+
+(node:12352) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 desktop/tests/electron/notebook.spec.ts:34:1 › saved source and output attach through the existing composer, preview offline and survive source changes and restart (3.5s)
+  ✓  2 desktop/tests/electron/notebook.spec.ts:71:1 › native text drag uses exact display offsets and rejects stale or foreign image requests (983ms)
+  ✓  3 desktop/tests/electron/notebook.spec.ts:93:1 › native pointer and keyboard image selection at 150 percent captures the exact original pixels (1.1s)
+  ✓  4 desktop/tests/electron/notebook.spec.ts:115:1 › two Notebook Panes remain independent and compact and enlarged layouts retain the composer (1.5s)
+  ✘  5 desktop/tests/electron/notebook.spec.ts:130:1 › malformed sources recover explicitly and renderer replacement preserves draft and captured attachments (6.1s)
+
+
+  1) desktop/tests/electron/notebook.spec.ts:130:1 › malformed sources recover explicitly and renderer replacement preserves draft and captured attachments 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: "Keep this Notebook review."
+    Received: ""
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+      137 |   await application.evaluate(({dialog,BrowserWindow})=>{dialog.showMessageBox=async()=>({response:0,checkboxChecked:false});const w=BrowserWindow.getAllWindows().find((w)=>w.webContents.getURL().startsWith('app://gobble/'))!;setTimeout(()=>w.webContents.forcefullyCrashRenderer(),100);});
+      138 |   await crashed;
+    > 139 |   await expect.poll(async()=>{try{return await page.getByRole('textbox',{name:'Message draft'}).inputValue();}catch{return '';}}).toBe('Keep this Notebook review.');
+          |                                                                                                                                   ^
+      140 |   await readyView(page);expect((await readDocument()).chat.attachments).toEqual(saved.attachments);
+      141 |   await page.getByLabel('Message attachments',{exact:true}).locator('.attachment-toggle').first().click();await expect(attachmentPreview(page).locator('.evidence-preview-body pre')).toContainText('keep = qc');
+      142 | });
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/notebook.spec.ts:139:131
+
+    Error Context: test-results/electron/notebook-malformed-sources-bcdca-ft-and-captured-attachments/error-context.md
+
+  1 failed
+    desktop/tests/electron/notebook.spec.ts:130:1 › malformed sources recover explicitly and renderer replacement preserves draft and captured attachments 
+  4 passed (13.7s)

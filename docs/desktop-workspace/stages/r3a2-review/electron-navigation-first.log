@@ -1,0 +1,38 @@
+
+Running 1 test using 1 worker
+
+(node:58434) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 desktop/tests/electron/runtime.spec.ts:15:1 › task navigation and stream selections survive refresh failures and normal restart (4.3s)
+
+
+  1) desktop/tests/electron/runtime.spec.ts:15:1 › task navigation and stream selections survive refresh failures and normal restart 
+
+    Error: locator.check: Clicking the checkbox did not change its state
+    Call log:
+      - waiting for getByRole('region', { name: 'Primary pane', exact: true }).getByRole('radio', { name: 'Align template · align-template · Attempt 0', exact: true })
+        - locator resolved to <input type="radio" name="_r_0_" aria-label="Align template · align-template · Attempt 0"/>
+      - attempting click action
+        - waiting for element to be visible, enabled and stable
+        - element is visible, enabled and stable
+        - scrolling into view if needed
+        - done scrolling
+        - performing click action
+        - click action done
+        - waiting for scheduled navigations to finish
+        - navigations have finished
+
+
+      132 |     await primary
+      133 |       .getByRole('radio', { name: 'Align template · align-template · Attempt 0', exact: true })
+    > 134 |       .check();
+          |        ^
+      135 |     await expect(primary.getByRole('button', { name: 'Open logs', exact: true })).toBeDisabled();
+      136 |     await expect(
+      137 |       primary.getByText('Template task · No attempt logs', { exact: true }),
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/runtime.spec.ts:134:8
+
+    Error Context: test-results/electron/runtime-task-navigation-an-7319a-failures-and-normal-restart/error-context.md
+
+  1 failed
+    desktop/tests/electron/runtime.spec.ts:15:1 › task navigation and stream selections survive refresh failures and normal restart 

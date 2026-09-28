@@ -1,0 +1,36 @@
+
+Running 3 tests using 1 worker
+
+(node:83930) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 desktop/tests/electron/report-reader.spec.ts:28:1 › qualified FastQC source preserves ordered text, tables, status variants and all original charts (357ms)
+  ✘  2 desktop/tests/electron/report-reader.spec.ts:47:1 › rejects active, external, malformed, unknown and oversized content without a partial rendition (1.5s)
+(node:83952) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  3 desktop/tests/electron/report-reader.spec.ts:66:1 › uses a hidden sandbox without a preload or privileged bridge, and close interrupts an active job (269ms)
+
+
+  1) desktop/tests/electron/report-reader.spec.ts:47:1 › rejects active, external, malformed, unknown and oversized content without a partial rendition 
+
+    Error: expect(received).rejects.toThrow()
+
+    Received promise resolved instead of rejected
+    Resolved to value: {"footer": "Produced by FastQC  (version 0.12.1)", "headerFilename": "Mon 28 Sep 2026
+    sample_trimmed.fq.gz", "headerTitle": "FastQC Report", "logoLabel": "FastQC", "modules": [[Object], [Object], [Object], [Object], [Object], [Object], [Object], [Object], [Object], [Object]], "profile": "fastqc-0.12.1-v1", "summary": [[Object], [Object], [Object], [Object], [Object], [Object], [Object], [Object], [Object], [Object]], "summaryHeading": "Summary", "title": "sample_trimmed.fq.gz FastQC Report"}
+
+      61 |     source.replace('AAAAASUVORK5CYII=','AAAAASUVORK5CYIA='),
+      62 |   ];
+    > 63 |   for(const html of invalid) await expect(decode(html)).rejects.toThrow();
+         |                                                                 ^
+      64 |   expect(await application.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows().length)).toBe(0);
+      65 | });
+      66 | test('uses a hidden sandbox without a preload or privileged bridge, and close interrupts an active job',async()=>{
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/report-reader.spec.ts:63:65
+
+    Error Context: test-results/electron/report-reader-rejects-acti-6dc7d-without-a-partial-rendition/error-context.md
+
+    Error Context: test-results/electron/report-reader-rejects-acti-6dc7d-without-a-partial-rendition/error-context.md
+
+  1 failed
+    desktop/tests/electron/report-reader.spec.ts:47:1 › rejects active, external, malformed, unknown and oversized content without a partial rendition 
+  2 passed (3.7s)

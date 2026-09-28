@@ -1,0 +1,5 @@
+desktop/src/renderer/shared-context/captured-reference.ts 35ms
+desktop/src/renderer/workspace/views/SurfaceView.tsx 52ms (unchanged)
+desktop/src/renderer/workspace/views/ObservedReferencePanel.tsx 8ms
+desktop/tests/electron/runtime-fixture.ts 7ms
+desktop/tests/electron/observed-reference.spec.ts 20ms

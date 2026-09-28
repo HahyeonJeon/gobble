@@ -1,0 +1,269 @@
+{
+  "schemaVersion": 14,
+  "viewLinks": [],
+  "paneOrientation": "vertical",
+  "workspace": {
+    "schemaVersion": 1,
+    "projectId": "prj_GYKUKXK57TZR74LATZTCTCOCIM",
+    "revision": 16,
+    "agents": [
+      {
+        "projectId": "prj_GYKUKXK57TZR74LATZTCTCOCIM",
+        "agentId": "agt_829c2dbf-55d4-4261-b658-70b979a29964",
+        "name": "Notebook Reviewer",
+        "instructionProfile": "discussion-v1",
+        "access": "sharedViews",
+        "configuration": {
+          "model": "gpt-6-astra",
+          "effort": "medium",
+          "instructions": ""
+        },
+        "provider": {
+          "kind": "codex",
+          "threadId": "01a08311-f1cf-76a1-90bb-295940cfd871",
+          "accountSessionId": "49e0106a-c73f-452b-bd21-ee57d3a72136",
+          "toolsetVersion": "shared-views-v9"
+        }
+      }
+    ],
+    "surfaces": [
+      {
+        "projectId": "prj_GYKUKXK57TZR74LATZTCTCOCIM",
+        "surfaceId": "srf_35961dac-b7bd-4384-9c16-1dd396dfd62d",
+        "resource": {
+          "kind": "file",
+          "resourceId": "res_2d471a56b86a921cd84a75b4455c76fc94670662bd08e403155776facc4ea7d1"
+        },
+        "view": "notebook",
+        "pinned": false,
+        "openedBy": {
+          "kind": "user"
+        }
+      }
+    ],
+    "layout": {
+      "kind": "single",
+      "primary": {
+        "tabs": [
+          "srf_35961dac-b7bd-4384-9c16-1dd396dfd62d"
+        ],
+        "activeSurfaceId": "srf_35961dac-b7bd-4384-9c16-1dd396dfd62d"
+      }
+    },
+    "decisions": [
+      {
+        "kind": "question",
+        "projectId": "prj_GYKUKXK57TZR74LATZTCTCOCIM",
+        "decisionId": "dec_67436db3274f2f086ea4ebfbed621aa9e511c57777323c26",
+        "requestedBy": "agt_829c2dbf-55d4-4261-b658-70b979a29964",
+        "question": "What is this placeholder image intended to represent?",
+        "options": [],
+        "evidence": [
+          {
+            "attachmentId": "att_5e9256c3-68ae-4cc6-8ce6-1dbf496824d2",
+            "evidence": {
+              "schemaVersion": 6,
+              "projectId": "prj_GYKUKXK57TZR74LATZTCTCOCIM",
+              "resource": {
+                "kind": "file",
+                "resourceId": "res_2d471a56b86a921cd84a75b4455c76fc94670662bd08e403155776facc4ea7d1"
+              },
+              "origin": {
+                "surfaceId": "srf_35961dac-b7bd-4384-9c16-1dd396dfd62d"
+              },
+              "dataRevision": "sha256:34084164c0373d523da011002c44069661dde4f0ab19899757ce6f14e02277af",
+              "selection": {
+                "kind": "notebook",
+                "profile": "notebook-passive-1",
+                "cell": {
+                  "kind": "id",
+                  "id": "quality"
+                },
+                "part": {
+                  "kind": "output",
+                  "index": 1,
+                  "mime": "image/png",
+                  "digest": "sha256:c3efe153f4026eba759dbabba363642a50e0acbc3484d093a0c92e92ffa51ed0"
+                },
+                "selector": {
+                  "kind": "image",
+                  "coordinateSpace": "natural-image-pixels",
+                  "rect": {
+                    "x": 40,
+                    "y": 30,
+                    "width": 160,
+                    "height": 80
+                  }
+                }
+              }
+            },
+            "createdAt": 1788905403927,
+            "label": "analysis.ipynb",
+            "capture": {
+              "kind": "notebook",
+              "capturedAt": 1788905403928,
+              "asset": {
+                "hash": "sha256:c3803e4068e4ff2e89c858368a56d7d8f43d1f764edbf8bf39d63f4941968320",
+                "byteLength": 286,
+                "mediaType": "image/png"
+              },
+              "representation": {
+                "kind": "image",
+                "notebook": true,
+                "width": 160,
+                "height": 80,
+                "originalWidth": 320,
+                "originalHeight": 160,
+                "crop": {
+                  "x": 40,
+                  "y": 30,
+                  "width": 160,
+                  "height": 80
+                }
+              }
+            },
+            "capturedAt": 1788905403928,
+            "asset": {
+              "hash": "sha256:c3803e4068e4ff2e89c858368a56d7d8f43d1f764edbf8bf39d63f4941968320",
+              "byteLength": 286,
+              "mediaType": "image/png"
+            },
+            "representation": {
+              "kind": "image",
+              "notebook": true,
+              "width": 160,
+              "height": 80,
+              "originalWidth": 320,
+              "originalHeight": 160,
+              "crop": {
+                "x": 40,
+                "y": 30,
+                "width": 160,
+                "height": 80
+              }
+            }
+          }
+        ],
+        "originSubmissionId": "req_1e97ece8-4a9b-4806-9502-4f3b6cb8fbec",
+        "createdAt": 1788905414064,
+        "invocation": {
+          "identity": "67436db3274f2f086ea4ebfbed621aa9e511c57777323c26488cb4c1ba0112bc",
+          "digest": "6bd027c2a6d788387690a66f2f222804564b2f0090bc09d0d040cbc77174b908"
+        },
+        "state": {
+          "kind": "pending"
+        }
+      }
+    ]
+  },
+  "titles": [
+    {
+      "surfaceId": "srf_35961dac-b7bd-4384-9c16-1dd396dfd62d",
+      "title": "analysis.ipynb"
+    }
+  ],
+  "activePane": "primary",
+  "maximizedPane": null,
+  "chat": {
+    "collapsed": false,
+    "width": 420,
+    "draft": "My next instruction stays local during this review.",
+    "recipientAgentId": "agt_829c2dbf-55d4-4261-b658-70b979a29964",
+    "attachmentRevision": 1
+  },
+  "selections": [],
+  "activity": [
+    {
+      "id": "req_3ce47a14-cd29-4c5e-ba2e-c5b8e9d6573d",
+      "text": "Opened a Project view.",
+      "at": 1788905386241
+    }
+  ],
+  "receipts": [
+    {
+      "requestId": "req_67651b9a-ac8f-48ad-a9dc-22f677f0f23e",
+      "digest": "db2502eca4601c8cc6c469a6eee9017fda2d802b051b7ecdac1f77642a07c5cb"
+    },
+    {
+      "requestId": "req_3ce47a14-cd29-4c5e-ba2e-c5b8e9d6573d",
+      "digest": "5c32fe862fb9dd6092a5374e720f40f4654929984a58ff8b003c57a4c8dabb44"
+    },
+    {
+      "requestId": "req_789644b5-d2f0-4339-a970-2a6aa3a8de78",
+      "digest": "1e752678b515fe6c7bdf4db0e2a9a630596dcdec0b0a57b0e79444351f09bc34"
+    },
+    {
+      "requestId": "req_a45a025c-2be9-4fda-aa50-d50d2b518f63",
+      "digest": "b607c1e7dfbcab155064ddf144ebcfb7538c730b688ccab7e8cca33074c55ab2"
+    }
+  ],
+  "collaboration": {
+    "submissions": [
+      {
+        "requestId": "req_1e97ece8-4a9b-4806-9502-4f3b6cb8fbec",
+        "agentId": "agt_829c2dbf-55d4-4261-b658-70b979a29964",
+        "text": "Review the visible saved analysis.ipynb using workspace_observe. Briefly summarize only its returned text. Explicitly observe a smaller region inside an advertised visible image target; display the returned PNG before describing what pixels you actually see. Do not infer scientific content from a synthetic placeholder image. Publish exactly one workspace_point to that observed image region using the exact schemaVersion 6 cell/part/profile/revision, observedReadId and observation. Create one short workspace_question using the evidenceId from that same explicit image observation. Finish your turn. Do not execute anything or change my navigation or selection.",
+        "model": "gpt-6-astra",
+        "effort": "medium",
+        "createdAt": 1788905386514,
+        "responseStartedAt": 1788905390667,
+        "state": "completed",
+        "threadId": "01a08311-f1cf-76a1-90bb-295940cfd871",
+        "turnId": "01a08311-f225-7502-88db-cf101942721c",
+        "response": "I’ll read the visible notebook text, inspect a smaller region of its visible image, then publish one pointer and one question from that image observation.\n\nThe returned text filters `qc` to `mapped_pct >= 80`; the saved output lists S01 at 94.2% and S03 at 91.7%.\n\nI displayed the 160 × 80 crop at (40, 30). Its pixels show solid teal on the left and red-orange on the right, without labels or scientific content.\n\nPublished exactly one pointer to that crop and one question using its evidence. No notebook execution or navigation/selection changes.",
+        "problem": null
+      }
+    ]
+  },
+  "sharedReferences": [
+    {
+      "referenceId": "ref_97210d78-82da-4ad6-b43d-3a44ae82d71e",
+      "evidence": {
+        "schemaVersion": 6,
+        "projectId": "prj_GYKUKXK57TZR74LATZTCTCOCIM",
+        "resource": {
+          "kind": "file",
+          "resourceId": "res_2d471a56b86a921cd84a75b4455c76fc94670662bd08e403155776facc4ea7d1"
+        },
+        "origin": {
+          "surfaceId": "srf_35961dac-b7bd-4384-9c16-1dd396dfd62d"
+        },
+        "dataRevision": "sha256:34084164c0373d523da011002c44069661dde4f0ab19899757ce6f14e02277af",
+        "selection": {
+          "kind": "notebook",
+          "profile": "notebook-passive-1",
+          "cell": {
+            "kind": "id",
+            "id": "quality"
+          },
+          "part": {
+            "kind": "output",
+            "index": 1,
+            "mime": "image/png",
+            "digest": "sha256:c3efe153f4026eba759dbabba363642a50e0acbc3484d093a0c92e92ffa51ed0"
+          },
+          "selector": {
+            "kind": "image",
+            "coordinateSpace": "natural-image-pixels",
+            "rect": {
+              "x": 40,
+              "y": 30,
+              "width": 160,
+              "height": 80
+            }
+          }
+        }
+      },
+      "note": "Observed crop (40, 30; 160 × 80 pixels): solid teal on the left and red-orange on the right, with no visible labels or scientific data.",
+      "author": {
+        "kind": "agent",
+        "agentId": "agt_829c2dbf-55d4-4261-b658-70b979a29964",
+        "name": "Notebook Reviewer"
+      },
+      "createdAt": 1788905409795,
+      "retracted": false,
+      "originSubmissionId": "req_1e97ece8-4a9b-4806-9502-4f3b6cb8fbec",
+      "label": "analysis.ipynb"
+    }
+  ]
+}

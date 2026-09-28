@@ -1,0 +1,166 @@
+{
+  "recordedAt": "2026-09-07T17:13:46.139122+00:00",
+  "stage": "R2b — linked User interaction",
+  "result": "passed; user review and R2c approval pending",
+  "sourceIdentity": {
+    "branch": "codex/project-workspace-design",
+    "head": "7fe3d5c9e10d0cc104a15b6e7aa3def0d15b98f1",
+    "changes": "changes.json",
+    "modifiedFiles": 35,
+    "addedFiles": 12,
+    "removedFiles": 0,
+    "preexistingWork": "Retained. Baseline covers this slice; no commit or push performed."
+  },
+  "environment": {
+    "os": "26.5.2",
+    "architecture": "arm64",
+    "node": "v25.7.0",
+    "electron": "44.2.0",
+    "react": "19.2.8",
+    "typescript": "5.9.3",
+    "playwright": "1.63.0",
+    "vitest": "4.1.11",
+    "plotly": "4.0.0"
+  },
+  "checks": [
+    {
+      "command": "npm run check",
+      "log": "checks.log",
+      "sha256": "51dac522058e7b010ee206db148b48ae36fd41a00039162878a09f0d4781f4cc",
+      "exitCode": 0,
+      "result": "pass after visual correction",
+      "unitFiles": 17,
+      "unitTests": 188,
+      "electronTests": 41,
+      "skipped": 0,
+      "covers": [
+        "format",
+        "separate process types",
+        "generated v5 schema",
+        "unit/contracts/native service",
+        "built Electron interaction and CSP"
+      ]
+    }
+  ],
+  "unchangedFromBaseline": {
+    "app/contracts/schema/v1.json": true,
+    "app/contracts/schema/v2.json": true,
+    "app/contracts/schema/v3.json": true,
+    "app/contracts/schema/v4.json": true,
+    "app/desktop/electron.vite.config.ts": true,
+    "app/desktop/src/main/security/content.ts": true,
+    "app/desktop/src/main/security/origin.ts": true,
+    "app/desktop/src/main/security/permissions.ts": true,
+    "app/package-lock.json": true,
+    "app/package.json": true
+  },
+  "builtArtifacts": [
+    {
+      "path": "app/desktop/out/main/index.js",
+      "bytes": 395340,
+      "sha256": "cd55b6f05e3d95850144eaa819d49ac6497fcc048803ad058d8ed9010d7ff4fd"
+    },
+    {
+      "path": "app/desktop/out/preload/index.cjs",
+      "bytes": 190392,
+      "sha256": "e6662cc2d66febb707e60be55d11c27a313266d57d7e960e50d94f9accbb9f45"
+    },
+    {
+      "path": "app/desktop/out/renderer/assets/chunk-DZLsuOxH.js",
+      "bytes": 1773953,
+      "sha256": "59b0b71f5f5caf07c8937e8c2e1204009599ec49944985105b469cade8e64856",
+      "gzip9Bytes": 441192
+    },
+    {
+      "path": "app/desktop/out/renderer/assets/index-RWZiceWe.css",
+      "bytes": 37018,
+      "sha256": "15a384df88b7fc0fc2b011d2338ba32e8e540ea547f8a4ee5d19398f638747d5"
+    },
+    {
+      "path": "app/desktop/out/renderer/assets/index-fOF1wJun.js",
+      "bytes": 917524,
+      "sha256": "fa703ffcc334f5e43f14b155a9230ecbe101b253d198ba52c27931b9f3e3a185"
+    },
+    {
+      "path": "app/desktop/out/renderer/assets/plotly-host.css",
+      "bytes": 207,
+      "sha256": "a894eb73799c9fdc0604f124d51112a57c1f934a785f533a9ce0fda0768b941d"
+    },
+    {
+      "path": "app/desktop/out/renderer/index.html",
+      "bytes": 481,
+      "sha256": "47eb20605c8899727bd861f1b8b59cf224c815021ca75c8096d3f10a29316937"
+    },
+    {
+      "path": "app/desktop/out/service/gobble-service",
+      "bytes": 10355090,
+      "sha256": "b02c14bd4a98e69c77d932b6ffbf396c562a3b656f96ce85fc0858290309713f"
+    }
+  ],
+  "visualReview": {
+    "result": "passed after fixing clipped keyboard chart controls",
+    "captures": [
+      {
+        "path": "r2b-linked-chat.png",
+        "sha256": "42bdcad60956a6e84afaf77c2b8573719ec04da29353f270e8e44f5ab87160f5"
+      },
+      {
+        "path": "r2b-compact-workspace.png",
+        "sha256": "aae50abd04f0a6ed746a0268eda068787e48f49d7ea5ba5e12d160a76a7345b5"
+      },
+      {
+        "path": "r2b-compact-chat.png",
+        "sha256": "62bf4225f824582d75e59c3ff48d68759c943dc3a8f556f35d7c968ad28e2f77"
+      },
+      {
+        "path": "r2b-compact-150.png",
+        "sha256": "d33b01c76b7d1975c552227851ea0f254f1a65f94e9aac56d380cca8c6a7bf4e"
+      },
+      {
+        "path": "r2b-dark-preference.png",
+        "sha256": "d014b3ec5e9469ad8e10e1a0be1eca314718d091b837981d83382a19e19b3dce"
+      }
+    ],
+    "sizes": [
+      "1440 × 1000 outer window at 100%",
+      "900 × 760 outer window at 100%",
+      "900 × 760 outer window at 150%"
+    ],
+    "notes": [
+      "Normal real CSV navigation with synthetic data and isolated profile; no Agent connected.",
+      "Three selected rows in the current group, one hidden by filter; earlier two-row attachment remains unchanged.",
+      "Single linked Discuss action, compact Workspace/Chat switch and one focused composer.",
+      "Current product light appearance remains under OS dark preference; no new dark theme claimed."
+    ]
+  },
+  "reviewCorrections": [
+    {
+      "finding": "Native chart controls clipped in compact pane despite passing first full check.",
+      "evidence": [
+        "compact-workspace-before-fix.png",
+        "checks-before-visual-fix.log"
+      ],
+      "resolution": "Bounded flexible chart height and view-local overflow; actual control bounds and 150% zoom regression verified."
+    },
+    {
+      "finding": "First linked tests used an unresolved exact label locator and read attachment before commit.",
+      "evidence": [
+        "linked-runtime-first.log"
+      ],
+      "resolution": "Exact accessible combobox role and commit observation; final journeys pass."
+    },
+    {
+      "finding": "In-flight screenshot showed optimistic table state before linked render committed.",
+      "evidence": [
+        "linked-chat-in-flight.png"
+      ],
+      "resolution": "Capture waits for committed membership and chart readiness."
+    }
+  ],
+  "limits": [
+    "R2c presentation binding, plot pixels, changed Agent capability and live Agent round trip remain pending.",
+    "Existing prepared-evidence source freshness guards remain authoritative.",
+    "No watcher; explicit linked refresh. CSV preview at most 500 rows and 100 columns.",
+    "No new scientific execution, engine edits, external MCP endpoint, installation, signing or cross-platform runtime claim."
+  ]
+}

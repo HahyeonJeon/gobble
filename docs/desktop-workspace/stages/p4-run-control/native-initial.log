@@ -1,0 +1,4 @@
+# github.com/HahyeonJeon/gobble/internal/appservice [github.com/HahyeonJeon/gobble/internal/appservice.test]
+internal/appservice/launch_review.go:5:2: "encoding/json" imported and not used
+FAIL	github.com/HahyeonJeon/gobble/internal/appservice [build failed]
+FAIL

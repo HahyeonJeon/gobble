@@ -1,0 +1,1260 @@
+{
+  "initial": {
+    "projectId": "prj_TVUVRCQXLLO56YOBBN4JK4UXE7",
+    "pipelineId": "pip_QOSM25BB6JZAPPVOM5QC6TE3QM",
+    "requestId": "req_c92704dc-27a9-4860-82db-d8ad41aa02e2",
+    "preparationId": "req_1dbd7ea3-6e2b-4879-b180-9e9b7a44853c",
+    "createdAt": "2026-09-27T08:01:48.546065Z",
+    "state": "accepted",
+    "issue": "",
+    "copiedBytes": 3066559,
+    "totalBytes": 3066559,
+    "readCount": 1000000,
+    "outputPath": "runs/analysis-c92704dc-27a9-4860-82db-d8ad41aa02e2",
+    "inputSHA256": "sha256:bc0f9ea353d8a9d9a2499d13aa0e1cd21712e4cfbb02e71800e22e9798c413ef",
+    "fresh": false,
+    "preparation": {
+      "engineId": "sha256:c7f3c4aa35767297db1f0acc84bc08477673f5f7429692ca594d06ba6e0c74e3",
+      "createdAt": "2026-09-27T08:00:44.953711Z",
+      "projectId": "prj_TVUVRCQXLLO56YOBBN4JK4UXE7",
+      "pipelineId": "pip_QOSM25BB6JZAPPVOM5QC6TE3QM",
+      "requestId": "req_1dbd7ea3-6e2b-4879-b180-9e9b7a44853c",
+      "artifactId": "sha256:265a42111e024611380ba9961305d21bd0849ae3adfa2b6a6f535e8b469d0fd4",
+      "state": "ready",
+      "issue": "",
+      "prepared": {
+        "flow": {
+          "schemaVersion": 2,
+          "name": "read_quality",
+          "inputs": [
+            {
+              "name": "reads",
+              "kind": "file",
+              "path": "inputs/reads.fastq.gz",
+              "members": []
+            }
+          ],
+          "steps": [
+            {
+              "id": "trim_galore",
+              "name": "trim_galore",
+              "module": "",
+              "display": {
+                "stage": "Trim adapters and low-quality bases"
+              },
+              "image": "community.wave.seqera.io/library/trim-galore:2.1.0--27e6376b8f6c1872@sha256:9d747504e44dbf5dfa8a2d66cbbd3bd80f897cc2e17ebe406821b4809b34a3a4",
+              "backend": "local",
+              "cpu": 4,
+              "memory": "2g",
+              "inputs": [
+                {
+                  "name": "read1",
+                  "kind": "file",
+                  "path": "inputs/reads.fastq.gz",
+                  "members": []
+                }
+              ],
+              "outputs": [
+                {
+                  "name": "trimmed_read1",
+                  "kind": "file",
+                  "path": "work/trim-galore/sample_trimmed.fq.gz",
+                  "members": []
+                },
+                {
+                  "name": "report1",
+                  "kind": "file",
+                  "path": "work/trim-galore/reads.fastq.gz_trimming_report.txt",
+                  "members": []
+                }
+              ],
+              "control": {
+                "branch": "",
+                "merge": "",
+                "scatter": "",
+                "gather": "",
+                "when": "",
+                "scatterFromKind": "",
+                "scatterFromTask": "",
+                "scatterFromPort": "",
+                "scatterFromPath": "",
+                "scatterMembers": [],
+                "scatterMemberPaths": [],
+                "skipIfMissingTask": "",
+                "skipIfMissingPort": "",
+                "skipIfMissingPath": "",
+                "skipIfFalse": ""
+              },
+              "settings": [
+                {
+                  "key": "quality",
+                  "label": "Quality threshold",
+                  "unit": "Phred",
+                  "value": 25
+                },
+                {
+                  "key": "length",
+                  "label": "Minimum length",
+                  "unit": "bp",
+                  "value": 40
+                }
+              ]
+            },
+            {
+              "id": "fastqc",
+              "name": "fastqc",
+              "module": "",
+              "display": {
+                "stage": "Inspect trimmed read quality"
+              },
+              "image": "quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0@sha256:e194048df39c3145d9b4e0a14f4da20b59d59250465b6f2a9cb698445fd45900",
+              "backend": "local",
+              "cpu": 2,
+              "memory": "1g",
+              "inputs": [
+                {
+                  "name": "reads",
+                  "kind": "file",
+                  "path": "work/trim-galore/sample_trimmed.fq.gz",
+                  "members": []
+                }
+              ],
+              "outputs": [
+                {
+                  "name": "html",
+                  "kind": "file",
+                  "path": "work/fastqc/sample_trimmed_fastqc.html",
+                  "members": []
+                },
+                {
+                  "name": "zip",
+                  "kind": "file",
+                  "path": "work/fastqc/sample_trimmed_fastqc.zip",
+                  "members": []
+                }
+              ],
+              "control": {
+                "branch": "",
+                "merge": "",
+                "scatter": "",
+                "gather": "",
+                "when": "",
+                "scatterFromKind": "",
+                "scatterFromTask": "",
+                "scatterFromPort": "",
+                "scatterFromPath": "",
+                "scatterMembers": [],
+                "scatterMemberPaths": [],
+                "skipIfMissingTask": "",
+                "skipIfMissingPort": "",
+                "skipIfMissingPath": "",
+                "skipIfFalse": ""
+              },
+              "settings": []
+            }
+          ],
+          "connections": [
+            {
+              "id": "edge-1",
+              "fromTask": "",
+              "fromPort": "reads",
+              "toTask": "trim_galore",
+              "toPort": "read1",
+              "wait": [
+                "inputs/reads.fastq.gz"
+              ]
+            },
+            {
+              "id": "edge-2",
+              "fromTask": "trim_galore",
+              "fromPort": "trimmed_read1",
+              "toTask": "fastqc",
+              "toPort": "reads",
+              "wait": [
+                "work/trim-galore/sample_trimmed.fq.gz"
+              ]
+            }
+          ]
+        },
+        "digest": "sha256:338420bdce45cc88c878260f1ea2aa845bef109ae2c6eb204e4280b0ca1d02ef",
+        "binding": {
+          "sourceRevision": "sha256:9ef9691d9cfe9c477f55d06f43dc504a19a0c26f17a94c85333f47661528ff9d",
+          "runtimeId": "sha256:8bd960a7e8b3228a93f01bd2252cfe60e4abb9abc174fd2a29242b2b9bbc9369",
+          "inputIdentity": "sha256:8ade79ebb88e0218ed98d5eab24dc93c115ee3a2a5c36c94bb513d4cfda4a0c4",
+          "inputPath": "inputs/reads.fastq.gz",
+          "cap": 1
+        },
+        "input": {
+          "resourceId": "res_fc60fcdb4e10b745099703e06e4bdb76e6b37ce2109dcce1494e1305b964e46a",
+          "relativePath": "sample.fastq.gz",
+          "readLayout": "single-end",
+          "size": 3066559,
+          "modifiedAt": "2026-09-27T07:59:30.633370942Z",
+          "identity": "sha256:e8bdffdc378acd879b21e90371aee603bcdf4b08bc55e07e232a7c0c31b35ed2"
+        },
+        "steps": [
+          {
+            "id": "trim_galore",
+            "label": "Trim reads",
+            "cpu": 4,
+            "memory": "2g",
+            "image": "community.wave.seqera.io/library/trim-galore:2.1.0--27e6376b8f6c1872@sha256:9d747504e44dbf5dfa8a2d66cbbd3bd80f897cc2e17ebe406821b4809b34a3a4",
+            "outputs": [
+              "work/trim-galore/sample_trimmed.fq.gz",
+              "work/trim-galore/reads.fastq.gz_trimming_report.txt"
+            ]
+          },
+          {
+            "id": "fastqc",
+            "label": "Check read quality",
+            "cpu": 2,
+            "memory": "1g",
+            "image": "quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0@sha256:e194048df39c3145d9b4e0a14f4da20b59d59250465b6f2a9cb698445fd45900",
+            "outputs": [
+              "work/fastqc/sample_trimmed_fastqc.html",
+              "work/fastqc/sample_trimmed_fastqc.zip"
+            ]
+          }
+        ],
+        "checkedAt": "2026-09-27T08:01:47.851831Z"
+      },
+      "fresh": true
+    },
+    "operation": {
+      "requestId": "req_0500e81f-9fc5-400b-876a-e93c9b8e2dc0",
+      "state": "admitted",
+      "runRef": "run_FQYGQ344DFXXEJL2UCHJ3OISR6",
+      "runStatus": "running",
+      "snapshot": "22ec4fb735af99779994a943b69b3d62",
+      "ownerLease": "5c8fcabcea42440426431cc930cef4e7",
+      "observedAt": "2026-09-27T08:01:56.479301Z",
+      "issue": "",
+      "stopRequestId": "",
+      "stopState": "",
+      "stopLease": ""
+    }
+  },
+  "stopped": {
+    "pointer": {
+      "format": 3,
+      "current": "7d15379700235aef6c867c4846fb6649",
+      "previous": "0be6ff1b25849d8925005b8b03c8e826"
+    },
+    "run": {
+      "executionHistory": {
+        "schemaVersion": 1,
+        "continuations": []
+      },
+      "admission": {
+        "schemaVersion": 2,
+        "intentDigest": "sha256:a54e1035050454b50241291df7693a75b5999007848669fb0ab1b8836b959184",
+        "requestId": "req_0500e81f-9fc5-400b-876a-e93c9b8e2dc0",
+        "preparedDigest": "sha256:338420bdce45cc88c878260f1ea2aa845bef109ae2c6eb204e4280b0ca1d02ef",
+        "workspaceId": "req_c92704dc-27a9-4860-82db-d8ad41aa02e2",
+        "lease": "5c8fcabcea42440426431cc930cef4e7"
+      },
+      "schema_version": 2,
+      "identity": {
+        "gobble_module": "github.com/HahyeonJeon/gobble",
+        "gobble_version": "prepared-v2",
+        "gobble_vcs_revision": "sha256:c7f3c4aa35767297db1f0acc84bc08477673f5f7429692ca594d06ba6e0c74e3",
+        "gobble_vcs_modified": false,
+        "gobble_source_realpath": "",
+        "gobble_executable_sha256": "00e3780e610f119f94f908c8467a637b288105ccc64517ad7208ba30b30dd61a",
+        "pipeline_module": "gobble.local/prepared",
+        "pipeline_import": "gobble.local/prepared",
+        "pipeline_version": "prepared-v2",
+        "pipeline_vcs_revision": "sha256:9ef9691d9cfe9c477f55d06f43dc504a19a0c26f17a94c85333f47661528ff9d",
+        "pipeline_vcs_modified": false,
+        "pipeline_source_realpath": "",
+        "goos": "linux",
+        "goarch": "amd64",
+        "install_kind": "module",
+        "identity_mode": "local-pin"
+      },
+      "snapshot": "7d15379700235aef6c867c4846fb6649",
+      "id": "read_quality",
+      "status": "stopped",
+      "started": "2026-09-27T08:01:51.854017638Z",
+      "ended": "2026-09-27T08:01:59.199598835Z",
+      "occupancy": {
+        "active": false,
+        "host": "gobble-237637978b6080dc2ea448b0",
+        "pid": 7,
+        "lease": "5c8fcabcea42440426431cc930cef4e7",
+        "started": "2026-09-27T08:01:51.854017638Z",
+        "closed": "2026-09-27T08:01:59.199598835Z"
+      }
+    },
+    "tasks": {
+      "schema_version": 2,
+      "snapshot": "7d15379700235aef6c867c4846fb6649",
+      "tasks": [
+        {
+          "id": "trim_galore",
+          "instance": "",
+          "shard_index": 0,
+          "shard_count": 1,
+          "attempt": 1,
+          "status": "succeeded",
+          "executor": "docker",
+          "image": "community.wave.seqera.io/library/trim-galore:2.1.0--27e6376b8f6c1872@sha256:9d747504e44dbf5dfa8a2d66cbbd3bd80f897cc2e17ebe406821b4809b34a3a4",
+          "command": [
+            "trim_galore",
+            "--cores",
+            "1",
+            "--gzip",
+            "--output_dir",
+            "work/trim-galore",
+            "--basename",
+            "sample",
+            "--quality",
+            "25",
+            "--length",
+            "40",
+            "inputs/reads.fastq.gz"
+          ],
+          "resources": {
+            "cpu": 4,
+            "memory": "2g"
+          },
+          "params": [],
+          "env_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "submission": {
+            "token": "ebd3021a10a61ab10463e68fdc4e1c87",
+            "endpoint": "unix:///var/run/docker.sock",
+            "daemon_id": "bfc24268-2f66-46d9-a1d1-969af8291bec",
+            "created": true
+          },
+          "image_digest": "sha256:9d747504e44dbf5dfa8a2d66cbbd3bd80f897cc2e17ebe406821b4809b34a3a4",
+          "reason": "ready",
+          "stdout": ".gobble/tasks/trim_galore/_/0/1/stdout",
+          "stderr": ".gobble/tasks/trim_galore/_/0/1/stderr",
+          "started": "2026-09-27T08:01:51.864823221Z",
+          "ended": "2026-09-27T08:01:55.082068542Z",
+          "fingerprints": [
+            {
+              "path": "inputs/reads.fastq.gz",
+              "sha256": "bc0f9ea353d8a9d9a2499d13aa0e1cd21712e4cfbb02e71800e22e9798c413ef",
+              "size": 3066559,
+              "mtime": 1790496109464224500,
+              "dev": 49,
+              "inode": 511
+            }
+          ],
+          "checksums": [
+            {
+              "path": "work/trim-galore/sample_trimmed.fq.gz",
+              "sha256": "1278cead35d5417d594cec80cd1c25fc31c7e04859347d9f24271fc2db89537e",
+              "size": 4971925,
+              "mtime": 1790496115079080200,
+              "dev": 49,
+              "inode": 561
+            },
+            {
+              "path": "work/trim-galore/reads.fastq.gz_trimming_report.txt",
+              "sha256": "b706ece861090a1d8c004e9a57d5329d11f01878c3fc68a15580101d4bba8681",
+              "size": 1626,
+              "mtime": 1790496115080481300,
+              "dev": 49,
+              "inode": 562
+            }
+          ],
+          "lineage": [
+            {
+              "producer": "",
+              "path": "inputs/reads.fastq.gz",
+              "checksum": "bc0f9ea353d8a9d9a2499d13aa0e1cd21712e4cfbb02e71800e22e9798c413ef",
+              "consumer": "trim_galore"
+            },
+            {
+              "producer": "trim_galore",
+              "path": "work/trim-galore/sample_trimmed.fq.gz",
+              "checksum": "1278cead35d5417d594cec80cd1c25fc31c7e04859347d9f24271fc2db89537e",
+              "consumer": ""
+            },
+            {
+              "producer": "trim_galore",
+              "path": "work/trim-galore/reads.fastq.gz_trimming_report.txt",
+              "checksum": "b706ece861090a1d8c004e9a57d5329d11f01878c3fc68a15580101d4bba8681",
+              "consumer": ""
+            }
+          ]
+        },
+        {
+          "id": "fastqc",
+          "instance": "",
+          "shard_index": 0,
+          "shard_count": 1,
+          "attempt": 1,
+          "status": "incomplete",
+          "executor": "docker",
+          "image": "quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0@sha256:e194048df39c3145d9b4e0a14f4da20b59d59250465b6f2a9cb698445fd45900",
+          "command": [
+            "fastqc",
+            "--outdir",
+            "work/fastqc",
+            "--noextract",
+            "--threads",
+            "2",
+            "work/trim-galore/sample_trimmed.fq.gz"
+          ],
+          "resources": {
+            "cpu": 2,
+            "memory": "1g"
+          },
+          "params": [],
+          "env_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "runtime_id": "4c6b696235625bcdd56b4552b287da1c9cc93d8f86937d9af90cbe2412c230c6",
+          "submission": {
+            "token": "ba2fcb0019d225517e980d488e0681de",
+            "endpoint": "unix:///var/run/docker.sock",
+            "daemon_id": "bfc24268-2f66-46d9-a1d1-969af8291bec",
+            "created": true
+          },
+          "image_digest": "sha256:e194048df39c3145d9b4e0a14f4da20b59d59250465b6f2a9cb698445fd45900",
+          "reason": "canceled",
+          "started": "2026-09-27T08:01:55.103011959Z",
+          "ended": "2026-09-27T08:01:59.187405002Z"
+        }
+      ]
+    }
+  },
+  "repeated": {
+    "pointer": {
+      "format": 3,
+      "current": "2339728a8fcc2d26a548ba6ec03e9887",
+      "previous": "bbd4ed04293d541caba6994e23ea1377"
+    },
+    "run": {
+      "executionHistory": {
+        "schemaVersion": 1,
+        "continuations": [
+          {
+            "intent": {
+              "schemaVersion": 1,
+              "requestId": "req_982c4616-dac3-4bc1-8f51-8f91e653b20f",
+              "workspaceId": "req_c92704dc-27a9-4860-82db-d8ad41aa02e2",
+              "originDigest": "sha256:a54e1035050454b50241291df7693a75b5999007848669fb0ab1b8836b959184",
+              "reviewDigest": "sha256:d431b31d23d9b3b138960abed887f42b7693d2ec4362eb94644897be6518a103",
+              "previousHead": "sha256:a54e1035050454b50241291df7693a75b5999007848669fb0ab1b8836b959184"
+            },
+            "intentDigest": "sha256:afcd008a244cd217f2397164c2fcf398c66e9062d92201bd116817e36784de3c",
+            "lease": "9864f7e92963e6f9886ef3b3b2e18307",
+            "snapshot": "2b99680755d973b86c4fec6c0b2ce951"
+          }
+        ]
+      },
+      "admission": {
+        "schemaVersion": 2,
+        "intentDigest": "sha256:a54e1035050454b50241291df7693a75b5999007848669fb0ab1b8836b959184",
+        "requestId": "req_0500e81f-9fc5-400b-876a-e93c9b8e2dc0",
+        "preparedDigest": "sha256:338420bdce45cc88c878260f1ea2aa845bef109ae2c6eb204e4280b0ca1d02ef",
+        "workspaceId": "req_c92704dc-27a9-4860-82db-d8ad41aa02e2",
+        "lease": "5c8fcabcea42440426431cc930cef4e7"
+      },
+      "schema_version": 2,
+      "identity": {
+        "gobble_module": "github.com/HahyeonJeon/gobble",
+        "gobble_version": "prepared-v2",
+        "gobble_vcs_revision": "sha256:c7f3c4aa35767297db1f0acc84bc08477673f5f7429692ca594d06ba6e0c74e3",
+        "gobble_vcs_modified": false,
+        "gobble_source_realpath": "",
+        "gobble_executable_sha256": "00e3780e610f119f94f908c8467a637b288105ccc64517ad7208ba30b30dd61a",
+        "pipeline_module": "gobble.local/prepared",
+        "pipeline_import": "gobble.local/prepared",
+        "pipeline_version": "prepared-v2",
+        "pipeline_vcs_revision": "sha256:9ef9691d9cfe9c477f55d06f43dc504a19a0c26f17a94c85333f47661528ff9d",
+        "pipeline_vcs_modified": false,
+        "pipeline_source_realpath": "",
+        "goos": "linux",
+        "goarch": "amd64",
+        "install_kind": "module",
+        "identity_mode": "local-pin"
+      },
+      "snapshot": "2339728a8fcc2d26a548ba6ec03e9887",
+      "id": "read_quality",
+      "status": "stopped",
+      "started": "2026-09-27T08:01:51.854017638Z",
+      "ended": "2026-09-27T08:02:25.797055334Z",
+      "occupancy": {
+        "active": false,
+        "host": "gobble-237637978b6080dc2ea448b0",
+        "pid": 7,
+        "lease": "9864f7e92963e6f9886ef3b3b2e18307",
+        "started": "2026-09-27T08:02:21.070346054Z",
+        "closed": "2026-09-27T08:02:25.797055334Z"
+      }
+    },
+    "tasks": {
+      "schema_version": 2,
+      "snapshot": "2339728a8fcc2d26a548ba6ec03e9887",
+      "tasks": [
+        {
+          "id": "fastqc",
+          "instance": "",
+          "shard_index": 0,
+          "shard_count": 1,
+          "attempt": 1,
+          "status": "incomplete",
+          "executor": "docker",
+          "image": "quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0@sha256:e194048df39c3145d9b4e0a14f4da20b59d59250465b6f2a9cb698445fd45900",
+          "command": [
+            "fastqc",
+            "--outdir",
+            "work/fastqc",
+            "--noextract",
+            "--threads",
+            "2",
+            "work/trim-galore/sample_trimmed.fq.gz"
+          ],
+          "resources": {
+            "cpu": 2,
+            "memory": "1g"
+          },
+          "params": [],
+          "env_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "runtime_id": "4c6b696235625bcdd56b4552b287da1c9cc93d8f86937d9af90cbe2412c230c6",
+          "submission": {
+            "token": "ba2fcb0019d225517e980d488e0681de",
+            "endpoint": "unix:///var/run/docker.sock",
+            "daemon_id": "bfc24268-2f66-46d9-a1d1-969af8291bec",
+            "created": true
+          },
+          "image_digest": "sha256:e194048df39c3145d9b4e0a14f4da20b59d59250465b6f2a9cb698445fd45900",
+          "reason": "canceled",
+          "started": "2026-09-27T08:01:55.103011959Z",
+          "ended": "2026-09-27T08:01:59.187405002Z"
+        },
+        {
+          "id": "trim_galore",
+          "instance": "",
+          "shard_index": 0,
+          "shard_count": 1,
+          "attempt": 1,
+          "status": "succeeded",
+          "executor": "docker",
+          "image": "community.wave.seqera.io/library/trim-galore:2.1.0--27e6376b8f6c1872@sha256:9d747504e44dbf5dfa8a2d66cbbd3bd80f897cc2e17ebe406821b4809b34a3a4",
+          "command": [
+            "trim_galore",
+            "--cores",
+            "1",
+            "--gzip",
+            "--output_dir",
+            "work/trim-galore",
+            "--basename",
+            "sample",
+            "--quality",
+            "25",
+            "--length",
+            "40",
+            "inputs/reads.fastq.gz"
+          ],
+          "resources": {
+            "cpu": 4,
+            "memory": "2g"
+          },
+          "params": [],
+          "env_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "submission": {
+            "token": "ebd3021a10a61ab10463e68fdc4e1c87",
+            "endpoint": "unix:///var/run/docker.sock",
+            "daemon_id": "bfc24268-2f66-46d9-a1d1-969af8291bec",
+            "created": true
+          },
+          "image_digest": "sha256:9d747504e44dbf5dfa8a2d66cbbd3bd80f897cc2e17ebe406821b4809b34a3a4",
+          "reason": "ready",
+          "stdout": ".gobble/tasks/trim_galore/_/0/1/stdout",
+          "stderr": ".gobble/tasks/trim_galore/_/0/1/stderr",
+          "started": "2026-09-27T08:01:51.864823221Z",
+          "ended": "2026-09-27T08:01:55.082068542Z",
+          "fingerprints": [
+            {
+              "path": "inputs/reads.fastq.gz",
+              "sha256": "bc0f9ea353d8a9d9a2499d13aa0e1cd21712e4cfbb02e71800e22e9798c413ef",
+              "size": 3066559,
+              "mtime": 1790496109464224500,
+              "dev": 49,
+              "inode": 511
+            }
+          ],
+          "checksums": [
+            {
+              "path": "work/trim-galore/sample_trimmed.fq.gz",
+              "sha256": "1278cead35d5417d594cec80cd1c25fc31c7e04859347d9f24271fc2db89537e",
+              "size": 4971925,
+              "mtime": 1790496115079080200,
+              "dev": 49,
+              "inode": 561
+            },
+            {
+              "path": "work/trim-galore/reads.fastq.gz_trimming_report.txt",
+              "sha256": "b706ece861090a1d8c004e9a57d5329d11f01878c3fc68a15580101d4bba8681",
+              "size": 1626,
+              "mtime": 1790496115080481300,
+              "dev": 49,
+              "inode": 562
+            }
+          ],
+          "lineage": [
+            {
+              "producer": "",
+              "path": "inputs/reads.fastq.gz",
+              "checksum": "bc0f9ea353d8a9d9a2499d13aa0e1cd21712e4cfbb02e71800e22e9798c413ef",
+              "consumer": "trim_galore"
+            },
+            {
+              "producer": "trim_galore",
+              "path": "work/trim-galore/sample_trimmed.fq.gz",
+              "checksum": "1278cead35d5417d594cec80cd1c25fc31c7e04859347d9f24271fc2db89537e",
+              "consumer": ""
+            },
+            {
+              "producer": "trim_galore",
+              "path": "work/trim-galore/reads.fastq.gz_trimming_report.txt",
+              "checksum": "b706ece861090a1d8c004e9a57d5329d11f01878c3fc68a15580101d4bba8681",
+              "consumer": ""
+            }
+          ],
+          "decision": "reused",
+          "reuse_reason": "reused-identity-matched",
+          "change": "Unchanged"
+        },
+        {
+          "id": "fastqc",
+          "instance": "",
+          "shard_index": 0,
+          "shard_count": 1,
+          "attempt": 2,
+          "status": "incomplete",
+          "executor": "docker",
+          "image": "quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0@sha256:e194048df39c3145d9b4e0a14f4da20b59d59250465b6f2a9cb698445fd45900",
+          "command": [
+            "fastqc",
+            "--outdir",
+            "work/fastqc",
+            "--noextract",
+            "--threads",
+            "2",
+            "work/trim-galore/sample_trimmed.fq.gz"
+          ],
+          "resources": {
+            "cpu": 2,
+            "memory": "1g"
+          },
+          "params": [],
+          "env_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "runtime_id": "3f0d8456436f147c4ccd60cd5b10460c2d4d1fd1bafac6e6ba9437f35032a591",
+          "submission": {
+            "token": "92350f4364efc4ae29bdbbff7d394448",
+            "endpoint": "unix:///var/run/docker.sock",
+            "daemon_id": "bfc24268-2f66-46d9-a1d1-969af8291bec",
+            "created": true
+          },
+          "image_digest": "sha256:e194048df39c3145d9b4e0a14f4da20b59d59250465b6f2a9cb698445fd45900",
+          "reason": "canceled",
+          "started": "2026-09-27T08:02:21.085958013Z",
+          "ended": "2026-09-27T08:02:25.791071251Z",
+          "decision": "rerun",
+          "reuse_reason": "previous-incomplete",
+          "change": "Unchanged"
+        }
+      ]
+    }
+  },
+  "final": {
+    "pointer": {
+      "format": 3,
+      "current": "b13ef4dba4bd2e7e36eeb7eb43122298",
+      "previous": "067cd2054ff31ae9850d1a95a9ac8e71"
+    },
+    "run": {
+      "executionHistory": {
+        "schemaVersion": 1,
+        "continuations": [
+          {
+            "intent": {
+              "schemaVersion": 1,
+              "requestId": "req_982c4616-dac3-4bc1-8f51-8f91e653b20f",
+              "workspaceId": "req_c92704dc-27a9-4860-82db-d8ad41aa02e2",
+              "originDigest": "sha256:a54e1035050454b50241291df7693a75b5999007848669fb0ab1b8836b959184",
+              "reviewDigest": "sha256:d431b31d23d9b3b138960abed887f42b7693d2ec4362eb94644897be6518a103",
+              "previousHead": "sha256:a54e1035050454b50241291df7693a75b5999007848669fb0ab1b8836b959184"
+            },
+            "intentDigest": "sha256:afcd008a244cd217f2397164c2fcf398c66e9062d92201bd116817e36784de3c",
+            "lease": "9864f7e92963e6f9886ef3b3b2e18307",
+            "snapshot": "2b99680755d973b86c4fec6c0b2ce951"
+          },
+          {
+            "intent": {
+              "schemaVersion": 1,
+              "requestId": "req_0002b324-381f-4e99-92f3-20ad6fbd8242",
+              "workspaceId": "req_c92704dc-27a9-4860-82db-d8ad41aa02e2",
+              "originDigest": "sha256:a54e1035050454b50241291df7693a75b5999007848669fb0ab1b8836b959184",
+              "reviewDigest": "sha256:1b73b327265a252e6a09f0275c94a36eb5b49142ae55474ecb5b277d8f9b5d90",
+              "previousHead": "sha256:706a66f91894ecad2fabf8abdc5601d95b14dcd4f460ff1fe4cfbd990194074d"
+            },
+            "intentDigest": "sha256:b27d51bbf725864c649b03554fd947c09e5626e20daa62402c2a4090bf409526",
+            "lease": "61ed169e237e478f8765fc0cb1951007",
+            "snapshot": "c8d42cb5766092dc32c2d0f15be93355"
+          }
+        ]
+      },
+      "admission": {
+        "schemaVersion": 2,
+        "intentDigest": "sha256:a54e1035050454b50241291df7693a75b5999007848669fb0ab1b8836b959184",
+        "requestId": "req_0500e81f-9fc5-400b-876a-e93c9b8e2dc0",
+        "preparedDigest": "sha256:338420bdce45cc88c878260f1ea2aa845bef109ae2c6eb204e4280b0ca1d02ef",
+        "workspaceId": "req_c92704dc-27a9-4860-82db-d8ad41aa02e2",
+        "lease": "5c8fcabcea42440426431cc930cef4e7"
+      },
+      "schema_version": 2,
+      "identity": {
+        "gobble_module": "github.com/HahyeonJeon/gobble",
+        "gobble_version": "prepared-v2",
+        "gobble_vcs_revision": "sha256:c7f3c4aa35767297db1f0acc84bc08477673f5f7429692ca594d06ba6e0c74e3",
+        "gobble_vcs_modified": false,
+        "gobble_source_realpath": "",
+        "gobble_executable_sha256": "00e3780e610f119f94f908c8467a637b288105ccc64517ad7208ba30b30dd61a",
+        "pipeline_module": "gobble.local/prepared",
+        "pipeline_import": "gobble.local/prepared",
+        "pipeline_version": "prepared-v2",
+        "pipeline_vcs_revision": "sha256:9ef9691d9cfe9c477f55d06f43dc504a19a0c26f17a94c85333f47661528ff9d",
+        "pipeline_vcs_modified": false,
+        "pipeline_source_realpath": "",
+        "goos": "linux",
+        "goarch": "amd64",
+        "install_kind": "module",
+        "identity_mode": "local-pin"
+      },
+      "snapshot": "b13ef4dba4bd2e7e36eeb7eb43122298",
+      "id": "read_quality",
+      "status": "succeeded",
+      "started": "2026-09-27T08:01:51.854017638Z",
+      "ended": "2026-09-27T08:02:53.753133833Z",
+      "occupancy": {
+        "active": true,
+        "host": "gobble-237637978b6080dc2ea448b0",
+        "pid": 7,
+        "lease": "61ed169e237e478f8765fc0cb1951007",
+        "started": "2026-09-27T08:02:32.851636129Z"
+      }
+    },
+    "tasks": {
+      "schema_version": 2,
+      "snapshot": "b13ef4dba4bd2e7e36eeb7eb43122298",
+      "tasks": [
+        {
+          "id": "fastqc",
+          "instance": "",
+          "shard_index": 0,
+          "shard_count": 1,
+          "attempt": 1,
+          "status": "incomplete",
+          "executor": "docker",
+          "image": "quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0@sha256:e194048df39c3145d9b4e0a14f4da20b59d59250465b6f2a9cb698445fd45900",
+          "command": [
+            "fastqc",
+            "--outdir",
+            "work/fastqc",
+            "--noextract",
+            "--threads",
+            "2",
+            "work/trim-galore/sample_trimmed.fq.gz"
+          ],
+          "resources": {
+            "cpu": 2,
+            "memory": "1g"
+          },
+          "params": [],
+          "env_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "runtime_id": "4c6b696235625bcdd56b4552b287da1c9cc93d8f86937d9af90cbe2412c230c6",
+          "submission": {
+            "token": "ba2fcb0019d225517e980d488e0681de",
+            "endpoint": "unix:///var/run/docker.sock",
+            "daemon_id": "bfc24268-2f66-46d9-a1d1-969af8291bec",
+            "created": true
+          },
+          "image_digest": "sha256:e194048df39c3145d9b4e0a14f4da20b59d59250465b6f2a9cb698445fd45900",
+          "reason": "canceled",
+          "started": "2026-09-27T08:01:55.103011959Z",
+          "ended": "2026-09-27T08:01:59.187405002Z"
+        },
+        {
+          "id": "fastqc",
+          "instance": "",
+          "shard_index": 0,
+          "shard_count": 1,
+          "attempt": 2,
+          "status": "incomplete",
+          "executor": "docker",
+          "image": "quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0@sha256:e194048df39c3145d9b4e0a14f4da20b59d59250465b6f2a9cb698445fd45900",
+          "command": [
+            "fastqc",
+            "--outdir",
+            "work/fastqc",
+            "--noextract",
+            "--threads",
+            "2",
+            "work/trim-galore/sample_trimmed.fq.gz"
+          ],
+          "resources": {
+            "cpu": 2,
+            "memory": "1g"
+          },
+          "params": [],
+          "env_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "runtime_id": "3f0d8456436f147c4ccd60cd5b10460c2d4d1fd1bafac6e6ba9437f35032a591",
+          "submission": {
+            "token": "92350f4364efc4ae29bdbbff7d394448",
+            "endpoint": "unix:///var/run/docker.sock",
+            "daemon_id": "bfc24268-2f66-46d9-a1d1-969af8291bec",
+            "created": true
+          },
+          "image_digest": "sha256:e194048df39c3145d9b4e0a14f4da20b59d59250465b6f2a9cb698445fd45900",
+          "reason": "canceled",
+          "started": "2026-09-27T08:02:21.085958013Z",
+          "ended": "2026-09-27T08:02:25.791071251Z",
+          "decision": "rerun",
+          "reuse_reason": "previous-incomplete",
+          "change": "Unchanged"
+        },
+        {
+          "id": "trim_galore",
+          "instance": "",
+          "shard_index": 0,
+          "shard_count": 1,
+          "attempt": 1,
+          "status": "succeeded",
+          "executor": "docker",
+          "image": "community.wave.seqera.io/library/trim-galore:2.1.0--27e6376b8f6c1872@sha256:9d747504e44dbf5dfa8a2d66cbbd3bd80f897cc2e17ebe406821b4809b34a3a4",
+          "command": [
+            "trim_galore",
+            "--cores",
+            "1",
+            "--gzip",
+            "--output_dir",
+            "work/trim-galore",
+            "--basename",
+            "sample",
+            "--quality",
+            "25",
+            "--length",
+            "40",
+            "inputs/reads.fastq.gz"
+          ],
+          "resources": {
+            "cpu": 4,
+            "memory": "2g"
+          },
+          "params": [],
+          "env_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "submission": {
+            "token": "ebd3021a10a61ab10463e68fdc4e1c87",
+            "endpoint": "unix:///var/run/docker.sock",
+            "daemon_id": "bfc24268-2f66-46d9-a1d1-969af8291bec",
+            "created": true
+          },
+          "image_digest": "sha256:9d747504e44dbf5dfa8a2d66cbbd3bd80f897cc2e17ebe406821b4809b34a3a4",
+          "reason": "ready",
+          "stdout": ".gobble/tasks/trim_galore/_/0/1/stdout",
+          "stderr": ".gobble/tasks/trim_galore/_/0/1/stderr",
+          "started": "2026-09-27T08:01:51.864823221Z",
+          "ended": "2026-09-27T08:01:55.082068542Z",
+          "fingerprints": [
+            {
+              "path": "inputs/reads.fastq.gz",
+              "sha256": "bc0f9ea353d8a9d9a2499d13aa0e1cd21712e4cfbb02e71800e22e9798c413ef",
+              "size": 3066559,
+              "mtime": 1790496109464224500,
+              "dev": 49,
+              "inode": 511
+            }
+          ],
+          "checksums": [
+            {
+              "path": "work/trim-galore/sample_trimmed.fq.gz",
+              "sha256": "1278cead35d5417d594cec80cd1c25fc31c7e04859347d9f24271fc2db89537e",
+              "size": 4971925,
+              "mtime": 1790496115079080200,
+              "dev": 49,
+              "inode": 561
+            },
+            {
+              "path": "work/trim-galore/reads.fastq.gz_trimming_report.txt",
+              "sha256": "b706ece861090a1d8c004e9a57d5329d11f01878c3fc68a15580101d4bba8681",
+              "size": 1626,
+              "mtime": 1790496115080481300,
+              "dev": 49,
+              "inode": 562
+            }
+          ],
+          "lineage": [
+            {
+              "producer": "",
+              "path": "inputs/reads.fastq.gz",
+              "checksum": "bc0f9ea353d8a9d9a2499d13aa0e1cd21712e4cfbb02e71800e22e9798c413ef",
+              "consumer": "trim_galore"
+            },
+            {
+              "producer": "trim_galore",
+              "path": "work/trim-galore/sample_trimmed.fq.gz",
+              "checksum": "1278cead35d5417d594cec80cd1c25fc31c7e04859347d9f24271fc2db89537e",
+              "consumer": ""
+            },
+            {
+              "producer": "trim_galore",
+              "path": "work/trim-galore/reads.fastq.gz_trimming_report.txt",
+              "checksum": "b706ece861090a1d8c004e9a57d5329d11f01878c3fc68a15580101d4bba8681",
+              "consumer": ""
+            }
+          ],
+          "decision": "reused",
+          "reuse_reason": "reused-identity-matched",
+          "change": "Unchanged"
+        },
+        {
+          "id": "fastqc",
+          "instance": "",
+          "shard_index": 0,
+          "shard_count": 1,
+          "attempt": 3,
+          "status": "succeeded",
+          "executor": "docker",
+          "image": "quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0@sha256:e194048df39c3145d9b4e0a14f4da20b59d59250465b6f2a9cb698445fd45900",
+          "command": [
+            "fastqc",
+            "--outdir",
+            "work/fastqc",
+            "--noextract",
+            "--threads",
+            "2",
+            "work/trim-galore/sample_trimmed.fq.gz"
+          ],
+          "resources": {
+            "cpu": 2,
+            "memory": "1g"
+          },
+          "params": [],
+          "env_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "submission": {
+            "token": "0a7ab490af22c1a4db3d21bc5986e47e",
+            "endpoint": "unix:///var/run/docker.sock",
+            "daemon_id": "bfc24268-2f66-46d9-a1d1-969af8291bec",
+            "created": true
+          },
+          "image_digest": "sha256:e194048df39c3145d9b4e0a14f4da20b59d59250465b6f2a9cb698445fd45900",
+          "reason": "ready",
+          "stdout": ".gobble/tasks/fastqc/_/0/3/stdout",
+          "stderr": ".gobble/tasks/fastqc/_/0/3/stderr",
+          "started": "2026-09-27T08:02:32.867329337Z",
+          "ended": "2026-09-27T08:02:53.743414666Z",
+          "fingerprints": [
+            {
+              "path": "work/trim-galore/sample_trimmed.fq.gz",
+              "sha256": "1278cead35d5417d594cec80cd1c25fc31c7e04859347d9f24271fc2db89537e",
+              "size": 4971925,
+              "mtime": 1790496131412540200,
+              "dev": 49,
+              "inode": 625
+            }
+          ],
+          "checksums": [
+            {
+              "path": "work/fastqc/sample_trimmed_fastqc.html",
+              "sha256": "55fef6b48e050ae7ebb974740f11c1b2f165b8fdeb50e11bd00f479916086f8c",
+              "size": 529856,
+              "mtime": 1790496173740668700,
+              "dev": 49,
+              "inode": 726
+            },
+            {
+              "path": "work/fastqc/sample_trimmed_fastqc.zip",
+              "sha256": "0c6d6514da2939da3dd7f20adaa8a3e7321ef1e0ac4389c09bc0c40436e3b92b",
+              "size": 329472,
+              "mtime": 1790496173741811700,
+              "dev": 49,
+              "inode": 727
+            }
+          ],
+          "lineage": [
+            {
+              "producer": "trim_galore",
+              "path": "work/trim-galore/sample_trimmed.fq.gz",
+              "checksum": "1278cead35d5417d594cec80cd1c25fc31c7e04859347d9f24271fc2db89537e",
+              "consumer": "fastqc"
+            },
+            {
+              "producer": "fastqc",
+              "path": "work/fastqc/sample_trimmed_fastqc.html",
+              "checksum": "55fef6b48e050ae7ebb974740f11c1b2f165b8fdeb50e11bd00f479916086f8c",
+              "consumer": ""
+            },
+            {
+              "producer": "fastqc",
+              "path": "work/fastqc/sample_trimmed_fastqc.zip",
+              "checksum": "0c6d6514da2939da3dd7f20adaa8a3e7321ef1e0ac4389c09bc0c40436e3b92b",
+              "consumer": ""
+            }
+          ],
+          "decision": "rerun",
+          "reuse_reason": "previous-incomplete",
+          "change": "Unchanged"
+        }
+      ]
+    }
+  },
+  "continuations": [
+    {
+      "projectId": "prj_TVUVRCQXLLO56YOBBN4JK4UXE7",
+      "pipelineId": "pip_QOSM25BB6JZAPPVOM5QC6TE3QM",
+      "launchReviewId": "req_c92704dc-27a9-4860-82db-d8ad41aa02e2",
+      "runRef": "run_FQYGQ344DFXXEJL2UCHJ3OISR6",
+      "requestId": "req_16d82fe0-31df-452f-982a-65857e6cd81a",
+      "createdAt": "2026-09-27T08:02:01.042221Z",
+      "state": "ready",
+      "issue": "",
+      "review": {
+        "schemaVersion": 1,
+        "workspaceId": "req_c92704dc-27a9-4860-82db-d8ad41aa02e2",
+        "originDigest": "sha256:a54e1035050454b50241291df7693a75b5999007848669fb0ab1b8836b959184",
+        "previousHead": "sha256:a54e1035050454b50241291df7693a75b5999007848669fb0ab1b8836b959184",
+        "snapshot": "7d15379700235aef6c867c4846fb6649",
+        "stateDigest": "sha256:3409ecdcff5892066b72ba843181ab62a5a4c76f701bac7e011a8a2881b7000c",
+        "steps": [
+          {
+            "taskId": "trim_galore",
+            "priorAttempt": 1,
+            "plannedAttempt": 1,
+            "action": "reuse"
+          },
+          {
+            "taskId": "fastqc",
+            "priorAttempt": 1,
+            "plannedAttempt": 2,
+            "action": "restart"
+          }
+        ],
+        "files": [
+          {
+            "path": "inputs/reads.fastq.gz",
+            "sha256": "bc0f9ea353d8a9d9a2499d13aa0e1cd21712e4cfbb02e71800e22e9798c413ef"
+          },
+          {
+            "path": "work/trim-galore/sample_trimmed.fq.gz",
+            "sha256": "1278cead35d5417d594cec80cd1c25fc31c7e04859347d9f24271fc2db89537e"
+          },
+          {
+            "path": "work/trim-galore/reads.fastq.gz_trimming_report.txt",
+            "sha256": "b706ece861090a1d8c004e9a57d5329d11f01878c3fc68a15580101d4bba8681"
+          }
+        ],
+        "digest": "sha256:d431b31d23d9b3b138960abed887f42b7693d2ec4362eb94644897be6518a103"
+      }
+    },
+    {
+      "projectId": "prj_TVUVRCQXLLO56YOBBN4JK4UXE7",
+      "pipelineId": "pip_QOSM25BB6JZAPPVOM5QC6TE3QM",
+      "launchReviewId": "req_c92704dc-27a9-4860-82db-d8ad41aa02e2",
+      "runRef": "run_FQYGQ344DFXXEJL2UCHJ3OISR6",
+      "requestId": "req_d81cfbe7-3937-4fd3-bb61-8d31f71fca3c",
+      "createdAt": "2026-09-27T08:02:05.534661Z",
+      "state": "blocked",
+      "issue": "A completed result is missing. Restore the original result and recheck, or review a new analysis."
+    },
+    {
+      "projectId": "prj_TVUVRCQXLLO56YOBBN4JK4UXE7",
+      "pipelineId": "pip_QOSM25BB6JZAPPVOM5QC6TE3QM",
+      "launchReviewId": "req_c92704dc-27a9-4860-82db-d8ad41aa02e2",
+      "runRef": "run_FQYGQ344DFXXEJL2UCHJ3OISR6",
+      "requestId": "req_38bc1872-2ba1-4a2b-bc03-512fd041e4b1",
+      "createdAt": "2026-09-27T08:02:09.464362Z",
+      "state": "blocked",
+      "issue": "A completed result has changed. Restore the original result and recheck, or review a new analysis."
+    },
+    {
+      "projectId": "prj_TVUVRCQXLLO56YOBBN4JK4UXE7",
+      "pipelineId": "pip_QOSM25BB6JZAPPVOM5QC6TE3QM",
+      "launchReviewId": "req_c92704dc-27a9-4860-82db-d8ad41aa02e2",
+      "runRef": "run_FQYGQ344DFXXEJL2UCHJ3OISR6",
+      "requestId": "req_925f07a2-a1fa-496f-aa3b-793b2826c0b1",
+      "createdAt": "2026-09-27T08:02:13.264197Z",
+      "state": "blocked",
+      "issue": "The checked input copy has changed. Restore the original copy and recheck, or review a new analysis."
+    },
+    {
+      "projectId": "prj_TVUVRCQXLLO56YOBBN4JK4UXE7",
+      "pipelineId": "pip_QOSM25BB6JZAPPVOM5QC6TE3QM",
+      "launchReviewId": "req_c92704dc-27a9-4860-82db-d8ad41aa02e2",
+      "runRef": "run_FQYGQ344DFXXEJL2UCHJ3OISR6",
+      "requestId": "req_982c4616-dac3-4bc1-8f51-8f91e653b20f",
+      "createdAt": "2026-09-27T08:02:14.194079Z",
+      "state": "accepted",
+      "issue": "",
+      "review": {
+        "schemaVersion": 1,
+        "workspaceId": "req_c92704dc-27a9-4860-82db-d8ad41aa02e2",
+        "originDigest": "sha256:a54e1035050454b50241291df7693a75b5999007848669fb0ab1b8836b959184",
+        "previousHead": "sha256:a54e1035050454b50241291df7693a75b5999007848669fb0ab1b8836b959184",
+        "snapshot": "7d15379700235aef6c867c4846fb6649",
+        "stateDigest": "sha256:3409ecdcff5892066b72ba843181ab62a5a4c76f701bac7e011a8a2881b7000c",
+        "steps": [
+          {
+            "taskId": "trim_galore",
+            "priorAttempt": 1,
+            "plannedAttempt": 1,
+            "action": "reuse"
+          },
+          {
+            "taskId": "fastqc",
+            "priorAttempt": 1,
+            "plannedAttempt": 2,
+            "action": "restart"
+          }
+        ],
+        "files": [
+          {
+            "path": "inputs/reads.fastq.gz",
+            "sha256": "bc0f9ea353d8a9d9a2499d13aa0e1cd21712e4cfbb02e71800e22e9798c413ef"
+          },
+          {
+            "path": "work/trim-galore/sample_trimmed.fq.gz",
+            "sha256": "1278cead35d5417d594cec80cd1c25fc31c7e04859347d9f24271fc2db89537e"
+          },
+          {
+            "path": "work/trim-galore/reads.fastq.gz_trimming_report.txt",
+            "sha256": "b706ece861090a1d8c004e9a57d5329d11f01878c3fc68a15580101d4bba8681"
+          }
+        ],
+        "digest": "sha256:d431b31d23d9b3b138960abed887f42b7693d2ec4362eb94644897be6518a103"
+      },
+      "operation": {
+        "requestId": "req_982c4616-dac3-4bc1-8f51-8f91e653b20f",
+        "state": "admitted",
+        "issue": "",
+        "receipt": {
+          "intent": {
+            "schemaVersion": 1,
+            "requestId": "req_982c4616-dac3-4bc1-8f51-8f91e653b20f",
+            "workspaceId": "req_c92704dc-27a9-4860-82db-d8ad41aa02e2",
+            "originDigest": "sha256:a54e1035050454b50241291df7693a75b5999007848669fb0ab1b8836b959184",
+            "reviewDigest": "sha256:d431b31d23d9b3b138960abed887f42b7693d2ec4362eb94644897be6518a103",
+            "previousHead": "sha256:a54e1035050454b50241291df7693a75b5999007848669fb0ab1b8836b959184"
+          },
+          "intentDigest": "sha256:afcd008a244cd217f2397164c2fcf398c66e9062d92201bd116817e36784de3c",
+          "lease": "9864f7e92963e6f9886ef3b3b2e18307",
+          "snapshot": "2b99680755d973b86c4fec6c0b2ce951"
+        },
+        "observation": {
+          "schemaVersion": 2,
+          "admission": {
+            "schemaVersion": 2,
+            "intentDigest": "sha256:a54e1035050454b50241291df7693a75b5999007848669fb0ab1b8836b959184",
+            "requestId": "req_0500e81f-9fc5-400b-876a-e93c9b8e2dc0",
+            "preparedDigest": "sha256:338420bdce45cc88c878260f1ea2aa845bef109ae2c6eb204e4280b0ca1d02ef",
+            "workspaceId": "req_c92704dc-27a9-4860-82db-d8ad41aa02e2",
+            "lease": "5c8fcabcea42440426431cc930cef4e7"
+          },
+          "status": "running",
+          "snapshot": "36e85a42b52dfeb14d597b06285ae6e6",
+          "ownerActive": true,
+          "ownerLive": true,
+          "epoch": {
+            "head": "sha256:706a66f91894ecad2fabf8abdc5601d95b14dcd4f460ff1fe4cfbd990194074d",
+            "lease": "9864f7e92963e6f9886ef3b3b2e18307"
+          }
+        },
+        "stopRequestId": "req_b02860e6-577f-4dbf-9bc4-7c14992cf76d",
+        "stopLease": "9864f7e92963e6f9886ef3b3b2e18307",
+        "stopState": "settled"
+      }
+    },
+    {
+      "projectId": "prj_TVUVRCQXLLO56YOBBN4JK4UXE7",
+      "pipelineId": "pip_QOSM25BB6JZAPPVOM5QC6TE3QM",
+      "launchReviewId": "req_c92704dc-27a9-4860-82db-d8ad41aa02e2",
+      "runRef": "run_FQYGQ344DFXXEJL2UCHJ3OISR6",
+      "requestId": "req_0002b324-381f-4e99-92f3-20ad6fbd8242",
+      "createdAt": "2026-09-27T08:02:27.120239Z",
+      "state": "accepted",
+      "issue": "",
+      "review": {
+        "schemaVersion": 1,
+        "workspaceId": "req_c92704dc-27a9-4860-82db-d8ad41aa02e2",
+        "originDigest": "sha256:a54e1035050454b50241291df7693a75b5999007848669fb0ab1b8836b959184",
+        "previousHead": "sha256:706a66f91894ecad2fabf8abdc5601d95b14dcd4f460ff1fe4cfbd990194074d",
+        "snapshot": "2339728a8fcc2d26a548ba6ec03e9887",
+        "stateDigest": "sha256:8d70525fe41a321e01f4bbfa555d61cfe71e1dc136e7759507d0e736e234c30f",
+        "steps": [
+          {
+            "taskId": "trim_galore",
+            "priorAttempt": 1,
+            "plannedAttempt": 1,
+            "action": "reuse"
+          },
+          {
+            "taskId": "fastqc",
+            "priorAttempt": 2,
+            "plannedAttempt": 3,
+            "action": "restart"
+          }
+        ],
+        "files": [
+          {
+            "path": "inputs/reads.fastq.gz",
+            "sha256": "bc0f9ea353d8a9d9a2499d13aa0e1cd21712e4cfbb02e71800e22e9798c413ef"
+          },
+          {
+            "path": "work/trim-galore/sample_trimmed.fq.gz",
+            "sha256": "1278cead35d5417d594cec80cd1c25fc31c7e04859347d9f24271fc2db89537e"
+          },
+          {
+            "path": "work/trim-galore/reads.fastq.gz_trimming_report.txt",
+            "sha256": "b706ece861090a1d8c004e9a57d5329d11f01878c3fc68a15580101d4bba8681"
+          }
+        ],
+        "digest": "sha256:1b73b327265a252e6a09f0275c94a36eb5b49142ae55474ecb5b277d8f9b5d90"
+      },
+      "operation": {
+        "requestId": "req_0002b324-381f-4e99-92f3-20ad6fbd8242",
+        "state": "admitted",
+        "issue": "",
+        "receipt": {
+          "intent": {
+            "schemaVersion": 1,
+            "requestId": "req_0002b324-381f-4e99-92f3-20ad6fbd8242",
+            "workspaceId": "req_c92704dc-27a9-4860-82db-d8ad41aa02e2",
+            "originDigest": "sha256:a54e1035050454b50241291df7693a75b5999007848669fb0ab1b8836b959184",
+            "reviewDigest": "sha256:1b73b327265a252e6a09f0275c94a36eb5b49142ae55474ecb5b277d8f9b5d90",
+            "previousHead": "sha256:706a66f91894ecad2fabf8abdc5601d95b14dcd4f460ff1fe4cfbd990194074d"
+          },
+          "intentDigest": "sha256:b27d51bbf725864c649b03554fd947c09e5626e20daa62402c2a4090bf409526",
+          "lease": "61ed169e237e478f8765fc0cb1951007",
+          "snapshot": "c8d42cb5766092dc32c2d0f15be93355"
+        },
+        "observation": {
+          "schemaVersion": 2,
+          "admission": {
+            "schemaVersion": 2,
+            "intentDigest": "sha256:a54e1035050454b50241291df7693a75b5999007848669fb0ab1b8836b959184",
+            "requestId": "req_0500e81f-9fc5-400b-876a-e93c9b8e2dc0",
+            "preparedDigest": "sha256:338420bdce45cc88c878260f1ea2aa845bef109ae2c6eb204e4280b0ca1d02ef",
+            "workspaceId": "req_c92704dc-27a9-4860-82db-d8ad41aa02e2",
+            "lease": "5c8fcabcea42440426431cc930cef4e7"
+          },
+          "status": "succeeded",
+          "snapshot": "b13ef4dba4bd2e7e36eeb7eb43122298",
+          "ownerActive": true,
+          "ownerLive": false,
+          "epoch": {
+            "head": "sha256:eff6b5481236393d8c873c09271f0eaf981ce17d35f4631ad9fb4e5ed72efe3a",
+            "lease": "61ed169e237e478f8765fc0cb1951007"
+          }
+        },
+        "stopRequestId": "",
+        "stopLease": "",
+        "stopState": ""
+      }
+    }
+  ]
+}

@@ -1,0 +1,330 @@
+{
+  "model": "gpt-6-astra",
+  "projectId": "prj_ALUMSMHXKYBDHDMJRB6M27ZQLN",
+  "refs": [
+    {
+      "referenceId": "ref_b69a11f0-4efc-4eb2-a762-c68b5489741b",
+      "evidence": {
+        "schemaVersion": 3,
+        "projectId": "prj_ALUMSMHXKYBDHDMJRB6M27ZQLN",
+        "resource": {
+          "kind": "run",
+          "runRef": "run_TZYLBKPRZKC6RXFHM7R4MXCKF7"
+        },
+        "origin": {
+          "surfaceId": "srf_6db0310a-97e0-4851-bbc8-da73f1ac128e"
+        },
+        "dataRevision": "sha256:0930297a320b62f21b5800ff243c73d02106d0410fcdcaef1ac624425c24c0f7",
+        "selection": {
+          "kind": "run-task",
+          "coordinateSpace": "observed-instance-attempt",
+          "instanceId": "prepare",
+          "attempt": 1
+        }
+      },
+      "note": "Prepare samples: instance prepare, attempt 1, completed; excluded by the displayed S03 filter.",
+      "author": {
+        "kind": "agent",
+        "agentId": "agt_43cacc0e-8f0d-42da-ba54-cf337a67d857",
+        "name": "Run reviewer"
+      },
+      "createdAt": 1788840401103,
+      "retracted": false,
+      "originSubmissionId": "req_0723f2ad-303e-435f-8fd2-4a5f41f4e618",
+      "label": "existing"
+    },
+    {
+      "referenceId": "ref_7a4a6c8f-1fba-4da8-8612-d60fe1076c4a",
+      "evidence": {
+        "schemaVersion": 3,
+        "projectId": "prj_ALUMSMHXKYBDHDMJRB6M27ZQLN",
+        "resource": {
+          "kind": "log",
+          "runRef": "run_TZYLBKPRZKC6RXFHM7R4MXCKF7",
+          "taskId": "align:S03",
+          "attempt": 2
+        },
+        "origin": {
+          "surfaceId": "srf_470acde1-8e87-4b4c-a7eb-5bfb2841b31b"
+        },
+        "dataRevision": "sha256:fe5db01c93f03e4a4a32d1ef6b97bda5a3f0505441a15e22b10afb0db7f01947",
+        "selection": {
+          "kind": "log-text",
+          "coordinateSpace": "decoded-preview-utf16-line-column",
+          "stream": "stdout",
+          "start": {
+            "line": 2,
+            "column": 0
+          },
+          "end": {
+            "line": 2,
+            "column": 18
+          }
+        }
+      },
+      "note": "stdout line 2, columns 0–18: \"Alignment complete\"; instance align:S03, attempt 2. Observed through source-preview while stderr remains displayed.",
+      "author": {
+        "kind": "agent",
+        "agentId": "agt_43cacc0e-8f0d-42da-ba54-cf337a67d857",
+        "name": "Run reviewer"
+      },
+      "createdAt": 1788840401146,
+      "retracted": false,
+      "originSubmissionId": "req_0723f2ad-303e-435f-8fd2-4a5f41f4e618",
+      "label": "align:S03 · attempt 2"
+    }
+  ],
+  "selectionBefore": [
+    {
+      "surfaceId": "srf_6db0310a-97e0-4851-bbc8-da73f1ac128e",
+      "evidence": {
+        "projectId": "prj_ALUMSMHXKYBDHDMJRB6M27ZQLN",
+        "origin": {
+          "surfaceId": "srf_6db0310a-97e0-4851-bbc8-da73f1ac128e"
+        },
+        "resource": {
+          "kind": "run",
+          "runRef": "run_TZYLBKPRZKC6RXFHM7R4MXCKF7"
+        },
+        "schemaVersion": 3,
+        "dataRevision": "sha256:0930297a320b62f21b5800ff243c73d02106d0410fcdcaef1ac624425c24c0f7",
+        "selection": {
+          "kind": "run-task",
+          "coordinateSpace": "observed-instance-attempt",
+          "instanceId": "align:S03",
+          "attempt": 2
+        }
+      }
+    },
+    {
+      "surfaceId": "srf_470acde1-8e87-4b4c-a7eb-5bfb2841b31b",
+      "evidence": {
+        "projectId": "prj_ALUMSMHXKYBDHDMJRB6M27ZQLN",
+        "origin": {
+          "surfaceId": "srf_470acde1-8e87-4b4c-a7eb-5bfb2841b31b"
+        },
+        "resource": {
+          "kind": "log",
+          "runRef": "run_TZYLBKPRZKC6RXFHM7R4MXCKF7",
+          "taskId": "align:S03",
+          "attempt": 2
+        },
+        "schemaVersion": 3,
+        "dataRevision": "sha256:fe5db01c93f03e4a4a32d1ef6b97bda5a3f0505441a15e22b10afb0db7f01947",
+        "selection": {
+          "kind": "log-text",
+          "coordinateSpace": "decoded-preview-utf16-line-column",
+          "stream": "stderr",
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 1,
+            "column": 14
+          }
+        }
+      }
+    }
+  ],
+  "selectionAfter": [
+    {
+      "surfaceId": "srf_6db0310a-97e0-4851-bbc8-da73f1ac128e",
+      "evidence": {
+        "projectId": "prj_ALUMSMHXKYBDHDMJRB6M27ZQLN",
+        "origin": {
+          "surfaceId": "srf_6db0310a-97e0-4851-bbc8-da73f1ac128e"
+        },
+        "resource": {
+          "kind": "run",
+          "runRef": "run_TZYLBKPRZKC6RXFHM7R4MXCKF7"
+        },
+        "schemaVersion": 3,
+        "dataRevision": "sha256:0930297a320b62f21b5800ff243c73d02106d0410fcdcaef1ac624425c24c0f7",
+        "selection": {
+          "kind": "run-task",
+          "coordinateSpace": "observed-instance-attempt",
+          "instanceId": "align:S03",
+          "attempt": 2
+        }
+      }
+    },
+    {
+      "surfaceId": "srf_470acde1-8e87-4b4c-a7eb-5bfb2841b31b",
+      "evidence": {
+        "projectId": "prj_ALUMSMHXKYBDHDMJRB6M27ZQLN",
+        "origin": {
+          "surfaceId": "srf_470acde1-8e87-4b4c-a7eb-5bfb2841b31b"
+        },
+        "resource": {
+          "kind": "log",
+          "runRef": "run_TZYLBKPRZKC6RXFHM7R4MXCKF7",
+          "taskId": "align:S03",
+          "attempt": 2
+        },
+        "schemaVersion": 3,
+        "dataRevision": "sha256:fe5db01c93f03e4a4a32d1ef6b97bda5a3f0505441a15e22b10afb0db7f01947",
+        "selection": {
+          "kind": "log-text",
+          "coordinateSpace": "decoded-preview-utf16-line-column",
+          "stream": "stderr",
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 1,
+            "column": 14
+          }
+        }
+      }
+    }
+  ],
+  "highlighted": "Alignment complete",
+  "selected": {
+    "text": "ERROR 😀 exact",
+    "focused": true
+  },
+  "captured": "Alignment complete",
+  "draft": "Keep this draft local while reviewing Agent references.",
+  "userWorkPreserved": true,
+  "toolset": "shared-views-v5",
+  "submissions": [
+    {
+      "requestId": "req_4dfa2603-f93f-4aa3-996f-0a121290fa0d",
+      "state": "completed",
+      "text": "This is synthetic UI acceptance-test data. Briefly report the exact two attached log excerpts with their stream, instance, attempt and recorded engine revision. Then use workspace_list and workspace_observe to read the displayed Run and its source-preview, identify the completed preparation task excluded by my S03 filter, and publish a pointer to that exact instance and attempt. Also observe only the stdout line \"Alignment complete\" in the log view using source-preview while my displayed stream remains stderr, and publish a pointer to that exact line using its observedReadId and full observation receipt. Keep all output in English and under 180 words. Keep my filters, stream, selection and draft unchanged. Use only the shared workspace tools; no files, execution or external resources are needed.",
+      "response": "I’ll read the displayed Run and source previews, then publish pointers to the excluded preparation task and the exact stdout line.\n\n\nThe attached excerpts are:\n\n- `ERROR 😀 exact` — stderr; instance `align:S03`; attempt 2; recorded engine revision `fixture-revision-4`.\n- `Alignment complete` — stdout; instance `align:S03`; attempt 2; recorded engine revision `fixture-revision-4`.\n\n`workspace_list` confirmed the Run’s `S03` filter and the log’s displayed stderr stream. However, the Project window is unavailable. All three observation requests—displayed Run, Run source-preview, and only stdout line 2, columns 0–18—returned `runtime_unavailable`.\n\nI therefore couldn’t identify the excluded preparation task or obtain observation receipts to publish either pointer. Your filters, stream, selection, and draft remain unchanged.\n\nPlease reveal the Project window and close any dialogs so I can finish.",
+      "evidence": [
+        {
+          "attachmentId": "att_b324364b-5a37-42a7-b57e-790bcb9257a9",
+          "evidence": {
+            "projectId": "prj_ALUMSMHXKYBDHDMJRB6M27ZQLN",
+            "origin": {
+              "surfaceId": "srf_470acde1-8e87-4b4c-a7eb-5bfb2841b31b"
+            },
+            "resource": {
+              "kind": "log",
+              "runRef": "run_TZYLBKPRZKC6RXFHM7R4MXCKF7",
+              "taskId": "align:S03",
+              "attempt": 2
+            },
+            "schemaVersion": 3,
+            "dataRevision": "sha256:fe5db01c93f03e4a4a32d1ef6b97bda5a3f0505441a15e22b10afb0db7f01947",
+            "selection": {
+              "kind": "log-text",
+              "coordinateSpace": "decoded-preview-utf16-line-column",
+              "stream": "stderr",
+              "start": {
+                "line": 1,
+                "column": 0
+              },
+              "end": {
+                "line": 1,
+                "column": 14
+              }
+            }
+          },
+          "label": "align:S03 · attempt 2",
+          "createdAt": 1788840038472,
+          "capture": {
+            "kind": "observed",
+            "capturedAt": 1788840038474,
+            "asset": {
+              "hash": "sha256:8b5d7c0052da14b197e8957e87daaaeb10c405ab2d66ed8e4add63bb9e54ca6a",
+              "byteLength": 1225,
+              "mediaType": "application/json"
+            },
+            "representation": {
+              "kind": "log",
+              "truncated": true
+            }
+          },
+          "capturedAt": 1788840038474,
+          "asset": {
+            "hash": "sha256:8b5d7c0052da14b197e8957e87daaaeb10c405ab2d66ed8e4add63bb9e54ca6a",
+            "byteLength": 1225,
+            "mediaType": "application/json"
+          },
+          "representation": {
+            "kind": "log",
+            "truncated": true
+          }
+        },
+        {
+          "attachmentId": "att_f1cc497f-7ff6-413f-8371-496c52cc5869",
+          "evidence": {
+            "projectId": "prj_ALUMSMHXKYBDHDMJRB6M27ZQLN",
+            "origin": {
+              "surfaceId": "srf_470acde1-8e87-4b4c-a7eb-5bfb2841b31b"
+            },
+            "resource": {
+              "kind": "log",
+              "runRef": "run_TZYLBKPRZKC6RXFHM7R4MXCKF7",
+              "taskId": "align:S03",
+              "attempt": 2
+            },
+            "schemaVersion": 3,
+            "dataRevision": "sha256:fe5db01c93f03e4a4a32d1ef6b97bda5a3f0505441a15e22b10afb0db7f01947",
+            "selection": {
+              "kind": "log-text",
+              "coordinateSpace": "decoded-preview-utf16-line-column",
+              "stream": "stdout",
+              "start": {
+                "line": 2,
+                "column": 0
+              },
+              "end": {
+                "line": 2,
+                "column": 18
+              }
+            }
+          },
+          "label": "align:S03 · attempt 2",
+          "createdAt": 1788840038620,
+          "capture": {
+            "kind": "observed",
+            "capturedAt": 1788840038622,
+            "asset": {
+              "hash": "sha256:9ff8f67b19951faf9794b2220a598d4571bdb21b05b07a08efc9f231e484d93f",
+              "byteLength": 1229,
+              "mediaType": "application/json"
+            },
+            "representation": {
+              "kind": "log",
+              "truncated": true
+            }
+          },
+          "capturedAt": 1788840038622,
+          "asset": {
+            "hash": "sha256:9ff8f67b19951faf9794b2220a598d4571bdb21b05b07a08efc9f231e484d93f",
+            "byteLength": 1229,
+            "mediaType": "application/json"
+          },
+          "representation": {
+            "kind": "log",
+            "truncated": true
+          }
+        }
+      ]
+    },
+    {
+      "requestId": "req_4cc8fd5d-ae84-45ea-b96a-295adb7fc850",
+      "state": "completed",
+      "text": "The Project window has been brought to the foreground again. Please retry the two exact pointers from current workspace observations: the preparation task outside my S03 filter, and only stdout line 2 \"Alignment complete\" while stderr remains displayed. The two earlier attached excerpts have already been delivered. Keep my views and selection unchanged.",
+      "response": "I’ll retry the current observations and publish both exact pointers.\n\n\nThe retry still returned `runtime_unavailable` for all three observations; `workspace_list` reports both views as hidden.\n\nNeither pointer was published because current observation receipts remain unavailable. Your S03 filter, displayed stderr stream, selection, and draft are unchanged. The shared workspace must report the Project window as available before I can finish."
+    },
+    {
+      "requestId": "req_e0bc07cc-33b3-480d-95e8-2f8b30f02b6a",
+      "state": "completed",
+      "text": "The Project window has been brought to the foreground again. Please retry the two exact pointers from current workspace observations: the preparation task outside my S03 filter, and only stdout line 2 \"Alignment complete\" while stderr remains displayed. The two earlier attached excerpts have already been delivered. Keep my views and selection unchanged. ",
+      "response": "I’ll retry the observations and use their current receipts for the two pointers.\n\n\n`workspace_list` now reported both views ready, but all three subsequent observations returned `runtime_unavailable`. I couldn’t obtain current receipts, so neither pointer was published.\n\nYour S03 filter, displayed stderr stream, selection, and draft remain unchanged. The workspace became unavailable between listing and observation."
+    },
+    {
+      "requestId": "req_0723f2ad-303e-435f-8fd2-4a5f41f4e618",
+      "state": "completed",
+      "text": "The Project window has been brought to the foreground again. Please retry the two exact pointers from current workspace observations: the preparation task outside my S03 filter, and only stdout line 2 \"Alignment complete\" while stderr remains displayed. The two earlier attached excerpts have already been delivered. Keep my views and selection unchanged.",
+      "response": "I’ll retry the current observations and publish the two pointers if the views are available.\n\n\nPublished both pointers using current observations, their observedReadIds, and full observation receipts:\n\n- **Prepare samples** — instance `prepare`, attempt **1**, completed and excluded by your `S03` filter.\n- **“Alignment complete”** — instance `align:S03`, attempt **2**, stdout line **2**, columns **0–18**, observed through source-preview while stderr remained displayed.\n\nYour views, filters, displayed stream, selection, and draft are unchanged."
+    }
+  ]
+}

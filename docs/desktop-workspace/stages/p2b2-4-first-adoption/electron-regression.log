@@ -1,0 +1,72 @@
+
+Running 12 tests using 1 worker
+
+(node:76691) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘   1 desktop/tests/electron/creation-agent-acceptance.spec.ts:10:1 › Creation: signed-in Agent proposes, reads and points; User adopts without a Run (3.3m)
+(node:77169) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   2 desktop/tests/electron/pipeline-creation.spec.ts:8:3 › Creation: chosen data, exact discussion, restart and discard (1.2m)
+  ✓   3 desktop/tests/electron/pipeline-creation.spec.ts:8:3 › Creation: chosen data, exact discussion, restart and adopt (1.2m)
+  ✘   4 desktop/tests/electron/pipeline-proposals.spec.ts:8:1 › B comparison: scoped Agent proposal, exact chat reference, adoption and restart (3.2m)
+(node:78195) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   5 desktop/tests/electron/workspace.spec.ts:27:1 › real files, split, selection and draft survive a normal app relaunch (1.9s)
+  ✓   6 desktop/tests/electron/workspace.spec.ts:66:1 › keyboard tabs, duplicate, move and close preserve the remaining views (1.2s)
+  ✓   7 desktop/tests/electron/workspace.spec.ts:96:1 › narrow windows retain both panes and keyboard image and text context (1.2s)
+  ✓   8 desktop/tests/electron/workspace.spec.ts:133:1 › changed and missing files remain explicit while other Projects stay separate (1.4s)
+  ✓   9 desktop/tests/electron/workspace.spec.ts:173:1 › a failed draft save preserves the Project and honors Keep Open on window close (942ms)
+  ✓  10 desktop/tests/electron/workspace.spec.ts:218:1 › stacked panes, fitted image and one composer retain their identity across resizing and compact chat (1.8s)
+  ✓  11 desktop/tests/electron/workspace.spec.ts:341:1 › the real app migrates saved v1 geometry on the first change and retains the original archive (1.8s)
+  ✓  12 desktop/tests/electron/workspace.spec.ts:408:1 › selection overview finds hidden sources, More returns keyboard focus, and empty panes target navigation (1.4s)
+
+
+  1) desktop/tests/electron/creation-agent-acceptance.spec.ts:10:1 › Creation: signed-in Agent proposes, reads and points; User adopts without a Run 
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  getByText('Completed', { exact: true })
+    Expected: 2
+    Received: 0
+    Timeout:  90000ms
+
+    Call log:
+      - Expect "toHaveCount" getByText('Completed', { exact: true }) with timeout 90000ms
+      - waiting for getByText('Completed', { exact: true })
+        182 × locator resolved to 0 elements
+            - unexpected value "0"
+
+
+      91 |       timeout: 180000,
+      92 |     });
+    > 93 |     await expect(page.getByText('Completed', { exact: true })).toHaveCount(2, { timeout: 90000 });
+         |                                                                ^
+      94 |     await page.screenshot({ path: info.outputPath('agent-shared-review.png') });
+      95 |     await view.getByRole('button', { name: 'Adopt as new pipeline', exact: true }).click();
+      96 |     await view.getByRole('textbox', { name: 'Pipeline name' }).fill('Read quality acceptance');
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/creation-agent-acceptance.spec.ts:93:64
+
+    Error Context: test-results/electron/creation-agent-acceptance--36383-s-User-adopts-without-a-Run/error-context.md
+
+  2) desktop/tests/electron/pipeline-proposals.spec.ts:8:1 › B comparison: scoped Agent proposal, exact chat reference, adoption and restart 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 4
+    Received: 5
+
+      159 |     await expect(page.getByText('30 Phred', { exact: true })).toBeVisible();
+      160 |     const catalog = JSON.parse(await readFile(join(profile, 'service/catalog.json'), 'utf8'));
+    > 161 |     expect(catalog.schemaVersion).toBe(4);
+          |                                   ^
+      162 |     expect(catalog.runs).toHaveLength(0);
+      163 |     expect(Object.keys(catalog.revisions)).toEqual([catalog.pipelines[0].pipelineId]);
+      164 |     expect(catalog.drafts).toEqual({});
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/pipeline-proposals.spec.ts:161:35
+
+    Error Context: test-results/electron/pipeline-proposals-B-compa-8e16b-erence-adoption-and-restart/error-context.md
+
+  2 failed
+    desktop/tests/electron/creation-agent-acceptance.spec.ts:10:1 › Creation: signed-in Agent proposes, reads and points; User adopts without a Run 
+    desktop/tests/electron/pipeline-proposals.spec.ts:8:1 › B comparison: scoped Agent proposal, exact chat reference, adoption and restart 
+  10 passed (9.2m)

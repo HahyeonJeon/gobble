@@ -1,0 +1,8 @@
+{
+  "normalProfileWritten": false,
+  "credentialAccess": "Read-only copy into isolated temporary profile; no credential output",
+  "temporaryProfileRemoved": true,
+  "syntheticProjectOnly": true,
+  "inspection": "Original trial stdin was closed; resumed inspection through that same temporary Electron debugging endpoint; no second Agent submission",
+  "close": "Closed temporary window normally; terminated only its identified background Electron process on macOS, then removed the temporary profile."
+}

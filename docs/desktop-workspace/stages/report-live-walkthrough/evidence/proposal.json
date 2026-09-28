@@ -1,0 +1,403 @@
+{
+  "followUp": {
+    "launchReviewId": "req_222fba14-f348-4df9-ab30-1844b5a67dd2",
+    "submissionId": "req_7b47b3ca-7cfa-4e2d-a19d-30e4e5a6b4eb",
+    "evidence": [
+      {
+        "attachmentId": "att_f916169d-248b-4908-a501-495ef23adbe9",
+        "evidence": {
+          "projectId": "prj_FWQ6GCP2UBLVPY7OHQZXQ6D37Y",
+          "origin": {
+            "surfaceId": "srf_f0650ccf-2f4e-4ba8-a3a4-0fe757dc47e7"
+          },
+          "resource": {
+            "kind": "run",
+            "runRef": "run_SD3V3NANJIYO4B5IA5RBR3BLMJ"
+          },
+          "schemaVersion": 3,
+          "dataRevision": "sha256:7c54862413e62eefad99ed75bea0c69aec058f7427530bcbee5010052b706d56",
+          "selection": {
+            "kind": "run-task",
+            "coordinateSpace": "observed-instance-attempt",
+            "instanceId": "fastqc",
+            "attempt": 1
+          }
+        },
+        "label": "Analysis 1",
+        "createdAt": 1790581777626,
+        "capture": {
+          "kind": "observed",
+          "capturedAt": 1790581777630,
+          "asset": {
+            "hash": "sha256:5af9c97b548cb6ba112924e730437b80e0af36f4a22cf3a88dde4d515e1d4d91",
+            "byteLength": 1735,
+            "mediaType": "application/json"
+          },
+          "representation": {
+            "kind": "run",
+            "truncated": true
+          }
+        },
+        "capturedAt": 1790581777630,
+        "asset": {
+          "hash": "sha256:5af9c97b548cb6ba112924e730437b80e0af36f4a22cf3a88dde4d515e1d4d91",
+          "byteLength": 1735,
+          "mediaType": "application/json"
+        },
+        "representation": {
+          "kind": "run",
+          "truncated": true
+        }
+      }
+    ],
+    "schemaVersion": 1,
+    "projectId": "prj_FWQ6GCP2UBLVPY7OHQZXQ6D37Y",
+    "pipelineId": "pip_MOLOFL6ZYFZBSMSQNPOZRRJTOI",
+    "runRef": "run_SD3V3NANJIYO4B5IA5RBR3BLMJ",
+    "runName": "Analysis 1",
+    "preparationId": "req_ae39422e-e2ea-43bc-b6b6-915918f9168d",
+    "artifactId": "sha256:83552c9d7d8cca73f5e8aca55ebc9a7cbd4630988d91e6d3a15e58efeb93ae42",
+    "inputSHA256": "sha256:c0b126faa3fdd69a2e8f3f4e71ca9e54b4238bccc028965debd310d41c15c516"
+  },
+  "createdAt": "2026-09-28T07:50:11.002456Z",
+  "projectId": "prj_FWQ6GCP2UBLVPY7OHQZXQ6D37Y",
+  "pipelineId": "pip_MOLOFL6ZYFZBSMSQNPOZRRJTOI",
+  "proposalId": "req_fe69455c6d920cce4be5f39cddd4eddb5eec79222458ef8a15c7dc46e09a9933",
+  "digest": "sha256:a5a7d3828c155a1d9bda3d98768e2cddcd56d2bb9f6164bd9daaa0b9420fa239",
+  "state": "ready",
+  "summary": "Synthetic 100-read UI comparison: change only Trim Galore Quality threshold from 20 to 25 Phred. Preserve selected data, minimum-length default, step order and FastQC. Context: attached Analysis 1 completed fastqc task, attempt 1, Run run_SD3V3NANJIYO4B5IA5RBR3BLMJ (att_f916169d-248b-4908-a501-495ef23adbe9), and its saved sample_trimmed.fq.gz FastQC Report (att_94f6e68b-59f2-4beb-bdea-43adaf67ec22; saved hash sha256:3cb1a44e5ff8933704dd0f4978f4e6f47f9fe7dde4642ca034e7951da5282d5e). This is a comparison exercise, not a proven repair for report warnings or encoding ambiguity. No adoption or analysis requested.",
+  "issue": "",
+  "base": {
+    "artifactId": "sha256:83552c9d7d8cca73f5e8aca55ebc9a7cbd4630988d91e6d3a15e58efeb93ae42",
+    "sourceRevision": "sha256:10c85516edb7c665deb75aa170be9bd701c7936edb7bbb2ef93aef5114d0d5f5",
+    "checkedAt": "2026-09-28T07:42:49.189622Z",
+    "flow": {
+      "schemaVersion": 2,
+      "name": "read_quality",
+      "inputs": [
+        {
+          "name": "reads",
+          "kind": "file",
+          "path": "inputs/reads.fastq.gz",
+          "members": []
+        }
+      ],
+      "steps": [
+        {
+          "id": "trim_galore",
+          "name": "trim_galore",
+          "module": "",
+          "display": {
+            "stage": "Trim adapters and low-quality ends (quality 20)"
+          },
+          "image": "community.wave.seqera.io/library/trim-galore:2.1.0--27e6376b8f6c1872@sha256:9d747504e44dbf5dfa8a2d66cbbd3bd80f897cc2e17ebe406821b4809b34a3a4",
+          "backend": "local",
+          "cpu": 4,
+          "memory": "2g",
+          "inputs": [
+            {
+              "name": "read1",
+              "kind": "file",
+              "path": "inputs/reads.fastq.gz",
+              "members": []
+            }
+          ],
+          "outputs": [
+            {
+              "name": "trimmed_read1",
+              "kind": "file",
+              "path": "work/trim-galore/sample_trimmed.fq.gz",
+              "members": []
+            },
+            {
+              "name": "report1",
+              "kind": "file",
+              "path": "work/trim-galore/reads.fastq.gz_trimming_report.txt",
+              "members": []
+            }
+          ],
+          "control": {
+            "branch": "",
+            "merge": "",
+            "scatter": "",
+            "gather": "",
+            "when": "",
+            "scatterFromKind": "",
+            "scatterFromTask": "",
+            "scatterFromPort": "",
+            "scatterFromPath": "",
+            "scatterMembers": [],
+            "scatterMemberPaths": [],
+            "skipIfMissingTask": "",
+            "skipIfMissingPort": "",
+            "skipIfMissingPath": "",
+            "skipIfFalse": ""
+          },
+          "settings": [
+            {
+              "key": "quality",
+              "label": "Quality threshold",
+              "unit": "Phred",
+              "value": 20
+            },
+            {
+              "key": "length",
+              "label": "Minimum length",
+              "unit": "bp",
+              "value": null
+            }
+          ]
+        },
+        {
+          "id": "fastqc",
+          "name": "fastqc",
+          "module": "",
+          "display": {
+            "stage": "Inspect trimmed read quality"
+          },
+          "image": "quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0@sha256:e194048df39c3145d9b4e0a14f4da20b59d59250465b6f2a9cb698445fd45900",
+          "backend": "local",
+          "cpu": 2,
+          "memory": "1g",
+          "inputs": [
+            {
+              "name": "reads",
+              "kind": "file",
+              "path": "work/trim-galore/sample_trimmed.fq.gz",
+              "members": []
+            }
+          ],
+          "outputs": [
+            {
+              "name": "html",
+              "kind": "file",
+              "path": "work/fastqc/sample_trimmed_fastqc.html",
+              "members": []
+            },
+            {
+              "name": "zip",
+              "kind": "file",
+              "path": "work/fastqc/sample_trimmed_fastqc.zip",
+              "members": []
+            }
+          ],
+          "control": {
+            "branch": "",
+            "merge": "",
+            "scatter": "",
+            "gather": "",
+            "when": "",
+            "scatterFromKind": "",
+            "scatterFromTask": "",
+            "scatterFromPort": "",
+            "scatterFromPath": "",
+            "scatterMembers": [],
+            "scatterMemberPaths": [],
+            "skipIfMissingTask": "",
+            "skipIfMissingPort": "",
+            "skipIfMissingPath": "",
+            "skipIfFalse": ""
+          },
+          "settings": []
+        }
+      ],
+      "connections": [
+        {
+          "id": "edge-1",
+          "fromTask": "",
+          "fromPort": "reads",
+          "toTask": "trim_galore",
+          "toPort": "read1",
+          "wait": [
+            "inputs/reads.fastq.gz"
+          ]
+        },
+        {
+          "id": "edge-2",
+          "fromTask": "trim_galore",
+          "fromPort": "trimmed_read1",
+          "toTask": "fastqc",
+          "toPort": "reads",
+          "wait": [
+            "work/trim-galore/sample_trimmed.fq.gz"
+          ]
+        }
+      ]
+    }
+  },
+  "proposed": {
+    "artifactId": "sha256:7366efcbb691991f6e656ec85b58bdc9d84a1bb69ad49046a4bb25ab82d57098",
+    "sourceRevision": "sha256:3471e4db4312e5b04d0850e26f8d17e089ba5150c11b574dbf0fce020dbb3cad",
+    "checkedAt": "2026-09-28T07:52:13.187229Z",
+    "flow": {
+      "schemaVersion": 2,
+      "name": "read_quality",
+      "inputs": [
+        {
+          "name": "reads",
+          "kind": "file",
+          "path": "inputs/reads.fastq.gz",
+          "members": []
+        }
+      ],
+      "steps": [
+        {
+          "id": "trim_galore",
+          "name": "trim_galore",
+          "module": "",
+          "display": {
+            "stage": "Trim adapters and low-quality ends (quality 20)"
+          },
+          "image": "community.wave.seqera.io/library/trim-galore:2.1.0--27e6376b8f6c1872@sha256:9d747504e44dbf5dfa8a2d66cbbd3bd80f897cc2e17ebe406821b4809b34a3a4",
+          "backend": "local",
+          "cpu": 4,
+          "memory": "2g",
+          "inputs": [
+            {
+              "name": "read1",
+              "kind": "file",
+              "path": "inputs/reads.fastq.gz",
+              "members": []
+            }
+          ],
+          "outputs": [
+            {
+              "name": "trimmed_read1",
+              "kind": "file",
+              "path": "work/trim-galore/sample_trimmed.fq.gz",
+              "members": []
+            },
+            {
+              "name": "report1",
+              "kind": "file",
+              "path": "work/trim-galore/reads.fastq.gz_trimming_report.txt",
+              "members": []
+            }
+          ],
+          "control": {
+            "branch": "",
+            "merge": "",
+            "scatter": "",
+            "gather": "",
+            "when": "",
+            "scatterFromKind": "",
+            "scatterFromTask": "",
+            "scatterFromPort": "",
+            "scatterFromPath": "",
+            "scatterMembers": [],
+            "scatterMemberPaths": [],
+            "skipIfMissingTask": "",
+            "skipIfMissingPort": "",
+            "skipIfMissingPath": "",
+            "skipIfFalse": ""
+          },
+          "settings": [
+            {
+              "key": "quality",
+              "label": "Quality threshold",
+              "unit": "Phred",
+              "value": 25
+            },
+            {
+              "key": "length",
+              "label": "Minimum length",
+              "unit": "bp",
+              "value": null
+            }
+          ]
+        },
+        {
+          "id": "fastqc",
+          "name": "fastqc",
+          "module": "",
+          "display": {
+            "stage": "Inspect trimmed read quality"
+          },
+          "image": "quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0@sha256:e194048df39c3145d9b4e0a14f4da20b59d59250465b6f2a9cb698445fd45900",
+          "backend": "local",
+          "cpu": 2,
+          "memory": "1g",
+          "inputs": [
+            {
+              "name": "reads",
+              "kind": "file",
+              "path": "work/trim-galore/sample_trimmed.fq.gz",
+              "members": []
+            }
+          ],
+          "outputs": [
+            {
+              "name": "html",
+              "kind": "file",
+              "path": "work/fastqc/sample_trimmed_fastqc.html",
+              "members": []
+            },
+            {
+              "name": "zip",
+              "kind": "file",
+              "path": "work/fastqc/sample_trimmed_fastqc.zip",
+              "members": []
+            }
+          ],
+          "control": {
+            "branch": "",
+            "merge": "",
+            "scatter": "",
+            "gather": "",
+            "when": "",
+            "scatterFromKind": "",
+            "scatterFromTask": "",
+            "scatterFromPort": "",
+            "scatterFromPath": "",
+            "scatterMembers": [],
+            "scatterMemberPaths": [],
+            "skipIfMissingTask": "",
+            "skipIfMissingPort": "",
+            "skipIfMissingPath": "",
+            "skipIfFalse": ""
+          },
+          "settings": []
+        }
+      ],
+      "connections": [
+        {
+          "id": "edge-1",
+          "fromTask": "",
+          "fromPort": "reads",
+          "toTask": "trim_galore",
+          "toPort": "read1",
+          "wait": [
+            "inputs/reads.fastq.gz"
+          ]
+        },
+        {
+          "id": "edge-2",
+          "fromTask": "trim_galore",
+          "fromPort": "trimmed_read1",
+          "toTask": "fastqc",
+          "toPort": "reads",
+          "wait": [
+            "work/trim-galore/sample_trimmed.fq.gz"
+          ]
+        }
+      ]
+    }
+  },
+  "comparison": {
+    "schemaVersion": 1,
+    "changes": [
+      {
+        "id": "setting:trim_galore:quality",
+        "kind": "setting",
+        "stepId": "trim_galore",
+        "key": "quality",
+        "label": "Quality threshold",
+        "unit": "Phred",
+        "before": 20,
+        "after": 25
+      }
+    ],
+    "gaps": []
+  },
+  "managed": true
+}

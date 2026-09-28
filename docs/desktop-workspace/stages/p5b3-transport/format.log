@@ -1,0 +1,9 @@
+contracts/src/run-continuation.ts 72ms
+contracts/src/index.ts 4ms (unchanged)
+contracts/src/service.ts 13ms
+contracts/scripts/export-schema.ts 5ms (unchanged)
+desktop/src/main/service/run-continuation.ts 12ms
+desktop/src/main/service/project-service.ts 14ms
+desktop/src/main/service/ipc.ts 16ms
+desktop/src/preload/index.ts 19ms
+README.md 120ms (unchanged)

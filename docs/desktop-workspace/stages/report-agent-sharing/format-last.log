@@ -1,0 +1,6 @@
+contracts/src/reference-resolution.ts 48ms (unchanged)
+contracts/src/observed-reference.ts 11ms (unchanged)
+desktop/src/main/workspace/controller.ts 75ms
+desktop/src/main/shared-context/report.ts 7ms (unchanged)
+desktop/tests/report-evidence.test.ts 20ms
+desktop/tests/report-sharing.test.ts 14ms (unchanged)

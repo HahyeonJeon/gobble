@@ -1,0 +1,131 @@
+{
+  "saved": {
+    "projectId": "prj_FWQ6GCP2UBLVPY7OHQZXQ6D37Y",
+    "runRef": "run_SD3V3NANJIYO4B5IA5RBR3BLMJ",
+    "producer": {
+      "schemaVersion": 1,
+      "runId": "read_quality",
+      "snapshot": "48135f7f4b10262c2c69f657104cd276",
+      "originDigest": "sha256:2e00aa75d07be0543abda13766c7af4a8442c9f071588574450e274e5c1b2023",
+      "instance": "fastqc",
+      "attempt": 1,
+      "port": "html",
+      "recipe": "fastqc-v1",
+      "sha256": "sha256:8f045465fd56bbfb18360592e1b41c4978b45c6054fb6bc2cef52aa724413d52",
+      "size": 537181
+    },
+    "capturedAt": 1790581657066,
+    "title": "sample_trimmed.fq.gz FastQC Report",
+    "profile": "fastqc-0.12.1-v1",
+    "asset": {
+      "hash": "sha256:3cb1a44e5ff8933704dd0f4978f4e6f47f9fe7dde4642ca034e7951da5282d5e",
+      "byteLength": 494980
+    }
+  },
+  "sourcePath": "/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-report-live-ibcp9Y/Report collaboration study/runs/analysis-222fba14-f348-4df9-ab30-1844b5a67dd2/work/fastqc/sample_trimmed_fastqc.html",
+  "sourceMatchesRecordedDigest": true,
+  "savedHashVerified": true,
+  "modelImagesMatchAllOriginalBytes": true,
+  "originalCharts": [
+    {
+      "id": "image-1",
+      "module": "Per base sequence quality",
+      "sha256": "967375cc97e2d1cc00058569f344cc3d0ca59f99a1fa1c27843192ab6db90b66",
+      "bytes": 35331
+    },
+    {
+      "id": "image-2",
+      "module": "Per sequence quality scores",
+      "sha256": "4f93bc5301193c01ead8c0aba349286289788327d7aa498f95f124fca9ba058e",
+      "bytes": 6687
+    },
+    {
+      "id": "image-3",
+      "module": "Per base sequence content",
+      "sha256": "f8376bad5efc3bbce86962ca5750075f7774f47e84da5a43535dcaef7f501c89",
+      "bytes": 85122
+    },
+    {
+      "id": "image-4",
+      "module": "Per sequence GC content",
+      "sha256": "3ab316f73f8916349457a68949f802af48f1c21bc0cd8b8de7a158583f00cce6",
+      "bytes": 80826
+    },
+    {
+      "id": "image-5",
+      "module": "Per base N content",
+      "sha256": "2436f532aee45f30ae7f55d4246fbbf8c2f3916556100d3287af3b053935bc2d",
+      "bytes": 40899
+    },
+    {
+      "id": "image-6",
+      "module": "Sequence Length Distribution",
+      "sha256": "201fbe146e01e9e9bca607f16b8e5e2fda59ef8c1f26cbd8f2802d4cf41b9135",
+      "bytes": 23730
+    },
+    {
+      "id": "image-7",
+      "module": "Sequence Duplication Levels",
+      "sha256": "f094696dc293ca849fd6928844a81ccf098eff1885eedb7c8039d295428146ea",
+      "bytes": 36156
+    },
+    {
+      "id": "image-8",
+      "module": "Adapter Content",
+      "sha256": "60f3bafc208678d9607bb74c7de7b67acd63fc754d4c70026b6720ded290dcde",
+      "bytes": 59871
+    }
+  ],
+  "modules": [
+    {
+      "id": "M0",
+      "title": "Basic Statistics",
+      "status": "[OK]"
+    },
+    {
+      "id": "M1",
+      "title": "Per base sequence quality",
+      "status": "[OK]"
+    },
+    {
+      "id": "M3",
+      "title": "Per sequence quality scores",
+      "status": "[FAIL]"
+    },
+    {
+      "id": "M4",
+      "title": "Per base sequence content",
+      "status": "[FAIL]"
+    },
+    {
+      "id": "M5",
+      "title": "Per sequence GC content",
+      "status": "[WARN]"
+    },
+    {
+      "id": "M6",
+      "title": "Per base N content",
+      "status": "[OK]"
+    },
+    {
+      "id": "M7",
+      "title": "Sequence Length Distribution",
+      "status": "[OK]"
+    },
+    {
+      "id": "M8",
+      "title": "Sequence Duplication Levels",
+      "status": "[FAIL]"
+    },
+    {
+      "id": "M9",
+      "title": "Overrepresented sequences",
+      "status": "[FAIL]"
+    },
+    {
+      "id": "M10",
+      "title": "Adapter Content",
+      "status": "[OK]"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+
+> gobble-app-workspace@0.1.0 typecheck
+> tsc -p contracts/tsconfig.json && npm run typecheck --workspace @gobble/desktop && tsc -p tsconfig.tools.json
+
+
+> @gobble/desktop@0.1.0 typecheck
+> tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && tsc -p tsconfig.renderer.json
+
+src/renderer/evidence/EvidencePreview.tsx(156,35): error TS2339: Property 'text' does not exist on type '{ kind: "text"; text: string; notebook: { capturedAt: number; target: { origin?: { surfaceId: string; }; schemaVersion: 6; projectId: string; resource: { resourceId: string; kind: "file"; }; dataRevision: string; selection: { ...; }; }; rawQuote: string; }; } | { ...; } | { ...; }'.
+  Property 'text' does not exist on type '{ kind: "report"; report: { schemaVersion: 1; projectId: string; runRef: string; producer: { schemaVersion: 1; size: number; runId: string; snapshot: string; originDigest: string; instance: string; attempt: number; port: "html"; recipe: "fastqc-v1"; sha256: string; }; capturedAt: number; content: { ...; }; }; }'.
+src/renderer/workspace/views/ReportView.tsx(2,10): error TS6133: 'referenceAuthor' is declared but its value is never read.
+src/renderer/workspace/views/ReportView.tsx(15,3): error TS6133: 'marks' is declared but its value is never read.
+src/renderer/workspace/views/ReportView.tsx(99,13): error TS2722: Cannot invoke an object which is possibly 'undefined'.
+npm error Lifecycle script `typecheck` failed with error:
+npm error code 2
+npm error path /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop
+npm error workspace @gobble/desktop@0.1.0
+npm error location /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop
+npm error command failed
+npm error command sh -c tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && tsc -p tsconfig.renderer.json

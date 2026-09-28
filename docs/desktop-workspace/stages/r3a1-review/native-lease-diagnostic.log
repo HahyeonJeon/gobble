@@ -1,0 +1,83 @@
+
+Running 2 tests using 1 worker
+
+(node:55152) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+RENDER reveal [null]
+RENDER reveal [null]
+RENDER reveal ["srf_0301d323-ed72-4a00-8c2f-14663314df68"]
+RENDER reveal ["srf_0301d323-ed72-4a00-8c2f-14663314df68"]
+RENDER begin srf_0301d323-ed72-4a00-8c2f-14663314df68 1
+RENDER ack srf_0301d323-ed72-4a00-8c2f-14663314df68 1
+RENDER reveal ["srf_0301d323-ed72-4a00-8c2f-14663314df68"]
+RENDER reveal ["srf_0301d323-ed72-4a00-8c2f-14663314df68"]
+RENDER reconcile removed srf_0301d323-ed72-4a00-8c2f-14663314df68 [null,{"kind":"file","resourceId":"res_1a1056c2f7757c14fe6b853150c70fe44db6275630c02770086309d2ea30e7b8"},"table",null,null,null] [null,{"kind":"file","resourceId":"res_1a1056c2f7757c14fe6b853150c70fe44db6275630c02770086309d2ea30e7b8"},"table",null,{"columns":["col_0","col_1","col_3"],"sort":null,"viewRevision":1},null]
+RENDER reveal ["srf_0301d323-ed72-4a00-8c2f-14663314df68"]
+RENDER begin srf_0301d323-ed72-4a00-8c2f-14663314df68 2
+RENDER ack srf_0301d323-ed72-4a00-8c2f-14663314df68 2
+RENDER reveal ["srf_0301d323-ed72-4a00-8c2f-14663314df68"]
+RENDER reconcile removed srf_0301d323-ed72-4a00-8c2f-14663314df68 [null,{"kind":"file","resourceId":"res_1a1056c2f7757c14fe6b853150c70fe44db6275630c02770086309d2ea30e7b8"},"table",null,{"columns":["col_0","col_1","col_3"],"sort":null,"viewRevision":1},null] [null,{"kind":"file","resourceId":"res_1a1056c2f7757c14fe6b853150c70fe44db6275630c02770086309d2ea30e7b8"},"table",null,{"columns":["col_0","col_1"],"sort":null,"viewRevision":2},null]
+RENDER reveal ["srf_0301d323-ed72-4a00-8c2f-14663314df68"]
+RENDER begin srf_0301d323-ed72-4a00-8c2f-14663314df68 3
+RENDER ack srf_0301d323-ed72-4a00-8c2f-14663314df68 3
+RENDER reveal ["srf_0301d323-ed72-4a00-8c2f-14663314df68"]
+RENDER reveal ["srf_0301d323-ed72-4a00-8c2f-14663314df68"]
+RENDER reveal [null]
+RENDER reveal [null]
+RENDER reveal ["srf_93f63b55-4cee-403b-90c6-dde17a6f098b"]
+RENDER reveal ["srf_93f63b55-4cee-403b-90c6-dde17a6f098b"]
+RENDER begin srf_93f63b55-4cee-403b-90c6-dde17a6f098b 1
+RENDER ack srf_93f63b55-4cee-403b-90c6-dde17a6f098b 1
+RENDER reveal ["srf_93f63b55-4cee-403b-90c6-dde17a6f098b"]
+RENDER reveal ["srf_93f63b55-4cee-403b-90c6-dde17a6f098b"]
+RENDER begin srf_93f63b55-4cee-403b-90c6-dde17a6f098b 1
+RENDER ack srf_93f63b55-4cee-403b-90c6-dde17a6f098b 1
+RENDER reveal ["srf_93f63b55-4cee-403b-90c6-dde17a6f098b"]
+RENDER reveal ["srf_93f63b55-4cee-403b-90c6-dde17a6f098b"]
+RENDER begin srf_93f63b55-4cee-403b-90c6-dde17a6f098b 2
+RENDER ack srf_93f63b55-4cee-403b-90c6-dde17a6f098b 2
+RENDER reveal ["srf_93f63b55-4cee-403b-90c6-dde17a6f098b"]
+RENDER reveal ["srf_93f63b55-4cee-403b-90c6-dde17a6f098b"]
+RENDER begin srf_93f63b55-4cee-403b-90c6-dde17a6f098b 1
+  ✓  1 desktop/tests/electron/evidence.spec.ts:285:1 › migrates v2 shared marks and captured evidence, reopens without origin, and distinguishes changed or missing sources (6.7s)
+(node:55176) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+RENDER reveal [null]
+RENDER reveal [null]
+RENDER reveal ["srf_b2c49de2-d33f-4775-90ce-380f7ac19cdf"]
+RENDER reveal ["srf_b2c49de2-d33f-4775-90ce-380f7ac19cdf"]
+RENDER begin srf_b2c49de2-d33f-4775-90ce-380f7ac19cdf 1
+RENDER ack srf_b2c49de2-d33f-4775-90ce-380f7ac19cdf 1
+RENDER reveal ["srf_b2c49de2-d33f-4775-90ce-380f7ac19cdf"]
+RENDER reveal ["srf_b2c49de2-d33f-4775-90ce-380f7ac19cdf"]
+RENDER reconcile removed srf_b2c49de2-d33f-4775-90ce-380f7ac19cdf [null,{"kind":"file","resourceId":"res_8c3c2eb8d1d7d6f01bb854f215211badbac14129f708a8ad8441e009c0432b64"},"table",null,null,null] [null,{"kind":"file","resourceId":"res_8c3c2eb8d1d7d6f01bb854f215211badbac14129f708a8ad8441e009c0432b64"},"table",null,{"columns":["col_0","col_1","col_3"],"sort":null,"viewRevision":1},null]
+RENDER reveal ["srf_b2c49de2-d33f-4775-90ce-380f7ac19cdf"]
+RENDER begin srf_b2c49de2-d33f-4775-90ce-380f7ac19cdf 2
+RENDER ack srf_b2c49de2-d33f-4775-90ce-380f7ac19cdf 2
+RENDER reveal ["srf_b2c49de2-d33f-4775-90ce-380f7ac19cdf"]
+RENDER reconcile removed srf_b2c49de2-d33f-4775-90ce-380f7ac19cdf [null,{"kind":"file","resourceId":"res_8c3c2eb8d1d7d6f01bb854f215211badbac14129f708a8ad8441e009c0432b64"},"table",null,{"columns":["col_0","col_1","col_3"],"sort":null,"viewRevision":1},null] [null,{"kind":"file","resourceId":"res_8c3c2eb8d1d7d6f01bb854f215211badbac14129f708a8ad8441e009c0432b64"},"table",null,{"columns":["col_0","col_1"],"sort":null,"viewRevision":2},null]
+RENDER reveal ["srf_b2c49de2-d33f-4775-90ce-380f7ac19cdf"]
+RENDER begin srf_b2c49de2-d33f-4775-90ce-380f7ac19cdf 3
+RENDER ack srf_b2c49de2-d33f-4775-90ce-380f7ac19cdf 3
+RENDER reveal ["srf_b2c49de2-d33f-4775-90ce-380f7ac19cdf"]
+RENDER reveal ["srf_b2c49de2-d33f-4775-90ce-380f7ac19cdf"]
+RENDER reveal [null]
+RENDER reveal [null]
+RENDER reveal ["srf_b66b683e-b8dd-4585-8551-89db2ab777d5"]
+RENDER reveal ["srf_b66b683e-b8dd-4585-8551-89db2ab777d5"]
+RENDER begin srf_b66b683e-b8dd-4585-8551-89db2ab777d5 1
+RENDER ack srf_b66b683e-b8dd-4585-8551-89db2ab777d5 1
+RENDER reveal ["srf_b66b683e-b8dd-4585-8551-89db2ab777d5"]
+RENDER reveal ["srf_b66b683e-b8dd-4585-8551-89db2ab777d5"]
+RENDER begin srf_b66b683e-b8dd-4585-8551-89db2ab777d5 1
+RENDER ack srf_b66b683e-b8dd-4585-8551-89db2ab777d5 1
+RENDER reveal ["srf_b66b683e-b8dd-4585-8551-89db2ab777d5"]
+RENDER reveal ["srf_b66b683e-b8dd-4585-8551-89db2ab777d5"]
+RENDER begin srf_b66b683e-b8dd-4585-8551-89db2ab777d5 2
+RENDER ack srf_b66b683e-b8dd-4585-8551-89db2ab777d5 2
+RENDER reveal ["srf_b66b683e-b8dd-4585-8551-89db2ab777d5"]
+RENDER reveal ["srf_b66b683e-b8dd-4585-8551-89db2ab777d5"]
+RENDER begin srf_b66b683e-b8dd-4585-8551-89db2ab777d5 1
+  ✓  2 desktop/tests/electron/evidence.spec.ts:285:1 › migrates v2 shared marks and captured evidence, reopens without origin, and distinguishes changed or missing sources (5.9s)
+
+  2 passed (13.3s)

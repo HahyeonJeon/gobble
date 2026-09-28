@@ -1,0 +1,38 @@
+
+Running 3 tests using 1 worker
+
+(node:2771) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 desktop/tests/electron/ux-review.spec.ts:95:1 › C1: long names and 0, 1, 5, 12 Agents stay navigable with enlarged text (4.3s)
+  ✓  2 desktop/tests/electron/ux-review.spec.ts:142:1 › C2: long resources and multiple attachments retain a usable workspace at 100–150% zoom (4.3s)
+  ✘  3 desktop/tests/electron/ux-review.spec.ts:217:1 › C3: a pending reply and attachment error stay actionable in a small enlarged-text chat (7.6s)
+
+
+  1) desktop/tests/electron/ux-review.spec.ts:217:1 › C3: a pending reply and attachment error stay actionable in a small enlarged-text chat 
+
+    Error: expect(locator).toBeInViewport() failed
+
+    Locator: getByText('This model cannot receive images. Choose a supported model.', { exact: true })
+    Expected: in viewport
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeInViewport" getByText('This model cannot receive images. Choose a supported model.', { exact: true }) with timeout 5000ms
+      - waiting for getByText('This model cannot receive images. Choose a supported model.', { exact: true })
+
+
+      253 |   await expect(
+      254 |     page.getByText('This model cannot receive images. Choose a supported model.', { exact: true }),
+    > 255 |   ).toBeInViewport({ ratio: 1 });
+          |     ^
+      256 |   await expect(page.getByRole('button', { name: 'Prepare again', exact: true })).toBeInViewport({
+      257 |     ratio: 1,
+      258 |   });
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/ux-review.spec.ts:255:5
+
+    Error Context: test-results/electron/ux-review-C3-a-pending-rep-25b20--a-small-enlarged-text-chat/error-context.md
+
+  1 failed
+    desktop/tests/electron/ux-review.spec.ts:217:1 › C3: a pending reply and attachment error stay actionable in a small enlarged-text chat 
+  2 passed (16.7s)

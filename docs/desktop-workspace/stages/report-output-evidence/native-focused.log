@@ -1,0 +1,43 @@
+--- FAIL: TestRunReportHTTPReturnsVerifiedBytesWithoutExecution (0.19s)
+    run_report_test.go:82: open /private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/TestRunReportHTTPReturnsVerifiedBytesWithoutExecution2408154902/002/runs/analysis-test/work/fastqc/report.html: no such file or directory
+--- FAIL: TestRunReportRefusals (2.08s)
+    --- FAIL: TestRunReportRefusals/legacy (0.19s)
+        run_report_test.go:144: open /private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/TestRunReportRefusalslegacy871544772/002/runs/analysis-test/work/fastqc/report.html: no such file or directory
+    --- FAIL: TestRunReportRefusals/wrong-run (0.20s)
+        run_report_test.go:144: open /private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/TestRunReportRefusalswrong-run1726182724/002/runs/analysis-test/work/fastqc/report.html: no such file or directory
+    --- FAIL: TestRunReportRefusals/wrong-origin (0.20s)
+        run_report_test.go:144: open /private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/TestRunReportRefusalswrong-origin1779548114/002/runs/analysis-test/work/fastqc/report.html: no such file or directory
+    --- FAIL: TestRunReportRefusals/wrong-attempt (0.19s)
+        run_report_test.go:144: open /private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/TestRunReportRefusalswrong-attempt671265626/002/runs/analysis-test/work/fastqc/report.html: no such file or directory
+    --- FAIL: TestRunReportRefusals/wrong-recipe (0.17s)
+        run_report_test.go:144: open /private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/TestRunReportRefusalswrong-recipe4267592456/002/runs/analysis-test/work/fastqc/report.html: no such file or directory
+    --- FAIL: TestRunReportRefusals/path-escape (0.18s)
+        run_report_test.go:144: open /private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/TestRunReportRefusalspath-escape2650154188/002/runs/analysis-test/work/fastqc/report.html: no such file or directory
+    --- FAIL: TestRunReportRefusals/oversize (0.19s)
+        run_report_test.go:144: open /private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/TestRunReportRefusalsoversize3685534704/002/runs/analysis-test/work/fastqc/report.html: no such file or directory
+    --- FAIL: TestRunReportRefusals/changed-content (0.19s)
+        run_report_test.go:144: open /private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/TestRunReportRefusalschanged-content3570242235/002/runs/analysis-test/work/fastqc/report.html: no such file or directory
+    --- FAIL: TestRunReportRefusals/producer-drift (0.19s)
+        run_report_test.go:144: open /private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/TestRunReportRefusalsproducer-drift1053134184/002/runs/analysis-test/work/fastqc/report.html: no such file or directory
+    --- FAIL: TestRunReportRefusals/same-attempt-drift (0.19s)
+        run_report_test.go:144: open /private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/TestRunReportRefusalssame-attempt-drift115414399/002/runs/analysis-test/work/fastqc/report.html: no such file or directory
+    --- FAIL: TestRunReportRefusals/changed-binding (0.19s)
+        run_report_test.go:144: open /private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/TestRunReportRefusalschanged-binding3727907092/002/runs/analysis-test/work/fastqc/report.html: no such file or directory
+--- FAIL: TestRunReportContainedFiles (1.14s)
+    --- FAIL: TestRunReportContainedFiles/missing (0.20s)
+        run_report_test.go:157: open /private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/TestRunReportContainedFilesmissing2349176753/002/runs/analysis-test/work/fastqc/report.html: no such file or directory
+    --- FAIL: TestRunReportContainedFiles/directory (0.22s)
+        run_report_test.go:157: open /private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/TestRunReportContainedFilesdirectory2019801237/002/runs/analysis-test/work/fastqc/report.html: no such file or directory
+    --- FAIL: TestRunReportContainedFiles/symlink (0.18s)
+        run_report_test.go:157: open /private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/TestRunReportContainedFilessymlink2351394419/002/runs/analysis-test/work/fastqc/report.html: no such file or directory
+    --- FAIL: TestRunReportContainedFiles/outside-run (0.19s)
+        run_report_test.go:157: open /private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/TestRunReportContainedFilesoutside-run1455628200/002/runs/analysis-test/work/fastqc/report.html: no such file or directory
+    --- FAIL: TestRunReportContainedFiles/size (0.18s)
+        run_report_test.go:157: open /private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/TestRunReportContainedFilessize4127680249/002/runs/analysis-test/work/fastqc/report.html: no such file or directory
+    --- FAIL: TestRunReportContainedFiles/content (0.19s)
+        run_report_test.go:157: open /private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/TestRunReportContainedFilescontent2149530590/002/runs/analysis-test/work/fastqc/report.html: no such file or directory
+--- FAIL: TestRunReportRejectsUntrustedAndCrossProject (0.20s)
+    run_report_test.go:190: open /private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/TestRunReportRejectsUntrustedAndCrossProject924614850/002/runs/analysis-test/work/fastqc/report.html: no such file or directory
+FAIL
+FAIL	github.com/HahyeonJeon/gobble/internal/appservice	4.149s
+FAIL

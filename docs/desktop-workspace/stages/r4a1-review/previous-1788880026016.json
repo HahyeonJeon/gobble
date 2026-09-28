@@ -1,0 +1,278 @@
+{
+  "request": "R4a1-2026-09-08",
+  "started": "2026-09-08T15:03:06.835Z",
+  "scope": "Isolated source-checkout Notebook qualification; no production/Agent/kernel/package claim",
+  "cases": [
+    {
+      "name": "Worker cancellation, deadline and two-read admission release resources",
+      "result": "passed",
+      "ms": 82.93495899999971
+    },
+    {
+      "name": "Measured 2 MiB source and 1000-cell parsing justify a named bounded transport",
+      "result": "passed",
+      "ms": 86.66762500000004,
+      "details": [
+        {
+          "name": "python",
+          "bytes": 2491,
+          "cells": 3,
+          "textBytes": 331,
+          "ms": 16.82312499999989
+        },
+        {
+          "name": "large",
+          "bytes": 2099622,
+          "cells": 3,
+          "textBytes": 331,
+          "ms": 36.18383399999993
+        },
+        {
+          "name": "many",
+          "bytes": 118760,
+          "cells": 1000,
+          "textBytes": 21780,
+          "ms": 24.285542000000078
+        }
+      ]
+    },
+    {
+      "name": "Actual saved Notebook through emitted sandbox bridge; passive source/output fallback",
+      "result": "passed",
+      "ms": 117.28029199999992,
+      "details": {
+        "cells": 3,
+        "revision": "sha256:0f7f80252f94fef60a2489f24b74a049d757dee5d84db33e43232b772cea9595"
+      }
+    },
+    {
+      "name": "Native text drag identifies the exact source range and captures it without changing draft",
+      "result": "passed",
+      "ms": 229.13204099999984
+    },
+    {
+      "name": "Visibility receipt excludes folded, offscreen and clipped text; scrolling expires earlier observations",
+      "result": "passed",
+      "ms": 272.18112500000007
+    },
+    {
+      "name": "PNG display and scaled pointer selection preserve natural pixel crop",
+      "result": "passed",
+      "ms": 305.8351670000002
+    },
+    {
+      "name": "Captured Show/Return preserves source reader scroll and draft; new source keeps old evidence",
+      "result": "passed",
+      "ms": 224.36766700000044
+    },
+    {
+      "name": "JPEG decode, malformed image refusal, capture bounds and Unicode raw quote",
+      "result": "passed",
+      "ms": 152.28162500000053
+    },
+    {
+      "name": "Native sender, bridge, network, popup and CSP boundaries",
+      "result": "passed",
+      "ms": 8.13641700000062
+    },
+    {
+      "name": "900x650 compact reader and 150% native zoom keep the composer reachable",
+      "result": "passed",
+      "ms": 139.37537499999962
+    },
+    {
+      "name": "Two readers remain independent, reject a third, and release workers on close",
+      "result": "passed",
+      "ms": 269.0875420000002,
+      "details": {
+        "readers": 2,
+        "metrics": [
+          {
+            "cpu": {
+              "cumulativeCPUUsage": 0.989532,
+              "percentCPUUsage": 4.129795387208459,
+              "idleWakeupsPerSecond": 103
+            },
+            "pid": 8481,
+            "type": "Browser",
+            "creationTime": 1788879789231.425,
+            "memory": {
+              "workingSetSize": 198704,
+              "peakWorkingSetSize": 217840
+            },
+            "sandboxed": false
+          },
+          {
+            "cpu": {
+              "cumulativeCPUUsage": 0.337841,
+              "percentCPUUsage": 1.4106058650691942,
+              "idleWakeupsPerSecond": 239
+            },
+            "pid": 8482,
+            "type": "GPU",
+            "creationTime": 1788879789390.182,
+            "serviceName": "GPU",
+            "memory": {
+              "workingSetSize": 131264,
+              "peakWorkingSetSize": 139808
+            },
+            "sandboxed": true
+          },
+          {
+            "cpu": {
+              "cumulativeCPUUsage": 0.065145,
+              "percentCPUUsage": 0.012785397995033504,
+              "idleWakeupsPerSecond": 0
+            },
+            "pid": 8483,
+            "type": "Utility",
+            "creationTime": 1788879789391.696,
+            "serviceName": "network.mojom.NetworkService",
+            "name": "Network Service",
+            "memory": {
+              "workingSetSize": 44256,
+              "peakWorkingSetSize": 49600
+            },
+            "sandboxed": true
+          },
+          {
+            "cpu": {
+              "cumulativeCPUUsage": 0.48887,
+              "percentCPUUsage": 2.2008471976868633,
+              "idleWakeupsPerSecond": 57
+            },
+            "pid": 8484,
+            "type": "Tab",
+            "creationTime": 1788879789559.708,
+            "memory": {
+              "workingSetSize": 157072,
+              "peakWorkingSetSize": 158400
+            },
+            "sandboxed": true
+          },
+          {
+            "cpu": {
+              "cumulativeCPUUsage": 0.178169,
+              "percentCPUUsage": 0,
+              "idleWakeupsPerSecond": 0
+            },
+            "pid": 8487,
+            "type": "Tab",
+            "creationTime": 1788879791173.602,
+            "memory": {
+              "workingSetSize": 134256,
+              "peakWorkingSetSize": 134256
+            },
+            "sandboxed": true
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [],
+  "construction": "Strict TypeScript, bundled entries and 24 pure tests passed",
+  "environment": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "versions": {
+      "node": "24.20.0",
+      "acorn": "8.18.0",
+      "ada": "4.0.0",
+      "amaro": "1.1.11",
+      "ares": "1.34.8",
+      "brotli": "1.2.0",
+      "cldr": "48.0",
+      "icu": "78.2",
+      "llhttp": "9.4.3",
+      "merve": "1.2.2",
+      "modules": "149",
+      "napi": "10",
+      "nbytes": "0.1.4",
+      "ncrypto": "0.0.1",
+      "nghttp2": "1.70.0",
+      "nghttp3": "",
+      "ngtcp2": "",
+      "openssl": "0.0.0",
+      "simdjson": "4.6.6",
+      "simdutf": "7.7.0",
+      "sqlite": "3.53.4",
+      "tz": "2025c",
+      "undici": "7.29.0",
+      "unicode": "17.0",
+      "uv": "1.52.1",
+      "uvwasi": "0.0.23",
+      "v8": "15.2.124.19-electron.0",
+      "zlib": "1.3.2.1-motley",
+      "zstd": "1.6.0",
+      "electron": "44.2.0",
+      "chrome": "152.0.7977.76"
+    },
+    "metrics": [
+      {
+        "cpu": {
+          "cumulativeCPUUsage": 0.301518,
+          "percentCPUUsage": 0,
+          "idleWakeupsPerSecond": 0
+        },
+        "pid": 8481,
+        "type": "Browser",
+        "creationTime": 1788879789231.425,
+        "memory": {
+          "workingSetSize": 172880,
+          "peakWorkingSetSize": 172880
+        },
+        "sandboxed": false
+      },
+      {
+        "cpu": {
+          "cumulativeCPUUsage": 0.102839,
+          "percentCPUUsage": 0,
+          "idleWakeupsPerSecond": 0
+        },
+        "pid": 8482,
+        "type": "GPU",
+        "creationTime": 1788879789390.182,
+        "serviceName": "GPU",
+        "memory": {
+          "workingSetSize": 68688,
+          "peakWorkingSetSize": 68688
+        },
+        "sandboxed": true
+      },
+      {
+        "cpu": {
+          "cumulativeCPUUsage": 0.063015,
+          "percentCPUUsage": 0,
+          "idleWakeupsPerSecond": 0
+        },
+        "pid": 8483,
+        "type": "Utility",
+        "creationTime": 1788879789391.696,
+        "serviceName": "network.mojom.NetworkService",
+        "name": "Network Service",
+        "memory": {
+          "workingSetSize": 49600,
+          "peakWorkingSetSize": 49600
+        },
+        "sandboxed": true
+      },
+      {
+        "cpu": {
+          "cumulativeCPUUsage": 0.122217,
+          "percentCPUUsage": 0,
+          "idleWakeupsPerSecond": 0
+        },
+        "pid": 8484,
+        "type": "Tab",
+        "creationTime": 1788879789559.708,
+        "memory": {
+          "workingSetSize": 106896,
+          "peakWorkingSetSize": 106896
+        },
+        "sandboxed": true
+      }
+    ]
+  },
+  "status": "passed",
+  "finished": "2026-09-08T15:03:11.424Z"
+}

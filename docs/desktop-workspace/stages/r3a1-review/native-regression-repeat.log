@@ -1,0 +1,129 @@
+
+Running 6 tests using 1 worker
+
+(node:54794) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 desktop/tests/electron/evidence.spec.ts:285:1 › migrates v2 shared marks and captured evidence, reopens without origin, and distinguishes changed or missing sources (7.6s)
+(node:54803) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  2 desktop/tests/electron/shared-context.spec.ts:58:1 › User and Agent share table/image pointers while local selection and composer focus stay independent (3.2s)
+(node:54817) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  3 desktop/tests/electron/evidence.spec.ts:285:1 › migrates v2 shared marks and captured evidence, reopens without origin, and distinguishes changed or missing sources (9.1s)
+(node:54844) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  4 desktop/tests/electron/shared-context.spec.ts:58:1 › User and Agent share table/image pointers while local selection and composer focus stay independent (3.2s)
+(node:54860) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  5 desktop/tests/electron/evidence.spec.ts:285:1 › migrates v2 shared marks and captured evidence, reopens without origin, and distinguishes changed or missing sources (7.0s)
+(node:54869) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  6 desktop/tests/electron/shared-context.spec.ts:58:1 › User and Agent share table/image pointers while local selection and composer focus stay independent (3.1s)
+
+
+  1) desktop/tests/electron/evidence.spec.ts:285:1 › migrates v2 shared marks and captured evidence, reopens without origin, and distinguishes changed or missing sources 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('article', { name: 'You shared a reference', exact: true })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('article', { name: 'You shared a reference', exact: true }) with timeout 5000ms
+      - waiting for getByRole('article', { name: 'You shared a reference', exact: true })
+
+
+      292 |   await expect(
+      293 |     page.getByRole('article', { name: 'You shared a reference', exact: true }),
+    > 294 |   ).toBeVisible();
+          |     ^
+      295 |   await page.getByRole('button', { name: 'Add to message from samples.csv' }).click();
+      296 |   await page.getByRole('textbox', { name: 'Message draft' }).fill('Discuss S03');
+      297 |   await complete();
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/evidence.spec.ts:294:5
+
+    Error Context: test-results/electron/evidence-migrates-v2-share-8934e--changed-or-missing-sources/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/electron/evidence-migrates-v2-share-8934e--changed-or-missing-sources/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/electron/evidence-migrates-v2-share-8934e--changed-or-missing-sources/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) desktop/tests/electron/evidence.spec.ts:285:1 › migrates v2 shared marks and captured evidence, reopens without origin, and distinguishes changed or missing sources 
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  locator('.shared-cell')
+    Expected: 2
+    Received: 3
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveCount" locator('.shared-cell') with timeout 5000ms
+      - waiting for locator('.shared-cell')
+        14 × locator resolved to 3 elements
+           - unexpected value "3"
+
+
+      339 |   await event().getByRole('button', { name: 'Reveal', exact: true }).click();
+      340 |   await readyView(page);
+    > 341 |   await expect(page.locator('.shared-cell')).toHaveCount(2);
+          |                                              ^
+      342 |   expect(await readFile(path + '.v2.backup', 'utf8')).toBe(raw);
+      343 |   const migrated = JSON.parse(
+      344 |     await readFile(path, 'utf8'),
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/evidence.spec.ts:341:46
+
+    Error Context: test-results/electron/evidence-migrates-v2-share-8934e--changed-or-missing-sources-repeat1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/electron/evidence-migrates-v2-share-8934e--changed-or-missing-sources-repeat1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/electron/evidence-migrates-v2-share-8934e--changed-or-missing-sources-repeat1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) desktop/tests/electron/evidence.spec.ts:285:1 › migrates v2 shared marks and captured evidence, reopens without origin, and distinguishes changed or missing sources 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('article', { name: 'You shared a reference', exact: true })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('article', { name: 'You shared a reference', exact: true }) with timeout 5000ms
+      - waiting for getByRole('article', { name: 'You shared a reference', exact: true })
+
+
+      292 |   await expect(
+      293 |     page.getByRole('article', { name: 'You shared a reference', exact: true }),
+    > 294 |   ).toBeVisible();
+          |     ^
+      295 |   await page.getByRole('button', { name: 'Add to message from samples.csv' }).click();
+      296 |   await page.getByRole('textbox', { name: 'Message draft' }).fill('Discuss S03');
+      297 |   await complete();
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/evidence.spec.ts:294:5
+
+    Error Context: test-results/electron/evidence-migrates-v2-share-8934e--changed-or-missing-sources-repeat2/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/electron/evidence-migrates-v2-share-8934e--changed-or-missing-sources-repeat2/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/electron/evidence-migrates-v2-share-8934e--changed-or-missing-sources-repeat2/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3 failed
+    desktop/tests/electron/evidence.spec.ts:285:1 › migrates v2 shared marks and captured evidence, reopens without origin, and distinguishes changed or missing sources 
+    desktop/tests/electron/evidence.spec.ts:285:1 › migrates v2 shared marks and captured evidence, reopens without origin, and distinguishes changed or missing sources 
+    desktop/tests/electron/evidence.spec.ts:285:1 › migrates v2 shared marks and captured evidence, reopens without origin, and distinguishes changed or missing sources 
+  3 passed (35.2s)

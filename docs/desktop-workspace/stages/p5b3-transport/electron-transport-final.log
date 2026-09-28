@@ -1,0 +1,39 @@
+
+Running 1 test using 1 worker
+
+(node:49545) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 desktop/tests/electron/continuation-transport.spec.ts:6:1 › continuation preload and native catalog survive restart without execution (1.4s)
+
+
+  1) desktop/tests/electron/continuation-transport.spec.ts:6:1 › continuation preload and native catalog survive restart without execution 
+
+    Error: expect(received).toMatchObject(expected)
+
+    - Expected  - 1
+    + Received  + 6
+
+      Object {
+        "ok": true,
+    -   "value": Array [],
+    +   "value": Object {
+    +     "candidates": Array [],
+    +     "projectId": "prj_IQGGOOBPURROGMCVFFV7SP5XL7",
+    +     "runs": Array [],
+    +     "truncated": false,
+    +   },
+      }
+
+      45 |     );
+      46 |     expect(restored.list).toMatchObject({ ok: true, value: [] });
+    > 47 |     expect(restored.runs).toMatchObject({ ok: true, value: [] });
+         |                           ^
+      48 |   } finally {
+      49 |     await session.application.close();
+      50 |   }
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/continuation-transport.spec.ts:47:27
+
+    Error Context: test-results/electron/continuation-transport-con-94499-e-restart-without-execution/error-context.md
+
+  1 failed
+    desktop/tests/electron/continuation-transport.spec.ts:6:1 › continuation preload and native catalog survive restart without execution 

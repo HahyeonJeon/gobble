@@ -1,0 +1,84 @@
+Skip to workspace
+Read quality study
+Selections
+0
+Account
+Pipelines
+1
+＋ New pipeline
+Read quality study
+Import pipeline
+Files
+Project files
+sample.fastq.gz
+Runs
+Existing analyses
+
+No runs attached
+
+Workspace ready
+New pipeline
+Read quality study
+More
+Pipeline flow
+Managed current · Checked Sep 12, 08:17 PM
+Changes
+Discuss changes
+Refresh
+Check flow
+2 steps · 1 input · 2 connections
+Flow
+Step list
+Fit
+−
+78%
++
+reads
+file
+Trim adapters and low-quality bases
+1 input · 2 outputs
+Inspect trimmed read quality
+1 input · 2 outputs
+Input
+Step
+Selected
+Design view · select to inspect
+Chat
+Agents
+1
+Opened a Project view.
+You → Researcher
+08:16 PM
+New pipeline · Selected data · Proposal allowed
+
+pipeline-creation
+
+R
+Researcher
+In reply to: pipeline-creation
+
+Fixture response from Researcher.
+
+Completed
+You → Researcher
+08:17 PM
+Proposed addition · Quality threshold · 25 Phred · Discussion only
+
+pipeline-creation-review
+
+R
+Researcher
+In reply to: pipeline-creation-review
+
+Fixture response from Researcher.
+
+Completed
+Opened a Project view.
+Conversation recipient
+Choose recipient
+To Researcher
+Message model
+fixture-model · unavailable
+Send
+Draft saved locally
+Enter to send · Shift+Enter for a new line

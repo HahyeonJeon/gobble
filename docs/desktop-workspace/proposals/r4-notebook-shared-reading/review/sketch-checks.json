@@ -1,0 +1,22 @@
+{
+  "date": "2026-09-08",
+  "browser": "152.0.7977.76",
+  "subject": "Review-only deterministic HTML sketch; not Notebook parser, native Electron or Agent proof",
+  "checks": [
+    "Attaching captures source and focuses the single composer",
+    "Changing local selection preserves frozen attachment",
+    "Reference view disables local selection mutation",
+    "Show and Return preserve selection, scroll, attachment, draft and focus",
+    "Changed source opens captured original instead of retargeting",
+    "Refresh replaces local source but preserves frozen attachment",
+    "Demo send keeps exact original selection and version",
+    "Alternative concept exposes uncertain connection, no executable control",
+    "Focus and restore split retain the Notebook state",
+    "Cell jump closes and moves keyboard focus to the target",
+    "Layout 1280x800: controls and composer are visible without page overflow",
+    "Layout 900x650: controls and composer are visible without page overflow",
+    "Layout 640x600: controls and composer are visible without page overflow",
+    "Keyboard-only preset selection and attachment reach composer"
+  ],
+  "errors": []
+}

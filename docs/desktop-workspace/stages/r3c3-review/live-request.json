@@ -1,0 +1,29 @@
+{
+  "prompt": "Review the visible synthetic report.pdf page using workspace_observe. Display the returned PNG image before describing its contents. Briefly identify what you can actually see. Publish exactly one workspace_point to a smaller rectangle inside the returned visible PDF region, using the exact schemaVersion 5 page/model/revision, observedReadId and observation. Describe that region and let me Show it. Then create one short workspace_question using a PDF evidenceId from an observation of that exact smaller region. Finish your turn. Do not change my navigation or execute anything.",
+  "before": {
+    "surfaces": [
+      {
+        "projectId": "prj_PINWZOVZFCXLSE6KX3OZAS4A2G",
+        "surfaceId": "srf_354ff2af-61f6-4460-aabf-0d1923202cc2",
+        "resource": {
+          "kind": "file",
+          "resourceId": "res_1ad29808944749a08c3d449968d49b88ded1d8659206ee8eb30220c4cfd2ffdd"
+        },
+        "view": "pdf",
+        "pinned": false,
+        "openedBy": {
+          "kind": "user"
+        }
+      }
+    ],
+    "selections": [],
+    "chat": {
+      "collapsed": false,
+      "width": 420,
+      "draft": "My next instruction stays local during this review.",
+      "recipientAgentId": "agt_3974616a-06e5-4e75-98b6-16031d4c6dee",
+      "attachmentRevision": 1
+    }
+  },
+  "startedAt": "2026-09-08T13:58:31.738Z"
+}

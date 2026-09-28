@@ -1,0 +1,24 @@
+
+> gobble-app-workspace@0.1.0 typecheck
+> tsc -p contracts/tsconfig.json && npm run typecheck --workspace @gobble/desktop && tsc -p tsconfig.tools.json
+
+
+> @gobble/desktop@0.1.0 typecheck
+> tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && tsc -p tsconfig.renderer.json
+
+src/renderer/evidence/EvidencePreview.tsx(126,31): error TS2339: Property 'text' does not exist on type '{ kind: "run"; dependency: { schemaVersion: 1; target: { projectId: string; resource: { kind: "run"; runRef: string; }; dataRevision: string; schemaVersion: 4; selection: { kind: "run-group"; taskId: string; coordinateSpace: "observed-authored-task-group"; } | { ...; }; }; ... 5 more ...; edge: { ...; } | null; }; }...'.
+  Property 'text' does not exist on type '{ kind: "run"; dependency: { schemaVersion: 1; target: { projectId: string; resource: { kind: "run"; runRef: string; }; dataRevision: string; schemaVersion: 4; selection: { kind: "run-group"; taskId: string; coordinateSpace: "observed-authored-task-group"; } | { ...; }; }; ... 5 more ...; edge: { ...; } | null; }; }'.
+src/renderer/shared-context/marks.tsx(12,55): error TS2366: Function lacks ending return statement and return type does not include 'undefined'.
+src/renderer/workspace/views/SurfaceView.tsx(111,5): error TS2322: Type '{ schemaVersion: 2; dataRevision: string; selection: { kind: "table"; columns: string[]; rowKeys: string[]; coordinateSpace: "revision-row-column-keys"; } | { kind: "text"; coordinateSpace: "utf16-line-column"; start: { ...; }; end: { ...; }; } | { ...; } | { ...; } | { ...; }; projectId: string; origin: { ...; }; r...' is not assignable to type '{ projectId: string; resource: { kind: "run"; runRef: string; }; dataRevision: string; schemaVersion: 4; selection: { kind: "run-group"; taskId: string; coordinateSpace: "observed-authored-task-group"; } | { ...; }; } | { ...; } | { ...; }'.
+  Types of property 'selection' are incompatible.
+    Type '{ kind: "table"; columns: string[]; rowKeys: string[]; coordinateSpace: "revision-row-column-keys"; } | { kind: "text"; coordinateSpace: "utf16-line-column"; start: { line: number; column: number; }; end: { ...; }; } | { ...; } | { ...; } | { ...; }' is not assignable to type '{ kind: "table"; columns: string[]; rowKeys: string[]; coordinateSpace: "revision-row-column-keys"; } | { kind: "text"; coordinateSpace: "utf16-line-column"; start: { line: number; column: number; }; end: { ...; }; } | { ...; } | undefined'.
+      Type '{ kind: "run-group"; taskId: string; coordinateSpace: "observed-authored-task-group"; }' is not assignable to type '{ kind: "table"; columns: string[]; rowKeys: string[]; coordinateSpace: "revision-row-column-keys"; } | { kind: "text"; coordinateSpace: "utf16-line-column"; start: { line: number; column: number; }; end: { ...; }; } | { ...; } | undefined'.
+        Type '{ kind: "run-group"; taskId: string; coordinateSpace: "observed-authored-task-group"; }' is not assignable to type '{ kind: "table"; columns: string[]; rowKeys: string[]; coordinateSpace: "revision-row-column-keys"; } | { kind: "text"; coordinateSpace: "utf16-line-column"; start: { line: number; column: number; }; end: { ...; }; } | { ...; }'.
+          Type '{ kind: "run-group"; taskId: string; coordinateSpace: "observed-authored-task-group"; }' is missing the following properties from type '{ x: number; y: number; kind: "image"; coordinateSpace: "normalized-original-image"; width: number; height: number; originalWidth: number; originalHeight: number; contentHash: string; }': x, y, width, height, and 3 more.
+npm error Lifecycle script `typecheck` failed with error:
+npm error code 2
+npm error path /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop
+npm error workspace @gobble/desktop@0.1.0
+npm error location /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop
+npm error command failed
+npm error command sh -c tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && tsc -p tsconfig.renderer.json

@@ -1,0 +1,71 @@
+Skip to workspace
+Read quality study
+Workspace
+Chat
+Selections
+1
+Account
+Workspace ready
+Chat
+Agents
+1
+Opened a Project view.
+You → Researcher
+04:59 PM
+New pipeline · Selected data · Proposal allowed
+
+pipeline-creation
+
+R
+Researcher
+In reply to: pipeline-creation
+
+Fixture response from Researcher.
+
+Completed
+You → Researcher
+05:00 PM
+Proposed addition · Quality threshold · 25 Phred · Discussion only
+
+pipeline-creation-review
+
+R
+Researcher
+In reply to: pipeline-creation-review
+
+Fixture response from Researcher.
+
+Completed
+4 view updates
+Continuation confirmed
+
+Keep 1 result · Restart 1 step
+
+Saved confirmation plan · Execution status is shown below.
+Trim adapters and low-quality bases · Can reuse · Attempt 1
+Inspect trimmed read quality · Will restart · Attempt 3
+
+Uses this Run’s saved design and checked data. Restarted steps run from their beginning.
+
+sample.fastq.gz
+
+Last checked execution: succeeded
+
+Open Run
+Check continuation status
+Analysis 1
+Task · fastqc · Attempt 1
+Preview
+Analysis 1
+Task · fastqc · Attempt 3
+Preview
+Connect your ChatGPT account before sending.
+Prepare again
+Conversation recipient
+Choose recipient
+To Researcher
+Message model
+fixture-model · unavailable
+Send
+Draft saved locally
+Enter to send · Shift+Enter for a new line

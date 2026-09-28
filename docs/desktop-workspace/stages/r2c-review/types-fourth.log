@@ -1,0 +1,17 @@
+
+> gobble-app-workspace@0.1.0 typecheck
+> tsc -p contracts/tsconfig.json && npm run typecheck --workspace @gobble/desktop && tsc -p tsconfig.tools.json
+
+
+> @gobble/desktop@0.1.0 typecheck
+> tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && tsc -p tsconfig.renderer.json
+
+src/renderer/workspace/views/scatter-chart.ts(141,13): error TS2353: Object literal may only specify known properties, and 'fixedrange' does not exist in type '{ title: { text: string; }; range?: [number, number]; type: "linear"; zeroline: false; }'.
+src/renderer/workspace/views/scatter-chart.ts(148,13): error TS2353: Object literal may only specify known properties, and 'fixedrange' does not exist in type '{ title: { text: string; }; range?: [number, number]; type: "linear"; zeroline: false; }'.
+npm error Lifecycle script `typecheck` failed with error:
+npm error code 2
+npm error path /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop
+npm error workspace @gobble/desktop@0.1.0
+npm error location /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop
+npm error command failed
+npm error command sh -c tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && tsc -p tsconfig.renderer.json

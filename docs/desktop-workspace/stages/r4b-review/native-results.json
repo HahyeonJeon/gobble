@@ -1,0 +1,27 @@
+{
+  "component": {
+    "bundleBytes": 6039777,
+    "cssBytes": 220204,
+    "inputModules": 1888,
+    "unicodeSelection": "한국어",
+    "offsetUnit": "UTF-16",
+    "nativeKeyboardSelection": true,
+    "nativeKeyboardUpdatedAuthoritativeModel": true,
+    "staleSelectionRejected": true,
+    "cellIdSurvivedReorder": true,
+    "linkedWidgetSharesModel": true,
+    "closingLinkedWidgetPreservesDocument": true,
+    "rendererErrors": []
+  },
+  "connected": {
+    "cellId": "cell-counts",
+    "selection": "한국어",
+    "credentialInPageConfiguration": true,
+    "documentContextReady": true,
+    "kernel": "R4b synthetic Python",
+    "conflictDialog": "File Changed\n\"study.ipynb\" has changed on disk since the last time it was opened or saved. Do you want to overwrite the file on disk with the version open here, or load the version on disk (revert)?\nCancel\nRevert\nOverwrite",
+    "externalFilePreservedAfterCancel": true,
+    "webContentsDestroyedOnClose": true,
+    "sessionSurvivedPaneClose": true
+  }
+}

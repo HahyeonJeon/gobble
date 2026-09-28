@@ -1,0 +1,65 @@
+
+Running 3 tests using 1 worker
+
+(node:74553) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 desktop/tests/electron/creation-agent-acceptance.spec.ts:10:1 › Creation: signed-in Agent proposes, reads and points; User adopts without a Run (25.5s)
+(node:74776) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  2 desktop/tests/electron/pipeline-creation.spec.ts:8:3 › Creation: chosen data, exact discussion, restart and discard (1.2m)
+  ✘  3 desktop/tests/electron/pipeline-creation.spec.ts:8:3 › Creation: chosen data, exact discussion, restart and adopt (1.2m)
+
+
+  1) desktop/tests/electron/creation-agent-acceptance.spec.ts:10:1 › Creation: signed-in Agent proposes, reads and points; User adopts without a Run 
+
+    TimeoutError: locator.inputValue: Timeout 20000ms exceeded.
+    Call log:
+      - waiting for getByRole('dialog', { name: 'Add agent', exact: true }).getByLabel('Model', { exact: true })
+
+
+      49 |     await editor.getByLabel('Name', { exact: true }).fill('Researcher');
+      50 |     await editor.getByLabel('Project access').selectOption('sharedViews');
+    > 51 |     const model = await editor.getByLabel('Model', { exact: true }).inputValue();
+         |                                                                     ^
+      52 |     const effort = await editor.getByLabel('Reasoning effort', { exact: true }).inputValue();
+      53 |     await editor
+      54 |       .getByLabel('Role instructions')
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/creation-agent-acceptance.spec.ts:51:69
+
+    Error Context: test-results/electron/creation-agent-acceptance--36383-s-User-adopts-without-a-Run/error-context.md
+
+  2) desktop/tests/electron/pipeline-creation.spec.ts:8:3 › Creation: chosen data, exact discussion, restart and adopt 
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  locator('.pipeline-node')
+    Expected: 2
+    Received: 3
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveCount" locator('.pipeline-node') with timeout 5000ms
+      - waiting for locator('.pipeline-node')
+        - locator resolved to 3 elements
+        - unexpected value "3"
+        - locator resolved to 0 elements
+        - unexpected value "0"
+        12 × locator resolved to 3 elements
+           - unexpected value "3"
+
+
+      192 |         await expect(page.getByRole('heading', { name: 'No current version' })).toBeVisible();
+      193 |         await page.getByRole('button', { name: 'Open pipeline', exact: true }).click();
+    > 194 |         await expect(page.locator('.pipeline-node')).toHaveCount(2);
+          |                                                      ^
+      195 |         await expect(page.getByRole('heading', { name: 'No current version' })).not.toBeVisible();
+      196 |         await expect(page.getByRole('textbox', { name: 'Message draft' })).toHaveValue(
+      197 |           'Keep this unsent research question.',
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/pipeline-creation.spec.ts:194:54
+
+    Error Context: test-results/electron/pipeline-creation-Creation-7c5bf-iscussion-restart-and-adopt/error-context.md
+
+  2 failed
+    desktop/tests/electron/creation-agent-acceptance.spec.ts:10:1 › Creation: signed-in Agent proposes, reads and points; User adopts without a Run 
+    desktop/tests/electron/pipeline-creation.spec.ts:8:3 › Creation: chosen data, exact discussion, restart and adopt 
+  1 passed (2.9m)

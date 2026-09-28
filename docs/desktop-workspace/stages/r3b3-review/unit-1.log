@@ -1,0 +1,69 @@
+
+ RUN  v4.1.11 /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app
+
+ ❯ desktop/tests/dependency-reference.test.ts (7 tests | 2 failed) 72ms
+   × searches current source explicitly without replacing historical target or draft 4ms
+   × freezes v9/v6 readers and backs up exact bytes before v10 writes 33ms
+ ❯ desktop/tests/shared-context.test.ts (20 tests | 1 failed) 5549ms
+   × binds Agent task pointers to a returned scope and preserves User filters through Show and Return 113ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  desktop/tests/dependency-reference.test.ts > searches current source explicitly without replacing historical target or draft
+ContractValidationError: Shared reference has no originating submission.
+ ❯ fail contracts/src/workspace-document.ts:88:11
+     86|   const workspace = parseWorkspace(doc.workspace);
+     87|   const fail = (message: string): never => {
+     88|     throw new ContractValidationError(message);
+       |           ^
+     89|   };
+     90|   if (
+ ❯ parseWorkspaceDocument contracts/src/workspace-document.ts:168:9
+ ❯ transition desktop/src/main/workspace/model.ts:358:10
+ ❯ findCurrentDependency desktop/src/main/workspace/current-dependency.ts:20:20
+ ❯ desktop/tests/dependency-reference.test.ts:124:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  desktop/tests/dependency-reference.test.ts > freezes v9/v6 readers and backs up exact bytes before v10 writes
+ContractValidationError: Shared reference has no originating submission.
+ ❯ fail contracts/src/workspace-document.ts:88:11
+     86|   const workspace = parseWorkspace(doc.workspace);
+     87|   const fail = (message: string): never => {
+     88|     throw new ContractValidationError(message);
+       |           ^
+     89|   };
+     90|   if (
+ ❯ parseWorkspaceDocument contracts/src/workspace-document.ts:168:9
+ ❯ readStoredWorkspace contracts/src/workspace-migration.ts:162:10
+ ❯ AtomicStateFile.validate desktop/src/main/workspace/storage.ts:171:23
+ ❯ AtomicStateFile.write desktop/src/main/workspace/storage.ts:114:37
+ ❯ desktop/tests/dependency-reference.test.ts:144:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  desktop/tests/shared-context.test.ts > binds Agent task pointers to a returned scope and preserves User filters through Show and Return
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ desktop/tests/shared-context.test.ts:654:26
+    652|   ).toBe(false);
+    653|   const result = await s.invoke('workspace_point', pointer);
+    654|   expect(result.success).toBe(true);
+       |                          ^
+    655|   const referenceId = body(result).referenceId;
+    656|   const before = await s.workspace.read('prj_one');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  2 failed | 22 passed (24)
+      Tests  3 failed | 259 passed (262)
+   Start at  16:46:34
+   Duration  8.60s (transform 2.81s, setup 0ms, import 5.74s, tests 38.68s, environment 2ms)
+

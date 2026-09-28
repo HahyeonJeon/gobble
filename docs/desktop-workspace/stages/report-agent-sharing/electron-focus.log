@@ -1,0 +1,44 @@
+
+Running 4 tests using 1 worker
+
+(node:91839) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 desktop/tests/electron/saved-reports.spec.ts:17:1 › Flow opens a complete saved report; compact/focus/close/restart preserve its original result (10.1s)
+  ✘  2 desktop/tests/electron/shared-context.spec.ts:61:1 › User and Agent share table/image pointers while local selection and composer focus stay independent (7.1s)
+(node:91945) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  3 desktop/tests/electron/shared-context.spec.ts:108:1 › text pointing overlays a revision-bound range without replacing native local selection (2.2s)
+  ✓  4 desktop/tests/electron/shared-context.spec.ts:148:1 › explicit shared-view opt-in starts a new conversation and retains earlier messages (2.3s)
+
+
+  1) desktop/tests/electron/shared-context.spec.ts:61:1 › User and Agent share table/image pointers while local selection and composer focus stay independent 
+
+    Error: expect(locator).toHaveValue(expected) failed
+
+    Locator:  getByRole('textbox', { name: 'Message draft' })
+    Expected: ""
+    Received: "shared-pointt"
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveValue" getByRole('textbox', { name: 'Message draft' }) with timeout 5000ms
+      - waiting for getByRole('textbox', { name: 'Message draft' })
+        14 × locator resolved to <textarea rows="3" maxlength="16000" aria-label="Message draft" placeholder="Write a message for your agent…">shared-pointt</textarea>
+           - unexpected value "shared-pointt"
+
+
+      57 |   await page.getByRole('textbox', { name: 'Message draft' }).fill(text);
+      58 |   await page.getByRole('button', { name: 'Send', exact: true }).click();
+    > 59 |   await expect(page.getByRole('textbox', { name: 'Message draft' })).toHaveValue('');
+         |                                                                      ^
+      60 | }
+      61 | test('User and Agent share table/image pointers while local selection and composer focus stay independent', async ({}, info) => {
+      62 |   await page.getByRole('button', { name: 'samples.csv', exact: true }).click();
+        at send (/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/shared-context.spec.ts:59:70)
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/shared-context.spec.ts:75:3
+
+    Error Context: test-results/electron/shared-context-User-and-Ag-9cf32-oser-focus-stay-independent/error-context.md
+
+  1 failed
+    desktop/tests/electron/shared-context.spec.ts:61:1 › User and Agent share table/image pointers while local selection and composer focus stay independent 
+  3 passed (22.4s)

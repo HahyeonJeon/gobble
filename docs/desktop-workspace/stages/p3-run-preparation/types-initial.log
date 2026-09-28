@@ -1,0 +1,6 @@
+
+> gobble-app-workspace@0.1.0 typecheck
+> tsc -p contracts/tsconfig.json && npm run typecheck --workspace @gobble/desktop && tsc -p tsconfig.tools.json
+
+contracts/src/run-preparation.ts(4,10): error TS2724: '"./pipeline-creation"' has no exported member named 'CreationInputSchema'. Did you mean 'AdoptCreationInputSchema'?
+contracts/src/run-preparation.ts(28,55): error TS7006: Parameter 's' implicitly has an 'any' type.

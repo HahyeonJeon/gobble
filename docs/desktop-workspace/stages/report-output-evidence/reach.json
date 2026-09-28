@@ -1,0 +1,24 @@
+{
+  "changed": [
+    "cmd/gobble/help.go",
+    "cmd/gobble/main.go",
+    "cmd/gobble/parse.go",
+    "distribution/runtime/Dockerfile",
+    "internal/appservice/continuation_runtime.go",
+    "internal/appservice/launch_live_test.go",
+    "internal/appservice/platform_other.go",
+    "internal/appservice/platform_unix.go",
+    "internal/appservice/runtime.go",
+    "internal/appservice/service.go"
+  ],
+  "new": [
+    "cmd/gobble/output_evidence.go",
+    "cmd/gobble/output_evidence_test.go",
+    "internal/appservice/run_report.go",
+    "internal/appservice/run_report_live_test.go",
+    "internal/appservice/run_report_test.go",
+    "internal/engine/output_evidence.go",
+    "internal/engine/output_evidence_test.go",
+    "output_evidence.go"
+  ]
+}

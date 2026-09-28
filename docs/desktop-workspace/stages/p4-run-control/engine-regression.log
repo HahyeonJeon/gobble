@@ -1,0 +1,15 @@
+--- FAIL: TestInspectRemainingDoesNotReadFileBytes (0.05s)
+    fingerprint_test.go:39: input is readable, chmod 000 did not block reads
+FAIL
+FAIL	github.com/HahyeonJeon/gobble/internal/engine	11.322s
+ok  	github.com/HahyeonJeon/gobble/internal/engine/exec	0.119s
+--- FAIL: TestPackPrintpipeArtifact (4.02s)
+    pack_test.go:269: packed compose = code 1 stderr 
+--- FAIL: TestPackHostpipeEmptyInspectProtocol (4.74s)
+    pack_test.go:364: exit = 1
+        stderr: 
+FAIL
+FAIL	github.com/HahyeonJeon/gobble/cmd/gobble	200.705s
+?   	github.com/HahyeonJeon/gobble/internal/preparation	[no test files]
+ok  	github.com/HahyeonJeon/gobble/internal/containerenv	0.099s
+FAIL

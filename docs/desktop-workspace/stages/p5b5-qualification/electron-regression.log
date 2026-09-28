@@ -1,0 +1,12 @@
+
+Running 5 tests using 1 worker
+
+(node:62921) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 desktop/tests/electron/continuation-review.spec.ts:7:1 › continuation Flow, exact capture, compact draft and explicit native confirmation (12.4s)
+  ✓  2 desktop/tests/electron/continuation-review.spec.ts:98:1 › older engine, blocked recheck, historical capture and unknown confirmation never silently resubmit (13.5s)
+  ✓  3 desktop/tests/electron/continuation-review.spec.ts:179:1 › Agent points to the same continuation plan without changing User selection or starting work (7.3s)
+  ✓  4 desktop/tests/electron/continuation-transport.spec.ts:6:1 › continuation preload and native catalog survive restart without execution (1.5s)
+  ✓  5 desktop/tests/electron/observed-reference.spec.ts:14:1 › Agent Run and stream references preserve User work and separate historical evidence from current tasks (9.5s)
+
+  5 passed (44.6s)

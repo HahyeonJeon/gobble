@@ -1,0 +1,34 @@
+
+Running 1 test using 1 worker
+
+(node:57257) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 desktop/tests/electron/pipeline-creation.spec.ts:11:3 › Creation: chosen data, exact discussion, restart and launch (4.1m)
+
+
+  1) desktop/tests/electron/pipeline-creation.spec.ts:11:3 › Creation: chosen data, exact discussion, restart and launch 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: "admitted"
+    Received: "unknown"
+
+    Call Log:
+    - Timeout 60000ms exceeded while waiting on the predicate
+
+       at continuation-live-scenario.ts:166
+
+      164 |     await expect
+      165 |       .poll(async () => (await records()).at(-1)?.operation?.state, { timeout: 60000 })
+    > 166 |       .toBe('admitted');
+          |        ^
+      167 |     await page.getByRole('button', { name: 'Check continuation status' }).click();
+      168 |     await expect(page.getByRole('button', { name: 'Stop analysis', exact: true })).toBeVisible({
+      169 |       timeout: 30000,
+        at verifyLiveContinuation (/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/continuation-live-scenario.ts:166:8)
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/pipeline-creation.spec.ts:259:15
+
+    Error Context: test-results/p5b5-live-3/pipeline-creation-Creation-63435-scussion-restart-and-launch/error-context.md
+
+  1 failed
+    desktop/tests/electron/pipeline-creation.spec.ts:11:3 › Creation: chosen data, exact discussion, restart and launch 

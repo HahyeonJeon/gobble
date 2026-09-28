@@ -1,0 +1,14 @@
+{
+  "output-capabilities": {
+    "outputEvidenceVersion": 1,
+    "schemaVersion": 1
+  },
+  "prepared-capabilities": {
+    "continuationVersion": 1,
+    "launchSchemaVersion": 2,
+    "schemaVersion": 1
+  },
+  "olderImageId": "sha256:c7f3c4aa35767297db1f0acc84bc08477673f5f7429692ca594d06ba6e0c74e3",
+  "olderOutputLabel": "",
+  "compiledProductionInputsMatch": true
+}

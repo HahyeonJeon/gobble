@@ -1,0 +1,116 @@
+{
+  "recordedAt": "2026-09-07T16:21:30.619961+00:00",
+  "stage": "R2a \u2014 contracts and chart foundation",
+  "result": "passed; R2b approval pending",
+  "sourceIdentity": {
+    "branch": "codex/project-workspace-design",
+    "head": "7fe3d5c9e10d0cc104a15b6e7aa3def0d15b98f1",
+    "changes": "changes.json",
+    "modifiedFiles": 37,
+    "addedFiles": 17,
+    "removedFiles": 0,
+    "preexistingWork": "Retained; baseline covers this slice, not all pre-existing uncommitted app/engine work."
+  },
+  "environment": {
+    "os": "26.5.2",
+    "architecture": "arm64",
+    "node": "v25.7.0",
+    "electron": "44.2.0",
+    "react": "19.2.8",
+    "typescript": "5.9.3",
+    "playwright": "1.63.0",
+    "vitest": "4.1.11",
+    "plotly": "4.0.0"
+  },
+  "checks": [
+    {
+      "command": "npm run check",
+      "log": "checks.log",
+      "result": "pass",
+      "unitFiles": 16,
+      "unitTests": 179,
+      "electronTests": 38,
+      "covers": [
+        "format",
+        "process types",
+        "generated v4 schema",
+        "unit/contracts/native service",
+        "real built Electron"
+      ]
+    },
+    {
+      "command": "npx playwright test desktop/tests/electron/scatter.spec.ts",
+      "log": "measurement-runtime.log",
+      "result": "pass",
+      "electronTests": 2,
+      "note": "Only measurement fields were added to the test after full verification; product code and built assets unchanged."
+    },
+    {
+      "command": "npm run format:check; npm run typecheck",
+      "log": "final-typecheck.log",
+      "result": "pass",
+      "note": "Final format check passed on stdout; log retains typecheck output."
+    }
+  ],
+  "unchangedBoundaryHashesMatchBaseline": {
+    "app/desktop/src/main/security/content.ts": true,
+    "app/desktop/src/main/security/origin.ts": true,
+    "app/contracts/schema/v1.json": true,
+    "app/contracts/schema/v2.json": true,
+    "app/contracts/schema/v3.json": true
+  },
+  "assets": [
+    {
+      "path": "app/desktop/out/renderer/assets/chunk-DZLsuOxH.js",
+      "bytes": 1773953,
+      "gzipLevel9Bytes": 441192,
+      "sha256": "59b0b71f5f5caf07c8937e8c2e1204009599ec49944985105b469cade8e64856"
+    },
+    {
+      "path": "app/desktop/out/renderer/assets/index-6D72gOfJ.css",
+      "bytes": 35012,
+      "gzipLevel9Bytes": 6681,
+      "sha256": "e7b264c7e8575c666eb3c5a2ffbd85fa364f6970ae89c7d74b84580bb2b6f53d"
+    },
+    {
+      "path": "app/desktop/out/renderer/assets/index-DCoANvy5.js",
+      "bytes": 882481,
+      "gzipLevel9Bytes": 156456,
+      "sha256": "761b8d94ebf262f56c784c45bed8afe2119174b160572b4d10cea22481228f8b"
+    },
+    {
+      "path": "app/desktop/out/renderer/assets/plotly-host.css",
+      "bytes": 207,
+      "gzipLevel9Bytes": 178,
+      "sha256": "a894eb73799c9fdc0604f124d51112a57c1f934a785f533a9ce0fda0768b941d"
+    }
+  ],
+  "measurement": {
+    "points": 500,
+    "emptyLaunchToReadyMs": 495.08374999999995,
+    "linkedLaunchToReadyMs": 689.271416,
+    "pointerToCommitMs": 50.6697079999999,
+    "scope": "One local macOS run including Electron launch, focus and native service. Empty and linked workspaces differ; this is not isolated chart overhead or a general latency budget."
+  },
+  "artifacts": {
+    "scatter.png": "98532b249eb089da04969662bd40c42d4840c15ffae21adbc82436c94fdfb4fb",
+    "measurement.json": "9f65868ac7e678899ab37d1eb53ec796d496ea0523c6110296c5fa3ed906122c",
+    "checks.log": "f706e65258e43f85e9b35ade6fc899687e93a2660c37d65f279b53fb87cccc29",
+    "measurement-runtime.log": "fe5cf6da5243e6e29e6865ead09c9af70bc856471b978c2726777a1ec3adb24b",
+    "final-typecheck.log": "6ff63b65066e1f848d1a8a5d259df439a13f03c0b30070bc0f7189940444076c"
+  },
+  "review": {
+    "actualElectronScreenshot": "scatter.png",
+    "observed": "Four selected row members appear in the scatter and linked table; one linked selection group is counted. Existing per-pane action duplication is reserved for R2b.",
+    "fixture": "Temporary CSV of 500 rows x 3 columns; isolated native app profile seeded while stopped. Chat collapsed in compact Workspace mode.",
+    "cspViolations": 0,
+    "httpRequestsDuringInteraction": 0
+  },
+  "limitations": [
+    "Normal scatter creation, filter/axes/viewport controls, coordinated source refresh and unified Discuss UX remain R2b.",
+    "ReferencePresentation is not bound into draft/sent evidence; Agent toolset negotiation and live round trip remain R2c.",
+    "At most 500 preview rows and 100 columns; no large-data budget or analysis transformation.",
+    "Visible linked snapshots are retained without a file watcher; lease renewal and existing evidence checks detect source changes.",
+    "Only macOS development output tested; no installation, signing, Windows/Linux or live provider claim."
+  ]
+}

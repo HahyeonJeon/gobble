@@ -1,0 +1,1 @@
+PASS: newly frozen Workspace18 storage schema exactly equals WorkspaceDocumentSchema from the unmodified published bundle23 after JSON parsing. Formatting changes no schema value.

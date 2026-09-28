@@ -1,0 +1,9 @@
+
+Running 2 tests using 1 worker
+
+(node:76785) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 desktop/tests/electron/dependencies.spec.ts:47:1 › User selects a group, exact attempt and directed dependency; frozen evidence and navigation survive restart and source changes (11.0s)
+  ✓  2 desktop/tests/electron/dependencies.spec.ts:189:1 › missing, cyclic and bounded topology stays navigable by list and at compact native zoom (7.0s)
+
+  2 passed (18.4s)

@@ -1,0 +1,35 @@
+
+Running 1 test using 1 worker
+
+(node:87597) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 desktop/tests/electron/pipeline-creation.spec.ts:8:3 › Creation: chosen data, exact discussion, restart and prepare (3.6m)
+
+
+  1) desktop/tests/electron/pipeline-creation.spec.ts:8:3 › Creation: chosen data, exact discussion, restart and prepare 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: locator('.chat-composer .review-context')
+    Expected substring: "Run review · settings"
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toContainText" locator('.chat-composer .review-context') with timeout 5000ms
+      - waiting for locator('.chat-composer .review-context')
+
+
+      318 |             page.getByRole('combobox', { name: 'Run review history' }).locator('option'),
+      319 |           ).toHaveCount(2);
+    > 320 |           await expect(page.locator('.chat-composer .review-context')).toContainText(
+          |                                                                        ^
+      321 |             'Run review · settings',
+      322 |           );
+      323 |           const finalReviews = await page.evaluate(
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/pipeline-creation.spec.ts:320:72
+
+    Error Context: test-results/electron/pipeline-creation-Creation-39e6d-cussion-restart-and-prepare/error-context.md
+
+  1 failed
+    desktop/tests/electron/pipeline-creation.spec.ts:8:3 › Creation: chosen data, exact discussion, restart and prepare 

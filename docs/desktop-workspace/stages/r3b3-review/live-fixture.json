@@ -1,0 +1,66 @@
+{
+  "directory": "/Users/hahyeon/.codex/visualizations/2026/09/06/01a075c8-fb5d-7c53-98d2-e091c96ac580/R3b3 Agent Review",
+  "root": "/Users/hahyeon/.codex/visualizations/2026/09/06/01a075c8-fb5d-7c53-98d2-e091c96ac580/R3b3 Agent Review/Runtime fixture",
+  "profile": "/Users/hahyeon/.codex/visualizations/2026/09/06/01a075c8-fb5d-7c53-98d2-e091c96ac580/R3b3 Agent Review/profile",
+  "monitorPath": "/Users/hahyeon/.codex/visualizations/2026/09/06/01a075c8-fb5d-7c53-98d2-e091c96ac580/R3b3 Agent Review/monitor.json",
+  "monitor": {
+    "schema_version": 2,
+    "snapshot": "fixture-revision-4",
+    "pipeline": "Fixture",
+    "run": {
+      "id": "fixture-run",
+      "status": "completed"
+    },
+    "tasks": [
+      {
+        "identity": "prepare",
+        "task_id": "prepare",
+        "name": "Prepare samples",
+        "status": "completed",
+        "attempt": 1
+      },
+      {
+        "identity": "align:S03",
+        "task_id": "align",
+        "name": "Align reads",
+        "status": "failed",
+        "attempt": 2
+      },
+      {
+        "identity": "align:S04",
+        "task_id": "align",
+        "name": "Align reads",
+        "status": "custom-state",
+        "attempt": 0
+      },
+      {
+        "identity": "align-template",
+        "task_id": "align",
+        "name": "Align template",
+        "status": "pending",
+        "attempt": 0,
+        "template": true
+      }
+    ],
+    "edges": [
+      {
+        "from": "prepare",
+        "to": "align"
+      }
+    ],
+    "logs": [
+      {
+        "identity": "align:S03",
+        "stdout_tail": "Read sample S03\nAlignment complete",
+        "stderr_tail": "ERROR 😀 exact\nShared line\nstderr only",
+        "stdout_size": 8192,
+        "stderr_size": 80
+      }
+    ]
+  },
+  "environment": {
+    "PATH": "/Users/hahyeon/.codex/visualizations/2026/09/06/01a075c8-fb5d-7c53-98d2-e091c96ac580/R3b3 Agent Review/bin:/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/node_modules/.bin:/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/node_modules/.bin:/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/node_modules/.bin:/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/node_modules/.bin:/Users/hahyeon/.codex/.chatgpt-projects/node_modules/.bin:/Users/hahyeon/.codex/node_modules/.bin:/Users/hahyeon/node_modules/.bin:/Users/node_modules/.bin:/node_modules/.bin:/opt/homebrew/lib/node_modules/npm/node_modules/@npmcli/run-script/lib/node-gyp-bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/pkg/env/global/bin:/opt/X11/bin:/usr/local/go/bin:/Users/hahyeon/.codex/tmp/arg0/codex-arg0z8Dc0x:/Users/hahyeon/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/override:/Users/hahyeon/.grok/bin:/Users/hahyeon/.antigravity/antigravity/bin:/Users/hahyeon/.local/bin:/Users/hahyeon/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/fallback:/Applications/ChatGPT.app/Contents/Resources",
+    "DOCKER_HOST": "unix:///fixture/docker.sock",
+    "DOCKER_CONTEXT": ""
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "asOf": "2026-09-09",
+  "sourceFiles": {
+    "app/qualification/jupyter/node_modules/@jupyterlab/docregistry/lib/context.js": "d97cad187423872ce11dc2fc44a27e533d17d112199e889f75b3562e2aea4522",
+    "app/qualification/jupyter/node_modules/@jupyterlab/notebook/lib/model.js": "3a81def40b94629825db94252f7ebb07bba62b98b2006773647a1213f584f75a",
+    "app/qualification/jupyter/node_modules/@jupyterlab/notebook/lib/widget.js": "b489d0f18fd4ab9df8bb0e3c0106730acb4c86aac0d0420d48f04ebaec3c388b",
+    "app/qualification/jupyter/node_modules/@jupyterlab/codemirror/lib/editor.js": "c90c34d501a4fa7eeb17e64731e45108c0db7281390c3374b6b20a9920ba2f80",
+    "app/qualification/jupyter/.venv/lib/python3.12/site-packages/jupyterlab/labapp.py": "85fe6b59bf96965ac6d794df47aa000e85e5fe6c548505713479dcd5f909ffba",
+    "app/qualification/jupyter/.venv/lib/python3.12/site-packages/jupyter_server/services/contents/handlers.py": "5d2b738fbb0b4dcbba2484e88ecf708ed04b45ff502539ad5cd6fa53d117bc29",
+    "app/qualification/jupyter/.venv/lib/python3.12/site-packages/jupyter_server/services/kernels/websocket.py": "568df1b55b164d4ae262870cca5eccdba0c92bb8e73ad0c9d33bc44c511b2211"
+  },
+  "qualificationFiles": {
+    "app/qualification/jupyter/server.py": "0dc4aa5bb37d78b81d84f6edca025030cb2ee58bb260203cc32c9be75e04b660",
+    "app/qualification/jupyter/component.ts": "59b9d196385fdaab158a6c093e027d215f0cf8291c6d0c600caedcba0f1c4314",
+    "app/qualification/jupyter/requirements.txt": "b74e82c58f22139744ee0608b0f309ec0481f3fef35a50ee1508b938f9ee7186",
+    "app/qualification/jupyter/protocol.py": "4b9792b0398bbcfde941cc0fd75370f96b14134de9fa241ec2379844cae5563a",
+    "app/qualification/jupyter/qualify.cjs": "585df68de820c3d2aa31157a1c3d13c9b54bba4fc50830b59dc607293266955d",
+    "app/qualification/jupyter/model.ts": "43963d5b45623ca86174104027dfd30ffee3572cc680059731431b7b9aa998e7",
+    "app/qualification/jupyter/README.md": "ec07b430de1450b7d10c6da11bc6b6ab8b26306b4d0633863e6d57405c2fccba",
+    "app/qualification/jupyter/.gitignore": "8d53865c65b2b6abe43d9553e2a448beeb0087378806f78ba31147ef729857c0",
+    "app/qualification/jupyter/package-lock.json": "3e22ed0a1eb6dade6949e93fb6ecd3a0ea16fe277c25d31e0c7a86c9252ba80b",
+    "app/qualification/jupyter/package.json": "2e4d360b42131b7173ad308ee660f1f0512306423f70f7aba088274926b0bb93",
+    "app/qualification/jupyter/style.css": "2cce741649429bba16ab47d1376bf17c58153caf5f50419b0fab16a39e8b4ad7",
+    "app/qualification/jupyter/host.cjs": "8de07607d4b0be8235199fc179d0fdeb70b22ba6c8069065a5895559fa73983e",
+    "app/qualification/jupyter/requirements.lock.txt": "91021f30d7891799e7248ed3459c411cfc74c6b9ccaf4de7dd340344514683e2",
+    "app/qualification/jupyter/tsconfig.json": "4458e923226f4719ca6f2db81faee2514c4990de856e5108891d7e18d7ad92ec"
+  },
+  "macOS": "26.5.2",
+  "architecture": "arm64",
+  "buildNode": "v25.7.0",
+  "python": "Python 3.12.14",
+  "electron": "44.2.0",
+  "componentDependencies": {
+    "@jupyter/ydoc": {
+      "version": "4.1.1",
+      "license": "BSD-3-Clause"
+    },
+    "@jupyterlab/notebook": {
+      "version": "4.6.3",
+      "license": "BSD-3-Clause"
+    },
+    "@jupyterlab/codemirror": {
+      "version": "4.6.3",
+      "license": "BSD-3-Clause"
+    },
+    "@jupyterlab/services": {
+      "version": "7.6.3",
+      "license": "BSD-3-Clause"
+    },
+    "@lumino/widgets": {
+      "version": "2.8.0",
+      "license": "BSD-3-Clause"
+    },
+    "react": {
+      "version": "18.3.1",
+      "license": "MIT"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+
+Running 2 tests using 1 worker
+
+(node:63671) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 desktop/tests/electron/observed-reference.spec.ts:14:1 › Agent Run and stream references preserve User work and separate historical evidence from current tasks (6.9s)
+(node:63713) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  2 desktop/tests/electron/runtime.spec.ts:16:1 › task navigation and stream selections survive refresh failures and normal restart (14.5s)
+
+
+  1) desktop/tests/electron/observed-reference.spec.ts:14:1 › Agent Run and stream references preserve User work and separate historical evidence from current tasks 
+
+    Error: expect(received).toBeGreaterThan(expected)
+
+    Expected: > 0
+    Received:   0
+
+      70 |       }));
+      71 |     const before = await position();
+    > 72 |     expect(before.top).toBeGreaterThan(0);
+         |                        ^
+      73 |     const draft = page.getByRole('textbox', { name: 'Message draft' });
+      74 |     await draft.fill('observed-point');
+      75 |     await page.getByRole('button', { name: 'Send', exact: true }).click();
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/observed-reference.spec.ts:72:24
+
+    Error Context: test-results/electron/observed-reference-Agent-R-58711-evidence-from-current-tasks/error-context.md
+
+  1 failed
+    desktop/tests/electron/observed-reference.spec.ts:14:1 › Agent Run and stream references preserve User work and separate historical evidence from current tasks 
+  1 passed (22.1s)

@@ -1,0 +1,14 @@
+--- FAIL: TestContinuationReviewExplainsKnownRefusalWithoutLeakingDiagnostics (2.96s)
+    --- FAIL: TestContinuationReviewExplainsKnownRefusalWithoutLeakingDiagnostics/completed_output_is_unavailable (0.52s)
+        continuation_issue_test.go:48: unexpected blocked review: {ProjectID:prj_RYFBJIU7NVLISXIMJYNVLW5Q5O PipelineID:pip_3ZNC2B5QXDAXCGKFFUGPMH4TNV LaunchReviewID:req_test RunRef:run_saved RequestID:req_reason CreatedAt:2026-09-27T07:52:23.565565Z State:blocked Issue:The recorded Docker runtime could not complete this query. Review:<nil> Operation:<nil>}
+    --- FAIL: TestContinuationReviewExplainsKnownRefusalWithoutLeakingDiagnostics/completed_output_content_changed (0.49s)
+        continuation_issue_test.go:48: unexpected blocked review: {ProjectID:prj_HTYX42KYLACK3SMEIKJXTJR3SC PipelineID:pip_7KI6Y4PQT673SANIO55F33SKXG LaunchReviewID:req_test RunRef:run_saved RequestID:req_reason CreatedAt:2026-09-27T07:52:24.056173Z State:blocked Issue:The recorded Docker runtime could not complete this query. Review:<nil> Operation:<nil>}
+    --- FAIL: TestContinuationReviewExplainsKnownRefusalWithoutLeakingDiagnostics/saved_input_content_changed (0.47s)
+        continuation_issue_test.go:48: unexpected blocked review: {ProjectID:prj_SJ2NUPLOOPBSSUQTA56PXE73UI PipelineID:pip_CDEY5OV5NNKRHCZ2LSZJJGSU65 LaunchReviewID:req_test RunRef:run_saved RequestID:req_reason CreatedAt:2026-09-27T07:52:24.535785Z State:blocked Issue:The recorded Docker runtime could not complete this query. Review:<nil> Operation:<nil>}
+    --- FAIL: TestContinuationReviewExplainsKnownRefusalWithoutLeakingDiagnostics/accepted_tool_image_unavailable_or_changed (0.49s)
+        continuation_issue_test.go:48: unexpected blocked review: {ProjectID:prj_NPOJGAPDPUA6MXGG4W6K575WBS PipelineID:pip_LMBRPYSEYT5NSL6272SZA6CJBZ LaunchReviewID:req_test RunRef:run_saved RequestID:req_reason CreatedAt:2026-09-27T07:52:25.018641Z State:blocked Issue:The recorded Docker runtime could not complete this query. Review:<nil> Operation:<nil>}
+    --- FAIL: TestContinuationReviewExplainsKnownRefusalWithoutLeakingDiagnostics/continuation_requires_a_settled_stopped_Run (0.48s)
+        continuation_issue_test.go:48: unexpected blocked review: {ProjectID:prj_PH3CDIFF2GHGVAC3I6ANMHPQR6 PipelineID:pip_4VDDWE7PDS4E6XPZLRGBRC5VZX LaunchReviewID:req_test RunRef:run_saved RequestID:req_reason CreatedAt:2026-09-27T07:52:25.509577Z State:blocked Issue:The recorded Docker runtime could not complete this query. Review:<nil> Operation:<nil>}
+FAIL
+FAIL	github.com/HahyeonJeon/gobble/internal/appservice	3.519s
+FAIL

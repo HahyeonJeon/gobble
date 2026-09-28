@@ -1,0 +1,11 @@
+{
+  "date": "2026-09-12",
+  "baselineSourceHash": "ec7ad31e21c83e2b8b1919522e80b3f4a3179e5df21ad7d9527ad0a57062130a",
+  "baselineFilesChecked": 724,
+  "baselineDrift": [
+    "docs/desktop-workspace/README.md",
+    "docs/desktop-workspace/remaining-work.md"
+  ],
+  "missingProposalLinks": [],
+  "evidenceKind": "author prototype walkthrough, not production integration"
+}

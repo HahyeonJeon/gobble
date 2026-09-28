@@ -19,16 +19,17 @@ the supported assay graph from individual tasks.
 
 ## First application outcome
 
-A user works locally with an agent to design, execute, control, and monitor a
-bioinformatics pipeline. The agent opens relevant views to show evidence,
+A user opens a Project and works locally with multiple attached agents to
+design, execute, control, and monitor bioinformatics pipelines. Files, plans,
+runs, results, shared views and decisions belong to that Project. The agent opens relevant views to show evidence,
 asks questions tied to that evidence, and observes results for its own checks.
 Users can interact with the same views and control runs directly. Gobble is the
 core engine behind this workspace and retains its independent Linux CLI role.
 
 The recommended sequence is a thin Electron/React/TypeScript app first, with
 portable React views and browser-based development where useful. A separately
-shipped local web product comes later. Review the new interaction model and
-layout with the user before implementing screens; see
+shipped local web product comes later. The user approved the Project-centered interaction concept; review the detailed
+contract and first-slice acceptance before implementing screens. See
 [Agent-centered workspace](../feature/agent-workspace.md) and the
 [delivery rationale](../architecture/application.md#delivery-recommendation-thin-desktop-first).
 

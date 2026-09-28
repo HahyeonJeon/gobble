@@ -1,0 +1,16 @@
+{
+  "head": "7fe3d5c9e10d0cc104a15b6e7aa3def0d15b98f1",
+  "files": {
+    "app/desktop/src/renderer/workspace/ResourceWorkspace.tsx": "5d8964285ec9a82c56511e7e98bd62f2c8d530e12c10e32777886cc16b27568a",
+    "app/desktop/src/renderer/workspace/Pane.tsx": "01f97546ac49b8288b03268c1c15c90703bf945451be7df8c8b4d28066465004",
+    "app/desktop/src/renderer/workspace/views/SurfaceView.tsx": "6a5551121f83fd97340c48124d2f517d43bbb4f0a0ffba66714fa3d89d2dccde",
+    "app/desktop/src/renderer/workspace/views/pipeline/flow-navigation.ts": "be7e1a3275130b983af1ef2f09962bb39eb9602150c757b559ce5e5e5e6dbbbe",
+    "app/desktop/src/renderer/workspace/views/pipeline/PipelineView.tsx": "8c6fba632c750d5294f344129dba9879f03f68c2fe87b37c10802df0e656a056",
+    "app/desktop/src/renderer/workspace/views/pipeline/PipelineSurface.tsx": "bfabb9b2cea9285f7c4c6bd9ac0275279721cdf7884def9fdd92307b11bb4a1f",
+    "app/desktop/src/renderer/workspace/views/pipeline/PipelineReviewPanel.tsx": "dcdf2ebe5da6bc250bbcd834572d4775d34b8e203671bec43b34ac5244372609",
+    "app/desktop/src/renderer/workspace/PresentedViews.tsx": "73305483b19b36b5effbadb4611a5ba4b458e071dbb9a316a9ef7bd06957c90a",
+    "app/desktop/src/renderer/workspace/views/useSurfaceLoad.ts": "147dba3cc300dfa59a01290bf01e2416fbb05318734102799e80ea87af051e7d",
+    "app/desktop/tests/electron/pipeline-review-navigation.spec.ts": "08de79b35c2238ce1cfef94b6bea7fe0897540b756ba922a7c3208128a0e52fd"
+  },
+  "presentationGuardsUnchanged": true
+}

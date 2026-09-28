@@ -1,0 +1,221 @@
+{
+  "schemaVersion": 19,
+  "viewLinks": [],
+  "paneOrientation": "vertical",
+  "workspace": {
+    "schemaVersion": 1,
+    "projectId": "prj_3BMO7MA3SS3GLW5FLENVOC2MH6",
+    "revision": 34,
+    "agents": [
+      {
+        "projectId": "prj_3BMO7MA3SS3GLW5FLENVOC2MH6",
+        "agentId": "agt_c8d66e9f-25ae-4740-b7d4-c05d6cb04579",
+        "name": "Researcher",
+        "instructionProfile": "discussion-v1",
+        "access": "sharedViews",
+        "configuration": {
+          "model": "fixture-model",
+          "effort": "low",
+          "instructions": ""
+        },
+        "provider": {
+          "kind": "codex",
+          "threadId": "thread_1",
+          "accountSessionId": "5eacf446-1298-481d-bb86-fd1eaae2ea0e",
+          "toolsetVersion": "shared-views-v13"
+        }
+      }
+    ],
+    "surfaces": [
+      {
+        "projectId": "prj_3BMO7MA3SS3GLW5FLENVOC2MH6",
+        "surfaceId": "srf_442844dc-888b-4bd4-829d-73253d815c6e",
+        "resource": {
+          "kind": "creation-draft",
+          "draftId": "drf_ARSHY5MVSN3QSY5KUPAC2JXJPO"
+        },
+        "view": "creation-draft",
+        "pinned": false,
+        "openedBy": {
+          "kind": "user"
+        }
+      },
+      {
+        "projectId": "prj_3BMO7MA3SS3GLW5FLENVOC2MH6",
+        "surfaceId": "srf_bf98ce55-72e0-4950-8f0a-397a8aa2b2d5",
+        "resource": {
+          "kind": "pipeline",
+          "pipelineId": "pip_VJWQCYWSPZFYN2YCLRAVQDCS2E"
+        },
+        "view": "pipeline",
+        "pinned": false,
+        "openedBy": {
+          "kind": "user"
+        }
+      }
+    ],
+    "layout": {
+      "kind": "single",
+      "primary": {
+        "tabs": [
+          "srf_442844dc-888b-4bd4-829d-73253d815c6e",
+          "srf_bf98ce55-72e0-4950-8f0a-397a8aa2b2d5"
+        ],
+        "activeSurfaceId": "srf_bf98ce55-72e0-4950-8f0a-397a8aa2b2d5"
+      }
+    },
+    "decisions": []
+  },
+  "titles": [
+    {
+      "surfaceId": "srf_442844dc-888b-4bd4-829d-73253d815c6e",
+      "title": "New pipeline"
+    },
+    {
+      "surfaceId": "srf_bf98ce55-72e0-4950-8f0a-397a8aa2b2d5",
+      "title": "Read quality study"
+    }
+  ],
+  "activePane": "primary",
+  "maximizedPane": null,
+  "chat": {
+    "collapsed": false,
+    "width": 420,
+    "draft": "Keep discussing these settings.",
+    "recipientAgentId": "agt_c8d66e9f-25ae-4740-b7d4-c05d6cb04579",
+    "attachmentRevision": 1
+  },
+  "selections": [],
+  "activity": [
+    {
+      "id": "req_281bd0cb-db22-4dcc-81d4-2026ab6d4b05",
+      "text": "Opened a Project view.",
+      "at": 1789217453816
+    },
+    {
+      "id": "req_47219c5b-912c-4a38-8cbb-11b725cf7d47",
+      "text": "Opened a Project view.",
+      "at": 1789217527651
+    }
+  ],
+  "receipts": [
+    {
+      "requestId": "req_281bd0cb-db22-4dcc-81d4-2026ab6d4b05",
+      "digest": "31facfd5323cbdc8e22061539e68509625a821117b49d268dd03fe7f9cf243ee"
+    },
+    {
+      "requestId": "req_a9219fbb-336c-4c9c-9eeb-d5d2f044f905",
+      "digest": "83fdfd9ed7d0a0eafce4ebfe4192875b3086de421af5f2a64ab7bbdd86d138a6"
+    },
+    {
+      "requestId": "req_47219c5b-912c-4a38-8cbb-11b725cf7d47",
+      "digest": "445c1265f4beb6c35fce0c0347a2ef34c945079bb81707c775e71d07e041f8ca"
+    }
+  ],
+  "collaboration": {
+    "submissions": [
+      {
+        "requestId": "req_6b40fc63-7249-45e4-8715-1ddf451f2f61",
+        "agentId": "agt_c8d66e9f-25ae-4740-b7d4-c05d6cb04579",
+        "text": "pipeline-creation",
+        "pipelineCreation": {
+          "kind": "draft",
+          "draftId": "drf_ARSHY5MVSN3QSY5KUPAC2JXJPO",
+          "generation": 2
+        },
+        "allowPipelineCreation": true,
+        "model": "fixture-model",
+        "effort": "low",
+        "createdAt": 1789217457923,
+        "responseStartedAt": 1789217457998,
+        "state": "completed",
+        "threadId": "thread_1",
+        "turnId": "turn_2",
+        "response": "Fixture response from Researcher.",
+        "problem": null
+      },
+      {
+        "requestId": "req_f0f1e2c7-3a25-44a4-8f2e-55c68fad8002",
+        "agentId": "agt_c8d66e9f-25ae-4740-b7d4-c05d6cb04579",
+        "text": "pipeline-creation-review",
+        "pipelineCreation": {
+          "kind": "candidate",
+          "base": "none",
+          "draftId": "drf_ARSHY5MVSN3QSY5KUPAC2JXJPO",
+          "generation": 2,
+          "candidateId": "req_d1c14c9f29917e8be4f163a31adf64dbebed4b38376ab5cfbb7c0b14056fab56",
+          "artifactId": "sha256:29752bbb76e3c07c17e44aa4cb004e3540d745dde02b4da367f9af02d1e79923",
+          "target": {
+            "kind": "setting",
+            "id": "trim_galore",
+            "name": "quality"
+          }
+        },
+        "allowPipelineCreation": false,
+        "model": "fixture-model",
+        "effort": "low",
+        "createdAt": 1789217523590,
+        "responseStartedAt": 1789217523655,
+        "state": "completed",
+        "threadId": "thread_1",
+        "turnId": "turn_3",
+        "response": "Fixture response from Researcher.",
+        "problem": null
+      },
+      {
+        "requestId": "req_99bf4605-807b-40f8-9fdb-fe2475e765b0",
+        "agentId": "agt_c8d66e9f-25ae-4740-b7d4-c05d6cb04579",
+        "text": "pipeline-preparation-review",
+        "pipelineReview": {
+          "pipelineId": "pip_VJWQCYWSPZFYN2YCLRAVQDCS2E",
+          "baseArtifactId": "sha256:29752bbb76e3c07c17e44aa4cb004e3540d745dde02b4da367f9af02d1e79923",
+          "preparationId": "req_c566edd1-ceb5-4079-8eb5-d8d44b6e4fd6",
+          "preparationSection": "settings"
+        },
+        "allowPipelineProposal": false,
+        "model": "fixture-model",
+        "effort": "low",
+        "createdAt": 1789217594647,
+        "responseStartedAt": 1789217594707,
+        "state": "completed",
+        "threadId": "thread_1",
+        "turnId": "turn_4",
+        "response": "Fixture response from Researcher.",
+        "problem": null
+      }
+    ]
+  },
+  "creationMarks": [
+    {
+      "context": {
+        "kind": "candidate",
+        "base": "none",
+        "draftId": "drf_ARSHY5MVSN3QSY5KUPAC2JXJPO",
+        "generation": 2,
+        "candidateId": "req_d1c14c9f29917e8be4f163a31adf64dbebed4b38376ab5cfbb7c0b14056fab56",
+        "artifactId": "sha256:29752bbb76e3c07c17e44aa4cb004e3540d745dde02b4da367f9af02d1e79923",
+        "target": {
+          "kind": "setting",
+          "id": "trim_galore",
+          "name": "quality"
+        }
+      },
+      "agentId": "agt_c8d66e9f-25ae-4740-b7d4-c05d6cb04579",
+      "submissionId": "req_f0f1e2c7-3a25-44a4-8f2e-55c68fad8002",
+      "note": "Quality threshold: 25 Phred for this proposed trimming step."
+    }
+  ],
+  "pipelineReviewMarks": [
+    {
+      "context": {
+        "pipelineId": "pip_VJWQCYWSPZFYN2YCLRAVQDCS2E",
+        "baseArtifactId": "sha256:29752bbb76e3c07c17e44aa4cb004e3540d745dde02b4da367f9af02d1e79923",
+        "preparationId": "req_c566edd1-ceb5-4079-8eb5-d8d44b6e4fd6",
+        "preparationSection": "settings"
+      },
+      "agentId": "agt_c8d66e9f-25ae-4740-b7d4-c05d6cb04579",
+      "submissionId": "req_99bf4605-807b-40f8-9fdb-fe2475e765b0",
+      "note": "This saved plan uses the reviewed quality threshold. Data contents will be checked before Start."
+    }
+  ]
+}

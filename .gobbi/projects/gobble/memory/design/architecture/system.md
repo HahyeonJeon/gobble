@@ -18,7 +18,8 @@ subscription agent experience. The independent Go service and analysis
 controllers retain engine authority. Provider turns and pipeline runs have
 separate identities and cancellation rules. Browser delivery is a later option.
 
-The app is an agent-centered shared workspace: its controller manages views,
+The app is a Project-centered shared workspace with multiple attached agents:
+its controller manages Project-owned views,
 observations, and contextual user decisions through separate workspace tools.
 These UI concepts do not enter the engine's execution state. Gobble remains
 the core engine and a standalone Linux CLI. Neither the Go library nor CLI

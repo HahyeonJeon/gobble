@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gobble · PDF shared reading proposal</title>
+    <link rel="stylesheet" href="sketch.css" />
+  </head>
+  <body>
+    <header class="review-header">
+      <div>
+        <span class="eyebrow">R3c / DESIGN REVIEW</span
+        ><strong>Read together. Point precisely.</strong>
+      </div>
+      <div class="concept-switch" aria-label="Layout concept">
+        <button id="concept-a" aria-pressed="true">A · Inline reader</button>
+        <button id="concept-b" aria-pressed="false">B · Page rail</button>
+      </div>
+      <a href="design.md">Design notes ↗</a>
+    </header>
+    <div class="scenario-bar" aria-label="Prototype scenarios">
+      <span>HTML simulation · no PDF decoder or Agent connection</span>
+      <button id="sample">Sample text</button>
+      <label><input id="scanned" type="checkbox" /> Scanned page</label>
+      <label><input id="changed" type="checkbox" /> Source changed</label>
+      <label
+        ><input id="capture" type="checkbox" checked /> Saved capture</label
+      >
+    </div>
+    <main class="app" data-section="workspace">
+      <header class="app-bar">
+        <div class="project">
+          <span class="project-icon" aria-hidden="true">▥</span
+          ><strong>RNA-seq study</strong><span aria-hidden="true">⌄</span>
+        </div>
+        <div class="mobile-switch">
+          <button id="workspace-tab" aria-pressed="true">Workspace</button
+          ><button id="chat-tab" aria-pressed="false">
+            Chat <span id="mobile-count"></span>
+          </button>
+        </div>
+        <span class="account"><i></i> Account</span>
+      </header>
+      <div class="workspace-layout">
+        <section class="work" aria-label="Project workspace">
+          <section class="pdf-pane" aria-label="PDF Surface">
+            <header class="tabs">
+              <span class="tab active">▤ &nbsp; analysis-report.pdf</span
+              ><span class="subtle tab-info">PDF</span>
+            </header>
+            <div class="pdf-toolbar">
+              <button id="pages-toggle" aria-expanded="false">Pages</button>
+              <div class="page-nav">
+                <button id="previous" aria-label="Previous page">←</button
+                ><label
+                  ><input
+                    id="page-number"
+                    type="number"
+                    min="1"
+                    max="4"
+                    value="3"
+                    aria-label="Page number"
+                  /><span>/ 4</span></label
+                ><button id="next" aria-label="Next page">→</button>
+              </div>
+              <select id="zoom" aria-label="Page zoom">
+                <option value="fit">Fit width</option>
+                <option value="100">100%</option>
+                <option value="125">125%</option>
+              </select>
+              <span class="toolbar-divider"></span>
+              <button id="region-mode" aria-pressed="false">
+                Select region
+              </button>
+              <button id="select-page">Select page</button>
+            </div>
+            <div id="reference-banner" class="reference-banner" hidden>
+              <div>
+                <strong id="reference-title">Reference view · Researcher</strong
+                ><span id="reference-detail"></span>
+              </div>
+              <button id="return-view">Return to my view</button>
+            </div>
+            <div class="reader-body">
+              <nav
+                id="page-rail"
+                class="page-rail"
+                aria-label="PDF pages"
+                hidden
+              ></nav>
+              <div class="page-scroll" id="page-scroll">
+                <article
+                  id="paper"
+                  class="paper"
+                  aria-label="Synthetic report page"
+                ></article>
+                <div
+                  id="region-box"
+                  class="region-box"
+                  hidden
+                  aria-hidden="true"
+                ></div>
+                <div id="unavailable" class="unavailable" hidden>
+                  <h2>Reference unavailable</h2>
+                  <p>The source changed and no matching capture was saved.</p>
+                  <p>The current file may contain different content.</p>
+                  <button id="open-current">Open current file</button>
+                </div>
+              </div>
+            </div>
+            <div id="selection-bar" class="selection-bar" hidden>
+              <span id="selection-label"></span
+              ><button id="clear-selection">Clear</button
+              ><button id="discuss" class="primary">Discuss selection</button>
+            </div>
+            <footer class="pdf-status">
+              <span id="page-status"></span
+              ><span id="gesture-hint">Drag text to select</span>
+            </footer>
+          </section>
+          <section class="notes-pane" aria-label="Notes Surface">
+            <header class="tabs">
+              <span class="tab active">≡ &nbsp; review-notes.md</span>
+            </header>
+            <div class="notes">
+              <span>01</span><strong># Review notes</strong><span>02</span>
+              <p>Compare the report with the same filtered cohort.</p>
+              <span>03</span>
+              <p>Keep the methods paragraph attached to the discussion.</p>
+            </div>
+          </section>
+        </section>
+        <aside class="chat" aria-label="Project Chat">
+          <header class="chat-header">
+            <strong>Chat</strong
+            ><span class="agent-pill"><i></i> Researcher</span>
+          </header>
+          <div id="messages" class="messages">
+            <div class="chat-context">PROJECT DISCUSSION</div>
+            <div class="message user">
+              <span class="byline">You <small>10:14</small></span>
+              <p>
+                Which part of the report explains the cohort used for this
+                comparison?
+              </p>
+            </div>
+            <div class="message agent">
+              <span class="byline"
+                ><span class="avatar">R</span> Researcher
+                <small>10:15</small></span
+              >
+              <p>
+                The methods describe the shared cohort. I've marked that part of
+                the report.
+              </p>
+              <div class="reference-card">
+                <span class="reference-icon">▤</span>
+                <div>
+                  <strong>analysis-report.pdf</strong
+                  ><span>Page 2 · Region</span>
+                </div>
+                <button id="show-reference">Show</button>
+              </div>
+              <span class="simulation-note">Simulated Agent reference</span>
+            </div>
+          </div>
+          <div class="composer-wrap">
+            <div id="attachment" class="attachment" hidden>
+              <span id="attachment-label"></span
+              ><button id="remove-attachment" aria-label="Remove attachment">
+                ×
+              </button>
+            </div>
+            <label class="sr-only" for="composer">Message Researcher</label
+            ><textarea
+              id="composer"
+              placeholder="Discuss this project…"
+              rows="3"
+            ></textarea>
+            <div class="composer-footer">
+              <span id="draft-status">One conversation. Shared context.</span
+              ><button id="send" class="primary" disabled>Send demo</button>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
+    <div id="notice" class="notice" role="status" aria-live="polite"></div>
+    <script src="sketch.js"></script>
+  </body>
+</html>

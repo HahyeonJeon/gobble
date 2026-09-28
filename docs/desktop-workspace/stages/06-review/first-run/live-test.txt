@@ -1,0 +1,67 @@
+
+> gobble-app-workspace@0.1.0 test:live-runtime
+> npm run build && playwright test --config playwright.live.config.ts
+
+
+> gobble-app-workspace@0.1.0 build
+> npm run build:service && npm run build --workspace @gobble/desktop
+
+
+> gobble-app-workspace@0.1.0 build:service
+> tsx scripts/build-service.ts
+
+
+> @gobble/desktop@0.1.0 build
+> electron-vite build
+
+vite v7.3.6 building ssr environment for production...
+transforming...
+✓ 316 modules transformed.
+rendering chunks...
+out/main/index.js  351.45 kB
+✓ built in 774ms
+vite v7.3.6 building ssr environment for production...
+transforming...
+✓ 276 modules transformed.
+rendering chunks...
+out/preload/index.cjs  175.55 kB
+✓ built in 240ms
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 353 modules transformed.
+rendering chunks...
+../../out/renderer/index.html                   0.39 kB
+../../out/renderer/assets/index-T5bhhG-7.css   34.56 kB
+../../out/renderer/assets/index-JsVc2Gw9.js   850.52 kB
+✓ built in 633ms
+
+Running 1 test using 1 worker
+
+(node:10076) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 desktop/tests/live/runtime.spec.ts:7:1 › actual CLI Run matches Electron and its controller survives app quit (2.1m)
+
+
+  1) desktop/tests/live/runtime.spec.ts:7:1 › actual CLI Run matches Electron and its controller survives app quit 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    Call Log:
+    - Timeout 90000ms exceeded while waiting on the predicate
+
+      47 |         { timeout: 90_000, intervals: [1000, 2000] },
+      48 |       )
+    > 49 |       .toBe(true);
+         |        ^
+      50 |     const running = JSON.parse(await runtime.cli('inspect', 'monitor', '--workspace', 'runs/live'));
+      51 |     await writeFile(info.outputPath('cli-running.json'), JSON.stringify(running, null, 2));
+      52 |     const started = await launch(profile);
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/live/runtime.spec.ts:49:8
+
+    Error Context: test-results/live-runtime/runtime-actual-CLI-Run-mat-ca5d8-ontroller-survives-app-quit/error-context.md
+
+  1 failed
+    desktop/tests/live/runtime.spec.ts:7:1 › actual CLI Run matches Electron and its controller survives app quit 

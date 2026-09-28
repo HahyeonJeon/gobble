@@ -1,0 +1,8 @@
+
+> gobble-app-workspace@0.1.0 typecheck
+> tsc -p contracts/tsconfig.json && npm run typecheck --workspace @gobble/desktop && tsc -p tsconfig.tools.json
+
+contracts/src/reference-resolution.ts(81,32): error TS2339: Property 'instance' does not exist on type '{ schemaVersion: 1; projectId: string; capturedAt: number; content: { profile: "fastqc-0.12.1-v1"; title: string; logoLabel: string; headerTitle: string; headerFilename: string; summaryHeading: string; summary: { ...; }[]; modules: { ...; }[]; footer: string; }; runRef: string; producer: { ...; }; } | { ...; } | { ....'.
+  Property 'instance' does not exist on type '{ schemaVersion: 1; projectId: string; capturedAt: number; content: { profile: "fastqc-0.12.1-v1"; title: string; logoLabel: string; headerTitle: string; headerFilename: string; summaryHeading: string; summary: { ...; }[]; modules: { ...; }[]; footer: string; }; runRef: string; producer: { ...; }; }'.
+contracts/src/reference-resolution.ts(82,33): error TS2339: Property 'attempt' does not exist on type '{ schemaVersion: 1; projectId: string; capturedAt: number; content: { profile: "fastqc-0.12.1-v1"; title: string; logoLabel: string; headerTitle: string; headerFilename: string; summaryHeading: string; summary: { ...; }[]; modules: { ...; }[]; footer: string; }; runRef: string; producer: { ...; }; } | { ...; } | { ....'.
+  Property 'attempt' does not exist on type '{ schemaVersion: 1; projectId: string; capturedAt: number; content: { profile: "fastqc-0.12.1-v1"; title: string; logoLabel: string; headerTitle: string; headerFilename: string; summaryHeading: string; summary: { ...; }[]; modules: { ...; }[]; footer: string; }; runRef: string; producer: { ...; }; }'.

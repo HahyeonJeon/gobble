@@ -1,0 +1,918 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>R3a — Run discussion concept</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #263c37;
+        --muted: #677d76;
+        --line: #dbe4df;
+        --paper: #fff;
+        --base: #f4f7f4;
+        --teal: #146b63;
+        --tealwash: #e4f1ed;
+        --amber: #906d20;
+        --amberwash: #fff3d5;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--base);
+        color: var(--ink);
+        font:
+          14px/1.45 -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+      }
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+        color: inherit;
+      }
+      button {
+        cursor: pointer;
+        background: white;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        padding: 7px 11px;
+      }
+      button:hover {
+        background: #eff5f1;
+      }
+      button:focus-visible,
+      input:focus-visible,
+      select:focus-visible,
+      textarea:focus-visible {
+        outline: 3px solid #418f85;
+        outline-offset: 2px;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      .primary {
+        background: var(--teal);
+        border-color: var(--teal);
+        color: white;
+      }
+      .primary:hover {
+        background: #10594f;
+      }
+      .quiet {
+        border-color: transparent;
+        background: transparent;
+      }
+      .small {
+        font-size: 12px;
+        padding: 5px 8px;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .concept {
+        background: #263c37;
+        color: #e2ebe4;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        padding: 9px 20px;
+        font-size: 12px;
+      }
+      .concept strong {
+        color: white;
+        letter-spacing: 0.06em;
+      }
+      .concept span:last-child {
+        margin-left: auto;
+      }
+      .top {
+        height: 54px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 0 18px;
+        background: #fcfdfb;
+        border-bottom: 1px solid var(--line);
+      }
+      .top strong {
+        font-size: 16px;
+      }
+      .spacer {
+        flex: 1;
+      }
+      .app {
+        display: grid;
+        grid-template-columns: 174px minmax(420px, 1fr) 374px;
+        height: calc(100vh - 90px);
+        min-height: 630px;
+      }
+      .nav {
+        padding: 20px 12px;
+        border-right: 1px solid var(--line);
+      }
+      .nav h2 {
+        font-size: 12px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin: 4px 8px 10px;
+      }
+      .nav p {
+        padding: 7px 9px;
+        margin: 2px 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .nav .active {
+        background: var(--tealwash);
+        border-radius: 6px;
+        color: var(--teal);
+        font-weight: 600;
+      }
+      .nav .group {
+        margin-top: 32px;
+      }
+      .work {
+        display: grid;
+        grid-template-rows: minmax(280px, 0.9fr) minmax(335px, 1.1fr);
+        gap: 12px;
+        padding: 14px;
+        min-width: 0;
+        overflow: auto;
+      }
+      .pane {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .pane-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 44px;
+        padding: 0 14px;
+        border-bottom: 1px solid var(--line);
+        flex-shrink: 0;
+      }
+      .pane-head h2 {
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0;
+      }
+      .badge {
+        font-size: 11px;
+        padding: 3px 7px;
+        border-radius: 4px;
+        white-space: nowrap;
+      }
+      .failed {
+        background: #fae9e5;
+        color: #a04332;
+      }
+      .success {
+        background: #edf4ee;
+        color: #507954;
+      }
+      .observed {
+        color: var(--muted);
+        font-size: 11px;
+      }
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 13px;
+        flex-shrink: 0;
+      }
+      .toolbar input {
+        min-width: 70px;
+        flex: 1;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 7px 9px;
+      }
+      .toolbar select {
+        max-width: 130px;
+        background: #fff;
+        border: 1px solid var(--line);
+        padding: 7px;
+        border-radius: 6px;
+      }
+      .body {
+        overflow: auto;
+        min-height: 0;
+        flex: 1;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      th {
+        text-align: left;
+        font-size: 11px;
+        color: var(--muted);
+        font-weight: 500;
+        background: #fafcf9;
+        padding: 8px 12px;
+      }
+      td {
+        border-top: 1px solid #edf1ed;
+        padding: 10px 12px;
+      }
+      td:first-child {
+        width: 34px;
+        padding-right: 0;
+      }
+      td strong {
+        font-weight: 500;
+      }
+      td small {
+        display: inline;
+        color: var(--muted);
+        font-size: 11px;
+        margin-left: 8px;
+      }
+      tr.selected {
+        background: #edf6f2;
+      }
+      input[type="radio"] {
+        accent-color: var(--teal);
+      }
+      .pane-foot {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 13px;
+        border-top: 1px solid var(--line);
+        font-size: 12px;
+        flex-shrink: 0;
+      }
+      .task-actions {
+        justify-content: flex-end;
+      }
+      .task-actions .muted {
+        margin-right: auto;
+      }
+      details {
+        border-top: 1px solid #edf1ed;
+        padding: 8px 14px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      details p {
+        margin: 8px 0;
+      }
+      .tabs {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        padding: 8px 13px;
+        border-bottom: 1px solid #edf1ed;
+      }
+      .tabs button[aria-pressed="true"] {
+        background: var(--tealwash);
+        color: var(--teal);
+        border-color: #b9d3ca;
+      }
+      .tabs .muted {
+        font-size: 11px;
+        margin-left: auto;
+      }
+      .log {
+        font:
+          12px/1.85 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          monospace;
+        overflow: auto;
+        padding: 10px 0;
+        flex: 1;
+        min-height: 0;
+      }
+      .line {
+        display: flex;
+        white-space: pre;
+        min-width: max-content;
+        padding: 0 14px;
+      }
+      .n {
+        display: inline-block;
+        width: 30px;
+        color: #93a29b;
+        user-select: none;
+        flex-shrink: 0;
+      }
+      .line.user {
+        background: var(--tealwash);
+        box-shadow: inset 3px 0 var(--teal);
+      }
+      .line.agent {
+        background: var(--amberwash);
+        box-shadow: inset 3px 0 var(--amber);
+      }
+      .line code {
+        font: inherit;
+      }
+      .banner {
+        display: none;
+        gap: 8px;
+        align-items: center;
+        padding: 7px 13px;
+        background: var(--amberwash);
+        color: #745715;
+        font-size: 12px;
+      }
+      .banner.visible {
+        display: flex;
+      }
+      .chat {
+        border-left: 1px solid var(--line);
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+      .chat-head {
+        padding: 13px 17px;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        border-bottom: 1px solid var(--line);
+        height: 59px;
+      }
+      .chat-head h2 {
+        font-size: 16px;
+        margin: 0;
+      }
+      .avatar {
+        display: inline-grid;
+        place-items: center;
+        background: #e6eee9;
+        border-radius: 50%;
+        height: 23px;
+        width: 23px;
+        font-size: 11px;
+      }
+      .messages {
+        padding: 23px 20px;
+        overflow: auto;
+        flex: 1;
+      }
+      .author {
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+      .author small {
+        font-weight: 400;
+        color: var(--muted);
+        margin-left: 7px;
+      }
+      .message {
+        font-size: 14px;
+        margin-bottom: 29px;
+      }
+      .message p {
+        margin: 7px 0;
+      }
+      .chip {
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        padding: 9px 10px;
+        background: #f7faf7;
+        font-size: 12px;
+        margin-top: 11px;
+      }
+      .chip .muted {
+        display: block;
+        font-size: 11px;
+        margin-top: 3px;
+      }
+      .pointer {
+        border-left: 3px solid var(--amber);
+        background: #fffaf0;
+      }
+      .pointer button {
+        margin-top: 8px;
+      }
+      .compose {
+        padding: 14px;
+        border-top: 1px solid var(--line);
+      }
+      .compose textarea {
+        display: block;
+        width: 100%;
+        height: 88px;
+        resize: vertical;
+        border: 0;
+        padding: 9px;
+        background: transparent;
+        outline-offset: 0;
+      }
+      .composer {
+        border: 1px solid #cbdad2;
+        border-radius: 9px;
+        overflow: hidden;
+      }
+      .composer .chip {
+        margin: 9px 9px 0;
+      }
+      .send-row {
+        display: flex;
+        align-items: center;
+        padding: 4px 9px 9px;
+        gap: 8px;
+        font-size: 11px;
+      }
+      .note {
+        font-size: 11px;
+        color: var(--muted);
+        margin: 7px 2px 0;
+      }
+      .demo-select {
+        font-size: 11px;
+        margin-right: auto;
+      }
+      .nav-hidden {
+        grid-template-columns: minmax(420px, 1fr) 374px;
+      }
+      .nav-hidden .nav {
+        display: none;
+      }
+      .status-note {
+        font-size: 11px;
+        min-height: 17px;
+        color: var(--muted);
+        margin-top: 6px;
+      }
+      .focus-log .run-pane {
+        display: none;
+      }
+      .focus-log .work {
+        grid-template-rows: 1fr;
+      }
+      .hidden {
+        display: none !important;
+      }
+      @media (max-width: 1100px) {
+        .app {
+          grid-template-columns: minmax(390px, 1fr) 350px;
+        }
+        .nav {
+          display: none;
+        }
+        .work {
+          padding: 9px;
+          gap: 9px;
+        }
+        .toolbar {
+          flex-wrap: wrap;
+        }
+        .observed {
+          display: none;
+        }
+        .concept span:last-child {
+          display: none;
+        }
+        .chat-head {
+          padding-left: 13px;
+        }
+      }
+      @media (max-width: 760px) {
+        .app {
+          display: flex;
+          flex-direction: column;
+          height: auto;
+          min-height: 0;
+        }
+        .work {
+          min-height: 740px;
+        }
+        .chat {
+          min-height: 540px;
+          border-top: 1px solid var(--line);
+        }
+        .nav {
+          display: none;
+        }
+        .top {
+          gap: 6px;
+          padding: 0 10px;
+        }
+        .top .optional {
+          display: none;
+        }
+        .concept {
+          padding: 8px 10px;
+          flex-wrap: wrap;
+        }
+        .pane-foot {
+          flex-wrap: wrap;
+        }
+        .pane-head {
+          flex-wrap: wrap;
+          padding: 8px 10px;
+        }
+        .messages {
+          min-height: 280px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="concept">
+      <strong>R3a / DESIGN SKETCH</strong
+      ><span>Synthetic data · Simulated Agent · No runtime connection</span
+      ><span>Try: select excerpt → attach → Show in view → Return</span>
+    </div>
+    <header class="top">
+      <button class="quiet small" id="nav-toggle" aria-label="Toggle resources">
+        ☰</button
+      ><strong>RNA-seq review <span class="muted">⌄</span></strong
+      ><span class="spacer"></span
+      ><button class="quiet small optional" id="focus">Focus logs</button
+      ><button class="quiet small">Account</button>
+    </header>
+    <div class="app" id="app">
+      <nav class="nav" aria-label="Project resources">
+        <h2>Files</h2>
+        <p>▱ samples.csv</p>
+        <p>▱ analysis.go</p>
+        <p>▱ results</p>
+        <h2 class="group">Runs</h2>
+        <p class="active">▷ RNA-seq · Sep 08</p>
+        <p class="muted">▷ Pilot · Sep 05</p>
+      </nav>
+      <main class="work">
+        <section class="pane run-pane" aria-label="Run view">
+          <header class="pane-head">
+            <h2>RNA-seq · Sep 08</h2>
+            <span class="badge failed">Failed</span><span class="spacer"></span
+            ><span class="observed">Observed 14:32</span
+            ><button class="quiet small" data-refresh>Refresh</button>
+          </header>
+          <div class="toolbar">
+            <input
+              id="search"
+              aria-label="Search task instances"
+              placeholder="Search task or instance…"
+            /><select id="filter" aria-label="Filter task state">
+              <option value="all">All states</option>
+              <option value="failed">Failed</option>
+              <option value="succeeded">Succeeded</option>
+            </select>
+          </div>
+          <div class="body">
+            <table aria-label="Task instances">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Task / instance</th>
+                  <th>State</th>
+                  <th>Attempt</th>
+                </tr>
+              </thead>
+              <tbody id="tasks"></tbody>
+            </table>
+            <p class="muted hidden" id="no-tasks" style="padding: 0 14px">
+              No matching tasks in this observation.
+            </p>
+          </div>
+          <div class="pane-foot task-actions">
+            <span class="muted" id="task-count">4 task instances</span
+            ><button class="small" id="open-logs">Open logs ↓</button
+            ><button class="small" id="discuss-task">Discuss task</button>
+          </div>
+          <details>
+            <summary>Details · Pipeline and observed source</summary>
+            <p>
+              Pipeline label: RNA-seq. Task dependencies refer to authored task
+              IDs. This sketch does not present an execution graph. Only the
+              current attempt can be queried.
+            </p>
+          </details>
+        </section>
+        <section class="pane" aria-label="Log view">
+          <header class="pane-head">
+            <h2 id="log-title">Align · S03</h2>
+            <span class="muted" style="font-size: 12px">Attempt 2</span
+            ><span class="spacer"></span
+            ><button class="quiet small" data-refresh>Refresh</button>
+          </header>
+          <div class="banner" id="reference-banner">
+            <span>Researcher reference · stdout · preview line 3</span
+            ><span class="spacer"></span
+            ><button class="small" id="return">Return</button>
+          </div>
+          <div class="tabs">
+            <button class="small" data-stream="stderr" aria-pressed="true">
+              stderr</button
+            ><button class="small" data-stream="stdout" aria-pressed="false">
+              stdout</button
+            ><span class="muted">Tail preview · Observed 14:32</span>
+          </div>
+          <div class="log" id="log" aria-label="Log preview"></div>
+          <div class="pane-foot">
+            <span class="muted" id="selection-label"
+              >Tail preview · Up to 4 KB / stream</span
+            ><span class="spacer"></span
+            ><button class="quiet small" id="select-excerpt">
+              Select demo excerpt</button
+            ><button class="primary small" id="discuss" disabled>
+              Discuss selection
+            </button>
+          </div>
+        </section>
+      </main>
+      <aside class="chat" aria-label="Project chat">
+        <header class="chat-head">
+          <h2>Chat</h2>
+          <span class="spacer"></span><span class="avatar">R</span
+          ><span style="font-size: 12px">Researcher</span
+          ><button class="quiet small" aria-label="Agent options">⌄</button>
+        </header>
+        <div class="messages">
+          <article class="message">
+            <div class="author">You <small>14:34</small></div>
+            <p>
+              Why did this sample fail? Point me to the related input message.
+            </p>
+            <div class="chip">
+              Align · S03 · Attempt 2<span class="muted"
+                >stderr · preview lines 7–8 · Captured 14:32</span
+              >
+            </div>
+          </article>
+          <article class="message">
+            <div class="author">
+              <span class="avatar">R</span> Researcher <small>Simulated</small>
+            </div>
+            <p>
+              The excerpt reports an input read failure. The related stdout
+              entry identifies the read file for S03.
+            </p>
+            <div class="chip pointer">
+              Related input · S03<span class="muted"
+                >Attempt 2 · stdout · preview line 3</span
+              ><button class="small" id="show-reference">Show in view ↗</button>
+            </div>
+            <p class="muted" style="font-size: 12px; margin-top: 12px">
+              Reference opens on request. Your stderr selection stays unchanged.
+            </p>
+          </article>
+        </div>
+        <div class="compose">
+          <div class="composer">
+            <div class="chip hidden" id="draft-attachment"></div>
+            <textarea
+              aria-label="Message composer"
+              placeholder="Discuss this work with Researcher…"
+            ></textarea>
+            <div class="send-row">
+              <span class="muted">Researcher</span><span class="spacer"></span
+              ><button class="primary small" id="send">Send demo</button>
+            </div>
+          </div>
+          <div class="status-note" id="status" role="status"></div>
+          <p class="note">Concept only. No message or data leaves this page.</p>
+        </div>
+      </aside>
+    </div>
+    <script>
+      const taskData = [
+        {
+          name: "Prepare reads",
+          id: "prepare",
+          state: "succeeded",
+          attempt: 1,
+        },
+        {
+          name: "Align · S01",
+          id: "align[S01]",
+          state: "succeeded",
+          attempt: 1,
+        },
+        { name: "Align · S03", id: "align[S03]", state: "failed", attempt: 2 },
+        {
+          name: "Quantify · S03",
+          id: "quantify[S03]",
+          state: "blocked",
+          attempt: 0,
+        },
+      ];
+      const streams = {
+        stderr: [
+          "[align] Starting input validation",
+          "[align] Checking paired reads",
+          "[align] Read group: S03",
+          "[align] Opening input stream",
+          "[align] Decompressing read block",
+          "[align] Input validation failed",
+          "ERROR: Unexpected end of input",
+          "File: S03_R2.fastq.gz",
+          "Task stopped with exit code 1",
+        ],
+        stdout: [
+          "Pipeline: RNA-seq",
+          "Sample: S03",
+          "Input reads: S03_R1.fastq.gz, S03_R2.fastq.gz",
+          "Reference: synthetic-reference",
+          "Aligner initialized",
+          "Loading paired reads…",
+        ],
+      };
+      let stream = "stderr",
+        selected = false,
+        reference = false,
+        previous = "stderr",
+        task = "align[S03]";
+      const byId = (id) => document.getElementById(id);
+      function status(text) {
+        byId("status").textContent = text;
+      }
+      function renderTasks() {
+        const search = byId("search").value.toLowerCase(),
+          filter = byId("filter").value;
+        const rows = taskData.filter(
+          (t) =>
+            (t.name + " " + t.id).toLowerCase().includes(search) &&
+            (filter === "all" || t.state === filter),
+        );
+        byId("tasks").replaceChildren(
+          ...rows.map((t) => {
+            const tr = document.createElement("tr");
+            tr.className = t.id === task ? "selected" : "";
+            const td = document.createElement("td"),
+              radio = document.createElement("input");
+            radio.type = "radio";
+            radio.name = "task";
+            radio.checked = t.id === task;
+            radio.setAttribute("aria-label", "Select " + t.name);
+            radio.addEventListener("change", () => {
+              task = t.id;
+              renderTasks();
+            });
+            td.append(radio);
+            tr.append(td);
+            const label = document.createElement("td"),
+              name = document.createElement("strong"),
+              id = document.createElement("small");
+            name.textContent = t.name;
+            id.textContent = t.id;
+            label.append(name, " ", id);
+            tr.append(label);
+            const state = document.createElement("td"),
+              badge = document.createElement("span");
+            badge.className =
+              "badge " +
+              (t.state === "failed"
+                ? "failed"
+                : t.state === "succeeded"
+                  ? "success"
+                  : "");
+            badge.textContent = t.state[0].toUpperCase() + t.state.slice(1);
+            state.append(badge);
+            const attempt = document.createElement("td");
+            attempt.textContent = t.attempt ? String(t.attempt) : "Not started";
+            tr.append(state, attempt);
+            return tr;
+          }),
+        );
+        byId("task-count").textContent = rows.length + " of 4 instances";
+        byId("no-tasks").classList.toggle("hidden", rows.length > 0);
+        byId("open-logs").disabled =
+          taskData.find((t) => t.id === task).attempt === 0;
+      }
+      function renderLog() {
+        byId("log").replaceChildren(
+          ...streams[stream].map((text, i) => {
+            const line = document.createElement("div");
+            line.className =
+              "line" +
+              (selected && stream === "stderr" && i >= 6 && i <= 7
+                ? " user"
+                : "") +
+              (reference && stream === "stdout" && i === 2 ? " agent" : "");
+            const number = document.createElement("span");
+            number.className = "n";
+            number.textContent = String(i + 1);
+            const content = document.createElement("code");
+            content.textContent = text;
+            line.append(number, content);
+            return line;
+          }),
+        );
+        document
+          .querySelectorAll("[data-stream]")
+          .forEach((b) =>
+            b.setAttribute("aria-pressed", String(b.dataset.stream === stream)),
+          );
+        byId("reference-banner").classList.toggle("visible", reference);
+        byId("selection-label").textContent = selected
+          ? "stderr · preview lines 7–8 · 4 KB tail limit"
+          : "Tail preview · Up to 4 KB / stream";
+        byId("discuss").disabled = !selected;
+      }
+      document.querySelectorAll("[data-stream]").forEach((b) =>
+        b.addEventListener("click", () => {
+          stream = b.dataset.stream;
+          renderLog();
+        }),
+      );
+      byId("select-excerpt").addEventListener("click", () => {
+        selected = true;
+        stream = "stderr";
+        renderLog();
+        status(
+          "Selected a synthetic stderr excerpt. Nothing has been attached or sent.",
+        );
+      });
+      byId("discuss").addEventListener("click", () => {
+        byId("draft-attachment").classList.remove("hidden");
+        byId("draft-attachment").textContent =
+          "Frozen excerpt · Align S03 · Attempt 2 · stderr · lines 7–8";
+        status(
+          "Added to this demo draft. Source refresh will not change the capture.",
+        );
+        document.querySelector("textarea").focus();
+      });
+      byId("show-reference").addEventListener("click", () => {
+        if (!reference) previous = stream;
+        reference = true;
+        stream = "stdout";
+        renderLog();
+        status(
+          "Showing the simulated Agent reference. User selection is preserved.",
+        );
+      });
+      byId("return").addEventListener("click", () => {
+        reference = false;
+        stream = previous;
+        renderLog();
+        byId("show-reference").focus();
+        status("Returned to your prior stream.");
+      });
+      byId("open-logs").addEventListener("click", () => {
+        if (task !== "align[S03]") {
+          status(
+            "This bounded sketch supplies logs only for Align S03. Production will resolve the selected instance.",
+          );
+          return;
+        }
+        stream = "stderr";
+        renderLog();
+        status("Opened the existing Align S03 attempt 2 log tab.");
+      });
+      byId("discuss-task").addEventListener("click", () => {
+        const t = taskData.find((t) => t.id === task);
+        byId("draft-attachment").classList.remove("hidden");
+        byId("draft-attachment").textContent =
+          "Frozen task facts · " +
+          t.name +
+          " · " +
+          t.state +
+          " · " +
+          (t.attempt ? "attempt " + t.attempt : "not started");
+        document.querySelector("textarea").focus();
+        status("Task observation attached to the demo draft.");
+      });
+      byId("send").addEventListener("click", () =>
+        status("Demo only: no provider is connected and no message was sent."),
+      );
+      document
+        .querySelectorAll("[data-refresh]")
+        .forEach((b) =>
+          b.addEventListener("click", () =>
+            status(
+              "Demo observation retained. This sketch does not query a runtime.",
+            ),
+          ),
+        );
+      byId("search").addEventListener("input", renderTasks);
+      byId("filter").addEventListener("change", renderTasks);
+      byId("nav-toggle").addEventListener("click", () =>
+        byId("app").classList.toggle("nav-hidden"),
+      );
+      byId("focus").addEventListener("click", () => {
+        const active = byId("app").classList.toggle("focus-log");
+        byId("focus").textContent = active ? "Restore split" : "Focus logs";
+      });
+      renderTasks();
+      renderLog();
+    </script>
+  </body>
+</html>

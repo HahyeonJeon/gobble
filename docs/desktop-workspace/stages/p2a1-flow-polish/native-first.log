@@ -1,0 +1,40 @@
+
+Running 3 tests using 1 worker
+
+(node:55347) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 desktop/tests/electron/pipeline-flow.spec.ts:7:1 › real checked branching flow, keyboard details, preserved draft and historical restart (52.9s)
+(node:55534) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  2 desktop/tests/electron/pipelines.spec.ts:40:1 › import opens a flow, preserves the other pane and draft, and restores Pipeline identity (1.9s)
+  ✓  3 desktop/tests/electron/pipelines.spec.ts:88:1 › registration errors stay visible and retries do not create incomplete definitions (936ms)
+
+
+  1) desktop/tests/electron/pipeline-flow.spec.ts:7:1 › real checked branching flow, keyboard details, preserved draft and historical restart 
+
+    Error: expect(locator).toHaveAttribute(expected) failed
+
+    Locator: getByRole('region', { name: 'Primary pane', exact: true }).getByRole('button', { name: 'Inspect Trim adapters · 1 input · 1 output', exact: true })
+    Expected: "true"
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toHaveAttribute" getByRole('region', { name: 'Primary pane', exact: true }).getByRole('button', { name: 'Inspect Trim adapters · 1 input · 1 output', exact: true }) with timeout 5000ms
+      - waiting for getByRole('region', { name: 'Primary pane', exact: true }).getByRole('button', { name: 'Inspect Trim adapters · 1 input · 1 output', exact: true })
+
+
+      52 |     await trim.focus();
+      53 |     await page.keyboard.press('Enter');
+    > 54 |     await expect(trim).toHaveAttribute('aria-pressed', 'true');
+         |                        ^
+      55 |     await expect(primary.getByRole('region', { name: 'Details for Trim adapters' })).toContainText(
+      56 |       '4g memory',
+      57 |     );
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/pipeline-flow.spec.ts:54:24
+
+    Error Context: test-results/electron/pipeline-flow-real-checked-04894-raft-and-historical-restart/error-context.md
+
+  1 failed
+    desktop/tests/electron/pipeline-flow.spec.ts:7:1 › real checked branching flow, keyboard details, preserved draft and historical restart 
+  2 passed (56.6s)

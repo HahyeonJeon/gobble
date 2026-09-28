@@ -1,0 +1,67 @@
+{
+  "date": "2026-09-09",
+  "scope": "P2B proposal and local in-memory prototype only; production implementation awaits owner review",
+  "parent": "docs/desktop-workspace/stages/p2a2-flow-discussion/after.json",
+  "sourceHash": "f33086ffa7ea66a1675e2ddb416cb12ef4456006933d1080f49ff80b048eee84",
+  "sourceFilesVerifiedUnchanged": 686,
+  "changedSourceFiles": [],
+  "historicalDocumentsVerified": 943,
+  "changedHistoricalDocuments": [
+    "docs/desktop-workspace/remaining-work.md",
+    "docs/desktop-workspace/README.md"
+  ],
+  "unchangedHistoricalDocuments": 941,
+  "checks": {
+    "prototypeSyntax": "node --check passed",
+    "proposalFormatting": "7 HTML/CSS/JS/Markdown files passed Prettier",
+    "localDocumentLinks": "passed",
+    "ui": "author CUA walkthrough; see review.md; not native or human user evidence",
+    "productionSuites": "not rerun for design-only work"
+  },
+  "screenshots": {
+    "compact.jpg": {
+      "format": "JPEG",
+      "width": 800,
+      "height": 850
+    },
+    "incomplete.jpg": {
+      "format": "JPEG",
+      "width": 1166,
+      "height": 969
+    },
+    "first-managed-version.jpg": {
+      "format": "JPEG",
+      "width": 1166,
+      "height": 969
+    },
+    "concept-a.jpg": {
+      "format": "JPEG",
+      "width": 1166,
+      "height": 969
+    },
+    "concept-b.jpg": {
+      "format": "JPEG",
+      "width": 1166,
+      "height": 969
+    }
+  },
+  "artifacts": {
+    "docs/desktop-workspace/proposals/p2b-visual-change-review/README.md": "14e22fda531ef9b8179ce6592d28a71dfc9e629d776c6ef0cf3346980c7b9cb5",
+    "docs/desktop-workspace/proposals/p2b-visual-change-review/before.json": "afffad2ccba07a557d22b41a5fee4a5f54734d2dc899ab3697064fd7936afe4e",
+    "docs/desktop-workspace/proposals/p2b-visual-change-review/compact.jpg": "84f80268d50980b8713d36e1ec17935b146f442075fafa74a67e3f04cd383f02",
+    "docs/desktop-workspace/proposals/p2b-visual-change-review/concept-a.jpg": "4165b2331b90e7049b6a8d1262a84698a182d99d8df5b7215a389e731ff6df19",
+    "docs/desktop-workspace/proposals/p2b-visual-change-review/concept-b.jpg": "46f5dc240d435b08fdb14d0c119d8d39769878f072eb863e450a61b8ded43247",
+    "docs/desktop-workspace/proposals/p2b-visual-change-review/design.md": "48384960aecfc6e2931846c554f77d07b3ca89aeca3ba9333140eedc6c56be7c",
+    "docs/desktop-workspace/proposals/p2b-visual-change-review/first-managed-version.jpg": "da9790aa61dcdb9e77788d3dc4a2074dc4575a15fd21d068676b9d96b2d39c6a",
+    "docs/desktop-workspace/proposals/p2b-visual-change-review/incomplete.jpg": "7eeb12e2b3c56a14154a4293956098c962ab70252c28f68aaf7267a28993089f",
+    "docs/desktop-workspace/proposals/p2b-visual-change-review/plan.md": "78c8f3c29880fa8b95ff9fe37d29addc41712a0c020b3806b228b84a06eaafed",
+    "docs/desktop-workspace/proposals/p2b-visual-change-review/review.md": "85ca11ada7b1b92dc494ab968aceb37e3a7fc3804633d756907837af9c930b77",
+    "docs/desktop-workspace/proposals/p2b-visual-change-review/sketch.css": "d35288d043e4ceaff938de09e8d8eb94e72bbcdc04ed4d502c59f86fd2ddb644",
+    "docs/desktop-workspace/proposals/p2b-visual-change-review/sketch.html": "e5540e79b031bad8b7dbf4a7c7a9de914e54e03f59cdaa4d41906a0a35ce3b1e",
+    "docs/desktop-workspace/proposals/p2b-visual-change-review/sketch.js": "dc0317ed0ca348af06afc10c698978291abaa9f1f448f39879db35c7baf7282e"
+  },
+  "mutableIndexes": {
+    "docs/desktop-workspace/remaining-work.md": "eab504375ec622a0793564e5a3c3656b32c43372e99d140ef0d1ac4071902375",
+    "docs/desktop-workspace/README.md": "5115c8268fe003e3031a5617fee57a9572b1e1460ffceeaac042902bd598eddc"
+  }
+}

@@ -1,0 +1,9 @@
+
+ RUN  v4.1.11 /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app
+
+
+ Test Files  1 passed (1)
+      Tests  15 passed (15)
+   Start at  14:29:27
+   Duration  488ms (transform 179ms, setup 0ms, import 283ms, tests 81ms, environment 0ms)
+

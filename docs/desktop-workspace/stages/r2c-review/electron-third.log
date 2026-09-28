@@ -1,0 +1,29 @@
+
+Running 1 test using 1 worker
+
+(node:41739) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 desktop/tests/electron/linked-views.spec.ts:321:1 › frozen plot evidence reaches the protocol peer; Agent Show and Return use a temporary view without changing User selection (4.1s)
+
+
+  1) desktop/tests/electron/linked-views.spec.ts:321:1 › frozen plot evidence reaches the protocol peer; Agent Show and Return use a temporary view without changing User selection 
+
+    Error: locator.scrollIntoViewIfNeeded: Element is not attached to the DOM
+    Call log:
+      - attempting scroll into view action
+        - waiting for element to be stable
+
+
+      417 |   await page
+      418 |     .getByRole('button', { name: 'Return to my view', exact: true })
+    > 419 |     .scrollIntoViewIfNeeded();
+          |      ^
+      420 |   await expect(
+      421 |     page.getByRole('button', { name: 'Return to my view', exact: true }),
+      422 |   ).toBeInViewport();
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/linked-views.spec.ts:419:6
+
+    Error Context: test-results/electron/linked-views-frozen-plot-e-73c31-out-changing-User-selection/error-context.md
+
+  1 failed
+    desktop/tests/electron/linked-views.spec.ts:321:1 › frozen plot evidence reaches the protocol peer; Agent Show and Return use a temporary view without changing User selection 

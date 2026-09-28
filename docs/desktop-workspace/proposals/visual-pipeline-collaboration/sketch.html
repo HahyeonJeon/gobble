@@ -1,0 +1,1069 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gobble · Visual pipeline design preview</title>
+  <style>
+    :root {
+      font:
+        14px -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+      color: #25372f;
+      background: #f6f7f4;
+      --accent: #176967;
+      --line: #dce2dc;
+      --muted: #65736a;
+      --soft: #e8f2ef;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      height: 100vh;
+      overflow: hidden;
+    }
+    button,
+    select,
+    textarea {
+      font: inherit;
+      color: inherit;
+    }
+    button,
+    select {
+      border: 1px solid var(--line);
+      background: white;
+      border-radius: 6px;
+      padding: 7px 10px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: var(--soft);
+    }
+    button:focus-visible,
+    select:focus-visible,
+    textarea:focus-visible,
+    a:focus-visible {
+      outline: 3px solid #176967;
+      outline-offset: 3px;
+    }
+    button:disabled {
+      opacity: 0.48;
+      cursor: default;
+    }
+    button[aria-pressed="true"],
+    .selected {
+      background: var(--soft);
+      border-color: #176967;
+      color: #176967;
+    }
+    .quiet {
+      border: 0;
+      background: transparent;
+    }
+    .accent {
+      background: #176967;
+      color: white;
+      border-color: #176967;
+    }
+    .accent:hover {
+      background: #125653;
+    }
+    .muted,
+    small {
+      color: var(--muted);
+    }
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+    h1 {
+      font-size: 16px;
+    }
+    h2 {
+      font-size: 17px;
+    }
+    h3 {
+      font-size: 15px;
+    }
+    svg {
+      display: block;
+    }
+    header.top {
+      height: 48px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 18px;
+    }
+    .spacer {
+      flex: 1;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--soft);
+      border: 1px solid #bed5ce;
+      color: #176967;
+      border-radius: 5px;
+      padding: 5px 8px;
+      font-size: 12px;
+    }
+    .top .mode {
+      display: none;
+    }
+    .shell {
+      display: grid;
+      grid-template-columns: 166px minmax(520px, 1fr) 340px;
+      height: calc(100vh - 83px);
+      min-height: 0;
+    }
+    .navigation {
+      padding: 23px 12px;
+      border-right: 1px solid var(--line);
+    }
+    .navigation summary {
+      font-weight: 600;
+      padding: 8px 4px;
+      cursor: pointer;
+    }
+    .navigation button {
+      width: 100%;
+      text-align: left;
+      justify-content: start;
+      margin: 7px 0 20px;
+    }
+    .navigation p {
+      font-size: 12px;
+      line-height: 1.5;
+      padding: 8px;
+      color: var(--muted);
+    }
+    main {
+      min-width: 0;
+      min-height: 0;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .work {
+      border: 1px solid var(--line);
+      background: white;
+      border-radius: 8px;
+      min-height: 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .work-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 13px 17px;
+      border-bottom: 1px solid var(--line);
+    }
+    .switch {
+      display: flex;
+      gap: 3px;
+      padding: 3px;
+      border-radius: 7px;
+      background: #f5f7f4;
+    }
+    .switch button {
+      padding: 5px 9px;
+      border: 1px solid transparent;
+      background: transparent;
+    }
+    .switch button[aria-pressed="true"] {
+      background: white;
+      border-color: var(--line);
+      box-shadow: 0 1px 2px #00000006;
+    }
+    .notice {
+      padding: 10px 16px;
+      background: #fff6e2;
+      border-bottom: 1px solid #eddcb5;
+      font-size: 13px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .notice[hidden] {
+      display: none;
+    }
+    .graph-toolbar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 12px 16px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .graph-scroll {
+      min-height: 0;
+      overflow: auto;
+      flex: 1;
+    }
+    .graph {
+      position: relative;
+      width: 700px;
+      height: 280px;
+      min-width: 700px;
+      margin: 10px auto;
+    }
+    .graph > svg {
+      position: absolute;
+      inset: 0;
+    }
+    .wire {
+      fill: none;
+      stroke: #b2c2ba;
+      stroke-width: 2;
+    }
+    .wire.added {
+      stroke: #176967;
+      stroke-dasharray: 5 3;
+    }
+    .node {
+      position: absolute;
+      width: 140px;
+      height: 84px;
+      text-align: left;
+      display: flex;
+      align-items: start;
+      justify-content: center;
+      flex-direction: column;
+      gap: 7px;
+      border-radius: 8px;
+      box-shadow: 0 2px 3px #26382e05;
+      padding: 12px;
+    }
+    .node strong {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .node small {
+      font-size: 11px;
+    }
+    .node .badge {
+      position: absolute;
+      top: -11px;
+      right: 8px;
+      background: #fff3d8;
+      color: #765819;
+      font-size: 10px;
+      padding: 3px 6px;
+      border: 1px solid #e9d7aa;
+      border-radius: 4px;
+    }
+    .node.added {
+      border-color: #176967;
+      background: #f3f9f6;
+    }
+    .node.added .badge {
+      background: #e8f2ef;
+      color: #176967;
+      border-color: #a9cfc4;
+    }
+    .node[aria-pressed="true"] {
+      outline: 2px solid #176967;
+      outline-offset: 3px;
+    }
+    .agent-mark {
+      position: absolute;
+      bottom: -12px;
+      right: 8px;
+      font-size: 10px;
+      background: #e9ebfb;
+      border: 1px solid #c2c8e9;
+      color: #4d5792;
+      border-radius: 4px;
+      padding: 2px 6px;
+    }
+    .edge-button {
+      position: absolute;
+      font-size: 10px;
+      padding: 4px 6px;
+      border-radius: 4px;
+      z-index: 1;
+    }
+    .change-summary {
+      padding: 12px 16px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      border-top: 1px solid var(--line);
+      font-size: 12px;
+    }
+    .detail {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      padding: 15px 18px;
+      min-height: 166px;
+      flex-shrink: 0;
+    }
+    .detail-head {
+      display: flex;
+      gap: 9px;
+      align-items: center;
+      margin-bottom: 13px;
+    }
+    .detail-fields {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .field {
+      display: block;
+      text-align: left;
+      min-height: 67px;
+      padding: 10px;
+      white-space: normal;
+    }
+    .field span {
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .field strong {
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .detail-note {
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--muted);
+      margin-top: 12px;
+    }
+    .chat {
+      border-left: 1px solid var(--line);
+      background: white;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      min-height: 0;
+    }
+    .chat-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .messages {
+      padding: 20px 18px;
+      overflow: auto;
+      flex: 1;
+    }
+    .message {
+      font-size: 13px;
+      line-height: 1.65;
+      margin-bottom: 23px;
+    }
+    .message strong.author {
+      font-size: 12px;
+      display: block;
+      margin-bottom: 7px;
+    }
+    .message.user {
+      background: #f4f6f3;
+      border-radius: 9px;
+      padding: 12px 13px;
+    }
+    .reference {
+      font-size: 11px;
+      border-color: #cadbd4;
+      color: #176967;
+      margin-top: 9px;
+      white-space: normal;
+      text-align: left;
+    }
+    .review {
+      border: 1px solid var(--line);
+      padding: 12px;
+      border-radius: 7px;
+      margin-top: 14px;
+    }
+    .review p {
+      font-size: 12px;
+      color: var(--muted);
+      margin: 4px 0 10px;
+    }
+    .review-actions {
+      display: flex;
+      gap: 6px;
+    }
+    .review-actions button {
+      font-size: 12px;
+    }
+    .composer {
+      border-top: 1px solid var(--line);
+      padding: 13px;
+    }
+    .attachment {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+    .attachment button {
+      font-size: 11px;
+    }
+    .attachment[hidden] {
+      display: none;
+    }
+    textarea {
+      display: block;
+      resize: vertical;
+      min-height: 82px;
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fff;
+      line-height: 1.5;
+    }
+    .composer-bottom {
+      margin-top: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .composer small {
+      font-size: 10px;
+    }
+    .preview-bar {
+      height: 35px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      padding: 0 15px;
+      font-size: 11px;
+      background: #eef2ee;
+    }
+    .preview-bar select {
+      font-size: 11px;
+      padding: 2px 5px;
+    }
+    .preview-bar label {
+      margin-left: auto;
+    }
+    dialog {
+      max-width: 480px;
+      width: 90%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: inherit;
+      padding: 22px;
+      box-shadow: 0 12px 60px #1d312e26;
+    }
+    dialog::backdrop {
+      background: #18332f35;
+    }
+    dialog h2 {
+      margin-bottom: 15px;
+    }
+    dialog p {
+      font-size: 13px;
+      line-height: 1.65;
+      margin: 10px 0;
+    }
+    dialog button {
+      margin-top: 14px;
+    }
+    dialog code {
+      overflow-wrap: anywhere;
+      font-size: 11px;
+    }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+    .shell.nav-hidden {
+      grid-template-columns: 0 minmax(520px, 1fr) 340px;
+    }
+    .shell.nav-hidden .navigation {
+      display: none;
+    }
+    @media (max-width: 1190px) {
+      .shell {
+        grid-template-columns: 0 minmax(490px, 1fr) 310px;
+      }
+      .navigation {
+        display: none;
+      }
+      .shell.nav-hidden {
+        grid-template-columns: 0 minmax(490px, 1fr) 310px;
+      }
+      .graph {
+        margin-left: 8px;
+        margin-right: 8px;
+      }
+      .detail-fields {
+        gap: 6px;
+      }
+      .work-header {
+        gap: 7px;
+      }
+    }
+    @media (max-width: 900px) {
+      .shell,
+      .shell.nav-hidden {
+        display: flex;
+        height: calc(100vh - 83px);
+        min-height: 0;
+      }
+      .navigation {
+        display: none;
+      }
+      main {
+        flex: 1;
+      }
+      .chat {
+        display: none;
+        width: 100%;
+        border: 0;
+      }
+      .shell.chat-mode main {
+        display: none;
+      }
+      .shell.chat-mode .chat {
+        display: flex;
+      }
+      .top .mode {
+        display: flex;
+      }
+      .top .account {
+        display: none;
+      }
+      .preview-bar .desktop-note {
+        display: none;
+      }
+      .detail-fields {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .top {
+        gap: 10px !important;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        scroll-behavior: auto;
+      }
+    }
+  </style>
+  <header class="top">
+    <button class="quiet" id="toggle-nav" aria-label="Toggle navigation">
+      ☰
+    </button>
+    <h1>RNA study</h1>
+    <span class="spacer"></span>
+    <div class="mode">
+      <button id="workspace-mode" aria-pressed="true">Workspace</button
+      ><button id="chat-mode" aria-pressed="false">Chat</button>
+    </div>
+    <span class="account muted">● &nbsp; Account</span>
+  </header>
+  <div class="shell" id="shell">
+    <nav class="navigation" aria-label="Project navigation">
+      <details open>
+        <summary>Pipelines</summary>
+        <button class="selected">RNA analysis</button>
+      </details>
+      <details>
+        <summary>Files</summary>
+        <p>Project data and supporting material.</p>
+      </details>
+      <details>
+        <summary>Runs</summary>
+        <p>Past analyses appear here.</p>
+      </details>
+    </nav>
+    <main aria-label="Pipeline workspace">
+      <section class="work" aria-label="Shared pipeline view">
+        <header class="work-header">
+          <h2>RNA analysis</h2>
+          <span class="spacer"></span>
+          <div class="switch" aria-label="Pipeline version">
+            <button id="current" aria-pressed="false">Current</button
+            ><button id="proposed" aria-pressed="true">Proposed</button>
+          </div>
+          <span id="version-status" class="chip">2 changes</span>
+        </header>
+        <div class="notice" id="notice" role="status" hidden></div>
+        <div class="graph-toolbar">
+          <span>Flow</span><span>·</span><span>Example analysis</span
+          ><span class="spacer"></span><span>Click a step or connection</span>
+        </div>
+        <div class="graph-scroll"><div class="graph" id="graph"></div></div>
+        <div class="change-summary" id="change-summary"></div>
+      </section>
+      <section class="detail" aria-label="Selected pipeline item">
+        <div class="detail-head">
+          <h3 id="detail-title">Trim adapters</h3>
+          <span id="detail-version" class="chip">Proposed</span
+          ><span class="spacer"></span
+          ><button id="discuss" class="quiet">Discuss this step ↗</button>
+        </div>
+        <div class="detail-fields" id="detail-fields"></div>
+        <p class="detail-note" id="detail-note"></p>
+      </section>
+    </main>
+    <section class="chat" aria-label="Project chat">
+      <header class="chat-header">
+        <h2>Chat</h2>
+        <span class="spacer"></span><span class="chip">Researcher</span>
+      </header>
+      <div class="messages" id="messages">
+        <article class="message user">
+          <strong class="author">You</strong>
+          <p>
+            Check read quality after trimming, and use a stricter quality
+            threshold.
+          </p>
+          <button class="reference" id="original-ref">
+            Trim adapters · Current
+          </button>
+        </article>
+        <article class="message">
+          <strong class="author">Researcher</strong>
+          <p>
+            I added a quality check and raised the threshold to 25. Alignment
+            still uses the trimmed reads.
+          </p>
+          <button class="reference" id="agent-ref">
+            Show Quality check · Proposed ↗
+          </button>
+          <div class="review">
+            <strong>2 changes to review</strong>
+            <p>New quality report · stricter trimming</p>
+            <div class="review-actions">
+              <button id="review">Review changes</button
+              ><button id="accept" class="accent">Accept changes</button>
+            </div>
+          </div>
+        </article>
+      </div>
+      <form class="composer" id="composer">
+        <div id="attachment" class="attachment" hidden>
+          <button id="attachment-info" type="button"></button
+          ><button
+            id="remove-attachment"
+            type="button"
+            aria-label="Remove reference"
+          >
+            ×
+          </button>
+        </div>
+        <label class="sr-only" for="draft">Message draft</label
+        ><textarea
+          id="draft"
+          placeholder="Discuss the pipeline with your agent…"
+        >
+Can you explain this connection?</textarea>
+        <div class="composer-bottom">
+          <small id="draft-status">Preview only · messages stay here</small
+          ><button class="accent" type="submit" id="send">Send ↗</button>
+        </div>
+      </form>
+    </section>
+  </div>
+  <footer class="preview-bar">
+    <strong>Design preview</strong
+    ><span class="desktop-note"
+      >Example data · no Agent, source edits or analysis</span
+    ><label
+      >Try a state
+      <select id="scenario">
+        <option value="ready">Changes ready</option>
+        <option value="checking">Checking changes</option>
+        <option value="stale">Pipeline changed</option>
+        <option value="missing">Needs input</option>
+      </select></label
+    >
+  </footer>
+  <dialog id="info">
+    <h2 id="info-title"></h2>
+    <div id="info-body"></div>
+    <button id="close-info">Close</button>
+  </dialog>
+  <script>
+    // Isolated interaction sketch. All records below are illustrative, not Gobble output.
+    const $ = (id) => document.getElementById(id);
+    const steps = {
+      reads: {
+        label: "Read files",
+        tool: "Paired reads",
+        x: 22,
+        y: 35,
+        input: "6 example samples",
+        output: "Paired reads",
+      },
+      trim: {
+        label: "Trim adapters",
+        tool: "Trim Galore",
+        x: 192,
+        y: 35,
+        input: "Paired reads",
+        output: "Trimmed reads",
+      },
+      align: {
+        label: "Align reads",
+        tool: "STAR",
+        x: 362,
+        y: 35,
+        input: "Trimmed reads",
+        output: "Aligned reads",
+      },
+      count: {
+        label: "Count genes",
+        tool: "featureCounts",
+        x: 532,
+        y: 35,
+        input: "Aligned reads",
+        output: "Counts + summary",
+      },
+      quality: {
+        label: "Quality check",
+        tool: "FastQC",
+        x: 192,
+        y: 175,
+        input: "Trimmed reads",
+        output: "Quality reports",
+      },
+      summary: {
+        label: "Summary report",
+        tool: "MultiQC",
+        x: 532,
+        y: 175,
+        input: "Analysis reports",
+        output: "Combined report",
+      },
+    };
+    const state = {
+      version: "proposed",
+      selection: { kind: "step", id: "trim" },
+      attachment: null,
+      scenario: "ready",
+      accepted: false,
+    };
+    const version = () =>
+      state.version === "current" ? "Current" : "Proposed";
+    const edges = [
+      ["reads", "trim", "Paired reads"],
+      ["trim", "align", "Trimmed reads"],
+      ["align", "count", "Aligned reads"],
+      ["trim", "quality", "Trimmed reads"],
+      ["quality", "summary", "QC reports"],
+      ["count", "summary", "Count report"],
+    ];
+    function isVisible(id) {
+      return id !== "quality" || state.version === "proposed" || state.accepted;
+    }
+    function targetLabel(s) {
+      if (s.kind === "connection") {
+        const e = edges[Number(s.id)];
+        return steps[e[0]].label + " → " + steps[e[1]].label;
+      }
+      return s.kind === "setting"
+        ? "Quality threshold"
+        : s.kind === "input"
+          ? steps[s.id].label + " · Input"
+          : s.kind === "output"
+            ? steps[s.id].label + " · Output"
+            : steps[s.id].label;
+    }
+    function reference() {
+      return {
+        projectId: "example-project",
+        pipelineId: "example-rna",
+        artifactId:
+          state.version === "current"
+            ? state.accepted
+              ? "example-accepted-3"
+              : "example-current-1"
+            : "example-proposal-2",
+        viewVersion: version(),
+        target: { ...state.selection },
+        label: targetLabel(state.selection),
+      };
+    }
+    function choose(kind, id) {
+      state.selection = { kind, id };
+      render();
+    }
+    function setVersion(v) {
+      state.version = v;
+      if (
+        !isVisible(state.selection.id) ||
+        (state.selection.kind === "connection" &&
+          Number(state.selection.id) >= 3 &&
+          Number(state.selection.id) <= 4 &&
+          v === "current" &&
+          !state.accepted)
+      )
+        state.selection = { kind: "step", id: "trim" };
+      render();
+    }
+    function render() {
+      $("current").setAttribute("aria-pressed", state.version === "current");
+      $("proposed").setAttribute("aria-pressed", state.version === "proposed");
+      $("version-status").textContent = state.accepted
+        ? "Accepted in preview"
+        : state.version === "current"
+          ? "Current version"
+          : "2 changes";
+      const wires = edges
+        .filter((e) => isVisible(e[0]) && isVisible(e[1]))
+        .map(([from, to]) => {
+          const a = steps[from],
+            b = steps[to];
+          let d;
+          if (a.y === b.y) d = `M${a.x + 140} ${a.y + 42} H${b.x}`;
+          else d = `M${a.x + 70} ${a.y + 84} V${b.y}`;
+          return `<path class="wire ${from === "quality" || to === "quality" ? "added" : ""}" d="${d}" marker-end="url(#arrow)"/>`;
+        })
+        .join("");
+      $("graph").innerHTML =
+        `<svg width="700" height="338" aria-hidden="true"><defs><marker id="arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#93aaa0"/></marker></defs>${wires}</svg>`;
+      for (const [id, s] of Object.entries(steps)) {
+        if (!isVisible(id)) continue;
+        const b = document.createElement("button");
+        b.className = "node" + (id === "quality" ? " added" : "");
+        b.style.left = s.x + "px";
+        b.style.top = s.y + "px";
+        b.setAttribute("aria-label", s.label + " · " + version());
+        b.setAttribute(
+          "aria-pressed",
+          state.selection.kind !== "connection" && state.selection.id === id,
+        );
+        b.innerHTML = `<strong>${s.label}</strong><small>${s.tool}</small>${state.version === "proposed" && !state.accepted && (id === "trim" || id === "quality") ? `<span class="badge">${id === "quality" ? "Added" : "Changed"}</span>` : ""}${id === "quality" ? '<span class="agent-mark">Researcher</span>' : ""}`;
+        b.onclick = () => choose("step", id);
+        $("graph").append(b);
+      }
+      if (isVisible("quality")) {
+        const b = document.createElement("button");
+        b.className = "edge-button";
+        b.style.left = "279px";
+        b.style.top = "135px";
+        b.textContent = "Trim → Quality check";
+        b.setAttribute(
+          "aria-label",
+          "Select connection from Trim adapters to Quality check",
+        );
+        b.setAttribute(
+          "aria-pressed",
+          state.selection.kind === "connection" && state.selection.id === "3",
+        );
+        b.onclick = () => choose("connection", "3");
+        $("graph").append(b);
+      }
+      $("change-summary").innerHTML =
+        state.version === "proposed" && !state.accepted
+          ? '<span class="chip">+ Quality check after trimming</span><span class="chip">Changed · quality 20 → 25</span>'
+          : '<span class="muted">Select a step to inspect its inputs, outputs and settings.</span>';
+      const sel = state.selection;
+      const selectedStep = steps[sel.id] || steps.trim;
+      $("detail-title").textContent = targetLabel(sel);
+      $("detail-version").textContent = version();
+      $("discuss").textContent =
+        sel.kind === "connection"
+          ? "Discuss this connection ↗"
+          : sel.kind === "setting"
+            ? "Discuss this setting ↗"
+            : "Discuss this step ↗";
+      const fields =
+        sel.kind === "connection"
+          ? [
+              ["From", "Trim adapters"],
+              ["To", "Quality check"],
+              ["Carries", "Trimmed reads"],
+            ]
+          : [
+              ["Input", selectedStep.input],
+              ["Output", selectedStep.output],
+              [
+                sel.id === "trim" ? "Quality threshold" : "Tool",
+                sel.id === "trim"
+                  ? state.version === "proposed" && !state.accepted
+                    ? "20 → 25"
+                    : state.accepted
+                      ? "25"
+                      : "20"
+                  : selectedStep.tool,
+              ],
+            ];
+      $("detail-fields").replaceChildren();
+      fields.forEach(([label, value], i) => {
+        const b = document.createElement("button");
+        b.className = "field";
+        b.innerHTML = `<span>${label}</span><strong>${value}</strong>`;
+        b.setAttribute(
+          "aria-label",
+          "Select " + label + " for " + selectedStep.label,
+        );
+        b.onclick = () => {
+          if (sel.kind === "connection") return;
+          choose(
+            i === 0
+              ? "input"
+              : i === 1
+                ? "output"
+                : sel.id === "trim"
+                  ? "setting"
+                  : "step",
+            sel.id,
+          );
+        };
+        $("detail-fields").append(b);
+      });
+      $("detail-note").textContent =
+        sel.kind === "connection"
+          ? "Quality checking and alignment both receive trimmed reads. This connection does not make alignment wait for a quality report."
+          : "Selecting an item prepares a reference. Only Discuss attaches it to your message.";
+      renderAttachment();
+      renderStatus();
+    }
+    function renderAttachment() {
+      const a = state.attachment;
+      $("attachment").hidden = !a;
+      if (a) $("attachment-info").textContent = a.label + " · " + a.viewVersion;
+      $("attachment-info").title =
+        "Review what is included with this reference";
+    }
+    function attach() {
+      state.attachment = reference();
+      renderAttachment();
+      $("draft").focus();
+      if (innerWidth <= 900) setChat(true);
+    }
+    function setChat(show) {
+      $("shell").classList.toggle("chat-mode", show);
+      $("workspace-mode").setAttribute("aria-pressed", !show);
+      $("chat-mode").setAttribute("aria-pressed", show);
+    }
+    function showInfo(title, content) {
+      $("info-title").textContent = title;
+      $("info-body").innerHTML = content;
+      $("info").showModal();
+    }
+    function renderStatus() {
+      const messages = {
+        ready: "",
+        checking:
+          "Checking the proposed pipeline. The last available flow remains visible.",
+        stale:
+          "The pipeline changed since this proposal. Ask the Agent to update it before accepting.",
+        missing:
+          "Choose the read files to check this proposal. Your draft and the current flow are preserved.",
+      };
+      $("notice").hidden = state.scenario === "ready";
+      $("notice").textContent = messages[state.scenario];
+      $("accept").disabled = state.scenario !== "ready" || state.accepted;
+      $("accept").textContent = state.accepted ? "Accepted" : "Accept changes";
+      $("draft-status").textContent =
+        state.scenario === "stale"
+          ? "Earlier references can still be discussed."
+          : "Preview only · messages stay here";
+    }
+    $("current").onclick = () => setVersion("current");
+    $("proposed").onclick = () => setVersion("proposed");
+    $("discuss").onclick = attach;
+    $("original-ref").onclick = () => {
+      setVersion("current");
+      choose("step", "trim");
+      setChat(false);
+    };
+    $("agent-ref").onclick = () => {
+      setVersion("proposed");
+      choose("step", "quality");
+      setChat(false);
+    };
+    $("review").onclick = () => {
+      setVersion("proposed");
+      choose("step", "trim");
+      setChat(false);
+    };
+    $("accept").onclick = () =>
+      showInfo(
+        "Accept these pipeline changes?",
+        '<p>Add a quality check after trimming and change the quality threshold from 20 to 25.</p><p>This adopts the proposed pipeline. It does not start an analysis.</p><p><strong>Design preview only:</strong> no source files will be changed.</p><button class="accent" id="confirm-accept">Accept in preview</button>',
+      );
+    $("info").addEventListener("click", (e) => {
+      if (e.target.id === "confirm-accept") {
+        state.accepted = true;
+        setVersion("proposed");
+        $("info").close();
+        $("accept").focus();
+      }
+    });
+    $("attachment-info").onclick = () => {
+      const a = state.attachment;
+      if (!a) return;
+      showInfo(
+        "Reference included with your message",
+        `<p><strong>${a.label} · ${a.viewVersion}</strong></p><p>The Agent receives the exact pipeline version, selected item and its visible context. This reference keeps its original version when you switch views.</p><p class="muted">Prototype identifiers: <code>${a.artifactId} / ${a.target.kind} / ${a.target.id}</code>. These are example records, not live observations.</p>`,
+      );
+    };
+    $("remove-attachment").onclick = () => {
+      state.attachment = null;
+      renderAttachment();
+      $("draft").focus();
+    };
+    $("close-info").onclick = () => $("info").close();
+    $("scenario").onchange = (e) => {
+      state.scenario = e.target.value;
+      renderStatus();
+    };
+    $("composer").onsubmit = (e) => {
+      e.preventDefault();
+      if (!$("draft").value.trim() && !state.attachment) return;
+      const item = document.createElement("article");
+      item.className = "message user";
+      const name = document.createElement("strong");
+      name.className = "author";
+      name.textContent = "You · preview";
+      const content = document.createElement("p");
+      content.textContent = $("draft").value;
+      item.append(name, content);
+      if (state.attachment) {
+        const a = document.createElement("p");
+        a.className = "chip";
+        a.textContent =
+          state.attachment.label +
+          " · " +
+          state.attachment.viewVersion +
+          (state.scenario === "stale" ? " · Earlier version" : "");
+        item.append(a);
+      }
+      $("messages").append(item);
+      $("messages").scrollTop = $("messages").scrollHeight;
+      $("draft").value = "";
+      state.attachment = null;
+      renderAttachment();
+      $("draft-status").textContent =
+        "Preview message added · no Agent contacted";
+    };
+    $("toggle-nav").onclick = () => $("shell").classList.toggle("nav-hidden");
+    $("workspace-mode").onclick = () => setChat(false);
+    $("chat-mode").onclick = () => setChat(true);
+    render();
+  </script>
+</html>

@@ -1,0 +1,184 @@
+{
+  "projectId": "prj_RHZGMRPODFSPKEVNYJMW4LLEHH",
+  "toolset": "shared-views-v7",
+  "agent": {
+    "projectId": "prj_RHZGMRPODFSPKEVNYJMW4LLEHH",
+    "agentId": "agt_55e385fa-3d30-4591-a56a-7a6f7ef2f0a1",
+    "name": "Dependency reviewer",
+    "instructionProfile": "discussion-v1",
+    "access": "sharedViews",
+    "configuration": {
+      "model": "gpt-6-astra",
+      "effort": "medium",
+      "instructions": ""
+    },
+    "provider": {
+      "kind": "codex",
+      "threadId": "01a08009-b671-7cb2-bfc5-93044a535c8c",
+      "accountSessionId": "95802682-84c0-451b-ae34-8bcc4965d157",
+      "toolsetVersion": "shared-views-v7"
+    }
+  },
+  "references": [
+    {
+      "referenceId": "ref_28e44a6d-e055-496b-b35a-0590e32bddeb",
+      "evidence": {
+        "schemaVersion": 4,
+        "projectId": "prj_RHZGMRPODFSPKEVNYJMW4LLEHH",
+        "resource": {
+          "kind": "run",
+          "runRef": "run_4ULBLJVTTRWMJA6WF32CKYZ75K"
+        },
+        "dataRevision": "sha256:d9d1eea08fedfd817f01e9d50b9bb20bb63e3df5b171a73cf4010e2fcbdc09e0",
+        "selection": {
+          "kind": "run-group",
+          "coordinateSpace": "observed-authored-task-group",
+          "taskId": "align"
+        }
+      },
+      "note": "Authored align group: three observed members; their statuses and attempts do not define an aggregate group state.",
+      "author": {
+        "kind": "agent",
+        "agentId": "agt_55e385fa-3d30-4591-a56a-7a6f7ef2f0a1",
+        "name": "Dependency reviewer"
+      },
+      "createdAt": 1788854538636,
+      "retracted": false,
+      "originSubmissionId": "req_94a86cb1-bf44-47a7-a87a-3804d94cc28d",
+      "label": "existing"
+    },
+    {
+      "referenceId": "ref_15ef5961-d1fc-45db-a017-aee7d7b7fa93",
+      "evidence": {
+        "schemaVersion": 4,
+        "projectId": "prj_RHZGMRPODFSPKEVNYJMW4LLEHH",
+        "resource": {
+          "kind": "run",
+          "runRef": "run_4ULBLJVTTRWMJA6WF32CKYZ75K"
+        },
+        "dataRevision": "sha256:d9d1eea08fedfd817f01e9d50b9bb20bb63e3df5b171a73cf4010e2fcbdc09e0",
+        "selection": {
+          "kind": "run-dependency",
+          "coordinateSpace": "observed-authored-task-pair",
+          "fromTaskId": "prepare",
+          "toTaskId": "align"
+        }
+      },
+      "note": "Authored directed dependency prepare \u2192 align; this does not identify instance-level or attempt-level edges.",
+      "author": {
+        "kind": "agent",
+        "agentId": "agt_55e385fa-3d30-4591-a56a-7a6f7ef2f0a1",
+        "name": "Dependency reviewer"
+      },
+      "createdAt": 1788854538672,
+      "retracted": false,
+      "originSubmissionId": "req_94a86cb1-bf44-47a7-a87a-3804d94cc28d",
+      "label": "existing"
+    }
+  ],
+  "submissions": [
+    {
+      "requestId": "req_94a86cb1-bf44-47a7-a87a-3804d94cc28d",
+      "agentId": "agt_55e385fa-3d30-4591-a56a-7a6f7ef2f0a1",
+      "text": "This is synthetic UI acceptance-test data. Use workspace_list, then workspace_observe with representation dependencies on the displayed Run. Explain the attached align group and directed prepare \u2192 align dependency, distinguishing authored groups from observed instances and attempts. Publish exactly two pointers using workspace_point: the returned align group target and the returned prepare \u2192 align directed pair target, with that read\u2019s observedReadId and complete observation receipt. Keep output in English and under 160 words. Preserve my selection, view mode, camera and draft. Use only the named shared workspace tools; no execution, files or external resources are needed.",
+      "model": "gpt-6-astra",
+      "effort": "medium",
+      "createdAt": 1788854515404,
+      "responseStartedAt": 1788854521735,
+      "state": "completed",
+      "threadId": "01a08009-b671-7cb2-bfc5-93044a535c8c",
+      "turnId": "01a08009-b6db-7f22-97ce-50746f59ff84",
+      "response": "I\u2019ll inspect the displayed dependencies and publish the two requested pointers without changing your view or selection.\n\n\nThe displayed dependencies match the attachments. **align** is an authored task group with three observed members:\n\n- `align:S03`: failed, attempt 2; template status unknown.\n- `align:S04`: `custom-state`, attempt 0; template status unknown.\n- `align-template`: pending, attempt 0; explicitly a template.\n\nThese are member observations, not an aggregate group status. Attempt numbers identify observed attempts; they do not provide attempt history.\n\n**prepare \u2192 align** is the authored directed dependency from upstream `prepare` to downstream `align`. The observed `prepare` member completed at attempt 1. This pair does not establish individual instance or attempt connections, or imply that all align members succeeded.\n\nPublished exactly two pointers using the returned targets, that read\u2019s `observedReadId`, and its complete observation receipt. Your selection, view mode, camera, and draft were preserved.",
+      "problem": null,
+      "evidence": [
+        {
+          "attachmentId": "att_16e9a912-c7ea-4949-957d-23dd26daf3cd",
+          "evidence": {
+            "schemaVersion": 4,
+            "projectId": "prj_RHZGMRPODFSPKEVNYJMW4LLEHH",
+            "resource": {
+              "kind": "run",
+              "runRef": "run_4ULBLJVTTRWMJA6WF32CKYZ75K"
+            },
+            "dataRevision": "sha256:d9d1eea08fedfd817f01e9d50b9bb20bb63e3df5b171a73cf4010e2fcbdc09e0",
+            "selection": {
+              "kind": "run-group",
+              "coordinateSpace": "observed-authored-task-group",
+              "taskId": "align"
+            }
+          },
+          "label": "existing",
+          "createdAt": 1788854448357,
+          "capture": {
+            "kind": "observed",
+            "capturedAt": 1788854448361,
+            "asset": {
+              "hash": "sha256:cc3962f81c17482b8fa078f3ddc2486e144eed28a7da1598347927252619b2da",
+              "byteLength": 1482,
+              "mediaType": "application/json"
+            },
+            "representation": {
+              "kind": "run",
+              "truncated": false
+            }
+          },
+          "capturedAt": 1788854448361,
+          "asset": {
+            "hash": "sha256:cc3962f81c17482b8fa078f3ddc2486e144eed28a7da1598347927252619b2da",
+            "byteLength": 1482,
+            "mediaType": "application/json"
+          },
+          "representation": {
+            "kind": "run",
+            "truncated": false
+          }
+        },
+        {
+          "attachmentId": "att_99bbfbea-7a86-430d-afec-685bbcd0921f",
+          "evidence": {
+            "schemaVersion": 4,
+            "projectId": "prj_RHZGMRPODFSPKEVNYJMW4LLEHH",
+            "resource": {
+              "kind": "run",
+              "runRef": "run_4ULBLJVTTRWMJA6WF32CKYZ75K"
+            },
+            "dataRevision": "sha256:d9d1eea08fedfd817f01e9d50b9bb20bb63e3df5b171a73cf4010e2fcbdc09e0",
+            "selection": {
+              "kind": "run-dependency",
+              "coordinateSpace": "observed-authored-task-pair",
+              "fromTaskId": "prepare",
+              "toTaskId": "align"
+            }
+          },
+          "label": "existing",
+          "createdAt": 1788854486383,
+          "capture": {
+            "kind": "observed",
+            "capturedAt": 1788854486386,
+            "asset": {
+              "hash": "sha256:7047bc5315dfe75ce367ce1e39453f92c3c87fac7ac9714f18c9c1b61bdd6a39",
+              "byteLength": 1860,
+              "mediaType": "application/json"
+            },
+            "representation": {
+              "kind": "run",
+              "truncated": false
+            }
+          },
+          "capturedAt": 1788854486386,
+          "asset": {
+            "hash": "sha256:7047bc5315dfe75ce367ce1e39453f92c3c87fac7ac9714f18c9c1b61bdd6a39",
+            "byteLength": 1860,
+            "mediaType": "application/json"
+          },
+          "representation": {
+            "kind": "run",
+            "truncated": false
+          }
+        }
+      ],
+      "preparedEvidenceId": "prep_ba0c4580-5820-4db2-aef6-496a6b2277ca"
+    }
+  ],
+  "arrivalSelectionCameraDraftPreserved": true
+}

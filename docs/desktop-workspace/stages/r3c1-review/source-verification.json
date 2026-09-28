@@ -1,0 +1,26 @@
+{
+  "date": "2026-09-08T11:19:26.013Z",
+  "qualificationReportSha256": "86451ad0cdd16f7be9b38cb827e63ad0ffa3fa50e4529e834dfa099d160805f0",
+  "protectedFiles": 434,
+  "changedProtectedFiles": [],
+  "newQualificationFiles": 17,
+  "sources": {
+    "app/qualification/pdf/README.md": "56051a84ee5198b4ccad60d1998ae9955749df06216667a1d4acc9b5a06328b8",
+    "app/qualification/pdf/build.cjs": "df241f5470d88ef73d46aed0bd22c67d564ec0cba2f846d266d6a948a84a3121",
+    "app/qualification/pdf/decoder.ts": "4da4b78f0fd222a3388846db08f1bb5850c1e863588a3f79d0db1a938787bd50",
+    "app/qualification/pdf/fixtures/encrypted.pdf": "4a30e2ff4e263b127ed60f8819876225adc831692876ac34fb7cdb809f268127",
+    "app/qualification/pdf/fixtures.ts": "eb280882071e864789d888276e3470c88b5847d42459e7b607f2e9a0fe4aa436",
+    "app/qualification/pdf/geometry.ts": "385c6883f5481077c49b658ba07e71df0528d6de756eddcfccdcf799b2b4596c",
+    "app/qualification/pdf/host.ts": "6eb34fcc6ba832d5a573cd49d741b169e5ea26950da65092baa9dad91d9677ef",
+    "app/qualification/pdf/main.ts": "7bd429d6bb5c8bc66bef934257ab9eb7da7baf1dc5bbfbd94264721646221a0d",
+    "app/qualification/pdf/preload.ts": "05a5b94aba381e44bd10d49b75d47514c0695d18484dafd35273d00409dc1c3d",
+    "app/qualification/pdf/protocol.ts": "db14e2a89253ecab4df551d8df54ceba9d5a4cea72aff60dcd5c34f1565164ff",
+    "app/qualification/pdf/qualify.cjs": "c14893985a5c719448bf00528b5a89ef802cbc76bdcaac7c7d7952e55abc75b1",
+    "app/qualification/pdf/raster.ts": "40ccf2b473c8f903f173fa25dc21c67a09fd90233f95183954d5b23d792565fa",
+    "app/qualification/pdf/renderer.tsx": "fe1608a0add75e94e023c818f10387dee77b33a9ae0c27d80c1dce2c5d78a6f0",
+    "app/qualification/pdf/style.css": "948878d29f113b7cc6691a5a65efb4afa7ce318987987327170450cdd4831f54",
+    "app/qualification/pdf/ui-preload.ts": "dc6b993c44af8dd22c88d3fddfd39ab8310e7517d76c73ebf163f17ec0817c47",
+    "app/qualification/pdf/view.cjs": "b02ebcb16e42f81cbe7c63afdc423debc237d2c50cd235e41b560dfe973a5940",
+    "app/qualification/pdf/worker.ts": "5cd4e21c975600a0587e47f018e005ad62e31d1e6b6c5dd05db1f3754c9eb6f7"
+  }
+}

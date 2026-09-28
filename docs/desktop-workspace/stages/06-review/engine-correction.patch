@@ -1,0 +1,309 @@
+diff --git a/docs/docker-execution.md b/docs/docker-execution.md
+index 807be88..fcae402 100644
+--- a/docs/docker-execution.md
++++ b/docs/docker-execution.md
+@@ -69,9 +69,14 @@ do not configure the client. Endpoint selection is consistent with Docker's
+ 
+ New handles carry the controller's attempt directory. Log collection uses that
+ local path instead of interpreting a daemon-host bind source as a controller
+-path. A following Docker log client writes stdout/stderr while the task runs;
+-settlement joins that collector before gathering final logs and removing the
+-container. The monitor only reads these files. Docker polling has a 500 ms interval to avoid launching client
++path. A following Docker log client writes stdout/stderr while the task runs.
++After Docker proves normal task completion, the adapter drains that collector
++and checks its exit and file-close results before removing the container. It
++does not recreate files already owned by the live collector. Without a live
++collector, final collection still requires new exclusive files; existing,
++linked or untrusted attempt files are not overwritten. Failed or canceled
++collection remains an explicit incomplete-log warning. The monitor only reads
++these files. Docker polling has a 500 ms interval to avoid launching client
+ processes at 50 Hz per task; process-task polling remains independent.
+ 
+ ## Validation boundary
+diff --git a/internal/engine/checkpoint.go b/internal/engine/checkpoint.go
+index 298d4a6..cc8cf85 100644
+--- a/internal/engine/checkpoint.go
++++ b/internal/engine/checkpoint.go
+@@ -92,7 +92,7 @@ func checkpointLock(workspace string, write bool) (*os.File, error) {
+ 	if write {
+ 		flag = os.O_CREATE | os.O_RDWR
+ 	}
+-	f, err := os.OpenFile(path, flag|syscall.O_NOFOLLOW, 0o600)
++	f, err := openLockFile(path, flag|syscall.O_NOFOLLOW, 0o600)
+ 	if err != nil {
+ 		return nil, err
+ 	}
+diff --git a/internal/engine/exec/docker.go b/internal/engine/exec/docker.go
+index 1bce3e2..4f46c49 100644
+--- a/internal/engine/exec/docker.go
++++ b/internal/engine/exec/docker.go
+@@ -230,15 +230,15 @@ func (d *Docker) Reconcile(ctx context.Context, h Handle) (Report, error) {
+ }
+ 
+ func (d *Docker) finishStopped(ctx context.Context, h Handle, exit int) (Report, error) {
+-	if err := d.stopLogs(ctx, h.RuntimeID); err != nil {
+-		return Report{Identity: h.Identity, RuntimeID: h.RuntimeID}, err
+-	}
+ 	msg := ""
+ 	if exit != 0 {
+ 		msg = "exit " + strconv.Itoa(exit)
+ 	}
+ 	r := Report{Identity: h.Identity, RuntimeID: h.RuntimeID, Exit: exit, Message: msg, Running: false}
+-	if err := writeDockerLogs(ctx, h); err != nil {
++	if err := d.finishLogs(ctx, h); err != nil {
++		if ctx.Err() != nil {
++			return Report{Identity: h.Identity, RuntimeID: h.RuntimeID}, ctx.Err()
++		}
+ 		r.Reason = "log-copy-failed"
+ 	}
+ 	if err := removeDockerContainer(ctx, h.RuntimeID); err == nil {
+diff --git a/internal/engine/exec/logs.go b/internal/engine/exec/logs.go
+index 3ff40c7..48ebb10 100644
+--- a/internal/engine/exec/logs.go
++++ b/internal/engine/exec/logs.go
+@@ -2,12 +2,15 @@ package exec
+ 
+ import (
+ 	"context"
++	"errors"
++	"fmt"
+ 	"path/filepath"
+ )
+ 
+ type logStream struct {
+ 	cancel context.CancelFunc
+ 	done   chan struct{}
++	err    error // Published by closing done; read only after joining.
+ }
+ 
+ // The controller owns the collector. A monitor only reads attempt files.
+@@ -40,13 +43,34 @@ func (d *Docker) followLogs(ctx context.Context, h Handle) {
+ 	cli, env := DockerCLI, dockerEnvForContext(ctx)
+ 	go func() {
+ 		defer close(stream.done)
+-		defer out.Close()
+-		defer stderr.Close()
+ 		defer cancel()
+-		_, _ = cli(ctx, []string{"logs", "--follow", h.RuntimeID}, env, out, stderr)
++		code, err := cli(ctx, []string{"logs", "--follow", h.RuntimeID}, env, out, stderr)
++		if err == nil && code != 0 {
++			err = fmt.Errorf("docker logs: exit %d", code)
++		}
++		stream.err = errors.Join(err, out.Close(), stderr.Close())
+ 	}()
+ }
+ 
++// finishLogs drains an owned collector after Docker proves the task stopped.
++// Creating the same files again would reject the collector's own exclusive files.
++// A failed stream is not treated as complete and never authorizes an overwrite.
++func (d *Docker) finishLogs(ctx context.Context, h Handle) error {
++	d.mu.Lock()
++	stream := d.streams[h.RuntimeID]
++	d.mu.Unlock()
++	if stream == nil {
++		return writeDockerLogs(ctx, h)
++	}
++	select {
++	case <-stream.done:
++		return stream.err
++	case <-ctx.Done():
++		stream.cancel()
++		return ctx.Err()
++	}
++}
++
+ func (d *Docker) stopLogs(ctx context.Context, id string) error {
+ 	d.mu.Lock()
+ 	stream := d.streams[id]
+diff --git a/internal/engine/exec/logs_test.go b/internal/engine/exec/logs_test.go
+index 5f8bba4..e9d9b1f 100644
+--- a/internal/engine/exec/logs_test.go
++++ b/internal/engine/exec/logs_test.go
+@@ -5,6 +5,7 @@ import (
+ 	"io"
+ 	"os"
+ 	"path/filepath"
++	"strings"
+ 	"sync/atomic"
+ 	"testing"
+ 	"time"
+@@ -56,3 +57,66 @@ func TestDockerLogsVisibleBeforeTaskStops(t *testing.T) {
+ 		t.Fatalf("started %d collectors", calls.Load())
+ 	}
+ }
++
++func TestStoppedDockerTaskUsesItsCompletedLiveLogs(t *testing.T) {
++	for _, failed := range []bool{false, true} {
++		t.Run(map[bool]string{false: "complete", true: "collector failure"}[failed], func(t *testing.T) {
++			attempt := t.TempDir()
++			work := filepath.Join(attempt, "work")
++			if err := os.Mkdir(work, 0o755); err != nil {
++				t.Fatal(err)
++			}
++			started, finish := make(chan struct{}), make(chan struct{})
++			original := DockerCLI
++			t.Cleanup(func() { DockerCLI = original })
++			DockerCLI = func(ctx context.Context, args, env []string, stdout, stderr io.Writer) (int, error) {
++				switch strings.Join(args, " ") {
++				case "logs --follow container":
++					io.WriteString(stdout, "started\n")
++					close(started)
++					select {
++					case <-finish:
++					case <-ctx.Done():
++						return -1, ctx.Err()
++					}
++					io.WriteString(stdout, "finished\n")
++					if failed {
++						return 23, nil
++					}
++					return 0, nil
++				case "rm -f container":
++					return 0, nil
++				default:
++					t.Errorf("unexpected Docker call %v", args)
++					return 1, nil
++				}
++			}
++			ctx, cancel := context.WithTimeout(t.Context(), 2*time.Second)
++			defer cancel()
++			d := NewDocker()
++			h := Handle{Identity: "task", RuntimeID: "container", Isolate: work, Submission: &Submission{Token: "token"}}
++			d.followLogs(ctx, h)
++			select {
++			case <-started:
++			case <-ctx.Done():
++				t.Fatal("collector did not start")
++			}
++			close(finish)
++			r, err := d.finishStopped(ctx, h, 0)
++			if err != nil {
++				t.Fatal(err)
++			}
++			wantReason := ""
++			if failed {
++				wantReason = "log-copy-failed"
++			}
++			if r.Reason != wantReason || r.Exit != 0 || r.RuntimeID != "" {
++				t.Fatalf("final report = %#v, want exit 0 with reason %q", r, wantReason)
++			}
++			got, err := os.ReadFile(filepath.Join(attempt, "stdout"))
++			if err != nil || string(got) != "started\nfinished\n" {
++				t.Fatalf("final logs = %q, %v", got, err)
++			}
++		})
++	}
++}
+diff --git a/internal/engine/filelock.go b/internal/engine/filelock.go
+new file mode 100644
+index 0000000..343809f
+--- /dev/null
++++ b/internal/engine/filelock.go
+@@ -0,0 +1,20 @@
++package engine
++
++import "os"
++
++// openLockFile keeps creation separate from the descriptor used for flock.
++// Docker Desktop VirtioFS can grant conflicting locks when one descriptor also
++// created the file. Reopening restores exclusion with other readers/writers.
++// The caller owns the returned descriptor and the lock acquired on it.
++func openLockFile(path string, flag int, perm os.FileMode) (*os.File, error) {
++	if flag&os.O_CREATE != 0 {
++		created, err := os.OpenFile(path, flag, perm)
++		if err != nil {
++			return nil, err
++		}
++		if err := created.Close(); err != nil {
++			return nil, err
++		}
++	}
++	return os.OpenFile(path, flag&^os.O_CREATE, perm)
++}
+diff --git a/internal/engine/filelock_test.go b/internal/engine/filelock_test.go
+new file mode 100644
+index 0000000..66194df
+--- /dev/null
++++ b/internal/engine/filelock_test.go
+@@ -0,0 +1,59 @@
++package engine
++
++import (
++	"errors"
++	"os"
++	"path/filepath"
++	"syscall"
++	"testing"
++)
++
++// Run with TMPDIR on a Docker Desktop bind mount to exercise VirtioFS too.
++func TestFreshOccupancyLockIsObservable(t *testing.T) {
++	workspace := t.TempDir()
++	first, defects := claimOccupy(filepath.Join(workspace, ControlDir))
++	if len(defects) != 0 {
++		t.Fatal(defects)
++	}
++	t.Cleanup(func() { first.Close() })
++	if !flockHeld(workspace) {
++		t.Error("a different descriptor must observe the freshly created occupancy lock")
++	}
++	second, defects := claimOccupy(filepath.Join(workspace, ControlDir))
++	if second != nil {
++		second.Close()
++		t.Error("a second claimant acquired the occupied workspace")
++	}
++	if len(defects) != 1 || defects[0].Code != DefectOccupiedWorkspace {
++		t.Errorf("second claim defects = %v", defects)
++	}
++	first.Close()
++	if flockHeld(workspace) {
++		t.Error("closed occupancy must no longer appear live")
++	}
++}
++
++func TestFreshCheckpointLockExcludesReaders(t *testing.T) {
++	workspace := t.TempDir()
++	if err := os.Mkdir(filepath.Join(workspace, ControlDir), 0o755); err != nil {
++		t.Fatal(err)
++	}
++	writer, err := checkpointLock(workspace, true)
++	if err != nil {
++		t.Fatal(err)
++	}
++	t.Cleanup(func() { writer.Close() })
++	reader, err := os.Open(filepath.Join(workspace, ControlDir, checkpointLockFile))
++	if err != nil {
++		t.Fatal(err)
++	}
++	defer reader.Close()
++	err = syscall.Flock(int(reader.Fd()), syscall.LOCK_SH|syscall.LOCK_NB)
++	if !errors.Is(err, syscall.EWOULDBLOCK) && !errors.Is(err, syscall.EAGAIN) {
++		t.Fatalf("reader must conflict with fresh writer; got %v", err)
++	}
++	writer.Close()
++	if err := syscall.Flock(int(reader.Fd()), syscall.LOCK_SH|syscall.LOCK_NB); err != nil {
++		t.Fatalf("reader after writer closes: %v", err)
++	}
++}
+diff --git a/internal/engine/occupancy.go b/internal/engine/occupancy.go
+index 1a1ef07..1ee283d 100644
+--- a/internal/engine/occupancy.go
++++ b/internal/engine/occupancy.go
+@@ -141,7 +141,7 @@ func claimOccupy(root string) (*os.File, []Defect) {
+ 	if err := os.MkdirAll(root, 0o755); err != nil {
+ 		return nil, pathDefects(err)
+ 	}
+-	f, err := os.OpenFile(filepath.Join(root, occupyLockFile), os.O_CREATE|os.O_RDWR, 0o644)
++	f, err := openLockFile(filepath.Join(root, occupyLockFile), os.O_CREATE|os.O_RDWR, 0o644)
+ 	if err != nil {
+ 		return nil, pathDefects(err)
+ 	}
+@@ -288,7 +288,7 @@ func ownerLive(workspace string) bool {
+ 
+ func flockHeld(workspace string) bool {
+ 	path := filepath.Join(workspace, ControlDir, occupyLockFile)
+-	f, err := os.OpenFile(path, os.O_RDWR, 0)
++	f, err := os.Open(path)
+ 	if err != nil {
+ 		return false
+ 	}

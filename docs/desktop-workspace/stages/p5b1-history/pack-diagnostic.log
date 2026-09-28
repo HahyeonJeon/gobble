@@ -1,0 +1,10 @@
+=== RUN   TestPackPrintpipeArtifact
+    pack_test.go:269: packed compose = code 1 stderr 
+--- FAIL: TestPackPrintpipeArtifact (4.59s)
+=== RUN   TestPackHostpipeEmptyInspectProtocol
+    pack_test.go:364: exit = 1
+        stderr: 
+--- FAIL: TestPackHostpipeEmptyInspectProtocol (4.17s)
+FAIL
+FAIL	github.com/HahyeonJeon/gobble/cmd/gobble	8.812s
+FAIL

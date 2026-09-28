@@ -1,0 +1,300 @@
+{
+  "request": "R4a1-2026-09-08",
+  "started": "2026-09-08T15:07:06.013Z",
+  "scope": "Isolated source-checkout Notebook qualification; no production/Agent/kernel/package claim",
+  "cases": [
+    {
+      "name": "Worker cancellation, deadline and two-read admission release resources",
+      "result": "passed",
+      "ms": 770.4568749999999
+    },
+    {
+      "name": "Measured 2 MiB source and 1000-cell parsing justify a named bounded transport",
+      "result": "passed",
+      "ms": 359.4895829999996,
+      "details": [
+        {
+          "name": "python",
+          "bytes": 2491,
+          "cells": 3,
+          "textBytes": 331,
+          "ms": 34.914666999999554
+        },
+        {
+          "name": "large",
+          "bytes": 3385667,
+          "cells": 3,
+          "textBytes": 331,
+          "ms": 64.31295899999986
+        },
+        {
+          "name": "many",
+          "bytes": 118760,
+          "cells": 1000,
+          "textBytes": 21780,
+          "ms": 25.261207999999897
+        }
+      ]
+    },
+    {
+      "name": "Actual saved Notebook through emitted sandbox bridge; passive source/output fallback",
+      "result": "passed",
+      "ms": 91.63862499999959,
+      "details": {
+        "cells": 3,
+        "revision": "sha256:0f7f80252f94fef60a2489f24b74a049d757dee5d84db33e43232b772cea9595"
+      }
+    },
+    {
+      "name": "Native text drag identifies the exact source range and captures it without changing draft",
+      "result": "passed",
+      "ms": 233.71741699999984
+    },
+    {
+      "name": "Visibility receipt excludes folded, offscreen and clipped text; scrolling expires earlier observations",
+      "result": "passed",
+      "ms": 233.6260830000001
+    },
+    {
+      "name": "PNG display and scaled pointer selection preserve natural pixel crop",
+      "result": "passed",
+      "ms": 252.31387499999983
+    },
+    {
+      "name": "Captured Show/Return preserves source reader scroll and draft; new source keeps old evidence",
+      "result": "passed",
+      "ms": 180.24895800000013
+    },
+    {
+      "name": "JPEG decode, malformed image refusal and Unicode raw quote",
+      "result": "passed",
+      "ms": 161.82829200000015
+    },
+    {
+      "name": "Host enforces text/pixel/encoded capture budgets and isolates returned view data",
+      "result": "passed",
+      "ms": 90.78341700000055,
+      "details": {
+        "text": {
+          "exact": 65536,
+          "over": "Text capture exceeds 64 KiB.",
+          "intact": "filter"
+        },
+        "pixels": {
+          "accepted": 1536,
+          "error": "Image capture exceeds 1536 pixels; select a smaller region."
+        },
+        "encodedBudget": "768 KiB enforced in Host; high-entropy case below"
+      }
+    },
+    {
+      "name": "Native keyboard source and image-region controls create exact captures",
+      "result": "passed",
+      "ms": 232.47970899999927
+    },
+    {
+      "name": "Native sender, bridge, network, popup and CSP boundaries",
+      "result": "passed",
+      "ms": 4.043541000000005
+    },
+    {
+      "name": "900x650 compact reader and 150% native zoom keep the composer reachable",
+      "result": "passed",
+      "ms": 160.65358299999934
+    },
+    {
+      "name": "Two readers remain independent, reject a third, and release workers on close",
+      "result": "passed",
+      "ms": 270.564625,
+      "details": {
+        "readers": 2,
+        "metrics": [
+          {
+            "cpu": {
+              "cumulativeCPUUsage": 1.186106,
+              "percentCPUUsage": 4.720180415133628,
+              "idleWakeupsPerSecond": 111
+            },
+            "pid": 8688,
+            "type": "Browser",
+            "creationTime": 1788880029657.315,
+            "memory": {
+              "workingSetSize": 249456,
+              "peakWorkingSetSize": 263536
+            },
+            "sandboxed": false
+          },
+          {
+            "cpu": {
+              "cumulativeCPUUsage": 0.362801,
+              "percentCPUUsage": 1.3651256346906977,
+              "idleWakeupsPerSecond": 243
+            },
+            "pid": 8689,
+            "type": "GPU",
+            "creationTime": 1788880029838.286,
+            "serviceName": "GPU",
+            "memory": {
+              "workingSetSize": 145776,
+              "peakWorkingSetSize": 166912
+            },
+            "sandboxed": true
+          },
+          {
+            "cpu": {
+              "cumulativeCPUUsage": 0.066541,
+              "percentCPUUsage": 0.009021819337394498,
+              "idleWakeupsPerSecond": 0
+            },
+            "pid": 8690,
+            "type": "Utility",
+            "creationTime": 1788880029839.648,
+            "serviceName": "network.mojom.NetworkService",
+            "name": "Network Service",
+            "memory": {
+              "workingSetSize": 43984,
+              "peakWorkingSetSize": 49632
+            },
+            "sandboxed": true
+          },
+          {
+            "cpu": {
+              "cumulativeCPUUsage": 0.571236,
+              "percentCPUUsage": 2.4178626155665013,
+              "idleWakeupsPerSecond": 74
+            },
+            "pid": 8691,
+            "type": "Tab",
+            "creationTime": 1788880030003.868,
+            "memory": {
+              "workingSetSize": 164384,
+              "peakWorkingSetSize": 164384
+            },
+            "sandboxed": true
+          },
+          {
+            "cpu": {
+              "cumulativeCPUUsage": 0.173295,
+              "percentCPUUsage": 0,
+              "idleWakeupsPerSecond": 0
+            },
+            "pid": 8695,
+            "type": "Tab",
+            "creationTime": 1788880031820.001,
+            "memory": {
+              "workingSetSize": 134144,
+              "peakWorkingSetSize": 134144
+            },
+            "sandboxed": true
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [],
+  "construction": "Strict TypeScript, bundled entries and 24 pure tests passed",
+  "environment": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "versions": {
+      "node": "24.20.0",
+      "acorn": "8.18.0",
+      "ada": "4.0.0",
+      "amaro": "1.1.11",
+      "ares": "1.34.8",
+      "brotli": "1.2.0",
+      "cldr": "48.0",
+      "icu": "78.2",
+      "llhttp": "9.4.3",
+      "merve": "1.2.2",
+      "modules": "149",
+      "napi": "10",
+      "nbytes": "0.1.4",
+      "ncrypto": "0.0.1",
+      "nghttp2": "1.70.0",
+      "nghttp3": "",
+      "ngtcp2": "",
+      "openssl": "0.0.0",
+      "simdjson": "4.6.6",
+      "simdutf": "7.7.0",
+      "sqlite": "3.53.4",
+      "tz": "2025c",
+      "undici": "7.29.0",
+      "unicode": "17.0",
+      "uv": "1.52.1",
+      "uvwasi": "0.0.23",
+      "v8": "15.2.124.19-electron.0",
+      "zlib": "1.3.2.1-motley",
+      "zstd": "1.6.0",
+      "electron": "44.2.0",
+      "chrome": "152.0.7977.76"
+    },
+    "metrics": [
+      {
+        "cpu": {
+          "cumulativeCPUUsage": 0.309754,
+          "percentCPUUsage": 0,
+          "idleWakeupsPerSecond": 0
+        },
+        "pid": 8688,
+        "type": "Browser",
+        "creationTime": 1788880029657.315,
+        "memory": {
+          "workingSetSize": 172608,
+          "peakWorkingSetSize": 172608
+        },
+        "sandboxed": false
+      },
+      {
+        "cpu": {
+          "cumulativeCPUUsage": 0.10935,
+          "percentCPUUsage": 0,
+          "idleWakeupsPerSecond": 0
+        },
+        "pid": 8689,
+        "type": "GPU",
+        "creationTime": 1788880029838.286,
+        "serviceName": "GPU",
+        "memory": {
+          "workingSetSize": 68656,
+          "peakWorkingSetSize": 68656
+        },
+        "sandboxed": true
+      },
+      {
+        "cpu": {
+          "cumulativeCPUUsage": 0.064866,
+          "percentCPUUsage": 0,
+          "idleWakeupsPerSecond": 0
+        },
+        "pid": 8690,
+        "type": "Utility",
+        "creationTime": 1788880029839.648,
+        "serviceName": "network.mojom.NetworkService",
+        "name": "Network Service",
+        "memory": {
+          "workingSetSize": 49632,
+          "peakWorkingSetSize": 49632
+        },
+        "sandboxed": true
+      },
+      {
+        "cpu": {
+          "cumulativeCPUUsage": 0.122332,
+          "percentCPUUsage": 0,
+          "idleWakeupsPerSecond": 0
+        },
+        "pid": 8691,
+        "type": "Tab",
+        "creationTime": 1788880030003.868,
+        "memory": {
+          "workingSetSize": 106688,
+          "peakWorkingSetSize": 106688
+        },
+        "sandboxed": true
+      }
+    ]
+  },
+  "status": "passed",
+  "finished": "2026-09-08T15:07:12.072Z"
+}

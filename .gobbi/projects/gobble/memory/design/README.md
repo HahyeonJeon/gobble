@@ -6,7 +6,9 @@ Current project design, grouped by its dominant subject.
 
 - [Project and product-family overview](architecture/overview.md)
 - [Shared system architecture](architecture/system.md)
-- [Agent application, desktop delivery, engine/CLI boundaries, and monitoring](architecture/application.md)
+- [Project application, desktop delivery, engine/CLI boundaries, and monitoring](architecture/application.md)
+- [Project workspace: processes, identities, persistence and communication](architecture/project-workspace-contract.md)
+- [Domain definitions: Project, Workspace, Pipeline/Plan/Run, Resource, Surface, Pane and metadata ownership](architecture/workspace-domain.md)
 
 ## Process
 
@@ -14,7 +16,7 @@ Current project design, grouped by its dominant subject.
 
 ## Feature
 
-- [Agent-centered workspace, shared views, and contextual decisions](feature/agent-workspace.md)
+- [Approved Project-centered workspace, multiple agents, shared views and pointing](feature/agent-workspace.md)
 - [Assay product family and ownership](feature/assets.md)
 - [Compose pipeline](feature/compose-pipeline.md)
 - [Validate and plan](feature/validate-plan.md)

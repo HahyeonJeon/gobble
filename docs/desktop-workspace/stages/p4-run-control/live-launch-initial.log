@@ -1,0 +1,6 @@
+=== RUN   TestLivePreparedLaunch
+    launch_live_test.go:68: Select the exact Current flow to prepare.
+--- FAIL: TestLivePreparedLaunch (65.83s)
+FAIL
+FAIL	github.com/HahyeonJeon/gobble/internal/appservice	66.456s
+FAIL

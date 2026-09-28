@@ -1,0 +1,6 @@
+--- FAIL: TestStoppedDockerTaskUsesItsCompletedLiveLogs (0.01s)
+    --- FAIL: TestStoppedDockerTaskUsesItsCompletedLiveLogs/complete (0.01s)
+        logs_test.go:114: final report = exec.Report{Identity:"task", RuntimeID:"", ImageDigest:"", Exit:0, Message:"", Reason:"log-copy-failed", Running:false, NeedsRemoval:false, Published:false}, want exit 0 with reason ""
+FAIL
+FAIL	github.com/HahyeonJeon/gobble/internal/engine/exec	0.045s
+FAIL

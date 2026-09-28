@@ -1,0 +1,10 @@
+{
+  "scope": "Design-only P5 proposal",
+  "sourceFilesCompared": 620,
+  "changedProductionFiles": [],
+  "missingLocalLinks": [],
+  "prototypeOnly": true,
+  "browserConsoleWarningsOrErrors": 0,
+  "productionTestsRun": false,
+  "reason": "No production implementation changes in this design checkpoint."
+}

@@ -1,0 +1,7 @@
+=== RUN   TestLiveCreationAdoptionAndRefinement
+    creation_adoption_live_test.go:52: prepared=sha256:a7571cbae8d9df5fae0ad40446221bcb83ef33c986d9ce2b7426c6f62a3e7e22 engine=sha256:782c32f15c2ac26d9331fc45af3087c930924ba0e95019736ed182949bada2c3 current=sha256:32a53b5ba48dd1c66a0870f48a98232616f4c5f46a290ea33051a2f126d6f9fd no-runs
+    creation_adoption_live_test.go:94: prepared=sha256:38281cf244229bb7632066f36d8e7178851163efdd0a9fe9de7297f49a900a6d engine=sha256:782c32f15c2ac26d9331fc45af3087c930924ba0e95019736ed182949bada2c3 current=sha256:38a3aae5f602600dffee7c6a5e039ce2801ba3c97d2cda9245a6c620989c88a9 no-runs
+    creation_adoption_live_test.go:96: image=sha256:25fee86458e0c8df45293cfd6dcaa992256d3da2cfcdbef62e3c992bc2ac71f1 birth=sha256:32a53b5ba48dd1c66a0870f48a98232616f4c5f46a290ea33051a2f126d6f9fd refined=sha256:38a3aae5f602600dffee7c6a5e039ce2801ba3c97d2cda9245a6c620989c88a9 zero-runs
+--- PASS: TestLiveCreationAdoptionAndRefinement (318.65s)
+PASS
+ok  	github.com/HahyeonJeon/gobble/internal/appservice	319.249s

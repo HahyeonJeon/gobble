@@ -1,0 +1,11 @@
+{
+  "baselineFiles": 1413,
+  "unchanged": 1412,
+  "allowedDocumentationChanges": [
+    "docs/desktop-workspace/README.md"
+  ],
+  "unexpectedChanges": [],
+  "missing": [],
+  "productionManifestUnchanged": true,
+  "scratchDirectoriesRemaining": []
+}

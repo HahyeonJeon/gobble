@@ -1,0 +1,281 @@
+{
+  "schemaVersion": 12,
+  "viewLinks": [],
+  "paneOrientation": "vertical",
+  "workspace": {
+    "schemaVersion": 1,
+    "projectId": "prj_PINWZOVZFCXLSE6KX3OZAS4A2G",
+    "revision": 15,
+    "agents": [
+      {
+        "projectId": "prj_PINWZOVZFCXLSE6KX3OZAS4A2G",
+        "agentId": "agt_3974616a-06e5-4e75-98b6-16031d4c6dee",
+        "name": "PDF Reviewer",
+        "instructionProfile": "discussion-v1",
+        "access": "sharedViews",
+        "configuration": {
+          "model": "gpt-6-astra",
+          "effort": "medium",
+          "instructions": ""
+        },
+        "provider": {
+          "kind": "codex",
+          "threadId": "01a08150-31a7-7ad0-85a5-9db59dd688d1",
+          "accountSessionId": "ee3c74f9-230c-4cab-be20-db6d24540b16",
+          "toolsetVersion": "shared-views-v8"
+        }
+      }
+    ],
+    "surfaces": [
+      {
+        "projectId": "prj_PINWZOVZFCXLSE6KX3OZAS4A2G",
+        "surfaceId": "srf_354ff2af-61f6-4460-aabf-0d1923202cc2",
+        "resource": {
+          "kind": "file",
+          "resourceId": "res_1ad29808944749a08c3d449968d49b88ded1d8659206ee8eb30220c4cfd2ffdd"
+        },
+        "view": "pdf",
+        "pinned": false,
+        "openedBy": {
+          "kind": "user"
+        }
+      }
+    ],
+    "layout": {
+      "kind": "single",
+      "primary": {
+        "tabs": [
+          "srf_354ff2af-61f6-4460-aabf-0d1923202cc2"
+        ],
+        "activeSurfaceId": "srf_354ff2af-61f6-4460-aabf-0d1923202cc2"
+      }
+    },
+    "decisions": [
+      {
+        "kind": "question",
+        "projectId": "prj_PINWZOVZFCXLSE6KX3OZAS4A2G",
+        "decisionId": "dec_88afbd2f5237d76be3cf376630fd4864c14fdb57ada0bb2f",
+        "requestedBy": "agt_3974616a-06e5-4e75-98b6-16031d4c6dee",
+        "question": "Is the left-column caption “samples and filters” clear enough?",
+        "options": [],
+        "evidence": [
+          {
+            "attachmentId": "att_c46900b2-1a6f-4fa2-b8e9-0f9f02f85a99",
+            "evidence": {
+              "schemaVersion": 5,
+              "projectId": "prj_PINWZOVZFCXLSE6KX3OZAS4A2G",
+              "resource": {
+                "kind": "file",
+                "resourceId": "res_1ad29808944749a08c3d449968d49b88ded1d8659206ee8eb30220c4cfd2ffdd"
+              },
+              "origin": {
+                "surfaceId": "srf_354ff2af-61f6-4460-aabf-0d1923202cc2"
+              },
+              "dataRevision": "sha256:b820cec8dd3a7da1738048b88058cad606bf23cdf765458fc1bf88802195cf8e",
+              "selection": {
+                "kind": "pdf",
+                "coordinateSpace": "pdf-user-space",
+                "scope": "region",
+                "profile": "pdfjs-6.3.289-region-v1:no-xfa,no-annotations,path-fonts,no-wasm",
+                "pageIndex": 0,
+                "modelHash": "sha256:34164373e17f1d287f2f14e2eb2e109af682570e653ad8adaad329aa712cf5c9",
+                "region": [
+                  60,
+                  570,
+                  280,
+                  640
+                ]
+              }
+            },
+            "createdAt": 1788875936175,
+            "label": "report.pdf",
+            "capture": {
+              "kind": "pdf",
+              "capturedAt": 1788875936177,
+              "asset": {
+                "hash": "sha256:f6228ea81f3c3a5d5f13c9bfeb4d27983bd95f3a369007245b626784df512ac1",
+                "byteLength": 4475,
+                "mediaType": "image/png"
+              },
+              "representation": {
+                "kind": "image",
+                "width": 220,
+                "height": 70,
+                "originalWidth": 560,
+                "originalHeight": 760,
+                "crop": {
+                  "x": 40,
+                  "y": 160,
+                  "width": 220,
+                  "height": 70
+                },
+                "pdf": {
+                  "profile": "pdfjs-6.3.289-region-v1:no-xfa,no-annotations,path-fonts,no-wasm",
+                  "pageIndex": 0,
+                  "viewBox": [
+                    20,
+                    40,
+                    580,
+                    800
+                  ],
+                  "userUnit": 1,
+                  "intrinsicRotation": 0,
+                  "modelHash": "sha256:34164373e17f1d287f2f14e2eb2e109af682570e653ad8adaad329aa712cf5c9",
+                  "viewport": [
+                    1,
+                    0,
+                    0,
+                    -1,
+                    -20,
+                    800
+                  ]
+                }
+              }
+            },
+            "capturedAt": 1788875936177,
+            "asset": {
+              "hash": "sha256:f6228ea81f3c3a5d5f13c9bfeb4d27983bd95f3a369007245b626784df512ac1",
+              "byteLength": 4475,
+              "mediaType": "image/png"
+            },
+            "representation": {
+              "kind": "image",
+              "width": 220,
+              "height": 70,
+              "originalWidth": 560,
+              "originalHeight": 760,
+              "crop": {
+                "x": 40,
+                "y": 160,
+                "width": 220,
+                "height": 70
+              },
+              "pdf": {
+                "profile": "pdfjs-6.3.289-region-v1:no-xfa,no-annotations,path-fonts,no-wasm",
+                "pageIndex": 0,
+                "viewBox": [
+                  20,
+                  40,
+                  580,
+                  800
+                ],
+                "userUnit": 1,
+                "intrinsicRotation": 0,
+                "modelHash": "sha256:34164373e17f1d287f2f14e2eb2e109af682570e653ad8adaad329aa712cf5c9",
+                "viewport": [
+                  1,
+                  0,
+                  0,
+                  -1,
+                  -20,
+                  800
+                ]
+              }
+            }
+          }
+        ],
+        "originSubmissionId": "req_c9d53275-bdda-45f3-8441-989ba2904216",
+        "createdAt": 1788875948405,
+        "invocation": {
+          "identity": "88afbd2f5237d76be3cf376630fd4864c14fdb57ada0bb2f5660bc5cca17ec00",
+          "digest": "e0f3218b32173bb9b2b7987e64470b43cb5ea055f105087a72c1324d3d2901ae"
+        },
+        "state": {
+          "kind": "pending"
+        }
+      }
+    ]
+  },
+  "titles": [
+    {
+      "surfaceId": "srf_354ff2af-61f6-4460-aabf-0d1923202cc2",
+      "title": "report.pdf"
+    }
+  ],
+  "activePane": "primary",
+  "maximizedPane": null,
+  "chat": {
+    "collapsed": false,
+    "width": 420,
+    "draft": "My next instruction stays local during this review.",
+    "recipientAgentId": "agt_3974616a-06e5-4e75-98b6-16031d4c6dee",
+    "attachmentRevision": 1
+  },
+  "selections": [],
+  "activity": [
+    {
+      "id": "req_9704c459-7344-4bd0-89dc-a7c1e1bd08c5",
+      "text": "Opened a Project view.",
+      "at": 1788875911236
+    }
+  ],
+  "receipts": [
+    {
+      "requestId": "req_e95a5c86-522d-4bec-a06e-3f35690a492a",
+      "digest": "3a0600ee291ae029866a2672e628c2b8d4df0faa965800eb662ede390d60e8b2"
+    },
+    {
+      "requestId": "req_9704c459-7344-4bd0-89dc-a7c1e1bd08c5",
+      "digest": "7a33c8d93ef955450bdec513cc0e9f42104b44831e60de740a195150f7432e4f"
+    }
+  ],
+  "collaboration": {
+    "submissions": [
+      {
+        "requestId": "req_c9d53275-bdda-45f3-8441-989ba2904216",
+        "agentId": "agt_3974616a-06e5-4e75-98b6-16031d4c6dee",
+        "text": "Review the visible synthetic report.pdf page using workspace_observe. Display the returned PNG image before describing its contents. Briefly identify what you can actually see. Publish exactly one workspace_point to a smaller rectangle inside the returned visible PDF region, using the exact schemaVersion 5 page/model/revision, observedReadId and observation. Describe that region and let me Show it. Then create one short workspace_question using a PDF evidenceId from an observation of that exact smaller region. Finish your turn. Do not change my navigation or execute anything.",
+        "model": "gpt-6-astra",
+        "effort": "medium",
+        "createdAt": 1788875911615,
+        "responseStartedAt": 1788875915556,
+        "state": "completed",
+        "threadId": "01a08150-31a7-7ad0-85a5-9db59dd688d1",
+        "turnId": "01a08150-31cf-75b3-9383-5df5a6575361",
+        "response": "I’ll observe the visible page, display its image, and mark one smaller region for you to Show before asking a short question about it.\n\n\nThe visible page says “PDF shared reading” and “Synthetic qualification report - page 1.” Two columns repeat “Same filtered cohort.” Their captions refer to samples and filters on the left and comparison on the right. Below is a sentence about marked regions, with vertical “Rotated text” near the lower right.\n\nI’ll mark the left column’s heading and caption.\n\n\nThe visible page contains a report title, two cohort columns, a note about marked regions, and rotated text.\n\nPublished one pointer around the left heading “Same filtered cohort.” and caption “Left column: samples and filters.” Select **Show** to inspect it. Added one question about that exact region. Your navigation is unchanged.",
+        "problem": null
+      }
+    ]
+  },
+  "sharedReferences": [
+    {
+      "referenceId": "ref_528d6743-38a2-4b5e-83bb-5744911bcc3f",
+      "evidence": {
+        "schemaVersion": 5,
+        "projectId": "prj_PINWZOVZFCXLSE6KX3OZAS4A2G",
+        "resource": {
+          "kind": "file",
+          "resourceId": "res_1ad29808944749a08c3d449968d49b88ded1d8659206ee8eb30220c4cfd2ffdd"
+        },
+        "origin": {
+          "surfaceId": "srf_354ff2af-61f6-4460-aabf-0d1923202cc2"
+        },
+        "dataRevision": "sha256:b820cec8dd3a7da1738048b88058cad606bf23cdf765458fc1bf88802195cf8e",
+        "selection": {
+          "kind": "pdf",
+          "coordinateSpace": "pdf-user-space",
+          "scope": "region",
+          "profile": "pdfjs-6.3.289-region-v1:no-xfa,no-annotations,path-fonts,no-wasm",
+          "pageIndex": 0,
+          "modelHash": "sha256:34164373e17f1d287f2f14e2eb2e109af682570e653ad8adaad329aa712cf5c9",
+          "region": [
+            60,
+            570,
+            280,
+            640
+          ]
+        }
+      },
+      "note": "Left column: “Same filtered cohort.” above “Left column: samples and filters.” Use Show to view this region.",
+      "author": {
+        "kind": "agent",
+        "agentId": "agt_3974616a-06e5-4e75-98b6-16031d4c6dee",
+        "name": "PDF Reviewer"
+      },
+      "createdAt": 1788875942712,
+      "retracted": false,
+      "originSubmissionId": "req_c9d53275-bdda-45f3-8441-989ba2904216",
+      "label": "report.pdf"
+    }
+  ]
+}

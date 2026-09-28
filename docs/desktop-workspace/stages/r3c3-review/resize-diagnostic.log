@@ -1,0 +1,63 @@
+
+Running 1 test using 1 worker
+
+(node:6102) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+PDF_RESIZE_DIAG [
+  {
+    id: 4,
+    url: '',
+    bounds: { x: 500, y: 185, width: 900, height: 682 },
+    content: { x: 500, y: 217, width: 900, height: 650 },
+    min: [ 0, 0 ],
+    full: false,
+    resizable: true,
+    visible: false
+  },
+  {
+    id: 2,
+    url: 'pdf-host://decoder/index.html',
+    bounds: { x: 500, y: 185, width: 800, height: 800 },
+    content: { x: 500, y: 217, width: 800, height: 768 },
+    min: [ 0, 0 ],
+    full: false,
+    resizable: true,
+    visible: false
+  },
+  {
+    id: 1,
+    url: 'app://gobble/index.html',
+    bounds: { x: 260, y: 152, width: 1280, height: 840 },
+    content: { x: 260, y: 184, width: 1280, height: 808 },
+    min: [ 720, 520 ],
+    full: false,
+    resizable: true,
+    visible: true
+  }
+] { outerWidth: 1280, innerWidth: 1280, devicePixelRatio: 2 }
+  ✘  1 desktop/tests/electron/pdf-reference.spec.ts:86:1 › Agent PDF marks and immutable question capture preserve User state across Show, Return, changed source and restart (8.8s)
+
+
+  1) desktop/tests/electron/pdf-reference.spec.ts:86:1 › Agent PDF marks and immutable question capture preserve User state across Show, Return, changed source and restart 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 900
+    Received: 1280
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+      146 |   );
+      147 |   console.log('PDF_RESIZE_DIAG',await application.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows().map(w=>({id:w.id,url:w.webContents.getURL(),bounds:w.getBounds(),content:w.getContentBounds(),min:w.getMinimumSize(),full:w.isFullScreen(),resizable:w.isResizable(),visible:w.isVisible()}))), await page.evaluate(()=>({outerWidth,innerWidth,devicePixelRatio})));
+    > 148 |   await expect.poll(() => page.evaluate(() => innerWidth)).toBe(900);
+          |                                                            ^
+      149 |   if (await page.getByRole('button', { name: 'Workspace', exact: true }).isVisible())
+      150 |     await page.getByRole('button', { name: 'Workspace', exact: true }).click();
+      151 |   await expect(primary.getByRole('button', { name: 'Return to my view' })).toBeInViewport();
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/pdf-reference.spec.ts:148:60
+
+    Error Context: test-results/electron/pdf-reference-Agent-PDF-ma-fe871--changed-source-and-restart/error-context.md
+
+  1 failed
+    desktop/tests/electron/pdf-reference.spec.ts:86:1 › Agent PDF marks and immutable question capture preserve User state across Show, Return, changed source and restart 

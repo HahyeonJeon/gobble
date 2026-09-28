@@ -1,0 +1,10 @@
+{
+  "violations": [],
+  "errors": [],
+  "ready": true,
+  "version": "4.0.0",
+  "renderMs": 36,
+  "points": 500,
+  "electron": "44.2.0",
+  "csp": "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob:; font-src 'self'; connect-src 'none'; frame-src 'none'; frame-ancestors 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; worker-src 'none'"
+}

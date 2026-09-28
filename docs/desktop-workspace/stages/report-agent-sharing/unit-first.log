@@ -1,0 +1,35 @@
+
+> gobble-app-workspace@0.1.0 test
+> npm run build:service && vitest run
+
+
+> gobble-app-workspace@0.1.0 build:service
+> tsx scripts/build-service.ts
+
+
+ RUN  v4.1.11 /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app
+
+ ❯ desktop/tests/codex.test.ts (16 tests | 1 failed) 4357ms
+     × registers a versioned shared toolset and returns the exact text/image wire envelope 240ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  desktop/tests/codex.test.ts > dynamic-tool protocol adapter > registers a versioned shared toolset and returns the exact text/image wire envelope
+Error: Codex could not complete this request. Check the account and connection.
+ ❯ CodexTransport.receive desktop/src/main/codex/transport.ts:203:9
+    201|     if ('error' in message)
+    202|       pending.reject(
+    203|         new AppProblem(
+       |         ^
+    204|           'runtime_unavailable',
+    205|           'Codex could not complete this request. Check the account an…
+ ❯ Socket.<anonymous> desktop/src/main/codex/transport.ts:132:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 41 passed (42)
+      Tests  1 failed | 388 passed (389)
+   Start at  16:07:01
+   Duration  8.92s (transform 4.71s, setup 0ms, import 11.75s, tests 42.83s, environment 3ms)
+

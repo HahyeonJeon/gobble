@@ -1,0 +1,3 @@
+desktop/src/renderer/workspace/views/dependencies/DependencyGraph.tsx 61ms (unchanged)
+desktop/src/renderer/workspace/views/dependencies/DependencyDetails.tsx 15ms
+desktop/tests/electron/dependencies.spec.ts 32ms

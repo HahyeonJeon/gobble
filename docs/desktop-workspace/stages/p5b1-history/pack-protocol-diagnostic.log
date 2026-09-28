@@ -1,0 +1,10 @@
+=== RUN   TestPackPrintpipeArtifact
+    pack_test.go:269: packed compose = code 1 stderr {"defects":[{"code":"invalid-request","message":"invalid child protocol"}],"op":"compose"}
+--- FAIL: TestPackPrintpipeArtifact (4.20s)
+=== RUN   TestPackHostpipeEmptyInspectProtocol
+    pack_test.go:364: exit = 1
+        stderr: {"defects":[{"code":"invalid-request","message":"invalid child protocol"}],"op":"run"}
+--- FAIL: TestPackHostpipeEmptyInspectProtocol (4.07s)
+FAIL
+FAIL	github.com/HahyeonJeon/gobble/cmd/gobble	8.336s
+FAIL

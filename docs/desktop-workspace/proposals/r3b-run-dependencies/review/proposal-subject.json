@@ -1,0 +1,20 @@
+{
+  "date": "2026-09-08",
+  "status": "proposed for owner review",
+  "files": {
+    "design.md": "57bd0a77427d9a2864b7bebd130af6e36dfbdd4a22ff36f0a7c24d43e014d79e",
+    "implementation-plan.md": "bb59ab9a37686618fd5385197dc0ca370ec197d3cf62d05d58f6130b4e95e4fe",
+    "research.md": "e6f284496a0eeaa18586e4011df9b866fa6bc5b072635cb0d7e20951350904e5",
+    "review/baseline-verification.json": "ef22c3f5c6b3309e1ee3eb00e2a921d0607d09b7e92e03c5e0ae09619a5bd47c",
+    "review/check-sketch.cjs": "fe4dd7773a45b8f7ace8013faf508a3626d5cfa2d93f1c442bb6c75e6915436b",
+    "review/compact-640.png": "fa9e411cebda08c09bbac7c812b600177388b0c1fd37657c2aa00d7dfd252880",
+    "review/compact-900.png": "d2922e3bbb51d6d38d79f9280ebb277e01baacc90348643aa253fc722ab091ae",
+    "review/concept-a-reference.png": "5ef71a2f44af603c571de0f2ef50748be215f5ed9de4c17ac96b9fc6a9871489",
+    "review/concept-a.png": "4b0624ac7ec0dac10190516ca666e6f080160755d6165d218abbcb697b1c7a16",
+    "review/concept-b.png": "859558992e0876f407602e41f7b1cecc72f13085d2dbf300f17e7890f889005a",
+    "review/design-activities.md": "6d1ec4502c781180f682a5526735ec203d4d742438d34d0fb511629785f206a5",
+    "review/sketch-checks.json": "ba7c89dd22176b7f06bada52d9823968765079b8c7ee191598b6066df5261db9",
+    "sketch.html": "b9f9446154974a1043343a00b2b601f8b2d5542486bb44c9b02046a58f6ea0c0"
+  },
+  "nextAuthorizedByDesignApproval": "R3b1 only; later checkpoints need separate owner approval"
+}

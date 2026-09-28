@@ -1,0 +1,20 @@
+contracts/src/run-launch.ts 50ms
+contracts/src/index.ts 5ms (unchanged)
+contracts/src/service.ts 17ms (unchanged)
+contracts/scripts/export-schema.ts 6ms (unchanged)
+desktop/src/main/service/run-launch.ts 12ms
+desktop/src/main/service/project-service.ts 17ms (unchanged)
+desktop/src/main/service/ipc.ts 15ms
+desktop/src/preload/index.ts 22ms
+desktop/src/renderer/run-launch/LaunchActionCards.tsx 14ms
+desktop/src/renderer/run-launch/LaunchReviewControls.tsx 7ms
+desktop/src/renderer/run-launch/RetainedRunFlow.tsx 5ms
+desktop/src/renderer/run-launch/useLaunchReviews.ts 3ms
+desktop/src/renderer/styles/run-launch.css 18ms
+desktop/src/renderer/workspace/views/pipeline/PipelineNode.tsx 8ms (unchanged)
+desktop/src/renderer/workspace/views/pipeline/PipelineFlow.tsx 18ms
+desktop/src/renderer/workspace/views/pipeline/RunPreparation.tsx 10ms (unchanged)
+desktop/src/renderer/workspace/views/RunView.tsx 4ms (unchanged)
+desktop/src/renderer/chat/ProjectChat.tsx 5ms (unchanged)
+desktop/tests/run-launch.test.ts 5ms
+desktop/tests/service.test.ts 12ms

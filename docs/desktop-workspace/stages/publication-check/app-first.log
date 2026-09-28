@@ -1,0 +1,599 @@
+
+> gobble-app-workspace@0.1.0 check
+> npm run format:check && npm run typecheck && npm run schema:check && npm test && npm run test:electron
+
+
+> gobble-app-workspace@0.1.0 format:check
+> prettier --check .
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> gobble-app-workspace@0.1.0 typecheck
+> tsc -p contracts/tsconfig.json && npm run typecheck --workspace @gobble/desktop && tsc -p tsconfig.tools.json
+
+
+> @gobble/desktop@0.1.0 typecheck
+> tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && tsc -p tsconfig.renderer.json
+
+
+> gobble-app-workspace@0.1.0 schema:check
+> tsx contracts/scripts/export-schema.ts --check
+
+
+> gobble-app-workspace@0.1.0 test
+> npm run build:service && vitest run
+
+
+> gobble-app-workspace@0.1.0 build:service
+> tsx scripts/build-service.ts
+
+
+ RUN  v4.1.11 /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app
+
+
+ Test Files  43 passed (43)
+      Tests  397 passed (397)
+   Start at  01:10:55
+   Duration  9.75s (transform 5.11s, setup 0ms, import 12.83s, tests 50.76s, environment 2ms)
+
+
+> gobble-app-workspace@0.1.0 test:electron
+> npm run build && playwright test
+
+
+> gobble-app-workspace@0.1.0 build
+> npm run build:service && npm run build --workspace @gobble/desktop
+
+
+> gobble-app-workspace@0.1.0 build:service
+> tsx scripts/build-service.ts
+
+
+> @gobble/desktop@0.1.0 build
+> electron-vite build
+
+vite v7.3.6 building ssr environment for production...
+transforming...
+✓ 456 modules transformed.
+rendering chunks...
+out/main/index.js  2,243.87 kB
+✓ built in 925ms
+vite v7.3.6 building ssr environment for production...
+transforming...
+✓ 369 modules transformed.
+rendering chunks...
+out/preload/index.cjs  1,760.89 kB
+✓ built in 418ms
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 525 modules transformed.
+rendering chunks...
+../../out/renderer/index.html                     0.39 kB
+../../out/renderer/assets/index-M3pY2oMp.css     86.25 kB
+../../out/renderer/assets/index-Dz3ieMcl.js   2,815.34 kB
+✓ built in 916ms
+
+Running 90 tests using 1 worker
+
+(node:12210) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 desktop/tests/electron/admitted-runs.spec.ts:7:1 › Run navigation refreshes when a confirmed admission arrives, not on every status poll (12.7s)
+  ✓   2 desktop/tests/electron/agents.spec.ts:53:1 › two peer agents share panes but keep their streams and Stop controls separate (2.5s)
+  ✓   3 desktop/tests/electron/agents.spec.ts:76:1 › lost acknowledgment survives restart and Check status recovers the original response without resending (2.9s)
+  ✓   4 desktop/tests/electron/agents.spec.ts:146:1 › account and agent actions are readable before hover, on hover and with keyboard focus (2.1s)
+  ✓   5 desktop/tests/electron/agents.spec.ts:168:1 › the shared composer protects IME input and the timeline preserves the reading position (2.5s)
+  ✓   6 desktop/tests/electron/agents.spec.ts:221:1 › interleaved responses retain reading position through growth, collapse, compact mode and restoration (3.4s)
+  ✓   7 desktop/tests/electron/agents.spec.ts:328:1 › a refused Send stays visible in compact Chat and preserves its recipient and draft (2.7s)
+  ✓   8 desktop/tests/electron/agents.spec.ts:361:1 › compact project chrome and chat-side Agents preserve draft, focus and work across navigation (2.9s)
+  ✓   9 desktop/tests/electron/agents.spec.ts:444:1 › empty Agent roster explains connection and returns keyboard focus (885ms)
+  -  10 desktop/tests/electron/continuation-restored.spec.ts:7:1 › completed actual continuation restores its latest attempt and original review without executing
+  -  11 desktop/tests/electron/continuation-restored.spec.ts:67:1 › completed Run keeps its Flow and exact task actions reachable in stacked compact Panes
+  ✓  12 desktop/tests/electron/continuation-review.spec.ts:7:1 › continuation Flow, exact capture, compact draft and explicit native confirmation (11.4s)
+  ✓  13 desktop/tests/electron/continuation-review.spec.ts:98:1 › older engine, blocked recheck, historical capture and unknown confirmation never silently resubmit (13.2s)
+  ✓  14 desktop/tests/electron/continuation-review.spec.ts:179:1 › Agent points to the same continuation plan without changing User selection or starting work (7.2s)
+  ✓  15 desktop/tests/electron/continuation-transport.spec.ts:6:1 › continuation preload and native catalog survive restart without execution (1.5s)
+  -  16 desktop/tests/electron/creation-agent-acceptance.spec.ts:10:1 › Creation: signed-in Agent proposes, reads and points; User adopts without a Run
+  ✓  17 desktop/tests/electron/csv-table.spec.ts:37:1 › CSV stays a table: exact row selection, settings and attachment without chart creation (1.1s)
+  ✓  18 desktop/tests/electron/csv-table.spec.ts:87:1 › retired renderer requests are refused before changing the workspace (919ms)
+  ✓  19 desktop/tests/electron/csv-table.spec.ts:118:1 › old chart tabs retain metadata on restart and offer their source table (1.6s)
+  ✓  20 desktop/tests/electron/dependencies.spec.ts:47:1 › User selects a group, exact attempt and directed dependency; frozen evidence and navigation survive restart and source changes (11.1s)
+  ✓  21 desktop/tests/electron/dependencies.spec.ts:207:1 › missing, cyclic and bounded topology stays navigable by list and at compact native zoom (7.5s)
+  ✘  22 desktop/tests/electron/dependency-reference.spec.ts:19:1 › Agent dependency marks preserve User work; Show/Return, historical capture, current search and restart stay distinct (9.1s)
+(node:13008) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  23 desktop/tests/electron/evidence.spec.ts:77:1 › addresses exact row and cropped image in one composer, retaining immutable history after restart (4.4s)
+  ✓  24 desktop/tests/electron/evidence.spec.ts:183:1 › retains draft attachments across restart and blocks stale, unsupported and foreign sends (4.8s)
+  ✓  25 desktop/tests/electron/evidence.spec.ts:224:1 › sends an explicit whole preview without typed text and reports missing saved evidence (2.8s)
+  ✓  26 desktop/tests/electron/evidence.spec.ts:285:1 › migrates v2 shared marks and captured evidence, reopens without origin, and distinguishes changed or missing sources (5.7s)
+  ✘  27 desktop/tests/electron/foundation.spec.ts:69:1 › built app renders in English through a sandboxed named bridge (635ms)
+(node:13122) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  28 desktop/tests/electron/foundation.spec.ts:113:1 › native folder selection registers a real Project and serves its files (696ms)
+  ✓  29 desktop/tests/electron/foundation.spec.ts:152:1 › real IPC rejects bad payloads and an unregistered window (1.0s)
+  ✓  30 desktop/tests/electron/foundation.spec.ts:178:1 › blocks renderer code injection, frames, external navigation and new windows (1.1s)
+  ✓  31 desktop/tests/electron/foundation.spec.ts:202:1 › macOS window close preserves the host and activation recreates an isolated window (1.2s)
+  ✓  32 desktop/tests/electron/foundation.spec.ts:216:1 › a second launch reuses the current profile owner (968ms)
+  ✘  33 desktop/tests/electron/notebook-shared.spec.ts:108:1 › Agent text and immutable question evidence preserve User state through Show/Return and missing-source fallback (7.2s)
+(node:13189) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  34 desktop/tests/electron/notebook-shared.spec.ts:154:1 › only explicit painted image observation receives pixels and preserves an unfinished User region through Show/Return (7.2s)
+(node:13206) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  35 desktop/tests/electron/notebook-shared.spec.ts:184:1 › actual scrolling revokes old Notebook receipts and clipped source-preview cannot authorize a mark (7.0s)
+(node:13245) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  36 desktop/tests/electron/notebook-shared.spec.ts:221:1 › User output marks use the same exact Show contract and remain usable in a compact enlarged view (2.4s)
+  ✘  37 desktop/tests/electron/notebook-shared.spec.ts:257:3 › Notebook fold invalidates an earlier Agent viewport receipt (7.0s)
+(node:13311) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  38 desktop/tests/electron/notebook-shared.spec.ts:257:3 › Notebook zoom invalidates an earlier Agent viewport receipt (7.1s)
+(node:13340) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  39 desktop/tests/electron/notebook.spec.ts:93:1 › saved source and output attach through the existing composer, preview offline and survive source changes and restart (2.5s)
+  ✓  40 desktop/tests/electron/notebook.spec.ts:161:1 › native text drag uses exact display offsets and rejects stale or foreign image requests (930ms)
+  ✓  41 desktop/tests/electron/notebook.spec.ts:218:1 › native pointer and keyboard image selection at 150 percent captures the exact original pixels (1.1s)
+  ✓  42 desktop/tests/electron/notebook.spec.ts:283:1 › two Notebook Panes remain independent and compact and enlarged layouts retain the composer (2.5s)
+  ✓  43 desktop/tests/electron/notebook.spec.ts:337:1 › malformed sources recover explicitly and renderer replacement preserves draft and captured attachments (1.6s)
+  ✓  44 desktop/tests/electron/notebook.spec.ts:407:1 › one MiB text stays bounded, continuation keeps absolute offsets and oversized capture leaves the draft intact (1.4s)
+  ✓  45 desktop/tests/electron/notebook.spec.ts:428:1 › embedded image above generic text limits opens on demand and bounded exact capture succeeds (1.5s)
+  ✓  46 desktop/tests/electron/notebook.spec.ts:456:1 › explicit Send delivers captured Notebook text and image through the existing addressed path (2.7s)
+  ✘  47 desktop/tests/electron/observed-reference.spec.ts:14:1 › Agent Run and stream references preserve User work and separate historical evidence from current tasks (10.7s)
+(node:13523) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  48 desktop/tests/electron/pdf-reference.spec.ts:86:1 › Agent PDF marks and immutable question capture preserve User state across Show, Return, changed source and restart (7.7s)
+(node:13549) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  49 desktop/tests/electron/pdf-reference.spec.ts:200:1 › PDF tool scopes reject scroll-stale, source-preview, off-page, outside-visible and missing receipts (7.6s)
+(node:13564) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  50 desktop/tests/electron/pdf-reference.spec.ts:242:1 › User PDF mark needs no Agent turn; text-only models cannot observe PDF pixels (7.7s)
+(node:13595) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  51 desktop/tests/electron/pdf-reference.spec.ts:259:1 › Agent opens a PDF beside a protected User view without taking focus (7.7s)
+(node:13659) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  52 desktop/tests/electron/pdf.spec.ts:64:1 › PDF page and pointer/keyboard region become immutable draft and sent evidence across refresh and restart (6.7s)
+  ✓  53 desktop/tests/electron/pdf.spec.ts:179:1 › PDF readers isolate navigation, reject stale or cross-Pane capture and dispose when hidden or switched (2.5s)
+  ✓  54 desktop/tests/electron/pdf.spec.ts:285:1 › unsupported PDFs fail locally and recover through the existing Pane retry (1.6s)
+  ✓  55 desktop/tests/electron/pdf.spec.ts:300:1 › closing a loading PDF discards late work and leaves the Project usable (892ms)
+  -  56 desktop/tests/electron/pipeline-creation.spec.ts:11:3 › Creation: chosen data, exact discussion, restart and discard
+  -  57 desktop/tests/electron/pipeline-creation.spec.ts:11:3 › Creation: chosen data, exact discussion, restart and adopt
+  -  58 desktop/tests/electron/pipeline-creation.spec.ts:11:3 › Creation: chosen data, exact discussion, restart and prepare
+  -  59 desktop/tests/electron/pipeline-creation.spec.ts:11:3 › Creation: chosen data, exact discussion, restart and launch
+  -  60 desktop/tests/electron/pipeline-discussion.spec.ts:14:1 › real module flow, exact discussion, independent Agent marks, stale refusal and historical restart
+  -  61 desktop/tests/electron/pipeline-flow.spec.ts:7:1 › real checked branching flow, keyboard details, preserved draft and historical restart
+  -  62 desktop/tests/electron/pipeline-proposals.spec.ts:8:1 › B comparison: scoped Agent proposal, exact chat reference, adoption and restart
+  ✓  63 desktop/tests/electron/pipeline-review-navigation.spec.ts:9:1 › comparison location survives presentation changes without retaining authority or confirmation (8.3s)
+  ✓  64 desktop/tests/electron/pipelines.spec.ts:40:1 › import opens a flow, preserves the other pane and draft, and restores Pipeline identity (1.7s)
+  ✓  65 desktop/tests/electron/pipelines.spec.ts:88:1 › registration errors stay visible and retries do not create incomplete definitions (785ms)
+  ✘  66 desktop/tests/electron/questions.spec.ts:77:1 › question arrival preserves a peer draft; Reply/Cancel and Enter use one composer with immutable evidence and one addressed answer (7.9s)
+(node:13915) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  67 desktop/tests/electron/questions.spec.ts:157:1 › pending reply restores without replay; changed source invalidates Send while historical question preview and draft remain (7.1s)
+(node:13929) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  68 desktop/tests/electron/questions.spec.ts:199:1 › image questions block text-only reply and dismissal sends nothing; older shared tool bindings require explicit new conversation (4.2s)
+  ✓  69 desktop/tests/electron/report-reader.spec.ts:57:1 › qualified FastQC source preserves ordered text, tables, status variants and all original charts (514ms)
+  ✓  70 desktop/tests/electron/report-reader.spec.ts:126:1 › rejects active, external, malformed, unknown and oversized content without a partial rendition (1.8s)
+  ✓  71 desktop/tests/electron/report-reader.spec.ts:153:1 › uses a hidden sandbox without a preload or privileged bridge, and a closed reader refuses more jobs (194ms)
+  ✓  72 desktop/tests/electron/report-reader.spec.ts:192:1 › close and the finite deadline dispose a stalled parser job (10.1s)
+  -  73 desktop/tests/electron/run-feedback-retention.spec.ts:7:1 › Follow-up: historical design, missing capture and compact restored UI
+  -  74 desktop/tests/electron/run-launch-restored.spec.ts:6:1 › Run launch: retained Flow, exact task discussion and compact Chat survive App restart
+  ✓  75 desktop/tests/electron/runtime.spec.ts:16:1 › task navigation and stream selections survive refresh failures and normal restart (14.1s)
+  ✓  76 desktop/tests/electron/saved-reports.spec.ts:17:1 › Flow opens a complete saved report; compact/focus/close/restart preserve its original result (10.3s)
+  ✘  77 desktop/tests/electron/shared-context.spec.ts:61:1 › User and Agent share table/image pointers while local selection and composer focus stay independent (7.3s)
+(node:14246) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  78 desktop/tests/electron/shared-context.spec.ts:108:1 › text pointing overlays a revision-bound range without replacing native local selection (2.4s)
+  ✓  79 desktop/tests/electron/shared-context.spec.ts:148:1 › explicit shared-view opt-in starts a new conversation and retains earlier messages (2.4s)
+  ✓  80 desktop/tests/electron/ux-review.spec.ts:95:1 › C1: long names and 0, 1, 5, 12 Agents stay navigable with enlarged text (3.2s)
+  ✓  81 desktop/tests/electron/ux-review.spec.ts:142:1 › C2: long resources and multiple attachments retain a usable workspace at 100–150% zoom (5.1s)
+  ✓  82 desktop/tests/electron/ux-review.spec.ts:217:1 › C3: a pending reply and attachment error stay actionable in a small enlarged-text chat (3.0s)
+  ✓  83 desktop/tests/electron/workspace.spec.ts:27:1 › real files, split, selection and draft survive a normal app relaunch (2.1s)
+  ✓  84 desktop/tests/electron/workspace.spec.ts:66:1 › keyboard tabs, duplicate, move and close preserve the remaining views (1.1s)
+  ✓  85 desktop/tests/electron/workspace.spec.ts:96:1 › narrow windows retain both panes and keyboard image and text context (1.4s)
+  ✓  86 desktop/tests/electron/workspace.spec.ts:133:1 › changed and missing files remain explicit while other Projects stay separate (1.5s)
+  ✓  87 desktop/tests/electron/workspace.spec.ts:173:1 › a failed draft save preserves the Project and honors Keep Open on window close (1.0s)
+  ✓  88 desktop/tests/electron/workspace.spec.ts:218:1 › stacked panes, fitted image and one composer retain their identity across resizing and compact chat (1.7s)
+  ✓  89 desktop/tests/electron/workspace.spec.ts:341:1 › the real app migrates saved v1 geometry on the first change and retains the original archive (2.0s)
+  ✓  90 desktop/tests/electron/workspace.spec.ts:408:1 › selection overview finds hidden sources, More returns keyboard focus, and empty panes target navigation (1.6s)
+
+
+  1) desktop/tests/electron/dependency-reference.spec.ts:19:1 › Agent dependency marks preserve User work; Show/Return, historical capture, current search and restart stay distinct 
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  locator('.shared-reference-event')
+    Expected: 2
+    Received: 0
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveCount" locator('.shared-reference-event') with timeout 5000ms
+      - waiting for locator('.shared-reference-event')
+        14 × locator resolved to 0 elements
+           - unexpected value "0"
+
+
+      67 |     const before = await userState(page);
+      68 |     await writeFile(join(fixture.profile, 'codex/home/dependency-gate'), 'ready');
+    > 69 |     await expect(page.locator('.shared-reference-event')).toHaveCount(2);
+         |                                                           ^
+      70 |     await expect(
+      71 |       page.locator('.message-state').getByText('completed', { exact: true }),
+      72 |     ).toHaveCount(1);
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/dependency-reference.spec.ts:69:59
+
+    Error Context: test-results/electron/dependency-reference-Agent-aa1a4-h-and-restart-stay-distinct/error-context.md
+
+  2) desktop/tests/electron/foundation.spec.ts:69:1 › built app renders in English through a sandboxed named bridge 
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 0
+    + Received  + 1
+
+    @@ -1,8 +1,9 @@
+      Object {
+        "methods": Array [
+          "collaboration",
+    +     "continuations",
+          "creation",
+          "evidence",
+          "files",
+          "getAppInfo",
+          "launches",
+
+      75 |     methods: Object.keys(window.gobble).sort(),
+      76 |   }));
+    > 77 |   expect(globals).toEqual({
+         |                   ^
+      78 |     node: [],
+      79 |     methods: [
+      80 |       'collaboration',
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/foundation.spec.ts:77:19
+
+    Error Context: test-results/electron/foundation-built-app-rende-2bae8-gh-a-sandboxed-named-bridge/error-context.md
+
+  3) desktop/tests/electron/notebook-shared.spec.ts:108:1 › Agent text and immutable question evidence preserve User state through Show/Return and missing-source fallback 
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  locator('.message-state').getByText('completed', { exact: true })
+    Expected: 1
+    Received: 0
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveCount" locator('.message-state').getByText('completed', { exact: true }) with timeout 5000ms
+      - waiting for locator('.message-state').getByText('completed', { exact: true })
+        14 × locator resolved to 0 elements
+           - unexpected value "0"
+
+
+      100 | }
+      101 | async function delivered() {
+    > 102 |   await expect(page.locator('.message-state').getByText('completed', { exact: true })).toHaveCount(
+          |                                                                                        ^
+      103 |     1,
+      104 |   );
+      105 |   return JSON.parse(await readFile(file('notebook-delivery.json'), 'utf8'));
+        at delivered (/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/notebook-shared.spec.ts:102:88)
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/notebook-shared.spec.ts:113:20
+
+    Error Context: test-results/electron/notebook-shared-Agent-text-b8a55-and-missing-source-fallback/error-context.md
+
+  4) desktop/tests/electron/notebook-shared.spec.ts:154:1 › only explicit painted image observation receives pixels and preserves an unfinished User region through Show/Return 
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  locator('.message-state').getByText('completed', { exact: true })
+    Expected: 1
+    Received: 0
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveCount" locator('.message-state').getByText('completed', { exact: true }) with timeout 5000ms
+      - waiting for locator('.message-state').getByText('completed', { exact: true })
+        14 × locator resolved to 0 elements
+           - unexpected value "0"
+
+
+      100 | }
+      101 | async function delivered() {
+    > 102 |   await expect(page.locator('.message-state').getByText('completed', { exact: true })).toHaveCount(
+          |                                                                                        ^
+      103 |     1,
+      104 |   );
+      105 |   return JSON.parse(await readFile(file('notebook-delivery.json'), 'utf8'));
+        at delivered (/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/notebook-shared.spec.ts:102:88)
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/notebook-shared.spec.ts:161:20
+
+    Error Context: test-results/electron/notebook-shared-only-expli-7f0d0--region-through-Show-Return/error-context.md
+
+  5) desktop/tests/electron/notebook-shared.spec.ts:184:1 › actual scrolling revokes old Notebook receipts and clipped source-preview cannot authorize a mark 
+
+    Error: expect(received).toBeGreaterThan(expected)
+
+    Expected: > 0
+    Received:   0
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+      195 |       }
+      196 |     })
+    > 197 |     .toBeGreaterThan(0);
+          |      ^
+      198 |   await primary.locator('.notebook-scroll').evaluate((el) => {
+      199 |     el.scrollTop = el.scrollHeight;
+      200 |   });
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/notebook-shared.spec.ts:197:6
+
+    Error Context: test-results/electron/notebook-shared-actual-scr-ca400-iew-cannot-authorize-a-mark/error-context.md
+
+  6) desktop/tests/electron/notebook-shared.spec.ts:257:3 › Notebook fold invalidates an earlier Agent viewport receipt 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+      268 |         }
+      269 |       })
+    > 270 |       .toBe(true);
+          |        ^
+      271 |     if (change === 'fold')
+      272 |       await primary.getByRole('button', { name: 'Collapse outputs', exact: true }).click();
+      273 |     else
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/notebook-shared.spec.ts:270:8
+
+    Error Context: test-results/electron/notebook-shared-Notebook-f-ddfe5-lier-Agent-viewport-receipt/error-context.md
+
+  7) desktop/tests/electron/notebook-shared.spec.ts:257:3 › Notebook zoom invalidates an earlier Agent viewport receipt 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+      268 |         }
+      269 |       })
+    > 270 |       .toBe(true);
+          |        ^
+      271 |     if (change === 'fold')
+      272 |       await primary.getByRole('button', { name: 'Collapse outputs', exact: true }).click();
+      273 |     else
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/notebook-shared.spec.ts:270:8
+
+    Error Context: test-results/electron/notebook-shared-Notebook-z-ea9b9-lier-Agent-viewport-receipt/error-context.md
+
+  8) desktop/tests/electron/observed-reference.spec.ts:14:1 › Agent Run and stream references preserve User work and separate historical evidence from current tasks 
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  locator('.shared-reference-event')
+    Expected: 2
+    Received: 0
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveCount" locator('.shared-reference-event') with timeout 5000ms
+      - waiting for locator('.shared-reference-event')
+        14 × locator resolved to 0 elements
+           - unexpected value "0"
+
+
+      80 |     await draft.fill('Keep this draft local.');
+      81 |     await writeFile(join(profile, 'codex/home/observed-gate'), 'ready');
+    > 82 |     await expect(page.locator('.shared-reference-event')).toHaveCount(2);
+         |                                                           ^
+      83 |     await expect(
+      84 |       page.locator('.message-state').getByText('completed', { exact: true }),
+      85 |     ).toHaveCount(1);
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/observed-reference.spec.ts:82:59
+
+    Error Context: test-results/electron/observed-reference-Agent-R-58711-evidence-from-current-tasks/error-context.md
+
+  9) desktop/tests/electron/pdf-reference.spec.ts:86:1 › Agent PDF marks and immutable question capture preserve User state across Show, Return, changed source and restart 
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  locator('.shared-reference-event')
+    Expected: 1
+    Received: 0
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveCount" locator('.shared-reference-event') with timeout 5000ms
+      - waiting for locator('.shared-reference-event')
+        14 × locator resolved to 0 elements
+           - unexpected value "0"
+
+
+      88 |   let primary = await readyView(page);
+      89 |   const before = await begin('pdf-point');
+    > 90 |   await expect(page.locator('.shared-reference-event')).toHaveCount(1);
+         |                                                         ^
+      91 |   const delivery = await delivered();
+      92 |   expect(await userState(page)).toEqual(before);
+      93 |   await expect(page.getByRole('textbox', { name: 'Message draft' })).toBeFocused();
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/pdf-reference.spec.ts:90:57
+
+    Error Context: test-results/electron/pdf-reference-Agent-PDF-ma-fe871--changed-source-and-restart/error-context.md
+
+  10) desktop/tests/electron/pdf-reference.spec.ts:200:1 › PDF tool scopes reject scroll-stale, source-preview, off-page, outside-visible and missing receipts 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+      213 |       }
+      214 |     })
+    > 215 |     .toBe(true);
+          |      ^
+      216 |   await primary.locator('.pdf-scroll').evaluate((el) => {
+      217 |     el.scrollTop = 150;
+      218 |   });
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/pdf-reference.spec.ts:215:6
+
+    Error Context: test-results/electron/pdf-reference-PDF-tool-sco-16270-isible-and-missing-receipts/error-context.md
+
+  11) desktop/tests/electron/pdf-reference.spec.ts:242:1 › User PDF mark needs no Agent turn; text-only models cannot observe PDF pixels 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText(/PDF observations require an image-capable model/)
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByText(/PDF observations require an image-capable model/) with timeout 5000ms
+      - waiting for getByText(/PDF observations require an image-capable model/)
+
+
+      253 |   await begin('pdf-point');
+      254 |   await expect(page.locator('.message-state').getByText('failed', { exact: true })).toHaveCount(1);
+    > 255 |   await expect(page.getByText(/PDF observations require an image-capable model/)).toBeVisible();
+          |                                                                                   ^
+      256 |   expect((await document(page)).sharedReferences).toHaveLength(1);
+      257 | });
+      258 |
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/pdf-reference.spec.ts:255:83
+
+    Error Context: test-results/electron/pdf-reference-User-PDF-mar-10dc4-s-cannot-observe-PDF-pixels/error-context.md
+
+  12) desktop/tests/electron/pdf-reference.spec.ts:259:1 › Agent opens a PDF beside a protected User view without taking focus 
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  locator('.message-state').getByText('completed', { exact: true })
+    Expected: 1
+    Received: 0
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveCount" locator('.message-state').getByText('completed', { exact: true }) with timeout 5000ms
+      - waiting for locator('.message-state').getByText('completed', { exact: true })
+        14 × locator resolved to 0 elements
+           - unexpected value "0"
+
+
+      263 |   await readyView(page);
+      264 |   await begin('pdf-open');
+    > 265 |   await expect(page.locator('.message-state').getByText('completed', { exact: true })).toHaveCount(
+          |                                                                                        ^
+      266 |     1,
+      267 |   );
+      268 |   await readyView(page, 'Secondary pane');
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/pdf-reference.spec.ts:265:88
+
+    Error Context: test-results/electron/pdf-reference-Agent-opens--de361-r-view-without-taking-focus/error-context.md
+
+  13) desktop/tests/electron/questions.spec.ts:77:1 › question arrival preserves a peer draft; Reply/Cancel and Enter use one composer with immutable evidence and one addressed answer 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('article', { name: 'Question from Researcher', exact: true })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('article', { name: 'Question from Researcher', exact: true }) with timeout 5000ms
+      - waiting for getByRole('article', { name: 'Question from Researcher', exact: true })
+
+
+      94 |   await expect(question()).toHaveCount(0);
+      95 |   await writeFile(gate, 'ready');
+    > 96 |   await expect(question()).toBeVisible();
+         |                            ^
+      97 |   await expect(completed()).toHaveCount(1);
+      98 |   await expect(page.getByRole('textbox', { name: 'Message draft', exact: true })).toHaveValue(
+      99 |     'Keep S03; note the selected context.',
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/questions.spec.ts:96:28
+
+    Error Context: test-results/electron/questions-question-arrival-e6d0d-ce-and-one-addressed-answer/error-context.md
+
+  14) desktop/tests/electron/questions.spec.ts:157:1 › pending reply restores without replay; changed source invalidates Send while historical question preview and draft remain 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('article', { name: 'Question from Researcher', exact: true })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('article', { name: 'Question from Researcher', exact: true }) with timeout 5000ms
+      - waiting for getByRole('article', { name: 'Question from Researcher', exact: true })
+
+
+      164 |   await writeFile(gate, 'ready');
+      165 |   await send('ask-question');
+    > 166 |   await expect(question()).toBeVisible();
+          |                            ^
+      167 |   await expect(completed()).toHaveCount(1);
+      168 |   await question().getByRole('button', { name: 'Reply', exact: true }).click();
+      169 |   await page
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/questions.spec.ts:166:28
+
+    Error Context: test-results/electron/questions-pending-reply-re-e0026-on-preview-and-draft-remain/error-context.md
+
+  15) desktop/tests/electron/shared-context.spec.ts:61:1 › User and Agent share table/image pointers while local selection and composer focus stay independent 
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  locator('.shared-reference-event')
+    Expected: 3
+    Received: 1
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveCount" locator('.shared-reference-event') with timeout 5000ms
+      - waiting for locator('.shared-reference-event')
+        14 × locator resolved to 1 element
+           - unexpected value "1"
+
+
+      75 |   await send('shared-point');
+      76 |   await page.getByRole('textbox', { name: 'Message draft' }).fill('Keep this draft local.');
+    > 77 |   await expect(page.locator('.shared-reference-event')).toHaveCount(3);
+         |                                                         ^
+      78 |   await expect(page.locator('.message-state').getByText('completed', { exact: true })).toHaveCount(
+      79 |     1,
+      80 |   );
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/shared-context.spec.ts:77:57
+
+    Error Context: test-results/electron/shared-context-User-and-Ag-9cf32-oser-focus-stay-independent/error-context.md
+
+  15 failed
+    desktop/tests/electron/dependency-reference.spec.ts:19:1 › Agent dependency marks preserve User work; Show/Return, historical capture, current search and restart stay distinct 
+    desktop/tests/electron/foundation.spec.ts:69:1 › built app renders in English through a sandboxed named bridge 
+    desktop/tests/electron/notebook-shared.spec.ts:108:1 › Agent text and immutable question evidence preserve User state through Show/Return and missing-source fallback 
+    desktop/tests/electron/notebook-shared.spec.ts:154:1 › only explicit painted image observation receives pixels and preserves an unfinished User region through Show/Return 
+    desktop/tests/electron/notebook-shared.spec.ts:184:1 › actual scrolling revokes old Notebook receipts and clipped source-preview cannot authorize a mark 
+    desktop/tests/electron/notebook-shared.spec.ts:257:3 › Notebook fold invalidates an earlier Agent viewport receipt 
+    desktop/tests/electron/notebook-shared.spec.ts:257:3 › Notebook zoom invalidates an earlier Agent viewport receipt 
+    desktop/tests/electron/observed-reference.spec.ts:14:1 › Agent Run and stream references preserve User work and separate historical evidence from current tasks 
+    desktop/tests/electron/pdf-reference.spec.ts:86:1 › Agent PDF marks and immutable question capture preserve User state across Show, Return, changed source and restart 
+    desktop/tests/electron/pdf-reference.spec.ts:200:1 › PDF tool scopes reject scroll-stale, source-preview, off-page, outside-visible and missing receipts 
+    desktop/tests/electron/pdf-reference.spec.ts:242:1 › User PDF mark needs no Agent turn; text-only models cannot observe PDF pixels 
+    desktop/tests/electron/pdf-reference.spec.ts:259:1 › Agent opens a PDF beside a protected User view without taking focus 
+    desktop/tests/electron/questions.spec.ts:77:1 › question arrival preserves a peer draft; Reply/Cancel and Enter use one composer with immutable evidence and one addressed answer 
+    desktop/tests/electron/questions.spec.ts:157:1 › pending reply restores without replay; changed source invalidates Send while historical question preview and draft remain 
+    desktop/tests/electron/shared-context.spec.ts:61:1 › User and Agent share table/image pointers while local selection and composer focus stay independent 
+  12 skipped
+  63 passed (5.6m)

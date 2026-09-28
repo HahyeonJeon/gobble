@@ -1,0 +1,56 @@
+
+> gobble-app-workspace@0.1.0 test
+> npm run build:service && vitest run
+
+
+> gobble-app-workspace@0.1.0 build:service
+> tsx scripts/build-service.ts
+
+
+ RUN  v4.1.11 /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app
+
+ ❯ contracts/tests/contracts.test.ts (23 tests | 1 failed) 9ms
+     × requires renderer session, request, generation and data revision for an acknowledgment 2ms
+ ❯ desktop/tests/shared-context.test.ts (16 tests | 1 failed) 4704ms
+     × requires ready visible observations, and revalidates cached reads after navigation 2637ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  contracts/tests/contracts.test.ts > versioned wire contracts > requires renderer session, request, generation and data revision for an acknowledgment
+ContractValidationError: Data does not match the contract.
+ ❯ parse contracts/src/validation.ts:14:42
+     12| // Interpret schemas without generated code: this also works under ren…
+     13| export function parse<T extends TSchema>(schema: T, input: unknown): S…
+     14|   if (!Value.Check(schema, input)) throw new ContractValidationError();
+       |                                          ^
+     15|   return input;
+     16| }
+ ❯ contracts/tests/contracts.test.ts:48:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  desktop/tests/shared-context.test.ts > shared Project tools and authored references > requires ready visible observations, and revalidates cached reads after navigation
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ desktop/tests/shared-context.test.ts:348:56
+    346|     await s.workspace.openProject('prj_two');
+    347|     expect((await s.invoke('workspace_observe', args, 'observe')).succ…
+    348|     expect((await s.invoke('workspace_list')).success).toBe(true);
+       |                                                        ^
+    349|     expect(
+    350|       (await s.invoke('workspace_open', { resources: [{ kind: 'file', …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed | 15 passed (17)
+      Tests  2 failed | 186 passed (188)
+   Start at  08:42:05
+   Duration  7.54s (transform 2.22s, setup 0ms, import 4.08s, tests 29.72s, environment 1ms)
+

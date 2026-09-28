@@ -1,0 +1,33 @@
+{
+  "staleSave": {
+    "status": 200,
+    "staleIfMatchOverwroteNewerContent": true,
+    "preflightHashDetectsChange": true
+  },
+  "missingFile": {
+    "readStatus": 404,
+    "saveRecreatesWithoutExplicitCreateIntent": true
+  },
+  "liveOutput": {
+    "types": [
+      "display_data",
+      "update_display_data"
+    ],
+    "sameDisplayId": true,
+    "allRepliesCorrelated": true
+  },
+  "disconnect": {
+    "outcomeAtDisconnect": "unknown",
+    "counterAfterReconnect": 1,
+    "replayedOriginalRequest": false,
+    "kernelStillRunning": true
+  },
+  "restart": {
+    "kernelIdRetained": true,
+    "kernelMessageEpochChanged": true,
+    "oldVariablesGone": true
+  },
+  "viewLifetime": {
+    "sessionSurvivesAllProbeSocketsClosed": true
+  }
+}

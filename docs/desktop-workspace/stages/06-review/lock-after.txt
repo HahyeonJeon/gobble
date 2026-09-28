@@ -1,0 +1,5 @@
+=== RUN   TestFreshOccupancyLockIsObservable
+--- PASS: TestFreshOccupancyLockIsObservable (0.01s)
+=== RUN   TestFreshCheckpointLockExcludesReaders
+--- PASS: TestFreshCheckpointLockExcludesReaders (0.00s)
+PASS

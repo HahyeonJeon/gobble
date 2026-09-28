@@ -1,0 +1,31 @@
+
+Running 1 test using 1 worker
+
+(node:89633) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 desktop/tests/electron/saved-reports.spec.ts:10:1 › Flow opens a complete saved report; compact/focus/close/restart preserve its original result (8.8s)
+
+
+  1) desktop/tests/electron/saved-reports.spec.ts:10:1 › Flow opens a complete saved report; compact/focus/close/restart preserve its original result 
+
+    Error: locator.click: Error: strict mode violation: getByLabel('Message attachments', { exact: true }).getByRole('button', { name: /sample_trimmed/ }) resolved to 2 elements:
+        1) <button type="button" aria-expanded="false" aria-haspopup="dialog" class="attachment-toggle" title="sample_trimmed.fq.gz FastQC Report · Whole saved report">…</button> aka getByRole('button', { name: 'sample_trimmed.fq.gz FastQC Report Whole saved report' })
+        2) <button class="icon-button small" aria-label="Remove attachment sample_trimmed.fq.gz FastQC Report">…</button> aka getByRole('button', { name: 'Remove attachment' })
+
+    Call log:
+      - waiting for getByLabel('Message attachments', { exact: true }).getByRole('button', { name: /sample_trimmed/ })
+
+
+      157 |     await page.getByRole('button', {name:'Attach report',exact:true}).click();
+      158 |     await expect(page.getByText('1 attachment · Ready for Researcher', {exact:true})).toBeVisible();
+    > 159 |     await page.getByLabel('Message attachments',{exact:true}).getByRole('button',{name:/sample_trimmed/}).click();
+          |                                                                                                           ^
+      160 |     await expect(attachmentPreview(page).locator('.report-view img')).toHaveCount(8);
+      161 |     await page.screenshot({path:info.outputPath('report-attachment.png')});
+      162 |     await closeAttachmentPreview(page);
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/saved-reports.spec.ts:159:107
+
+    Error Context: test-results/electron/saved-reports-Flow-opens-a-17042-reserve-its-original-result/error-context.md
+
+  1 failed
+    desktop/tests/electron/saved-reports.spec.ts:10:1 › Flow opens a complete saved report; compact/focus/close/restart preserve its original result 

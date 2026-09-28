@@ -1,0 +1,680 @@
+{"Time":"2026-09-12T09:58:27.170141465Z","Action":"start","Package":"github.com/HahyeonJeon/gobble/internal/engine"}
+{"Time":"2026-09-12T09:58:27.204763548Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations"}
+{"Time":"2026-09-12T09:58:27.204813465Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations","Output":"=== RUN   TestCreationRejectsCompleteTaskAndTopologyMutations\n"}
+{"Time":"2026-09-12T09:58:27.209970632Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/hidden_step"}
+{"Time":"2026-09-12T09:58:27.209996673Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/hidden_step","Output":"=== RUN   TestCreationRejectsCompleteTaskAndTopologyMutations/hidden_step\n"}
+{"Time":"2026-09-12T09:58:27.211460382Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/hidden_step","Output":"--- PASS: TestCreationRejectsCompleteTaskAndTopologyMutations/hidden_step (0.00s)\n"}
+{"Time":"2026-09-12T09:58:27.211476798Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/hidden_step","Elapsed":0}
+{"Time":"2026-09-12T09:58:27.21179784Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/env"}
+{"Time":"2026-09-12T09:58:27.211800632Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/env","Output":"=== RUN   TestCreationRejectsCompleteTaskAndTopologyMutations/env\n"}
+{"Time":"2026-09-12T09:58:27.211812382Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/env","Output":"--- PASS: TestCreationRejectsCompleteTaskAndTopologyMutations/env (0.00s)\n"}
+{"Time":"2026-09-12T09:58:27.211814882Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/env","Elapsed":0}
+{"Time":"2026-09-12T09:58:27.211818923Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/params"}
+{"Time":"2026-09-12T09:58:27.21182034Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/params","Output":"=== RUN   TestCreationRejectsCompleteTaskAndTopologyMutations/params\n"}
+{"Time":"2026-09-12T09:58:27.211822757Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/params","Output":"--- PASS: TestCreationRejectsCompleteTaskAndTopologyMutations/params (0.00s)\n"}
+{"Time":"2026-09-12T09:58:27.211825173Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/params","Elapsed":0}
+{"Time":"2026-09-12T09:58:27.211827548Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/replace"}
+{"Time":"2026-09-12T09:58:27.21182934Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/replace","Output":"=== RUN   TestCreationRejectsCompleteTaskAndTopologyMutations/replace\n"}
+{"Time":"2026-09-12T09:58:27.211831965Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/replace","Output":"--- PASS: TestCreationRejectsCompleteTaskAndTopologyMutations/replace (0.00s)\n"}
+{"Time":"2026-09-12T09:58:27.211839673Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/replace","Elapsed":0}
+{"Time":"2026-09-12T09:58:27.211841632Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/input_source"}
+{"Time":"2026-09-12T09:58:27.211842965Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/input_source","Output":"=== RUN   TestCreationRejectsCompleteTaskAndTopologyMutations/input_source\n"}
+{"Time":"2026-09-12T09:58:27.211844965Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/input_source","Output":"--- PASS: TestCreationRejectsCompleteTaskAndTopologyMutations/input_source (0.00s)\n"}
+{"Time":"2026-09-12T09:58:27.211856965Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/input_source","Elapsed":0}
+{"Time":"2026-09-12T09:58:27.211858798Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/wait"}
+{"Time":"2026-09-12T09:58:27.211860173Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/wait","Output":"=== RUN   TestCreationRejectsCompleteTaskAndTopologyMutations/wait\n"}
+{"Time":"2026-09-12T09:58:27.211874673Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/wait","Output":"--- PASS: TestCreationRejectsCompleteTaskAndTopologyMutations/wait (0.00s)\n"}
+{"Time":"2026-09-12T09:58:27.211884215Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/wait","Elapsed":0}
+{"Time":"2026-09-12T09:58:27.211886132Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/env_digest"}
+{"Time":"2026-09-12T09:58:27.21188759Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/env_digest","Output":"=== RUN   TestCreationRejectsCompleteTaskAndTopologyMutations/env_digest\n"}
+{"Time":"2026-09-12T09:58:27.211889757Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/env_digest","Output":"--- PASS: TestCreationRejectsCompleteTaskAndTopologyMutations/env_digest (0.00s)\n"}
+{"Time":"2026-09-12T09:58:27.21189159Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/env_digest","Elapsed":0}
+{"Time":"2026-09-12T09:58:27.211893465Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/script"}
+{"Time":"2026-09-12T09:58:27.211894923Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/script","Output":"=== RUN   TestCreationRejectsCompleteTaskAndTopologyMutations/script\n"}
+{"Time":"2026-09-12T09:58:27.211897923Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/script","Output":"--- PASS: TestCreationRejectsCompleteTaskAndTopologyMutations/script (0.00s)\n"}
+{"Time":"2026-09-12T09:58:27.21189959Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/script","Elapsed":0}
+{"Time":"2026-09-12T09:58:27.21190109Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/executable"}
+{"Time":"2026-09-12T09:58:27.21190234Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/executable","Output":"=== RUN   TestCreationRejectsCompleteTaskAndTopologyMutations/executable\n"}
+{"Time":"2026-09-12T09:58:27.21190409Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/executable","Output":"--- PASS: TestCreationRejectsCompleteTaskAndTopologyMutations/executable (0.00s)\n"}
+{"Time":"2026-09-12T09:58:27.211908715Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/executable","Elapsed":0}
+{"Time":"2026-09-12T09:58:27.211910298Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/connection"}
+{"Time":"2026-09-12T09:58:27.211911757Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/connection","Output":"=== RUN   TestCreationRejectsCompleteTaskAndTopologyMutations/connection\n"}
+{"Time":"2026-09-12T09:58:27.211913673Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/connection","Output":"--- PASS: TestCreationRejectsCompleteTaskAndTopologyMutations/connection (0.00s)\n"}
+{"Time":"2026-09-12T09:58:27.211915423Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/connection","Elapsed":0}
+{"Time":"2026-09-12T09:58:27.211948173Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/extra_command"}
+{"Time":"2026-09-12T09:58:27.211949882Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/extra_command","Output":"=== RUN   TestCreationRejectsCompleteTaskAndTopologyMutations/extra_command\n"}
+{"Time":"2026-09-12T09:58:27.21195184Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/extra_command","Output":"--- PASS: TestCreationRejectsCompleteTaskAndTopologyMutations/extra_command (0.00s)\n"}
+{"Time":"2026-09-12T09:58:27.211953632Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/extra_command","Elapsed":0}
+{"Time":"2026-09-12T09:58:27.211955173Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/resource"}
+{"Time":"2026-09-12T09:58:27.21195659Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/resource","Output":"=== RUN   TestCreationRejectsCompleteTaskAndTopologyMutations/resource\n"}
+{"Time":"2026-09-12T09:58:27.211968007Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/resource","Output":"--- PASS: TestCreationRejectsCompleteTaskAndTopologyMutations/resource (0.00s)\n"}
+{"Time":"2026-09-12T09:58:27.211974507Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/resource","Elapsed":0}
+{"Time":"2026-09-12T09:58:27.211977173Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/image"}
+{"Time":"2026-09-12T09:58:27.21198209Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/image","Output":"=== RUN   TestCreationRejectsCompleteTaskAndTopologyMutations/image\n"}
+{"Time":"2026-09-12T09:58:27.21208359Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/image","Output":"--- PASS: TestCreationRejectsCompleteTaskAndTopologyMutations/image (0.00s)\n"}
+{"Time":"2026-09-12T09:58:27.212133173Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/image","Elapsed":0}
+{"Time":"2026-09-12T09:58:27.212140382Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/scatter"}
+{"Time":"2026-09-12T09:58:27.212142465Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/scatter","Output":"=== RUN   TestCreationRejectsCompleteTaskAndTopologyMutations/scatter\n"}
+{"Time":"2026-09-12T09:58:27.212147798Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/scatter","Output":"--- PASS: TestCreationRejectsCompleteTaskAndTopologyMutations/scatter (0.00s)\n"}
+{"Time":"2026-09-12T09:58:27.212159423Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/scatter","Elapsed":0}
+{"Time":"2026-09-12T09:58:27.212161382Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/module"}
+{"Time":"2026-09-12T09:58:27.212163173Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/module","Output":"=== RUN   TestCreationRejectsCompleteTaskAndTopologyMutations/module\n"}
+{"Time":"2026-09-12T09:58:27.212268715Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/module","Output":"--- PASS: TestCreationRejectsCompleteTaskAndTopologyMutations/module (0.00s)\n"}
+{"Time":"2026-09-12T09:58:27.212325632Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/module","Elapsed":0}
+{"Time":"2026-09-12T09:58:27.212332923Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/control"}
+{"Time":"2026-09-12T09:58:27.21233534Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/control","Output":"=== RUN   TestCreationRejectsCompleteTaskAndTopologyMutations/control\n"}
+{"Time":"2026-09-12T09:58:27.212339257Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/control","Output":"--- PASS: TestCreationRejectsCompleteTaskAndTopologyMutations/control (0.00s)\n"}
+{"Time":"2026-09-12T09:58:27.212341465Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/control","Elapsed":0}
+{"Time":"2026-09-12T09:58:27.212343007Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/report"}
+{"Time":"2026-09-12T09:58:27.212345465Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/report","Output":"=== RUN   TestCreationRejectsCompleteTaskAndTopologyMutations/report\n"}
+{"Time":"2026-09-12T09:58:27.212347423Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/report","Output":"--- PASS: TestCreationRejectsCompleteTaskAndTopologyMutations/report (0.00s)\n"}
+{"Time":"2026-09-12T09:58:27.212349048Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/report","Elapsed":0}
+{"Time":"2026-09-12T09:58:27.21235059Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/duplicate_edge"}
+{"Time":"2026-09-12T09:58:27.212352007Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/duplicate_edge","Output":"=== RUN   TestCreationRejectsCompleteTaskAndTopologyMutations/duplicate_edge\n"}
+{"Time":"2026-09-12T09:58:27.212358382Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/duplicate_edge","Output":"--- PASS: TestCreationRejectsCompleteTaskAndTopologyMutations/duplicate_edge (0.00s)\n"}
+{"Time":"2026-09-12T09:58:27.212366298Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations/duplicate_edge","Elapsed":0}
+{"Time":"2026-09-12T09:58:27.21247909Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations","Output":"--- PASS: TestCreationRejectsCompleteTaskAndTopologyMutations (0.01s)\n"}
+{"Time":"2026-09-12T09:58:27.212495173Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestCreationRejectsCompleteTaskAndTopologyMutations","Elapsed":0.01}
+{"Time":"2026-09-12T09:58:27.212762215Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields"}
+{"Time":"2026-09-12T09:58:27.212765757Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields","Output":"=== RUN   TestReviewFingerprintCoversHiddenExecutionFields\n"}
+{"Time":"2026-09-12T09:58:27.212769965Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/replace"}
+{"Time":"2026-09-12T09:58:27.212782507Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/replace","Output":"=== RUN   TestReviewFingerprintCoversHiddenExecutionFields/replace\n"}
+{"Time":"2026-09-12T09:58:27.214444298Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/replace","Output":"--- PASS: TestReviewFingerprintCoversHiddenExecutionFields/replace (0.00s)\n"}
+{"Time":"2026-09-12T09:58:27.21445584Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/replace","Elapsed":0}
+{"Time":"2026-09-12T09:58:27.214459632Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/condition"}
+{"Time":"2026-09-12T09:58:27.214461715Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/condition","Output":"=== RUN   TestReviewFingerprintCoversHiddenExecutionFields/condition\n"}
+{"Time":"2026-09-12T09:58:27.214512257Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/condition","Output":"--- PASS: TestReviewFingerprintCoversHiddenExecutionFields/condition (0.00s)\n"}
+{"Time":"2026-09-12T09:58:27.214529548Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/condition","Elapsed":0}
+{"Time":"2026-09-12T09:58:27.214533757Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/env"}
+{"Time":"2026-09-12T09:58:27.21454409Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/env","Output":"=== RUN   TestReviewFingerprintCoversHiddenExecutionFields/env\n"}
+{"Time":"2026-09-12T09:58:27.21483634Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/env","Output":"--- PASS: TestReviewFingerprintCoversHiddenExecutionFields/env (0.00s)\n"}
+{"Time":"2026-09-12T09:58:27.214844923Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/env","Elapsed":0}
+{"Time":"2026-09-12T09:58:27.214847382Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/executable"}
+{"Time":"2026-09-12T09:58:27.21484909Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/executable","Output":"=== RUN   TestReviewFingerprintCoversHiddenExecutionFields/executable\n"}
+{"Time":"2026-09-12T09:58:27.214894465Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/executable","Output":"--- PASS: TestReviewFingerprintCoversHiddenExecutionFields/executable (0.00s)\n"}
+{"Time":"2026-09-12T09:58:27.214904923Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/executable","Elapsed":0}
+{"Time":"2026-09-12T09:58:27.214907382Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/input_source"}
+{"Time":"2026-09-12T09:58:27.214908923Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/input_source","Output":"=== RUN   TestReviewFingerprintCoversHiddenExecutionFields/input_source\n"}
+{"Time":"2026-09-12T09:58:27.215048382Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/input_source","Output":"--- PASS: TestReviewFingerprintCoversHiddenExecutionFields/input_source (0.00s)\n"}
+{"Time":"2026-09-12T09:58:27.215061757Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/input_source","Elapsed":0}
+{"Time":"2026-09-12T09:58:27.215065215Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/scatter_spec"}
+{"Time":"2026-09-12T09:58:27.215066965Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/scatter_spec","Output":"=== RUN   TestReviewFingerprintCoversHiddenExecutionFields/scatter_spec\n"}
+{"Time":"2026-09-12T09:58:27.215136423Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/scatter_spec","Output":"--- PASS: TestReviewFingerprintCoversHiddenExecutionFields/scatter_spec (0.00s)\n"}
+{"Time":"2026-09-12T09:58:27.215149132Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/scatter_spec","Elapsed":0}
+{"Time":"2026-09-12T09:58:27.215152257Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/script"}
+{"Time":"2026-09-12T09:58:27.215153923Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/script","Output":"=== RUN   TestReviewFingerprintCoversHiddenExecutionFields/script\n"}
+{"Time":"2026-09-12T09:58:27.215175882Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/script","Output":"--- PASS: TestReviewFingerprintCoversHiddenExecutionFields/script (0.00s)\n"}
+{"Time":"2026-09-12T09:58:27.215182965Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/script","Elapsed":0}
+{"Time":"2026-09-12T09:58:27.215186215Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/environment_digest"}
+{"Time":"2026-09-12T09:58:27.215187798Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/environment_digest","Output":"=== RUN   TestReviewFingerprintCoversHiddenExecutionFields/environment_digest\n"}
+{"Time":"2026-09-12T09:58:27.21527434Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/environment_digest","Output":"--- PASS: TestReviewFingerprintCoversHiddenExecutionFields/environment_digest (0.00s)\n"}
+{"Time":"2026-09-12T09:58:27.215284215Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/environment_digest","Elapsed":0}
+{"Time":"2026-09-12T09:58:27.215289465Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/params"}
+{"Time":"2026-09-12T09:58:27.215291048Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/params","Output":"=== RUN   TestReviewFingerprintCoversHiddenExecutionFields/params\n"}
+{"Time":"2026-09-12T09:58:27.215342007Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/params","Output":"--- PASS: TestReviewFingerprintCoversHiddenExecutionFields/params (0.00s)\n"}
+{"Time":"2026-09-12T09:58:27.215353215Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields/params","Elapsed":0}
+{"Time":"2026-09-12T09:58:27.215357923Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields","Output":"--- PASS: TestReviewFingerprintCoversHiddenExecutionFields (0.00s)\n"}
+{"Time":"2026-09-12T09:58:27.215360298Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestReviewFingerprintCoversHiddenExecutionFields","Elapsed":0}
+{"Time":"2026-09-12T09:58:27.215361882Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestFastQCReviewRejectsUnrepresentedFields"}
+{"Time":"2026-09-12T09:58:27.215363465Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestFastQCReviewRejectsUnrepresentedFields","Output":"=== RUN   TestFastQCReviewRejectsUnrepresentedFields\n"}
+{"Time":"2026-09-12T09:58:27.215966965Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestFastQCReviewRejectsUnrepresentedFields","Output":"--- PASS: TestFastQCReviewRejectsUnrepresentedFields (0.00s)\n"}
+{"Time":"2026-09-12T09:58:27.215980965Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestFastQCReviewRejectsUnrepresentedFields","Elapsed":0}
+{"Time":"2026-09-12T09:58:27.21621034Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestParseMemoryGrammar"}
+{"Time":"2026-09-12T09:58:27.216229423Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestParseMemoryGrammar","Output":"=== RUN   TestParseMemoryGrammar\n"}
+{"Time":"2026-09-12T09:58:27.217813173Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestParseMemoryGrammar","Output":"--- PASS: TestParseMemoryGrammar (0.00s)\n"}
+{"Time":"2026-09-12T09:58:27.21782309Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Test":"TestParseMemoryGrammar","Elapsed":0}
+{"Time":"2026-09-12T09:58:27.218227298Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Output":"PASS\n"}
+{"Time":"2026-09-12T09:58:27.219811173Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/internal/engine","Output":"ok  \tgithub.com/HahyeonJeon/gobble/internal/engine\t0.047s\n"}
+{"Time":"2026-09-12T09:58:27.221065465Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/internal/engine","Elapsed":0.051}
+{"Time":"2026-09-12T09:58:40.181813388Z","Action":"start","Package":"github.com/HahyeonJeon/gobble"}
+{"Time":"2026-09-12T09:58:40.226465638Z","Action":"run","Package":"github.com/HahyeonJeon/gobble","Test":"TestCreationInputDescriptor"}
+{"Time":"2026-09-12T09:58:40.226503013Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestCreationInputDescriptor","Output":"=== RUN   TestCreationInputDescriptor\n"}
+{"Time":"2026-09-12T09:58:40.236770263Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestCreationInputDescriptor","Output":"--- PASS: TestCreationInputDescriptor (0.01s)\n"}
+{"Time":"2026-09-12T09:58:40.238226054Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble","Test":"TestCreationInputDescriptor","Elapsed":0.01}
+{"Time":"2026-09-12T09:58:40.238267679Z","Action":"run","Package":"github.com/HahyeonJeon/gobble","Test":"TestCreationCompleteModuleGraph"}
+{"Time":"2026-09-12T09:58:40.238271804Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestCreationCompleteModuleGraph","Output":"=== RUN   TestCreationCompleteModuleGraph\n"}
+{"Time":"2026-09-12T09:58:40.260218971Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestCreationCompleteModuleGraph","Output":"--- PASS: TestCreationCompleteModuleGraph (0.02s)\n"}
+{"Time":"2026-09-12T09:58:40.260538596Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble","Test":"TestCreationCompleteModuleGraph","Elapsed":0.02}
+{"Time":"2026-09-12T09:58:40.260560221Z","Action":"run","Package":"github.com/HahyeonJeon/gobble","Test":"TestPipelineReviewSettingAndBranch"}
+{"Time":"2026-09-12T09:58:40.260563971Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestPipelineReviewSettingAndBranch","Output":"=== RUN   TestPipelineReviewSettingAndBranch\n"}
+{"Time":"2026-09-12T09:58:40.261966346Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestPipelineReviewSettingAndBranch","Output":"--- PASS: TestPipelineReviewSettingAndBranch (0.00s)\n"}
+{"Time":"2026-09-12T09:58:40.261999929Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble","Test":"TestPipelineReviewSettingAndBranch","Elapsed":0}
+{"Time":"2026-09-12T09:58:40.262009929Z","Action":"run","Package":"github.com/HahyeonJeon/gobble","Test":"TestPipelineReviewRejectsUnexplainedBehavior"}
+{"Time":"2026-09-12T09:58:40.262011888Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestPipelineReviewRejectsUnexplainedBehavior","Output":"=== RUN   TestPipelineReviewRejectsUnexplainedBehavior\n"}
+{"Time":"2026-09-12T09:58:40.269043513Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestPipelineReviewRejectsUnexplainedBehavior","Output":"--- PASS: TestPipelineReviewRejectsUnexplainedBehavior (0.01s)\n"}
+{"Time":"2026-09-12T09:58:40.269072346Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble","Test":"TestPipelineReviewRejectsUnexplainedBehavior","Elapsed":0.01}
+{"Time":"2026-09-12T09:58:40.269080471Z","Action":"run","Package":"github.com/HahyeonJeon/gobble","Test":"TestPipelineReviewDoesNotChangeFlowContract"}
+{"Time":"2026-09-12T09:58:40.269082263Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestPipelineReviewDoesNotChangeFlowContract","Output":"=== RUN   TestPipelineReviewDoesNotChangeFlowContract\n"}
+{"Time":"2026-09-12T09:58:40.269479804Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestPipelineReviewDoesNotChangeFlowContract","Output":"--- PASS: TestPipelineReviewDoesNotChangeFlowContract (0.00s)\n"}
+{"Time":"2026-09-12T09:58:40.269500304Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble","Test":"TestPipelineReviewDoesNotChangeFlowContract","Elapsed":0}
+{"Time":"2026-09-12T09:58:40.269624096Z","Action":"run","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetValid"}
+{"Time":"2026-09-12T09:58:40.269648263Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetValid","Output":"=== RUN   TestParseSampleSheetValid\n"}
+{"Time":"2026-09-12T09:58:40.270995763Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetValid","Output":"--- PASS: TestParseSampleSheetValid (0.00s)\n"}
+{"Time":"2026-09-12T09:58:40.271011388Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetValid","Elapsed":0}
+{"Time":"2026-09-12T09:58:40.271014638Z","Action":"run","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetOmitsOptionalHeaders"}
+{"Time":"2026-09-12T09:58:40.271016388Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetOmitsOptionalHeaders","Output":"=== RUN   TestParseSampleSheetOmitsOptionalHeaders\n"}
+{"Time":"2026-09-12T09:58:40.271021346Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetOmitsOptionalHeaders","Output":"--- PASS: TestParseSampleSheetOmitsOptionalHeaders (0.00s)\n"}
+{"Time":"2026-09-12T09:58:40.271023679Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetOmitsOptionalHeaders","Elapsed":0}
+{"Time":"2026-09-12T09:58:40.271026304Z","Action":"run","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetAllowsConstructorDeferredRules"}
+{"Time":"2026-09-12T09:58:40.271039054Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetAllowsConstructorDeferredRules","Output":"=== RUN   TestParseSampleSheetAllowsConstructorDeferredRules\n"}
+{"Time":"2026-09-12T09:58:40.271094179Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetAllowsConstructorDeferredRules","Output":"--- PASS: TestParseSampleSheetAllowsConstructorDeferredRules (0.00s)\n"}
+{"Time":"2026-09-12T09:58:40.271107679Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetAllowsConstructorDeferredRules","Elapsed":0}
+{"Time":"2026-09-12T09:58:40.271111138Z","Action":"run","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetEmptyRead2"}
+{"Time":"2026-09-12T09:58:40.271112679Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetEmptyRead2","Output":"=== RUN   TestParseSampleSheetEmptyRead2\n"}
+{"Time":"2026-09-12T09:58:40.271190638Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetEmptyRead2","Output":"--- PASS: TestParseSampleSheetEmptyRead2 (0.00s)\n"}
+{"Time":"2026-09-12T09:58:40.271272179Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetEmptyRead2","Elapsed":0}
+{"Time":"2026-09-12T09:58:40.271324929Z","Action":"run","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetEmptyOptionalCells"}
+{"Time":"2026-09-12T09:58:40.271328763Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetEmptyOptionalCells","Output":"=== RUN   TestParseSampleSheetEmptyOptionalCells\n"}
+{"Time":"2026-09-12T09:58:40.271337554Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetEmptyOptionalCells","Output":"--- PASS: TestParseSampleSheetEmptyOptionalCells (0.00s)\n"}
+{"Time":"2026-09-12T09:58:40.271339429Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetEmptyOptionalCells","Elapsed":0}
+{"Time":"2026-09-12T09:58:40.271341054Z","Action":"run","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetBOM"}
+{"Time":"2026-09-12T09:58:40.271342596Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetBOM","Output":"=== RUN   TestParseSampleSheetBOM\n"}
+{"Time":"2026-09-12T09:58:40.271345596Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetBOM","Output":"--- PASS: TestParseSampleSheetBOM (0.00s)\n"}
+{"Time":"2026-09-12T09:58:40.271347554Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetBOM","Elapsed":0}
+{"Time":"2026-09-12T09:58:40.271350638Z","Action":"run","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject"}
+{"Time":"2026-09-12T09:58:40.271355888Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject","Output":"=== RUN   TestParseSampleSheetReject\n"}
+{"Time":"2026-09-12T09:58:40.271495263Z","Action":"run","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/malformed_CSV"}
+{"Time":"2026-09-12T09:58:40.271505263Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/malformed_CSV","Output":"=== RUN   TestParseSampleSheetReject/malformed_CSV\n"}
+{"Time":"2026-09-12T09:58:40.272267596Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/malformed_CSV","Output":"--- PASS: TestParseSampleSheetReject/malformed_CSV (0.00s)\n"}
+{"Time":"2026-09-12T09:58:40.272278679Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/malformed_CSV","Elapsed":0}
+{"Time":"2026-09-12T09:58:40.272283554Z","Action":"run","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/tab_separated"}
+{"Time":"2026-09-12T09:58:40.272285138Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/tab_separated","Output":"=== RUN   TestParseSampleSheetReject/tab_separated\n"}
+{"Time":"2026-09-12T09:58:40.272291596Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/tab_separated","Output":"--- PASS: TestParseSampleSheetReject/tab_separated (0.00s)\n"}
+{"Time":"2026-09-12T09:58:40.272295096Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/tab_separated","Elapsed":0}
+{"Time":"2026-09-12T09:58:40.272330388Z","Action":"run","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/missing_header"}
+{"Time":"2026-09-12T09:58:40.272337763Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/missing_header","Output":"=== RUN   TestParseSampleSheetReject/missing_header\n"}
+{"Time":"2026-09-12T09:58:40.272434721Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/missing_header","Output":"--- PASS: TestParseSampleSheetReject/missing_header (0.00s)\n"}
+{"Time":"2026-09-12T09:58:40.272445138Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/missing_header","Elapsed":0}
+{"Time":"2026-09-12T09:58:40.272448596Z","Action":"run","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/no_data_rows"}
+{"Time":"2026-09-12T09:58:40.272451721Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/no_data_rows","Output":"=== RUN   TestParseSampleSheetReject/no_data_rows\n"}
+{"Time":"2026-09-12T09:58:40.272458929Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/no_data_rows","Output":"--- PASS: TestParseSampleSheetReject/no_data_rows (0.00s)\n"}
+{"Time":"2026-09-12T09:58:40.272460679Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/no_data_rows","Elapsed":0}
+{"Time":"2026-09-12T09:58:40.272466013Z","Action":"run","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/missing_required_header"}
+{"Time":"2026-09-12T09:58:40.272467471Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/missing_required_header","Output":"=== RUN   TestParseSampleSheetReject/missing_required_header\n"}
+{"Time":"2026-09-12T09:58:40.272471929Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/missing_required_header","Output":"--- PASS: TestParseSampleSheetReject/missing_required_header (0.00s)\n"}
+{"Time":"2026-09-12T09:58:40.272474138Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/missing_required_header","Elapsed":0}
+{"Time":"2026-09-12T09:58:40.272484304Z","Action":"run","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/unknown_header"}
+{"Time":"2026-09-12T09:58:40.272485763Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/unknown_header","Output":"=== RUN   TestParseSampleSheetReject/unknown_header\n"}
+{"Time":"2026-09-12T09:58:40.272489138Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/unknown_header","Output":"--- PASS: TestParseSampleSheetReject/unknown_header (0.00s)\n"}
+{"Time":"2026-09-12T09:58:40.272490638Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/unknown_header","Elapsed":0}
+{"Time":"2026-09-12T09:58:40.272495721Z","Action":"run","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/duplicate_header"}
+{"Time":"2026-09-12T09:58:40.272497096Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/duplicate_header","Output":"=== RUN   TestParseSampleSheetReject/duplicate_header\n"}
+{"Time":"2026-09-12T09:58:40.272501388Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/duplicate_header","Output":"--- PASS: TestParseSampleSheetReject/duplicate_header (0.00s)\n"}
+{"Time":"2026-09-12T09:58:40.272502929Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/duplicate_header","Elapsed":0}
+{"Time":"2026-09-12T09:58:40.272504971Z","Action":"run","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/empty_sample"}
+{"Time":"2026-09-12T09:58:40.272506221Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/empty_sample","Output":"=== RUN   TestParseSampleSheetReject/empty_sample\n"}
+{"Time":"2026-09-12T09:58:40.272600304Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/empty_sample","Output":"--- PASS: TestParseSampleSheetReject/empty_sample (0.00s)\n"}
+{"Time":"2026-09-12T09:58:40.272610929Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/empty_sample","Elapsed":0}
+{"Time":"2026-09-12T09:58:40.272613388Z","Action":"run","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/empty_read1"}
+{"Time":"2026-09-12T09:58:40.272617471Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/empty_read1","Output":"=== RUN   TestParseSampleSheetReject/empty_read1\n"}
+{"Time":"2026-09-12T09:58:40.272733971Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/empty_read1","Output":"--- PASS: TestParseSampleSheetReject/empty_read1 (0.00s)\n"}
+{"Time":"2026-09-12T09:58:40.272773679Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/empty_read1","Elapsed":0}
+{"Time":"2026-09-12T09:58:40.272779179Z","Action":"run","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/illegal_sample_name"}
+{"Time":"2026-09-12T09:58:40.272782221Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/illegal_sample_name","Output":"=== RUN   TestParseSampleSheetReject/illegal_sample_name\n"}
+{"Time":"2026-09-12T09:58:40.272786388Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/illegal_sample_name","Output":"--- PASS: TestParseSampleSheetReject/illegal_sample_name (0.00s)\n"}
+{"Time":"2026-09-12T09:58:40.272787971Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/illegal_sample_name","Elapsed":0}
+{"Time":"2026-09-12T09:58:40.272789554Z","Action":"run","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/duplicate_sample_name"}
+{"Time":"2026-09-12T09:58:40.272790888Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/duplicate_sample_name","Output":"=== RUN   TestParseSampleSheetReject/duplicate_sample_name\n"}
+{"Time":"2026-09-12T09:58:40.272795179Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/duplicate_sample_name","Output":"--- PASS: TestParseSampleSheetReject/duplicate_sample_name (0.00s)\n"}
+{"Time":"2026-09-12T09:58:40.272796721Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/duplicate_sample_name","Elapsed":0}
+{"Time":"2026-09-12T09:58:40.272798179Z","Action":"run","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/backslash_path"}
+{"Time":"2026-09-12T09:58:40.272799388Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/backslash_path","Output":"=== RUN   TestParseSampleSheetReject/backslash_path\n"}
+{"Time":"2026-09-12T09:58:40.272821263Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/backslash_path","Output":"--- PASS: TestParseSampleSheetReject/backslash_path (0.00s)\n"}
+{"Time":"2026-09-12T09:58:40.272831388Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/backslash_path","Elapsed":0}
+{"Time":"2026-09-12T09:58:40.272833179Z","Action":"run","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/absolute_path"}
+{"Time":"2026-09-12T09:58:40.272834513Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/absolute_path","Output":"=== RUN   TestParseSampleSheetReject/absolute_path\n"}
+{"Time":"2026-09-12T09:58:40.272838471Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/absolute_path","Output":"--- PASS: TestParseSampleSheetReject/absolute_path (0.00s)\n"}
+{"Time":"2026-09-12T09:58:40.272840929Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/absolute_path","Elapsed":0}
+{"Time":"2026-09-12T09:58:40.272842346Z","Action":"run","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/windows_volume_path"}
+{"Time":"2026-09-12T09:58:40.272843596Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/windows_volume_path","Output":"=== RUN   TestParseSampleSheetReject/windows_volume_path\n"}
+{"Time":"2026-09-12T09:58:40.272848513Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/windows_volume_path","Output":"--- PASS: TestParseSampleSheetReject/windows_volume_path (0.00s)\n"}
+{"Time":"2026-09-12T09:58:40.272850054Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/windows_volume_path","Elapsed":0}
+{"Time":"2026-09-12T09:58:40.272852013Z","Action":"run","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/url_path"}
+{"Time":"2026-09-12T09:58:40.272853596Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/url_path","Output":"=== RUN   TestParseSampleSheetReject/url_path\n"}
+{"Time":"2026-09-12T09:58:40.272902013Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/url_path","Output":"--- PASS: TestParseSampleSheetReject/url_path (0.00s)\n"}
+{"Time":"2026-09-12T09:58:40.272905096Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/url_path","Elapsed":0}
+{"Time":"2026-09-12T09:58:40.272912554Z","Action":"run","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/dotdot_escape"}
+{"Time":"2026-09-12T09:58:40.272913971Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/dotdot_escape","Output":"=== RUN   TestParseSampleSheetReject/dotdot_escape\n"}
+{"Time":"2026-09-12T09:58:40.272917138Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/dotdot_escape","Output":"--- PASS: TestParseSampleSheetReject/dotdot_escape (0.00s)\n"}
+{"Time":"2026-09-12T09:58:40.272997013Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/dotdot_escape","Elapsed":0}
+{"Time":"2026-09-12T09:58:40.273001221Z","Action":"run","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/inconsistent_reference"}
+{"Time":"2026-09-12T09:58:40.273003054Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/inconsistent_reference","Output":"=== RUN   TestParseSampleSheetReject/inconsistent_reference\n"}
+{"Time":"2026-09-12T09:58:40.273009929Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/inconsistent_reference","Output":"--- PASS: TestParseSampleSheetReject/inconsistent_reference (0.00s)\n"}
+{"Time":"2026-09-12T09:58:40.273012138Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/inconsistent_reference","Elapsed":0}
+{"Time":"2026-09-12T09:58:40.273013804Z","Action":"run","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/inconsistent_gtf"}
+{"Time":"2026-09-12T09:58:40.273015304Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/inconsistent_gtf","Output":"=== RUN   TestParseSampleSheetReject/inconsistent_gtf\n"}
+{"Time":"2026-09-12T09:58:40.273024721Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/inconsistent_gtf","Output":"--- PASS: TestParseSampleSheetReject/inconsistent_gtf (0.00s)\n"}
+{"Time":"2026-09-12T09:58:40.273026638Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject/inconsistent_gtf","Elapsed":0}
+{"Time":"2026-09-12T09:58:40.273029388Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject","Output":"--- PASS: TestParseSampleSheetReject (0.00s)\n"}
+{"Time":"2026-09-12T09:58:40.273031221Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble","Test":"TestParseSampleSheetReject","Elapsed":0}
+{"Time":"2026-09-12T09:58:40.273605138Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Output":"PASS\n"}
+{"Time":"2026-09-12T09:58:40.274543721Z","Action":"output","Package":"github.com/HahyeonJeon/gobble","Output":"ok  \tgithub.com/HahyeonJeon/gobble\t0.093s\n"}
+{"Time":"2026-09-12T09:58:40.279798804Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble","Elapsed":0.098}
+{"Time":"2026-09-12T09:59:10.786857721Z","Action":"start","Package":"github.com/HahyeonJeon/gobble/cmd/gobble"}
+{"Time":"2026-09-12T09:59:10.844910096Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestCreationCommandsKeepExecutionSeparate"}
+{"Time":"2026-09-12T09:59:10.844992638Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestCreationCommandsKeepExecutionSeparate","Output":"=== RUN   TestCreationCommandsKeepExecutionSeparate\n"}
+{"Time":"2026-09-12T09:59:10.85080293Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestCreationCommandsKeepExecutionSeparate","Output":"--- PASS: TestCreationCommandsKeepExecutionSeparate (0.01s)\n"}
+{"Time":"2026-09-12T09:59:10.851173763Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestCreationCommandsKeepExecutionSeparate","Elapsed":0.01}
+{"Time":"2026-09-12T09:59:10.851351596Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp"}
+{"Time":"2026-09-12T09:59:10.851364763Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp","Output":"=== RUN   TestHelp\n"}
+{"Time":"2026-09-12T09:59:10.852880263Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/bare"}
+{"Time":"2026-09-12T09:59:10.852898721Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/bare","Output":"=== RUN   TestHelp/bare\n"}
+{"Time":"2026-09-12T09:59:10.853578638Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/bare","Output":"--- PASS: TestHelp/bare (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.853591971Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/bare","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.853596888Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/help"}
+{"Time":"2026-09-12T09:59:10.853598388Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/help","Output":"=== RUN   TestHelp/help\n"}
+{"Time":"2026-09-12T09:59:10.853878471Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/help","Output":"--- PASS: TestHelp/help (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.853927346Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/help","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.853930555Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/short"}
+{"Time":"2026-09-12T09:59:10.853932221Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/short","Output":"=== RUN   TestHelp/short\n"}
+{"Time":"2026-09-12T09:59:10.853940846Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/short","Output":"--- PASS: TestHelp/short (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.853942638Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/short","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.853952888Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/long"}
+{"Time":"2026-09-12T09:59:10.85395518Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/long","Output":"=== RUN   TestHelp/long\n"}
+{"Time":"2026-09-12T09:59:10.853958346Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/long","Output":"--- PASS: TestHelp/long (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.853960221Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/long","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.853961596Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/help_compose"}
+{"Time":"2026-09-12T09:59:10.853962805Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/help_compose","Output":"=== RUN   TestHelp/help_compose\n"}
+{"Time":"2026-09-12T09:59:10.854165471Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/help_compose","Output":"--- PASS: TestHelp/help_compose (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.85420093Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/help_compose","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.85420668Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/compose_help"}
+{"Time":"2026-09-12T09:59:10.854208721Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/compose_help","Output":"=== RUN   TestHelp/compose_help\n"}
+{"Time":"2026-09-12T09:59:10.854459055Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/compose_help","Output":"--- PASS: TestHelp/compose_help (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.854536971Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/compose_help","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.854562096Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/inspect_help"}
+{"Time":"2026-09-12T09:59:10.85456468Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/inspect_help","Output":"=== RUN   TestHelp/inspect_help\n"}
+{"Time":"2026-09-12T09:59:10.854569013Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/inspect_help","Output":"--- PASS: TestHelp/inspect_help (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.854571513Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/inspect_help","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.854583638Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/run_help"}
+{"Time":"2026-09-12T09:59:10.85458518Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/run_help","Output":"=== RUN   TestHelp/run_help\n"}
+{"Time":"2026-09-12T09:59:10.854708638Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/run_help","Output":"--- PASS: TestHelp/run_help (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.854746388Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/run_help","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.854757096Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/release_help"}
+{"Time":"2026-09-12T09:59:10.85476168Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/release_help","Output":"=== RUN   TestHelp/release_help\n"}
+{"Time":"2026-09-12T09:59:10.85477243Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/release_help","Output":"--- PASS: TestHelp/release_help (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.85479643Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/release_help","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.854860055Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/help_pack"}
+{"Time":"2026-09-12T09:59:10.854863388Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/help_pack","Output":"=== RUN   TestHelp/help_pack\n"}
+{"Time":"2026-09-12T09:59:10.854867305Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/help_pack","Output":"--- PASS: TestHelp/help_pack (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.854869221Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/help_pack","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.854871013Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/pack_help"}
+{"Time":"2026-09-12T09:59:10.854874305Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/pack_help","Output":"=== RUN   TestHelp/pack_help\n"}
+{"Time":"2026-09-12T09:59:10.85496018Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/pack_help","Output":"--- PASS: TestHelp/pack_help (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.855003888Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/pack_help","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.855007721Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/inspect_help_skips_view"}
+{"Time":"2026-09-12T09:59:10.855009096Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/inspect_help_skips_view","Output":"=== RUN   TestHelp/inspect_help_skips_view\n"}
+{"Time":"2026-09-12T09:59:10.855018721Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/inspect_help_skips_view","Output":"--- PASS: TestHelp/inspect_help_skips_view (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.855020638Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp/inspect_help_skips_view","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.856224596Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp","Output":"--- PASS: TestHelp (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.856239471Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestHelp","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.856244263Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestVersion"}
+{"Time":"2026-09-12T09:59:10.856245721Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestVersion","Output":"=== RUN   TestVersion\n"}
+{"Time":"2026-09-12T09:59:10.85645268Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestVersion/--version"}
+{"Time":"2026-09-12T09:59:10.856460846Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestVersion/--version","Output":"=== RUN   TestVersion/--version\n"}
+{"Time":"2026-09-12T09:59:10.906202888Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestVersion/--version","Output":"--- PASS: TestVersion/--version (0.05s)\n"}
+{"Time":"2026-09-12T09:59:10.906244055Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestVersion/--version","Elapsed":0.05}
+{"Time":"2026-09-12T09:59:10.906250805Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestVersion/version"}
+{"Time":"2026-09-12T09:59:10.90625318Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestVersion/version","Output":"=== RUN   TestVersion/version\n"}
+{"Time":"2026-09-12T09:59:10.95230668Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestVersion/version","Output":"--- PASS: TestVersion/version (0.05s)\n"}
+{"Time":"2026-09-12T09:59:10.952347013Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestVersion/version","Elapsed":0.05}
+{"Time":"2026-09-12T09:59:10.952355596Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestVersion","Output":"--- PASS: TestVersion (0.10s)\n"}
+{"Time":"2026-09-12T09:59:10.95235868Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestVersion","Elapsed":0.1}
+{"Time":"2026-09-12T09:59:10.95236793Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures"}
+{"Time":"2026-09-12T09:59:10.95236943Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures","Output":"=== RUN   TestInvocationFailures\n"}
+{"Time":"2026-09-12T09:59:10.952935471Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/unknown_verb"}
+{"Time":"2026-09-12T09:59:10.952976721Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/unknown_verb","Output":"=== RUN   TestInvocationFailures/unknown_verb\n"}
+{"Time":"2026-09-12T09:59:10.954395388Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/unknown_verb","Output":"--- PASS: TestInvocationFailures/unknown_verb (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.954444388Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/unknown_verb","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.954452638Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/unknown_flag"}
+{"Time":"2026-09-12T09:59:10.954454596Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/unknown_flag","Output":"=== RUN   TestInvocationFailures/unknown_flag\n"}
+{"Time":"2026-09-12T09:59:10.954562471Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/unknown_flag","Output":"--- PASS: TestInvocationFailures/unknown_flag (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.954595138Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/unknown_flag","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.95460393Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/extra_compose_operands"}
+{"Time":"2026-09-12T09:59:10.954607638Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/extra_compose_operands","Output":"=== RUN   TestInvocationFailures/extra_compose_operands\n"}
+{"Time":"2026-09-12T09:59:10.954623763Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/extra_compose_operands","Output":"--- PASS: TestInvocationFailures/extra_compose_operands (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.954648305Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/extra_compose_operands","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.954653763Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/extra_plan_operands"}
+{"Time":"2026-09-12T09:59:10.954655388Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/extra_plan_operands","Output":"=== RUN   TestInvocationFailures/extra_plan_operands\n"}
+{"Time":"2026-09-12T09:59:10.954838971Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/extra_plan_operands","Output":"--- PASS: TestInvocationFailures/extra_plan_operands (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.954875471Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/extra_plan_operands","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.954883055Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/extra_validate_operands"}
+{"Time":"2026-09-12T09:59:10.954886888Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/extra_validate_operands","Output":"=== RUN   TestInvocationFailures/extra_validate_operands\n"}
+{"Time":"2026-09-12T09:59:10.955286888Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/extra_validate_operands","Output":"--- PASS: TestInvocationFailures/extra_validate_operands (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.955304888Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/extra_validate_operands","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.955388638Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_view"}
+{"Time":"2026-09-12T09:59:10.955409138Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_view","Output":"=== RUN   TestInvocationFailures/missing_view\n"}
+{"Time":"2026-09-12T09:59:10.95546568Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_view","Output":"--- PASS: TestInvocationFailures/missing_view (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.95548118Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_view","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.955487221Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_inspect_workspace"}
+{"Time":"2026-09-12T09:59:10.95549043Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_inspect_workspace","Output":"=== RUN   TestInvocationFailures/missing_inspect_workspace\n"}
+{"Time":"2026-09-12T09:59:10.955510471Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_inspect_workspace","Output":"--- PASS: TestInvocationFailures/missing_inspect_workspace (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.95553943Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_inspect_workspace","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.955589846Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_inspect_args"}
+{"Time":"2026-09-12T09:59:10.955595846Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_inspect_args","Output":"=== RUN   TestInvocationFailures/missing_inspect_args\n"}
+{"Time":"2026-09-12T09:59:10.955605846Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_inspect_args","Output":"--- PASS: TestInvocationFailures/missing_inspect_args (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.955679388Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_inspect_args","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.955687305Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_release_workspace"}
+{"Time":"2026-09-12T09:59:10.95571268Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_release_workspace","Output":"=== RUN   TestInvocationFailures/missing_release_workspace\n"}
+{"Time":"2026-09-12T09:59:10.955723721Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_release_workspace","Output":"--- PASS: TestInvocationFailures/missing_release_workspace (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.955731763Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_release_workspace","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.955734096Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_run_workspace"}
+{"Time":"2026-09-12T09:59:10.955735388Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_run_workspace","Output":"=== RUN   TestInvocationFailures/missing_run_workspace\n"}
+{"Time":"2026-09-12T09:59:10.955741263Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_run_workspace","Output":"--- PASS: TestInvocationFailures/missing_run_workspace (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.955748471Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_run_workspace","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.955750388Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_resume_workspace"}
+{"Time":"2026-09-12T09:59:10.95575168Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_resume_workspace","Output":"=== RUN   TestInvocationFailures/missing_resume_workspace\n"}
+{"Time":"2026-09-12T09:59:10.956093596Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_resume_workspace","Output":"--- PASS: TestInvocationFailures/missing_resume_workspace (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.956103471Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_resume_workspace","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.956106055Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/non-integer_cap"}
+{"Time":"2026-09-12T09:59:10.956107721Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/non-integer_cap","Output":"=== RUN   TestInvocationFailures/non-integer_cap\n"}
+{"Time":"2026-09-12T09:59:10.956119221Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/non-integer_cap","Output":"--- PASS: TestInvocationFailures/non-integer_cap (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.956121555Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/non-integer_cap","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.956124221Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/empty_cap"}
+{"Time":"2026-09-12T09:59:10.956125638Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/empty_cap","Output":"=== RUN   TestInvocationFailures/empty_cap\n"}
+{"Time":"2026-09-12T09:59:10.956238221Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/empty_cap","Output":"--- PASS: TestInvocationFailures/empty_cap (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.956252346Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/empty_cap","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.956255388Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/repeated_workspace"}
+{"Time":"2026-09-12T09:59:10.956257555Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/repeated_workspace","Output":"=== RUN   TestInvocationFailures/repeated_workspace\n"}
+{"Time":"2026-09-12T09:59:10.956262221Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/repeated_workspace","Output":"--- PASS: TestInvocationFailures/repeated_workspace (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.956278971Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/repeated_workspace","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.956282138Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/repeated_cap"}
+{"Time":"2026-09-12T09:59:10.956284388Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/repeated_cap","Output":"=== RUN   TestInvocationFailures/repeated_cap\n"}
+{"Time":"2026-09-12T09:59:10.956341555Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/repeated_cap","Output":"--- PASS: TestInvocationFailures/repeated_cap (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.956350805Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/repeated_cap","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.956353721Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/repeated_instance"}
+{"Time":"2026-09-12T09:59:10.956355805Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/repeated_instance","Output":"=== RUN   TestInvocationFailures/repeated_instance\n"}
+{"Time":"2026-09-12T09:59:10.956434305Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/repeated_instance","Output":"--- PASS: TestInvocationFailures/repeated_instance (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.956458721Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/repeated_instance","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.956520305Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/help_and_version_flags"}
+{"Time":"2026-09-12T09:59:10.956524263Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/help_and_version_flags","Output":"=== RUN   TestInvocationFailures/help_and_version_flags\n"}
+{"Time":"2026-09-12T09:59:10.95657043Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/help_and_version_flags","Output":"--- PASS: TestInvocationFailures/help_and_version_flags (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.956663888Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/help_and_version_flags","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.957888638Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/compose_help_and_version"}
+{"Time":"2026-09-12T09:59:10.95789643Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/compose_help_and_version","Output":"=== RUN   TestInvocationFailures/compose_help_and_version\n"}
+{"Time":"2026-09-12T09:59:10.957966805Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/compose_help_and_version","Output":"--- PASS: TestInvocationFailures/compose_help_and_version (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.957972305Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/compose_help_and_version","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.95797418Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/run_version"}
+{"Time":"2026-09-12T09:59:10.957975888Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/run_version","Output":"=== RUN   TestInvocationFailures/run_version\n"}
+{"Time":"2026-09-12T09:59:10.958038513Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/run_version","Output":"--- PASS: TestInvocationFailures/run_version (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.958068055Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/run_version","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.95807293Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/inspect_version"}
+{"Time":"2026-09-12T09:59:10.95807468Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/inspect_version","Output":"=== RUN   TestInvocationFailures/inspect_version\n"}
+{"Time":"2026-09-12T09:59:10.958078846Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/inspect_version","Output":"--- PASS: TestInvocationFailures/inspect_version (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.958218971Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/inspect_version","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.958228638Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/version_then_run"}
+{"Time":"2026-09-12T09:59:10.958230763Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/version_then_run","Output":"=== RUN   TestInvocationFailures/version_then_run\n"}
+{"Time":"2026-09-12T09:59:10.958235138Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/version_then_run","Output":"--- PASS: TestInvocationFailures/version_then_run (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.958236805Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/version_then_run","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.958238471Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/inspect_extra_package"}
+{"Time":"2026-09-12T09:59:10.958239763Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/inspect_extra_package","Output":"=== RUN   TestInvocationFailures/inspect_extra_package\n"}
+{"Time":"2026-09-12T09:59:10.958428388Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/inspect_extra_package","Output":"--- PASS: TestInvocationFailures/inspect_extra_package (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.958437513Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/inspect_extra_package","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.958439971Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/release_extra_package"}
+{"Time":"2026-09-12T09:59:10.958441346Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/release_extra_package","Output":"=== RUN   TestInvocationFailures/release_extra_package\n"}
+{"Time":"2026-09-12T09:59:10.958515013Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/release_extra_package","Output":"--- PASS: TestInvocationFailures/release_extra_package (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.95852393Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/release_extra_package","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.958526138Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/unknown_--view"}
+{"Time":"2026-09-12T09:59:10.958527596Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/unknown_--view","Output":"=== RUN   TestInvocationFailures/unknown_--view\n"}
+{"Time":"2026-09-12T09:59:10.958531805Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/unknown_--view","Output":"--- PASS: TestInvocationFailures/unknown_--view (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.958534221Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/unknown_--view","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.958556846Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/cap_on_inspect"}
+{"Time":"2026-09-12T09:59:10.958560013Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/cap_on_inspect","Output":"=== RUN   TestInvocationFailures/cap_on_inspect\n"}
+{"Time":"2026-09-12T09:59:10.958619263Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/cap_on_inspect","Output":"--- PASS: TestInvocationFailures/cap_on_inspect (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.95870193Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/cap_on_inspect","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.958715055Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/instance_on_run"}
+{"Time":"2026-09-12T09:59:10.958717596Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/instance_on_run","Output":"=== RUN   TestInvocationFailures/instance_on_run\n"}
+{"Time":"2026-09-12T09:59:10.958723263Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/instance_on_run","Output":"--- PASS: TestInvocationFailures/instance_on_run (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.958725888Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/instance_on_run","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.95872818Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/workspace_on_compose"}
+{"Time":"2026-09-12T09:59:10.958729721Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/workspace_on_compose","Output":"=== RUN   TestInvocationFailures/workspace_on_compose\n"}
+{"Time":"2026-09-12T09:59:10.95873518Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/workspace_on_compose","Output":"--- PASS: TestInvocationFailures/workspace_on_compose (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.958742721Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/workspace_on_compose","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.958745096Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/repeated_sample"}
+{"Time":"2026-09-12T09:59:10.958746513Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/repeated_sample","Output":"=== RUN   TestInvocationFailures/repeated_sample\n"}
+{"Time":"2026-09-12T09:59:10.958810388Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/repeated_sample","Output":"--- PASS: TestInvocationFailures/repeated_sample (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.958817013Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/repeated_sample","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.958818971Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/empty_sample"}
+{"Time":"2026-09-12T09:59:10.95882043Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/empty_sample","Output":"=== RUN   TestInvocationFailures/empty_sample\n"}
+{"Time":"2026-09-12T09:59:10.958824305Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/empty_sample","Output":"--- PASS: TestInvocationFailures/empty_sample (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.958826471Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/empty_sample","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.958836388Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/whitespace_sample"}
+{"Time":"2026-09-12T09:59:10.958844513Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/whitespace_sample","Output":"=== RUN   TestInvocationFailures/whitespace_sample\n"}
+{"Time":"2026-09-12T09:59:10.958849013Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/whitespace_sample","Output":"--- PASS: TestInvocationFailures/whitespace_sample (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.958855055Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/whitespace_sample","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.958863763Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_sample_value"}
+{"Time":"2026-09-12T09:59:10.95886543Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_sample_value","Output":"=== RUN   TestInvocationFailures/missing_sample_value\n"}
+{"Time":"2026-09-12T09:59:10.958871805Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_sample_value","Output":"--- PASS: TestInvocationFailures/missing_sample_value (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.958873846Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_sample_value","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.958875263Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/unknown_--samples"}
+{"Time":"2026-09-12T09:59:10.958878638Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/unknown_--samples","Output":"=== RUN   TestInvocationFailures/unknown_--samples\n"}
+{"Time":"2026-09-12T09:59:10.958882138Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/unknown_--samples","Output":"--- PASS: TestInvocationFailures/unknown_--samples (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.958892596Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/unknown_--samples","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.958894846Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/unknown_--constructor"}
+{"Time":"2026-09-12T09:59:10.958896388Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/unknown_--constructor","Output":"=== RUN   TestInvocationFailures/unknown_--constructor\n"}
+{"Time":"2026-09-12T09:59:10.958903346Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/unknown_--constructor","Output":"--- PASS: TestInvocationFailures/unknown_--constructor (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.95890593Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/unknown_--constructor","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.959077138Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/unknown_--no-sample"}
+{"Time":"2026-09-12T09:59:10.959090388Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/unknown_--no-sample","Output":"=== RUN   TestInvocationFailures/unknown_--no-sample\n"}
+{"Time":"2026-09-12T09:59:10.959096805Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/unknown_--no-sample","Output":"--- PASS: TestInvocationFailures/unknown_--no-sample (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.959098721Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/unknown_--no-sample","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.959100513Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_on_inspect"}
+{"Time":"2026-09-12T09:59:10.959101846Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_on_inspect","Output":"=== RUN   TestInvocationFailures/sample_on_inspect\n"}
+{"Time":"2026-09-12T09:59:10.959105138Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_on_inspect","Output":"--- PASS: TestInvocationFailures/sample_on_inspect (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.959106805Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_on_inspect","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.959154346Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_on_release"}
+{"Time":"2026-09-12T09:59:10.95917518Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_on_release","Output":"=== RUN   TestInvocationFailures/sample_on_release\n"}
+{"Time":"2026-09-12T09:59:10.959223513Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_on_release","Output":"--- PASS: TestInvocationFailures/sample_on_release (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.959271346Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_on_release","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.959276221Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_on_help"}
+{"Time":"2026-09-12T09:59:10.959277971Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_on_help","Output":"=== RUN   TestInvocationFailures/sample_on_help\n"}
+{"Time":"2026-09-12T09:59:10.959284055Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_on_help","Output":"--- PASS: TestInvocationFailures/sample_on_help (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.959286096Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_on_help","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.95928793Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_on_version"}
+{"Time":"2026-09-12T09:59:10.959289596Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_on_version","Output":"=== RUN   TestInvocationFailures/sample_on_version\n"}
+{"Time":"2026-09-12T09:59:10.959293888Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_on_version","Output":"--- PASS: TestInvocationFailures/sample_on_version (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.95931468Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_on_version","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.959322763Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_on_inspect_help"}
+{"Time":"2026-09-12T09:59:10.95932443Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_on_inspect_help","Output":"=== RUN   TestInvocationFailures/sample_on_inspect_help\n"}
+{"Time":"2026-09-12T09:59:10.959380346Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_on_inspect_help","Output":"--- PASS: TestInvocationFailures/sample_on_inspect_help (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.959393846Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_on_inspect_help","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.959396305Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_equals_form_on_release"}
+{"Time":"2026-09-12T09:59:10.959397805Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_equals_form_on_release","Output":"=== RUN   TestInvocationFailures/sample_equals_form_on_release\n"}
+{"Time":"2026-09-12T09:59:10.959404055Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_equals_form_on_release","Output":"--- PASS: TestInvocationFailures/sample_equals_form_on_release (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.959405971Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_equals_form_on_release","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.959407513Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/help_unknown_command"}
+{"Time":"2026-09-12T09:59:10.959408763Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/help_unknown_command","Output":"=== RUN   TestInvocationFailures/help_unknown_command\n"}
+{"Time":"2026-09-12T09:59:10.959453305Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/help_unknown_command","Output":"--- PASS: TestInvocationFailures/help_unknown_command (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.959468888Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/help_unknown_command","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.959472513Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/version_extra"}
+{"Time":"2026-09-12T09:59:10.959474013Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/version_extra","Output":"=== RUN   TestInvocationFailures/version_extra\n"}
+{"Time":"2026-09-12T09:59:10.959477513Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/version_extra","Output":"--- PASS: TestInvocationFailures/version_extra (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.959487263Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/version_extra","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.959490138Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_workspace_value"}
+{"Time":"2026-09-12T09:59:10.95949143Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_workspace_value","Output":"=== RUN   TestInvocationFailures/missing_workspace_value\n"}
+{"Time":"2026-09-12T09:59:10.95949493Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_workspace_value","Output":"--- PASS: TestInvocationFailures/missing_workspace_value (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.959496763Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/missing_workspace_value","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.959498388Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/workspace_cannot_consume_sample_flag"}
+{"Time":"2026-09-12T09:59:10.959499846Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/workspace_cannot_consume_sample_flag","Output":"=== RUN   TestInvocationFailures/workspace_cannot_consume_sample_flag\n"}
+{"Time":"2026-09-12T09:59:10.959503346Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/workspace_cannot_consume_sample_flag","Output":"--- PASS: TestInvocationFailures/workspace_cannot_consume_sample_flag (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.959505388Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/workspace_cannot_consume_sample_flag","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.959507471Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_cannot_consume_workspace_flag"}
+{"Time":"2026-09-12T09:59:10.95950893Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_cannot_consume_workspace_flag","Output":"=== RUN   TestInvocationFailures/sample_cannot_consume_workspace_flag\n"}
+{"Time":"2026-09-12T09:59:10.959580305Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_cannot_consume_workspace_flag","Output":"--- PASS: TestInvocationFailures/sample_cannot_consume_workspace_flag (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.959693805Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_cannot_consume_workspace_flag","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.959703971Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/cap_cannot_consume_workspace_flag"}
+{"Time":"2026-09-12T09:59:10.959709513Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/cap_cannot_consume_workspace_flag","Output":"=== RUN   TestInvocationFailures/cap_cannot_consume_workspace_flag\n"}
+{"Time":"2026-09-12T09:59:10.959714138Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/cap_cannot_consume_workspace_flag","Output":"--- PASS: TestInvocationFailures/cap_cannot_consume_workspace_flag (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.959715846Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/cap_cannot_consume_workspace_flag","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.959717596Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/cap_cannot_consume_negative_token"}
+{"Time":"2026-09-12T09:59:10.959719055Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/cap_cannot_consume_negative_token","Output":"=== RUN   TestInvocationFailures/cap_cannot_consume_negative_token\n"}
+{"Time":"2026-09-12T09:59:10.959723513Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/cap_cannot_consume_negative_token","Output":"--- PASS: TestInvocationFailures/cap_cannot_consume_negative_token (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.95972893Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/cap_cannot_consume_negative_token","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.959730596Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/empty_workspace"}
+{"Time":"2026-09-12T09:59:10.959732055Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/empty_workspace","Output":"=== RUN   TestInvocationFailures/empty_workspace\n"}
+{"Time":"2026-09-12T09:59:10.959736055Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/empty_workspace","Output":"--- PASS: TestInvocationFailures/empty_workspace (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.959953638Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/empty_workspace","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.959961471Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/help_with_version_flag"}
+{"Time":"2026-09-12T09:59:10.959963055Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/help_with_version_flag","Output":"=== RUN   TestInvocationFailures/help_with_version_flag\n"}
+{"Time":"2026-09-12T09:59:10.960008138Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/help_with_version_flag","Output":"--- PASS: TestInvocationFailures/help_with_version_flag (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.96005543Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/help_with_version_flag","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.960073555Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/unknown_short_flag"}
+{"Time":"2026-09-12T09:59:10.960075805Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/unknown_short_flag","Output":"=== RUN   TestInvocationFailures/unknown_short_flag\n"}
+{"Time":"2026-09-12T09:59:10.960163555Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/unknown_short_flag","Output":"--- PASS: TestInvocationFailures/unknown_short_flag (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.960173138Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/unknown_short_flag","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.960999721Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_missing_output"}
+{"Time":"2026-09-12T09:59:10.961008263Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_missing_output","Output":"=== RUN   TestInvocationFailures/pack_missing_output\n"}
+{"Time":"2026-09-12T09:59:10.961013346Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_missing_output","Output":"--- PASS: TestInvocationFailures/pack_missing_output (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.961015055Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_missing_output","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.96101718Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_missing_output_value"}
+{"Time":"2026-09-12T09:59:10.96101843Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_missing_output_value","Output":"=== RUN   TestInvocationFailures/pack_missing_output_value\n"}
+{"Time":"2026-09-12T09:59:10.961054513Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_missing_output_value","Output":"--- PASS: TestInvocationFailures/pack_missing_output_value (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.961062805Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_missing_output_value","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.961064805Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_empty_output"}
+{"Time":"2026-09-12T09:59:10.96106618Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_empty_output","Output":"=== RUN   TestInvocationFailures/pack_empty_output\n"}
+{"Time":"2026-09-12T09:59:10.961085138Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_empty_output","Output":"--- PASS: TestInvocationFailures/pack_empty_output (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.961088138Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_empty_output","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.961097555Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_repeated_output"}
+{"Time":"2026-09-12T09:59:10.961106471Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_repeated_output","Output":"=== RUN   TestInvocationFailures/pack_repeated_output\n"}
+{"Time":"2026-09-12T09:59:10.96115143Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_repeated_output","Output":"--- PASS: TestInvocationFailures/pack_repeated_output (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.961161763Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_repeated_output","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.961163638Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_extra_package"}
+{"Time":"2026-09-12T09:59:10.961165513Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_extra_package","Output":"=== RUN   TestInvocationFailures/pack_extra_package\n"}
+{"Time":"2026-09-12T09:59:10.96116943Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_extra_package","Output":"--- PASS: TestInvocationFailures/pack_extra_package (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.961171013Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_extra_package","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.961172513Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_short_output"}
+{"Time":"2026-09-12T09:59:10.961173888Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_short_output","Output":"=== RUN   TestInvocationFailures/pack_short_output\n"}
+{"Time":"2026-09-12T09:59:10.961177096Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_short_output","Output":"--- PASS: TestInvocationFailures/pack_short_output (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.961179096Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_short_output","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.961185013Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_short_output_with_value"}
+{"Time":"2026-09-12T09:59:10.961186346Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_short_output_with_value","Output":"=== RUN   TestInvocationFailures/pack_short_output_with_value\n"}
+{"Time":"2026-09-12T09:59:10.961213721Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_short_output_with_value","Output":"--- PASS: TestInvocationFailures/pack_short_output_with_value (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.961221638Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_short_output_with_value","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.96122368Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_single_dash_output"}
+{"Time":"2026-09-12T09:59:10.961225055Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_single_dash_output","Output":"=== RUN   TestInvocationFailures/pack_single_dash_output\n"}
+{"Time":"2026-09-12T09:59:10.961235971Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_single_dash_output","Output":"--- PASS: TestInvocationFailures/pack_single_dash_output (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.961238221Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/pack_single_dash_output","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.96126193Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/output_on_compose"}
+{"Time":"2026-09-12T09:59:10.961264055Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/output_on_compose","Output":"=== RUN   TestInvocationFailures/output_on_compose\n"}
+{"Time":"2026-09-12T09:59:10.961268305Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/output_on_compose","Output":"--- PASS: TestInvocationFailures/output_on_compose (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.961269846Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/output_on_compose","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.961271346Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/workspace_on_pack"}
+{"Time":"2026-09-12T09:59:10.961272721Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/workspace_on_pack","Output":"=== RUN   TestInvocationFailures/workspace_on_pack\n"}
+{"Time":"2026-09-12T09:59:10.961279638Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/workspace_on_pack","Output":"--- PASS: TestInvocationFailures/workspace_on_pack (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.961281263Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/workspace_on_pack","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.961282596Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_on_pack"}
+{"Time":"2026-09-12T09:59:10.961283846Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_on_pack","Output":"=== RUN   TestInvocationFailures/sample_on_pack\n"}
+{"Time":"2026-09-12T09:59:10.961288638Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_on_pack","Output":"--- PASS: TestInvocationFailures/sample_on_pack (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.961292596Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures/sample_on_pack","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.961579388Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures","Output":"--- PASS: TestInvocationFailures (0.01s)\n"}
+{"Time":"2026-09-12T09:59:10.961588805Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestInvocationFailures","Elapsed":0.01}
+{"Time":"2026-09-12T09:59:10.961592888Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParsePack"}
+{"Time":"2026-09-12T09:59:10.961594596Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParsePack","Output":"=== RUN   TestParsePack\n"}
+{"Time":"2026-09-12T09:59:10.96159743Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParsePack/default_package"}
+{"Time":"2026-09-12T09:59:10.961598763Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParsePack/default_package","Output":"=== RUN   TestParsePack/default_package\n"}
+{"Time":"2026-09-12T09:59:10.961676096Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParsePack/default_package","Output":"--- PASS: TestParsePack/default_package (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.96168818Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParsePack/default_package","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.961690721Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParsePack/package_before_output"}
+{"Time":"2026-09-12T09:59:10.961691971Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParsePack/package_before_output","Output":"=== RUN   TestParsePack/package_before_output\n"}
+{"Time":"2026-09-12T09:59:10.961696263Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParsePack/package_before_output","Output":"--- PASS: TestParsePack/package_before_output (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.961699138Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParsePack/package_before_output","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.96170068Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParsePack/output_before_package"}
+{"Time":"2026-09-12T09:59:10.961706346Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParsePack/output_before_package","Output":"=== RUN   TestParsePack/output_before_package\n"}
+{"Time":"2026-09-12T09:59:10.961709721Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParsePack/output_before_package","Output":"--- PASS: TestParsePack/output_before_package (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.961711388Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParsePack/output_before_package","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.961712721Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParsePack/equals_output"}
+{"Time":"2026-09-12T09:59:10.96171393Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParsePack/equals_output","Output":"=== RUN   TestParsePack/equals_output\n"}
+{"Time":"2026-09-12T09:59:10.961716555Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParsePack/equals_output","Output":"--- PASS: TestParsePack/equals_output (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.961726721Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParsePack/equals_output","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.961730263Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParsePack","Output":"--- PASS: TestParsePack (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.961731971Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParsePack","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.961733471Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp"}
+{"Time":"2026-09-12T09:59:10.961734971Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp","Output":"=== RUN   TestSampleHelp\n"}
+{"Time":"2026-09-12T09:59:10.961803513Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp/compose"}
+{"Time":"2026-09-12T09:59:10.961837221Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp/compose","Output":"=== RUN   TestSampleHelp/compose\n"}
+{"Time":"2026-09-12T09:59:10.96194693Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp/compose","Output":"--- PASS: TestSampleHelp/compose (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.961986888Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp/compose","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.961989596Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp/validate"}
+{"Time":"2026-09-12T09:59:10.961991305Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp/validate","Output":"=== RUN   TestSampleHelp/validate\n"}
+{"Time":"2026-09-12T09:59:10.96199893Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp/validate","Output":"--- PASS: TestSampleHelp/validate (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.962000555Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp/validate","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.962002263Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp/plan"}
+{"Time":"2026-09-12T09:59:10.962003638Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp/plan","Output":"=== RUN   TestSampleHelp/plan\n"}
+{"Time":"2026-09-12T09:59:10.962006471Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp/plan","Output":"--- PASS: TestSampleHelp/plan (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.962008055Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp/plan","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.962009471Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp/run"}
+{"Time":"2026-09-12T09:59:10.962010721Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp/run","Output":"=== RUN   TestSampleHelp/run\n"}
+{"Time":"2026-09-12T09:59:10.962014096Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp/run","Output":"--- PASS: TestSampleHelp/run (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.962015763Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp/run","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.962017055Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp/resume"}
+{"Time":"2026-09-12T09:59:10.962018263Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp/resume","Output":"=== RUN   TestSampleHelp/resume\n"}
+{"Time":"2026-09-12T09:59:10.962020721Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp/resume","Output":"--- PASS: TestSampleHelp/resume (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.962022138Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp/resume","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.962023471Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp/inspect"}
+{"Time":"2026-09-12T09:59:10.96202468Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp/inspect","Output":"=== RUN   TestSampleHelp/inspect\n"}
+{"Time":"2026-09-12T09:59:10.962028763Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp/inspect","Output":"--- PASS: TestSampleHelp/inspect (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.96203018Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp/inspect","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.962058055Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp/release"}
+{"Time":"2026-09-12T09:59:10.962059305Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp/release","Output":"=== RUN   TestSampleHelp/release\n"}
+{"Time":"2026-09-12T09:59:10.962061971Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp/release","Output":"--- PASS: TestSampleHelp/release (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.962067221Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp/release","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.962070305Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp","Output":"--- PASS: TestSampleHelp (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.962072096Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestSampleHelp","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.962074388Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag"}
+{"Time":"2026-09-12T09:59:10.962076096Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag","Output":"=== RUN   TestParseSampleFlag\n"}
+{"Time":"2026-09-12T09:59:10.962400388Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/compose_default"}
+{"Time":"2026-09-12T09:59:10.96240893Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/compose_default","Output":"=== RUN   TestParseSampleFlag/compose_default\n"}
+{"Time":"2026-09-12T09:59:10.962414638Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/compose_default","Output":"--- PASS: TestParseSampleFlag/compose_default (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.962416763Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/compose_default","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.96241843Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/validate_default"}
+{"Time":"2026-09-12T09:59:10.96241968Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/validate_default","Output":"=== RUN   TestParseSampleFlag/validate_default\n"}
+{"Time":"2026-09-12T09:59:10.96242268Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/validate_default","Output":"--- PASS: TestParseSampleFlag/validate_default (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.96242443Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/validate_default","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.962426513Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/plan_default"}
+{"Time":"2026-09-12T09:59:10.962427763Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/plan_default","Output":"=== RUN   TestParseSampleFlag/plan_default\n"}
+{"Time":"2026-09-12T09:59:10.962430721Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/plan_default","Output":"--- PASS: TestParseSampleFlag/plan_default (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.962445388Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/plan_default","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.96244718Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/run_default"}
+{"Time":"2026-09-12T09:59:10.962448388Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/run_default","Output":"=== RUN   TestParseSampleFlag/run_default\n"}
+{"Time":"2026-09-12T09:59:10.962452638Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/run_default","Output":"--- PASS: TestParseSampleFlag/run_default (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.96245443Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/run_default","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.962455846Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/resume_default"}
+{"Time":"2026-09-12T09:59:10.96245718Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/resume_default","Output":"=== RUN   TestParseSampleFlag/resume_default\n"}
+{"Time":"2026-09-12T09:59:10.962462055Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/resume_default","Output":"--- PASS: TestParseSampleFlag/resume_default (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.962463513Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/resume_default","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.962464971Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/compose_space_form"}
+{"Time":"2026-09-12T09:59:10.96246618Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/compose_space_form","Output":"=== RUN   TestParseSampleFlag/compose_space_form\n"}
+{"Time":"2026-09-12T09:59:10.962469263Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/compose_space_form","Output":"--- PASS: TestParseSampleFlag/compose_space_form (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.962470846Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/compose_space_form","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.962473013Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/compose_equals_form"}
+{"Time":"2026-09-12T09:59:10.96247468Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/compose_equals_form","Output":"=== RUN   TestParseSampleFlag/compose_equals_form\n"}
+{"Time":"2026-09-12T09:59:10.962478721Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/compose_equals_form","Output":"--- PASS: TestParseSampleFlag/compose_equals_form (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.962482555Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/compose_equals_form","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.962484471Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/relative_not_cleaned"}
+{"Time":"2026-09-12T09:59:10.962486263Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/relative_not_cleaned","Output":"=== RUN   TestParseSampleFlag/relative_not_cleaned\n"}
+{"Time":"2026-09-12T09:59:10.962489721Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/relative_not_cleaned","Output":"--- PASS: TestParseSampleFlag/relative_not_cleaned (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.962491805Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/relative_not_cleaned","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.96249368Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/run_explicit"}
+{"Time":"2026-09-12T09:59:10.962495305Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/run_explicit","Output":"=== RUN   TestParseSampleFlag/run_explicit\n"}
+{"Time":"2026-09-12T09:59:10.96249868Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/run_explicit","Output":"--- PASS: TestParseSampleFlag/run_explicit (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.962500596Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/run_explicit","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.962503805Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/resume_equals"}
+{"Time":"2026-09-12T09:59:10.962505555Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/resume_equals","Output":"=== RUN   TestParseSampleFlag/resume_equals\n"}
+{"Time":"2026-09-12T09:59:10.962509096Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/resume_equals","Output":"--- PASS: TestParseSampleFlag/resume_equals (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.962518596Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag/resume_equals","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.962547221Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag","Output":"--- PASS: TestParseSampleFlag (0.00s)\n"}
+{"Time":"2026-09-12T09:59:10.96255418Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestParseSampleFlag","Elapsed":0}
+{"Time":"2026-09-12T09:59:10.962555721Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestGraphVerbsParseWithoutCompile"}
+{"Time":"2026-09-12T09:59:10.962565346Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestGraphVerbsParseWithoutCompile","Output":"=== RUN   TestGraphVerbsParseWithoutCompile\n"}
+{"Time":"2026-09-12T09:59:10.962733805Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestGraphVerbsParseWithoutCompile/run"}
+{"Time":"2026-09-12T09:59:10.962750471Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestGraphVerbsParseWithoutCompile/run","Output":"=== RUN   TestGraphVerbsParseWithoutCompile/run\n"}
+{"Time":"2026-09-12T09:59:13.928911Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestGraphVerbsParseWithoutCompile/run","Output":"--- PASS: TestGraphVerbsParseWithoutCompile/run (2.97s)\n"}
+{"Time":"2026-09-12T09:59:13.928954167Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestGraphVerbsParseWithoutCompile/run","Elapsed":2.97}
+{"Time":"2026-09-12T09:59:13.928985209Z","Action":"run","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestGraphVerbsParseWithoutCompile/resume"}
+{"Time":"2026-09-12T09:59:13.92898825Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestGraphVerbsParseWithoutCompile/resume","Output":"=== RUN   TestGraphVerbsParseWithoutCompile/resume\n"}
+{"Time":"2026-09-12T09:59:16.614915668Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestGraphVerbsParseWithoutCompile/resume","Output":"--- PASS: TestGraphVerbsParseWithoutCompile/resume (2.69s)\n"}
+{"Time":"2026-09-12T09:59:16.614950543Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestGraphVerbsParseWithoutCompile/resume","Elapsed":2.69}
+{"Time":"2026-09-12T09:59:16.614962127Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestGraphVerbsParseWithoutCompile","Output":"--- PASS: TestGraphVerbsParseWithoutCompile (5.65s)\n"}
+{"Time":"2026-09-12T09:59:16.614965252Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Test":"TestGraphVerbsParseWithoutCompile","Elapsed":5.65}
+{"Time":"2026-09-12T09:59:16.61565321Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Output":"PASS\n"}
+{"Time":"2026-09-12T09:59:16.616786418Z","Action":"output","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Output":"ok  \tgithub.com/HahyeonJeon/gobble/cmd/gobble\t5.829s\n"}
+{"Time":"2026-09-12T09:59:16.618749502Z","Action":"pass","Package":"github.com/HahyeonJeon/gobble/cmd/gobble","Elapsed":5.8309999999999995}

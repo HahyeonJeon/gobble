@@ -1,0 +1,13 @@
+commit 0533b01258a2b3ff66d429d4e67b476e36612b86
+Author:     HAHYEON JEON <jeonhh0061@gmail.com>
+AuthorDate: Mon Sep 7 21:34:05 2026 +0900
+Commit:     HAHYEON JEON <jeonhh0061@gmail.com>
+CommitDate: Mon Sep 7 21:34:05 2026 +0900
+
+    fix(engine): observe fresh locks across shared filesystem readers
+
+ internal/engine/checkpoint.go    |  2 +-
+ internal/engine/filelock.go      | 20 ++++++++++++++
+ internal/engine/filelock_test.go | 59 ++++++++++++++++++++++++++++++++++++++++
+ internal/engine/occupancy.go     |  4 +--
+ 4 files changed, 82 insertions(+), 3 deletions(-)

@@ -1,0 +1,18 @@
+
+> gobble-app-workspace@0.1.0 typecheck
+> tsc -p contracts/tsconfig.json && npm run typecheck --workspace @gobble/desktop && tsc -p tsconfig.tools.json
+
+
+> @gobble/desktop@0.1.0 typecheck
+> tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && tsc -p tsconfig.renderer.json
+
+src/main/evidence/materialize.ts(246,89): error TS2339: Property 'base64' does not exist on type '{ kind: "image"; base64: string; } | { kind: string; report: { content: { modules: { blocks: ({ kind: "text"; text: string; } | { kind: "table"; headers: string[]; rows: string[][]; } | { kind: "image"; id: string; alt: string; width: number; height: number; })[]; id: string; title: string; status: string; }[]; ... ...'.
+  Property 'base64' does not exist on type '{ kind: string; report: { content: { modules: { blocks: ({ kind: "text"; text: string; } | { kind: "table"; headers: string[]; rows: string[][]; } | { kind: "image"; id: string; alt: string; width: number; height: number; })[]; id: string; title: string; status: string; }[]; ... 7 more ...; footer: string; }; ... 4 ...'.
+src/main/shared-context/catalog.ts(4,7): error TS2741: Property 'read_report' is missing in type '{ gobble_creation_source: string; gobble_creation_propose: string; gobble_creation_status: string; gobble_creation_review: string; gobble_creation_point: string; gobble_pipeline_proposals: string; ... 14 more ...; gobble_logs: string; }' but required in type 'Record<"read_report" | "gobble_creation_source" | "gobble_creation_propose" | "gobble_creation_status" | "gobble_creation_review" | "gobble_creation_point" | "gobble_pipeline_source" | ... 14 more ... | "gobble_logs", string>'.
+npm error Lifecycle script `typecheck` failed with error:
+npm error code 2
+npm error path /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop
+npm error workspace @gobble/desktop@0.1.0
+npm error location /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop
+npm error command failed
+npm error command sh -c tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && tsc -p tsconfig.renderer.json

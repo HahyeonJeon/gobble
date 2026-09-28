@@ -1,0 +1,62 @@
+
+Running 2 tests using 1 worker
+
+(node:59548) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 desktop/tests/electron/pipeline-discussion.spec.ts:14:1 › real module flow, exact discussion, independent Agent marks, stale refusal and historical restart (6.3s)
+(node:59567) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  2 desktop/tests/electron/pipeline-flow.spec.ts:7:1 › real checked branching flow, keyboard details, preserved draft and historical restart (5.4s)
+
+
+  1) desktop/tests/electron/pipeline-discussion.spec.ts:14:1 › real module flow, exact discussion, independent Agent marks, stale refusal and historical restart 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+       at support.ts:42
+
+      40 |       ),
+      41 |     )
+    > 42 |     .toBe(true);
+         |      ^
+      43 |   return { application, page };
+      44 | }
+      45 | export async function projectFixture(base: string, name = 'Atlas study') {
+        at launch (/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/support.ts:42:6)
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/pipeline-discussion.spec.ts:31:31
+
+    Error Context: test-results/electron/pipeline-discussion-real-m-be31f-usal-and-historical-restart/error-context.md
+
+  2) desktop/tests/electron/pipeline-flow.spec.ts:7:1 › real checked branching flow, keyboard details, preserved draft and historical restart 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+       at support.ts:42
+
+      40 |       ),
+      41 |     )
+    > 42 |     .toBe(true);
+         |      ^
+      43 |   return { application, page };
+      44 | }
+      45 | export async function projectFixture(base: string, name = 'Atlas study') {
+        at launch (/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/support.ts:42:6)
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/pipeline-flow.spec.ts:19:31
+
+    Error Context: test-results/electron/pipeline-flow-real-checked-04894-raft-and-historical-restart/error-context.md
+
+  2 failed
+    desktop/tests/electron/pipeline-discussion.spec.ts:14:1 › real module flow, exact discussion, independent Agent marks, stale refusal and historical restart 
+    desktop/tests/electron/pipeline-flow.spec.ts:7:1 › real checked branching flow, keyboard details, preserved draft and historical restart 

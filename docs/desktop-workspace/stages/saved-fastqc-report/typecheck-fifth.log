@@ -1,0 +1,11 @@
+
+> gobble-app-workspace@0.1.0 typecheck
+> tsc -p contracts/tsconfig.json && npm run typecheck --workspace @gobble/desktop && tsc -p tsconfig.tools.json
+
+
+> @gobble/desktop@0.1.0 typecheck
+> tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && tsc -p tsconfig.renderer.json
+
+desktop/tests/electron/report-reader.spec.ts(22,48): error TS6133: 'host' is declared but its value is never read.
+desktop/tests/electron/report-reader.spec.ts(67,70): error TS6133: 'host' is declared but its value is never read.
+desktop/tests/report-evidence.test.ts(6,124): error TS6133: 'ResourceRef' is declared but its value is never read.

@@ -1,0 +1,1762 @@
+{
+  "date": "2026-09-08T10:53:02.895Z",
+  "status": "passed",
+  "scope": "Synthetic source-checkout qualification; no production PDF integration or release claim.",
+  "cases": [
+    {
+      "name": "pure geometry and closed selector validation",
+      "result": "passed",
+      "ms": 0.5499999999999545,
+      "details": {
+        "invalidCases": 7
+      }
+    },
+    {
+      "name": "real fixture through sandboxed preview bridge",
+      "result": "passed",
+      "ms": 471.7329169999998,
+      "details": {
+        "page": {
+          "kind": "page",
+          "model": {
+            "revision": "sha256:7a7a99defd18d5aca87efa5cc3b08c0c058495b04a5bac96b4dc979699c9455c",
+            "profile": "pdfjs-6.3.289-region-v1:no-xfa,no-annotations,path-fonts,no-wasm",
+            "pageIndex": 0,
+            "viewBox": [
+              20,
+              40,
+              580,
+              800
+            ],
+            "userUnit": 1,
+            "intrinsicRotation": 0,
+            "text": {
+              "capability": "diagnostic-only",
+              "items": [
+                {
+                  "id": 0,
+                  "text": "PDF shared reading",
+                  "transform": [
+                    24,
+                    0,
+                    0,
+                    24,
+                    70,
+                    720
+                  ],
+                  "width": 214.75199999999995,
+                  "height": 24,
+                  "direction": "ltr"
+                },
+                {
+                  "id": 1,
+                  "text": "",
+                  "transform": [
+                    11,
+                    0,
+                    0,
+                    11,
+                    70,
+                    687
+                  ],
+                  "width": 0,
+                  "height": 0,
+                  "direction": "ltr"
+                },
+                {
+                  "id": 2,
+                  "text": "Synthetic qualification report - page 1",
+                  "transform": [
+                    11,
+                    0,
+                    0,
+                    11,
+                    70,
+                    687
+                  ],
+                  "width": 181.58799999999985,
+                  "height": 11,
+                  "direction": "ltr"
+                },
+                {
+                  "id": 3,
+                  "text": "",
+                  "transform": [
+                    14,
+                    0,
+                    0,
+                    14,
+                    70,
+                    620
+                  ],
+                  "width": 0,
+                  "height": 0,
+                  "direction": "ltr"
+                },
+                {
+                  "id": 4,
+                  "text": "Same filtered cohort.",
+                  "transform": [
+                    14,
+                    0,
+                    0,
+                    14,
+                    70,
+                    620
+                  ],
+                  "width": 129.16400000000002,
+                  "height": 14,
+                  "direction": "ltr"
+                },
+                {
+                  "id": 5,
+                  "text": " ",
+                  "transform": [
+                    14,
+                    0,
+                    0,
+                    14,
+                    199.16399999999996,
+                    620
+                  ],
+                  "width": 125.83600000000004,
+                  "height": 0,
+                  "direction": "ltr"
+                },
+                {
+                  "id": 6,
+                  "text": "Same filtered cohort.",
+                  "transform": [
+                    14,
+                    0,
+                    0,
+                    14,
+                    325,
+                    620
+                  ],
+                  "width": 129.16400000000002,
+                  "height": 14,
+                  "direction": "ltr"
+                },
+                {
+                  "id": 7,
+                  "text": "",
+                  "transform": [
+                    11,
+                    0,
+                    0,
+                    11,
+                    70,
+                    581
+                  ],
+                  "width": 0,
+                  "height": 0,
+                  "direction": "ltr"
+                },
+                {
+                  "id": 8,
+                  "text": "Left column: samples and filters.",
+                  "transform": [
+                    11,
+                    0,
+                    0,
+                    11,
+                    70,
+                    581
+                  ],
+                  "width": 157.72899999999998,
+                  "height": 11,
+                  "direction": "ltr"
+                },
+                {
+                  "id": 9,
+                  "text": " ",
+                  "transform": [
+                    11,
+                    0,
+                    0,
+                    11,
+                    227.72899999999987,
+                    581
+                  ],
+                  "width": 97.27100000000013,
+                  "height": 0,
+                  "direction": "ltr"
+                },
+                {
+                  "id": 10,
+                  "text": "Right column: comparison.",
+                  "transform": [
+                    11,
+                    0,
+                    0,
+                    11,
+                    325,
+                    581
+                  ],
+                  "width": 130.20699999999997,
+                  "height": 11,
+                  "direction": "ltr"
+                },
+                {
+                  "id": 11,
+                  "text": "",
+                  "transform": [
+                    13,
+                    0,
+                    0,
+                    13,
+                    70,
+                    520
+                  ],
+                  "width": 0,
+                  "height": 0,
+                  "direction": "ltr"
+                },
+                {
+                  "id": 12,
+                  "text": "A marked region refers to the source page.",
+                  "transform": [
+                    13,
+                    0,
+                    0,
+                    13,
+                    70,
+                    520
+                  ],
+                  "width": 247.1170000000001,
+                  "height": 13,
+                  "direction": "ltr"
+                },
+                {
+                  "id": 13,
+                  "text": "",
+                  "transform": [
+                    0,
+                    12,
+                    -12,
+                    0,
+                    480,
+                    270
+                  ],
+                  "width": 0,
+                  "height": 0,
+                  "direction": "ltr"
+                },
+                {
+                  "id": 14,
+                  "text": "Rotated text",
+                  "transform": [
+                    0,
+                    12,
+                    -12,
+                    0,
+                    480,
+                    270
+                  ],
+                  "width": 64.70400000000001,
+                  "height": 12,
+                  "direction": "ltr"
+                },
+                {
+                  "id": 15,
+                  "text": "",
+                  "transform": [
+                    10,
+                    0,
+                    0,
+                    10,
+                    70,
+                    85
+                  ],
+                  "width": 0,
+                  "height": 0,
+                  "direction": "ltr"
+                },
+                {
+                  "id": 16,
+                  "text": "Known red rectangle: [100, 120, 220, 180]",
+                  "transform": [
+                    10,
+                    0,
+                    0,
+                    10,
+                    70,
+                    85
+                  ],
+                  "width": 186.23000000000005,
+                  "height": 10,
+                  "direction": "ltr"
+                }
+              ],
+              "truncated": false
+            }
+          },
+          "modelHash": "sha256:703bb3dfdf5236a353191a98393ddf41cf4771030608b9ae716514a22fd5d735",
+          "renditionId": "a16b9dc0-0776-403c-b8a9-9aa7f7f0ac0a",
+          "viewport": [
+            1,
+            0,
+            0,
+            -1,
+            -20,
+            800
+          ],
+          "raster": {
+            "width": 560,
+            "height": 760,
+            "png": "[omitted]"
+          },
+          "timings": {
+            "modelMs": 14.799999952316284,
+            "renderMs": 25.90000009536743
+          }
+        }
+      }
+    },
+    {
+      "name": "actual source geometry and retained-raster crop across transformations",
+      "result": "passed",
+      "ms": 1987.7489579999997,
+      "details": {
+        "rendered": 64,
+        "pixelLimited": 8,
+        "maxUserSpaceRoundTripError": 5.684341886080802e-14,
+        "modelHashStableAcrossPresentations": true
+      }
+    },
+    {
+      "name": "stale rendition and changed source cannot capture",
+      "result": "passed",
+      "ms": 405.5227910000003,
+      "details": {
+        "oldTargetNeverSubstituted": true
+      }
+    },
+    {
+      "name": "empty scan and ambiguous text remain diagnostic-only",
+      "result": "passed",
+      "ms": 391.42724999999973,
+      "details": {
+        "scanItems": 0,
+        "duplicates": 2,
+        "unicodeStrings": [
+          "PDF shared reading",
+          "",
+          "Synthetic qualification report - page 1",
+          "",
+          "Same filtered cohort.",
+          " ",
+          "Same filtered cohort.",
+          "",
+          "Left column: samples and filters.",
+          " ",
+          "Right column: comparison.",
+          "",
+          "A marked region refers to the source page.",
+          "",
+          "Rotated text",
+          "",
+          "Known red rectangle: [100, 120, 220, 180]",
+          "",
+          "fi😀éבאA"
+        ],
+        "textTargeting": "unsupported target or claim: per-character glyph mapping is not established"
+      }
+    },
+    {
+      "name": "file and page count limits",
+      "result": "passed",
+      "ms": 944.4692919999998,
+      "details": {
+        "admittedBytes": [
+          8388607,
+          8388608
+        ],
+        "rejectedBytes": 8388609,
+        "maxPages": 200
+      }
+    },
+    {
+      "name": "malformed and password-protected files fail locally",
+      "result": "passed",
+      "ms": 498.4562080000005
+    },
+    {
+      "name": "noisy evidence enforces byte limits",
+      "result": "passed",
+      "ms": 400.14300000000003,
+      "details": {
+        "pagePngBytes": 3263377,
+        "smallerRegionAccepted": true
+      }
+    },
+    {
+      "name": "actual worker, separate process and offline asset policy",
+      "result": "passed",
+      "ms": 210.40891600000032,
+      "details": {
+        "preferences": {
+          "allowRunningInsecureContent": false,
+          "contextIsolation": true,
+          "disableDialogs": false,
+          "disablePopups": false,
+          "enableBlinkFeatures": "",
+          "experimentalFeatures": false,
+          "javascript": true,
+          "nodeIntegration": false,
+          "nodeIntegrationInSubFrames": false,
+          "nodeIntegrationInWorker": false,
+          "safeDialogs": false,
+          "safeDialogsMessage": "",
+          "sandbox": true,
+          "webSecurity": true,
+          "webviewTag": false
+        },
+        "capabilities": {
+          "node": "undefined",
+          "workspace": "undefined",
+          "preview": "undefined"
+        },
+        "blocked": {
+          "results": [
+            true,
+            true
+          ],
+          "child": true
+        },
+        "diagnostics": {
+          "requests": [
+            "/index.html",
+            "/decoder.js",
+            "/vendor/pdf.worker.mjs",
+            "/vendor/standard_fonts/LiberationSans-Regular.ttf"
+          ],
+          "denied": [],
+          "pending": false,
+          "closed": false,
+          "webContentsId": 19,
+          "pid": 92024
+        },
+        "previewPid": 92003
+      }
+    },
+    {
+      "name": "preview bridge rejects injected capabilities",
+      "result": "passed",
+      "ms": 2.593457999999373,
+      "details": {
+        "closedInputRejected": true
+      }
+    },
+    {
+      "name": "foreign sender cannot complete a pending decode job",
+      "result": "passed",
+      "ms": 615.0905000000002
+    },
+    {
+      "name": "cancellation destroys host and prevents late publication",
+      "result": "passed",
+      "ms": 379.60704200000055,
+      "details": {
+        "published": false,
+        "message": "PDF job cancelled.",
+        "ms": 14,
+        "status": {
+          "requests": [
+            "/index.html",
+            "/decoder.js",
+            "/vendor/pdf.worker.mjs",
+            "/vendor/standard_fonts/LiberationSans-Regular.ttf"
+          ],
+          "denied": [],
+          "pending": false,
+          "closed": true
+        }
+      }
+    },
+    {
+      "name": "timeout ends a blocked decoder process",
+      "result": "passed",
+      "ms": 5359.661375,
+      "details": {
+        "published": false,
+        "message": "PDF job timed out.",
+        "ms": 5002,
+        "status": {
+          "requests": [
+            "/index.html",
+            "/decoder.js",
+            "/vendor/pdf.worker.mjs"
+          ],
+          "denied": [],
+          "pending": false,
+          "closed": true
+        }
+      }
+    },
+    {
+      "name": "decoder crash is local and recoverable",
+      "result": "passed",
+      "ms": 370.36725000000115,
+      "details": {
+        "rejected": true,
+        "closed": true,
+        "previewAlive": true
+      }
+    },
+    {
+      "name": "cold/warm latency and cleanup observations",
+      "result": "passed",
+      "ms": 627.2890000000007,
+      "details": {
+        "measurements": [
+          {
+            "openMs": 156.06895799999984,
+            "coldPageMs": 43.72925000000032,
+            "warmPageMs": 6.545750000001135,
+            "rasterPixels": 425600
+          },
+          {
+            "openMs": 155.26258400000006,
+            "coldPageMs": 45.354583000000275,
+            "warmPageMs": 7.948374999999942,
+            "rasterPixels": 425600
+          },
+          {
+            "openMs": 153.58354099999997,
+            "coldPageMs": 44.27883400000064,
+            "warmPageMs": 7.048333000000639,
+            "rasterPixels": 425600
+          }
+        ],
+        "live": [
+          {
+            "type": "Browser",
+            "pid": 92000,
+            "memory": {
+              "workingSetSize": 337872,
+              "peakWorkingSetSize": 364192
+            }
+          },
+          {
+            "type": "GPU",
+            "pid": 92001,
+            "memory": {
+              "workingSetSize": 96048,
+              "peakWorkingSetSize": 256096
+            }
+          },
+          {
+            "type": "Utility",
+            "pid": 92002,
+            "memory": {
+              "workingSetSize": 53104,
+              "peakWorkingSetSize": 53104
+            }
+          },
+          {
+            "type": "Tab",
+            "pid": 92003,
+            "memory": {
+              "workingSetSize": 140288,
+              "peakWorkingSetSize": 141920
+            }
+          },
+          {
+            "type": "Tab",
+            "pid": 92036,
+            "memory": {
+              "workingSetSize": 151408,
+              "peakWorkingSetSize": 153104
+            }
+          }
+        ],
+        "afterStop": {
+          "windows": 1,
+          "metrics": [
+            {
+              "type": "Browser",
+              "pid": 92000,
+              "memory": {
+                "workingSetSize": 337584,
+                "peakWorkingSetSize": 364192
+              }
+            },
+            {
+              "type": "GPU",
+              "pid": 92001,
+              "memory": {
+                "workingSetSize": 95728,
+                "peakWorkingSetSize": 256096
+              }
+            },
+            {
+              "type": "Utility",
+              "pid": 92002,
+              "memory": {
+                "workingSetSize": 53104,
+                "peakWorkingSetSize": 53104
+              }
+            },
+            {
+              "type": "Tab",
+              "pid": 92003,
+              "memory": {
+                "workingSetSize": 140288,
+                "peakWorkingSetSize": 141920
+              }
+            }
+          ],
+          "status": {
+            "retired": [
+              {
+                "requests": [
+                  "/index.html",
+                  "/decoder.js",
+                  "/vendor/pdf.worker.mjs",
+                  "/vendor/standard_fonts/LiberationSans-Regular.ttf"
+                ],
+                "denied": [],
+                "pending": false,
+                "closed": true
+              },
+              {
+                "requests": [
+                  "/index.html",
+                  "/decoder.js",
+                  "/vendor/pdf.worker.mjs",
+                  "/vendor/standard_fonts/LiberationSans-Regular.ttf"
+                ],
+                "denied": [],
+                "pending": false,
+                "closed": true
+              },
+              {
+                "requests": [
+                  "/index.html",
+                  "/decoder.js",
+                  "/vendor/pdf.worker.mjs",
+                  "/vendor/standard_fonts/LiberationSans-Regular.ttf"
+                ],
+                "denied": [],
+                "pending": false,
+                "closed": true
+              },
+              {
+                "requests": [
+                  "/index.html",
+                  "/decoder.js",
+                  "/vendor/pdf.worker.mjs",
+                  "/vendor/standard_fonts/LiberationSans-Regular.ttf"
+                ],
+                "denied": [],
+                "pending": false,
+                "closed": true
+              },
+              {
+                "requests": [
+                  "/index.html",
+                  "/decoder.js",
+                  "/vendor/pdf.worker.mjs",
+                  "/vendor/standard_fonts/LiberationSans-Regular.ttf"
+                ],
+                "denied": [],
+                "pending": false,
+                "closed": true
+              },
+              {
+                "requests": [
+                  "/index.html",
+                  "/decoder.js",
+                  "/vendor/pdf.worker.mjs",
+                  "/vendor/standard_fonts/LiberationSans-Regular.ttf"
+                ],
+                "denied": [],
+                "pending": false,
+                "closed": true
+              },
+              {
+                "requests": [
+                  "/index.html",
+                  "/decoder.js",
+                  "/vendor/pdf.worker.mjs"
+                ],
+                "denied": [],
+                "pending": false,
+                "closed": true
+              },
+              {
+                "requests": [
+                  "/index.html",
+                  "/decoder.js",
+                  "/vendor/pdf.worker.mjs",
+                  "/vendor/standard_fonts/LiberationSans-Regular.ttf"
+                ],
+                "denied": [],
+                "pending": false,
+                "closed": true
+              },
+              {
+                "requests": [
+                  "/index.html",
+                  "/decoder.js",
+                  "/vendor/pdf.worker.mjs",
+                  "/vendor/standard_fonts/LiberationSans-Regular.ttf"
+                ],
+                "denied": [],
+                "pending": false,
+                "closed": true
+              },
+              {
+                "requests": [
+                  "/index.html",
+                  "/decoder.js",
+                  "/vendor/pdf.worker.mjs",
+                  "/vendor/standard_fonts/LiberationSans-Regular.ttf"
+                ],
+                "denied": [],
+                "pending": false,
+                "closed": true
+              },
+              {
+                "requests": [
+                  "/index.html",
+                  "/decoder.js"
+                ],
+                "denied": [],
+                "pending": false,
+                "closed": true
+              },
+              {
+                "requests": [
+                  "/index.html",
+                  "/decoder.js",
+                  "/vendor/pdf.worker.mjs",
+                  "/vendor/standard_fonts/LiberationSans-Regular.ttf"
+                ],
+                "denied": [],
+                "pending": false,
+                "closed": true
+              },
+              {
+                "requests": [
+                  "/index.html",
+                  "/decoder.js",
+                  "/vendor/pdf.worker.mjs"
+                ],
+                "denied": [],
+                "pending": false,
+                "closed": true
+              },
+              {
+                "requests": [
+                  "/index.html",
+                  "/decoder.js",
+                  "/vendor/pdf.worker.mjs"
+                ],
+                "denied": [],
+                "pending": false,
+                "closed": true
+              },
+              {
+                "requests": [
+                  "/index.html",
+                  "/decoder.js",
+                  "/vendor/pdf.worker.mjs"
+                ],
+                "denied": [],
+                "pending": false,
+                "closed": true
+              },
+              {
+                "requests": [
+                  "/index.html",
+                  "/decoder.js",
+                  "/vendor/pdf.worker.mjs",
+                  "/vendor/standard_fonts/LiberationSans-Regular.ttf"
+                ],
+                "denied": [],
+                "pending": false,
+                "closed": true
+              },
+              {
+                "requests": [
+                  "/index.html",
+                  "/decoder.js",
+                  "/vendor/pdf.worker.mjs"
+                ],
+                "denied": [],
+                "pending": false,
+                "closed": true
+              },
+              {
+                "requests": [
+                  "/index.html",
+                  "/decoder.js",
+                  "/vendor/pdf.worker.mjs",
+                  "/vendor/standard_fonts/LiberationSans-Regular.ttf"
+                ],
+                "denied": [],
+                "pending": false,
+                "closed": true
+              },
+              {
+                "requests": [
+                  "/index.html",
+                  "/decoder.js",
+                  "/vendor/pdf.worker.mjs",
+                  "/vendor/standard_fonts/LiberationSans-Regular.ttf"
+                ],
+                "denied": [],
+                "pending": false,
+                "closed": true
+              },
+              {
+                "requests": [
+                  "/index.html",
+                  "/decoder.js",
+                  "/vendor/pdf.worker.mjs",
+                  "/vendor/standard_fonts/LiberationSans-Regular.ttf"
+                ],
+                "denied": [],
+                "pending": false,
+                "closed": true
+              },
+              {
+                "requests": [
+                  "/index.html",
+                  "/decoder.js",
+                  "/vendor/pdf.worker.mjs",
+                  "/vendor/standard_fonts/LiberationSans-Regular.ttf"
+                ],
+                "denied": [],
+                "pending": false,
+                "closed": true
+              },
+              {
+                "requests": [
+                  "/index.html",
+                  "/decoder.js",
+                  "/vendor/pdf.worker.mjs"
+                ],
+                "denied": [],
+                "pending": false,
+                "closed": true
+              },
+              {
+                "requests": [
+                  "/index.html",
+                  "/decoder.js",
+                  "/vendor/pdf.worker.mjs",
+                  "/vendor/standard_fonts/LiberationSans-Regular.ttf"
+                ],
+                "denied": [],
+                "pending": false,
+                "closed": true
+              },
+              {
+                "requests": [
+                  "/index.html",
+                  "/decoder.js",
+                  "/vendor/pdf.worker.mjs"
+                ],
+                "denied": [],
+                "pending": false,
+                "closed": true
+              },
+              {
+                "requests": [
+                  "/index.html",
+                  "/decoder.js",
+                  "/vendor/pdf.worker.mjs",
+                  "/vendor/standard_fonts/LiberationSans-Regular.ttf"
+                ],
+                "denied": [],
+                "pending": false,
+                "closed": true
+              },
+              {
+                "requests": [
+                  "/index.html",
+                  "/decoder.js",
+                  "/vendor/pdf.worker.mjs",
+                  "/vendor/standard_fonts/LiberationSans-Regular.ttf"
+                ],
+                "denied": [],
+                "pending": false,
+                "closed": true
+              },
+              {
+                "requests": [
+                  "/index.html",
+                  "/decoder.js",
+                  "/vendor/pdf.worker.mjs",
+                  "/vendor/standard_fonts/LiberationSans-Regular.ttf"
+                ],
+                "denied": [],
+                "pending": false,
+                "closed": true
+              },
+              {
+                "requests": [
+                  "/index.html",
+                  "/decoder.js",
+                  "/vendor/pdf.worker.mjs",
+                  "/vendor/standard_fonts/LiberationSans-Regular.ttf"
+                ],
+                "denied": [],
+                "pending": false,
+                "closed": true
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "renders": [
+    {
+      "fixture": "report",
+      "scale": 0.75,
+      "dpr": 1,
+      "rotation": 0,
+      "width": 420,
+      "height": 570,
+      "modelMs": 13.799999952316284,
+      "renderMs": 25.40000009536743,
+      "pngBytes": 27834,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "report",
+      "scale": 0.75,
+      "dpr": 1,
+      "rotation": 90,
+      "width": 570,
+      "height": 420,
+      "modelMs": 1.1000001430511475,
+      "renderMs": 2.5,
+      "pngBytes": 29367,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "report",
+      "scale": 0.75,
+      "dpr": 1,
+      "rotation": 180,
+      "width": 420,
+      "height": 570,
+      "modelMs": 1,
+      "renderMs": 2.5999999046325684,
+      "pngBytes": 27923,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "report",
+      "scale": 0.75,
+      "dpr": 1,
+      "rotation": 270,
+      "width": 570,
+      "height": 420,
+      "modelMs": 0.8999998569488525,
+      "renderMs": 2.299999952316284,
+      "pngBytes": 29434,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "report",
+      "scale": 0.75,
+      "dpr": 2,
+      "rotation": 0,
+      "width": 840,
+      "height": 1140,
+      "modelMs": 0.5999999046325684,
+      "renderMs": 4.700000047683716,
+      "pngBytes": 73794,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "report",
+      "scale": 0.75,
+      "dpr": 2,
+      "rotation": 90,
+      "width": 1140,
+      "height": 840,
+      "modelMs": 0.7999999523162842,
+      "renderMs": 11.200000047683716,
+      "pngBytes": 79041,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "report",
+      "scale": 0.75,
+      "dpr": 2,
+      "rotation": 180,
+      "width": 840,
+      "height": 1140,
+      "modelMs": 0.7000000476837158,
+      "renderMs": 11.5,
+      "pngBytes": 74808,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "report",
+      "scale": 0.75,
+      "dpr": 2,
+      "rotation": 270,
+      "width": 1140,
+      "height": 840,
+      "modelMs": 0.5999999046325684,
+      "renderMs": 11.300000190734863,
+      "pngBytes": 79486,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "report",
+      "scale": 1,
+      "dpr": 1,
+      "rotation": 0,
+      "width": 560,
+      "height": 760,
+      "modelMs": 0.5999999046325684,
+      "renderMs": 3.200000047683716,
+      "pngBytes": 39137,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "report",
+      "scale": 1,
+      "dpr": 1,
+      "rotation": 90,
+      "width": 760,
+      "height": 560,
+      "modelMs": 0.6000001430511475,
+      "renderMs": 2.799999952316284,
+      "pngBytes": 43438,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "report",
+      "scale": 1,
+      "dpr": 1,
+      "rotation": 180,
+      "width": 560,
+      "height": 760,
+      "modelMs": 0.5999999046325684,
+      "renderMs": 3.0999999046325684,
+      "pngBytes": 39078,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "report",
+      "scale": 1,
+      "dpr": 1,
+      "rotation": 270,
+      "width": 760,
+      "height": 560,
+      "modelMs": 0.6000001430511475,
+      "renderMs": 10,
+      "pngBytes": 43463,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "report",
+      "scale": 1,
+      "dpr": 2,
+      "rotation": 0,
+      "width": 1120,
+      "height": 1520,
+      "modelMs": 0.6000001430511475,
+      "renderMs": 5.8999998569488525,
+      "pngBytes": 105439,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "report",
+      "scale": 1,
+      "dpr": 2,
+      "rotation": 90,
+      "width": 1520,
+      "height": 1120,
+      "modelMs": 0.7000000476837158,
+      "renderMs": 6.299999952316284,
+      "pngBytes": 117632,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "report",
+      "scale": 1,
+      "dpr": 2,
+      "rotation": 180,
+      "width": 1120,
+      "height": 1520,
+      "modelMs": 0.5999999046325684,
+      "renderMs": 6.1000001430511475,
+      "pngBytes": 104745,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "report",
+      "scale": 1,
+      "dpr": 2,
+      "rotation": 270,
+      "width": 1520,
+      "height": 1120,
+      "modelMs": 0.7000000476837158,
+      "renderMs": 8.799999952316284,
+      "pngBytes": 117188,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "report",
+      "scale": 1.25,
+      "dpr": 1,
+      "rotation": 0,
+      "width": 700,
+      "height": 950,
+      "modelMs": 0.5999999046325684,
+      "renderMs": 6.700000047683716,
+      "pngBytes": 58181,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "report",
+      "scale": 1.25,
+      "dpr": 1,
+      "rotation": 90,
+      "width": 950,
+      "height": 700,
+      "modelMs": 0.5,
+      "renderMs": 3.700000047683716,
+      "pngBytes": 60535,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "report",
+      "scale": 1.25,
+      "dpr": 1,
+      "rotation": 180,
+      "width": 700,
+      "height": 950,
+      "modelMs": 0.5,
+      "renderMs": 3.6000001430511475,
+      "pngBytes": 58256,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "report",
+      "scale": 1.25,
+      "dpr": 1,
+      "rotation": 270,
+      "width": 950,
+      "height": 700,
+      "modelMs": 0.6000001430511475,
+      "renderMs": 9.200000047683716,
+      "pngBytes": 61071,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "report",
+      "scale": 1.25,
+      "dpr": 2,
+      "rotation": 0,
+      "width": 1400,
+      "height": 1900,
+      "modelMs": 0.5999999046325684,
+      "renderMs": 8.300000190734863,
+      "pngBytes": 150104,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "report",
+      "scale": 1.25,
+      "dpr": 2,
+      "rotation": 90,
+      "width": 1900,
+      "height": 1400,
+      "modelMs": 0.5,
+      "renderMs": 8.400000095367432,
+      "pngBytes": 161458,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "report",
+      "scale": 1.25,
+      "dpr": 2,
+      "rotation": 180,
+      "width": 1400,
+      "height": 1900,
+      "modelMs": 0.5999999046325684,
+      "renderMs": 8.700000047683716,
+      "pngBytes": 151246,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "report",
+      "scale": 1.25,
+      "dpr": 2,
+      "rotation": 270,
+      "width": 1900,
+      "height": 1400,
+      "modelMs": 0.39999985694885254,
+      "renderMs": 7.900000095367432,
+      "pngBytes": 160754,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "rotated",
+      "scale": 0.75,
+      "dpr": 1,
+      "rotation": 0,
+      "width": 570,
+      "height": 420,
+      "modelMs": 14.899999856948853,
+      "renderMs": 24.899999856948853,
+      "pngBytes": 29367,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "rotated",
+      "scale": 0.75,
+      "dpr": 1,
+      "rotation": 90,
+      "width": 420,
+      "height": 570,
+      "modelMs": 1,
+      "renderMs": 9.5,
+      "pngBytes": 27923,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "rotated",
+      "scale": 0.75,
+      "dpr": 1,
+      "rotation": 180,
+      "width": 570,
+      "height": 420,
+      "modelMs": 1.0999999046325684,
+      "renderMs": 7.300000190734863,
+      "pngBytes": 29434,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "rotated",
+      "scale": 0.75,
+      "dpr": 1,
+      "rotation": 270,
+      "width": 420,
+      "height": 570,
+      "modelMs": 0.8999998569488525,
+      "renderMs": 2.5,
+      "pngBytes": 27834,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "rotated",
+      "scale": 0.75,
+      "dpr": 2,
+      "rotation": 0,
+      "width": 1140,
+      "height": 840,
+      "modelMs": 0.7000000476837158,
+      "renderMs": 4.300000190734863,
+      "pngBytes": 79041,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "rotated",
+      "scale": 0.75,
+      "dpr": 2,
+      "rotation": 90,
+      "width": 840,
+      "height": 1140,
+      "modelMs": 0.7000000476837158,
+      "renderMs": 4.6000001430511475,
+      "pngBytes": 74808,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "rotated",
+      "scale": 0.75,
+      "dpr": 2,
+      "rotation": 180,
+      "width": 1140,
+      "height": 840,
+      "modelMs": 0.5999999046325684,
+      "renderMs": 4.5,
+      "pngBytes": 79486,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "rotated",
+      "scale": 0.75,
+      "dpr": 2,
+      "rotation": 270,
+      "width": 840,
+      "height": 1140,
+      "modelMs": 0.5999999046325684,
+      "renderMs": 4.1000001430511475,
+      "pngBytes": 73794,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "rotated",
+      "scale": 1,
+      "dpr": 1,
+      "rotation": 0,
+      "width": 760,
+      "height": 560,
+      "modelMs": 0.7000000476837158,
+      "renderMs": 3.299999952316284,
+      "pngBytes": 43438,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "rotated",
+      "scale": 1,
+      "dpr": 1,
+      "rotation": 90,
+      "width": 560,
+      "height": 760,
+      "modelMs": 0.7000000476837158,
+      "renderMs": 2.8999998569488525,
+      "pngBytes": 39078,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "rotated",
+      "scale": 1,
+      "dpr": 1,
+      "rotation": 180,
+      "width": 760,
+      "height": 560,
+      "modelMs": 0.6000001430511475,
+      "renderMs": 10.299999952316284,
+      "pngBytes": 43463,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "rotated",
+      "scale": 1,
+      "dpr": 1,
+      "rotation": 270,
+      "width": 560,
+      "height": 760,
+      "modelMs": 0.5999999046325684,
+      "renderMs": 2.700000047683716,
+      "pngBytes": 39137,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "rotated",
+      "scale": 1,
+      "dpr": 2,
+      "rotation": 0,
+      "width": 1520,
+      "height": 1120,
+      "modelMs": 0.7000000476837158,
+      "renderMs": 6.199999809265137,
+      "pngBytes": 117632,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "rotated",
+      "scale": 1,
+      "dpr": 2,
+      "rotation": 90,
+      "width": 1120,
+      "height": 1520,
+      "modelMs": 0.5999999046325684,
+      "renderMs": 6.099999904632568,
+      "pngBytes": 104745,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "rotated",
+      "scale": 1,
+      "dpr": 2,
+      "rotation": 180,
+      "width": 1520,
+      "height": 1120,
+      "modelMs": 0.6000001430511475,
+      "renderMs": 5.8999998569488525,
+      "pngBytes": 117188,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "rotated",
+      "scale": 1,
+      "dpr": 2,
+      "rotation": 270,
+      "width": 1120,
+      "height": 1520,
+      "modelMs": 0.6000001430511475,
+      "renderMs": 13.899999856948853,
+      "pngBytes": 105439,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "rotated",
+      "scale": 1.25,
+      "dpr": 1,
+      "rotation": 0,
+      "width": 950,
+      "height": 700,
+      "modelMs": 0.7000000476837158,
+      "renderMs": 7.400000095367432,
+      "pngBytes": 60535,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "rotated",
+      "scale": 1.25,
+      "dpr": 1,
+      "rotation": 90,
+      "width": 700,
+      "height": 950,
+      "modelMs": 0.5,
+      "renderMs": 3.5999999046325684,
+      "pngBytes": 58256,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "rotated",
+      "scale": 1.25,
+      "dpr": 1,
+      "rotation": 180,
+      "width": 950,
+      "height": 700,
+      "modelMs": 0.5999999046325684,
+      "renderMs": 3.4000000953674316,
+      "pngBytes": 61071,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "rotated",
+      "scale": 1.25,
+      "dpr": 1,
+      "rotation": 270,
+      "width": 700,
+      "height": 950,
+      "modelMs": 0.5,
+      "renderMs": 9.700000047683716,
+      "pngBytes": 58181,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "rotated",
+      "scale": 1.25,
+      "dpr": 2,
+      "rotation": 0,
+      "width": 1900,
+      "height": 1400,
+      "modelMs": 0.6000001430511475,
+      "renderMs": 8.200000047683716,
+      "pngBytes": 161458,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "rotated",
+      "scale": 1.25,
+      "dpr": 2,
+      "rotation": 90,
+      "width": 1400,
+      "height": 1900,
+      "modelMs": 0.6000001430511475,
+      "renderMs": 8.5,
+      "pngBytes": 151246,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "rotated",
+      "scale": 1.25,
+      "dpr": 2,
+      "rotation": 180,
+      "width": 1900,
+      "height": 1400,
+      "modelMs": 0.5,
+      "renderMs": 9.200000047683716,
+      "pngBytes": 160754,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "rotated",
+      "scale": 1.25,
+      "dpr": 2,
+      "rotation": 270,
+      "width": 1400,
+      "height": 1900,
+      "modelMs": 0.7000000476837158,
+      "renderMs": 8.399999856948853,
+      "pngBytes": 150104,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "user-unit",
+      "scale": 0.75,
+      "dpr": 1,
+      "rotation": 0,
+      "width": 840,
+      "height": 1140,
+      "modelMs": 14.5,
+      "renderMs": 26.600000143051147,
+      "pngBytes": 73794,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "user-unit",
+      "scale": 0.75,
+      "dpr": 1,
+      "rotation": 90,
+      "width": 1140,
+      "height": 840,
+      "modelMs": 1.2000000476837158,
+      "renderMs": 9.700000047683716,
+      "pngBytes": 79041,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "user-unit",
+      "scale": 0.75,
+      "dpr": 1,
+      "rotation": 180,
+      "width": 840,
+      "height": 1140,
+      "modelMs": 0.7999999523162842,
+      "renderMs": 11.799999952316284,
+      "pngBytes": 74808,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "user-unit",
+      "scale": 0.75,
+      "dpr": 1,
+      "rotation": 270,
+      "width": 1140,
+      "height": 840,
+      "modelMs": 0.8000001907348633,
+      "renderMs": 4.299999952316284,
+      "pngBytes": 79486,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "user-unit",
+      "scale": 0.75,
+      "dpr": 2,
+      "rotation": 0,
+      "width": 1680,
+      "height": 2280,
+      "modelMs": 0.7999999523162842,
+      "renderMs": 15.899999856948853,
+      "pngBytes": 187039,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "user-unit",
+      "scale": 0.75,
+      "dpr": 2,
+      "rotation": 90,
+      "width": 2280,
+      "height": 1680,
+      "modelMs": 0.7999999523162842,
+      "renderMs": 10.900000095367432,
+      "pngBytes": 205389,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "user-unit",
+      "scale": 0.75,
+      "dpr": 2,
+      "rotation": 180,
+      "width": 1680,
+      "height": 2280,
+      "modelMs": 0.5999999046325684,
+      "renderMs": 10.400000095367432,
+      "pngBytes": 186497,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "user-unit",
+      "scale": 0.75,
+      "dpr": 2,
+      "rotation": 270,
+      "width": 2280,
+      "height": 1680,
+      "modelMs": 0.5999999046325684,
+      "renderMs": 11.400000095367432,
+      "pngBytes": 206425,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "user-unit",
+      "scale": 1,
+      "dpr": 1,
+      "rotation": 0,
+      "width": 1120,
+      "height": 1520,
+      "modelMs": 0.6000001430511475,
+      "renderMs": 6,
+      "pngBytes": 105439,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "user-unit",
+      "scale": 1,
+      "dpr": 1,
+      "rotation": 90,
+      "width": 1520,
+      "height": 1120,
+      "modelMs": 0.6999998092651367,
+      "renderMs": 11.700000047683716,
+      "pngBytes": 117632,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "user-unit",
+      "scale": 1,
+      "dpr": 1,
+      "rotation": 180,
+      "width": 1120,
+      "height": 1520,
+      "modelMs": 0.7000000476837158,
+      "renderMs": 8.299999952316284,
+      "pngBytes": 104745,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "user-unit",
+      "scale": 1,
+      "dpr": 1,
+      "rotation": 270,
+      "width": 1520,
+      "height": 1120,
+      "modelMs": 0.5,
+      "renderMs": 10.199999809265137,
+      "pngBytes": 117188,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "user-unit",
+      "scale": 1.25,
+      "dpr": 1,
+      "rotation": 0,
+      "width": 1400,
+      "height": 1900,
+      "modelMs": 0.5999999046325684,
+      "renderMs": 7.700000047683716,
+      "pngBytes": 150104,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "user-unit",
+      "scale": 1.25,
+      "dpr": 1,
+      "rotation": 90,
+      "width": 1900,
+      "height": 1400,
+      "modelMs": 0.7000000476837158,
+      "renderMs": 8.299999952316284,
+      "pngBytes": 161458,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "user-unit",
+      "scale": 1.25,
+      "dpr": 1,
+      "rotation": 180,
+      "width": 1400,
+      "height": 1900,
+      "modelMs": 0.7000000476837158,
+      "renderMs": 11.400000095367432,
+      "pngBytes": 151246,
+      "cropPixelsMatch": true
+    },
+    {
+      "fixture": "user-unit",
+      "scale": 1.25,
+      "dpr": 1,
+      "rotation": 270,
+      "width": 1900,
+      "height": 1400,
+      "modelMs": 0.6999998092651367,
+      "renderMs": 8.100000143051147,
+      "pngBytes": 160754,
+      "cropPixelsMatch": true
+    }
+  ],
+  "errors": [],
+  "construction": "passed: TypeScript + bundled Main/preloads/decoder/React entries",
+  "environment": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "versions": {
+      "node": "24.20.0",
+      "acorn": "8.18.0",
+      "ada": "4.0.0",
+      "amaro": "1.1.11",
+      "ares": "1.34.8",
+      "brotli": "1.2.0",
+      "cldr": "48.0",
+      "icu": "78.2",
+      "llhttp": "9.4.3",
+      "merve": "1.2.2",
+      "modules": "149",
+      "napi": "10",
+      "nbytes": "0.1.4",
+      "ncrypto": "0.0.1",
+      "nghttp2": "1.70.0",
+      "nghttp3": "",
+      "ngtcp2": "",
+      "openssl": "0.0.0",
+      "simdjson": "4.6.6",
+      "simdutf": "7.7.0",
+      "sqlite": "3.53.4",
+      "tz": "2025c",
+      "undici": "7.29.0",
+      "unicode": "17.0",
+      "uv": "1.52.1",
+      "uvwasi": "0.0.23",
+      "v8": "15.2.124.19-electron.0",
+      "zlib": "1.3.2.1-motley",
+      "zstd": "1.6.0",
+      "electron": "44.2.0",
+      "chrome": "152.0.7977.76"
+    },
+    "metrics": [
+      {
+        "type": "Browser",
+        "pid": 92000,
+        "memory": {
+          "workingSetSize": 169072,
+          "peakWorkingSetSize": 169072
+        }
+      },
+      {
+        "type": "GPU",
+        "pid": 92001,
+        "memory": {
+          "workingSetSize": 68864,
+          "peakWorkingSetSize": 68864
+        }
+      },
+      {
+        "type": "Utility",
+        "pid": 92002,
+        "memory": {
+          "workingSetSize": 49584,
+          "peakWorkingSetSize": 49584
+        }
+      },
+      {
+        "type": "Tab",
+        "pid": 92003,
+        "memory": {
+          "workingSetSize": 103776,
+          "peakWorkingSetSize": 103776
+        }
+      }
+    ]
+  },
+  "textDecision": "R3c2 should expose page/region only. Text extraction is diagnostic; exact glyph/range targeting is not qualified."
+}

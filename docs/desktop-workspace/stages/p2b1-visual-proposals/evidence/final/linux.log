@@ -1,0 +1,16 @@
+ok  	github.com/HahyeonJeon/gobble	0.064s
+ok  	github.com/HahyeonJeon/gobble/internal/engine	0.038s
+?   	github.com/HahyeonJeon/gobble/assets/modules/fastqc	[no test files]
+ok  	github.com/HahyeonJeon/gobble/assets/modules/trim-galore	0.044s [no tests to run]
+--- FAIL: TestPackPrintpipeArtifact (3.85s)
+    pack_test.go:269: packed compose = code 1 stderr 
+--- FAIL: TestPackHostpipeEmptyInspectProtocol (3.78s)
+    pack_test.go:364: exit = 1
+        stderr: 
+--- FAIL: TestPackedHelpLicenseBoundary (0.00s)
+    pack_test.go:643: packed review help omits "gobble portions": "Usage: gobble review [package] [--sample PATH]\n\nWrite checked flow and versioned processing-review identities without starting a Run.\nRequires the same bounded Project-code evaluation as flow.\n"
+FAIL
+FAIL	github.com/HahyeonJeon/gobble/cmd/gobble	113.043s
+ok  	github.com/HahyeonJeon/gobble/internal/pipelinereview	0.044s
+?   	github.com/HahyeonJeon/gobble/internal/modulecommand	[no test files]
+FAIL

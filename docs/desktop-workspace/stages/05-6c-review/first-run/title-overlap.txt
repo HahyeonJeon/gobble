@@ -1,0 +1,52 @@
+
+Running 2 tests using 1 worker
+
+(node:2056) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 desktop/tests/electron/ux-review.spec.ts:95:1 › C1: long names and 0, 1, 5, 12 Agents stay navigable with enlarged text (3.8s)
+(node:2080) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  2 desktop/tests/electron/ux-review.spec.ts:142:1 › C2: long resources and multiple attachments retain a usable workspace at 100–150% zoom (3.2s)
+
+
+  1) desktop/tests/electron/ux-review.spec.ts:95:1 › C1: long names and 0, 1, 5, 12 Agents stay navigable with enlarged text 
+
+    Error: expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 195.4947967529297
+    Received:    262
+
+      81 |     .boundingBox())!;
+      82 |   const actions = (await page.locator('.project-bar-actions').boundingBox())!;
+    > 83 |   expect(title.x + title.width).toBeLessThanOrEqual(actions.x);
+         |                                 ^
+      84 | }
+      85 | async function documentSnapshot() {
+      86 |   return page.evaluate(async () => {
+        at projectBarDoesNotOverlap (/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/ux-review.spec.ts:83:33)
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/ux-review.spec.ts:138:3
+
+    Error Context: test-results/electron/ux-review-C1-long-names-an-246d4-avigable-with-enlarged-text/error-context.md
+
+  2) desktop/tests/electron/ux-review.spec.ts:142:1 › C2: long resources and multiple attachments retain a usable workspace at 100–150% zoom 
+
+    Error: expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 195.4947967529297
+    Received:    262
+
+      81 |     .boundingBox())!;
+      82 |   const actions = (await page.locator('.project-bar-actions').boundingBox())!;
+    > 83 |   expect(title.x + title.width).toBeLessThanOrEqual(actions.x);
+         |                                 ^
+      84 | }
+      85 | async function documentSnapshot() {
+      86 |   return page.evaluate(async () => {
+        at projectBarDoesNotOverlap (/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/ux-review.spec.ts:83:33)
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/ux-review.spec.ts:184:5
+
+    Error Context: test-results/electron/ux-review-C2-long-resource-7b998-e-workspace-at-100–150-zoom/error-context.md
+
+  2 failed
+    desktop/tests/electron/ux-review.spec.ts:95:1 › C1: long names and 0, 1, 5, 12 Agents stay navigable with enlarged text 
+    desktop/tests/electron/ux-review.spec.ts:142:1 › C2: long resources and multiple attachments retain a usable workspace at 100–150% zoom 

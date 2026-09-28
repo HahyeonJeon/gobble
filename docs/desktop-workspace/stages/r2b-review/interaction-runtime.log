@@ -1,0 +1,48 @@
+
+> gobble-app-workspace@0.1.0 test:electron
+> npm run build && playwright test --grep normal CSV opening|linked refresh|Shift box|500 real CSV
+
+
+> gobble-app-workspace@0.1.0 build
+> npm run build:service && npm run build --workspace @gobble/desktop
+
+
+> gobble-app-workspace@0.1.0 build:service
+> tsx scripts/build-service.ts
+
+
+> @gobble/desktop@0.1.0 build
+> electron-vite build
+
+vite v7.3.6 building ssr environment for production...
+transforming...
+✓ 334 modules transformed.
+rendering chunks...
+out/main/index.js  393.94 kB
+✓ built in 554ms
+vite v7.3.6 building ssr environment for production...
+transforming...
+✓ 292 modules transformed.
+rendering chunks...
+out/preload/index.cjs  189.95 kB
+✓ built in 246ms
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 378 modules transformed.
+rendering chunks...
+../../out/renderer/index.html                     0.48 kB
+../../out/renderer/assets/index-nEZqeXXo.css     36.93 kB
+../../out/renderer/assets/index-DqfVvVH0.js     913.09 kB
+../../out/renderer/assets/chunk-DZLsuOxH.js   1,773.95 kB
+✓ built in 2.23s
+
+Running 4 tests using 1 worker
+
+(node:33712) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 desktop/tests/electron/linked-views.spec.ts:43:1 › normal CSV opening links exact rows through filter, sort, axes and viewport; Discuss focuses one composer without Send (3.7s)
+  ✓  2 desktop/tests/electron/linked-views.spec.ts:112:1 › linked refresh resets changed-source selection and keeps old attachments; counterpart reopen and compact Discuss preserve work (1.6s)
+  ✓  3 desktop/tests/electron/linked-views.spec.ts:145:1 › Shift box adds exact members, mouse and keyboard zoom preserve them, and invalid rows remain selectable in a zero-point plot (1.6s)
+  ✓  4 desktop/tests/electron/scatter.spec.ts:134:1 › 500 real CSV points preserve row identity through pointer/keyboard selection, resize and reopen under production CSP (3.4s)
+
+  4 passed (11.0s)

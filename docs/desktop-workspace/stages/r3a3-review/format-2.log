@@ -1,0 +1,9 @@
+desktop/src/main/shared-context/observed.ts 53ms (unchanged)
+desktop/src/main/shared-context/run-observation.ts 4ms (unchanged)
+desktop/src/main/shared-context/host.ts 36ms
+desktop/src/main/workspace/controller.ts 57ms (unchanged)
+desktop/src/renderer/workspace/Pane.tsx 14ms (unchanged)
+desktop/src/renderer/workspace/views/LogView.tsx 15ms
+desktop/tests/shared-context.test.ts 39ms (unchanged)
+desktop/tests/observed-reference.test.ts 12ms (unchanged)
+desktop/tests/observed-evidence.test.ts 33ms (unchanged)

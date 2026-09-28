@@ -1,0 +1,9 @@
+
+> gobble-app-workspace@0.1.0 format:check
+> prettier --check .
+
+Checking formatting...
+[warn] contracts/src/storage/workspace-v17.json
+[warn] desktop/tests/fixtures/creation-candidate.json
+[warn] README.md
+[warn] Code style issues found in 3 files. Run Prettier with --write to fix.

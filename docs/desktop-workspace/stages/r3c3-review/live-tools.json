@@ -1,0 +1,32 @@
+{
+  "realRuntime": "Codex 0.153.4",
+  "model": "gpt-6-astra",
+  "calls": [
+    {
+      "type": "custom_tool_call",
+      "name": "exec",
+      "input": "text(await tools.workspace_list({}));\n"
+    },
+    {
+      "type": "custom_tool_call",
+      "name": "exec",
+      "input": "const r=await tools.workspace_observe({surfaceId:\"srf_354ff2af-61f6-4460-aabf-0d1923202cc2\"});const i=r.indexOf(\"\\ndata:image/\");const receipt=JSON.parse(r.slice(0,i));store(\"pdf\",receipt);text(r.slice(0,i));image(r.slice(i+1));\n"
+    },
+    {
+      "type": "custom_tool_call",
+      "name": "exec",
+      "input": "const r=load(\"pdf\").receipt;const selection={...r.evidence.selection,region:[60,570,280,640]};store(\"selection\",selection);const out=await tools.workspace_observe({surfaceId:r.observation.surfaceId,selection});const i=out.indexOf(\"\\ndata:image/\");store(\"small\",JSON.parse(out.slice(0,i)));text(out.slice(0,i));image(out.slice(i+1));\n"
+    },
+    {
+      "type": "custom_tool_call",
+      "name": "exec",
+      "input": "const r=load(\"small\").receipt;text(await tools.workspace_point({evidence:r.evidence,observedReadId:r.observedReadId,observation:r.observation,note:'Left column: \u201cSame filtered cohort.\u201d above \u201cLeft column: samples and filters.\u201d Use Show to view this region.'}));\n"
+    },
+    {
+      "type": "custom_tool_call",
+      "name": "exec",
+      "input": "text(await tools.workspace_question({evidenceIds:[load(\"small\").receipt.evidenceId],question:'Is the left-column caption \u201csamples and filters\u201d clear enough?'}));\n"
+    }
+  ],
+  "imageDisplayCalls": 2
+}

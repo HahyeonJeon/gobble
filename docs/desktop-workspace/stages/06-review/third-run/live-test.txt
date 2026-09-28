@@ -1,0 +1,28 @@
+
+Running 1 test using 1 worker
+
+(node:12728) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 desktop/tests/live/runtime.spec.ts:7:1 › actual CLI Run matches Electron and its controller survives app quit (1.2m)
+
+
+  1) desktop/tests/live/runtime.spec.ts:7:1 › actual CLI Run matches Electron and its controller survives app quit 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: "completed"
+    Received: "succeeded"
+
+      111 |     const final = JSON.parse(await runtime.cli('inspect', 'monitor', '--workspace', 'runs/live'));
+      112 |     expect(final.run.id).toBe(running.run.id);
+    > 113 |     expect(final.run.status).toBe('completed');
+          |                              ^
+      114 |     await writeFile(info.outputPath('cli-final.json'), JSON.stringify(final, null, 2));
+      115 |     const restarted = await launch(profile);
+      116 |     application = restarted.application;
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/live/runtime.spec.ts:113:30
+
+    Error Context: test-results/live-runtime/runtime-actual-CLI-Run-mat-ca5d8-ontroller-survives-app-quit/error-context.md
+
+  1 failed
+    desktop/tests/live/runtime.spec.ts:7:1 › actual CLI Run matches Electron and its controller survives app quit 

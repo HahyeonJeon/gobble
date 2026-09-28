@@ -1,0 +1,10 @@
+{
+  "projectId": "prj_TVUVRCQXLLO56YOBBN4JK4UXE7",
+  "pipelineId": "pip_QOSM25BB6JZAPPVOM5QC6TE3QM",
+  "launchReviewId": "req_c92704dc-27a9-4860-82db-d8ad41aa02e2",
+  "runRef": "run_FQYGQ344DFXXEJL2UCHJ3OISR6",
+  "requestId": "req_d81cfbe7-3937-4fd3-bb61-8d31f71fca3c",
+  "createdAt": "2026-09-27T08:02:05.534661Z",
+  "state": "blocked",
+  "issue": "A completed result is missing. Restore the original result and recheck, or review a new analysis."
+}

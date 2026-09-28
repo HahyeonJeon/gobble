@@ -1,0 +1,35 @@
+
+Running 1 test using 1 worker
+
+(node:14101) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 desktop/tests/electron/run-launch-restored.spec.ts:6:1 › Run launch: retained Flow, exact task discussion and compact Chat survive App restart (8.1s)
+
+
+  1) desktop/tests/electron/run-launch-restored.spec.ts:6:1 › Run launch: retained Flow, exact task discussion and compact Chat survive App restart 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('article', { name: 'Analysis run' })
+    Expected substring: "succeeded"
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toContainText" getByRole('article', { name: 'Analysis run' }) with timeout 5000ms
+      - waiting for getByRole('article', { name: 'Analysis run' })
+
+
+      19 |       timeout: 20000,
+      20 |     });
+    > 21 |     await expect(page.getByRole('article', { name: 'Analysis run' })).toContainText('succeeded');
+         |                                                                       ^
+      22 |     await expect(page.getByRole('button', { name: 'Start analysis', exact: true })).toHaveCount(0);
+      23 |     const node = flow.locator('.pipeline-node[data-run-status="succeeded"]').last();
+      24 |     await expect(node).toBeEnabled();
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/run-launch-restored.spec.ts:21:71
+
+    Error Context: test-results/electron/run-launch-restored-Run-la-53ffb-ct-Chat-survive-App-restart/error-context.md
+
+  1 failed
+    desktop/tests/electron/run-launch-restored.spec.ts:6:1 › Run launch: retained Flow, exact task discussion and compact Chat survive App restart 

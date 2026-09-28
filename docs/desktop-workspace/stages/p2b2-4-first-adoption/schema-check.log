@@ -1,0 +1,4 @@
+
+> gobble-app-workspace@0.1.0 schema:check
+> tsx contracts/scripts/export-schema.ts --check
+

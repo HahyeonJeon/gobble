@@ -1,11 +1,15 @@
-# Gobble — Agent Application and Monitoring Design
+# Gobble — Project Application and Monitoring Design
 
 Updated: 2026-09-06. Electron, React/TypeScript, agent-centered interaction,
 ChatGPT subscription authentication as the first agent target, and continued
 Linux CLI support are user-selected directions. After reconsidering local web
 delivery, a thin desktop application remains the recommended first delivery.
-Detailed UX choices require discussion; contracts and release qualification
-remain implementation work. Existing and planned behavior are separated below.
+The user has now approved Project-centered navigation, multiple attached agents,
+shared panels and selection-based discussion. The detailed implementation design
+is in [Project workspace contract](project-workspace-contract.md); release
+qualification remains implementation work. Definitions and metadata ownership
+are in the [workspace domain model](workspace-domain.md). Existing and planned behavior are
+separated below.
 
 Related: [Project roadmap](../roadmap/project.md), [Engine architecture](system.md),
 [Agent-centered workspace](../feature/agent-workspace.md),
@@ -13,8 +17,10 @@ Related: [Project roadmap](../roadmap/project.md), [Engine architecture](system.
 
 ## Vision
 
-The first application goal is a local workspace where a user and an agent
-design, execute, control, and monitor bioinformatics pipelines together. The
+The first application goal is a Project-centered local workspace where a user
+and several attached agents design, execute, control, and monitor bioinformatics
+pipelines together. Project owns the shared work area; agents, runs, files, plans,
+results and decisions belong to it. The
 agent can open analysis views, inspect their evidence, and bring specific
 questions to the user. The first agent experience uses OpenAI models through
 the user's ChatGPT subscription sign-in and the official Codex App Server.
@@ -136,9 +142,11 @@ flowchart TD
     Service --> Workspace
 ```
 
-This is the intended application topology, not shipped behavior. The provider
-runtime manages agent turns; Gobble manages analysis. An agent thread and a
-pipeline run have different identities, state, and lifetimes.
+This is the intended application topology, not shipped behavior. Project is the
+app identity and scope boundary; the provider runtime manages separate agent
+threads/turns and Gobble manages analysis. The detailed process, protocol and
+state-owner decisions are canonical in
+[Project workspace contract](project-workspace-contract.md).
 
 | Component | Responsibility and boundary |
 |---|---|
@@ -155,9 +163,12 @@ pipeline run have different identities, state, and lifetimes.
 
 Run the agent integration on the host so it can edit the selected local project
 and use the host's sign-in environment. Keep compilation and analysis in the
-Gobble container runtime. The proposed application service may initially run
-in a runtime container; define its exact startup and mount contract before
-implementation. No nested Docker daemon is required.
+Gobble container runtime. The first application service is a host Go process for project registration and
+queries; its engine adapter enters the recorded compatible container runtime.
+This keeps Project navigation available when Docker is down and avoids one
+service-wide mount set for all Projects. The startup and path contract is
+defined in [Project workspace contract](project-workspace-contract.md).
+No nested Docker daemon is required.
 
 The service routes old runs through compatible pinned runtimes. Application,
 Codex runtime, and analysis-runtime versions are managed independently. An app
@@ -249,7 +260,9 @@ engine identities before choosing a new schema.
 
 | Concept | Meaning |
 |---|---|
-| Project | Registered local root containing pipeline source and associated inputs and runs |
+| Project | Primary app workspace: registered root, attached agents, shared surfaces, files, plans, runs, results and decisions |
+| Agent attachment | Project-scoped peer with its own provider thread and explicit shared-context references |
+| Surface | Project-owned view that remains independent of the opening agent or selected conversation |
 | Pipeline revision | Recorded source, typed configuration, dependency/runtime identity, and reviewed plan |
 | Run | Durable analysis record associated with an exclusive run workspace |
 | Task instance | Executable unit, including explicit sample ownership or expanded membership |
@@ -265,7 +278,7 @@ must not rewrite already-executed definitions or provenance. For changed-source
 recovery, show plan differences and expected reuse. Whether it creates a new
 run or a revision within a run is an explicit compatibility decision.
 
-## Agent-centered interaction and monitoring
+## Project-centered collaboration and monitoring
 
 The defining UX is a shared workspace that the agent can use alongside the
 person. It opens a plan, selects a sample, reads a log, inspects a report, or
@@ -273,12 +286,13 @@ presents alternatives while discussing the analysis. Structured observations
 and optional scoped captures let it check what the application actually shows.
 User responses are associated with the evidence and its revision.
 
-[Agent-centered workspace](../feature/agent-workspace.md) owns the proposed
-layouts, surface lifecycle, attention rules, presentation-versus-inspection
-behavior, contextual decisions, and concrete interaction examples. These require
-discussion before UI implementation. The starting recommendation is a shared
-work area with persistent conversation, tabs/splits for evidence, and always
-accessible run controls. Detached windows are a separate layout choice.
+[Project-centered workspace](../feature/agent-workspace.md) owns the approved
+concept and detailed surface lifecycle, attention, selection and decision design.
+The left navigation groups resources by Project. The main area holds shared
+tabs/splits; a bottom discussion dock addresses a named agent with visible
+context references. User and agent actions use one workspace controller. Run
+controls belong to the relevant run surface. Detached OS windows are deferred
+from the first slice, which supports one or two panes inside the main window.
 
 The primary desktop journey is installation and dependency checks, ChatGPT
 sign-in, project registration, in-app agent authoring, plan review, execution,
@@ -403,33 +417,32 @@ Measurements and estimates include observation time and availability.
 Monitoring collection must not determine task success or block the scheduler.
 Timelines, run comparison, notifications, and reports follow the basic viewer.
 
-A catalog database, potentially SQLite, can support discovery and preferences.
-Application-owned surface references, conversation associations, and pending
-decisions also need persistence; unlike execution summaries, they cannot all
-be rebuilt from run files. Their format and location remain open. Large
+The first single-writer catalog and Project UI records use versioned atomic
+JSON with last-valid backups in app data, owned separately by the Go service
+and workspace controller. Provider history and credentials stay in the
+provider-owned store. The exact authority/lifetime table is in
+[Project workspace contract](project-workspace-contract.md#persistence). Large
 artifacts and logs stay in files; catalog loss must not invalidate engine
-workspace recovery or standalone CLI use.
+workspace recovery or standalone CLI use. SQLite can follow measured scale
+or transaction requirements.
 
-## Decisions still requiring discussion
+## Decision status and remaining gates
 
-| Decision | Working recommendation | Resolve before |
+| Subject | Current decision | Remaining gate |
 |---|---|---|
-| Agent workspace layout | Shared evidence area, persistent conversation, accessible run controls; compare with a conversation-led layout | First screen implementation, with user review |
-| Surface and attention policy | Managed tabs/splits, scoped observation, contextual decisions; separate native-window choice | Workspace tools implementation, with user review |
-| Codex distribution and compatibility | Official runtime with a pinned, tested host integration | First installer and agent integration |
-| Agent state and tool bridge | Separate provider thread/turn IDs from Gobble operation/run IDs | First complete agent-driven analysis |
-| Service and project registration | One local service with explicitly shared roots | Multi-project service implementation |
-| Run/revision identity | Preserve executed definitions and link recovery attempts | Application persistence schema |
-| API/runtime compatibility | Versioned operations routed to the pinned runtime | Application mutations |
-| Event durability | Checkpoint-led state and recoverable history | Durable event publication |
-| Catalog persistence | Rebuildable execution index; separately owned registration, preferences, surface references, and decisions | Persistent catalog |
-| Background recovery | Reconnect and reconcile; no silent automatic rerun | Automatic recovery features |
-| Finish-active-and-wait | Separate scheduling action | Adding a pause-like control |
+| Project structure | User-approved Project workspace with multiple agents/resources | Interactive usability and implementation proof |
+| Panels and discussion | Shared main area, one/two panes, bottom addressed discussion | Exact adaptive layout and input behavior |
+| Service and persistence | Host Go service, pinned-runtime adapter, separate state owners | Technical contract review and implementation evidence |
+| Agent tools | Project/agent-scoped MCP bridge, official stdio App Server | Pinned runtime, image delivery and concurrent attachment proof |
+| Initial scope | Project, multiple agents, shared views, pointing/questions, restore and existing-run queries | [Session plan](../../../../../../docs/desktop-workspace/session-plan/plan-index.md) |
+| Execution mutations | Shared durable commands with conditional identity/lease checks | Phase 2 crash reconciliation and complete analysis journey |
+| Codex acquisition | App-managed official compatible binary; configured development path | Artifact digest, license notices, native packaging and sign-in evidence |
+| Event history | Checkpoint-led snapshots first | Ordered cursor, gap recovery and publication contract |
+| Background recovery | Reconnect and reconcile; no silent rerun | Separate policy for automatic recovery |
 
-The desktop framework, frontend language, agent-centered principle, initial
-subscription-backed OpenAI provider, and standalone Linux CLI are selected.
-The desktop-first recommendation was reconsidered against local web delivery
-above. The table keeps unresolved UX and implementation contracts visible.
+The user-approved concept is recorded separately from unimplemented contracts.
+The detailed first-slice contract and completion criteria are ready for review;
+no design statement proves a desktop capability has shipped.
 
 Standalone browser delivery, remote execution, HPC, cloud, native ARM analysis,
 cross-workspace caching, retention/deletion, additional providers, and

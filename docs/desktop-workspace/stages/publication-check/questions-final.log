@@ -1,0 +1,10 @@
+
+Running 3 tests using 1 worker
+
+(node:15825) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 desktop/tests/electron/questions.spec.ts:79:1 › question arrival preserves a peer draft; Reply/Cancel and Enter use one composer with immutable evidence and one addressed answer (3.8s)
+  ✓  2 desktop/tests/electron/questions.spec.ts:160:1 › pending reply restores without replay; changed source invalidates Send while historical question preview and draft remain (3.4s)
+  ✓  3 desktop/tests/electron/questions.spec.ts:203:1 › image questions block text-only reply and dismissal sends nothing; older shared tool bindings require explicit new conversation (3.6s)
+
+  3 passed (11.4s)

@@ -1,0 +1,43 @@
+{
+  "status": "passed",
+  "frozenSchemaFiles": [
+    "app/contracts/schema/v1.json",
+    "app/contracts/schema/v6.json",
+    "app/contracts/schema/v7.json",
+    "app/contracts/schema/v8.json",
+    "app/contracts/schema/v4.json",
+    "app/contracts/schema/v5.json",
+    "app/contracts/schema/v9.json",
+    "app/contracts/schema/v2.json",
+    "app/contracts/schema/v3.json"
+  ],
+  "frozenHashAndCaptureSources": [
+    "app/contracts/src/run-presentation.ts",
+    "app/contracts/src/selection-v2.ts",
+    "app/contracts/src/reference-v2.ts",
+    "app/contracts/src/observed-evidence.ts",
+    "app/desktop/src/main/service/run-presentation.ts",
+    "app/desktop/src/main/workspace/selection.ts",
+    "app/desktop/src/main/evidence/capture.ts",
+    "app/desktop/src/main/evidence/materialize.ts"
+  ],
+  "unchangedCurrentShapes": [
+    "WorkspaceDocumentSchema",
+    "EvidenceRefSchema",
+    "RunPresentationSchema"
+  ],
+  "baselineNonAppSourcesChecked": 78,
+  "changedNonAppSources": [],
+  "productManifestsChecked": [
+    "app/package.json",
+    "app/desktop/package.json",
+    "app/contracts/package.json",
+    "app/package-lock.json"
+  ],
+  "absentProductDependencies": [
+    "plotly",
+    "@xyflow/react",
+    "@dagrejs/dagre"
+  ],
+  "note": "The baseline includes unrelated pre-existing changes; this audit compares this turn only. Scientific chart archive contracts remain for compatibility."
+}

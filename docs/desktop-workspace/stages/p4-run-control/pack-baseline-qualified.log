@@ -1,0 +1,7 @@
+--- FAIL: TestPackPrintpipeArtifact (0.22s)
+    pack_test.go:219: pack: exit status 128
+--- FAIL: TestPackHostpipeEmptyInspectProtocol (0.20s)
+    pack_test.go:356: pack: exit status 128
+FAIL
+FAIL	github.com/HahyeonJeon/gobble/cmd/gobble	0.474s
+FAIL

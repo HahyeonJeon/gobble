@@ -1,0 +1,5 @@
+{
+  "exitCode": 0,
+  "stdout": "{\"schemaVersion\":1,\"found\":true,\"receipt\":{\"intent\":{\"schemaVersion\":1,\"requestId\":\"req_96229dfc-39bf-4374-bba9-49f5d862ecfa\",\"workspaceId\":\"req_be040804-e30f-4c58-a9e4-85ec9be092a1\",\"originDigest\":\"sha256:5046e8343e2bba66f219d17a87c7abce99b1910a07bd3115f3556923061486f9\",\"reviewDigest\":\"sha256:eac9fe5ced19b34688a99dde3024d37a3d0d09078f112ab4795e686d8356f901\",\"previousHead\":\"sha256:5046e8343e2bba66f219d17a87c7abce99b1910a07bd3115f3556923061486f9\"},\"intentDigest\":\"sha256:521023158c8cc954c82b9f3483e6712e38c60db37a3b0355b16d4f7e5f2c3aa3\",\"lease\":\"2d15742e9e41f904327929ebaa3386aa\",\"snapshot\":\"f6adf7cac31e46395d273f37f6002f2c\"}}\n",
+  "stderr": ""
+}

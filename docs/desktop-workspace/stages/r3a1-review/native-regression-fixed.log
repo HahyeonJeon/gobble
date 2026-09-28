@@ -1,0 +1,17 @@
+
+Running 6 tests using 1 worker
+
+(node:55470) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 desktop/tests/electron/evidence.spec.ts:285:1 › migrates v2 shared marks and captured evidence, reopens without origin, and distinguishes changed or missing sources (5.5s)
+  ✓  2 desktop/tests/electron/shared-context.spec.ts:58:1 › User and Agent share table/image pointers while local selection and composer focus stay independent (3.2s)
+(node:55520) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  3 desktop/tests/electron/evidence.spec.ts:285:1 › migrates v2 shared marks and captured evidence, reopens without origin, and distinguishes changed or missing sources (5.7s)
+  ✓  4 desktop/tests/electron/shared-context.spec.ts:58:1 › User and Agent share table/image pointers while local selection and composer focus stay independent (3.1s)
+(node:55559) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  5 desktop/tests/electron/evidence.spec.ts:285:1 › migrates v2 shared marks and captured evidence, reopens without origin, and distinguishes changed or missing sources (5.5s)
+  ✓  6 desktop/tests/electron/shared-context.spec.ts:58:1 › User and Agent share table/image pointers while local selection and composer focus stay independent (3.1s)
+
+  6 passed (27.0s)

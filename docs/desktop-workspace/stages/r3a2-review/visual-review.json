@@ -1,0 +1,43 @@
+{
+  "date": "2026-09-08",
+  "subject": "implementation-subject.json",
+  "source": "Final native Electron suite; synthetic runtime/provider process peers",
+  "viewports": [
+    {
+      "width": 1280,
+      "height": 840,
+      "zoom": 1
+    },
+    {
+      "width": 900,
+      "height": 650,
+      "zoom": 1
+    },
+    {
+      "width": 1280,
+      "height": 840,
+      "zoom": 1.5
+    }
+  ],
+  "reviewed": {
+    "r3a2-compact.png": "5b643512ee0b3a1c274f131340d08c1307e47f5d3ad7a8f973c000f12678c66e",
+    "r3a2-frozen-log-after-restart.png": "652a97f70d49535f233fcc952950d5a4a5e416ac9b5b0aa23b749809d6cbbce7",
+    "r3a2-refresh-failed.png": "3ad4819073135df38302d9afb87ecc7f58a0f14a0ae02327a797402659e2bca2",
+    "r3a2-task-log-chat.png": "2327a2f3d2640ba15b7d06533bd21d7bee496e7219978e7b778d22c8d14cdcd6",
+    "r3a2-tasks-compact.png": "5b643512ee0b3a1c274f131340d08c1307e47f5d3ad7a8f973c000f12678c66e",
+    "r3a2-tasks-zoom-150.png": "26f78f0ecc4860c1873a51799d44bfeb24cc39389241e0a5503613bddf73e528",
+    "r3a2-zoom-150.png": "a38fd9d44616ef37d255a158da25c72e9187939444e73065f598aadb8f53d94e"
+  },
+  "findings": [
+    "Compact task rows keep source instance and attempt legible.",
+    "Run/log detail blocks collapsed; primary actions visible before hover.",
+    "Stream-specific draft cards distinguish stderr and stdout.",
+    "Failed refresh preserves text and explicit earlier observation notice.",
+    "900x650 retains both panes; 150% uses height-based pane switch.",
+    "Normal restart preserves captured attempt-2 excerpt while source advances to attempt 3."
+  ],
+  "limitations": [
+    "No real model interpretation or Agent task/log reference trial in R3a2.",
+    "Current-attempt 4096-byte per-stream previews, 1000 task preview bound; no original source offsets or completeness guarantee."
+  ]
+}

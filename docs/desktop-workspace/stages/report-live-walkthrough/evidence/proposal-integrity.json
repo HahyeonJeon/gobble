@@ -1,0 +1,83 @@
+{
+  "runCount": 1,
+  "proposalCount": 1,
+  "state": "ready",
+  "changeCount": 1,
+  "changes": [
+    {
+      "id": "setting:trim_galore:quality",
+      "kind": "setting",
+      "stepId": "trim_galore",
+      "key": "quality",
+      "label": "Quality threshold",
+      "unit": "Phred",
+      "before": 20,
+      "after": 25
+    }
+  ],
+  "currentArtifactId": "sha256:83552c9d7d8cca73f5e8aca55ebc9a7cbd4630988d91e6d3a15e58efeb93ae42",
+  "baseArtifactId": "sha256:83552c9d7d8cca73f5e8aca55ebc9a7cbd4630988d91e6d3a15e58efeb93ae42",
+  "proposedArtifactId": "sha256:7366efcbb691991f6e656ec85b58bdc9d84a1bb69ad49046a4bb25ab82d57098",
+  "adopted": false,
+  "followUp": {
+    "launchReviewId": "req_222fba14-f348-4df9-ab30-1844b5a67dd2",
+    "submissionId": "req_7b47b3ca-7cfa-4e2d-a19d-30e4e5a6b4eb",
+    "evidence": [
+      {
+        "attachmentId": "att_f916169d-248b-4908-a501-495ef23adbe9",
+        "evidence": {
+          "projectId": "prj_FWQ6GCP2UBLVPY7OHQZXQ6D37Y",
+          "origin": {
+            "surfaceId": "srf_f0650ccf-2f4e-4ba8-a3a4-0fe757dc47e7"
+          },
+          "resource": {
+            "kind": "run",
+            "runRef": "run_SD3V3NANJIYO4B5IA5RBR3BLMJ"
+          },
+          "schemaVersion": 3,
+          "dataRevision": "sha256:7c54862413e62eefad99ed75bea0c69aec058f7427530bcbee5010052b706d56",
+          "selection": {
+            "kind": "run-task",
+            "coordinateSpace": "observed-instance-attempt",
+            "instanceId": "fastqc",
+            "attempt": 1
+          }
+        },
+        "label": "Analysis 1",
+        "createdAt": 1790581777626,
+        "capture": {
+          "kind": "observed",
+          "capturedAt": 1790581777630,
+          "asset": {
+            "hash": "sha256:5af9c97b548cb6ba112924e730437b80e0af36f4a22cf3a88dde4d515e1d4d91",
+            "byteLength": 1735,
+            "mediaType": "application/json"
+          },
+          "representation": {
+            "kind": "run",
+            "truncated": true
+          }
+        },
+        "capturedAt": 1790581777630,
+        "asset": {
+          "hash": "sha256:5af9c97b548cb6ba112924e730437b80e0af36f4a22cf3a88dde4d515e1d4d91",
+          "byteLength": 1735,
+          "mediaType": "application/json"
+        },
+        "representation": {
+          "kind": "run",
+          "truncated": true
+        }
+      }
+    ],
+    "schemaVersion": 1,
+    "projectId": "prj_FWQ6GCP2UBLVPY7OHQZXQ6D37Y",
+    "pipelineId": "pip_MOLOFL6ZYFZBSMSQNPOZRRJTOI",
+    "runRef": "run_SD3V3NANJIYO4B5IA5RBR3BLMJ",
+    "runName": "Analysis 1",
+    "preparationId": "req_ae39422e-e2ea-43bc-b6b6-915918f9168d",
+    "artifactId": "sha256:83552c9d7d8cca73f5e8aca55ebc9a7cbd4630988d91e6d3a15e58efeb93ae42",
+    "inputSHA256": "sha256:c0b126faa3fdd69a2e8f3f4e71ca9e54b4238bccc028965debd310d41c15c516"
+  },
+  "reportLinkScope": "Saved report is in the same submitted message and Agent summary. Structured proposal followUp retains Run/task evidence only."
+}

@@ -1,0 +1,5 @@
+=== RUN   TestLiveCreationAdoptionAndRefinement
+    creation_adoption_live_test.go:90: image=sha256:25fee86458e0c8df45293cfd6dcaa992256d3da2cfcdbef62e3c992bc2ac71f1 birth=sha256:82e1a3c57a3a6e0ba11a48fead0de269b5d8e8170209307d824422ef312a17ca refined=sha256:b33ae274df8a59b575134830d7f69a67b59f79be482e035d0e6acbac46740422 zero-runs
+--- PASS: TestLiveCreationAdoptionAndRefinement (189.80s)
+PASS
+ok  	github.com/HahyeonJeon/gobble/internal/appservice	190.355s

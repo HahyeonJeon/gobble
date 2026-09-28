@@ -1,0 +1,18 @@
+
+> gobble-app-workspace@0.1.0 format:check
+> prettier --check .
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> gobble-app-workspace@0.1.0 typecheck
+> tsc -p contracts/tsconfig.json && npm run typecheck --workspace @gobble/desktop && tsc -p tsconfig.tools.json
+
+
+> @gobble/desktop@0.1.0 typecheck
+> tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && tsc -p tsconfig.renderer.json
+
+desktop/tests/tabular-foundation.test.ts(259,9): error TS2375: Type '{ referenceId: string; label: string; note: string; author: { kind: "user"; }; createdAt: number; retracted: false; evidence: { schemaVersion: 2; projectId: string; resource: { kind: "file"; resourceId: string; }; dataRevision: string; selection: { ...; }; }; presentation: { ...; } | undefined; }' is not assignable to type '{ presentation?: { filter: { kind: "all"; } | { kind: "equals"; columnId: string; value: string; }; kind: "scatter"; spec: { labelColumnId?: string; xColumnId: string; yColumnId: string; xScale: "linear"; yScale: "linear"; }; viewport: { ...; }; schemaVersion: 1; revision: { ...; }; }; ... 7 more ...; retracted: boo...' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'presentation' are incompatible.
+    Type '{ filter: { kind: "all"; } | { kind: "equals"; columnId: string; value: string; }; kind: "scatter"; spec: { labelColumnId?: string; xColumnId: string; yColumnId: string; xScale: "linear"; yScale: "linear"; }; viewport: { ...; }; schemaVersion: 1; revision: { ...; }; } | undefined' is not assignable to type '{ filter: { kind: "all"; } | { kind: "equals"; columnId: string; value: string; }; kind: "scatter"; spec: { labelColumnId?: string; xColumnId: string; yColumnId: string; xScale: "linear"; yScale: "linear"; }; viewport: { ...; }; schemaVersion: 1; revision: { ...; }; }'.
+      Type 'undefined' is not assignable to type '{ filter: { kind: "all"; } | { kind: "equals"; columnId: string; value: string; }; kind: "scatter"; spec: { labelColumnId?: string; xColumnId: string; yColumnId: string; xScale: "linear"; yScale: "linear"; }; viewport: { ...; }; schemaVersion: 1; revision: { ...; }; }'.

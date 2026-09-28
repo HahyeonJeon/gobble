@@ -1,0 +1,20 @@
+{
+  "profile": "/Users/hahyeon/Library/Application Support/Gobble-stage4-review",
+  "originalWindow": {
+    "schemaVersion": 1,
+    "activeProjectId": "prj_AMLEPCTL2UZFXLADH2ZA5KGNV4",
+    "bounds": {
+      "x": 260,
+      "y": 149,
+      "width": 1280,
+      "height": 840
+    }
+  },
+  "existingProjectHashes": {
+    "prj_DXT6JIS3LZCPFX6BEA7ZMUURGS.json": "6e86a7f51166d3c5f72d4dfd7ed5f7b9871f6eb4a5c1d3c2708055445b83d4d9",
+    "prj_AMLEPCTL2UZFXLADH2ZA5KGNV4.json": "d0d43558e165054b5cb660de60d08ea99e21012303c98a8e8c7a10f82aa2bd90",
+    "prj_BMNZSOZGRIUGDEMROC2XSUUIGS.json": "01c05d372bf2a30e645f3d8acd2a215e522f5abf3333ab0d125f6b0fd60d8ae7",
+    "prj_BLTEOBDGRONGZGKXPNPFK6P2WI.json": "442468465faf020a1713ddae4ad6abc3a27bbbf6ddc0089880ef21dd794f7ff4"
+  },
+  "activeTurns": []
+}

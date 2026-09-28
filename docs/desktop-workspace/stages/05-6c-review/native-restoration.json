@@ -1,0 +1,27 @@
+{
+  "case": "C4",
+  "classification": "passed",
+  "restored": {
+    "activePane": true,
+    "maximizedPane": true,
+    "selections": true,
+    "chat": true,
+    "titles": true,
+    "sharedReferences": true,
+    "referenceReveal": true,
+    "layout": true,
+    "surfaces": true,
+    "submissions": true,
+    "bounds": true
+  },
+  "submissions": 12,
+  "windowBounds": {
+    "x": 260,
+    "y": 149,
+    "width": 1280,
+    "height": 840
+  },
+  "agentCount": 5,
+  "method": "Native AX/pointer/keyboard control, normal quit/relaunch, scoped saved-state comparison",
+  "newProviderTurn": false
+}

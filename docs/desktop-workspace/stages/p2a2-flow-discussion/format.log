@@ -1,0 +1,11 @@
+desktop/src/renderer/workspace/views/pipeline/PipelineDetails.tsx 66ms (unchanged)
+desktop/tests/electron/pipeline-discussion.spec.ts 28ms (unchanged)
+README.md 116ms (unchanged)
+qualification/pipeline-flow/README.md 5ms (unchanged)
+../docs/desktop-workspace/stages/p2a2-flow-discussion/README.md 6ms
+../docs/desktop-workspace/stages/p2a2-flow-discussion/design.md 5ms (unchanged)
+../docs/desktop-workspace/stages/p2a2-flow-discussion/review.md 4ms (unchanged)
+../docs/desktop-workspace/stages/p2a2-flow-discussion/live-agent.ts 15ms
+../docs/desktop-workspace/stages/p2a2-flow-discussion/visual-review.ts 8ms
+../docs/desktop-workspace/remaining-work.md 13ms
+../docs/desktop-workspace/README.md 46ms (unchanged)

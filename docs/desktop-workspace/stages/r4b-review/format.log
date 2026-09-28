@@ -1,0 +1,7 @@
+component.ts 57ms
+model.ts 5ms (unchanged)
+host.cjs 23ms
+qualify.cjs 19ms
+style.css 18ms
+tsconfig.json 1ms
+package.json 1ms (unchanged)

@@ -1,0 +1,12 @@
+{
+  "projectId": "prj_AMLEPCTL2UZFXLADH2ZA5KGNV4",
+  "submissionCount": 1,
+  "responseAndEvidenceUnchanged": true,
+  "referencesUnchanged": true,
+  "baseSettingsUnchanged": true,
+  "selectedRows": [
+    "row_3",
+    "row_5"
+  ],
+  "nativeReview": "Normal quit and restart restored base view without replay. Explicit Show on the final build scrolled the table to S10 and rendered its separate chart diamond. User selection remained S03/S05."
+}

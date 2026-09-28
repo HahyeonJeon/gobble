@@ -1,0 +1,62 @@
+{
+  "date": "2026-09-09",
+  "scope": "Three revised P2B comparison concepts; no production implementation",
+  "decision": "Owner comparison choice pending; prior toggle recommendation reopened",
+  "sourceHash": "f33086ffa7ea66a1675e2ddb416cb12ef4456006933d1080f49ff80b048eee84",
+  "sourceFilesVerifiedUnchanged": 686,
+  "changedSourceFiles": [],
+  "previousProposalFilesVerifiedUnchanged": 14,
+  "changedPreviousProposalFiles": [],
+  "checks": {
+    "format": "Five authored HTML/CSS/JS/Markdown files passed Prettier",
+    "syntax": "node --check passed",
+    "links": "All relative Markdown links resolve",
+    "interaction": "Author CUA walkthrough at default 1280x720 and compact 800x850; see review.md",
+    "nativeAndProductionTests": "Not rerun; no production change",
+    "viewport": "Temporary override reset"
+  },
+  "screenshots": {
+    "b-change-spotlight.jpg": {
+      "format": "JPEG",
+      "width": 1280,
+      "height": 720
+    },
+    "c-visual-diff.jpg": {
+      "format": "JPEG",
+      "width": 1280,
+      "height": 720
+    },
+    "a-stacked-flows.jpg": {
+      "format": "JPEG",
+      "width": 1280,
+      "height": 720
+    },
+    "a-compact.jpg": {
+      "format": "JPEG",
+      "width": 800,
+      "height": 850
+    },
+    "b-added-step.jpg": {
+      "format": "JPEG",
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "artifacts": {
+    "docs/desktop-workspace/proposals/p2b-visual-change-review/alternatives-v2/README.md": "a1df2a93170f22e7f418c84509c9a134ec16bd9750fbebc2dffd1043140b539f",
+    "docs/desktop-workspace/proposals/p2b-visual-change-review/alternatives-v2/a-compact.jpg": "c5de8754d007a212e4c527bdc306a16ee660be9391406de4728f276a3d677184",
+    "docs/desktop-workspace/proposals/p2b-visual-change-review/alternatives-v2/a-stacked-flows.jpg": "1d8637690030c12e3a857ccae9c126d1d1ddece7fad619f1be71a6baa6fbc2a0",
+    "docs/desktop-workspace/proposals/p2b-visual-change-review/alternatives-v2/b-added-step.jpg": "833d767ac536f5ed41bcf0ac30e00ab68f6eeb5ed1e138bc0f24534aa14be9a9",
+    "docs/desktop-workspace/proposals/p2b-visual-change-review/alternatives-v2/b-change-spotlight.jpg": "8b17757f4b0a0dc08a8ea752e60eac978b3bf0d9a3597b08735639807a682df9",
+    "docs/desktop-workspace/proposals/p2b-visual-change-review/alternatives-v2/before.json": "1c1926d1e4e4b3a1710b87d6843f69bc46c4e4904341a420991208cebd9e9de6",
+    "docs/desktop-workspace/proposals/p2b-visual-change-review/alternatives-v2/c-visual-diff.jpg": "db2e3604584097c8aeb73ae306c13d731b5939cc31913f6d6f2c8c08a7614b47",
+    "docs/desktop-workspace/proposals/p2b-visual-change-review/alternatives-v2/review.md": "610ec9c762723d8ca36a8d95aafa7cd11f75486027b5a04a2fbc4cbf98f1c9f6",
+    "docs/desktop-workspace/proposals/p2b-visual-change-review/alternatives-v2/sketch.css": "9d1c5ae77cf41554eb0765550288da7b01f322394dcee1388b24935812a0f3f4",
+    "docs/desktop-workspace/proposals/p2b-visual-change-review/alternatives-v2/sketch.html": "11a66c993ab9308305bb857c7fac7d4f53ed965d919d12f00c51ff65429d7288",
+    "docs/desktop-workspace/proposals/p2b-visual-change-review/alternatives-v2/sketch.js": "e8497e14ee6934a4598b3a0c55409a61bc58786c1d7f6b89a46f6cfc9b0d55e7"
+  },
+  "mutableIndexes": {
+    "docs/desktop-workspace/README.md": "eb4a943054efb7cef18ee9f205e09caaefac54bab85ba22d7bbf49e6737cc720",
+    "docs/desktop-workspace/remaining-work.md": "8ebbad92bc2c41562395936617aa5c263f66fa6ed9ce8e5dec9e1aecb03f61bd"
+  }
+}

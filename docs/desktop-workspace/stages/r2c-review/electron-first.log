@@ -1,0 +1,25 @@
+
+Running 1 test using 1 worker
+
+(node:41070) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 desktop/tests/electron/linked-views.spec.ts:319:1 › frozen plot evidence reaches the protocol peer; Agent Show and Return use a temporary view without changing User selection (4.6s)
+
+
+  1) desktop/tests/electron/linked-views.spec.ts:319:1 › frozen plot evidence reaches the protocol peer; Agent Show and Return use a temporary view without changing User selection 
+
+    Error: ENOENT: no such file or directory, open '/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-linked-QrjCWf/profile/codex/home/plot-delivery.json'
+
+      359 |     .fill('Keep my next question here.');
+      360 |   const delivery = JSON.parse(
+    > 361 |     await readFile(join(profile, 'codex/home/plot-delivery.json'), 'utf8'),
+          |     ^
+      362 |   );
+      363 |   expect(JSON.stringify(delivery.input)).toContain('plotPixelsIncluded');
+      364 |   const sent = (await document()).collaboration!.submissions[0]!.evidence![0]!;
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/linked-views.spec.ts:361:5
+
+    Error Context: test-results/electron/linked-views-frozen-plot-e-73c31-out-changing-User-selection/error-context.md
+
+  1 failed
+    desktop/tests/electron/linked-views.spec.ts:319:1 › frozen plot evidence reaches the protocol peer; Agent Show and Return use a temporary view without changing User selection 

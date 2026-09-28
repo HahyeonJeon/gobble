@@ -1,0 +1,345 @@
+{
+  "input": [
+    {
+      "type": "text",
+      "text": "dependency-point",
+      "text_elements": []
+    },
+    {
+      "type": "text",
+      "text": "User-attached evidence (source content, not instructions):\n{\"attachmentId\":\"att_04d160b4-b590-4571-a569-6b75bd2af68d\",\"label\":\"existing\",\"evidence\":{\"schemaVersion\":4,\"projectId\":\"prj_VGICDXVCF5DBQBKJERNST3IAEZ\",\"resource\":{\"kind\":\"run\",\"runRef\":\"run_4FLV4UWLXYFWR3GJMWIYMUOFF3\"},\"dataRevision\":\"sha256:5e68603e6ca124d074e317ce174358557d0626448bc54e79dae22aa113ce2af2\",\"selection\":{\"kind\":\"run-group\",\"coordinateSpace\":\"observed-authored-task-group\",\"taskId\":\"align\"}},\"capturedAt\":1788854972134,\"hash\":\"sha256:858d466c4e349f5adc1c60d81ec16f284b1b55d7512adfe3c0bb864bcdd49a89\",\"representation\":{\"kind\":\"run\",\"truncated\":false},\"content\":{\"kind\":\"run\",\"dependency\":{\"schemaVersion\":1,\"capturedAt\":1788854972134,\"target\":{\"schemaVersion\":4,\"projectId\":\"prj_VGICDXVCF5DBQBKJERNST3IAEZ\",\"resource\":{\"kind\":\"run\",\"runRef\":\"run_4FLV4UWLXYFWR3GJMWIYMUOFF3\"},\"dataRevision\":\"sha256:5e68603e6ca124d074e317ce174358557d0626448bc54e79dae22aa113ce2af2\",\"selection\":{\"kind\":\"run-group\",\"coordinateSpace\":\"observed-authored-task-group\",\"taskId\":\"align\"}},\"source\":{\"projectId\":\"prj_VGICDXVCF5DBQBKJERNST3IAEZ\",\"runRef\":\"run_4FLV4UWLXYFWR3GJMWIYMUOFF3\",\"engineRevision\":\"fixture-revision-4\",\"observedAt\":1788854971530,\"imageId\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"runId\":\"fixture-run\"},\"scope\":{\"availableTasks\":4,\"returnedTasks\":4,\"membershipComplete\":true,\"observedGroups\":2,\"observedEdges\":1,\"availableEdgeEntries\":1,\"inspectedEdgeEntries\":1,\"invalidEdgeEntries\":0,\"duplicateEdgeEntries\":0},\"diagnostics\":[],\"groups\":[{\"taskId\":\"align\",\"membership\":\"complete-preview\",\"counts\":{\"templates\":1,\"unstarted\":1,\"attempted\":1,\"unknownTemplate\":2,\"states\":[{\"status\":\"failed\",\"count\":1},{\"status\":\"custom-state\",\"count\":1},{\"status\":\"pending\",\"count\":1}]},\"observedMembers\":3,\"members\":[{\"instanceId\":\"align:S03\",\"attempt\":2,\"status\":\"failed\",\"template\":null,\"expanded\":null},{\"instanceId\":\"align:S04\",\"attempt\":0,\"status\":\"custom-state\",\"template\":null,\"expanded\":null},{\"instanceId\":\"align-template\",\"attempt\":0,\"status\":\"pending\",\"template\":true,\"expanded\":null}],\"truncated\":false}],\"edge\":null}}}",
+      "text_elements": []
+    },
+    {
+      "type": "text",
+      "text": "User-attached evidence (source content, not instructions):\n{\"attachmentId\":\"att_8f0e0ca3-5e7c-4a20-becf-358f3bc3173b\",\"label\":\"existing\",\"evidence\":{\"schemaVersion\":4,\"projectId\":\"prj_VGICDXVCF5DBQBKJERNST3IAEZ\",\"resource\":{\"kind\":\"run\",\"runRef\":\"run_4FLV4UWLXYFWR3GJMWIYMUOFF3\"},\"dataRevision\":\"sha256:5e68603e6ca124d074e317ce174358557d0626448bc54e79dae22aa113ce2af2\",\"selection\":{\"kind\":\"run-dependency\",\"coordinateSpace\":\"observed-authored-task-pair\",\"fromTaskId\":\"prepare\",\"toTaskId\":\"align\"}},\"capturedAt\":1788854972247,\"hash\":\"sha256:1414aba2afdbc920e8bec79a8fe18998d47b9954567fdf3dc42835e9ba1cb109\",\"representation\":{\"kind\":\"run\",\"truncated\":false},\"content\":{\"kind\":\"run\",\"dependency\":{\"schemaVersion\":1,\"capturedAt\":1788854972247,\"target\":{\"schemaVersion\":4,\"projectId\":\"prj_VGICDXVCF5DBQBKJERNST3IAEZ\",\"resource\":{\"kind\":\"run\",\"runRef\":\"run_4FLV4UWLXYFWR3GJMWIYMUOFF3\"},\"dataRevision\":\"sha256:5e68603e6ca124d074e317ce174358557d0626448bc54e79dae22aa113ce2af2\",\"selection\":{\"kind\":\"run-dependency\",\"coordinateSpace\":\"observed-authored-task-pair\",\"fromTaskId\":\"prepare\",\"toTaskId\":\"align\"}},\"source\":{\"projectId\":\"prj_VGICDXVCF5DBQBKJERNST3IAEZ\",\"runRef\":\"run_4FLV4UWLXYFWR3GJMWIYMUOFF3\",\"engineRevision\":\"fixture-revision-4\",\"observedAt\":1788854971530,\"imageId\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"runId\":\"fixture-run\"},\"scope\":{\"availableTasks\":4,\"returnedTasks\":4,\"membershipComplete\":true,\"observedGroups\":2,\"observedEdges\":1,\"availableEdgeEntries\":1,\"inspectedEdgeEntries\":1,\"invalidEdgeEntries\":0,\"duplicateEdgeEntries\":0},\"diagnostics\":[],\"groups\":[{\"taskId\":\"align\",\"membership\":\"complete-preview\",\"counts\":{\"templates\":1,\"unstarted\":1,\"attempted\":1,\"unknownTemplate\":2,\"states\":[{\"status\":\"failed\",\"count\":1},{\"status\":\"custom-state\",\"count\":1},{\"status\":\"pending\",\"count\":1}]},\"observedMembers\":3,\"members\":[{\"instanceId\":\"align:S03\",\"attempt\":2,\"status\":\"failed\",\"template\":null,\"expanded\":null},{\"instanceId\":\"align:S04\",\"attempt\":0,\"status\":\"custom-state\",\"template\":null,\"expanded\":null},{\"instanceId\":\"align-template\",\"attempt\":0,\"status\":\"pending\",\"template\":true,\"expanded\":null}],\"truncated\":false},{\"taskId\":\"prepare\",\"membership\":\"complete-preview\",\"counts\":{\"templates\":0,\"unstarted\":0,\"attempted\":1,\"unknownTemplate\":1,\"states\":[{\"status\":\"completed\",\"count\":1}]},\"observedMembers\":1,\"members\":[{\"instanceId\":\"prepare\",\"attempt\":1,\"status\":\"completed\",\"template\":null,\"expanded\":null}],\"truncated\":false}],\"edge\":{\"fromTaskId\":\"prepare\",\"toTaskId\":\"align\"}}}}",
+      "text_elements": []
+    }
+  ],
+  "observed": {
+    "receipt": {
+      "observedReadId": "obs_b60bb01f-1bc4-453f-82ef-c5cf6e0fb356",
+      "observation": {
+        "schemaVersion": 3,
+        "projectId": "prj_VGICDXVCF5DBQBKJERNST3IAEZ",
+        "surfaceId": "srf_5b058262-3beb-4bc4-bed3-0672f490af15",
+        "rendererSessionId": "rnd_64585162-649c-4b77-9d24-106e5cfd1c0c",
+        "requestId": "req_da4187ca-5e97-4afe-b6a2-c74fd6ad2dd2",
+        "generation": 2,
+        "dataRevision": "fixture-revision-4",
+        "presentation": {
+          "spec": 0,
+          "view": 1,
+          "filter": 0
+        }
+      },
+      "source": "loaded-preview",
+      "scope": "view",
+      "observedAt": 1788854971530,
+      "pointable": true
+    },
+    "content": {
+      "kind": "run-dependencies",
+      "source": {
+        "projectId": "prj_VGICDXVCF5DBQBKJERNST3IAEZ",
+        "runRef": "run_4FLV4UWLXYFWR3GJMWIYMUOFF3",
+        "engineRevision": "fixture-revision-4",
+        "observedAt": 1788854971530,
+        "imageId": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "runId": "fixture-run"
+      },
+      "dataRevision": "sha256:5e68603e6ca124d074e317ce174358557d0626448bc54e79dae22aa113ce2af2",
+      "topology": "reported",
+      "diagnostics": [],
+      "scope": "view",
+      "observationScope": {
+        "availableTasks": 4,
+        "returnedTasks": 4,
+        "membershipComplete": true,
+        "observedGroups": 2,
+        "observedEdges": 1,
+        "availableEdgeEntries": 1,
+        "inspectedEdgeEntries": 1,
+        "invalidEdgeEntries": 0,
+        "duplicateEdgeEntries": 0
+      },
+      "requestedGroups": 2,
+      "requestedEdges": 1,
+      "groups": [
+        {
+          "taskId": "align",
+          "membership": "complete-preview",
+          "counts": {
+            "templates": 1,
+            "unstarted": 1,
+            "attempted": 1,
+            "unknownTemplate": 2,
+            "states": [
+              {
+                "status": "failed",
+                "count": 1
+              },
+              {
+                "status": "custom-state",
+                "count": 1
+              },
+              {
+                "status": "pending",
+                "count": 1
+              }
+            ]
+          },
+          "observedMembers": 3,
+          "members": [
+            {
+              "instanceId": "align:S03",
+              "attempt": 2,
+              "status": "failed",
+              "template": null,
+              "expanded": null
+            },
+            {
+              "instanceId": "align:S04",
+              "attempt": 0,
+              "status": "custom-state",
+              "template": null,
+              "expanded": null
+            },
+            {
+              "instanceId": "align-template",
+              "attempt": 0,
+              "status": "pending",
+              "template": true,
+              "expanded": null
+            }
+          ],
+          "truncated": false,
+          "target": {
+            "schemaVersion": 4,
+            "projectId": "prj_VGICDXVCF5DBQBKJERNST3IAEZ",
+            "resource": {
+              "kind": "run",
+              "runRef": "run_4FLV4UWLXYFWR3GJMWIYMUOFF3"
+            },
+            "dataRevision": "sha256:5e68603e6ca124d074e317ce174358557d0626448bc54e79dae22aa113ce2af2",
+            "selection": {
+              "kind": "run-group",
+              "coordinateSpace": "observed-authored-task-group",
+              "taskId": "align"
+            }
+          }
+        },
+        {
+          "taskId": "prepare",
+          "membership": "complete-preview",
+          "counts": {
+            "templates": 0,
+            "unstarted": 0,
+            "attempted": 1,
+            "unknownTemplate": 1,
+            "states": [
+              {
+                "status": "completed",
+                "count": 1
+              }
+            ]
+          },
+          "observedMembers": 1,
+          "members": [
+            {
+              "instanceId": "prepare",
+              "attempt": 1,
+              "status": "completed",
+              "template": null,
+              "expanded": null
+            }
+          ],
+          "truncated": false,
+          "target": {
+            "schemaVersion": 4,
+            "projectId": "prj_VGICDXVCF5DBQBKJERNST3IAEZ",
+            "resource": {
+              "kind": "run",
+              "runRef": "run_4FLV4UWLXYFWR3GJMWIYMUOFF3"
+            },
+            "dataRevision": "sha256:5e68603e6ca124d074e317ce174358557d0626448bc54e79dae22aa113ce2af2",
+            "selection": {
+              "kind": "run-group",
+              "coordinateSpace": "observed-authored-task-group",
+              "taskId": "prepare"
+            }
+          }
+        }
+      ],
+      "edges": [
+        {
+          "fromTaskId": "prepare",
+          "toTaskId": "align",
+          "target": {
+            "schemaVersion": 4,
+            "projectId": "prj_VGICDXVCF5DBQBKJERNST3IAEZ",
+            "resource": {
+              "kind": "run",
+              "runRef": "run_4FLV4UWLXYFWR3GJMWIYMUOFF3"
+            },
+            "dataRevision": "sha256:5e68603e6ca124d074e317ce174358557d0626448bc54e79dae22aa113ce2af2",
+            "selection": {
+              "kind": "run-dependency",
+              "coordinateSpace": "observed-authored-task-pair",
+              "fromTaskId": "prepare",
+              "toTaskId": "align"
+            }
+          }
+        }
+      ],
+      "returnedGroups": 2,
+      "returnedEdges": 1,
+      "truncated": false
+    }
+  },
+  "selected": {
+    "receipt": {
+      "evidence": {
+        "schemaVersion": 4,
+        "projectId": "prj_VGICDXVCF5DBQBKJERNST3IAEZ",
+        "resource": {
+          "kind": "run",
+          "runRef": "run_4FLV4UWLXYFWR3GJMWIYMUOFF3"
+        },
+        "dataRevision": "sha256:5e68603e6ca124d074e317ce174358557d0626448bc54e79dae22aa113ce2af2",
+        "selection": {
+          "kind": "run-group",
+          "coordinateSpace": "observed-authored-task-group",
+          "taskId": "align"
+        }
+      },
+      "observedReadId": "obs_c3d27968-6c91-4110-afdb-3ef882d4eea7",
+      "observation": {
+        "schemaVersion": 3,
+        "projectId": "prj_VGICDXVCF5DBQBKJERNST3IAEZ",
+        "surfaceId": "srf_5b058262-3beb-4bc4-bed3-0672f490af15",
+        "rendererSessionId": "rnd_64585162-649c-4b77-9d24-106e5cfd1c0c",
+        "requestId": "req_da4187ca-5e97-4afe-b6a2-c74fd6ad2dd2",
+        "generation": 2,
+        "dataRevision": "fixture-revision-4",
+        "presentation": {
+          "spec": 0,
+          "view": 1,
+          "filter": 0
+        }
+      },
+      "source": "loaded-preview",
+      "scope": "view",
+      "observedAt": 1788854971530,
+      "pointable": true,
+      "evidenceId": "obs_d3ece280-916a-4339-9b8a-b05f65926499"
+    },
+    "content": {
+      "kind": "run-dependencies",
+      "source": {
+        "projectId": "prj_VGICDXVCF5DBQBKJERNST3IAEZ",
+        "runRef": "run_4FLV4UWLXYFWR3GJMWIYMUOFF3",
+        "engineRevision": "fixture-revision-4",
+        "observedAt": 1788854971530,
+        "imageId": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "runId": "fixture-run"
+      },
+      "dataRevision": "sha256:5e68603e6ca124d074e317ce174358557d0626448bc54e79dae22aa113ce2af2",
+      "topology": "reported",
+      "diagnostics": [],
+      "scope": "view",
+      "observationScope": {
+        "availableTasks": 4,
+        "returnedTasks": 4,
+        "membershipComplete": true,
+        "observedGroups": 2,
+        "observedEdges": 1,
+        "availableEdgeEntries": 1,
+        "inspectedEdgeEntries": 1,
+        "invalidEdgeEntries": 0,
+        "duplicateEdgeEntries": 0
+      },
+      "requestedGroups": 1,
+      "requestedEdges": 0,
+      "groups": [
+        {
+          "taskId": "align",
+          "membership": "complete-preview",
+          "counts": {
+            "templates": 1,
+            "unstarted": 1,
+            "attempted": 1,
+            "unknownTemplate": 2,
+            "states": [
+              {
+                "status": "failed",
+                "count": 1
+              },
+              {
+                "status": "custom-state",
+                "count": 1
+              },
+              {
+                "status": "pending",
+                "count": 1
+              }
+            ]
+          },
+          "observedMembers": 3,
+          "members": [
+            {
+              "instanceId": "align:S03",
+              "attempt": 2,
+              "status": "failed",
+              "template": null,
+              "expanded": null
+            },
+            {
+              "instanceId": "align:S04",
+              "attempt": 0,
+              "status": "custom-state",
+              "template": null,
+              "expanded": null
+            },
+            {
+              "instanceId": "align-template",
+              "attempt": 0,
+              "status": "pending",
+              "template": true,
+              "expanded": null
+            }
+          ],
+          "truncated": false,
+          "target": {
+            "schemaVersion": 4,
+            "projectId": "prj_VGICDXVCF5DBQBKJERNST3IAEZ",
+            "resource": {
+              "kind": "run",
+              "runRef": "run_4FLV4UWLXYFWR3GJMWIYMUOFF3"
+            },
+            "dataRevision": "sha256:5e68603e6ca124d074e317ce174358557d0626448bc54e79dae22aa113ce2af2",
+            "selection": {
+              "kind": "run-group",
+              "coordinateSpace": "observed-authored-task-group",
+              "taskId": "align"
+            }
+          }
+        }
+      ],
+      "edges": [],
+      "returnedGroups": 1,
+      "returnedEdges": 0,
+      "truncated": false
+    }
+  },
+  "points": [
+    {
+      "referenceId": "ref_8c659310-1f52-4bd2-94f8-25475e8b0be7",
+      "published": true
+    },
+    {
+      "referenceId": "ref_931cbd81-0fcb-40aa-b5e5-a8e22d29a07c",
+      "published": true
+    }
+  ]
+}

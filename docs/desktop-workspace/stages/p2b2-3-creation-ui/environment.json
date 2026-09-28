@@ -1,0 +1,6 @@
+{
+  "system": "macOS-26.5.2-arm64-arm-64bit",
+  "engine": "sha256:25fee86458e0c8df45293cfd6dcaa992256d3da2cfcdbef62e3c992bc2ac71f1 linux/amd64",
+  "electron": "44.2.0",
+  "qualification": "development build, deterministic Agent, actual native service and Gobble, disposable profile"
+}

@@ -1,0 +1,4 @@
+
+> gobble-app-workspace@0.1.0 schema:generate
+> tsx contracts/scripts/export-schema.ts
+

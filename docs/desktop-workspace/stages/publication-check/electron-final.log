@@ -1,0 +1,50 @@
+
+Running 13 tests using 1 worker
+
+(node:15135) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 desktop/tests/electron/notebook-shared.spec.ts:111:1 › Agent text and immutable question evidence preserve User state through Show/Return and missing-source fallback (3.8s)
+  ✓   2 desktop/tests/electron/notebook-shared.spec.ts:157:1 › only explicit painted image observation receives pixels and preserves an unfinished User region through Show/Return (2.5s)
+  ✓   3 desktop/tests/electron/notebook-shared.spec.ts:187:1 › actual scrolling revokes old Notebook receipts and clipped source-preview cannot authorize a mark (2.4s)
+  ✓   4 desktop/tests/electron/notebook-shared.spec.ts:225:1 › User output marks use the same exact Show contract and remain usable in a compact enlarged view (2.3s)
+  ✓   5 desktop/tests/electron/notebook-shared.spec.ts:261:3 › Notebook fold invalidates an earlier Agent viewport receipt (2.2s)
+  ✓   6 desktop/tests/electron/notebook-shared.spec.ts:261:3 › Notebook zoom invalidates an earlier Agent viewport receipt (2.3s)
+  ✓   7 desktop/tests/electron/pdf-reference.spec.ts:89:1 › Agent PDF marks and immutable question capture preserve User state across Show, Return, changed source and restart (6.0s)
+  ✓   8 desktop/tests/electron/pdf-reference.spec.ts:203:1 › PDF tool scopes reject scroll-stale, source-preview, off-page, outside-visible and missing receipts (2.7s)
+  ✓   9 desktop/tests/electron/pdf-reference.spec.ts:246:1 › User PDF mark needs no Agent turn; text-only models cannot observe PDF pixels (2.7s)
+  ✓  10 desktop/tests/electron/pdf-reference.spec.ts:263:1 › Agent opens a PDF beside a protected User view without taking focus (2.6s)
+  ✓  11 desktop/tests/electron/questions.spec.ts:79:1 › question arrival preserves a peer draft; Reply/Cancel and Enter use one composer with immutable evidence and one addressed answer (3.9s)
+  ✘  12 desktop/tests/electron/questions.spec.ts:160:1 › pending reply restores without replay; changed source invalidates Send while historical question preview and draft remain (7.2s)
+(node:15298) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  13 desktop/tests/electron/questions.spec.ts:203:1 › image questions block text-only reply and dismissal sends nothing; older shared tool bindings require explicit new conversation (3.7s)
+
+
+  1) desktop/tests/electron/questions.spec.ts:160:1 › pending reply restores without replay; changed source invalidates Send while historical question preview and draft remain 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('article', { name: 'Question from Researcher', exact: true })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('article', { name: 'Question from Researcher', exact: true }) with timeout 5000ms
+      - waiting for getByRole('article', { name: 'Question from Researcher', exact: true })
+
+
+      168 |   await writeFile(gate, 'ready');
+      169 |   await send('ask-question');
+    > 170 |   await expect(question()).toBeVisible();
+          |                            ^
+      171 |   await expect(completed()).toHaveCount(1);
+      172 |   await question().getByRole('button', { name: 'Reply', exact: true }).click();
+      173 |   await page
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/questions.spec.ts:170:28
+
+    Error Context: test-results/electron/questions-pending-reply-re-e0026-on-preview-and-draft-remain/error-context.md
+
+  1 failed
+    desktop/tests/electron/questions.spec.ts:160:1 › pending reply restores without replay; changed source invalidates Send while historical question preview and draft remain 
+  12 passed (46.1s)

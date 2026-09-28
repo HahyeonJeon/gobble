@@ -1,0 +1,28 @@
+import { type Static } from '@sinclair/typebox';
+/** Go package/entry-source registration. Does not claim Plan validity or own source bytes. */
+export declare const PipelineDefinitionSchema: import("@sinclair/typebox").TObject<{
+    projectId: import("@sinclair/typebox").TString;
+    pipelineId: import("@sinclair/typebox").TString;
+    name: import("@sinclair/typebox").TString;
+    packageResourceId: import("@sinclair/typebox").TString;
+    sourceResourceId: import("@sinclair/typebox").TString;
+}>;
+export type PipelineDefinition = Static<typeof PipelineDefinitionSchema>;
+export declare const PipelinesSchema: import("@sinclair/typebox").TObject<{
+    projectId: import("@sinclair/typebox").TString;
+    pipelines: import("@sinclair/typebox").TArray<import("@sinclair/typebox").TObject<{
+        projectId: import("@sinclair/typebox").TString;
+        pipelineId: import("@sinclair/typebox").TString;
+        name: import("@sinclair/typebox").TString;
+        packageResourceId: import("@sinclair/typebox").TString;
+        sourceResourceId: import("@sinclair/typebox").TString;
+    }>>;
+}>;
+/** Resource IDs are resolved inside the Project service; paths and code are not request inputs. */
+export declare const RegisterPipelineInputSchema: import("@sinclair/typebox").TObject<{
+    projectId: import("@sinclair/typebox").TString;
+    requestId: import("@sinclair/typebox").TString;
+    packageResourceId: import("@sinclair/typebox").TString;
+    name: import("@sinclair/typebox").TString;
+}>;
+export type RegisterPipelineInput = Static<typeof RegisterPipelineInputSchema>;

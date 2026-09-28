@@ -1,0 +1,16 @@
+
+Running 1 test using 1 worker
+
+(node:52761) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 desktop/tests/electron/runtime.spec.ts:7:1 › current-attempt logs freeze at attach and survive source replacement and normal restart (30.0s)
+
+
+  1) desktop/tests/electron/runtime.spec.ts:7:1 › current-attempt logs freeze at attach and survive source replacement and normal restart 
+
+    Test timeout of 30000ms exceeded.
+
+    Error Context: test-results/electron/runtime-current-attempt-lo-55971-lacement-and-normal-restart/error-context.md
+
+  1 failed
+    desktop/tests/electron/runtime.spec.ts:7:1 › current-attempt logs freeze at attach and survive source replacement and normal restart 

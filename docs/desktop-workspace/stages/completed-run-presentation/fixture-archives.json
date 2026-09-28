@@ -1,0 +1,41 @@
+{
+  "note": "Owned completed test profiles archived outside source tree. Diagnostic bytes retained; absolute fixture bindings are historical, not reusable runtime registration. No production or original qualification profile moved.",
+  "paths": [
+    {
+      "from": "/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/docs/desktop-workspace/stages/completed-run-presentation/verified-evidence/continuation-review-older--af053-ion-never-silently-resubmit/fixture",
+      "to": "/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-presentation-fixtures-2a1e1j01/verified-evidence/continuation-review-older--af053-ion-never-silently-resubmit/fixture"
+    },
+    {
+      "from": "/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/docs/desktop-workspace/stages/completed-run-presentation/verified-evidence/admitted-runs-Run-navigati-8e756-es-not-on-every-status-poll/fixture",
+      "to": "/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-presentation-fixtures-2a1e1j01/verified-evidence/admitted-runs-Run-navigati-8e756-es-not-on-every-status-poll/fixture"
+    },
+    {
+      "from": "/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/docs/desktop-workspace/stages/completed-run-presentation/verified-evidence/continuation-review-Agent--1bd4e--selection-or-starting-work/fixture",
+      "to": "/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-presentation-fixtures-2a1e1j01/verified-evidence/continuation-review-Agent--1bd4e--selection-or-starting-work/fixture"
+    },
+    {
+      "from": "/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/docs/desktop-workspace/stages/completed-run-presentation/verified-evidence/continuation-review-contin-c548e-xplicit-native-confirmation/fixture",
+      "to": "/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-presentation-fixtures-2a1e1j01/verified-evidence/continuation-review-contin-c548e-xplicit-native-confirmation/fixture"
+    },
+    {
+      "from": "/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/docs/desktop-workspace/stages/completed-run-presentation/final-evidence/continuation-review-older--af053-ion-never-silently-resubmit/fixture",
+      "to": "/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-presentation-fixtures-2a1e1j01/final-evidence/continuation-review-older--af053-ion-never-silently-resubmit/fixture"
+    },
+    {
+      "from": "/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/docs/desktop-workspace/stages/completed-run-presentation/final-evidence/admitted-runs-Run-navigati-8e756-es-not-on-every-status-poll/fixture",
+      "to": "/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-presentation-fixtures-2a1e1j01/final-evidence/admitted-runs-Run-navigati-8e756-es-not-on-every-status-poll/fixture"
+    },
+    {
+      "from": "/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/docs/desktop-workspace/stages/completed-run-presentation/final-evidence/continuation-review-Agent--1bd4e--selection-or-starting-work/fixture",
+      "to": "/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-presentation-fixtures-2a1e1j01/final-evidence/continuation-review-Agent--1bd4e--selection-or-starting-work/fixture"
+    },
+    {
+      "from": "/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/docs/desktop-workspace/stages/completed-run-presentation/final-evidence/continuation-review-contin-c548e-xplicit-native-confirmation/fixture",
+      "to": "/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-presentation-fixtures-2a1e1j01/final-evidence/continuation-review-contin-c548e-xplicit-native-confirmation/fixture"
+    },
+    {
+      "from": "/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/docs/desktop-workspace/stages/completed-run-presentation/diagnostic-evidence/continuation-review-Agent--1bd4e--selection-or-starting-work/fixture",
+      "to": "/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-presentation-fixtures-2a1e1j01/diagnostic-evidence/continuation-review-Agent--1bd4e--selection-or-starting-work/fixture"
+    }
+  ]
+}

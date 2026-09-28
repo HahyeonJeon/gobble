@@ -1,0 +1,166 @@
+{
+  "request": "R4a1-2026-09-08",
+  "started": "2026-09-08T15:00:36.743Z",
+  "scope": "Isolated source-checkout Notebook qualification; no production/Agent/kernel/package claim",
+  "cases": [
+    {
+      "name": "Worker cancellation, deadline and two-read admission release resources",
+      "result": "passed",
+      "ms": 83.386708
+    },
+    {
+      "name": "Measured 2 MiB source and 1000-cell parsing justify a named bounded transport",
+      "result": "passed",
+      "ms": 86.40712500000018,
+      "details": [
+        {
+          "name": "python",
+          "bytes": 2491,
+          "cells": 3,
+          "textBytes": 331,
+          "ms": 16.88504200000034
+        },
+        {
+          "name": "large",
+          "bytes": 2099622,
+          "cells": 3,
+          "textBytes": 331,
+          "ms": 35.69470799999999
+        },
+        {
+          "name": "many",
+          "bytes": 118760,
+          "cells": 1000,
+          "textBytes": 21780,
+          "ms": 24.598625000000084
+        }
+      ]
+    },
+    {
+      "name": "Actual saved Notebook through emitted sandbox bridge; passive source/output fallback",
+      "result": "passed",
+      "ms": 125.85204199999998,
+      "details": {
+        "cells": 3,
+        "revision": "sha256:0f7f80252f94fef60a2489f24b74a049d757dee5d84db33e43232b772cea9595"
+      }
+    },
+    {
+      "name": "Native text drag identifies the exact source range and captures it without changing draft",
+      "result": "passed",
+      "ms": 653.6190420000003
+    },
+    {
+      "name": "Visibility receipt excludes folded, offscreen and clipped text; scrolling expires earlier observations",
+      "result": "product defect",
+      "ms": 1682.1211249999997,
+      "message": "Error: No ready receipt\n    at receipt (/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/qualification/notebook/qualify.cjs:66:9)\n    at async /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/qualification/notebook/qualify.cjs:220:19\n    at async check (/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/qualification/notebook/qualify.cjs:26:21)\n    at async /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/qualification/notebook/qualify.cjs:216:5"
+    }
+  ],
+  "errors": [],
+  "construction": "Strict TypeScript, bundled entries and 24 pure tests passed",
+  "environment": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "versions": {
+      "node": "24.20.0",
+      "acorn": "8.18.0",
+      "ada": "4.0.0",
+      "amaro": "1.1.11",
+      "ares": "1.34.8",
+      "brotli": "1.2.0",
+      "cldr": "48.0",
+      "icu": "78.2",
+      "llhttp": "9.4.3",
+      "merve": "1.2.2",
+      "modules": "149",
+      "napi": "10",
+      "nbytes": "0.1.4",
+      "ncrypto": "0.0.1",
+      "nghttp2": "1.70.0",
+      "nghttp3": "",
+      "ngtcp2": "",
+      "openssl": "0.0.0",
+      "simdjson": "4.6.6",
+      "simdutf": "7.7.0",
+      "sqlite": "3.53.4",
+      "tz": "2025c",
+      "undici": "7.29.0",
+      "unicode": "17.0",
+      "uv": "1.52.1",
+      "uvwasi": "0.0.23",
+      "v8": "15.2.124.19-electron.0",
+      "zlib": "1.3.2.1-motley",
+      "zstd": "1.6.0",
+      "electron": "44.2.0",
+      "chrome": "152.0.7977.76"
+    },
+    "metrics": [
+      {
+        "cpu": {
+          "cumulativeCPUUsage": 0.375747,
+          "percentCPUUsage": 0,
+          "idleWakeupsPerSecond": 0
+        },
+        "pid": 8369,
+        "type": "Browser",
+        "creationTime": 1788879639239.695,
+        "memory": {
+          "workingSetSize": 172480,
+          "peakWorkingSetSize": 172480
+        },
+        "sandboxed": false
+      },
+      {
+        "cpu": {
+          "cumulativeCPUUsage": 0.114003,
+          "percentCPUUsage": 0,
+          "idleWakeupsPerSecond": 0
+        },
+        "pid": 8373,
+        "type": "GPU",
+        "creationTime": 1788879639537.429,
+        "serviceName": "GPU",
+        "memory": {
+          "workingSetSize": 68672,
+          "peakWorkingSetSize": 68672
+        },
+        "sandboxed": true
+      },
+      {
+        "cpu": {
+          "cumulativeCPUUsage": 0.062689,
+          "percentCPUUsage": 0,
+          "idleWakeupsPerSecond": 0
+        },
+        "pid": 8374,
+        "type": "Utility",
+        "creationTime": 1788879639547.234,
+        "serviceName": "network.mojom.NetworkService",
+        "name": "Network Service",
+        "memory": {
+          "workingSetSize": 49520,
+          "peakWorkingSetSize": 49520
+        },
+        "sandboxed": true
+      },
+      {
+        "cpu": {
+          "cumulativeCPUUsage": 0.136047,
+          "percentCPUUsage": 0,
+          "idleWakeupsPerSecond": 0
+        },
+        "pid": 8376,
+        "type": "Tab",
+        "creationTime": 1788879639818.32,
+        "memory": {
+          "workingSetSize": 106480,
+          "peakWorkingSetSize": 106480
+        },
+        "sandboxed": true
+      }
+    ]
+  },
+  "status": "failed",
+  "failure": "Error: No ready receipt"
+}

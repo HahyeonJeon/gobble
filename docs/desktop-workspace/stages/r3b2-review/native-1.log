@@ -1,0 +1,42 @@
+
+Running 2 tests using 1 worker
+
+(node:75815) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 desktop/tests/electron/dependencies.spec.ts:16:1 › User selects a group, exact attempt and directed dependency; frozen evidence and navigation survive restart and source changes (5.2s)
+(node:75840) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  2 desktop/tests/electron/dependencies.spec.ts:61:1 › missing, cyclic and bounded topology stays navigable by list and at compact native zoom (7.1s)
+
+
+  1) desktop/tests/electron/dependencies.spec.ts:16:1 › User selects a group, exact attempt and directed dependency; frozen evidence and navigation survive restart and source changes 
+
+    Error: locator.check: Clicking the checkbox did not change its state
+    Call log:
+      - waiting for getByRole('region', { name: 'Primary pane', exact: true }).getByRole('radio', { name: 'Instance align-template · Attempt 0', exact: true })
+        - locator resolved to <input type="radio" name="_r_2_" aria-label="Instance align-template · Attempt 0"/>
+      - attempting click action
+        - waiting for element to be visible, enabled and stable
+        - element is visible, enabled and stable
+        - scrolling into view if needed
+        - done scrolling
+        - performing click action
+        - click action done
+        - waiting for scheduled navigations to finish
+        - navigations have finished
+
+
+      23 |   const group=primary.getByRole('button',{name:'Task group align',exact:true});await group.focus();await group.press('Enter');
+      24 |   await expect(primary.getByRole('button',{name:'Discuss group',exact:true})).toBeEnabled();
+    > 25 |   await primary.getByRole('radio',{name:'Instance align-template · Attempt 0',exact:true}).check();
+         |                                                                                            ^
+      26 |   await expect(primary.getByRole('button',{name:'Open logs',exact:true})).toBeDisabled();
+      27 |   await primary.getByRole('radio',{name:'Instance align:S03 · Attempt 2',exact:true}).check();
+      28 |   await primary.getByRole('button',{name:'Open logs',exact:true}).click();const secondary=await readyView(page,'Secondary pane');
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/dependencies.spec.ts:25:92
+
+    Error Context: test-results/electron/dependencies-User-selects--c1dca--restart-and-source-changes/error-context.md
+
+  1 failed
+    desktop/tests/electron/dependencies.spec.ts:16:1 › User selects a group, exact attempt and directed dependency; frozen evidence and navigation survive restart and source changes 
+  1 passed (13.2s)

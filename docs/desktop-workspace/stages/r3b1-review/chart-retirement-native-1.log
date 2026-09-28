@@ -1,0 +1,46 @@
+
+> gobble-app-workspace@0.1.0 test:electron
+> npm run build && playwright test --grep CSV stays|retired renderer|old chart tabs
+
+
+> gobble-app-workspace@0.1.0 build
+> npm run build:service && npm run build --workspace @gobble/desktop
+
+
+> gobble-app-workspace@0.1.0 build:service
+> tsx scripts/build-service.ts
+
+
+> @gobble/desktop@0.1.0 build
+> electron-vite build
+
+vite v7.3.6 building ssr environment for production...
+transforming...
+✓ 356 modules transformed.
+rendering chunks...
+out/main/index.js  476.37 kB
+✓ built in 586ms
+vite v7.3.6 building ssr environment for production...
+transforming...
+✓ 306 modules transformed.
+rendering chunks...
+out/preload/index.cjs  215.53 kB
+✓ built in 276ms
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 393 modules transformed.
+rendering chunks...
+../../out/renderer/index.html                   0.39 kB
+../../out/renderer/assets/index-DMesEXLU.css   40.76 kB
+../../out/renderer/assets/index-CTyKDi2K.js   952.74 kB
+✓ built in 727ms
+
+Running 3 tests using 1 worker
+
+(node:69028) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 desktop/tests/electron/csv-table.spec.ts:25:1 › CSV stays a table: exact row selection, settings and attachment without chart creation (2.3s)
+  ✓  2 desktop/tests/electron/csv-table.spec.ts:48:1 › retired renderer requests are refused before changing the workspace (926ms)
+  ✓  3 desktop/tests/electron/csv-table.spec.ts:61:1 › old chart tabs retain metadata on restart and offer their source table (1.6s)
+
+  3 passed (5.6s)

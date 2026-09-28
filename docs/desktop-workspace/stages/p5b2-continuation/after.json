@@ -1,0 +1,16 @@
+{
+  "docs/desktop-workspace/proposals/p5b-continuation/README.md": "3bc3811778385cc98c95a0319fcdaac72d5653bd7960a699c4e34818d2ba0b24",
+  "docs/desktop-workspace/proposals/p5b-continuation/plan.md": "de85b3377a0467a483e56ebf4571c8a55ca09893833d72bd871e2942e948a068",
+  "internal/engine/continuation_admission.go": "54f14dfc310767be9657cb8ca44614254cfd1c144a8f546b05e8b7dd405a1086",
+  "internal/engine/continuation_lifecycle_test.go": "a26b3eb15acbcfabaab05ae24cff071410542060ea102b7c84400e7f31e906ef",
+  "internal/engine/continuation_review.go": "8f39ae4c35c759890969b68bb1a9809adb1318f023bc89c77f8d552886b5c566",
+  "internal/engine/continuation_test.go": "dd305afb630a27213c79c2d43c05f2bfe285ed80b46e2f0353fa7ab389d6857c",
+  "internal/engine/exec.go": "2dfd2e1b03e87a6559b4816fa06299bb9cfa1449ab1d1f881df03d9c1bef8239",
+  "internal/engine/exec/submission.go": "9a89a46fdc723bca2ca36436446838f44def6e3d3ff260c28b3c08b233b465bd",
+  "internal/engine/exec/submission_test.go": "f8f316e62f7e67e327bbf758dd3d4ff1806dbfe7a8c82b97aa42b3a83f8cd731",
+  "internal/engine/publication_collision_test.go": "9cc68462b675ea2b8d09c6fb41ddc9425bf5c72317509e144bdb1a3a677d778e",
+  "internal/engine/run.go": "632de53ed07625172ec76975aa32706aa90586aa85eef30efeb65b6f74f2aab3",
+  "internal/preparation/continuation.go": "8100fe93ab9a728b95ff57f5a0566ba28ed2e4abe8ffdb82c62c8e2830ac384b",
+  "launch.go": "4ac70f67bb74921e72b4da53c077eb208ad21dd8ab45705c4365d36678115674",
+  "launch_test.go": "4823f0946f19cf1be6ae4e182de683a751d52629bd2e5bdd5865d33abaaaab37"
+}

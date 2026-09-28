@@ -1,0 +1,13 @@
+{
+  "publishedBundlesUnchanged": {
+    "app/contracts/schema/v1.json": true,
+    "app/contracts/schema/v2.json": true,
+    "app/contracts/schema/v3.json": true,
+    "app/contracts/schema/v4.json": true,
+    "app/contracts/schema/v5.json": true,
+    "app/contracts/schema/v6.json": true,
+    "app/contracts/schema/v7.json": true,
+    "app/contracts/schema/v8.json": true
+  },
+  "durableWorkspaceV8Identical": true
+}

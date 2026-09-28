@@ -1,0 +1,10 @@
+{
+  "system": "macOS-26.5.2-arm64-arm-64bit",
+  "electron": "44.2.0",
+  "node": "v25.7.0",
+  "go": "go version go1.27.1 darwin/arm64",
+  "engine": "sha256:25fee86458e0c8df45293cfd6dcaa992256d3da2cfcdbef62e3c992bc2ac71f1 linux/amd64",
+  "qualification": "development bundle, actual foreground Electron, temporary Projects; deterministic peer and separately real signed-in Agent",
+  "reviewRegressionEngine": "sha256:effd239270cd58dc27d97b32b884ab21569a08e26b163d61736ab50c2a85f78d linux/amd64",
+  "credentials": "Real account used only in isolated Codex home; auth bytes never included in evidence and copied auth file removed after test."
+}

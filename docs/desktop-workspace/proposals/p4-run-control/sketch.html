@@ -1,0 +1,946 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Gobble · P4 Run control sketch</title>
+    <style>
+      :root {
+        font-family:
+          Inter,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        color: #263c35;
+        background: #f6f8f5;
+        font-size: 14px;
+        --line: #dce5df;
+        --green: #23756d;
+        --muted: #74827b;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+      }
+      button,
+      select {
+        font: inherit;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: white;
+        color: inherit;
+        padding: 9px 13px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #edf4f0;
+      }
+      button:focus-visible,
+      select:focus-visible {
+        outline: 3px solid #48a99a;
+        outline-offset: 2px;
+      }
+      .primary {
+        background: var(--green);
+        color: white;
+        border-color: var(--green);
+      }
+      .primary:hover {
+        background: #165f58;
+      }
+      .danger {
+        color: #a75340;
+        border-color: #dfc1b9;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 58px;
+        padding: 0 23px;
+        border-bottom: 1px solid var(--line);
+        background: #fafcf9;
+      }
+      .brand {
+        font-size: 17px;
+        font-weight: 650;
+      }
+      .prototype {
+        font-size: 12px;
+        background: #ecf1ed;
+        padding: 5px 10px;
+        border-radius: 5px;
+      }
+      .scenes {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        padding: 10px 22px;
+        background: #fff;
+        border-bottom: 1px solid var(--line);
+        flex-wrap: wrap;
+      }
+      .scenes b {
+        font-size: 12px;
+        margin-right: 10px;
+      }
+      .scenes button {
+        font-size: 12px;
+        padding: 6px 11px;
+      }
+      .scenes button[aria-pressed="true"] {
+        border-color: #90b6a7;
+        background: #eaf3ee;
+        color: #20675b;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 184px minmax(480px, 1fr) 370px;
+        min-height: calc(100vh - 112px);
+      }
+      aside {
+        padding: 24px 12px;
+        border-right: 1px solid var(--line);
+      }
+      aside h4 {
+        margin: 0 10px 13px;
+      }
+      aside .nav {
+        padding: 11px 12px;
+        color: #687a71;
+        margin: 5px 0;
+        border-radius: 7px;
+      }
+      .nav.active {
+        background: #e5eee7;
+        color: #275f51;
+        font-weight: 600;
+      }
+      .nav small {
+        display: block;
+        font-weight: 400;
+        margin-top: 6px;
+      }
+      .spaced {
+        margin-top: 34px !important;
+      }
+      .center {
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        min-width: 0;
+      }
+      .canvas {
+        border: 1px solid #cfded5;
+        border-radius: 10px;
+        background: #fff;
+        overflow: hidden;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+      .pipelinebar {
+        padding: 17px 20px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        border-bottom: 1px solid var(--line);
+      }
+      h1 {
+        font-size: 18px;
+        margin: 0 0 6px;
+      }
+      p {
+        line-height: 1.6;
+        margin: 7px 0;
+      }
+      .small {
+        font-size: 12px;
+      }
+      .mode {
+        display: flex;
+        margin-left: auto;
+        background: #f4f7f4;
+        border-radius: 7px;
+        padding: 3px;
+      }
+      .mode span {
+        padding: 6px 11px;
+        font-size: 12px;
+      }
+      .mode .on {
+        background: white;
+        border-radius: 5px;
+        box-shadow: 0 1px 3px #1c3f2422;
+      }
+      .runbar {
+        padding: 12px 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid var(--line);
+      }
+      .status {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #70a187;
+      }
+      .badge {
+        font-size: 11px;
+        color: #658075;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        padding: 4px 7px;
+      }
+      .runbar button {
+        margin-left: auto;
+        font-size: 12px;
+        padding: 7px 10px;
+      }
+      .flow {
+        min-height: 275px;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        position: relative;
+        background: radial-gradient(#dce6e0 0.8px, transparent 0.8px) 0 0/18px
+          18px;
+      }
+      .flow svg {
+        width: 100%;
+        min-height: 250px;
+        max-height: 350px;
+      }
+      .node {
+        cursor: pointer;
+      }
+      .node rect.box {
+        fill: white;
+        stroke: #c9d9d1;
+        stroke-width: 1.3;
+        filter: drop-shadow(0 3px 4px #d6e3da55);
+      }
+      .node.selected rect.box {
+        stroke: #29877b;
+        stroke-width: 2;
+      }
+      .node text {
+        fill: #29433a;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .node .sub {
+        font-size: 11px;
+        font-weight: 400;
+        fill: #7a8880;
+      }
+      .node .icon {
+        fill: #eef4f1;
+        stroke: none;
+      }
+      .node.running .box {
+        fill: #edf7f2;
+        stroke: #5caa8c;
+      }
+      .node.done .box {
+        fill: #f4faf5;
+        stroke: #80b194;
+      }
+      .node.running .icon {
+        fill: #d6eee1;
+      }
+      .connection {
+        stroke: #a3bbb0;
+        stroke-width: 1.7;
+        fill: none;
+      }
+      .legend {
+        display: flex;
+        gap: 18px;
+        padding: 12px 20px;
+        border-bottom: 1px solid var(--line);
+        font-size: 11px;
+        color: #748278;
+      }
+      .detail {
+        padding: 17px 20px;
+        min-height: 242px;
+        background: #fff;
+      }
+      .detailhead {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .detail h2 {
+        font-size: 15px;
+        margin: 0;
+      }
+      .detailgrid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        margin: 16px 0;
+      }
+      .item {
+        background: #f7f9f6;
+        border: 1px solid #e8eee8;
+        border-radius: 8px;
+        padding: 12px;
+      }
+      .item span {
+        display: block;
+        font-size: 11px;
+        color: #718479;
+        margin-bottom: 6px;
+      }
+      .item strong {
+        font-size: 13px;
+        font-weight: 550;
+      }
+      .detailfoot {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .detailfoot button {
+        font-size: 12px;
+      }
+      .chat {
+        border-left: 1px solid var(--line);
+        background: white;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+      .chathead {
+        padding: 17px 19px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .chathead h2 {
+        font-size: 16px;
+        margin: 0;
+      }
+      .chathead button {
+        font-size: 12px;
+        padding: 6px 9px;
+      }
+      .messages {
+        padding: 22px 18px;
+        flex: 1;
+      }
+      .who {
+        font-size: 12px;
+        font-weight: 650;
+        margin: 4px 0 10px;
+      }
+      .avatar {
+        display: inline-grid;
+        place-items: center;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: #e5f0ed;
+        color: #24746b;
+        margin-right: 8px;
+      }
+      .bubble {
+        margin: 0 0 20px 34px;
+        font-size: 13px;
+        line-height: 1.65;
+      }
+      .user {
+        padding: 13px;
+        background: #edf5f1;
+        border-radius: 10px;
+        margin-left: 38px;
+        margin-bottom: 24px;
+      }
+      .action {
+        border: 1px solid #aacaba;
+        border-radius: 10px;
+        background: #f7fbf7;
+        padding: 16px;
+        margin: 22px 0;
+      }
+      .action h3 {
+        font-size: 14px;
+        margin: 0 0 9px;
+      }
+      .action p {
+        font-size: 12px;
+        color: #5b7366;
+      }
+      .action .pair {
+        display: flex;
+        gap: 7px;
+        margin-top: 14px;
+      }
+      .action .pair button {
+        font-size: 12px;
+      }
+      .reviewref {
+        font-size: 11px;
+        background: #e9f2ec;
+        border-radius: 5px;
+        padding: 7px 9px;
+        margin-bottom: 10px;
+      }
+      .composer {
+        padding: 14px;
+        border-top: 1px solid var(--line);
+      }
+      textarea {
+        width: 100%;
+        height: 82px;
+        resize: vertical;
+        border: 1px solid #bacfc3;
+        border-radius: 8px;
+        padding: 12px;
+        font: inherit;
+        color: inherit;
+      }
+      .sendrow {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 10px;
+        font-size: 12px;
+      }
+      .notice {
+        padding: 12px 20px;
+        background: #fff7e8;
+        color: #8c6a2e;
+        border-bottom: 1px solid #eadcbd;
+        font-size: 12px;
+      }
+      .hidden {
+        display: none !important;
+      }
+      .hint {
+        color: #7a887f;
+        font-size: 11px;
+        margin-top: 12px;
+      }
+      .key {
+        display: inline-block;
+        width: 7px;
+        height: 7px;
+        border-radius: 2px;
+        background: #6da58a;
+        margin-right: 5px;
+      }
+      #feedback {
+        min-height: 20px;
+        font-size: 12px;
+        color: #207267;
+        margin-top: 7px;
+      }
+      .pagefoot {
+        text-align: center;
+        color: #7c8981;
+        font-size: 11px;
+        padding: 9px;
+        border-top: 1px solid var(--line);
+      }
+      @media (max-width: 1150px) {
+        .layout {
+          grid-template-columns: 145px minmax(420px, 1fr) 320px;
+        }
+        .center {
+          padding: 10px;
+        }
+        .brand {
+          font-size: 15px;
+        }
+      }
+      @media (max-width: 950px) {
+        .layout {
+          grid-template-columns: minmax(420px, 1fr) 300px;
+        }
+        aside {
+          display: none;
+        }
+        .top {
+          padding: 0 14px;
+        }
+      }
+      @media (max-width: 740px) {
+        .layout {
+          display: flex;
+          flex-direction: column;
+        }
+        .chat {
+          border-top: 1px solid var(--line);
+        }
+        .flow {
+          min-height: 220px;
+        }
+        .detailgrid {
+          grid-template-columns: 1fr 1fr;
+        }
+        .messages {
+          padding-bottom: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="brand">
+        ◫ &nbsp; Read quality study <span class="muted">⌄</span>
+      </div>
+      <span class="prototype">P4 design sketch · simulated states</span>
+    </header>
+    <nav class="scenes" aria-label="Sketch scenes">
+      <b>PREVIEW</b><button data-scene="ready">Ready to start</button
+      ><button data-scene="running">Running</button
+      ><button data-scene="stopping">Stopping</button
+      ><button data-scene="reconnect">Reconnecting</button
+      ><button data-scene="finished">Completed</button>
+    </nav>
+    <div class="layout">
+      <aside>
+        <h4>⌘ &nbsp; Pipelines</h4>
+        <div class="nav active">
+          Read quality study<small>Current design</small>
+        </div>
+        <div class="nav">＋ New pipeline</div>
+        <h4 class="spaced">▷ &nbsp; Runs</h4>
+        <div class="nav" id="runnav">No active run</div>
+        <h4 class="spaced">▱ &nbsp; Files</h4>
+        <div class="nav">sample.fastq.gz</div>
+      </aside>
+      <main class="center">
+        <section class="canvas">
+          <header class="pipelinebar">
+            <div>
+              <h1>Read quality study</h1>
+              <div class="muted small" id="subtitle">
+                Current flow · reviewed settings
+              </div>
+            </div>
+            <div class="mode">
+              <span id="designmode" class="on">Design</span
+              ><span id="runmode">Run</span>
+            </div>
+          </header>
+          <div class="runbar">
+            <div class="status">
+              <i class="dot" id="statusdot"></i
+              ><span id="status">Ready to start</span>
+            </div>
+            <span class="badge" id="runlabel">Run review</span
+            ><button id="stop" class="danger hidden">Stop analysis</button>
+          </div>
+          <div id="notice" class="notice hidden"></div>
+          <div class="flow">
+            <svg
+              viewBox="0 0 760 260"
+              role="group"
+              aria-label="Input reads connected to trimming, then read quality checking"
+            >
+              <defs>
+                <marker
+                  id="arrow"
+                  viewBox="0 0 8 8"
+                  refX="7"
+                  refY="4"
+                  markerWidth="6"
+                  markerHeight="6"
+                  orient="auto"
+                >
+                  <path d="M1 1 L7 4 L1 7" fill="none" stroke="#93ada0" />
+                </marker>
+              </defs>
+              <path
+                class="connection"
+                d="M195 116 H224 Q232 116 232 124 V152 Q232 160 240 160 H277"
+                marker-end="url(#arrow)"
+              />
+              <path
+                class="connection"
+                d="M482 160 H510 Q518 160 518 152 V124 Q518 116 526 116 H557"
+                marker-end="url(#arrow)"
+              />
+              <g class="node" id="input">
+                <rect
+                  class="box"
+                  x="25"
+                  y="64"
+                  width="170"
+                  height="105"
+                  rx="10"
+                />
+                <rect
+                  class="icon"
+                  x="40"
+                  y="82"
+                  width="30"
+                  height="30"
+                  rx="7"
+                />
+                <text x="49" y="103">▤</text>
+                <text x="80" y="103">Input reads</text>
+                <text class="sub" x="42" y="146">sample.fastq.gz</text>
+              </g>
+              <g
+                class="node selected"
+                id="trim"
+                tabindex="0"
+                role="button"
+                aria-label="Inspect trimming step"
+              >
+                <rect
+                  class="box"
+                  x="280"
+                  y="105"
+                  width="202"
+                  height="109"
+                  rx="10"
+                />
+                <rect
+                  class="icon"
+                  x="295"
+                  y="122"
+                  width="30"
+                  height="30"
+                  rx="7"
+                />
+                <text x="304" y="143">⌘</text>
+                <text x="336" y="137">Trim adapters and</text>
+                <text x="336" y="155">low-quality bases</text>
+                <text class="sub" id="trimstate" x="296" y="191">
+                  25 Phred · 40 bp minimum
+                </text>
+              </g>
+              <g
+                class="node"
+                id="qc"
+                tabindex="0"
+                role="button"
+                aria-label="Inspect read quality step"
+              >
+                <rect
+                  class="box"
+                  x="560"
+                  y="64"
+                  width="175"
+                  height="105"
+                  rx="10"
+                />
+                <rect
+                  class="icon"
+                  x="575"
+                  y="82"
+                  width="30"
+                  height="30"
+                  rx="7"
+                />
+                <text x="584" y="103">⌘</text>
+                <text x="615" y="96">Check read</text>
+                <text x="615" y="113">quality</text>
+                <text class="sub" id="qcstate" x="576" y="146">
+                  After trimming
+                </text>
+              </g>
+            </svg>
+          </div>
+          <div class="legend">
+            <span id="legendstatus"
+              ><i class="key"></i>Design view · no analysis started</span
+            ><span>Click a step to discuss it</span>
+          </div>
+          <section class="detail">
+            <div class="detailhead">
+              <h2 id="detailtitle">Ready to run this reviewed analysis</h2>
+              <span class="badge" id="detailbadge">No Run started</span>
+            </div>
+            <p class="small muted" id="detailintro">
+              The data copy, analysis tools and new result location have been
+              checked.
+            </p>
+            <div class="detailgrid">
+              <div class="item">
+                <span id="k1">DATA COPY</span
+                ><strong id="v1">sample.fastq.gz · 24.8 MB</strong>
+              </div>
+              <div class="item">
+                <span id="k2">RESULT LOCATION</span
+                ><strong id="v2">runs/read-quality-001/</strong>
+              </div>
+            </div>
+            <div class="detailfoot">
+              <button id="discuss">Discuss this review</button
+              ><button id="logs" class="hidden">View task logs</button
+              ><span class="small muted" id="detailnote"
+                >Original file preserved · one task at a time</span
+              >
+            </div>
+            <div id="feedback" role="status"></div>
+          </section>
+        </section>
+      </main>
+      <section class="chat" aria-label="Project Chat">
+        <header class="chathead">
+          <h2>Chat</h2>
+          <button>♧ Agents 1</button>
+        </header>
+        <div class="messages">
+          <div class="user small">
+            The flow looks good. Let's run the quality checks.
+          </div>
+          <div class="who"><span class="avatar">R</span>Researcher</div>
+          <div class="bubble" id="reply">
+            The settings are ready for your review. I’ll use this same flow to
+            discuss the results with you.
+          </div>
+          <div class="action" id="action">
+            <h3 id="actiontitle">Start this analysis?</h3>
+            <div class="reviewref" id="reviewref">
+              Run review · Sep 12, 10:14 PM
+            </div>
+            <p id="actionbody">
+              Use the checked data copy and save results in
+              <strong>runs/read-quality-001/</strong>. The analysis can continue
+              while the App is closed.
+            </p>
+            <div class="pair">
+              <button class="primary" id="start">Start analysis</button
+              ><button id="back">Back to review</button>
+            </div>
+          </div>
+          <div class="hint">
+            Preview only. These controls simulate UI states and never start an
+            analysis.
+          </div>
+        </div>
+        <div class="composer">
+          <div id="attachment" class="reviewref hidden">
+            Trimming · Run 001 · observed step state
+          </div>
+          <textarea
+            aria-label="Message draft"
+            placeholder="Discuss the analysis with your Agent…"
+          ></textarea>
+          <div class="sendrow">
+            <span>♧ To Researcher ⌄</span
+            ><button id="send" class="primary">Send →</button>
+          </div>
+        </div>
+      </section>
+    </div>
+    <footer class="pagefoot">
+      Design proposal · exact reviewed input and settings · User-authorized
+      execution · independent Gobble controller
+    </footer>
+    <script>
+      const $ = (id) => document.getElementById(id);
+      let current = "ready",
+        selected = "trim";
+      function scene(name) {
+        current = name;
+        document
+          .querySelectorAll("[data-scene]")
+          .forEach((b) =>
+            b.setAttribute("aria-pressed", String(b.dataset.scene === name)),
+          );
+        const ready = name === "ready",
+          running = name === "running",
+          stopping = name === "stopping",
+          lost = name === "reconnect",
+          done = name === "finished";
+        $("legendstatus").textContent = ready
+          ? "Design view · no analysis started"
+          : "States come from the selected Run";
+        $("status").textContent = {
+          ready: "Ready to start",
+          running: "Running",
+          stopping: "Stopping",
+          reconnect: "Checking run status",
+          finished: "Completed",
+        }[name];
+        $("statusdot").style.background =
+          lost || stopping ? "#c59a4e" : "#62a182";
+        $("subtitle").textContent = ready
+          ? "Current flow · reviewed settings"
+          : "Run 001 · the exact design used for this analysis";
+        $("runlabel").textContent = ready ? "Run review" : "Run 001";
+        $("runnav").textContent = ready
+          ? "No active run"
+          : "Read quality · 001";
+        $("runnav").classList.toggle("active", !ready);
+        $("designmode").classList.toggle("on", ready);
+        $("runmode").classList.toggle("on", !ready);
+        $("stop").classList.toggle("hidden", !running);
+        $("notice").classList.toggle("hidden", !lost && !stopping);
+        $("notice").textContent = lost
+          ? "The last observed state is shown. Reconnecting does not start another Run."
+          : "Stop requested. Waiting for Gobble to confirm that the tasks have stopped.";
+        $("trim").setAttribute(
+          "class",
+          "node selected " +
+            (running || stopping || lost ? "running" : done ? "done" : ""),
+        );
+        $("qc").setAttribute("class", "node " + (done ? "done" : ""));
+        $("trimstate").textContent = ready
+          ? "25 Phred · 40 bp minimum"
+          : done
+            ? "✓ Completed"
+            : lost
+              ? "Running · last observed"
+              : stopping
+                ? "Stopping…"
+                : "● Running";
+        $("qcstate").textContent = ready
+          ? "After trimming"
+          : done
+            ? "✓ Completed"
+            : "Waiting for trimming";
+        $("actiontitle").textContent = ready
+          ? "Start this analysis?"
+          : done
+            ? "Analysis completed"
+            : lost
+              ? "Execution status is unconfirmed"
+              : stopping
+                ? "Stop request accepted"
+                : "Analysis started";
+        $("actionbody").innerHTML = ready
+          ? "Use the checked data copy and save results in <strong>runs/read-quality-001/</strong>. The analysis can continue while the App is closed."
+          : done
+            ? "Your trimmed reads and quality report are ready. Select a step to inspect its results."
+            : lost
+              ? "The existing Run is being checked. No new analysis will be started."
+              : stopping
+                ? "This request targets Run 001. Results already written remain available."
+                : "Run 001 uses the exact reviewed flow and data copy. You can close the App and reconnect later.";
+        $("start").classList.toggle("hidden", !ready);
+        $("back").textContent = ready
+          ? "Back to review"
+          : lost
+            ? "Check status"
+            : done
+              ? "View results"
+              : "Show run";
+        $("reply").textContent = ready
+          ? "The settings are ready for your review. I’ll use this same flow to discuss the results with you."
+          : "We can discuss the same processing steps here. Select a step to attach its observed state to your message.";
+        $("feedback").textContent = "";
+        $("attachment").classList.add("hidden");
+        details(selected);
+      }
+      function details(step) {
+        selected = step;
+        for (const n of ["trim", "qc"])
+          $(n).classList.toggle("selected", n === step);
+        const ready = current === "ready";
+        $("detailtitle").textContent = ready
+          ? "Ready to run this reviewed analysis"
+          : step === "trim"
+            ? "Trim adapters and low-quality bases"
+            : "Check read quality";
+        $("detailbadge").textContent = ready
+          ? "No Run started"
+          : current === "finished"
+            ? "Completed"
+            : step === "qc"
+              ? "Waiting"
+              : "Run 001";
+        $("detailintro").textContent = ready
+          ? "The data copy, analysis tools and new result location have been checked."
+          : step === "trim"
+            ? "Quality threshold: 25 Phred · Minimum length: 40 bp"
+            : "Read quality is checked after trimmed reads are available.";
+        $("k1").textContent = ready ? "DATA COPY" : "INPUT";
+        $("v1").textContent = ready
+          ? "sample.fastq.gz · 24.8 MB"
+          : step === "trim"
+            ? "Checked copy of sample.fastq.gz"
+            : "Trimmed single-end reads";
+        $("k2").textContent = ready ? "RESULT LOCATION" : "EXPECTED RESULT";
+        $("v2").textContent = ready
+          ? "runs/read-quality-001/"
+          : step === "trim"
+            ? "Trimmed reads + trimming report"
+            : "Quality report + report archive";
+        $("discuss").textContent = ready
+          ? "Discuss this review"
+          : "Discuss this step";
+        $("logs").classList.toggle("hidden", ready);
+        $("detailnote").textContent = ready
+          ? "Original file preserved · one task at a time"
+          : "Exact Run and step observation will be attached";
+      }
+      document
+        .querySelectorAll("[data-scene]")
+        .forEach((b) => (b.onclick = () => scene(b.dataset.scene)));
+      for (const n of ["trim", "qc"]) {
+        $(n).onclick = () => details(n);
+        $(n).onkeydown = (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            details(n);
+          }
+        };
+      }
+      $("start").onclick = () => scene("running");
+      $("stop").onclick = () => scene("stopping");
+      $("back").onclick = () => {
+        $("detailtitle").scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+        $("feedback").textContent =
+          current === "reconnect"
+            ? "Preview: check the same Run; never start another."
+            : "Review remains attached to this exact analysis.";
+      };
+      $("discuss").onclick = () => {
+        $("attachment").classList.remove("hidden");
+        $("attachment").textContent =
+          current === "ready"
+            ? "Run review · checked data and execution target"
+            : (selected === "trim" ? "Trimming" : "Read quality") +
+              " · Run 001 · observed step state";
+        $("feedback").textContent =
+          "Exact reference added to the existing message draft.";
+        document.querySelector("textarea").focus();
+      };
+      $("logs").onclick = () => {
+        $("feedback").textContent =
+          "Preview: existing task log view opens below this Run Flow.";
+      };
+      $("send").onclick = () => {
+        $("feedback").textContent =
+          "Design preview only — no message was sent.";
+      };
+      const initial = new URLSearchParams(location.search).get("scene");
+      scene(
+        ["ready", "running", "stopping", "reconnect", "finished"].includes(
+          initial,
+        )
+          ? initial
+          : "ready",
+      );
+    </script>
+  </body>
+</html>

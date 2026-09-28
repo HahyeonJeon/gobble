@@ -1,0 +1,7 @@
+--- FAIL: TestPipelineInspectionSettingOwnership (0.00s)
+    pipeline_inspection_test.go:126: compose: missing output
+FAIL
+FAIL	github.com/HahyeonJeon/gobble	0.061s
+ok  	github.com/HahyeonJeon/gobble/cmd/gobble	0.061s
+ok  	github.com/HahyeonJeon/gobble/assets/modules/trim-galore	0.065s
+FAIL

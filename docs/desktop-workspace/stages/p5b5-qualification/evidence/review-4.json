@@ -1,0 +1,10 @@
+{
+  "projectId": "prj_TVUVRCQXLLO56YOBBN4JK4UXE7",
+  "pipelineId": "pip_QOSM25BB6JZAPPVOM5QC6TE3QM",
+  "launchReviewId": "req_c92704dc-27a9-4860-82db-d8ad41aa02e2",
+  "runRef": "run_FQYGQ344DFXXEJL2UCHJ3OISR6",
+  "requestId": "req_925f07a2-a1fa-496f-aa3b-793b2826c0b1",
+  "createdAt": "2026-09-27T08:02:13.264197Z",
+  "state": "blocked",
+  "issue": "The checked input copy has changed. Restore the original copy and recheck, or review a new analysis."
+}

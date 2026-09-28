@@ -1,0 +1,10 @@
+
+Running 3 tests using 1 worker
+
+(node:56852) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 desktop/tests/electron/pipeline-flow.spec.ts:7:1 › real checked branching flow, keyboard details, preserved draft and historical restart (52.7s)
+  ✓  2 desktop/tests/electron/pipelines.spec.ts:40:1 › import opens a flow, preserves the other pane and draft, and restores Pipeline identity (1.8s)
+  ✓  3 desktop/tests/electron/pipelines.spec.ts:88:1 › registration errors stay visible and retries do not create incomplete definitions (921ms)
+
+  3 passed (55.9s)

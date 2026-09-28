@@ -1,0 +1,16 @@
+
+> gobble-app-workspace@0.1.0 typecheck
+> tsc -p contracts/tsconfig.json && npm run typecheck --workspace @gobble/desktop && tsc -p tsconfig.tools.json
+
+
+> @gobble/desktop@0.1.0 typecheck
+> tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && tsc -p tsconfig.renderer.json
+
+desktop/tests/observed-evidence.test.ts(1,47): error TS6133: 'readdir' is declared but its value is never read.
+desktop/tests/observed-evidence.test.ts(8,8): error TS6133: 'WorkspaceDocument' is declared but its value is never read.
+desktop/tests/observed-evidence.test.ts(64,37): error TS2322: Type '(_s: { evidence?: { presentation?: { filter: { kind: "all"; } | { kind: "equals"; columnId: string; value: string; }; kind: "scatter"; spec: { labelColumnId?: string; xColumnId: string; yColumnId: string; xScale: "linear"; yScale: "linear"; }; viewport: { ...; }; schemaVersion: 1; revision: { ...; }; }; ... 7 more ....' is not assignable to type '(submission: { evidence?: { presentation?: { filter: { kind: "all"; } | { kind: "equals"; columnId: string; value: string; }; kind: "scatter"; spec: { labelColumnId?: string; xColumnId: string; yColumnId: string; xScale: "linear"; yScale: "linear"; }; viewport: { ...; }; schemaVersion: 1; revision: { ...; }; }; ... ...'.
+  Type 'Promise<{ turnId: string; }>' is not assignable to type 'Promise<ProviderTurn>'.
+    Type '{ turnId: string; }' is missing the following properties from type 'ProviderTurn': id, status, clientIds, messages
+desktop/tests/observed-evidence.test.ts(64,82): error TS2345: Argument of type 'ProviderInput[] | undefined' is not assignable to parameter of type 'ProviderInput[]'.
+  Type 'undefined' is not assignable to type 'ProviderInput[]'.
+desktop/tests/observed-evidence.test.ts(107,87): error TS2353: Object literal may only specify known properties, and 'status' does not exist in type '{ id: string; }'.

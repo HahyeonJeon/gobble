@@ -1,0 +1,9 @@
+=== RUN   TestLivePipelineInspection
+    pipeline_inspection_test.go:275: Real Gobble flow: 5 steps, 7 exact connections, no Run; artifact sha256:fabda1438d87a9e5a6ade5e7f959aacaf2d915a133a0719c630947d25bd8c098
+--- PASS: TestLivePipelineInspection (49.14s)
+=== RUN   TestLivePipelineModuleSettings
+    pipeline_inspection_test.go:302: {prj_EVFFNWW6K546MNOUIKXAHLXMR4 pip_7NXEBALOORPVUCZ45QNQVTO2H3 failed req_live The analysis entry source is missing from its inspection setup. <nil>} <nil>
+--- FAIL: TestLivePipelineModuleSettings (0.24s)
+FAIL
+FAIL	github.com/HahyeonJeon/gobble/internal/appservice	49.936s
+FAIL

@@ -1,0 +1,139 @@
+
+> gobble-app-workspace@0.1.0 test
+> npm run build:service && vitest run
+
+
+> gobble-app-workspace@0.1.0 build:service
+> tsx scripts/build-service.ts
+
+
+ RUN  v4.1.11 /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app
+
+ ❯ tests/architecture.test.ts (6 tests | 1 failed) 278ms
+     × desktop/src/main imports only its own files and allowed packages 73ms
+ ❯ desktop/tests/plot-evidence.test.ts (8 tests | 1 failed) 217ms
+     × backs up exact v5 bytes once and restores the current workspace without adding plot context to old records 146ms
+ ❯ desktop/tests/linked-interaction.test.ts (7 tests | 1 failed) 222ms
+     × preserves v4 schema identity and migrates without inventing table options or selection origins 16ms
+ ❯ desktop/tests/workspace.test.ts (19 tests | 1 failed) 2019ms
+     × preserves corrupt and future state and refuses automatic overwrite 36ms
+ ❯ desktop/tests/observed-evidence.test.ts (27 tests | 1 failed) 4810ms
+     × backs up exact v6 bytes and rejects new reference/capture shapes nested inside old versions 57ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/architecture.test.ts > process dependency boundaries > desktop/src/main imports only its own files and allowed packages
+AssertionError: desktop/src/main/notebook/targets.ts: expected [ '@sinclair/typebox', …(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "@sinclair/typebox",
++   "@sinclair/typebox/value",
++ ]
+
+ ❯ tests/architecture.test.ts:106:11
+    104|           violations(path, await readFile(path, 'utf8'), layer, extern…
+    105|           `${layer}/${file}`,
+    106|         ).toEqual([]);
+       |           ^
+    107|       }
+    108|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  desktop/tests/linked-interaction.test.ts > linked User intent semantics > preserves v4 schema identity and migrates without inventing table options or selection origins
+AssertionError: expected [Function] to throw an error
+ ❯ desktop/tests/linked-interaction.test.ts:162:70
+    160|     expect(migrated).toEqual({ ...old, schemaVersion: 13 });
+    161|     expect(old.schemaVersion).toBe(4);
+    162|     expect(() => readStoredWorkspace({ ...old, schemaVersion: 13 })).t…
+       |                                                                      ^
+    163|   });
+    164| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  desktop/tests/observed-evidence.test.ts > bounded render ownership and migration > backs up exact v6 bytes and rejects new reference/capture shapes nested inside old versions
+AssertionError: expected [Function] to throw an error
+ ❯ desktop/tests/observed-evidence.test.ts:628:70
+    626|     expect(() => readStoredWorkspace(invalid)).toThrow();
+    627|     expect(() => readStoredWorkspace({ ...invalid, schemaVersion: 5 })…
+    628|     expect(() => readStoredWorkspace({ ...old, schemaVersion: 13 })).t…
+       |                                                                      ^
+    629|     expect(
+    630|       retainedEvidenceHashes([
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  desktop/tests/plot-evidence.test.ts > frozen historical document contracts > backs up exact v5 bytes once and restores the current workspace without adding plot context to old records
+AssertionError: expected [Function] to throw an error
+ ❯ desktop/tests/plot-evidence.test.ts:186:72
+    184|       await storage.write(next);
+    185|       expect(await readFile(path + '.v5.backup', 'utf8')).toBe(raw);
+    186|       expect(() => readStoredWorkspace({ ...old, schemaVersion: 13 }))…
+       |                                                                        ^
+    187|     } finally {
+    188|       await rm(base, { recursive: true, force: true });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  desktop/tests/workspace.test.ts > workspace storage recovery > preserves corrupt and future state and refuses automatic overwrite
+AssertionError: promise resolved "{ schemaVersion: 13, …(10) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "activePane": "primary",
++   "activity": [],
++   "chat": {
++     "collapsed": false,
++     "draft": "",
++     "recipientAgentId": null,
++     "width": 420,
++   },
++   "maximizedPane": null,
++   "paneOrientation": "vertical",
++   "receipts": [],
++   "schemaVersion": 13,
++   "selections": [],
++   "titles": [],
++   "viewLinks": [],
++   "workspace": {
++     "agents": [],
++     "decisions": [],
++     "layout": {
++       "kind": "single",
++       "primary": {
++         "activeSurfaceId": null,
++         "tabs": [],
++       },
++     },
++     "projectId": "prj_atlas",
++     "revision": 0,
++     "schemaVersion": 1,
++     "surfaces": [],
++   },
+  }
+
+ ❯ desktop/tests/workspace.test.ts:439:31
+    437|       await writeFile(path, source);
+    438|       const file = new AtomicStateFile(path, parseWorkspaceDocument);
+    439|       await expect(file.read()).rejects.toMatchObject({ code: 'interna…
+       |                               ^
+    440|       await expect(file.write(emptyWorkspace('prj_atlas'))).rejects.to…
+    441|         code: 'internal',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  5 failed | 23 passed (28)
+      Tests  5 failed | 307 passed (312)
+   Start at  01:06:13
+   Duration  8.69s (transform 3.67s, setup 0ms, import 7.69s, tests 40.22s, environment 2ms)
+

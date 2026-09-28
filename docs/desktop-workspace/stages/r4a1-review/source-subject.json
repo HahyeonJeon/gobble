@@ -1,0 +1,128 @@
+{
+  "recordedAt": "2026-09-08T15:22:02.073633+00:00",
+  "scope": "Final qualification source, fixtures, scripts and configuration; README excluded. No code changed after the final passed run.",
+  "reportSha256": "5d192fad6d3e26a8cb3d0c97db82b653a99c422ca6e86bc84a36e21e1174c349",
+  "testedBuildSha256": "fed37195412e5dc759852d7c753af382c1413b1027654541b13fa47c7b2cccd8",
+  "files": [
+    {
+      "path": "app/qualification/notebook/bridge.ts",
+      "bytes": 492,
+      "sha256": "d4739622b48f3efef18b95cc21028dcdb016bdbc9b32bd34d1cb777f838582f3"
+    },
+    {
+      "path": "app/qualification/notebook/build.cjs",
+      "bytes": 3222,
+      "sha256": "c65443230274a087c025136d3e7961724e044814a62251bc515a61767185183a"
+    },
+    {
+      "path": "app/qualification/notebook/fixtures.ts",
+      "bytes": 4933,
+      "sha256": "ada4f17a6caba1bcf66d69e0039285b43fe3164b9e8c5b2bb8921e85c27a40f6"
+    },
+    {
+      "path": "app/qualification/notebook/host.ts",
+      "bytes": 5762,
+      "sha256": "4709a444980769f9ac197704f1111922e4963ce8fb794677ace41eb49fd72ce2"
+    },
+    {
+      "path": "app/qualification/notebook/image-source.ts",
+      "bytes": 3221,
+      "sha256": "9204666ff66ea21f78ea000d95651dc1d54ee9f94823b6a6ebac05f856dda4ff"
+    },
+    {
+      "path": "app/qualification/notebook/main.ts",
+      "bytes": 5763,
+      "sha256": "57934105d8a786a95140ea8dc1296ecb38690c2648cec08139a9cbdd7d89fbeb"
+    },
+    {
+      "path": "app/qualification/notebook/model.ts",
+      "bytes": 3033,
+      "sha256": "144a22e5e09dce5a3c258bb37661eaea0452109748440da32ccdfa78899aabb3"
+    },
+    {
+      "path": "app/qualification/notebook/notebook.test.ts",
+      "bytes": 8912,
+      "sha256": "013bfa80203ce21de1215e33a565dd3b0ccb53a64f69ea033779033cf5dc198f"
+    },
+    {
+      "path": "app/qualification/notebook/parser.ts",
+      "bytes": 7540,
+      "sha256": "48916f085779da5780e3a03186e510539d82095476c3906a24b7eef8014884e6"
+    },
+    {
+      "path": "app/qualification/notebook/preload.ts",
+      "bytes": 610,
+      "sha256": "516df23ff6ce585c255863ee986b4c9314ee2c921f2f15e6fdfb19c3068e959c"
+    },
+    {
+      "path": "app/qualification/notebook/qualify.cjs",
+      "bytes": 27346,
+      "sha256": "153ca9ba4a6ee8674bdf94d017c0d9c7f9e5300ef2d6dfe15ea8c8e8b2b107c3"
+    },
+    {
+      "path": "app/qualification/notebook/reader-parts.tsx",
+      "bytes": 8632,
+      "sha256": "84297481b734bc32ffdc6354e7ffbff30790d9bf99c59da9c514042e8202c974"
+    },
+    {
+      "path": "app/qualification/notebook/renderer.tsx",
+      "bytes": 13658,
+      "sha256": "e8047d2391bc8e2f4acdb0194c89b6a9ca61fe4fadaa22ef021e5d5c0e5be934"
+    },
+    {
+      "path": "app/qualification/notebook/style.css",
+      "bytes": 5769,
+      "sha256": "723755ba1a28fe11650aaf56801b9a28889cce608eac7a4cb94bd666bbc752ba"
+    },
+    {
+      "path": "app/qualification/notebook/targets.ts",
+      "bytes": 5595,
+      "sha256": "18ef282f322f192f1a0e2ef5e13550b77189e3d4207d8f71e14fdb66db519cde"
+    },
+    {
+      "path": "app/qualification/notebook/test.config.ts",
+      "bytes": 160,
+      "sha256": "2f57076c6eef6c278d0b2b4b1ad0efdb18060ab217786c7285cab006cddbfdcc"
+    },
+    {
+      "path": "app/qualification/notebook/text-window.ts",
+      "bytes": 737,
+      "sha256": "ecbd0ec2cb09fe1dde0d85c89796422b305265e099c3aa7cf31a2e27d3ec97ee"
+    },
+    {
+      "path": "app/qualification/notebook/text.ts",
+      "bytes": 2439,
+      "sha256": "f3fb022fe488b94299c8b5426df6b2edba1cda970c982c560beb0611868549f6"
+    },
+    {
+      "path": "app/qualification/notebook/tsconfig.json",
+      "bytes": 196,
+      "sha256": "406d435a6b9e4bdd8eef426d10197af13400422c7e9e3b4aa239a52f767c9c35"
+    },
+    {
+      "path": "app/qualification/notebook/view.cjs",
+      "bytes": 520,
+      "sha256": "9e674db050fc7123ff80aa85ca23796c3a5cb6e85a10ca0e847940104e470228"
+    },
+    {
+      "path": "app/qualification/notebook/visibility.ts",
+      "bytes": 4963,
+      "sha256": "62fd24c3fedd015c4e9def001abd558befadc565039e6ac2a98494afb78d798a"
+    },
+    {
+      "path": "app/qualification/notebook/worker-client.ts",
+      "bytes": 2087,
+      "sha256": "f1e520d67c4af12c44d4c4da3e9b43a825dfde213d74284fe6bbb03241946305"
+    },
+    {
+      "path": "app/qualification/notebook/worker-protocol.ts",
+      "bytes": 2407,
+      "sha256": "8498ecb70fd7c40ca090ba95f5d1db8ce854a270e55ec74727168695fd509826"
+    },
+    {
+      "path": "app/qualification/notebook/worker.ts",
+      "bytes": 616,
+      "sha256": "0cc48ed9a8073cd5dbd33b23752e7abc025c8865acb045d9243da4893e965820"
+    }
+  ]
+}

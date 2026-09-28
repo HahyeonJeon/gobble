@@ -1,0 +1,37 @@
+
+Running 1 test using 1 worker
+
+(node:24491) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 desktop/tests/electron/run-feedback-retention.spec.ts:7:1 › Follow-up: historical design, missing capture and compact restored UI (8.5s)
+
+
+  1) desktop/tests/electron/run-feedback-retention.spec.ts:7:1 › Follow-up: historical design, missing capture and compact restored UI 
+
+    Error: expect(locator).not.toContainText(expected) failed
+
+    Locator: getByRole('dialog', { name: /Attachment:/ })
+    Expected substring: not "Captured Run facts"
+    Received string: "Attachment: Analysis 1CloseCaptured observation · 12:31:20 AMEvidence unavailable: its saved content is missing or corrupt. The original record has been preserved.Retry previewCaptured Run facts · Observed previewSource versionsha256:99e3bb92a6e8bb8404873ef1fa70eb2335f93ecb12d70bf798460ec57d3f759a"
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "not toContainText" getByRole('dialog', { name: /Attachment:/ }) with timeout 5000ms
+      - waiting for getByRole('dialog', { name: /Attachment:/ })
+        14 × locator resolved to <dialog open="" aria-label="Attachment: Analysis 1" class="modal-dialog evidence-dialog">…</dialog>
+           - unexpected value "Attachment: Analysis 1CloseCaptured observation · 12:31:20 AMEvidence unavailable: its saved content is missing or corrupt. The original record has been preserved.Retry previewCaptured Run facts · Observed previewSource versionsha256:99e3bb92a6e8bb8404873ef1fa70eb2335f93ecb12d70bf798460ec57d3f759a"
+
+
+      42 |       const preview = page.getByRole('dialog', { name: /Attachment:/ });
+      43 |       await expect(preview.getByRole('alert')).toContainText('saved content is missing or corrupt');
+    > 44 |       await expect(preview).not.toContainText('Captured Run facts');
+         |                                 ^
+      45 |       await page.screenshot({ path: info.outputPath('feedback-missing.png') });
+      46 |     } finally {
+      47 |       await rename(capture + '.p5a-test-held', capture);
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/run-feedback-retention.spec.ts:44:33
+
+    Error Context: test-results/p5a-retention/run-feedback-retention-Fol-5f99a-ure-and-compact-restored-UI/error-context.md
+
+  1 failed
+    desktop/tests/electron/run-feedback-retention.spec.ts:7:1 › Follow-up: historical design, missing capture and compact restored UI 

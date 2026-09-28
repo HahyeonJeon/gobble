@@ -1,0 +1,1699 @@
+{
+  "anyOf": [
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "tool",
+        "arguments"
+      ],
+      "properties": {
+        "tool": {
+          "const": "workspace_question",
+          "type": "string"
+        },
+        "arguments": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "question",
+            "evidenceIds"
+          ],
+          "properties": {
+            "question": {
+              "minLength": 1,
+              "maxLength": 8000,
+              "type": "string"
+            },
+            "options": {
+              "maxItems": 6,
+              "uniqueItems": true,
+              "type": "array",
+              "items": {
+                "minLength": 1,
+                "maxLength": 500,
+                "type": "string"
+              }
+            },
+            "evidenceIds": {
+              "minItems": 1,
+              "maxItems": 16,
+              "uniqueItems": true,
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "pattern": "^obs_[A-Za-z0-9_-]{1,80}$",
+                    "maxLength": 84,
+                    "type": "string"
+                  },
+                  {
+                    "pattern": "^att_[A-Za-z0-9_-]{1,128}$",
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "tool",
+        "arguments"
+      ],
+      "properties": {
+        "tool": {
+          "const": "workspace_list",
+          "type": "string"
+        },
+        "arguments": {
+          "additionalProperties": false,
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "tool",
+        "arguments"
+      ],
+      "properties": {
+        "tool": {
+          "const": "workspace_resources",
+          "type": "string"
+        },
+        "arguments": {
+          "additionalProperties": false,
+          "type": "object",
+          "properties": {
+            "directoryId": {
+              "pattern": "^res_[A-Za-z0-9_-]{1,80}$",
+              "maxLength": 90,
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "tool",
+        "arguments"
+      ],
+      "properties": {
+        "tool": {
+          "const": "workspace_open",
+          "type": "string"
+        },
+        "arguments": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "resources"
+          ],
+          "properties": {
+            "resources": {
+              "minItems": 1,
+              "maxItems": 2,
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "type": "object",
+                    "required": [
+                      "kind",
+                      "resourceId"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "const": "file",
+                        "type": "string"
+                      },
+                      "resourceId": {
+                        "pattern": "^res_[A-Za-z0-9_-]{1,80}$",
+                        "maxLength": 90,
+                        "type": "string"
+                      }
+                    }
+                  },
+                  {
+                    "additionalProperties": false,
+                    "type": "object",
+                    "required": [
+                      "kind",
+                      "runRef"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "const": "run",
+                        "type": "string"
+                      },
+                      "runRef": {
+                        "pattern": "^run_[A-Za-z0-9_-]{1,80}$",
+                        "maxLength": 90,
+                        "type": "string"
+                      }
+                    }
+                  },
+                  {
+                    "additionalProperties": false,
+                    "type": "object",
+                    "required": [
+                      "kind",
+                      "runRef",
+                      "taskId",
+                      "attempt"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "const": "log",
+                        "type": "string"
+                      },
+                      "runRef": {
+                        "pattern": "^run_[A-Za-z0-9_-]{1,80}$",
+                        "maxLength": 90,
+                        "type": "string"
+                      },
+                      "taskId": {
+                        "minLength": 1,
+                        "maxLength": 256,
+                        "type": "string"
+                      },
+                      "attempt": {
+                        "minimum": 1,
+                        "maximum": 9007199254740991,
+                        "type": "integer"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "preferredPane": {
+              "anyOf": [
+                {
+                  "const": "primary",
+                  "type": "string"
+                },
+                {
+                  "const": "secondary",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "tool",
+        "arguments"
+      ],
+      "properties": {
+        "tool": {
+          "const": "workspace_arrange",
+          "type": "string"
+        },
+        "arguments": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "surfaceId",
+            "pane"
+          ],
+          "properties": {
+            "surfaceId": {
+              "pattern": "^srf_[A-Za-z0-9_-]{1,80}$",
+              "maxLength": 90,
+              "type": "string"
+            },
+            "pane": {
+              "anyOf": [
+                {
+                  "const": "primary",
+                  "type": "string"
+                },
+                {
+                  "const": "secondary",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "tool",
+        "arguments"
+      ],
+      "properties": {
+        "tool": {
+          "const": "workspace_observe",
+          "type": "string"
+        },
+        "arguments": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "surfaceId"
+          ],
+          "properties": {
+            "surfaceId": {
+              "pattern": "^srf_[A-Za-z0-9_-]{1,80}$",
+              "maxLength": 90,
+              "type": "string"
+            },
+            "representation": {
+              "anyOf": [
+                {
+                  "const": "tasks",
+                  "type": "string"
+                },
+                {
+                  "const": "dependencies",
+                  "type": "string"
+                }
+              ]
+            },
+            "stream": {
+              "anyOf": [
+                {
+                  "const": "stdout",
+                  "type": "string"
+                },
+                {
+                  "const": "stderr",
+                  "type": "string"
+                }
+              ]
+            },
+            "selection": {
+              "anyOf": [
+                {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "kind",
+                    "coordinateSpace",
+                    "scope",
+                    "profile",
+                    "pageIndex",
+                    "modelHash",
+                    "region"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "pdf",
+                      "type": "string"
+                    },
+                    "coordinateSpace": {
+                      "const": "pdf-user-space",
+                      "type": "string"
+                    },
+                    "scope": {
+                      "anyOf": [
+                        {
+                          "const": "page",
+                          "type": "string"
+                        },
+                        {
+                          "const": "region",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "profile": {
+                      "const": "pdfjs-6.3.289-region-v1:no-xfa,no-annotations,path-fonts,no-wasm",
+                      "type": "string"
+                    },
+                    "pageIndex": {
+                      "minimum": 0,
+                      "maximum": 199,
+                      "type": "integer"
+                    },
+                    "modelHash": {
+                      "minLength": 1,
+                      "maxLength": 256,
+                      "type": "string"
+                    },
+                    "region": {
+                      "type": "array",
+                      "items": [
+                        {
+                          "minimum": -10000000,
+                          "maximum": 10000000,
+                          "type": "number"
+                        },
+                        {
+                          "minimum": -10000000,
+                          "maximum": 10000000,
+                          "type": "number"
+                        },
+                        {
+                          "minimum": -10000000,
+                          "maximum": 10000000,
+                          "type": "number"
+                        },
+                        {
+                          "minimum": -10000000,
+                          "maximum": 10000000,
+                          "type": "number"
+                        }
+                      ],
+                      "additionalItems": false,
+                      "minItems": 4,
+                      "maxItems": 4
+                    }
+                  }
+                },
+                {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "kind",
+                    "coordinateSpace",
+                    "rowKeys",
+                    "columns"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "table",
+                      "type": "string"
+                    },
+                    "coordinateSpace": {
+                      "const": "revision-row-column-keys",
+                      "type": "string"
+                    },
+                    "rowKeys": {
+                      "minItems": 1,
+                      "maxItems": 500,
+                      "uniqueItems": true,
+                      "type": "array",
+                      "items": {
+                        "minLength": 1,
+                        "maxLength": 256,
+                        "type": "string"
+                      }
+                    },
+                    "columns": {
+                      "minItems": 1,
+                      "maxItems": 100,
+                      "uniqueItems": true,
+                      "type": "array",
+                      "items": {
+                        "minLength": 1,
+                        "maxLength": 256,
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "kind",
+                    "coordinateSpace",
+                    "start",
+                    "end"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "text",
+                      "type": "string"
+                    },
+                    "coordinateSpace": {
+                      "const": "utf16-line-column",
+                      "type": "string"
+                    },
+                    "start": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": [
+                        "line",
+                        "column"
+                      ],
+                      "properties": {
+                        "line": {
+                          "minimum": 1,
+                          "maximum": 9007199254740991,
+                          "type": "integer"
+                        },
+                        "column": {
+                          "minimum": 0,
+                          "maximum": 9007199254740991,
+                          "type": "integer"
+                        }
+                      }
+                    },
+                    "end": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": [
+                        "line",
+                        "column"
+                      ],
+                      "properties": {
+                        "line": {
+                          "minimum": 1,
+                          "maximum": 9007199254740991,
+                          "type": "integer"
+                        },
+                        "column": {
+                          "minimum": 0,
+                          "maximum": 9007199254740991,
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "kind",
+                    "coordinateSpace",
+                    "x",
+                    "y",
+                    "width",
+                    "height",
+                    "originalWidth",
+                    "originalHeight",
+                    "contentHash"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "image",
+                      "type": "string"
+                    },
+                    "coordinateSpace": {
+                      "const": "normalized-original-image",
+                      "type": "string"
+                    },
+                    "x": {
+                      "minimum": 0,
+                      "maximum": 1,
+                      "type": "number"
+                    },
+                    "y": {
+                      "minimum": 0,
+                      "maximum": 1,
+                      "type": "number"
+                    },
+                    "width": {
+                      "exclusiveMinimum": 0,
+                      "maximum": 1,
+                      "type": "number"
+                    },
+                    "height": {
+                      "exclusiveMinimum": 0,
+                      "maximum": 1,
+                      "type": "number"
+                    },
+                    "originalWidth": {
+                      "minimum": 1,
+                      "maximum": 100000,
+                      "type": "integer"
+                    },
+                    "originalHeight": {
+                      "minimum": 1,
+                      "maximum": 100000,
+                      "type": "integer"
+                    },
+                    "contentHash": {
+                      "pattern": "^sha256:[a-f0-9]{64}$",
+                      "type": "string"
+                    }
+                  }
+                },
+                {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "kind",
+                    "coordinateSpace",
+                    "instanceId",
+                    "attempt"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "run-task",
+                      "type": "string"
+                    },
+                    "coordinateSpace": {
+                      "const": "observed-instance-attempt",
+                      "type": "string"
+                    },
+                    "instanceId": {
+                      "minLength": 1,
+                      "maxLength": 256,
+                      "type": "string"
+                    },
+                    "attempt": {
+                      "minimum": 0,
+                      "maximum": 9007199254740991,
+                      "type": "integer"
+                    }
+                  }
+                },
+                {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "kind",
+                    "coordinateSpace",
+                    "stream",
+                    "start",
+                    "end"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "log-text",
+                      "type": "string"
+                    },
+                    "coordinateSpace": {
+                      "const": "decoded-preview-utf16-line-column",
+                      "type": "string"
+                    },
+                    "stream": {
+                      "anyOf": [
+                        {
+                          "const": "stdout",
+                          "type": "string"
+                        },
+                        {
+                          "const": "stderr",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "start": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": [
+                        "line",
+                        "column"
+                      ],
+                      "properties": {
+                        "line": {
+                          "minimum": 1,
+                          "maximum": 9007199254740991,
+                          "type": "integer"
+                        },
+                        "column": {
+                          "minimum": 0,
+                          "maximum": 9007199254740991,
+                          "type": "integer"
+                        }
+                      }
+                    },
+                    "end": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": [
+                        "line",
+                        "column"
+                      ],
+                      "properties": {
+                        "line": {
+                          "minimum": 1,
+                          "maximum": 9007199254740991,
+                          "type": "integer"
+                        },
+                        "column": {
+                          "minimum": 0,
+                          "maximum": 9007199254740991,
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "kind",
+                    "coordinateSpace",
+                    "taskId"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "run-group",
+                      "type": "string"
+                    },
+                    "coordinateSpace": {
+                      "const": "observed-authored-task-group",
+                      "type": "string"
+                    },
+                    "taskId": {
+                      "minLength": 1,
+                      "maxLength": 256,
+                      "type": "string"
+                    }
+                  }
+                },
+                {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "kind",
+                    "coordinateSpace",
+                    "fromTaskId",
+                    "toTaskId"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "run-dependency",
+                      "type": "string"
+                    },
+                    "coordinateSpace": {
+                      "const": "observed-authored-task-pair",
+                      "type": "string"
+                    },
+                    "fromTaskId": {
+                      "minLength": 1,
+                      "maxLength": 256,
+                      "type": "string"
+                    },
+                    "toTaskId": {
+                      "minLength": 1,
+                      "maxLength": 256,
+                      "type": "string"
+                    }
+                  }
+                }
+              ]
+            },
+            "scope": {
+              "anyOf": [
+                {
+                  "const": "view",
+                  "type": "string"
+                },
+                {
+                  "const": "source-preview",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "tool",
+        "arguments"
+      ],
+      "properties": {
+        "tool": {
+          "const": "workspace_point",
+          "type": "string"
+        },
+        "arguments": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "evidence",
+            "note"
+          ],
+          "properties": {
+            "evidence": {
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": [
+                        "schemaVersion",
+                        "projectId",
+                        "resource",
+                        "dataRevision"
+                      ],
+                      "properties": {
+                        "schemaVersion": {
+                          "const": 2,
+                          "type": "number"
+                        },
+                        "projectId": {
+                          "pattern": "^prj_[A-Za-z0-9_-]{1,80}$",
+                          "maxLength": 90,
+                          "type": "string"
+                        },
+                        "resource": {
+                          "anyOf": [
+                            {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "required": [
+                                "kind",
+                                "resourceId"
+                              ],
+                              "properties": {
+                                "kind": {
+                                  "const": "file",
+                                  "type": "string"
+                                },
+                                "resourceId": {
+                                  "pattern": "^res_[A-Za-z0-9_-]{1,80}$",
+                                  "maxLength": 90,
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "required": [
+                                "kind",
+                                "runRef"
+                              ],
+                              "properties": {
+                                "kind": {
+                                  "const": "run",
+                                  "type": "string"
+                                },
+                                "runRef": {
+                                  "pattern": "^run_[A-Za-z0-9_-]{1,80}$",
+                                  "maxLength": 90,
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "required": [
+                                "kind",
+                                "runRef",
+                                "taskId",
+                                "attempt"
+                              ],
+                              "properties": {
+                                "kind": {
+                                  "const": "log",
+                                  "type": "string"
+                                },
+                                "runRef": {
+                                  "pattern": "^run_[A-Za-z0-9_-]{1,80}$",
+                                  "maxLength": 90,
+                                  "type": "string"
+                                },
+                                "taskId": {
+                                  "minLength": 1,
+                                  "maxLength": 256,
+                                  "type": "string"
+                                },
+                                "attempt": {
+                                  "minimum": 1,
+                                  "maximum": 9007199254740991,
+                                  "type": "integer"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        "dataRevision": {
+                          "minLength": 1,
+                          "maxLength": 256,
+                          "type": "string"
+                        },
+                        "selection": {
+                          "anyOf": [
+                            {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "required": [
+                                "kind",
+                                "coordinateSpace",
+                                "rowKeys",
+                                "columns"
+                              ],
+                              "properties": {
+                                "kind": {
+                                  "const": "table",
+                                  "type": "string"
+                                },
+                                "coordinateSpace": {
+                                  "const": "revision-row-column-keys",
+                                  "type": "string"
+                                },
+                                "rowKeys": {
+                                  "minItems": 1,
+                                  "maxItems": 500,
+                                  "uniqueItems": true,
+                                  "type": "array",
+                                  "items": {
+                                    "minLength": 1,
+                                    "maxLength": 256,
+                                    "type": "string"
+                                  }
+                                },
+                                "columns": {
+                                  "minItems": 1,
+                                  "maxItems": 100,
+                                  "uniqueItems": true,
+                                  "type": "array",
+                                  "items": {
+                                    "minLength": 1,
+                                    "maxLength": 256,
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "required": [
+                                "kind",
+                                "coordinateSpace",
+                                "start",
+                                "end"
+                              ],
+                              "properties": {
+                                "kind": {
+                                  "const": "text",
+                                  "type": "string"
+                                },
+                                "coordinateSpace": {
+                                  "const": "utf16-line-column",
+                                  "type": "string"
+                                },
+                                "start": {
+                                  "additionalProperties": false,
+                                  "type": "object",
+                                  "required": [
+                                    "line",
+                                    "column"
+                                  ],
+                                  "properties": {
+                                    "line": {
+                                      "minimum": 1,
+                                      "maximum": 9007199254740991,
+                                      "type": "integer"
+                                    },
+                                    "column": {
+                                      "minimum": 0,
+                                      "maximum": 9007199254740991,
+                                      "type": "integer"
+                                    }
+                                  }
+                                },
+                                "end": {
+                                  "additionalProperties": false,
+                                  "type": "object",
+                                  "required": [
+                                    "line",
+                                    "column"
+                                  ],
+                                  "properties": {
+                                    "line": {
+                                      "minimum": 1,
+                                      "maximum": 9007199254740991,
+                                      "type": "integer"
+                                    },
+                                    "column": {
+                                      "minimum": 0,
+                                      "maximum": 9007199254740991,
+                                      "type": "integer"
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "required": [
+                                "kind",
+                                "coordinateSpace",
+                                "x",
+                                "y",
+                                "width",
+                                "height",
+                                "originalWidth",
+                                "originalHeight",
+                                "contentHash"
+                              ],
+                              "properties": {
+                                "kind": {
+                                  "const": "image",
+                                  "type": "string"
+                                },
+                                "coordinateSpace": {
+                                  "const": "normalized-original-image",
+                                  "type": "string"
+                                },
+                                "x": {
+                                  "minimum": 0,
+                                  "maximum": 1,
+                                  "type": "number"
+                                },
+                                "y": {
+                                  "minimum": 0,
+                                  "maximum": 1,
+                                  "type": "number"
+                                },
+                                "width": {
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 1,
+                                  "type": "number"
+                                },
+                                "height": {
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 1,
+                                  "type": "number"
+                                },
+                                "originalWidth": {
+                                  "minimum": 1,
+                                  "maximum": 100000,
+                                  "type": "integer"
+                                },
+                                "originalHeight": {
+                                  "minimum": 1,
+                                  "maximum": 100000,
+                                  "type": "integer"
+                                },
+                                "contentHash": {
+                                  "pattern": "^sha256:[a-f0-9]{64}$",
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        "origin": {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": [
+                            "surfaceId"
+                          ],
+                          "properties": {
+                            "surfaceId": {
+                              "pattern": "^srf_[A-Za-z0-9_-]{1,80}$",
+                              "maxLength": 90,
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": [
+                        "schemaVersion",
+                        "projectId",
+                        "resource",
+                        "dataRevision"
+                      ],
+                      "properties": {
+                        "schemaVersion": {
+                          "const": 3,
+                          "type": "number"
+                        },
+                        "projectId": {
+                          "pattern": "^prj_[A-Za-z0-9_-]{1,80}$",
+                          "maxLength": 90,
+                          "type": "string"
+                        },
+                        "resource": {
+                          "anyOf": [
+                            {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "required": [
+                                "kind",
+                                "resourceId"
+                              ],
+                              "properties": {
+                                "kind": {
+                                  "const": "file",
+                                  "type": "string"
+                                },
+                                "resourceId": {
+                                  "pattern": "^res_[A-Za-z0-9_-]{1,80}$",
+                                  "maxLength": 90,
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "required": [
+                                "kind",
+                                "runRef"
+                              ],
+                              "properties": {
+                                "kind": {
+                                  "const": "run",
+                                  "type": "string"
+                                },
+                                "runRef": {
+                                  "pattern": "^run_[A-Za-z0-9_-]{1,80}$",
+                                  "maxLength": 90,
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "required": [
+                                "kind",
+                                "runRef",
+                                "taskId",
+                                "attempt"
+                              ],
+                              "properties": {
+                                "kind": {
+                                  "const": "log",
+                                  "type": "string"
+                                },
+                                "runRef": {
+                                  "pattern": "^run_[A-Za-z0-9_-]{1,80}$",
+                                  "maxLength": 90,
+                                  "type": "string"
+                                },
+                                "taskId": {
+                                  "minLength": 1,
+                                  "maxLength": 256,
+                                  "type": "string"
+                                },
+                                "attempt": {
+                                  "minimum": 1,
+                                  "maximum": 9007199254740991,
+                                  "type": "integer"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        "dataRevision": {
+                          "minLength": 1,
+                          "maxLength": 256,
+                          "type": "string"
+                        },
+                        "selection": {
+                          "anyOf": [
+                            {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "required": [
+                                "kind",
+                                "coordinateSpace",
+                                "instanceId",
+                                "attempt"
+                              ],
+                              "properties": {
+                                "kind": {
+                                  "const": "run-task",
+                                  "type": "string"
+                                },
+                                "coordinateSpace": {
+                                  "const": "observed-instance-attempt",
+                                  "type": "string"
+                                },
+                                "instanceId": {
+                                  "minLength": 1,
+                                  "maxLength": 256,
+                                  "type": "string"
+                                },
+                                "attempt": {
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991,
+                                  "type": "integer"
+                                }
+                              }
+                            },
+                            {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "required": [
+                                "kind",
+                                "coordinateSpace",
+                                "stream",
+                                "start",
+                                "end"
+                              ],
+                              "properties": {
+                                "kind": {
+                                  "const": "log-text",
+                                  "type": "string"
+                                },
+                                "coordinateSpace": {
+                                  "const": "decoded-preview-utf16-line-column",
+                                  "type": "string"
+                                },
+                                "stream": {
+                                  "anyOf": [
+                                    {
+                                      "const": "stdout",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "stderr",
+                                      "type": "string"
+                                    }
+                                  ]
+                                },
+                                "start": {
+                                  "additionalProperties": false,
+                                  "type": "object",
+                                  "required": [
+                                    "line",
+                                    "column"
+                                  ],
+                                  "properties": {
+                                    "line": {
+                                      "minimum": 1,
+                                      "maximum": 9007199254740991,
+                                      "type": "integer"
+                                    },
+                                    "column": {
+                                      "minimum": 0,
+                                      "maximum": 9007199254740991,
+                                      "type": "integer"
+                                    }
+                                  }
+                                },
+                                "end": {
+                                  "additionalProperties": false,
+                                  "type": "object",
+                                  "required": [
+                                    "line",
+                                    "column"
+                                  ],
+                                  "properties": {
+                                    "line": {
+                                      "minimum": 1,
+                                      "maximum": 9007199254740991,
+                                      "type": "integer"
+                                    },
+                                    "column": {
+                                      "minimum": 0,
+                                      "maximum": 9007199254740991,
+                                      "type": "integer"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        "origin": {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": [
+                            "surfaceId"
+                          ],
+                          "properties": {
+                            "surfaceId": {
+                              "pattern": "^srf_[A-Za-z0-9_-]{1,80}$",
+                              "maxLength": 90,
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "schemaVersion",
+                    "projectId",
+                    "resource",
+                    "dataRevision",
+                    "selection"
+                  ],
+                  "properties": {
+                    "schemaVersion": {
+                      "const": 4,
+                      "type": "number"
+                    },
+                    "projectId": {
+                      "pattern": "^prj_[A-Za-z0-9_-]{1,80}$",
+                      "maxLength": 90,
+                      "type": "string"
+                    },
+                    "resource": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": [
+                        "kind",
+                        "runRef"
+                      ],
+                      "properties": {
+                        "kind": {
+                          "const": "run",
+                          "type": "string"
+                        },
+                        "runRef": {
+                          "pattern": "^run_[A-Za-z0-9_-]{1,80}$",
+                          "maxLength": 90,
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "dataRevision": {
+                      "minLength": 1,
+                      "maxLength": 256,
+                      "type": "string"
+                    },
+                    "selection": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": [
+                            "kind",
+                            "coordinateSpace",
+                            "taskId"
+                          ],
+                          "properties": {
+                            "kind": {
+                              "const": "run-group",
+                              "type": "string"
+                            },
+                            "coordinateSpace": {
+                              "const": "observed-authored-task-group",
+                              "type": "string"
+                            },
+                            "taskId": {
+                              "minLength": 1,
+                              "maxLength": 256,
+                              "type": "string"
+                            }
+                          }
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": [
+                            "kind",
+                            "coordinateSpace",
+                            "fromTaskId",
+                            "toTaskId"
+                          ],
+                          "properties": {
+                            "kind": {
+                              "const": "run-dependency",
+                              "type": "string"
+                            },
+                            "coordinateSpace": {
+                              "const": "observed-authored-task-pair",
+                              "type": "string"
+                            },
+                            "fromTaskId": {
+                              "minLength": 1,
+                              "maxLength": 256,
+                              "type": "string"
+                            },
+                            "toTaskId": {
+                              "minLength": 1,
+                              "maxLength": 256,
+                              "type": "string"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "schemaVersion",
+                    "projectId",
+                    "resource",
+                    "dataRevision",
+                    "selection"
+                  ],
+                  "properties": {
+                    "schemaVersion": {
+                      "const": 5,
+                      "type": "number"
+                    },
+                    "projectId": {
+                      "pattern": "^prj_[A-Za-z0-9_-]{1,80}$",
+                      "maxLength": 90,
+                      "type": "string"
+                    },
+                    "resource": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": [
+                        "kind",
+                        "resourceId"
+                      ],
+                      "properties": {
+                        "kind": {
+                          "const": "file",
+                          "type": "string"
+                        },
+                        "resourceId": {
+                          "pattern": "^res_[A-Za-z0-9_-]{1,80}$",
+                          "maxLength": 90,
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "dataRevision": {
+                      "minLength": 1,
+                      "maxLength": 256,
+                      "type": "string"
+                    },
+                    "origin": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": [
+                        "surfaceId"
+                      ],
+                      "properties": {
+                        "surfaceId": {
+                          "pattern": "^srf_[A-Za-z0-9_-]{1,80}$",
+                          "maxLength": 90,
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "selection": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": [
+                        "kind",
+                        "coordinateSpace",
+                        "scope",
+                        "profile",
+                        "pageIndex",
+                        "modelHash",
+                        "region"
+                      ],
+                      "properties": {
+                        "kind": {
+                          "const": "pdf",
+                          "type": "string"
+                        },
+                        "coordinateSpace": {
+                          "const": "pdf-user-space",
+                          "type": "string"
+                        },
+                        "scope": {
+                          "anyOf": [
+                            {
+                              "const": "page",
+                              "type": "string"
+                            },
+                            {
+                              "const": "region",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "profile": {
+                          "const": "pdfjs-6.3.289-region-v1:no-xfa,no-annotations,path-fonts,no-wasm",
+                          "type": "string"
+                        },
+                        "pageIndex": {
+                          "minimum": 0,
+                          "maximum": 199,
+                          "type": "integer"
+                        },
+                        "modelHash": {
+                          "minLength": 1,
+                          "maxLength": 256,
+                          "type": "string"
+                        },
+                        "region": {
+                          "type": "array",
+                          "items": [
+                            {
+                              "minimum": -10000000,
+                              "maximum": 10000000,
+                              "type": "number"
+                            },
+                            {
+                              "minimum": -10000000,
+                              "maximum": 10000000,
+                              "type": "number"
+                            },
+                            {
+                              "minimum": -10000000,
+                              "maximum": 10000000,
+                              "type": "number"
+                            },
+                            {
+                              "minimum": -10000000,
+                              "maximum": 10000000,
+                              "type": "number"
+                            }
+                          ],
+                          "additionalItems": false,
+                          "minItems": 4,
+                          "maxItems": 4
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "observedReadId": {
+              "pattern": "^obs_[A-Za-z0-9_-]{1,80}$",
+              "maxLength": 84,
+              "type": "string"
+            },
+            "observation": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": [
+                "schemaVersion",
+                "projectId",
+                "surfaceId",
+                "rendererSessionId",
+                "requestId",
+                "generation",
+                "dataRevision",
+                "presentation"
+              ],
+              "properties": {
+                "schemaVersion": {
+                  "const": 3,
+                  "type": "number"
+                },
+                "projectId": {
+                  "pattern": "^prj_[A-Za-z0-9_-]{1,80}$",
+                  "maxLength": 90,
+                  "type": "string"
+                },
+                "surfaceId": {
+                  "pattern": "^srf_[A-Za-z0-9_-]{1,80}$",
+                  "maxLength": 90,
+                  "type": "string"
+                },
+                "rendererSessionId": {
+                  "pattern": "^rnd_[A-Za-z0-9_-]{1,80}$",
+                  "maxLength": 90,
+                  "type": "string"
+                },
+                "requestId": {
+                  "pattern": "^req_[A-Za-z0-9_-]{1,80}$",
+                  "maxLength": 90,
+                  "type": "string"
+                },
+                "generation": {
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "dataRevision": {
+                  "minLength": 1,
+                  "maxLength": 256,
+                  "type": "string"
+                },
+                "presentation": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "spec",
+                    "view",
+                    "filter"
+                  ],
+                  "properties": {
+                    "spec": {
+                      "minimum": 0,
+                      "maximum": 9007199254740991,
+                      "type": "integer"
+                    },
+                    "view": {
+                      "minimum": 0,
+                      "maximum": 9007199254740991,
+                      "type": "integer"
+                    },
+                    "filter": {
+                      "minimum": 0,
+                      "maximum": 9007199254740991,
+                      "type": "integer"
+                    }
+                  }
+                },
+                "referenceViewRequestId": {
+                  "pattern": "^req_[A-Za-z0-9_-]{1,80}$",
+                  "maxLength": 90,
+                  "type": "string"
+                }
+              }
+            },
+            "note": {
+              "maxLength": 500,
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "tool",
+        "arguments"
+      ],
+      "properties": {
+        "tool": {
+          "const": "workspace_release",
+          "type": "string"
+        },
+        "arguments": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "surfaceId"
+          ],
+          "properties": {
+            "surfaceId": {
+              "pattern": "^srf_[A-Za-z0-9_-]{1,80}$",
+              "maxLength": 90,
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "tool",
+        "arguments"
+      ],
+      "properties": {
+        "tool": {
+          "const": "gobble_runs",
+          "type": "string"
+        },
+        "arguments": {
+          "additionalProperties": false,
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "tool",
+        "arguments"
+      ],
+      "properties": {
+        "tool": {
+          "const": "gobble_run",
+          "type": "string"
+        },
+        "arguments": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "runRef"
+          ],
+          "properties": {
+            "runRef": {
+              "pattern": "^run_[A-Za-z0-9_-]{1,80}$",
+              "maxLength": 90,
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "tool",
+        "arguments"
+      ],
+      "properties": {
+        "tool": {
+          "const": "gobble_logs",
+          "type": "string"
+        },
+        "arguments": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "runRef",
+            "instance",
+            "attempt"
+          ],
+          "properties": {
+            "runRef": {
+              "pattern": "^run_[A-Za-z0-9_-]{1,80}$",
+              "maxLength": 90,
+              "type": "string"
+            },
+            "instance": {
+              "minLength": 1,
+              "maxLength": 256,
+              "type": "string"
+            },
+            "attempt": {
+              "minimum": 1,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

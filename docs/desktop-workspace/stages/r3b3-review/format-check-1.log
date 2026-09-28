@@ -1,0 +1,13 @@
+
+> gobble-app-workspace@0.1.0 format:check
+> prettier --check .
+
+Checking formatting...
+[warn] contracts/src/index.ts
+[warn] contracts/src/workspace-bridge.ts
+[warn] contracts/src/workspace-document-v7.ts
+[warn] contracts/src/workspace-document-v8.ts
+[warn] contracts/src/workspace-migration.ts
+[warn] desktop/src/main/workspace/storage.ts
+[warn] desktop/tests/dependency-navigation.test.ts
+[warn] Code style issues found in 7 files. Run Prettier with --write to fix.

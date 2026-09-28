@@ -1,0 +1,315 @@
+{
+  "scope": "Saved report Agent sharing; accepted slice 3",
+  "changed": [
+    {
+      "path": "app/contracts/schema/v30.json",
+      "before": null,
+      "after": "0b5ba3dbed1b5f61eb27fa06718b2106b4a3e39d6ee04a3f091553749afe107a"
+    },
+    {
+      "path": "app/contracts/scripts/export-schema.ts",
+      "before": "bec3d0de7b9ab655c029f04579d704b8ee07aa0cc6eed703da46f5cb04d5d182",
+      "after": "a61186ba1237834bb7a5bed2f81e1a199edc4f09e0600b84fc3ebc5b8af87546"
+    },
+    {
+      "path": "app/contracts/src/evidence-validation.ts",
+      "before": "a3a707d5c80e2fdd745ca64257235b72c5c6d4a3bf34b90179c9118ea014c8e6",
+      "after": "a9cb7c6e615824ed4509deb40f8918eec48186cf7033be587b9a82bd5c76a05c"
+    },
+    {
+      "path": "app/contracts/src/evidence.ts",
+      "before": "c8f10b22df53cec5612c26086b99910c569188a5fd4f0677701e93f9021ad41b",
+      "after": "1d43f370986b50416618556fc1d6c5bbd8f4fbe8d65db43087d52138d244cc71"
+    },
+    {
+      "path": "app/contracts/src/observed-reference.ts",
+      "before": "db7a3c0aac2abbd9b2840cf65c3f7bd27667d4ceda30b30ba65581d264bdfc4a",
+      "after": "c858a616372d77c03b01c69360a13c631f45667bbeabe788766be43b3f3ff857"
+    },
+    {
+      "path": "app/contracts/src/question-validation.ts",
+      "before": "b3ce69d1c0bbc974c79f4729d601006326d22a29ada657e0c53be3814c69db8b",
+      "after": "9dca913d4c4cfa3579d2ad4cd7df4180c0213758bc3b34a0d6d89f2d04af74c8"
+    },
+    {
+      "path": "app/contracts/src/reference-resolution.ts",
+      "before": "9549e70fab6320d725e385f46b53dd4472fb5bc89eef5be283c542164ae408a7",
+      "after": "4b9e2346808b7ea820270a91002727cca9622de00209217e2689aafb2b3ed3bd"
+    },
+    {
+      "path": "app/contracts/src/reference-target.ts",
+      "before": "e5fe44392c13f93cef8091724ba12936e9be5cb60b7ee373ef7d6920d64e9f3f",
+      "after": "a90e04158afde8b3141c00fcedf2433b3d60f7105db5e55c41b8f8fdb4c2d6b4"
+    },
+    {
+      "path": "app/contracts/src/run-report.ts",
+      "before": "b8f216c390fac2a9958c7e453b6c6a0c7242eb8544d5d8c76eda271920c3bfcb",
+      "after": "de2462de88a942b0c3fa017364938c36469db798907579d15259518baaf43bbd"
+    },
+    {
+      "path": "app/contracts/src/shared-context.ts",
+      "before": "f26f1ced94faf6144d48ceda89b702de8b7f1aff4da776fb84d64ec9c86f3387",
+      "after": "ac2ada7befb936b8ba94858bf414d0316a34a4aa776988ab8708a9926f3dfde5"
+    },
+    {
+      "path": "app/contracts/src/shared-tools.ts",
+      "before": "3cf34a31eae24b2c45867beb5cf515f736be2c75917421ace4dbcc604119df40",
+      "after": "8da0abdd1d393481236c6fabc007859289ff553595eb4db24eb25d4565efebaf"
+    },
+    {
+      "path": "app/contracts/src/storage/workspace-v20.json",
+      "before": null,
+      "after": "4e201697b194c8c6bb24af367434325bcc4fbe46e8be424aee36fed1171bfc22"
+    },
+    {
+      "path": "app/contracts/src/validation.ts",
+      "before": "0092d5ed1164cd5b91dcaddf4e5743dbebb0ac556831cf51b01956ef7f9fb798",
+      "after": "56c9ecd84c57ebe5058c64f320bcb6e47b96152886aa8fbc2421a5e002f47d73"
+    },
+    {
+      "path": "app/contracts/src/workspace-document-v20.ts",
+      "before": null,
+      "after": "0579574d0e8f805e88e183e3ef9a2376292e86f6f184d94821100acd53e9ed79"
+    },
+    {
+      "path": "app/contracts/src/workspace-document.ts",
+      "before": "d7348985a82038dfcf6e2c1585f647d7ddf0332778e72156e09975d5d81fba34",
+      "after": "e33ea7aea24a18fc87b9760b1520fc5580578c9398e66ac7e9b0e6fde80c4bf3"
+    },
+    {
+      "path": "app/contracts/src/workspace-migration.ts",
+      "before": "03c79f39a278f1aac1cac817180039b742607f6bbea3d413fc1effa21e2d119f",
+      "after": "5b1af98bd85fb1369c5ff6b67e53305c065a4d6dfb4e966259710adcfc36c772"
+    },
+    {
+      "path": "app/desktop/src/main/codex/policy.ts",
+      "before": "599f03b99159713f2019f6e86581ab7c950e905f23536534720bc4ea906deb66",
+      "after": "33e59479931f08c0d210bb7c745f1ec417358762b5620e5b3f983cc618166e85"
+    },
+    {
+      "path": "app/desktop/src/main/collaboration/coordinator.ts",
+      "before": "92b9aa6176eb56158c3b6a6b771f753867168ac98f5a913c6d1621ac1b5a7d1d",
+      "after": "42dc76189e0651965a6610388dcd658fc6a275e4478b0aaba6f0eb78ae4e2ce4"
+    },
+    {
+      "path": "app/desktop/src/main/evidence/capture.ts",
+      "before": "62da35a29be7bfc2e0bbaa10af417f014ade733e5b77b2a28f7f75294e9b5f6f",
+      "after": "c9d4b5f0382c1637995b1d8b30314af3a7f0566c487c1791aa1751d010af79f0"
+    },
+    {
+      "path": "app/desktop/src/main/evidence/materialize.ts",
+      "before": "e02030ca2c4363171a31b030ab7fdf985ac31f5cfde5087bdc16aa7d6873f61f",
+      "after": "ff3c822dc315d5e98834018dd308cd3e6d2b106a96320c7115fb5b5eb724f7d6"
+    },
+    {
+      "path": "app/desktop/src/main/evidence/references.ts",
+      "before": "199965682466dc8222b08c376c7ee2348c3f673d6437288f0ebca6b0c91c0863",
+      "after": "f5c39b16a9b5a013aa09ce3008e25cb24c7ad9185613e226295e7976bcb66954"
+    },
+    {
+      "path": "app/desktop/src/main/evidence/report.ts",
+      "before": "3b12dc9db359c5ead48c223a3d0aad56828d4dbec8d3271034f007d556a4fe72",
+      "after": "5a44b0506d21166276a50d5d8d54894011fb418925e8797e72d8d97b86af1b92"
+    },
+    {
+      "path": "app/desktop/src/main/evidence/service.ts",
+      "before": "b93c7cdacf9df36bbdf033cae518eca5c655aa598999ce3d91df509ec1a2d911",
+      "after": "30a296af74c851a149251343c0efc090c30b615e106d1ab81349fd3b1ccd4def"
+    },
+    {
+      "path": "app/desktop/src/main/index.ts",
+      "before": "9e582d9cd8111cad06d2c4e60128c4a5eeedd3a826d472946f85099f3d10ac32",
+      "after": "126779d457b1afe900656ed434881b05af6a0c473e7959ec6cf1e6019eb96e7e"
+    },
+    {
+      "path": "app/desktop/src/main/questions/service.ts",
+      "before": "289f242704d632e6196bb46ffd4fdd3f8ee8e67bc2bbdfa54a883954cb450c02",
+      "after": "7e1334b3461d205ede1e39b20291ce97f56835bae2431c5720416adf4804d953"
+    },
+    {
+      "path": "app/desktop/src/main/shared-context/catalog.ts",
+      "before": "48035dcf9467a146497bae31141b971a03306219a2135bd80c0ed0509189fe31",
+      "after": "7979d21bb3bad46a9995e88e95e6927415049635e3f74f24fc2c3ed8609ee9a2"
+    },
+    {
+      "path": "app/desktop/src/main/shared-context/host.ts",
+      "before": "775d2f112b80fd76d105de34588eae16e7c94b3e59a95c262742f3e0bff966c8",
+      "after": "64ecf7e2be410914832fa4fd8018ca18cf2de15d29b565495e01c687bdc8f319"
+    },
+    {
+      "path": "app/desktop/src/main/shared-context/observed.ts",
+      "before": "9f23c8c01472c56d613d8b68c7bde78a8acd9680609f7bf4987fc34acda49f72",
+      "after": "87a32c1739333456585c0f6962fcbea0b9ecb39f925775835e3ae16266d46f9b"
+    },
+    {
+      "path": "app/desktop/src/main/shared-context/report.ts",
+      "before": null,
+      "after": "43a58c6399ebda51d820fc4e9e46ceac049a801bf0a36c74869433e51b25d783"
+    },
+    {
+      "path": "app/desktop/src/main/workspace/controller.ts",
+      "before": "98dec45c19817f5c51274890f588b7924028fc8489086fec6bcc416af7407a09",
+      "after": "4bb082585e2872e95ca4e333890dbf410875f0e26d1edd7fdd873191deacf9c6"
+    },
+    {
+      "path": "app/desktop/src/main/workspace/model.ts",
+      "before": "4f847f2809df8495de837577eae40b99f616f7d09990f1e6284284f99b66a6d6",
+      "after": "dbce0d6c432a1c8ef37cf05c1489a6123b5d633d3241bef2298eee681646b041"
+    },
+    {
+      "path": "app/desktop/src/main/workspace/render-session.ts",
+      "before": "f4d78cfb7be15c0ab5f06aeafa4d51aad76154da4735e7c74ab1aac3595c69a2",
+      "after": "595a62646399f096ab1106b1a34deb72355c6f1fb70ed5b1d6e330ee14d34fd8"
+    },
+    {
+      "path": "app/desktop/src/main/workspace/storage.ts",
+      "before": "2d8744c68a00ee1774ff15a64c69bca19e718f83e673d4f24889cfac822def2d",
+      "after": "6209c90bd027b2d6de93250e669c849ef0a5e72f20254b050264d8c84d5fb709"
+    },
+    {
+      "path": "app/desktop/src/renderer/evidence/EvidencePreview.tsx",
+      "before": "a76622ec9aaee9be6d49e2cdcd3418261c373225b99dcb49dde7855a3de02576",
+      "after": "a541c705c7c6c8839b6ba7f93602203a724e08d617e1090566c8bb04685a8cfa"
+    },
+    {
+      "path": "app/desktop/src/renderer/shared-context/marks.tsx",
+      "before": "c8bdba8f9912f59b583b26395fc64f48ddd480e786c282ef497ca9176af7eedc",
+      "after": "f8fc09d5a72e6b9061c84e6953b98ad14a191a39c591ac8b22cb39f699b2448a"
+    },
+    {
+      "path": "app/desktop/src/renderer/styles/report.css",
+      "before": "e0981bcb54d995bccdeefc5cc2adbad252bb3cb5b95870f98de48bf7aae79c1f",
+      "after": "7f243948deee2cbf790d09424bc6b2eb19db41a32e4664c0f55ac5cb87129368"
+    },
+    {
+      "path": "app/desktop/src/renderer/workspace/views/ReportView.tsx",
+      "before": "97935067647169f2c21ebbf84659c1944ae5843f4de345840eda4cf41422304d",
+      "after": "188dade29c23b24e078eed90e88e48c7e767fb604d8a423bce0e659def5d8482"
+    },
+    {
+      "path": "app/desktop/src/renderer/workspace/views/SurfaceView.tsx",
+      "before": "628f41085377b2bb611f319c864ed2b9769049d057c30d6930578761e390d9be",
+      "after": "1d3c31cb91d5324a6e126b1da0105b7d0a975ce41889082a20021a5abd23e892"
+    },
+    {
+      "path": "app/desktop/tests/collaboration.test.ts",
+      "before": "dbabf26aca57912ced12132e9a3972c85643d2742ad76af6cd99e0d535c7d08b",
+      "after": "03e7f7d486549a5339a8c635ecd14493f58cc617ead5a0e4116715d903916f4d"
+    },
+    {
+      "path": "app/desktop/tests/creation-host.test.ts",
+      "before": "6103f4758e16f9d6596cd8127fa90f099d1e94c6fefcf96bf65436f81a1a2360",
+      "after": "7ac955fa10a49644b2089256f554a0c9a735adcf04f6324ca44859afa20d14e6"
+    },
+    {
+      "path": "app/desktop/tests/dependency-navigation.test.ts",
+      "before": "b66ed71d487330bd4bf6e62d52078182e1c7b97cef29fe8d3261f84f37a196eb",
+      "after": "17aca64bfcdf7c61eed10eb2712848ffada4afd86c3031a384c8c999f519c522"
+    },
+    {
+      "path": "app/desktop/tests/dependency-reference.test.ts",
+      "before": "790961d4099a3e4f3fa4315428275a6d9f150111ac3352a97f57f2e82e506aec",
+      "after": "9150313ad882fcaac160e148988c046905734e8f459f9f2ab4402e6239c7592f"
+    },
+    {
+      "path": "app/desktop/tests/design.test.ts",
+      "before": "cc5445b69e3917ce9269b5160deee3fb79c230b9ba1cec44b829c9be31350189",
+      "after": "eab26e37adaae9a239b0a77567e18c4afe56e785c3bc4de66b91093f40c6f30d"
+    },
+    {
+      "path": "app/desktop/tests/electron/evidence.spec.ts",
+      "before": "9fe89c15de6dae55c148ce9610c09a7181439cf059b87309c525c57be861eb9c",
+      "after": "3d8fe09a275d67954e436d8d4a21bd7442ed3d3d55bd3eae5a103a230c90147f"
+    },
+    {
+      "path": "app/desktop/tests/electron/questions.spec.ts",
+      "before": "820e9b1e3203b284709d47889303e29eedd6717c9a11a4de4f5f3c445a888ec4",
+      "after": "b7e7935444601a614ad904bf4fe71f7be1e99bc59b695d7fae050aecd7d2f626"
+    },
+    {
+      "path": "app/desktop/tests/electron/saved-reports.spec.ts",
+      "before": "3b79cb53373be6a6407e799c9c1cb5a1f5665332da699917fc6322a992149a0d",
+      "after": "bd9f7992052abf7d2c6a2ec1da9a65c91b34fd78399ea10681126b22806447ee"
+    },
+    {
+      "path": "app/desktop/tests/electron/shared-context.spec.ts",
+      "before": "c7b5041e73e79c10d1f6a332926f0719ce42192be135bab17f2deafb7f99298f",
+      "after": "e6360619d78cb04d40bf5a625aff936d3caeaf19906cf0f879c2da512a87b7f6"
+    },
+    {
+      "path": "app/desktop/tests/electron/support.ts",
+      "before": "d11715e370df73a0049b2bc7be877225c9a31c4be45f4eb4a4941502e2f73bfd",
+      "after": "755a8dd465cd63f3a9b3362ac98ab9e783bf8d7763909953d1944f137bb5f2c8"
+    },
+    {
+      "path": "app/desktop/tests/fixtures/codex.cjs",
+      "before": "f34aa534c98c74fb76634266bb6afb92ecb3bf7d60f3e255fdb6a667b4336702",
+      "after": "c85fb11c67f12377ab14246ffdccb887e4e8d4c012adaa06c0f8aefbd809538f"
+    },
+    {
+      "path": "app/desktop/tests/linked-interaction.test.ts",
+      "before": "c9cbc0f691c1f749635d2e5d5d23a5acbfa8ce062d352e02c076f1c1976b2cc8",
+      "after": "deff76362064360c73c6d218ae248d03fdf2fae7c105bb2bb93616ca45114ad1"
+    },
+    {
+      "path": "app/desktop/tests/notebook-contracts.test.ts",
+      "before": "207c9bc9377bdf8668863de10ab30be5232637f00849ce65c105e6bd69170dd4",
+      "after": "5065b8035fc9e5955640b00ecce183cc2fec01df72bae8d9d10112983cb80c42"
+    },
+    {
+      "path": "app/desktop/tests/observed-evidence.test.ts",
+      "before": "e24645f2f5bf05f6f3b452eb31037101ec37c34b83ca95edbb848c1c231ab982",
+      "after": "ee34cdf57b11261343a1b17e22a6aa82f8a4b7aa48e2398f198acab5fc83ce60"
+    },
+    {
+      "path": "app/desktop/tests/pdf-evidence.test.ts",
+      "before": "4b213f5abed4141666e31557efc60fac63f21b995eded0c068b73405b1e9d0eb",
+      "after": "ac07dcd6ec0af79ff5574f749dec6496a2a6a5a416d2a15591f81f9bf717a02b"
+    },
+    {
+      "path": "app/desktop/tests/pipeline-discussion.test.ts",
+      "before": "bb837516b376ff1feef49de01000ec60623389662bc124d3f32634a83952eb7c",
+      "after": "dc73d23a12ab61bb52db7d3e9699ccf6ca73d4865f0c5c8157a4cebc10f8bd1e"
+    },
+    {
+      "path": "app/desktop/tests/pipeline-flow.test.ts",
+      "before": "8e5d858101d47e8d33a4763a0b491fceb7df7e5d56faf353216c153d5c491291",
+      "after": "dd7dc4cc3c390173d716e07890372b7e60f4d4ed3edd21768be55409ceb18a01"
+    },
+    {
+      "path": "app/desktop/tests/pipeline-proposal.test.ts",
+      "before": "51871723c88b86011a90b2513436982a4a5e54563efba9a738ff7ee3bbe6c9ce",
+      "after": "87cfeba0a58826bedd178a73e0ace9543581466209fe0b08bbf76f42ff381f57"
+    },
+    {
+      "path": "app/desktop/tests/plot-evidence.test.ts",
+      "before": "16524944d75ba5c1059f8cc82e48b540efdc867b14b5b5c6c4d700aacbd96363",
+      "after": "a1b90ebd24c0d59e6d9b8decfeb40e15adfc297f6bbb7456e62871d9d4358816"
+    },
+    {
+      "path": "app/desktop/tests/report-evidence.test.ts",
+      "before": "eabcdb0d527fac217902a7ef7af2be513a5051ea8fb5912f3451048ef10f07d0",
+      "after": "50f9f385bb71519690b5b57f062a32d93dbe2b4ea1bfc8e61bba67418604b051"
+    },
+    {
+      "path": "app/desktop/tests/report-sharing.test.ts",
+      "before": null,
+      "after": "00fcdeadcd7054f8ba4f6c60be9dd99c9ce851442f68023142e836698072db45"
+    },
+    {
+      "path": "app/desktop/tests/run-preparation.test.ts",
+      "before": "fee92190214990fe839f27cde5a6ce0840fc44ac7ec4f1420a5d9701df1308c7",
+      "after": "8a53208e7e5b466c8dbad9c1526fd5dc55ff39e71d45e2431b234d5a71e9b80a"
+    },
+    {
+      "path": "app/desktop/tests/shared-context.test.ts",
+      "before": "f74db83bff008696e73d54410ee49c0f67adec4793d42aa31fa53761944861ee",
+      "after": "00b9df6bb55add634c33919b3760aa5e467ad44c97fb569cd1ba1c7adaf3cb41"
+    },
+    {
+      "path": "app/desktop/tests/workspace-migration.test.ts",
+      "before": "cd2ea71c661bf795b6142afb0e3f72a4350b03c9f12096ba4e9097ccdb0a7b54",
+      "after": "1706a0db727549b129ebd5a891c2ec6ea78df77834f88928b4d2b766b59a988e"
+    }
+  ]
+}

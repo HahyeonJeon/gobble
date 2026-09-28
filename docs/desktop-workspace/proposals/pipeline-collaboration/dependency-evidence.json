@@ -1,0 +1,16 @@
+{
+  "role": "Added dependency/build and generator evidence after unaided review lock; original subject identity unchanged",
+  "files": {
+    "internal/containerenv/mounts.go": "255d80d7ecd53ab807848374172154e4ca9d5264ea14208fd9b6ef967cfdc50d",
+    "internal/containerenv/permissions_linux.go": "0bb8add85315d7dee6788eacf9527c8a84bc0fc627afa35248d51234bc824125",
+    "internal/containerenv/runtime.go": "66a8de00f30f69d1f68840f8e5f18bf121804feaef413f43ab7de8a268d0f6d7",
+    "internal/containerenv/runtime_test.go": "7423909f495e0fae7e748fbe2dc0983967fdc429cdcabd2ac54c72ee9dc143dd",
+    "app/scripts/generate-codex-protocol.ts": "407e7b78020673bdd8982d375d7082cf32b1168e9feac8e5e7f0499b1c3c180b"
+  },
+  "checklist": {
+    "path": "/Users/hahyeon/.codex/plugins/cache/gobbi-workspace/gobbi/1.2.4/skills/code-review/checklist.md",
+    "sha256": "89aaf24bad0d5f0deddba8df22103f7380c6aa348effe3468c5573cbc43fce07"
+  },
+  "platform": "macOS 26.5.2 build 25F84 arm64; Go 1.27.1; CGO_ENABLED=1 for native test",
+  "dependencyFact": "runtime.go SHA256 matches git show HEAD:internal/containerenv/runtime.go; git status --short internal/containerenv was empty"
+}

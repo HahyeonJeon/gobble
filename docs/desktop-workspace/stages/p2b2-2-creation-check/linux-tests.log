@@ -1,0 +1,3 @@
+ok  	github.com/HahyeonJeon/gobble/internal/engine	0.045s
+ok  	github.com/HahyeonJeon/gobble	0.076s
+ok  	github.com/HahyeonJeon/gobble/cmd/gobble	5.472s

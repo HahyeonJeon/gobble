@@ -1,0 +1,32 @@
+
+> gobble-app-workspace@0.1.0 build
+> npm run build:service && npm run build --workspace @gobble/desktop
+
+
+> gobble-app-workspace@0.1.0 build:service
+> tsx scripts/build-service.ts
+
+
+> @gobble/desktop@0.1.0 build
+> electron-vite build
+
+vite v7.3.6 building ssr environment for production...
+transforming...
+✓ 441 modules transformed.
+rendering chunks...
+out/main/index.js  1,888.10 kB
+✓ built in 1.03s
+vite v7.3.6 building ssr environment for production...
+transforming...
+✓ 360 modules transformed.
+rendering chunks...
+out/preload/index.cjs  1,444.78 kB
+✓ built in 419ms
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 506 modules transformed.
+rendering chunks...
+../../out/renderer/index.html                     0.39 kB
+../../out/renderer/assets/index-JPw9HWlG.css     79.11 kB
+../../out/renderer/assets/index-BRzbwxsM.js   2,458.52 kB
+✓ built in 988ms

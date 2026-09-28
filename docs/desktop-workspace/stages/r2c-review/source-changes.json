@@ -1,0 +1,272 @@
+[
+  {
+    "path": "app/README.md",
+    "before": "2345ab34fa77d8ccb78b9a1002991d39a4e50979de792ac1e3dbd340b5c79011",
+    "after": "cd17411a179f9bae69f06b6b865221fe1543f79d29df742b901e97349efd0c0e"
+  },
+  {
+    "path": "app/contracts/schema/v6.json",
+    "before": null,
+    "after": "f315f9156cd910f1b29f88f9ee20604fe888a7ee0ae494835e8304e938a9b4dd"
+  },
+  {
+    "path": "app/contracts/scripts/export-schema.ts",
+    "before": "211385724b3a815834240c13f1440291747e7462c208f3f7af115157cf8719e3",
+    "after": "7413b6807b24f8f7b0988eb37491c948d1e9c478b3800d8058ebb9ff14cd9d30"
+  },
+  {
+    "path": "app/contracts/src/document-content-v5.ts",
+    "before": null,
+    "after": "2a686610bcdcc48363875a4c0b8618279df9177050ded3257e192e5737f77f94"
+  },
+  {
+    "path": "app/contracts/src/evidence-validation.ts",
+    "before": "f8b8b84508ffdf0860515854c5469190eb38a32ffb35ba7fbd3a2bd5bfb59487",
+    "after": "8cc94aa3becd2366b49aee99bb577581f2d8cf8ad346d46f8e42fee93f0af1b2"
+  },
+  {
+    "path": "app/contracts/src/evidence.ts",
+    "before": "18bb10dc49c2c9f59947f6fbd4cd9c279f14acc5a732da00c12d6bd03ba690b6",
+    "after": "05ef30968dffe9ce93060f1a9b369c23f31209746d6d405025af79a02cbc2272"
+  },
+  {
+    "path": "app/contracts/src/index.ts",
+    "before": "a844818b937a835ffc6ddbf6cd1707b63864c38c6c79a62fc6cdd5e761941d1a",
+    "after": "5acd75fb4218a256c886f2656a3edd0a6c4756544adda658efdfea8acba27607"
+  },
+  {
+    "path": "app/contracts/src/reference-presentation.ts",
+    "before": null,
+    "after": "ea3aef6c660dcb8ea818a15fe986b30fb536daa714189196f813be59e5fbe838"
+  },
+  {
+    "path": "app/contracts/src/shared-context.ts",
+    "before": "b7078247e89eb9c5686ecd9515c87536d17655fc7538361f4fbe03436dfa331c",
+    "after": "2524137da56f756cb83ad8da6d63b14d6b9f4bf81918f1480427fe95eae210e3"
+  },
+  {
+    "path": "app/contracts/src/shared-tools.ts",
+    "before": "a998ede4e8f7574f27b78bb03909783b28769de6a6cd555bb26c7bf03f8008ca",
+    "after": "d3916b23a0879f3b0c397359029fcfd9de6e03623ca6e88fe8282b81afa2c80c"
+  },
+  {
+    "path": "app/contracts/src/surface.ts",
+    "before": "5e495c557e02562e5e1f60e4d3647cc265e7b6208875dbf0a50b230ac2f68376",
+    "after": "765ddefe5eff2d74b1d28f7d9764e57a28287cdf24714211c914ef8b8a286958"
+  },
+  {
+    "path": "app/contracts/src/workspace-bridge.ts",
+    "before": "0a9cc59716499dddf5e963560074941c234249c9db69972ddf00ec51e108d7cb",
+    "after": "46750989c61a5428c12ada7604e1e467fc33e8779765e1a52362c0bc6f410787"
+  },
+  {
+    "path": "app/contracts/src/workspace-document-v2.ts",
+    "before": "a24b0240c3d3c9e4fc9874c7d464bb02440e0ff2b9c260e1cfc20be265513917",
+    "after": "1bb66dee5d9bb258958716fe9efa3afa60c4a7a9432ecb2543a6561e25a860e1"
+  },
+  {
+    "path": "app/contracts/src/workspace-document-v3.ts",
+    "before": "9d5bff272005be98552e9a76d365123a6ce631840025b0004d536ef07da73744",
+    "after": "b4ec4bf458ca9e9ecfc0edf2cb416dfdb99fe874401c9eae176cc623c98fdf7c"
+  },
+  {
+    "path": "app/contracts/src/workspace-document-v4.ts",
+    "before": "b71a904a14b5dcc3383f338884d74442c22d2ec031caab2e0dbe3ad680cce2c3",
+    "after": "9ad137fb5cf535befaf59afb13b6a9be1b3bd5a9934e4b9ad4dd8b9f71cf9505"
+  },
+  {
+    "path": "app/contracts/src/workspace-document-v5.ts",
+    "before": null,
+    "after": "0abd4621f3785de2ffa5e73219a4c2839432e15831324be9b2bfd161f84ddd27"
+  },
+  {
+    "path": "app/contracts/src/workspace-document.ts",
+    "before": "ada75a47382669e89f8f951bc32c7f1d8a5985a18615de40b107783b774c7c2a",
+    "after": "d801d501efb9e9c6111c25d6d7d2160161cc4c02cd8066b8e0a25bf3cca83ab2"
+  },
+  {
+    "path": "app/contracts/src/workspace-migration.ts",
+    "before": "b8008f96df55a520398a317099f75e4572ed07dfe0fcf0d2537a5b581c7ec4c4",
+    "after": "e907f3be3df8d2ed15def29858b0027ccb9a306253eafcfd3dd46d63229870b9"
+  },
+  {
+    "path": "app/contracts/tests/contracts.test.ts",
+    "before": "8149bc48857360d5851b047faae39c5d1b07442f2a102113cb1d80e298504b8e",
+    "after": "6240fb6b3efd10ce5fa04dd912f0ef875930c0f9bb67d4bd5eb70b8f1b95fe23"
+  },
+  {
+    "path": "app/desktop/src/main/codex/policy.ts",
+    "before": "eb20f2a011ceceeef46b3f51fcb37d4ce357124b7bba1d5ee30f817228e010c5",
+    "after": "068911a543d0dae53ab0aca4692af53519285a8e1c21fb12abc4843ba146c389"
+  },
+  {
+    "path": "app/desktop/src/main/evidence/materialize.ts",
+    "before": "90593707d61e861cf0834237aac999e5f3f7ef75a377301a72007ab6d04f3f7e",
+    "after": "d69991e49912f56813e8431eddb2f2c8fcc0fb3f1fa5d6860365217ab9afc3c1"
+  },
+  {
+    "path": "app/desktop/src/main/questions/ports.ts",
+    "before": "d56eeceb7a080d6f28b77a9153862050e44cabe3c157e3c07ab881ce3a6449bf",
+    "after": "f9a663932c1da6eb7d54f641b4fa584c5a8dffcf1f8f63ae09ccd3084da05107"
+  },
+  {
+    "path": "app/desktop/src/main/questions/service.ts",
+    "before": "7db5d5b2e60567e7f390518674022ba6475cb2b7303707fca965649106e9228b",
+    "after": "72b53648098b0be2d682095bdd2d939271dbaf9923d0ed04a40cf3e352655c02"
+  },
+  {
+    "path": "app/desktop/src/main/shared-context/catalog.ts",
+    "before": "d55cf4f5bcce59e10be60cfe3424b6b40c4c52d0dd7eb9e47c962409b0cd5535",
+    "after": "863c4cfa8230a8721ca1c2c2e0106e0cbfe237a55350d85fbd6dc9ce8effc784"
+  },
+  {
+    "path": "app/desktop/src/main/shared-context/host.ts",
+    "before": "b1bfc1a96212f13d82fca2d4ceccd91c1deeadb56a8e9fa7813dad7a911fa6fe",
+    "after": "f62be1a4ecc92919ff1a1656b63a185605818b8a58d64aef123d721c1073d49d"
+  },
+  {
+    "path": "app/desktop/src/main/shared-context/layout.ts",
+    "before": "1d2e63dd00595fe4e14ac76723a46d39e1d4b4500735ebe955c34898bf3058cf",
+    "after": "3677219d635839d0aa8d6b44b136f129c9eaac30f32630dedae28b227902e824"
+  },
+  {
+    "path": "app/desktop/src/main/shared-context/tabular.ts",
+    "before": null,
+    "after": "4c323e814fbef3e1924cdbf2798e6ac84f12f4fb3fad1b76a810a0b6fe378a29"
+  },
+  {
+    "path": "app/desktop/src/main/workspace/controller.ts",
+    "before": "cf3007222b0d3b6af3c54e9ae6760057175561738ef712b8709ad414ff75559b",
+    "after": "6cd5a9a99c3b846f7443f45303069b6e211024cef5804ecf960821a5631f5b25"
+  },
+  {
+    "path": "app/desktop/src/main/workspace/model.ts",
+    "before": "9cf46b4080ca95b4ea630ba43a3e1d16e2f164c44df0bc491c454bcb6d144728",
+    "after": "a8ed29277e6dbb66cf3fb6c5f78445d479320f69acadff8d7ec450b1500e875c"
+  },
+  {
+    "path": "app/desktop/src/main/workspace/reference-views.ts",
+    "before": null,
+    "after": "42a57484b817b439334b92cea1ba53a886487fec421e53c989ddac77ae5e6d9e"
+  },
+  {
+    "path": "app/desktop/src/main/workspace/render-session.ts",
+    "before": "9ffa044cd80e4a9b77e3461508b8d014068bd1b13e0aa9eea18d8a6f648e2334",
+    "after": "5ec96db92dde03771d92fa4e55a65d43ffca19b939e664199b5e851d07e2dd70"
+  },
+  {
+    "path": "app/desktop/src/main/workspace/storage.ts",
+    "before": "9d4cd0e1bed728fde846835b7c0b55ceed1919b86747cc6d7776954034c3114b",
+    "after": "7768b673ae34a5d45c19e0cebcad1082b4fd8f3d946d8ade7b084969dbcd2d20"
+  },
+  {
+    "path": "app/desktop/src/main/workspace/tabular-commands.ts",
+    "before": "eb6700d6e0ad6a6d36e2f747b42b20cb3886fefa5ffb9e0d080d2a501f82c23a",
+    "after": "1594c4414e6e3b2a4157b1ad17e09df3a0afcab69ac09acc9d0085a61568b6dd"
+  },
+  {
+    "path": "app/desktop/src/renderer/evidence/AttachmentList.tsx",
+    "before": "801e6d5a9af2aa3d9457af9e116c958b2283d6c5b85172724608e1152725e37f",
+    "after": "7aa89edca00793a0d6bd01be2ec41b4dc68acec5e5e4d28b696b29f349b02277"
+  },
+  {
+    "path": "app/desktop/src/renderer/evidence/EvidencePreview.tsx",
+    "before": "067670fd012742748da297dcba3ba53ddbd38b9beb78c84ad9f62daf5ad96222",
+    "after": "7a678c0ccf3523813663a5dddf4ea8317e6d16669fa6927a62de61d685a0fa93"
+  },
+  {
+    "path": "app/desktop/src/renderer/shared-context/ReferenceEvent.tsx",
+    "before": "a4479f597ea3acf9edc6f40d8d1d6a9e9bbcf798cf499d683b1cdd9b31108140",
+    "after": "1067caac3902c3d86794eda4a53536e0c0c9f24f98b49afe67f67641a153dbf6"
+  },
+  {
+    "path": "app/desktop/src/renderer/styles/shared-context.css",
+    "before": "61ae7f81ad613ee6151e32f935edfb06b3b4cb709238d41a514297a05fb55de7",
+    "after": "8784d032c8e74059769eb9ea185c6f4aa48d660e52b2a70d819217290c6c8b69"
+  },
+  {
+    "path": "app/desktop/src/renderer/workspace/views/ReferenceViewBanner.tsx",
+    "before": null,
+    "after": "84ed4f5d96e71fc48ef50b06e83eb2fd171c17d51357fe726827170b32ea7813"
+  },
+  {
+    "path": "app/desktop/src/renderer/workspace/views/ScatterView.tsx",
+    "before": "b3450dd5f78dc6dfe92b5867dd68bbdf7aaf9553ce606fcd4a57c18ae36a6b22",
+    "after": "9053c12b0a2ff69bf4bf3ba9eeb39dea553e1527b018b25a6e54267d6559c5d8"
+  },
+  {
+    "path": "app/desktop/src/renderer/workspace/views/SurfaceView.tsx",
+    "before": "03ad2ad83a6117cd78511280641d5aeacbf025e1c2d67f311350e0c4fe0e0a68",
+    "after": "f45b048e6f6df1987b15beddaa7346ce488d3a1a444522238a761e138fc25ca7"
+  },
+  {
+    "path": "app/desktop/src/renderer/workspace/views/TableView.tsx",
+    "before": "ca0516a86c618874c185aa7d5c7c4a27a2006a9f211551f4dac3733e5805ce48",
+    "after": "8cbbee77b29acfe1a56235c2c351c54155db9f90f3c0a22424ac93ef4b5ee242"
+  },
+  {
+    "path": "app/desktop/src/renderer/workspace/views/plotly.d.ts",
+    "before": "1ed60c7430ba22660e1a0d2476587bb2e95f2918d019ecf9c3486203e1a4e0d7",
+    "after": "9c6e09781b1f0b228580e9d7ab3616ee7ad0558e7290fa0f976b4294beaaa32f"
+  },
+  {
+    "path": "app/desktop/src/renderer/workspace/views/scatter-chart.ts",
+    "before": "f6b6c44529a9bb61db8846523cbc8eb263d82b979109f37205835946a2f9ddd6",
+    "after": "6b7d9af9041a64235c953d683b0859bc640bc1ccca1064238f686ac869dc6eb9"
+  },
+  {
+    "path": "app/desktop/tests/collaboration.test.ts",
+    "before": "68d620d2a85a03300a619d4bab02e1ae62058ac53ec38cdf443d7dc4970a9b22",
+    "after": "e048176c83d426014e48a5d04c73af567aa6dbf1981d3fa9f7b0010ffb9d14b3"
+  },
+  {
+    "path": "app/desktop/tests/design.test.ts",
+    "before": "d1033eef76693d6c5c6fc14f9a21a48dc600eaf8128651b47acc331652210e1a",
+    "after": "f0bbf54cc4006eae89ac1036715c22955c57f9012af0f60d40f2e640a350d876"
+  },
+  {
+    "path": "app/desktop/tests/electron/evidence.spec.ts",
+    "before": "70693d320df418fe9e1c33fe9754eb05510e18cea6602a0888a84c5ef2176c34",
+    "after": "3d8d1e35d2affdc2e0ea86c8d608ddf51309f28cc30ef3d36bf2bd9ccde924a5"
+  },
+  {
+    "path": "app/desktop/tests/electron/linked-views.spec.ts",
+    "before": "153f0552b1f9e0f3efc306b130fffe341cdbc29b6dde8ad4e073d303a97d4f6a",
+    "after": "aeabfdc0a1047593f2501a65b4a1c60732f73808eef75fa588e0f751db72ba17"
+  },
+  {
+    "path": "app/desktop/tests/electron/questions.spec.ts",
+    "before": "c7af8467877d75d752336360d7a7a9e9ea9987388490e80b726c4cbd51a3aef0",
+    "after": "d65e9c0fdd753b218d34b31086577d7da0d6e7503bf0c0175ff133cddc925b18"
+  },
+  {
+    "path": "app/desktop/tests/fixtures/codex.cjs",
+    "before": "75832a3622d0123fcae5e1ff028c53d7a7bd60adbe81206c863268d53f49a378",
+    "after": "6f3eaa32e5c49e998c7142010efb93b5ece83f1d82040395925ee2edeeab16e2"
+  },
+  {
+    "path": "app/desktop/tests/linked-interaction.test.ts",
+    "before": "3d9f7e96df413e235ee35144ea9596a982d31ac9ed4112e4d140b428eb9464b4",
+    "after": "c2b4be4c3497eeeffc5291081b7398543a3c9f224aaf3087e8bed3fa966a3f9e"
+  },
+  {
+    "path": "app/desktop/tests/plot-evidence.test.ts",
+    "before": null,
+    "after": "9f2aa99d05ed9cc82c5009fe88c78d4aaebea1766b3747f9824ecc85e49f6baa"
+  },
+  {
+    "path": "app/desktop/tests/shared-context.test.ts",
+    "before": "d3c78f5b565c5cf8f68b6a9a474d798a9156b41fed664d5f37bb89a6cca43ab3",
+    "after": "fec36173c7192246fe38d8dfdff3a1de9480c4afe6d4f79b9f2e7b1d83e01124"
+  },
+  {
+    "path": "app/desktop/tests/tabular-foundation.test.ts",
+    "before": "32c0ce60226d46d5889e50e634d13460a0bc42ddfaf5d706f709c59d28ac49b2",
+    "after": "20e79a34687dede6ac9c2d13c826823254ca33b2acf8e181427e1a993e142147"
+  },
+  {
+    "path": "app/desktop/tests/workspace-migration.test.ts",
+    "before": "df85aa45c1a6c1786ac88da433aa336b33b8cdc25491afaa4149b21ef8b7a692",
+    "after": "680fcbb2e0e498b1e3ec67eb5954045a50f1f853d73b9ae8cda375042b54b997"
+  }
+]

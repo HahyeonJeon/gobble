@@ -1,0 +1,26 @@
+{
+  "actualAgent": true,
+  "image": "sha256:4c7a78e6caf180bd098c441dcfd9ba673f262c0b56889ff5dcb2eeb7e322baeb",
+  "daemon": "bfc24268-2f66-46d9-a1d1-969af8291bec",
+  "model": "gpt-6-astra",
+  "exactReference": [
+    {
+      "context": {
+        "pipelineId": "pip_JKUTNAJZGUUU4ILQAPK3HWZ4PB",
+        "proposalId": "req_df909cc41b69ade3d1fda0064a098582cd9f301aba6005846b638a19cfdd62f3",
+        "baseArtifactId": "sha256:3e131f3fd3277bd88fb1cbdcec2de2d9b07c95b177bd6b8c78694fc2e2248783",
+        "proposedArtifactId": "sha256:d0283ec2941d1fcd8243582a9148600568dab4a69064db3cd9db1414ec9b1c52",
+        "changeId": "setting:trim_galore:quality",
+        "side": "both"
+      },
+      "agentId": "agt_c33118c6-4ba0-4244-b82b-aa14c37adc57",
+      "submissionId": "req_92b91587-4e3b-49a1-a77a-4b2bab867a44",
+      "note": "Trim adapters — Quality threshold: 25 Phred before → 30 Phred proposed; Minimum length remains 40 bp. Inspect trimmed read quality adds a FastQC branch from the trimmed reads. That additional branch has not run yet; its HTML and ZIP outputs are declared, not generated."
+    }
+  ],
+  "userSelectionPreserved": true,
+  "draftPreserved": true,
+  "importedSourceUnchanged": true,
+  "runs": 0,
+  "adopted": true
+}

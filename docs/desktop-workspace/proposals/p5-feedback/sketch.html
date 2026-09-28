@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Gobble · Discuss, refine, run again</title>
+    <link rel="stylesheet" href="sketch.css" />
+  </head>
+  <body>
+    <header class="appbar">
+      <div class="brand">
+        <span class="brandmark" aria-hidden="true">g</span> Gobble
+        <span class="slash">/</span> Read quality
+      </div>
+      <span class="prototype">P5 design study · simulated data</span>
+    </header>
+    <nav class="scenes" aria-label="Prototype scenarios">
+      <span>Explore</span><button data-scene="failure">Failure</button
+      ><button data-scene="feedback">Result feedback</button
+      ><button data-scene="review">Review change</button
+      ><button data-scene="ready">New analysis</button
+      ><button data-scene="stale">Earlier design</button
+      ><button data-scene="resume">Resume · later</button
+      ><button data-scene="concepts">Compare approaches</button>
+    </nav>
+    <div class="mobile-switch" role="group" aria-label="Visible area">
+      <button data-area="workspace" aria-pressed="true">Workspace</button
+      ><button data-area="chat" aria-pressed="false">Chat</button>
+    </div>
+    <div class="layout" data-area="workspace">
+      <aside class="rail" aria-label="Project navigation">
+        <div class="eyebrow">PROJECT</div>
+        <div class="project-name">Read quality</div>
+        <div class="rail-heading">Pipeline</div>
+        <button data-scene="current" class="navitem">
+          ◈ <span>Read quality workflow</span>
+        </button>
+        <div class="rail-heading">Analyses</div>
+        <button data-scene="feedback" class="navitem" id="origin-nav">
+          ◷ <span>Analysis 12<small>Earlier result</small></span></button
+        ><button data-scene="ready" class="navitem">
+          ↳ <span>Follow-up<small>Review before starting</small></span>
+        </button>
+        <div class="rail-note">
+          A shared place to<br />understand your analysis.
+        </div>
+      </aside>
+      <main id="workspace" tabindex="-1"></main>
+      <section class="chat" aria-label="Project chat">
+        <header class="chat-head">
+          <div><b>Discussion</b><small>Read quality project</small></div>
+          <span class="agent-status"
+            ><span aria-hidden="true">●</span> Research agent</span
+          >
+        </header>
+        <div id="messages" class="messages" aria-live="polite"></div>
+        <div class="composer-wrap">
+          <div id="attachment"></div>
+          <label for="composer" class="sr-only">Message to Research agent</label
+          ><textarea
+            id="composer"
+            placeholder="Discuss this analysis…"
+            rows="3"
+          ></textarea>
+          <div class="composer-bottom">
+            <small>Shared views, precise references</small
+            ><button id="send" class="primary">
+              Send <span aria-hidden="true">↑</span>
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+    <div id="announcement" class="sr-only" role="status"></div>
+    <script src="sketch.js"></script>
+  </body>
+</html>

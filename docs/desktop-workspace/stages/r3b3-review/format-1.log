@@ -1,0 +1,34 @@
+contracts/src/shared-reference-v3.ts 29ms (unchanged)
+contracts/src/shared-context.ts 8ms
+contracts/src/shared-tools.ts 8ms
+contracts/src/shared-tools-v6.ts 6ms (unchanged)
+contracts/src/observed-reference.ts 7ms
+contracts/src/workspace-document-v9.ts 3ms
+desktop/src/main/shared-context/catalog.ts 4ms (unchanged)
+desktop/src/main/shared-context/dependency-observation.ts 8ms
+desktop/src/main/shared-context/host.ts 32ms
+desktop/src/main/shared-context/image.ts 3ms (unchanged)
+desktop/src/main/shared-context/layout.ts 7ms (unchanged)
+desktop/src/main/shared-context/observation.ts 7ms (unchanged)
+desktop/src/main/shared-context/observed.ts 8ms
+desktop/src/main/shared-context/ports.ts 2ms (unchanged)
+desktop/src/main/shared-context/references.ts 2ms (unchanged)
+desktop/src/main/shared-context/run-observation.ts 1ms (unchanged)
+desktop/src/main/shared-context/tabular.ts 2ms (unchanged)
+desktop/src/main/workspace/current-dependency.ts 2ms
+desktop/src/main/workspace/observed-reference-views.ts 5ms
+desktop/src/main/workspace/controller.ts 40ms
+desktop/src/renderer/workspace/views/dependencies/dependency-layout.ts 3ms (unchanged)
+desktop/src/renderer/workspace/views/dependencies/dependency-marks.tsx 3ms
+desktop/src/renderer/workspace/views/dependencies/DependencyDetails.tsx 12ms
+desktop/src/renderer/workspace/views/dependencies/DependencyGraph.tsx 10ms
+desktop/src/renderer/workspace/views/dependencies/DependencyReferenceContent.tsx 3ms
+desktop/src/renderer/workspace/views/dependencies/DependencyView.tsx 12ms
+desktop/src/renderer/workspace/views/RunView.tsx 3ms (unchanged)
+desktop/src/renderer/workspace/views/ObservedReferencePanel.tsx 4ms
+desktop/src/renderer/shared-context/ReferenceEvent.tsx 3ms
+desktop/tests/dependency-reference.test.ts 14ms
+desktop/tests/shared-context.test.ts 30ms
+desktop/tests/electron/dependency-reference.spec.ts 10ms
+desktop/tests/electron/observed-reference.spec.ts 10ms
+desktop/tests/fixtures/codex.cjs 25ms

@@ -1,0 +1,518 @@
+
+Running 1 test using 1 worker
+
+(node:52921) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  pw:api => electron.launch started +0ms
+  pw:browser <launching> /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron -r /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/node_modules/playwright-core/lib/server/electron/loader.js --inspect=0 --remote-debugging-port=0 /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop --gobble-profile=/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-runtime-ui-4yQryL/profile +0ms
+  pw:browser <launched> pid=52922 +1ms
+  pw:browser [pid=52922][err] Debugger listening on ws://127.0.0.1:60849/abf5a73d-8406-413f-8ffe-490321b6c863 +147ms
+  pw:browser [pid=52922][err] For help, see: https://nodejs.org/learn/getting-started/debugging +0ms
+  pw:browser <ws connecting> ws://127.0.0.1:60849/abf5a73d-8406-413f-8ffe-490321b6c863 +0ms
+  pw:browser [pid=52922][err] Debugger attached. +3ms
+  pw:browser <ws connected> ws://127.0.0.1:60849/abf5a73d-8406-413f-8ffe-490321b6c863 +1ms
+  pw:browser [pid=52922][err] (node:52922) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set. +28ms
+  pw:browser [pid=52922][err] (Use `Electron --trace-warnings ...` to show where the warning was created) +0ms
+  pw:browser [pid=52922][err]  +18ms
+  pw:browser [pid=52922][err] DevTools listening on ws://127.0.0.1:60851/devtools/browser/19e89e21-fa8b-4c70-9771-5aa2d74b0d07 +0ms
+  pw:browser <ws connecting> ws://127.0.0.1:60851/devtools/browser/19e89e21-fa8b-4c70-9771-5aa2d74b0d07 +0ms
+  pw:browser <ws connected> ws://127.0.0.1:60851/devtools/browser/19e89e21-fa8b-4c70-9771-5aa2d74b0d07 +49ms
+  pw:api <= electron.launch succeeded +259ms
+  pw:api   "commit" event fired +141ms
+  pw:api   "commit" event fired +11ms
+  pw:api   navigated to "app://gobble/index.html" +1ms
+  pw:api <= electronApplication.firstWindow succeeded +1ms
+  pw:api => Expect "toHaveText" started +3ms
+  pw:api Expect "toHaveText" locator('.app-status') with timeout 5000ms +1ms
+  pw:api waiting for locator('.app-status') +0ms
+  pw:api   "domcontentloaded" event fired +35ms
+  pw:api   "load" event fired +0ms
+  pw:api   locator resolved to <div role="status" class="app-status sr-only">Opening workspace…</div> +110ms
+  pw:api   unexpected value "Opening workspace…" +0ms
+  pw:api   locator resolved to <div role="status" class="app-status sr-only">Workspace ready</div> +24ms
+  pw:api <= Expect "toHaveText" succeeded +0ms
+  pw:api => electronApplication.evaluate started +1ms
+  pw:api <= electronApplication.evaluate succeeded +4ms
+  pw:api => electronApplication.evaluate started +1ms
+  pw:api <= electronApplication.evaluate succeeded +2ms
+  pw:api => electronApplication.evaluate started +1ms
+  pw:api <= electronApplication.evaluate succeeded +1ms
+  pw:api => locator.isVisible started +1ms
+  pw:api   checking visibility of getByRole('button', { name: 'Open folder', exact: true }) +0ms
+  pw:api <= locator.isVisible succeeded +2ms
+  pw:api => locator.click started +0ms
+  pw:api waiting for getByRole('button', { name: 'Open folder', exact: true }) +1ms
+  pw:api   locator resolved to <button>…</button> +1ms
+  pw:api attempting click action +1ms
+  pw:api   waiting for element to be visible, enabled and stable +0ms
+  pw:api   element is visible, enabled and stable +3ms
+  pw:api   scrolling into view if needed +0ms
+  pw:api   done scrolling +0ms
+  pw:api   performing click action +2ms
+  pw:api   click action done +4ms
+  pw:api   waiting for scheduled navigations to finish +0ms
+  pw:api   navigations have finished +1ms
+  pw:api <= locator.click succeeded +0ms
+  pw:api => Expect "toBeVisible" started +1ms
+  pw:api Expect "toBeVisible" getByRole('heading', { name: 'Runtime fixture', exact: true }) with timeout 5000ms +0ms
+  pw:api waiting for getByRole('heading', { name: 'Runtime fixture', exact: true }) +0ms
+  pw:api   locator resolved to <h1 aria-label="Runtime fixture">…</h1> +81ms
+  pw:api <= Expect "toBeVisible" succeeded +1ms
+  pw:api => electronApplication.evaluate started +0ms
+  pw:api <= electronApplication.evaluate succeeded +1ms
+  pw:api => locator.click started +0ms
+  pw:api waiting for getByRole('button', { name: 'Account', exact: true }) +0ms
+  pw:api   locator resolved to <button aria-label="Account" title="Account · Check connection">…</button> +2ms
+  pw:api attempting click action +1ms
+  pw:api   waiting for element to be visible, enabled and stable +0ms
+  pw:api   element is visible, enabled and stable +6ms
+  pw:api   scrolling into view if needed +0ms
+  pw:api   done scrolling +0ms
+  pw:api   performing click action +1ms
+  pw:api   click action done +4ms
+  pw:api   waiting for scheduled navigations to finish +0ms
+  pw:api   navigations have finished +0ms
+  pw:api <= locator.click succeeded +0ms
+  pw:api => locator.click started +1ms
+  pw:api waiting for getByRole('button', { name: 'Sign in with ChatGPT' }) +0ms
+  pw:api   locator resolved to <button class="primary-button">Sign in with ChatGPT</button> +2ms
+  pw:api attempting click action +0ms
+  pw:api   waiting for element to be visible, enabled and stable +1ms
+  pw:api   element is visible, enabled and stable +8ms
+  pw:api   scrolling into view if needed +0ms
+  pw:api   done scrolling +0ms
+  pw:api   performing click action +1ms
+  pw:api   click action done +2ms
+  pw:api   waiting for scheduled navigations to finish +0ms
+  pw:api   navigations have finished +1ms
+  pw:api <= locator.click succeeded +0ms
+  pw:api => Expect "toBeVisible" started +1ms
+  pw:api Expect "toBeVisible" getByText('ChatGPT connected', { exact: true }) with timeout 5000ms +0ms
+  pw:api waiting for getByText('ChatGPT connected', { exact: true }) +0ms
+  pw:api   "networkidle" event fired +204ms
+  pw:api   locator resolved to <p role="status">ChatGPT connected</p> +624ms
+  pw:api <= Expect "toBeVisible" succeeded +0ms
+  pw:api => locator.click started +1ms
+  pw:api waiting for getByRole('button', { name: 'Close Codex account' }) +0ms
+  pw:api   locator resolved to <button type="button" aria-label="Close Codex account">Close</button> +5ms
+  pw:api attempting click action +1ms
+  pw:api   waiting for element to be visible, enabled and stable +0ms
+  pw:api   element is visible, enabled and stable +10ms
+  pw:api   scrolling into view if needed +0ms
+  pw:api   done scrolling +1ms
+  pw:api   performing click action +3ms
+  pw:api   click action done +8ms
+  pw:api   waiting for scheduled navigations to finish +0ms
+  pw:api   navigations have finished +1ms
+  pw:api <= locator.click succeeded +0ms
+  pw:api => locator.click started +1ms
+  pw:api waiting for getByRole('button', { name: 'Project agents', exact: true }) +0ms
+  pw:api   locator resolved to <button aria-expanded="false" class="agents-trigger" aria-haspopup="dialog" aria-label="Project agents" aria-description="0 attached to this Project">…</button> +4ms
+  pw:api attempting click action +1ms
+  pw:api   waiting for element to be visible, enabled and stable +0ms
+  pw:api   element is visible, enabled and stable +14ms
+  pw:api   scrolling into view if needed +0ms
+  pw:api   done scrolling +1ms
+  pw:api   performing click action +2ms
+  pw:api   click action done +11ms
+  pw:api   waiting for scheduled navigations to finish +0ms
+  pw:api   navigations have finished +1ms
+  pw:api <= locator.click succeeded +1ms
+  pw:api => Expect "toBeVisible" started +1ms
+  pw:api Expect "toBeVisible" getByRole('dialog', { name: 'Project agents', exact: true }) with timeout 5000ms +0ms
+  pw:api waiting for getByRole('dialog', { name: 'Project agents', exact: true }) +0ms
+  pw:api <= Expect "toBeVisible" succeeded +3ms
+  pw:api => locator.click started +2ms
+  pw:api waiting for getByRole('button', { name: 'Add agent', exact: true }) +0ms
+  pw:api   locator resolved to <button>…</button> +5ms
+  pw:api attempting click action +1ms
+  pw:api   waiting for element to be visible, enabled and stable +0ms
+  pw:api   element is visible, enabled and stable +14ms
+  pw:api   scrolling into view if needed +0ms
+  pw:api   done scrolling +1ms
+  pw:api   performing click action +7ms
+  pw:api   click action done +13ms
+  pw:api   waiting for scheduled navigations to finish +1ms
+  pw:api   navigations have finished +1ms
+  pw:api <= locator.click succeeded +1ms
+  pw:api => locator.fill started +1ms
+  pw:api waiting for getByRole('dialog', { name: 'Add agent', exact: true }).getByLabel('Name', { exact: true }) +0ms
+  pw:api   locator resolved to <input value="" required="" maxlength="200" placeholder="e.g. Researcher"/> +3ms
+  pw:api   fill("Researcher") +1ms
+  pw:api attempting fill action +0ms
+  pw:api   waiting for element to be visible, enabled and editable +0ms
+  pw:api <= locator.fill succeeded +4ms
+  pw:api => locator.click started +0ms
+  pw:api waiting for getByRole('dialog', { name: 'Add agent', exact: true }).getByRole('button', { name: 'Add agent', exact: true }) +1ms
+  pw:api   locator resolved to <button class="primary-button">Add agent</button> +47ms
+  pw:api attempting click action +0ms
+  pw:api   waiting for element to be visible, enabled and stable +0ms
+  pw:api   element is visible, enabled and stable +10ms
+  pw:api   scrolling into view if needed +0ms
+  pw:api   done scrolling +1ms
+  pw:api   performing click action +2ms
+  pw:api   click action done +4ms
+  pw:api   waiting for scheduled navigations to finish +0ms
+  pw:api   navigations have finished +2ms
+  pw:api <= locator.click succeeded +1ms
+  pw:api => Expect "not toBeVisible" started +1ms
+  pw:api Expect "not toBeVisible" getByRole('dialog', { name: 'Add agent', exact: true }) with timeout 5000ms +0ms
+  pw:api waiting for getByRole('dialog', { name: 'Add agent', exact: true }) +0ms
+  pw:api   locator resolved to <dialog open="" class="modal-dialog " aria-label="Add agent">…</dialog> +3ms
+  pw:api   unexpected value "visible" +0ms
+  pw:api <= Expect "not toBeVisible" succeeded +24ms
+  pw:api => locator.click started +0ms
+  pw:api waiting for getByRole('button', { name: 'Attach', exact: true }) +0ms
+  pw:api   locator resolved to <button>Attach</button> +2ms
+  pw:api attempting click action +1ms
+  pw:api   waiting for element to be visible, enabled and stable +0ms
+  pw:api   element is visible, enabled and stable +9ms
+  pw:api   scrolling into view if needed +0ms
+  pw:api   done scrolling +0ms
+  pw:api   performing click action +1ms
+  pw:api   click action done +3ms
+  pw:api   waiting for scheduled navigations to finish +0ms
+  pw:api   navigations have finished +0ms
+  pw:api <= locator.click succeeded +0ms
+  pw:api => locator.click started +1ms
+  pw:api waiting for getByRole('button', { name: 'existing', exact: true }) +0ms
+  pw:api   locator resolved to <button>…</button> +786ms
+  pw:api attempting click action +1ms
+  pw:api   waiting for element to be visible, enabled and stable +0ms
+  pw:api   element is visible, enabled and stable +1ms
+  pw:api   scrolling into view if needed +0ms
+  pw:api   done scrolling +0ms
+  pw:api   performing click action +1ms
+  pw:api   click action done +8ms
+  pw:api   waiting for scheduled navigations to finish +0ms
+  pw:api   navigations have finished +2ms
+  pw:api <= locator.click succeeded +0ms
+  pw:api => Expect "toHaveAttribute" started +1ms
+  pw:api Expect "toHaveAttribute" getByRole('region', { name: 'Primary pane', exact: true }).locator('.surface-view') with timeout 5000ms +0ms
+  pw:api waiting for getByRole('region', { name: 'Primary pane', exact: true }).locator('.surface-view') +0ms
+  pw:api   locator resolved to <div data-ready="true" class="surface-view" aria-label="existing preview">…</div> +799ms
+  pw:api <= Expect "toHaveAttribute" succeeded +0ms
+  pw:api => locator.click started +1ms
+  pw:api waiting for getByRole('region', { name: 'Primary pane', exact: true }).getByRole('button', { name: 'More actions for existing', exact: true }) +0ms
+  pw:api   locator resolved to <button class="pane-more" aria-expanded="false" aria-label="More actions for existing" aria-controls="actions-srf_adacb196-5e13-4a50-8a65-2de95189c842">…</button> +3ms
+  pw:api attempting click action +2ms
+  pw:api   waiting for element to be visible, enabled and stable +0ms
+  pw:api   element is visible, enabled and stable +8ms
+  pw:api   scrolling into view if needed +0ms
+  pw:api   done scrolling +1ms
+  pw:api   performing click action +2ms
+  pw:api   click action done +4ms
+  pw:api   waiting for scheduled navigations to finish +0ms
+  pw:api   navigations have finished +2ms
+  pw:api <= locator.click succeeded +0ms
+  pw:api => Expect "toBeVisible" started +1ms
+  pw:api Expect "toBeVisible" getByRole('region', { name: 'Primary pane', exact: true }).getByRole('group', { name: 'Actions for existing', exact: true }) with timeout 5000ms +0ms
+  pw:api waiting for getByRole('region', { name: 'Primary pane', exact: true }).getByRole('group', { name: 'Actions for existing', exact: true }) +0ms
+  pw:api <= Expect "toBeVisible" succeeded +2ms
+  pw:api => locator.click started +1ms
+  pw:api waiting for getByRole('region', { name: 'Primary pane', exact: true }).getByRole('button', { name: 'Move existing to other pane' }) +0ms
+  pw:api   locator resolved to <button aria-label="Move existing to other pane">…</button> +2ms
+  pw:api attempting click action +1ms
+  pw:api   waiting for element to be visible, enabled and stable +0ms
+  pw:api   element is visible, enabled and stable +17ms
+  pw:api   scrolling into view if needed +0ms
+  pw:api   done scrolling +0ms
+  pw:api   performing click action +2ms
+  pw:api   click action done +4ms
+  pw:api   waiting for scheduled navigations to finish +0ms
+  pw:api   navigations have finished +2ms
+  pw:api <= locator.click succeeded +0ms
+  pw:api => Expect "toHaveAttribute" started +1ms
+  pw:api Expect "toHaveAttribute" getByRole('region', { name: 'Secondary pane', exact: true }).locator('.surface-view') with timeout 5000ms +0ms
+  pw:api waiting for getByRole('region', { name: 'Secondary pane', exact: true }).locator('.surface-view') +0ms
+  pw:api   locator resolved to <div data-ready="true" class="surface-view" aria-label="existing preview">…</div> +809ms
+  pw:api <= Expect "toHaveAttribute" succeeded +1ms
+  pw:api => Expect "toBeVisible" started +3ms
+  pw:api Expect "toBeVisible" getByRole('region', { name: 'Secondary pane', exact: true }).getByText('Pipeline: Fixture', { exact: true }) with timeout 5000ms +1ms
+  pw:api waiting for getByRole('region', { name: 'Secondary pane', exact: true }).getByText('Pipeline: Fixture', { exact: true }) +0ms
+  pw:api <= Expect "toBeVisible" succeeded +6ms
+  pw:api => Expect "toBeVisible" started +1ms
+  pw:api Expect "toBeVisible" getByRole('region', { name: 'Secondary pane', exact: true }).getByRole('heading', { name: 'fixture-run' }) with timeout 5000ms +1ms
+  pw:api waiting for getByRole('region', { name: 'Secondary pane', exact: true }).getByRole('heading', { name: 'fixture-run' }) +0ms
+  pw:api <= Expect "toBeVisible" succeeded +3ms
+  pw:api => Expect "toBeVisible" started +1ms
+  pw:api Expect "toBeVisible" getByRole('region', { name: 'Secondary pane', exact: true }).getByRole('row', { name: 'Align reads completed 2 View logs', exact: true }) with timeout 5000ms +0ms
+  pw:api waiting for getByRole('region', { name: 'Secondary pane', exact: true }).getByRole('row', { name: 'Align reads completed 2 View logs', exact: true }) +0ms
+  pw:api <= Expect "toBeVisible" succeeded +3ms
+  pw:api => locator.click started +0ms
+  pw:api waiting for getByRole('region', { name: 'Secondary pane', exact: true }).getByRole('row', { name: 'Align reads completed 2 View logs', exact: true }).getByRole('button', { name: 'View logs' }) +1ms
+  pw:api   locator resolved to <button>View logs</button> +3ms
+  pw:api attempting click action +1ms
+  pw:api   waiting for element to be visible, enabled and stable +0ms
+  pw:api   element is visible, enabled and stable +15ms
+  pw:api   scrolling into view if needed +0ms
+  pw:api   done scrolling +1ms
+  pw:api   performing click action +2ms
+  pw:api   click action done +4ms
+  pw:api   waiting for scheduled navigations to finish +0ms
+  pw:api   navigations have finished +1ms
+  pw:api <= locator.click succeeded +0ms
+  pw:api => Expect "toHaveAttribute" started +2ms
+  pw:api Expect "toHaveAttribute" getByRole('region', { name: 'Primary pane', exact: true }).locator('.surface-view') with timeout 5000ms +0ms
+  pw:api waiting for getByRole('region', { name: 'Primary pane', exact: true }).locator('.surface-view') +0ms
+  pw:api   locator resolved to <div data-ready="true" class="surface-view" aria-label="align:S03 · attempt 2 preview">…</div> +811ms
+  pw:api <= Expect "toHaveAttribute" succeeded +1ms
+  pw:api => Expect "toHaveValue" started +0ms
+  pw:api Expect "toHaveValue" getByRole('region', { name: 'Primary pane', exact: true }).getByRole('textbox', { name: 'align:S03 · attempt 2 logs' }) with timeout 5000ms +1ms
+  pw:api waiting for getByRole('region', { name: 'Primary pane', exact: true }).getByRole('textbox', { name: 'align:S03 · attempt 2 logs' }) +0ms
+  pw:api <= Expect "toHaveValue" succeeded +1ms
+  pw:api => Expect "toBeVisible" started +0ms
+  pw:api Expect "toBeVisible" getByRole('region', { name: 'Primary pane', exact: true }).getByText('Attempt 2 · Up to 4096 bytes per stream') with timeout 5000ms +1ms
+  pw:api waiting for getByRole('region', { name: 'Primary pane', exact: true }).getByText('Attempt 2 · Up to 4096 bytes per stream') +0ms
+  pw:api <= Expect "toBeVisible" succeeded +1ms
+  pw:api => Expect "toHaveCount" started +0ms
+  pw:api Expect "toHaveCount" getByRole('button', { name: /^(Start|Stop|Resume)$/ }) with timeout 5000ms +1ms
+  pw:api waiting for getByRole('button', { name: /^(Start|Stop|Resume)$/ }) +0ms
+  pw:api <= Expect "toHaveCount" succeeded +1ms
+  pw:api => locator.evaluate started +0ms
+  pw:api waiting for getByRole('region', { name: 'Primary pane', exact: true }).getByRole('textbox', { name: 'align:S03 · attempt 2 logs' }) +1ms
+  pw:api   locator resolved to visible <textarea readonly spellcheck="false" class="text-preview" aria-label="align:S03 · attempt 2 logs">Task: align:S03↵Standard output↵Read sample S03↵A…</textarea> +1ms
+  pw:api <= locator.evaluate succeeded +15ms
+  pw:api => locator.click started +0ms
+  pw:api waiting for getByRole('region', { name: 'Primary pane', exact: true }).getByRole('button', { name: 'Use text selection', exact: true }) +0ms
+  pw:api   locator resolved to <button disabled>Use text selection</button> +2ms
+  pw:api attempting click action +0ms
+  pw:api   waiting for element to be visible, enabled and stable +0ms
+  pw:api   element is not enabled +11ms
+  pw:api retrying click action +0ms
+  pw:api   waiting for element to be visible, enabled and stable +0ms
+  pw:api   element is not enabled +16ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 20ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +22ms
+  pw:api   element is not enabled +12ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 100ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +104ms
+  pw:api   element is not enabled +5ms
+  pw:api retrying click action +1ms
+  pw:api   waiting 100ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +102ms
+  pw:api   element is not enabled +5ms
+  pw:api retrying click action +1ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +504ms
+  pw:api   element is not enabled +12ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +508ms
+  pw:api   element is not enabled +12ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +503ms
+  pw:api   element is not enabled +19ms
+  pw:api retrying click action +1ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +505ms
+  pw:api   element is not enabled +12ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +505ms
+  pw:api   element is not enabled +12ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +506ms
+  pw:api   element is not enabled +20ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +508ms
+  pw:api   element is not enabled +15ms
+  pw:api retrying click action +1ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +505ms
+  pw:api   element is not enabled +18ms
+  pw:api retrying click action +1ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +504ms
+  pw:api   element is not enabled +14ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +507ms
+  pw:api   element is not enabled +18ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +505ms
+  pw:api   element is not enabled +19ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +504ms
+  pw:api   element is not enabled +22ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +504ms
+  pw:api   element is not enabled +12ms
+  pw:api retrying click action +1ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +504ms
+  pw:api   element is not enabled +9ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +505ms
+  pw:api   element is not enabled +16ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +505ms
+  pw:api   element is not enabled +11ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +504ms
+  pw:api   element is not enabled +19ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +505ms
+  pw:api   element is not enabled +16ms
+  pw:api retrying click action +1ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +504ms
+  pw:api   element is not enabled +11ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +503ms
+  pw:api   element is not enabled +12ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +504ms
+  pw:api   element is not enabled +16ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +505ms
+  pw:api   element is not enabled +20ms
+  pw:api retrying click action +1ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +504ms
+  pw:api   element is not enabled +10ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +504ms
+  pw:api   element is not enabled +14ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +505ms
+  pw:api   element is not enabled +19ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +505ms
+  pw:api   element is not enabled +12ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +504ms
+  pw:api   element is not enabled +12ms
+  pw:api retrying click action +1ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +505ms
+  pw:api   element is not enabled +11ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +504ms
+  pw:api   element is not enabled +15ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +1ms
+  pw:api   waiting for element to be visible, enabled and stable +505ms
+  pw:api   element is not enabled +16ms
+  pw:api retrying click action +1ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +505ms
+  pw:api   element is not enabled +12ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +502ms
+  pw:api   element is not enabled +13ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +504ms
+  pw:api   element is not enabled +17ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +508ms
+  pw:api   element is not enabled +16ms
+  pw:api retrying click action +1ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +507ms
+  pw:api   element is not enabled +17ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +505ms
+  pw:api   element is not enabled +21ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +506ms
+  pw:api   element is not enabled +18ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +506ms
+  pw:api   element is not enabled +16ms
+  pw:api retrying click action +1ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +505ms
+  pw:api   element is not enabled +11ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +505ms
+  pw:api   element is not enabled +15ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +503ms
+  pw:api   element is not enabled +12ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +505ms
+  pw:api   element is not enabled +21ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +504ms
+  pw:api   element is not enabled +13ms
+  pw:api retrying click action +1ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +505ms
+  pw:api   element is not enabled +19ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +504ms
+  pw:api   element is not enabled +9ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +505ms
+  pw:api   element is not enabled +15ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  pw:api   waiting for element to be visible, enabled and stable +504ms
+  pw:api   element is not enabled +21ms
+  pw:api retrying click action +0ms
+  pw:api   waiting 500ms +0ms
+  ✘  1 desktop/tests/electron/runtime.spec.ts:7:1 › current-attempt logs freeze at attach and survive source replacement and normal restart (30.0s)
+  pw:browser [pid=52922] <gracefully close start> +30s
+  pw:browser <ws disconnecting> ws://127.0.0.1:60849/abf5a73d-8406-413f-8ffe-490321b6c863 +2ms
+  pw:browser [pid=52922][err] Debugger ending on ws://127.0.0.1:60849/abf5a73d-8406-413f-8ffe-490321b6c863 +1ms
+  pw:browser [pid=52922][err] For help, see: https://nodejs.org/learn/getting-started/debugging +0ms
+  pw:browser <ws disconnected> ws://127.0.0.1:60849/abf5a73d-8406-413f-8ffe-490321b6c863 code=1005 reason= +0ms
+  pw:api <= locator.click failed +304ms
+  pw:api => electronApplication.close started +1ms
+  pw:browser <ws disconnected> ws://127.0.0.1:60851/devtools/browser/19e89e21-fa8b-4c70-9771-5aa2d74b0d07 code=1006 reason= +190ms
+  pw:api <= electronApplication.close succeeded +50ms
+  pw:browser [pid=52922] <process did exit: exitCode=0, signal=null> +2ms
+  pw:browser [pid=52922] starting temporary directories cleanup +1ms
+  pw:browser [pid=52922] finished temporary directories cleanup +1ms
+  pw:browser [pid=52922] <gracefully close end> +0ms
+
+
+  1) desktop/tests/electron/runtime.spec.ts:7:1 › current-attempt logs freeze at attach and survive source replacement and normal restart 
+
+    Test timeout of 30000ms exceeded.
+
+    Error Context: test-results/electron/runtime-current-attempt-lo-55971-lacement-and-normal-restart/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/electron/runtime-current-attempt-lo-55971-lacement-and-normal-restart/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/electron/runtime-current-attempt-lo-55971-lacement-and-normal-restart/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    desktop/tests/electron/runtime.spec.ts:7:1 › current-attempt logs freeze at attach and survive source replacement and normal restart 

@@ -1,0 +1,13 @@
+ExpectError: expect(received).toBeTruthy()
+
+Received: undefined
+    at captureRawStack (/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/node_modules/playwright-core/lib/coreBundle.js:8588:17)
+    at callMatcherAsStep (/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/node_modules/playwright/lib/matchers/expect.js:13310:57)
+    at Object.toBeTruthy (/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/node_modules/playwright/lib/matchers/expect.js:13302:23)
+    at main (/Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/docs/desktop-workspace/stages/p2a2-flow-discussion/live-agent.ts:142:18) {
+  matcherResult: {
+    message: 'expect(received).toBeTruthy()\n\nReceived: undefined',
+    pass: false,
+    name: 'toBeTruthy'
+  }
+}

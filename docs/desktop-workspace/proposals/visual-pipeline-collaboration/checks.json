@@ -1,0 +1,34 @@
+{
+  "date": "2026-09-09",
+  "subject": "visual pipeline design and isolated browser prototype",
+  "baselineSourceHash": "e6fbfeb4618fe41484e1cd92af3101ad7e4216e779a38bc1a35c423ca7168ca7",
+  "preservedBaselinePaths": 564,
+  "sourceAndEngineUnchanged": true,
+  "localLinks": "passed",
+  "prototypeJavaScriptSyntax": "passed",
+  "checks": {
+    "browser": "Codex in-app browser, UI-operated example only",
+    "viewports": [
+      "1280x720 default",
+      "900x700 temporary, reset after review"
+    ],
+    "details": "review.md"
+  },
+  "fullApplicationTests": "not rerun; production source unchanged",
+  "imageGeneration": {
+    "tool": "built-in image_gen",
+    "file": "flow-concept.png",
+    "prompt": "flow-concept.prompt.txt",
+    "role": "generated proposal, not a product screenshot"
+  },
+  "files": {
+    "README.md": "d1e8fece6ac57db9fc98b899009e94c4f4dcad124297eb5913119716a875a8a7",
+    "design.md": "6e4be5be4d4c95a1ee3a7d7ca717d5777fb46eb5b4170e9b35c14f495fec7909",
+    "flow-concept.png": "1bfdaba5cfd6a9e6e4978e9f696a77819f3e0a8d572d60b4f96770e4f5c4fd45",
+    "flow-concept.prompt.txt": "6347fb322bf968678e00b22282410f9e40aa679239677981c18f6196664384e1",
+    "plan.md": "6e5a4c7686b8b610a480d8e8b4bf59d3889ea1dc39b624a9154e249b81ade2e1",
+    "review-scope.json": "f4cacda4e5745048f0764ca85a2b8067a11924325e847934519e3a95b3925e93",
+    "review.md": "f53a912686bbd87b63b88a5d057626e34b9c0e576b246815f803e8be0e633021",
+    "sketch.html": "d19c2ca0afff5f976c7fc9aa3621db36976d4d680afbd41d54b7721fa78aac24"
+  }
+}

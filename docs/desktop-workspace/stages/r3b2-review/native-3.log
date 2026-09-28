@@ -1,0 +1,40 @@
+
+Running 2 tests using 1 worker
+
+(node:76403) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 desktop/tests/electron/dependencies.spec.ts:16:1 › User selects a group, exact attempt and directed dependency; frozen evidence and navigation survive restart and source changes (8.1s)
+(node:76472) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  2 desktop/tests/electron/dependencies.spec.ts:65:1 › missing, cyclic and bounded topology stays navigable by list and at compact native zoom (7.5s)
+
+
+  1) desktop/tests/electron/dependencies.spec.ts:16:1 › User selects a group, exact attempt and directed dependency; frozen evidence and navigation survive restart and source changes 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('region', { name: 'Primary pane', exact: true }).getByText(/Refresh failed · Showing previous observation/)
+    Expected: visible
+    Error: strict mode violation: getByRole('region', { name: 'Primary pane', exact: true }).getByText(/Refresh failed · Showing previous observation/) resolved to 2 elements:
+        1) <span>Refresh failed · Showing previous observation · 3…</span> aka getByText('Refresh failed · Showing').first()
+        2) <span>Refresh failed · Showing previous observation · 3…</span> aka getByText('Refresh failed · Showing').nth(1)
+
+    Call log:
+      - Expect "toBeVisible" getByRole('region', { name: 'Primary pane', exact: true }).getByText(/Refresh failed · Showing previous observation/) with timeout 5000ms
+      - waiting for getByRole('region', { name: 'Primary pane', exact: true }).getByText(/Refresh failed · Showing previous observation/)
+
+
+      46 |   await expect(primary.getByRole('button',{name:'Discuss dependency',exact:true})).toBeEnabled();
+      47 |   await writeFile(fixture.monitorPath,'{}');await primary.getByRole('button',{name:'Refresh',exact:true}).click();
+    > 48 |   await expect(primary.getByText(/Refresh failed · Showing previous observation/)).toBeVisible();
+         |                                                                                    ^
+      49 |   await expect(primary.getByRole('button',{name:'Discuss dependency',exact:true})).toBeEnabled();
+      50 |   fixture.monitor.snapshot='fixture-revision-5';fixture.monitor.tasks[1]!.attempt=3;fixture.monitor.edges=[];await writeFile(fixture.monitorPath,JSON.stringify(fixture.monitor));
+      51 |   await primary.getByRole('button',{name:'Refresh',exact:true}).click();await readyView(page);await expect(primary.locator('.dependency-scope')).toContainText('0 of 0 observed dependencies');
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/dependencies.spec.ts:48:84
+
+    Error Context: test-results/electron/dependencies-User-selects--c1dca--restart-and-source-changes/error-context.md
+
+  1 failed
+    desktop/tests/electron/dependencies.spec.ts:16:1 › User selects a group, exact attempt and directed dependency; frozen evidence and navigation survive restart and source changes 
+  1 passed (16.4s)

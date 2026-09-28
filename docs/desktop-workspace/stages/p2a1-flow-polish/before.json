@@ -1,0 +1,14 @@
+{
+  "parentSourceHash": "0caff078c458517a0a8fa26b384874f48c5d50fa3f55bfe15a3fd6461cbdc920",
+  "authorization": "Owner requested refinement to approved concept: rounded orthogonal connections, card color and icons before P2A-2.",
+  "files": {
+    "app/desktop/src/renderer/workspace/views/pipeline/flow-layout.ts": "e380f4a3c53f647e128318332374a406bb57be14706cad644bf030e6d09825b0",
+    "app/desktop/src/renderer/workspace/views/pipeline/PipelineFlow.tsx": "0dafa8e3f3de674366423bf4f65cd1ebe99193885b92f3db20ecdee14d30d8c2",
+    "app/desktop/src/renderer/workspace/views/pipeline/PipelineView.tsx": "f1981721bb9a8f512dabc831ce2c2b09ad4953b27caf9f3fed6a461c238f0af4",
+    "app/desktop/src/renderer/styles/pipeline.css": "f9f2e50275e38b82246db93c9f4e0dd23a4a98aeee13794ffa57a0f92b84d949",
+    "app/desktop/tests/pipeline-flow.test.ts": "90d8d0884e668aa234294e22a35c2011329c25b7d42ca5c5c80c445f0012940d",
+    "app/desktop/tests/electron/pipeline-flow.spec.ts": "fa3210f2aa01f5e6969129ab7c2905354e08736e1a66d126b891d9c15e631f19",
+    "docs/desktop-workspace/README.md": "522bb9c242b2b57a32a0c519c9236f25cf0a3b6bd7a8b358b3623241ce8d15d5",
+    "docs/desktop-workspace/remaining-work.md": "2c923589ca7b3b1f183293caf27027d047dab61bc78c6e3657898aec18f14c48"
+  }
+}

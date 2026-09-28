@@ -1,0 +1,6 @@
+--- FAIL: TestOutputEvidenceRefusals (0.38s)
+    --- FAIL: TestOutputEvidenceRefusals/wrong-run (0.03s)
+        output_evidence_test.go:86: initial Run admission cannot be replaced
+FAIL
+FAIL	github.com/HahyeonJeon/gobble/internal/engine	1.275s
+FAIL

@@ -1,0 +1,52 @@
+[
+  {
+    "name": "python",
+    "bytes": 2491,
+    "sha256": "0f7f80252f94fef60a2489f24b74a049d757dee5d84db33e43232b772cea9595"
+  },
+  {
+    "name": "r",
+    "bytes": 2480,
+    "sha256": "5326cba333f97461c9ba6c3585ea52df8bf4aaad0150becfd8ee6d343ec692c7"
+  },
+  {
+    "name": "legacy",
+    "bytes": 2452,
+    "sha256": "b2b9d2011bec62d4cd885f32ae5f46d8066239be338b2a83adeec07764c2866a"
+  },
+  {
+    "name": "reordered",
+    "bytes": 2491,
+    "sha256": "8313d17231b8193f132b69562bf49bcafde2b83d0743dfa8dd17fe1947c90d46"
+  },
+  {
+    "name": "changed",
+    "bytes": 2491,
+    "sha256": "09b765d0d373776ff1c6617f30a281072a7096d542751c3eddc4d614946da422"
+  },
+  {
+    "name": "unsafe",
+    "bytes": 2675,
+    "sha256": "17ad0c58c105eb42384b9be3461af7d3c79a9788a249f7acb0352a0f61c8df60"
+  },
+  {
+    "name": "invalid",
+    "bytes": 9,
+    "sha256": "161751ade1d5c99df7d8e92c1d350bcf1b58266979dc3806b4f4d9939f6d0a20"
+  },
+  {
+    "name": "many",
+    "bytes": 118760,
+    "sha256": "0b6e6366e62baa9ca7eccf5e6a746f97276cbe60d5777bcb68a2851077bab37e"
+  },
+  {
+    "name": "large",
+    "bytes": 3385667,
+    "sha256": "fcfd5c2a02a72ddc22ce920960e0d6216badd28d98a96c79ae37b47796b87a1a"
+  },
+  {
+    "name": "long-text",
+    "bytes": 1048760,
+    "sha256": "5f9c7dc1209cb1b0089dc42f2d76bd8b6645dd54f261dd0eea713c3e73f457ea"
+  }
+]

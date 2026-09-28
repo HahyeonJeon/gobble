@@ -1,0 +1,4 @@
+ok  	github.com/HahyeonJeon/gobble/internal/engine	12.709s
+ok  	github.com/HahyeonJeon/gobble/internal/engine/exec	1.209s
+ok  	github.com/HahyeonJeon/gobble/monitor	4.043s
+ok  	github.com/HahyeonJeon/gobble/monitor/tui	7.837s

@@ -1,0 +1,465 @@
+[
+  {
+    "name": "gobble-launch-99e267fdada8cb8f75e2f9d8f15ca68a",
+    "image": "sha256:c7f3c4aa35767297db1f0acc84bc08477673f5f7429692ca594d06ba6e0c74e3",
+    "state": {
+      "Status": "exited",
+      "Running": false,
+      "Paused": false,
+      "Restarting": false,
+      "OOMKilled": false,
+      "Dead": false,
+      "Pid": 0,
+      "ExitCode": 1,
+      "Error": "",
+      "StartedAt": "2026-09-27T07:50:13.800134884Z",
+      "FinishedAt": "2026-09-27T07:50:26.074450334Z"
+    },
+    "mounts": [
+      {
+        "Type": "bind",
+        "Source": "/var/run/docker.sock",
+        "Destination": "/var/run/docker.sock",
+        "Mode": "",
+        "RW": true,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-creation-ui-B916gT/Read quality study/runs/analysis-08fb76b2-8493-464d-a93c-0954cbec4ec4",
+        "Destination": "/gobble/project/runs/analysis-08fb76b2-8493-464d-a93c-0954cbec4ec4",
+        "Mode": "",
+        "RW": true,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-creation-ui-B916gT/Read quality study/runs/analysis-08fb76b2-8493-464d-a93c-0954cbec4ec4/inputs/reads.fastq.gz",
+        "Destination": "/gobble/project/runs/analysis-08fb76b2-8493-464d-a93c-0954cbec4ec4/inputs/reads.fastq.gz",
+        "Mode": "",
+        "RW": false,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-creation-ui-B916gT/profile/service/launch-reviews/prj_ULQ5WEZCIBEENXO5KW3NMLCXVZ/req_08fb76b2-8493-464d-a93c-0954cbec4ec4/bundle",
+        "Destination": "/gobble/launch",
+        "Mode": "",
+        "RW": false,
+        "Propagation": "rprivate"
+      }
+    ],
+    "labels": {
+      "io.gobble.continuation.scope": "single-end-trim-fastqc-v1",
+      "io.gobble.creation.scope": "single-end-trim-fastqc-v1",
+      "io.gobble.launch": "sha256:99e267fdada8cb8f75e2f9d8f15ca68a00798a993bedc059cf7bd94f73e779c7",
+      "io.gobble.launch.scope": "single-end-trim-fastqc-v1",
+      "io.gobble.preparation.scope": "single-end-trim-fastqc-v1"
+    }
+  },
+  {
+    "name": "gobble-launch-5046e8343e2bba66f219d17a87c7abce",
+    "image": "sha256:c7f3c4aa35767297db1f0acc84bc08477673f5f7429692ca594d06ba6e0c74e3",
+    "state": {
+      "Status": "exited",
+      "Running": false,
+      "Paused": false,
+      "Restarting": false,
+      "OOMKilled": false,
+      "Dead": false,
+      "Pid": 0,
+      "ExitCode": 1,
+      "Error": "",
+      "StartedAt": "2026-09-27T07:56:36.673475589Z",
+      "FinishedAt": "2026-09-27T07:56:48.991029053Z"
+    },
+    "mounts": [
+      {
+        "Type": "bind",
+        "Source": "/private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-creation-ui-K1xCNF/Read quality study/runs/analysis-be040804-e30f-4c58-a9e4-85ec9be092a1/inputs/reads.fastq.gz",
+        "Destination": "/gobble/project/runs/analysis-be040804-e30f-4c58-a9e4-85ec9be092a1/inputs/reads.fastq.gz",
+        "Mode": "",
+        "RW": false,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-creation-ui-K1xCNF/profile/service/launch-reviews/prj_FTIIR37MMXPJYK2QTCSJFG5LUJ/req_be040804-e30f-4c58-a9e4-85ec9be092a1/bundle",
+        "Destination": "/gobble/launch",
+        "Mode": "",
+        "RW": false,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/var/run/docker.sock",
+        "Destination": "/var/run/docker.sock",
+        "Mode": "",
+        "RW": true,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-creation-ui-K1xCNF/Read quality study/runs/analysis-be040804-e30f-4c58-a9e4-85ec9be092a1",
+        "Destination": "/gobble/project/runs/analysis-be040804-e30f-4c58-a9e4-85ec9be092a1",
+        "Mode": "",
+        "RW": true,
+        "Propagation": "rprivate"
+      }
+    ],
+    "labels": {
+      "io.gobble.continuation.scope": "single-end-trim-fastqc-v1",
+      "io.gobble.creation.scope": "single-end-trim-fastqc-v1",
+      "io.gobble.launch": "sha256:5046e8343e2bba66f219d17a87c7abce99b1910a07bd3115f3556923061486f9",
+      "io.gobble.launch.scope": "single-end-trim-fastqc-v1",
+      "io.gobble.preparation.scope": "single-end-trim-fastqc-v1"
+    }
+  },
+  {
+    "name": "gobble-continuation-521023158c8cc954c82b9f3483e6712e",
+    "image": "sha256:c7f3c4aa35767297db1f0acc84bc08477673f5f7429692ca594d06ba6e0c74e3",
+    "state": {
+      "Status": "exited",
+      "Running": false,
+      "Paused": false,
+      "Restarting": false,
+      "OOMKilled": false,
+      "Dead": false,
+      "Pid": 0,
+      "ExitCode": 0,
+      "Error": "",
+      "StartedAt": "2026-09-27T07:57:09.523708132Z",
+      "FinishedAt": "2026-09-27T07:57:33.545473588Z"
+    },
+    "mounts": [
+      {
+        "Type": "bind",
+        "Source": "/var/run/docker.sock",
+        "Destination": "/var/run/docker.sock",
+        "Mode": "",
+        "RW": true,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-creation-ui-K1xCNF/Read quality study/runs/analysis-be040804-e30f-4c58-a9e4-85ec9be092a1",
+        "Destination": "/gobble/project/runs/analysis-be040804-e30f-4c58-a9e4-85ec9be092a1",
+        "Mode": "",
+        "RW": true,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-creation-ui-K1xCNF/Read quality study/runs/analysis-be040804-e30f-4c58-a9e4-85ec9be092a1/inputs/reads.fastq.gz",
+        "Destination": "/gobble/project/runs/analysis-be040804-e30f-4c58-a9e4-85ec9be092a1/inputs/reads.fastq.gz",
+        "Mode": "",
+        "RW": false,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-creation-ui-K1xCNF/profile/service/continuations/prj_FTIIR37MMXPJYK2QTCSJFG5LUJ/req_96229dfc-39bf-4374-bba9-49f5d862ecfa/bundle",
+        "Destination": "/gobble/launch",
+        "Mode": "",
+        "RW": false,
+        "Propagation": "rprivate"
+      }
+    ],
+    "labels": {
+      "io.gobble.continuation.scope": "single-end-trim-fastqc-v1",
+      "io.gobble.creation.scope": "single-end-trim-fastqc-v1",
+      "io.gobble.launch": "sha256:521023158c8cc954c82b9f3483e6712e38c60db37a3b0355b16d4f7e5f2c3aa3",
+      "io.gobble.launch.scope": "single-end-trim-fastqc-v1",
+      "io.gobble.preparation.scope": "single-end-trim-fastqc-v1"
+    }
+  },
+  {
+    "name": "gobble-launch-a54e1035050454b50241291df7693a75",
+    "image": "sha256:c7f3c4aa35767297db1f0acc84bc08477673f5f7429692ca594d06ba6e0c74e3",
+    "state": {
+      "Status": "exited",
+      "Running": false,
+      "Paused": false,
+      "Restarting": false,
+      "OOMKilled": false,
+      "Dead": false,
+      "Pid": 0,
+      "ExitCode": 1,
+      "Error": "",
+      "StartedAt": "2026-09-27T08:01:51.175678471Z",
+      "FinishedAt": "2026-09-27T08:01:59.20628146Z"
+    },
+    "mounts": [
+      {
+        "Type": "bind",
+        "Source": "/var/run/docker.sock",
+        "Destination": "/var/run/docker.sock",
+        "Mode": "",
+        "RW": true,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-creation-ui-vJBahc/Read quality study/runs/analysis-c92704dc-27a9-4860-82db-d8ad41aa02e2",
+        "Destination": "/gobble/project/runs/analysis-c92704dc-27a9-4860-82db-d8ad41aa02e2",
+        "Mode": "",
+        "RW": true,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-creation-ui-vJBahc/Read quality study/runs/analysis-c92704dc-27a9-4860-82db-d8ad41aa02e2/inputs/reads.fastq.gz",
+        "Destination": "/gobble/project/runs/analysis-c92704dc-27a9-4860-82db-d8ad41aa02e2/inputs/reads.fastq.gz",
+        "Mode": "",
+        "RW": false,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-creation-ui-vJBahc/profile/service/launch-reviews/prj_TVUVRCQXLLO56YOBBN4JK4UXE7/req_c92704dc-27a9-4860-82db-d8ad41aa02e2/bundle",
+        "Destination": "/gobble/launch",
+        "Mode": "",
+        "RW": false,
+        "Propagation": "rprivate"
+      }
+    ],
+    "labels": {
+      "io.gobble.continuation.scope": "single-end-trim-fastqc-v1",
+      "io.gobble.creation.scope": "single-end-trim-fastqc-v1",
+      "io.gobble.launch": "sha256:a54e1035050454b50241291df7693a75b5999007848669fb0ab1b8836b959184",
+      "io.gobble.launch.scope": "single-end-trim-fastqc-v1",
+      "io.gobble.preparation.scope": "single-end-trim-fastqc-v1"
+    }
+  },
+  {
+    "name": "gobble-continuation-afcd008a244cd217f2397164c2fcf398",
+    "image": "sha256:c7f3c4aa35767297db1f0acc84bc08477673f5f7429692ca594d06ba6e0c74e3",
+    "state": {
+      "Status": "exited",
+      "Running": false,
+      "Paused": false,
+      "Restarting": false,
+      "OOMKilled": false,
+      "Dead": false,
+      "Pid": 0,
+      "ExitCode": 1,
+      "Error": "",
+      "StartedAt": "2026-09-27T08:02:18.581478095Z",
+      "FinishedAt": "2026-09-27T08:02:25.803531751Z"
+    },
+    "mounts": [
+      {
+        "Type": "bind",
+        "Source": "/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-creation-ui-vJBahc/profile/service/continuations/prj_TVUVRCQXLLO56YOBBN4JK4UXE7/req_982c4616-dac3-4bc1-8f51-8f91e653b20f/bundle",
+        "Destination": "/gobble/launch",
+        "Mode": "",
+        "RW": false,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/var/run/docker.sock",
+        "Destination": "/var/run/docker.sock",
+        "Mode": "",
+        "RW": true,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-creation-ui-vJBahc/Read quality study/runs/analysis-c92704dc-27a9-4860-82db-d8ad41aa02e2",
+        "Destination": "/gobble/project/runs/analysis-c92704dc-27a9-4860-82db-d8ad41aa02e2",
+        "Mode": "",
+        "RW": true,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-creation-ui-vJBahc/Read quality study/runs/analysis-c92704dc-27a9-4860-82db-d8ad41aa02e2/inputs/reads.fastq.gz",
+        "Destination": "/gobble/project/runs/analysis-c92704dc-27a9-4860-82db-d8ad41aa02e2/inputs/reads.fastq.gz",
+        "Mode": "",
+        "RW": false,
+        "Propagation": "rprivate"
+      }
+    ],
+    "labels": {
+      "io.gobble.continuation.scope": "single-end-trim-fastqc-v1",
+      "io.gobble.creation.scope": "single-end-trim-fastqc-v1",
+      "io.gobble.launch": "sha256:afcd008a244cd217f2397164c2fcf398c66e9062d92201bd116817e36784de3c",
+      "io.gobble.launch.scope": "single-end-trim-fastqc-v1",
+      "io.gobble.preparation.scope": "single-end-trim-fastqc-v1"
+    }
+  },
+  {
+    "name": "gobble-continuation-b27d51bbf725864c649b03554fd947c0",
+    "image": "sha256:c7f3c4aa35767297db1f0acc84bc08477673f5f7429692ca594d06ba6e0c74e3",
+    "state": {
+      "Status": "exited",
+      "Running": false,
+      "Paused": false,
+      "Restarting": false,
+      "OOMKilled": false,
+      "Dead": false,
+      "Pid": 0,
+      "ExitCode": 0,
+      "Error": "",
+      "StartedAt": "2026-09-27T08:02:30.686269045Z",
+      "FinishedAt": "2026-09-27T08:02:53.774291083Z"
+    },
+    "mounts": [
+      {
+        "Type": "bind",
+        "Source": "/var/run/docker.sock",
+        "Destination": "/var/run/docker.sock",
+        "Mode": "",
+        "RW": true,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-creation-ui-vJBahc/Read quality study/runs/analysis-c92704dc-27a9-4860-82db-d8ad41aa02e2",
+        "Destination": "/gobble/project/runs/analysis-c92704dc-27a9-4860-82db-d8ad41aa02e2",
+        "Mode": "",
+        "RW": true,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-creation-ui-vJBahc/Read quality study/runs/analysis-c92704dc-27a9-4860-82db-d8ad41aa02e2/inputs/reads.fastq.gz",
+        "Destination": "/gobble/project/runs/analysis-c92704dc-27a9-4860-82db-d8ad41aa02e2/inputs/reads.fastq.gz",
+        "Mode": "",
+        "RW": false,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-creation-ui-vJBahc/profile/service/continuations/prj_TVUVRCQXLLO56YOBBN4JK4UXE7/req_0002b324-381f-4e99-92f3-20ad6fbd8242/bundle",
+        "Destination": "/gobble/launch",
+        "Mode": "",
+        "RW": false,
+        "Propagation": "rprivate"
+      }
+    ],
+    "labels": {
+      "io.gobble.continuation.scope": "single-end-trim-fastqc-v1",
+      "io.gobble.creation.scope": "single-end-trim-fastqc-v1",
+      "io.gobble.launch": "sha256:b27d51bbf725864c649b03554fd947c09e5626e20daa62402c2a4090bf409526",
+      "io.gobble.launch.scope": "single-end-trim-fastqc-v1",
+      "io.gobble.preparation.scope": "single-end-trim-fastqc-v1"
+    }
+  },
+  {
+    "name": "gobble-launch-02eba8eb256883787a1ec43585845bb5",
+    "image": "sha256:c7f3c4aa35767297db1f0acc84bc08477673f5f7429692ca594d06ba6e0c74e3",
+    "state": {
+      "Status": "exited",
+      "Running": false,
+      "Paused": false,
+      "Restarting": false,
+      "OOMKilled": false,
+      "Dead": false,
+      "Pid": 0,
+      "ExitCode": 0,
+      "Error": "",
+      "StartedAt": "2026-09-27T08:09:17.985770803Z",
+      "FinishedAt": "2026-09-27T08:09:25.485492792Z"
+    },
+    "mounts": [
+      {
+        "Type": "bind",
+        "Source": "/var/run/docker.sock",
+        "Destination": "/var/run/docker.sock",
+        "Mode": "",
+        "RW": true,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-creation-ui-2Cf3nR/Read quality study/runs/analysis-3206f85b-0041-4a0e-a5e2-3efc9a5ea52a",
+        "Destination": "/gobble/project/runs/analysis-3206f85b-0041-4a0e-a5e2-3efc9a5ea52a",
+        "Mode": "",
+        "RW": true,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-creation-ui-2Cf3nR/Read quality study/runs/analysis-3206f85b-0041-4a0e-a5e2-3efc9a5ea52a/inputs/reads.fastq.gz",
+        "Destination": "/gobble/project/runs/analysis-3206f85b-0041-4a0e-a5e2-3efc9a5ea52a/inputs/reads.fastq.gz",
+        "Mode": "",
+        "RW": false,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-creation-ui-2Cf3nR/profile/service/launch-reviews/prj_UGUJV3XKD72ECTJJQ7AAM6OZXI/req_3206f85b-0041-4a0e-a5e2-3efc9a5ea52a/bundle",
+        "Destination": "/gobble/launch",
+        "Mode": "",
+        "RW": false,
+        "Propagation": "rprivate"
+      }
+    ],
+    "labels": {
+      "io.gobble.continuation.scope": "single-end-trim-fastqc-v1",
+      "io.gobble.creation.scope": "single-end-trim-fastqc-v1",
+      "io.gobble.launch": "sha256:02eba8eb256883787a1ec43585845bb51c16417fa0ae24371762c88ebe0222c7",
+      "io.gobble.launch.scope": "single-end-trim-fastqc-v1",
+      "io.gobble.preparation.scope": "single-end-trim-fastqc-v1"
+    }
+  },
+  {
+    "name": "gobble-launch-93fa7b25b27f28405bdb48db5a0a65f9",
+    "image": "sha256:5d7b7247b407844149bc80173e8da2bf656077b827dd3f2ae9149ee490258e76",
+    "state": {
+      "Status": "exited",
+      "Running": false,
+      "Paused": false,
+      "Restarting": false,
+      "OOMKilled": false,
+      "Dead": false,
+      "Pid": 0,
+      "ExitCode": 0,
+      "Error": "",
+      "StartedAt": "2026-09-27T08:05:42.021051675Z",
+      "FinishedAt": "2026-09-27T08:05:50.974510763Z"
+    },
+    "mounts": [
+      {
+        "Type": "bind",
+        "Source": "/private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-creation-ui-2Cf3nR/Read quality study/runs/analysis-13e91078-392e-48dd-89b5-a855c0bbf0f0",
+        "Destination": "/gobble/project/runs/analysis-13e91078-392e-48dd-89b5-a855c0bbf0f0",
+        "Mode": "",
+        "RW": true,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/private/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-creation-ui-2Cf3nR/Read quality study/runs/analysis-13e91078-392e-48dd-89b5-a855c0bbf0f0/inputs/reads.fastq.gz",
+        "Destination": "/gobble/project/runs/analysis-13e91078-392e-48dd-89b5-a855c0bbf0f0/inputs/reads.fastq.gz",
+        "Mode": "",
+        "RW": false,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/var/folders/xr/75hrwk3x4bxcbr7f3lrb5d480000gn/T/gobble-creation-ui-2Cf3nR/profile/service/launch-reviews/prj_UGUJV3XKD72ECTJJQ7AAM6OZXI/req_13e91078-392e-48dd-89b5-a855c0bbf0f0/bundle",
+        "Destination": "/gobble/launch",
+        "Mode": "",
+        "RW": false,
+        "Propagation": "rprivate"
+      },
+      {
+        "Type": "bind",
+        "Source": "/var/run/docker.sock",
+        "Destination": "/var/run/docker.sock",
+        "Mode": "",
+        "RW": true,
+        "Propagation": "rprivate"
+      }
+    ],
+    "labels": {
+      "io.gobble.creation.scope": "single-end-trim-fastqc-v1",
+      "io.gobble.launch": "sha256:93fa7b25b27f28405bdb48db5a0a65f9d1456b0c26031e9d62f996ff39544411",
+      "io.gobble.launch.scope": "single-end-trim-fastqc-v1",
+      "io.gobble.preparation.scope": "single-end-trim-fastqc-v1"
+    }
+  }
+]

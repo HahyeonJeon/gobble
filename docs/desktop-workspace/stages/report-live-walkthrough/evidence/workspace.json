@@ -1,0 +1,680 @@
+{
+  "schemaVersion": 21,
+  "viewLinks": [],
+  "paneOrientation": "vertical",
+  "workspace": {
+    "schemaVersion": 1,
+    "projectId": "prj_FWQ6GCP2UBLVPY7OHQZXQ6D37Y",
+    "revision": 53,
+    "agents": [
+      {
+        "projectId": "prj_FWQ6GCP2UBLVPY7OHQZXQ6D37Y",
+        "agentId": "agt_96f460c7-ab32-4957-b53d-bdfe8225e492",
+        "name": "Researcher",
+        "instructionProfile": "discussion-v1",
+        "access": "sharedViews",
+        "configuration": {
+          "model": "gpt-6-astra",
+          "effort": "medium",
+          "instructions": ""
+        },
+        "provider": {
+          "kind": "codex",
+          "threadId": "01a0e6f6-2c70-7202-a7b7-de5fd062b390",
+          "accountSessionId": "ca2ad174-e775-4149-a22e-32f67cd613d2",
+          "toolsetVersion": "shared-views-v15"
+        }
+      }
+    ],
+    "surfaces": [
+      {
+        "projectId": "prj_FWQ6GCP2UBLVPY7OHQZXQ6D37Y",
+        "surfaceId": "srf_f66bbade-1b84-497f-9427-e4b730a0e80c",
+        "resource": {
+          "kind": "creation-draft",
+          "draftId": "drf_GJIUNYV5TNIRTBERNYAFHZBWPC"
+        },
+        "view": "creation-draft",
+        "pinned": false,
+        "openedBy": {
+          "kind": "user"
+        }
+      },
+      {
+        "projectId": "prj_FWQ6GCP2UBLVPY7OHQZXQ6D37Y",
+        "surfaceId": "srf_6b559bd9-3d45-43b9-a116-56cfa0b81093",
+        "resource": {
+          "kind": "pipeline",
+          "pipelineId": "pip_MOLOFL6ZYFZBSMSQNPOZRRJTOI"
+        },
+        "view": "pipeline",
+        "pinned": false,
+        "openedBy": {
+          "kind": "user"
+        }
+      },
+      {
+        "projectId": "prj_FWQ6GCP2UBLVPY7OHQZXQ6D37Y",
+        "surfaceId": "srf_f0650ccf-2f4e-4ba8-a3a4-0fe757dc47e7",
+        "resource": {
+          "kind": "run",
+          "runRef": "run_SD3V3NANJIYO4B5IA5RBR3BLMJ"
+        },
+        "view": "run",
+        "pinned": false,
+        "openedBy": {
+          "kind": "user"
+        },
+        "runView": {
+          "query": "",
+          "status": null,
+          "viewRevision": 0
+        }
+      },
+      {
+        "projectId": "prj_FWQ6GCP2UBLVPY7OHQZXQ6D37Y",
+        "surfaceId": "srf_76f38192-5a45-47dc-97b8-ff8d88969262",
+        "resource": {
+          "kind": "report",
+          "saved": {
+            "projectId": "prj_FWQ6GCP2UBLVPY7OHQZXQ6D37Y",
+            "runRef": "run_SD3V3NANJIYO4B5IA5RBR3BLMJ",
+            "producer": {
+              "schemaVersion": 1,
+              "runId": "read_quality",
+              "snapshot": "48135f7f4b10262c2c69f657104cd276",
+              "originDigest": "sha256:2e00aa75d07be0543abda13766c7af4a8442c9f071588574450e274e5c1b2023",
+              "instance": "fastqc",
+              "attempt": 1,
+              "port": "html",
+              "recipe": "fastqc-v1",
+              "sha256": "sha256:8f045465fd56bbfb18360592e1b41c4978b45c6054fb6bc2cef52aa724413d52",
+              "size": 537181
+            },
+            "capturedAt": 1790581657066,
+            "title": "sample_trimmed.fq.gz FastQC Report",
+            "profile": "fastqc-0.12.1-v1",
+            "asset": {
+              "hash": "sha256:3cb1a44e5ff8933704dd0f4978f4e6f47f9fe7dde4642ca034e7951da5282d5e",
+              "byteLength": 494980
+            }
+          }
+        },
+        "view": "report",
+        "pinned": false,
+        "openedBy": {
+          "kind": "user"
+        },
+        "reportModuleId": "M1"
+      }
+    ],
+    "layout": {
+      "kind": "split",
+      "primary": {
+        "tabs": [
+          "srf_f66bbade-1b84-497f-9427-e4b730a0e80c",
+          "srf_6b559bd9-3d45-43b9-a116-56cfa0b81093",
+          "srf_f0650ccf-2f4e-4ba8-a3a4-0fe757dc47e7"
+        ],
+        "activeSurfaceId": "srf_6b559bd9-3d45-43b9-a116-56cfa0b81093"
+      },
+      "secondary": {
+        "tabs": [
+          "srf_76f38192-5a45-47dc-97b8-ff8d88969262"
+        ],
+        "activeSurfaceId": "srf_76f38192-5a45-47dc-97b8-ff8d88969262"
+      },
+      "primaryFraction": 0.5
+    },
+    "decisions": []
+  },
+  "titles": [
+    {
+      "surfaceId": "srf_f66bbade-1b84-497f-9427-e4b730a0e80c",
+      "title": "New pipeline"
+    },
+    {
+      "surfaceId": "srf_6b559bd9-3d45-43b9-a116-56cfa0b81093",
+      "title": "Read quality study"
+    },
+    {
+      "surfaceId": "srf_f0650ccf-2f4e-4ba8-a3a4-0fe757dc47e7",
+      "title": "Analysis 1"
+    },
+    {
+      "surfaceId": "srf_76f38192-5a45-47dc-97b8-ff8d88969262",
+      "title": "sample_trimmed.fq.gz FastQC Report"
+    }
+  ],
+  "activePane": "secondary",
+  "maximizedPane": null,
+  "chat": {
+    "collapsed": false,
+    "width": 420,
+    "draft": "Keep this draft while I review the proposed threshold.",
+    "recipientAgentId": "agt_96f460c7-ab32-4957-b53d-bdfe8225e492",
+    "attachmentRevision": 6,
+    "attachments": []
+  },
+  "selections": [
+    {
+      "surfaceId": "srf_f0650ccf-2f4e-4ba8-a3a4-0fe757dc47e7",
+      "evidence": {
+        "projectId": "prj_FWQ6GCP2UBLVPY7OHQZXQ6D37Y",
+        "origin": {
+          "surfaceId": "srf_f0650ccf-2f4e-4ba8-a3a4-0fe757dc47e7"
+        },
+        "resource": {
+          "kind": "run",
+          "runRef": "run_SD3V3NANJIYO4B5IA5RBR3BLMJ"
+        },
+        "schemaVersion": 3,
+        "dataRevision": "sha256:7c54862413e62eefad99ed75bea0c69aec058f7427530bcbee5010052b706d56",
+        "selection": {
+          "kind": "run-task",
+          "coordinateSpace": "observed-instance-attempt",
+          "instanceId": "fastqc",
+          "attempt": 1
+        }
+      }
+    }
+  ],
+  "activity": [
+    {
+      "id": "req_33db88a6-9443-4d8e-b8b6-e175880ce63e",
+      "text": "Opened a Project view.",
+      "at": 1790581271828
+    },
+    {
+      "id": "req_4f82ecd0-58de-4293-8179-d3530433a865",
+      "text": "Opened a Project view.",
+      "at": 1790581417180
+    },
+    {
+      "id": "req_fad5039e-ee35-4dda-a668-c44f8ec6ab78",
+      "text": "Opened a Project view.",
+      "at": 1790581624880
+    },
+    {
+      "id": "req_46d4fc31-95ca-4dc9-8c25-bc698efd555d",
+      "text": "Opened a saved quality report.",
+      "at": 1790581657084
+    },
+    {
+      "id": "req_7a45602b-a7ea-4ebe-bcaa-20b1d85661c6",
+      "text": "Opened a Project view.",
+      "at": 1790581777689
+    }
+  ],
+  "receipts": [
+    {
+      "requestId": "req_7f017a12-a203-4345-a5d8-3b3a7707ecc0",
+      "digest": "ce99639e1b23e0936909254fed3787c5c1d39a5c6deb95e5a15cf4949d149556"
+    },
+    {
+      "requestId": "req_33db88a6-9443-4d8e-b8b6-e175880ce63e",
+      "digest": "e1df6fe660b7b389cd1e6cc847e4f5f538663f8236291fe4c194d8e0e93bb483"
+    },
+    {
+      "requestId": "req_4f82ecd0-58de-4293-8179-d3530433a865",
+      "digest": "a489f356b2da054b81a237107c09053282302a665304f81f75acf55d6cf061f8"
+    },
+    {
+      "requestId": "req_fad5039e-ee35-4dda-a668-c44f8ec6ab78",
+      "digest": "d3b79e9fa764382783bbd6968e9730e42cc8989039a213506eb9688a5b63fab3"
+    },
+    {
+      "requestId": "req_46d4fc31-95ca-4dc9-8c25-bc698efd555d",
+      "digest": "963b8aabb1996a59ad8ead31cc97142728b418bcb27492017a36ed026c45e355"
+    },
+    {
+      "requestId": "req_8226a1e2-9f73-46e2-9d6f-14c3bec6efa2",
+      "digest": "d7b45a94c58187189eccd368a57cdcf7214ad5173cbb6f12fb077c68678b4744"
+    },
+    {
+      "requestId": "req_db1d99d0-9c67-4919-9529-e29cf6d88817",
+      "digest": "b27e898361c8d7b4f167530915d0338669e47cf1a894ec42e0398d85dede519f"
+    },
+    {
+      "requestId": "req_10490489-fdee-4cb1-ac1b-b4ca43dedbc6",
+      "digest": "48de12d80fe7c061113d921b5b790573c1b66a6f5b47b3582c6dba6ae653357d"
+    },
+    {
+      "requestId": "req_567d0925-d422-4c0e-946f-add9a1d7a31d",
+      "digest": "4f2d9b3042bfec0571b7b267349f57d60529b4647a13ce9b42d484392a6d4809"
+    },
+    {
+      "requestId": "req_94f6e68b-59f2-4beb-bdea-43adaf67ec22",
+      "digest": "51cd13557ac21cf1f246a010352176d424a90bfbfc6c525fc004124d38eb239d"
+    },
+    {
+      "requestId": "req_cf640360-4bcc-4d99-adb2-c5143813bbd5",
+      "digest": "c72bb51a136af1f7ed69211d7cb2336f0b766198765df2e886b1ced5c1b0e01a"
+    },
+    {
+      "requestId": "req_db0ef152-eec4-45d1-8118-800bce17fc99",
+      "digest": "ca827d48f7f257f8752a7981801be8b2f5eab20b3007e72f5904fc44fc59d921"
+    },
+    {
+      "requestId": "req_97e417a2-9751-4217-80a2-817a4a21f64b",
+      "digest": "e6890e79dcc6528e66b3aa2d0947b3925e7b7ac207aa7883fe48cc8af0c4c719"
+    },
+    {
+      "requestId": "req_b02d6820-3d80-4858-b37e-765f22f6c9e2",
+      "digest": "e6890e79dcc6528e66b3aa2d0947b3925e7b7ac207aa7883fe48cc8af0c4c719"
+    },
+    {
+      "requestId": "req_f916169d-248b-4908-a501-495ef23adbe9",
+      "digest": "fa60b550510e69805045952bd1231b8271cc3bfaf8795abb85ce560c7ab3678a"
+    },
+    {
+      "requestId": "req_7a45602b-a7ea-4ebe-bcaa-20b1d85661c6",
+      "digest": "a489f356b2da054b81a237107c09053282302a665304f81f75acf55d6cf061f8"
+    },
+    {
+      "requestId": "req_eb9390f7-e2df-4b2a-93ac-53326f5b5d81",
+      "digest": "87cbd60276b8b1778a8882e441f9d1e647afc657c3447a97bbc578a57773e3e5"
+    },
+    {
+      "requestId": "req_0864c749-d77d-4944-9190-4b007eb4e96e",
+      "digest": "c72bb51a136af1f7ed69211d7cb2336f0b766198765df2e886b1ced5c1b0e01a"
+    },
+    {
+      "requestId": "req_c3274c55-da7d-4dde-9ce4-6a290acab7dd",
+      "digest": "abb0348007242ec07b8749fb1e97f703e5d2cff4da3c47dcf997808a161e3ab3"
+    }
+  ],
+  "collaboration": {
+    "submissions": [
+      {
+        "requestId": "req_906dcddd-4c71-43fa-b9a9-49d0409ee712",
+        "agentId": "agt_96f460c7-ab32-4957-b53d-bdfe8225e492",
+        "text": "Design a simple quality-control pipeline for the selected single-end FASTQ: trim adapters and low-quality ends with Trim Galore using a quality threshold of 20, then run FastQC on the trimmed reads. This is a synthetic 100-read UI qualification, not real research. Submit a checked proposal and explain the two steps in plain English using the flow. Do not execute the analysis.",
+        "pipelineCreation": {
+          "kind": "draft",
+          "draftId": "drf_GJIUNYV5TNIRTBERNYAFHZBWPC",
+          "generation": 2
+        },
+        "allowPipelineCreation": true,
+        "model": "gpt-6-astra",
+        "effort": "medium",
+        "createdAt": 1790581288116,
+        "responseStartedAt": 1790581292059,
+        "state": "completed",
+        "threadId": "01a0e6f6-2c70-7202-a7b7-de5fd062b390",
+        "turnId": "01a0e6f6-2ccb-76b2-bf5a-73896a865995",
+        "response": "I’ll build and check the two-step flow: Trim Galore at quality 20, followed by FastQC on the trimmed reads.\n\n\nThe proposal is submitted and its check is still running. The Project window is unavailable, so I’ll use the retained checked flow to verify the steps and their connection.\n\n\nSubmitted a checked proposal; validation passed.\n\n**Selected single-end FASTQ → Trim Galore (quality 20) → FastQC**\n\n1. **Trim Galore** removes adapters and trims low-quality ends using a Phred threshold of 20.\n2. **FastQC** inspects the trimmed reads and produces a quality report.\n\nI marked the connection showing trimmed reads feeding into FastQC. No analysis was executed.",
+        "problem": null
+      },
+      {
+        "requestId": "req_97135a37-83ad-42b1-bbfa-fbed1c2f5096",
+        "agentId": "agt_96f460c7-ab32-4957-b53d-bdfe8225e492",
+        "text": "Review this saved FastQC report with me. Read all eight original charts, and tell me what you actually see in the per-base quality, sequence-length and adapter-content plots. Separate those visual observations from the table facts and FastQC status labels. Explain the main limits of this deliberately synthetic 100-read input; do not diagnose a real experiment. Point to this same report in our shared view so I can follow your explanation. Do not propose changes or start any analysis yet.",
+        "model": "gpt-6-astra",
+        "effort": "medium",
+        "createdAt": 1790581683148,
+        "responseStartedAt": 1790581686806,
+        "state": "completed",
+        "threadId": "01a0e6f6-2c70-7202-a7b7-de5fd062b390",
+        "turnId": "01a0e6fc-33e0-7050-976b-b623c105c069",
+        "response": "I’ll read all eight original charts, separate what they show from the tables and status labels, and point to the saved report in our shared view.\n\n\nI read all eight original charts and pointed to this same saved report in our shared view.\n\n**What I see in the plots:**\n\n| Chart | Visual observation |\n|---|---|\n| **Per-base quality** | A blue line stays flat at approximately **Q9**, inside the red background band. There is no visible end-of-read decline and no discernible box-and-whisker spread. The title specifies Illumina 1.5 encoding. |\n| **Sequence length** | A single triangular peak reaches **100 reads at 80 bp**, with zero at 79 and 81 bp. The sloping connecting lines do not imply intermediate read lengths. |\n| **Adapter content** | The traces overlap along **0%** across the displayed positions, extending to approximately position 69. No rising adapter signal is visible for the listed sequences. |\n| Per-sequence quality | The horizontal axis has a single label, **9**, but no discernible plotted point or curve. I cannot read a frequency from the pixels alone. |\n| Per-base sequence content | Strong repeating oscillations: early positions alternate between 0% and 100%; grouped positions mostly alternate between 0% and about 50%. |\n| Per-sequence GC | A very narrow peak around **50% GC**; the observed and theoretical curves largely overlap. |\n| Per-base N content | A flat trace at **0%**. |\n| Duplication levels | A peak at **100%** in the **>50** duplication category; the plot heading reports **1% remaining if deduplicated**. |\n\n**Table facts, separately:** Basic Statistics reports **100 sequences, 8 kbp, length 80, 50% GC**, encoding **Illumina 1.5**, and **0 sequences flagged as poor quality**. That last field is not a claim that all quality scores are high. The overrepresented-sequence table lists an ACGT-repeat sequence with **count 100, 100.0%, “No Hit.”**\n\n**FastQC labels, separately:** Per-base quality, length, adapter content, N content and Basic Statistics **PASS**. Per-sequence quality, base composition, duplication and overrepresented sequences **FAIL**; GC content receives a **WARNING**. In particular, the per-base **PASS** label does not change the visible flat Q9 trace.\n\nThis deliberately synthetic input has only 100 reads and extreme repetition, so it offers little sequence diversity or realistic variation. Its composition and duplication patterns cannot diagnose contamination, PCR problems or any real experiment. The reported encoding also matters when interpreting Q9; these charts alone do not establish whether it matches the generator’s intended encoding.\n\nFinally, zero visible adapter signal only describes the sequences FastQC checks here. Without a before-trimming comparison, this report cannot demonstrate how much trimming occurred or whether quality improved. No changes were proposed and no analysis was started.",
+        "problem": null,
+        "evidence": [
+          {
+            "attachmentId": "att_db1d99d0-9c67-4919-9529-e29cf6d88817",
+            "evidence": {
+              "schemaVersion": 8,
+              "projectId": "prj_FWQ6GCP2UBLVPY7OHQZXQ6D37Y",
+              "resource": {
+                "kind": "report",
+                "saved": {
+                  "projectId": "prj_FWQ6GCP2UBLVPY7OHQZXQ6D37Y",
+                  "runRef": "run_SD3V3NANJIYO4B5IA5RBR3BLMJ",
+                  "producer": {
+                    "schemaVersion": 1,
+                    "runId": "read_quality",
+                    "snapshot": "48135f7f4b10262c2c69f657104cd276",
+                    "originDigest": "sha256:2e00aa75d07be0543abda13766c7af4a8442c9f071588574450e274e5c1b2023",
+                    "instance": "fastqc",
+                    "attempt": 1,
+                    "port": "html",
+                    "recipe": "fastqc-v1",
+                    "sha256": "sha256:8f045465fd56bbfb18360592e1b41c4978b45c6054fb6bc2cef52aa724413d52",
+                    "size": 537181
+                  },
+                  "capturedAt": 1790581657066,
+                  "title": "sample_trimmed.fq.gz FastQC Report",
+                  "profile": "fastqc-0.12.1-v1",
+                  "asset": {
+                    "hash": "sha256:3cb1a44e5ff8933704dd0f4978f4e6f47f9fe7dde4642ca034e7951da5282d5e",
+                    "byteLength": 494980
+                  }
+                }
+              },
+              "dataRevision": "sha256:3cb1a44e5ff8933704dd0f4978f4e6f47f9fe7dde4642ca034e7951da5282d5e",
+              "origin": {
+                "surfaceId": "srf_76f38192-5a45-47dc-97b8-ff8d88969262"
+              }
+            },
+            "label": "sample_trimmed.fq.gz FastQC Report",
+            "createdAt": 1790581657539,
+            "capture": {
+              "kind": "report",
+              "capturedAt": 1790581657066,
+              "asset": {
+                "hash": "sha256:3cb1a44e5ff8933704dd0f4978f4e6f47f9fe7dde4642ca034e7951da5282d5e",
+                "byteLength": 494980,
+                "mediaType": "application/json"
+              },
+              "representation": {
+                "kind": "report",
+                "truncated": false,
+                "textByteLength": 3388,
+                "imageCount": 8
+              }
+            },
+            "capturedAt": 1790581657066,
+            "asset": {
+              "hash": "sha256:3cb1a44e5ff8933704dd0f4978f4e6f47f9fe7dde4642ca034e7951da5282d5e",
+              "byteLength": 494980,
+              "mediaType": "application/json"
+            },
+            "representation": {
+              "kind": "report",
+              "truncated": false,
+              "textByteLength": 3388,
+              "imageCount": 8
+            }
+          }
+        ],
+        "preparedEvidenceId": "prep_54b3660c-a922-4623-929b-651c3ca9e6d1"
+      },
+      {
+        "requestId": "req_7b47b3ca-7cfa-4e2d-a19d-30e4e5a6b4eb",
+        "agentId": "agt_96f460c7-ab32-4957-b53d-bdfe8225e492",
+        "text": "For this synthetic UI test, propose exactly one change to the Current pipeline: increase the trimming quality threshold from 20 to 25. Keep the selected data, minimum-length behavior, step order and FastQC step unchanged. Link the proposal to the attached completed task and saved report. Explain that this is a comparison exercise, not a proven repair for the report warnings or encoding ambiguity. Submit the checked proposal and point to the changed setting so I can review Current versus Proposed in the flow. Do not adopt it or run another analysis.",
+        "pipelineReview": {
+          "pipelineId": "pip_MOLOFL6ZYFZBSMSQNPOZRRJTOI",
+          "baseArtifactId": "sha256:83552c9d7d8cca73f5e8aca55ebc9a7cbd4630988d91e6d3a15e58efeb93ae42"
+        },
+        "allowPipelineProposal": true,
+        "model": "gpt-6-astra",
+        "effort": "medium",
+        "createdAt": 1790581784613,
+        "responseStartedAt": 1790581791757,
+        "state": "completed",
+        "threadId": "01a0e6f6-2c70-7202-a7b7-de5fd062b390",
+        "turnId": "01a0e6fd-c031-76d0-b9ab-e60ac0a9e500",
+        "response": "I’ll change only the trimming quality threshold from 20 to 25, check the proposal, and reference the completed FastQC task and saved report as context for this comparison exercise.\n\n\nThe proposal is still checking. Only the quality setting was edited; the existing stage caption still says “quality 20,” so the checked setting comparison will be the authoritative place to review 20 versus 25.\n\n\nThe check has not returned a result yet. The proposal references Analysis 1’s completed FastQC attempt and its saved report; it makes no claim that raising the threshold resolves the warnings or encoding ambiguity.\n\n\nSubmitted a checked proposal with exactly one change: **Trim Galore quality threshold: Current 20 → Proposed 25 Phred**. I pointed to that setting in the comparison.\n\nSelected data, minimum-length behavior, step order and FastQC remain unchanged. The existing stage caption still says “quality 20”; the setting comparison shows the actual proposed value.\n\nThe proposal references Analysis 1’s completed FastQC attempt 1 and the attached saved report. This is a synthetic UI comparison exercise, **not a proven repair** for report warnings or encoding ambiguity.\n\nNothing was adopted or run.",
+        "problem": null,
+        "evidence": [
+          {
+            "attachmentId": "att_94f6e68b-59f2-4beb-bdea-43adaf67ec22",
+            "evidence": {
+              "schemaVersion": 8,
+              "projectId": "prj_FWQ6GCP2UBLVPY7OHQZXQ6D37Y",
+              "resource": {
+                "kind": "report",
+                "saved": {
+                  "projectId": "prj_FWQ6GCP2UBLVPY7OHQZXQ6D37Y",
+                  "runRef": "run_SD3V3NANJIYO4B5IA5RBR3BLMJ",
+                  "producer": {
+                    "schemaVersion": 1,
+                    "runId": "read_quality",
+                    "snapshot": "48135f7f4b10262c2c69f657104cd276",
+                    "originDigest": "sha256:2e00aa75d07be0543abda13766c7af4a8442c9f071588574450e274e5c1b2023",
+                    "instance": "fastqc",
+                    "attempt": 1,
+                    "port": "html",
+                    "recipe": "fastqc-v1",
+                    "sha256": "sha256:8f045465fd56bbfb18360592e1b41c4978b45c6054fb6bc2cef52aa724413d52",
+                    "size": 537181
+                  },
+                  "capturedAt": 1790581657066,
+                  "title": "sample_trimmed.fq.gz FastQC Report",
+                  "profile": "fastqc-0.12.1-v1",
+                  "asset": {
+                    "hash": "sha256:3cb1a44e5ff8933704dd0f4978f4e6f47f9fe7dde4642ca034e7951da5282d5e",
+                    "byteLength": 494980
+                  }
+                }
+              },
+              "dataRevision": "sha256:3cb1a44e5ff8933704dd0f4978f4e6f47f9fe7dde4642ca034e7951da5282d5e",
+              "origin": {
+                "surfaceId": "srf_76f38192-5a45-47dc-97b8-ff8d88969262"
+              }
+            },
+            "label": "sample_trimmed.fq.gz FastQC Report",
+            "createdAt": 1790581776207,
+            "capture": {
+              "kind": "report",
+              "capturedAt": 1790581657066,
+              "asset": {
+                "hash": "sha256:3cb1a44e5ff8933704dd0f4978f4e6f47f9fe7dde4642ca034e7951da5282d5e",
+                "byteLength": 494980,
+                "mediaType": "application/json"
+              },
+              "representation": {
+                "kind": "report",
+                "truncated": false,
+                "textByteLength": 3388,
+                "imageCount": 8
+              }
+            },
+            "capturedAt": 1790581657066,
+            "asset": {
+              "hash": "sha256:3cb1a44e5ff8933704dd0f4978f4e6f47f9fe7dde4642ca034e7951da5282d5e",
+              "byteLength": 494980,
+              "mediaType": "application/json"
+            },
+            "representation": {
+              "kind": "report",
+              "truncated": false,
+              "textByteLength": 3388,
+              "imageCount": 8
+            }
+          },
+          {
+            "attachmentId": "att_f916169d-248b-4908-a501-495ef23adbe9",
+            "evidence": {
+              "projectId": "prj_FWQ6GCP2UBLVPY7OHQZXQ6D37Y",
+              "origin": {
+                "surfaceId": "srf_f0650ccf-2f4e-4ba8-a3a4-0fe757dc47e7"
+              },
+              "resource": {
+                "kind": "run",
+                "runRef": "run_SD3V3NANJIYO4B5IA5RBR3BLMJ"
+              },
+              "schemaVersion": 3,
+              "dataRevision": "sha256:7c54862413e62eefad99ed75bea0c69aec058f7427530bcbee5010052b706d56",
+              "selection": {
+                "kind": "run-task",
+                "coordinateSpace": "observed-instance-attempt",
+                "instanceId": "fastqc",
+                "attempt": 1
+              }
+            },
+            "label": "Analysis 1",
+            "createdAt": 1790581777626,
+            "capture": {
+              "kind": "observed",
+              "capturedAt": 1790581777630,
+              "asset": {
+                "hash": "sha256:5af9c97b548cb6ba112924e730437b80e0af36f4a22cf3a88dde4d515e1d4d91",
+                "byteLength": 1735,
+                "mediaType": "application/json"
+              },
+              "representation": {
+                "kind": "run",
+                "truncated": true
+              }
+            },
+            "capturedAt": 1790581777630,
+            "asset": {
+              "hash": "sha256:5af9c97b548cb6ba112924e730437b80e0af36f4a22cf3a88dde4d515e1d4d91",
+              "byteLength": 1735,
+              "mediaType": "application/json"
+            },
+            "representation": {
+              "kind": "run",
+              "truncated": true
+            }
+          }
+        ],
+        "preparedEvidenceId": "prep_1f5c698d-9d90-4dde-a9e3-101f87034cfa"
+      }
+    ]
+  },
+  "creationMarks": [
+    {
+      "context": {
+        "kind": "candidate",
+        "base": "none",
+        "draftId": "drf_GJIUNYV5TNIRTBERNYAFHZBWPC",
+        "generation": 2,
+        "candidateId": "req_6361fd860fc1fa6e99e69d24278f2077d0c79a2116949545f1d0c24a4f3fceca",
+        "artifactId": "sha256:83552c9d7d8cca73f5e8aca55ebc9a7cbd4630988d91e6d3a15e58efeb93ae42",
+        "target": {
+          "kind": "connection",
+          "id": "edge-2"
+        }
+      },
+      "agentId": "agt_96f460c7-ab32-4957-b53d-bdfe8225e492",
+      "submissionId": "req_906dcddd-4c71-43fa-b9a9-49d0409ee712",
+      "note": "Trim Galore removes adapters and trims low-quality ends at Phred 20. Its trimmed single-end reads feed directly into FastQC for a quality report."
+    }
+  ],
+  "savedReports": [
+    {
+      "projectId": "prj_FWQ6GCP2UBLVPY7OHQZXQ6D37Y",
+      "runRef": "run_SD3V3NANJIYO4B5IA5RBR3BLMJ",
+      "producer": {
+        "schemaVersion": 1,
+        "runId": "read_quality",
+        "snapshot": "48135f7f4b10262c2c69f657104cd276",
+        "originDigest": "sha256:2e00aa75d07be0543abda13766c7af4a8442c9f071588574450e274e5c1b2023",
+        "instance": "fastqc",
+        "attempt": 1,
+        "port": "html",
+        "recipe": "fastqc-v1",
+        "sha256": "sha256:8f045465fd56bbfb18360592e1b41c4978b45c6054fb6bc2cef52aa724413d52",
+        "size": 537181
+      },
+      "capturedAt": 1790581657066,
+      "title": "sample_trimmed.fq.gz FastQC Report",
+      "profile": "fastqc-0.12.1-v1",
+      "asset": {
+        "hash": "sha256:3cb1a44e5ff8933704dd0f4978f4e6f47f9fe7dde4642ca034e7951da5282d5e",
+        "byteLength": 494980
+      }
+    }
+  ],
+  "sharedReferences": [
+    {
+      "referenceId": "ref_567d0925-d422-4c0e-946f-add9a1d7a31d",
+      "evidence": {
+        "schemaVersion": 8,
+        "projectId": "prj_FWQ6GCP2UBLVPY7OHQZXQ6D37Y",
+        "resource": {
+          "kind": "report",
+          "saved": {
+            "projectId": "prj_FWQ6GCP2UBLVPY7OHQZXQ6D37Y",
+            "runRef": "run_SD3V3NANJIYO4B5IA5RBR3BLMJ",
+            "producer": {
+              "schemaVersion": 1,
+              "runId": "read_quality",
+              "snapshot": "48135f7f4b10262c2c69f657104cd276",
+              "originDigest": "sha256:2e00aa75d07be0543abda13766c7af4a8442c9f071588574450e274e5c1b2023",
+              "instance": "fastqc",
+              "attempt": 1,
+              "port": "html",
+              "recipe": "fastqc-v1",
+              "sha256": "sha256:8f045465fd56bbfb18360592e1b41c4978b45c6054fb6bc2cef52aa724413d52",
+              "size": 537181
+            },
+            "capturedAt": 1790581657066,
+            "title": "sample_trimmed.fq.gz FastQC Report",
+            "profile": "fastqc-0.12.1-v1",
+            "asset": {
+              "hash": "sha256:3cb1a44e5ff8933704dd0f4978f4e6f47f9fe7dde4642ca034e7951da5282d5e",
+              "byteLength": 494980
+            }
+          }
+        },
+        "dataRevision": "sha256:3cb1a44e5ff8933704dd0f4978f4e6f47f9fe7dde4642ca034e7951da5282d5e",
+        "origin": {
+          "surfaceId": "srf_76f38192-5a45-47dc-97b8-ff8d88969262"
+        }
+      },
+      "author": {
+        "kind": "user"
+      },
+      "createdAt": 1790581682855,
+      "note": "Whole saved report",
+      "retracted": false,
+      "label": "sample_trimmed.fq.gz FastQC Report"
+    },
+    {
+      "referenceId": "ref_ae71b04d-5f43-48fd-b356-bde23c140d68",
+      "evidence": {
+        "schemaVersion": 8,
+        "projectId": "prj_FWQ6GCP2UBLVPY7OHQZXQ6D37Y",
+        "resource": {
+          "kind": "report",
+          "saved": {
+            "projectId": "prj_FWQ6GCP2UBLVPY7OHQZXQ6D37Y",
+            "runRef": "run_SD3V3NANJIYO4B5IA5RBR3BLMJ",
+            "producer": {
+              "schemaVersion": 1,
+              "runId": "read_quality",
+              "snapshot": "48135f7f4b10262c2c69f657104cd276",
+              "originDigest": "sha256:2e00aa75d07be0543abda13766c7af4a8442c9f071588574450e274e5c1b2023",
+              "instance": "fastqc",
+              "attempt": 1,
+              "port": "html",
+              "recipe": "fastqc-v1",
+              "sha256": "sha256:8f045465fd56bbfb18360592e1b41c4978b45c6054fb6bc2cef52aa724413d52",
+              "size": 537181
+            },
+            "capturedAt": 1790581657066,
+            "title": "sample_trimmed.fq.gz FastQC Report",
+            "profile": "fastqc-0.12.1-v1",
+            "asset": {
+              "hash": "sha256:3cb1a44e5ff8933704dd0f4978f4e6f47f9fe7dde4642ca034e7951da5282d5e",
+              "byteLength": 494980
+            }
+          }
+        },
+        "dataRevision": "sha256:3cb1a44e5ff8933704dd0f4978f4e6f47f9fe7dde4642ca034e7951da5282d5e",
+        "origin": {
+          "surfaceId": "srf_76f38192-5a45-47dc-97b8-ff8d88969262"
+        }
+      },
+      "note": "Reviewed all eight original charts in this saved report. Per-base quality is flat near Q9; length peaks at 80 bp; adapter traces lie at zero. These visual observations are separate from the tables and FastQC status labels.",
+      "author": {
+        "kind": "agent",
+        "agentId": "agt_96f460c7-ab32-4957-b53d-bdfe8225e492",
+        "name": "Researcher"
+      },
+      "createdAt": 1790581704786,
+      "retracted": false,
+      "originSubmissionId": "req_97135a37-83ad-42b1-bbfa-fbed1c2f5096",
+      "label": "sample_trimmed.fq.gz FastQC Report"
+    }
+  ],
+  "pipelineReviewMarks": [
+    {
+      "context": {
+        "pipelineId": "pip_MOLOFL6ZYFZBSMSQNPOZRRJTOI",
+        "proposalId": "req_fe69455c6d920cce4be5f39cddd4eddb5eec79222458ef8a15c7dc46e09a9933",
+        "baseArtifactId": "sha256:83552c9d7d8cca73f5e8aca55ebc9a7cbd4630988d91e6d3a15e58efeb93ae42",
+        "proposedArtifactId": "sha256:7366efcbb691991f6e656ec85b58bdc9d84a1bb69ad49046a4bb25ab82d57098",
+        "changeId": "setting:trim_galore:quality",
+        "side": "both"
+      },
+      "agentId": "agt_96f460c7-ab32-4957-b53d-bdfe8225e492",
+      "submissionId": "req_7b47b3ca-7cfa-4e2d-a19d-30e4e5a6b4eb",
+      "note": "Only change: Trim Galore Quality threshold, Current 20 → Proposed 25 Phred. Comparison context: Analysis 1 completed fastqc attempt 1 and attached saved sample_trimmed.fq.gz FastQC Report. Synthetic UI exercise, not a proven repair for report warnings or encoding ambiguity. Minimum-length default, selected data, step order and FastQC unchanged."
+    }
+  ]
+}

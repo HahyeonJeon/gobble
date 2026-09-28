@@ -1,0 +1,357 @@
+{
+  "app/contracts/schema/v22.json": {
+    "before": null,
+    "after": "9b4a4797f554f43ced5ef1d09cebf532247a25f021d28f4f4e6b3ec49c2f1a24",
+    "baselineAvailable": false
+  },
+  "app/contracts/scripts/export-schema.ts": {
+    "before": "3232e52066d082e98a4ca59920332d18296b17b3c752b5a76cb5e3e2aeb94766",
+    "after": "cb4dc9e9e5c5b223aed0230cdb559af825bd6bbe1d7f62e2cb3cf21833c6ff99",
+    "baselineAvailable": true
+  },
+  "app/contracts/src/surface.ts": {
+    "before": "4d8dceb4426e323306361db279c45f3129bb9434637d07c79b41dcaa3a820f67",
+    "after": "695499c494885778f7810ebf92ce10aa85405b16461f891a882469abf0cef4f2",
+    "baselineAvailable": true
+  },
+  "app/contracts/src/collaboration.ts": {
+    "before": "dc71ab23093ff3940c325daa86a0577da1f717d710e1fde15d449168b2a1f63b",
+    "after": "a2201214604c23f0aef749d106d1d30348f13921aecd60320ac64cb84af034b1",
+    "baselineAvailable": true
+  },
+  "app/contracts/src/workspace-migration.ts": {
+    "before": "341de10646c02a6afae21faf9f6d4b3048a48189a5fbbbfc2b7e964ecd3bda8c",
+    "after": "684cbf5ee920fb7ce94fb8da17b52140c20dc089a7017bd1af7d3b7d0e552a59",
+    "baselineAvailable": true
+  },
+  "app/contracts/src/shared-context.ts": {
+    "before": "87b61ed57d095246c97d3651a693875cf3fab355b71e63564da223b21fb45620",
+    "after": "0558106d7b0d0fc8d57640f3981ba7fce8cf85a5271f8190784fc6b7cfad078f",
+    "baselineAvailable": true
+  },
+  "app/contracts/src/document-content-v8.ts": {
+    "before": "e5defef9538c4cfb0ea81ceefaa1708b46efe34533d6465ec28a1edc8e56d84f",
+    "after": "febb1fa35d43e23e1ccf41ec3377ed9d9f8973543fbc94fe03166b57878a15fa",
+    "baselineAvailable": true
+  },
+  "app/contracts/src/shared-tools.ts": {
+    "before": "1cf532d3693fb14eb4c52718f5a57309d83b18a1aa7ecd60a2306faf29206b35",
+    "after": "3cf34a31eae24b2c45867beb5cf515f736be2c75917421ace4dbcc604119df40",
+    "baselineAvailable": true
+  },
+  "app/contracts/src/workspace-document-v17.ts": {
+    "before": null,
+    "after": "711b1d918e97e8c12f13d91a287e1fee75690c6e15aaeeaaefca5f7e9088b9d8",
+    "baselineAvailable": false
+  },
+  "app/contracts/src/resource.ts": {
+    "before": "d3ebaa6f71e34148ce7a70b7e2495746e0457549e82de275592c65ec6d8390fd",
+    "after": "b72ca662146f250f80c43b0c0b09c481a8f81c691935dba661486368b47f0772",
+    "baselineAvailable": true
+  },
+  "app/contracts/src/workspace-document.ts": {
+    "before": "a70bf3c7be69d645f4cb66ad2be51348b2ebf063a83b0ef72472346817da18a8",
+    "after": "2bdfc89078156db134721d1fe0492fc0d3c804b18f980a2187a547dea4f02e1e",
+    "baselineAvailable": true
+  },
+  "app/contracts/src/index.ts": {
+    "before": "2cdb0059025e6e1fd33b4af19afb6bdd38c12d447dbee3995aceb542a1f36cc8",
+    "after": "aeb116c6f6d80dbd86aa0cef5eaac6fc2d8d58891a50e6ef4290af86cef48503",
+    "baselineAvailable": true
+  },
+  "app/contracts/src/creation-review.ts": {
+    "before": null,
+    "after": "755f9c99321c6c3f91cabd97ae94e4d4e1c8dc45a10f6cb5b2c76953ae41a061",
+    "baselineAvailable": false
+  },
+  "app/contracts/src/service.ts": {
+    "before": "371e00e8de50ab38028553985fdc3a35aa9051bbb0601b0f6299ee06e369d0c1",
+    "after": "4966fb72862cd5a6ef6f411f1c101b360123e276c83e333456a0b45a6463c21c",
+    "baselineAvailable": true
+  },
+  "app/contracts/src/creation-bridge.ts": {
+    "before": null,
+    "after": "c2e7f8a16c2e0fd2fbd6747817f376d1ee50d1314ad7767e9965d440c53a46e2",
+    "baselineAvailable": false
+  },
+  "app/contracts/src/storage/workspace-v17.json": {
+    "before": null,
+    "after": "5844a4708401ed55887c34ffd14652cc79b96c5757bd4603e39a68c23f1a6a6c",
+    "baselineAvailable": false
+  },
+  "app/desktop/src/renderer/chat/ChatComposer.tsx": {
+    "before": "88c9669ae46c7563e1ddb0658e00d931fca152c0c6059becb48030968587889f",
+    "after": "87307f865912397d90e7bbf516fea01cec458fcd4da3ff778e2fab34366fab18",
+    "baselineAvailable": true
+  },
+  "app/desktop/src/renderer/chat/SubmissionMessage.tsx": {
+    "before": "637467fa2cb47a949c1cab177ffb6741d9bdc649dd1205ee0eefa1b71a656c7b",
+    "after": "0dd1b3d69aaee2a5a8d74716d67897ef5f8722805c037984ff7c688a4fd68f19",
+    "baselineAvailable": true
+  },
+  "app/desktop/src/renderer/chat/CreationReferenceLabel.tsx": {
+    "before": null,
+    "after": "26085ea981b830ed4d06676c83a06c093fa777f3ad7ac02cc59cb6a4c463a861",
+    "baselineAvailable": false
+  },
+  "app/desktop/src/renderer/workspace/Pane.tsx": {
+    "before": "3f72b19f917270a5e2ebd5d85ccbc6466e3664dca88f585c4dcbf08368bbb66e",
+    "after": "3ecf5135643921468e9437fa47fd145815336185534b919bc0b7149b7471948a",
+    "baselineAvailable": true
+  },
+  "app/desktop/src/renderer/workspace/navigation/PipelinesBrowser.tsx": {
+    "before": "f54baf321601aac93bde887eda2596d73b8e7a7482c048d1ea76d2ffed3da0fe",
+    "after": "f00a8f88af9270e6ebe0786755d2d60d73ae34e6503c63b0fbbe399b0c3e7d3f",
+    "baselineAvailable": true
+  },
+  "app/desktop/src/renderer/workspace/navigation/CreationDrafts.tsx": {
+    "before": null,
+    "after": "16707eb6b4a38b2cececc73164fcfa357588865a044f39422d3a881de544a885",
+    "baselineAvailable": false
+  },
+  "app/desktop/src/renderer/workspace/views/SurfaceView.tsx": {
+    "before": "049921df10db99b1facb77d1f56118a6e14bfb6d22f6a8cecf4cb92cd118f621",
+    "after": "d2b2c67f105fb9f476147b14d648ca681bc9676baef3591cb9a8cac6d640166e",
+    "baselineAvailable": true
+  },
+  "app/desktop/src/renderer/workspace/views/pipeline/PipelineFlow.tsx": {
+    "before": "0b80d24c2fd118db22050aa5162bdb3cbd3c4c03f2c088e548b2d8336dbd920d",
+    "after": "ef8e775f43c0b43d3691c04a77dcc90e9e36b9130b63fe877489f28b6656e6d2",
+    "baselineAvailable": true
+  },
+  "app/desktop/src/renderer/workspace/views/creation/CreationInput.tsx": {
+    "before": null,
+    "after": "79515a23d849e7d99e4c6a3c2844f6c34dea05197b6b928dbfd55baf85cb0272",
+    "baselineAvailable": false
+  },
+  "app/desktop/src/renderer/workspace/views/creation/CreationEngine.tsx": {
+    "before": null,
+    "after": "bee9b962ae92dfc6c7055c9ae5905cb58960941316922abfc745f467951556f8",
+    "baselineAvailable": false
+  },
+  "app/desktop/src/renderer/workspace/views/creation/CreationView.tsx": {
+    "before": null,
+    "after": "c4c4a7c8dd08b74ea56a25e101032c33f342bf15b28c45d6d7a0a74e90b21d92",
+    "baselineAvailable": false
+  },
+  "app/desktop/src/renderer/styles/creation.css": {
+    "before": null,
+    "after": "a6499caf4824cc75607f86a40bbfdc43e0d262340086d1db2d134cfb2defd0f0",
+    "baselineAvailable": false
+  },
+  "app/desktop/src/main/collaboration/coordinator.ts": {
+    "before": "9f52acb2d7746d90b7a8c99fb949f0a26c9e87b6f3c5ceb8f301621f73f2f1e0",
+    "after": "92b9aa6176eb56158c3b6a6b771f753867168ac98f5a913c6d1621ac1b5a7d1d",
+    "baselineAvailable": true
+  },
+  "app/desktop/src/main/workspace/storage.ts": {
+    "before": "dcc9b56b3b2b7526e5fdc4095d552c9152f157b5d4f7826a9dedc1bc017e0511",
+    "after": "ff3dcea586a1cea0f50a86854bbd0f1af64aa7e2cab9394688b01857458b83f5",
+    "baselineAvailable": true
+  },
+  "app/desktop/src/main/workspace/model.ts": {
+    "before": "252be5c0bdd78ef3bb4070ede40277801ee3e5fee3cec527f9e55bef1ad859b4",
+    "after": "3570eb914ab2f8b1a949748be56e6afa77bf09128b199dbd4a12dca1a0a61e27",
+    "baselineAvailable": true
+  },
+  "app/desktop/src/main/workspace/controller.ts": {
+    "before": "0434ebb77b1ceb7af477af9f9ffe307699733f35e6334bc6cd2b7cec74a0fb6b",
+    "after": "a53ed295d1b390e79f4e63ee91e37d844d9bf880380f4b3dc266fbc62537af3f",
+    "baselineAvailable": true
+  },
+  "app/desktop/src/main/workspace/service.ts": {
+    "before": "446815ac342a5a1b4c552cbb1dbdbb5efd24c882512a87c9510b51ee74af224d",
+    "after": "d9e9c521010f92dea6896889f5a3d17c7a53b6b66e177f4bb0b3bc79775cd599",
+    "baselineAvailable": true
+  },
+  "app/desktop/src/main/codex/policy.ts": {
+    "before": "f7c102b6704890db44d5f5fca1362c3b2197cb8a935e91357ffcd3762769f2e8",
+    "after": "9e58f13c3321fe9a0a0cdf3fde4a7e0a90228bea3d094238cd7e058e7b572c1a",
+    "baselineAvailable": true
+  },
+  "app/desktop/src/main/shared-context/observed.ts": {
+    "before": "c15b730a7bb8560b6f840500ec0335f0485b8dfd6b24158dc7088e68acf4ac8f",
+    "after": "40572c1ff2bb9e652fb49dbafea5790ac30b41ad2557e113f62017afecd8bd43",
+    "baselineAvailable": true
+  },
+  "app/desktop/src/main/shared-context/host.ts": {
+    "before": "45b00f0e101ddeb6be46d2a12616bb23b65824688493e188571d3531a728228a",
+    "after": "8fd227fb3de4ad32c0937e4867059981a0c9a33e77dcdbbc185d86d9d0b55713",
+    "baselineAvailable": true
+  },
+  "app/desktop/src/main/shared-context/catalog.ts": {
+    "before": "180a51bc60145964f2e2fe0da72e7ac989b4839b6b187b44bee685d702d60d0f",
+    "after": "ea474e8b344912ce8055f97989ad7b9967a8a5480635262d5020b0873c771051",
+    "baselineAvailable": true
+  },
+  "app/desktop/src/main/pipeline-review/creation-host.ts": {
+    "before": null,
+    "after": "aefaa4ef096184085ecc5880799f28b1494475293b7fe576299cc360f5d2be7e",
+    "baselineAvailable": false
+  },
+  "app/desktop/src/main/pipeline-review/host.ts": {
+    "before": "b833d8efc6a8553c9a6acb7eaaaef018377652497b842374a20754e0425aa2a5",
+    "after": "6405cd1aa5de034db17d48b358b496213619c5821d495fa9387c551f1848c292",
+    "baselineAvailable": true
+  },
+  "app/desktop/src/main/service/pipeline-creation.ts": {
+    "before": null,
+    "after": "57738e0d69be6813c7164eb873ce1cef1c62507abe004affdd8e4becb6b56296",
+    "baselineAvailable": false
+  },
+  "app/desktop/src/main/service/ipc.ts": {
+    "before": "68f4d17be8f18841256d9e721fe9ee49804f0d1e2257228cb766693dbdd65c62",
+    "after": "9f96cb1a2fa70fdcf179900e2ec15f9bb274e29ec4d51527faab3c17c852abb9",
+    "baselineAvailable": true
+  },
+  "app/desktop/src/main/service/project-service.ts": {
+    "before": "38632dc1306050f6b2b8f2d9548c0e7be21c0865bf4a2616c6d863332b5f7d70",
+    "after": "59f86e67fdc0890f90e8d0d3090995c00e0749c15689426b2dd6d8637e650c23",
+    "baselineAvailable": true
+  },
+  "app/desktop/src/preload/index.ts": {
+    "before": "9d86f33518291efd16abec6392d3b52ad8c7c1c117a3992512a90a98fbf92110",
+    "after": "c36cd96755966ca014b9e31e0514181c1f15f855bf111247201d21d50bd49050",
+    "baselineAvailable": true
+  },
+  "app/desktop/tests/notebook-contracts.test.ts": {
+    "before": "db9aeb7560df143107bb79b09a29ed9274faa190448a86360de12bb3984b2a52",
+    "after": "bf7b3ca640b6c95545061f7a94dc49507dd9d0c3036eef2865dd3bfd4c88de11",
+    "baselineAvailable": true
+  },
+  "app/desktop/tests/pipeline-proposal.test.ts": {
+    "before": "cf6eafbd8c73c19eddf287f4cc6c02f24c0e7eb87808235a7d5acc9ed3d37184",
+    "after": "9bfc6c198119f92853a113109c5e1093df5777530a362c60c058ce5a7b645cfa",
+    "baselineAvailable": true
+  },
+  "app/desktop/tests/plot-evidence.test.ts": {
+    "before": "d43da26836cc8e95d7773cf4fb07acc3a27f3826baf2d9f495159b61dc5ffa91",
+    "after": "ef5c5c0f82601d43700b562ab965da31570b3651ad74ba56f52771584b0fe53d",
+    "baselineAvailable": true
+  },
+  "app/desktop/tests/pipeline-discussion.test.ts": {
+    "before": "b13cb21731d1e910b87131026589c4accf34b321fa765f958754a846f0471bfe",
+    "after": "1eda60a225607ad6930cefe321502e3e029b30b207ef3e468a12efcc522ade47",
+    "baselineAvailable": true
+  },
+  "app/desktop/tests/design.test.ts": {
+    "before": "0d031da8ba209acb674d8dc2292a60ce3c83638a9cc8662584684f2d3f56e173",
+    "after": "4365a17548f0cb8f2ff8dde91e5949b6467dbe98d45d169d6bb34750caf57092",
+    "baselineAvailable": true
+  },
+  "app/desktop/tests/dependency-navigation.test.ts": {
+    "before": "57b6bb8036541cc5779a4573f827d2e09f4e63b77c7e2dfb1ff0936b9610ab0d",
+    "after": "5792ee62b816c30c6fdccff3be7b59472f88231f627add516c5f7a3152d5a009",
+    "baselineAvailable": true
+  },
+  "app/desktop/tests/collaboration.test.ts": {
+    "before": "549d869ae86a54fe96d8a6b09a19d45da8d3b99ebbb7875169cad4a4f78d45d6",
+    "after": "069f37b8f0611381748aeb9a05ecf937786cad51844ded7332b4523ce248ee31",
+    "baselineAvailable": true
+  },
+  "app/desktop/tests/pipeline-flow.test.ts": {
+    "before": "c80d14fbf540f44dfde3d99cd33fa14bb8f93acc42606f907ec68617f916c914",
+    "after": "1487050a997976bef5f7571e384e8512de39f98c37548982a4177fb64ca3809d",
+    "baselineAvailable": true
+  },
+  "app/desktop/tests/pdf-evidence.test.ts": {
+    "before": "e46363dd932b12f74cb60a3b4cbafeb06382280bb9e29b8c3df0e99aeb6658fa",
+    "after": "2b50c2ed1974f0a5958f9bc8d2cbb368716fc46e43441434128931d7d6cd934c",
+    "baselineAvailable": true
+  },
+  "app/desktop/tests/creation-host.test.ts": {
+    "before": null,
+    "after": "900ccbbd19e3d7cc7e2d717757e5d81854c7e40bc752dbee48fce6c53a1a7fc7",
+    "baselineAvailable": false
+  },
+  "app/desktop/tests/dependency-reference.test.ts": {
+    "before": "bd59a7a43b2ee6bfcb12a0c11deb3de0129ec570874aaa19e4079364b9146fd5",
+    "after": "0ef029c2a1083fbee42c6d4a75d9153fe6226732fd03747beabcec864d514973",
+    "baselineAvailable": true
+  },
+  "app/desktop/tests/creation-facts.test.ts": {
+    "before": null,
+    "after": "7977a841fd5ea230d5f63bca8eb20afb737f1e7c7924ea957cf126aed384daa7",
+    "baselineAvailable": false
+  },
+  "app/desktop/tests/observed-evidence.test.ts": {
+    "before": "0e9dcd288b453ffe7b7bb1cc99afca1f90ffffd212bd50ed784e9fe6529cd3de",
+    "after": "2168f82566c5ae0478bad6248a6a10477da3434875c97335f917553cd0eaf35d",
+    "baselineAvailable": true
+  },
+  "app/desktop/tests/shared-context.test.ts": {
+    "before": "f53c11837127b47cfeb2152086dfbb8cc651fde5a9a65e515800b12fcd40e1b8",
+    "after": "a66669c773e6b4a9c3461d9d0f2d4dd99adad8cbf34f3bf019efb924746147f5",
+    "baselineAvailable": true
+  },
+  "app/desktop/tests/linked-interaction.test.ts": {
+    "before": "e8695b48f66288c28c994f7da7eb820657731ebd16c348bb0eddb35e510ee5eb",
+    "after": "fdb7623df9a477badd6a63a025a1527bd224c3ddc06a7f3a2bb10b0f6fd4af3a",
+    "baselineAvailable": true
+  },
+  "app/desktop/tests/workspace-migration.test.ts": {
+    "before": "b24f814daff5ad79fcd510962ea2c167d7b600f4c355fe1c2c9f0ea23709cffa",
+    "after": "b3320bb29ffe6d0e20f9e53aac717169e806b220968fdacfef03054ac6c39be7",
+    "baselineAvailable": true
+  },
+  "app/desktop/tests/fixtures/creation-candidate.json": {
+    "before": null,
+    "after": "d9483c08fd8920cfdbcd95bc21dd72567bdbf813c3a3a2ce5e4dd7e429f53e30",
+    "baselineAvailable": false
+  },
+  "app/desktop/tests/fixtures/pipeline-tools.cjs": {
+    "before": null,
+    "after": "badefa5569ea50deabdfef3b100cc8dcdcdbaa54a74902a642dde240e24a6120",
+    "baselineAvailable": false
+  },
+  "app/desktop/tests/fixtures/pipeline-proposal-tools.cjs": {
+    "before": null,
+    "after": "6c4f3d3428e22411c41740beefa925667238005ccf60f89727741ad69aa4ad73",
+    "baselineAvailable": false
+  },
+  "app/desktop/tests/fixtures/pipeline-creation-tools.cjs": {
+    "before": null,
+    "after": "ed6b7f4532a1eadba3cafeeecebecd9a60707d6f349e664b6fb40269d694be7f",
+    "baselineAvailable": false
+  },
+  "app/desktop/tests/fixtures/codex.cjs": {
+    "before": null,
+    "after": "3cff1f22198b5d90d0446495811c47f3a09df0ec3526a5d62acfbe9e29749936",
+    "baselineAvailable": false
+  },
+  "app/desktop/tests/fixtures/notebook-tools.cjs": {
+    "before": null,
+    "after": "e23290097172d1c4f2156b3d82aa2277eff1919d87655de59a866c6e56d6f9a0",
+    "baselineAvailable": false
+  },
+  "app/desktop/tests/electron/questions.spec.ts": {
+    "before": "9f7fefb7bc5a3b78240e417380b68e2d766d363c4b59d3a0229eebf3dc1b8918",
+    "after": "98ba55a1e1bf184d242919c3b963bf715563bc76c57c5c6110f5d8b6518b4192",
+    "baselineAvailable": true
+  },
+  "app/desktop/tests/electron/pipeline-creation.spec.ts": {
+    "before": null,
+    "after": "380cea4a6616c2e823c3f6fdc0197f5d844821d3f6c373a56280c0673c9787b7",
+    "baselineAvailable": false
+  },
+  "app/desktop/tests/electron/evidence.spec.ts": {
+    "before": "e1d132f48eaf5a5276dda46d4c7f5e8e6454c3b6da3d8d723056934b81542a06",
+    "after": "349ca6aa537e4516d1fd28dc0f955187a1596e856e0dc8959662df1e66ba4ffc",
+    "baselineAvailable": true
+  },
+  "internal/appservice/creation_engines_test.go": {
+    "before": null,
+    "after": "eb5b7ec68fabbe913638d129458ed52858aa641f844e903f662013bc4e16eea6",
+    "baselineAvailable": false
+  },
+  "internal/appservice/creation_check_routes.go": {
+    "before": "bc20da51a941b6b41d881ea3c52d11c4a1688e739ec2ccf3971bb85d705a8db7",
+    "after": "8192753aa0a227db2de6fc75a952c63525db387093957ca722b80c1509b92002",
+    "baselineAvailable": true
+  },
+  "internal/appservice/creation_engines.go": {
+    "before": null,
+    "after": "2ecca2a69a636a4968e8db036f9c4122e81fb3b72e5411536bd4aae4235b311b",
+    "baselineAvailable": false
+  }
+}

@@ -1,0 +1,5 @@
+=== RUN   TestLiveCreationCheck
+    creation_candidate_test.go:311: runtime=sha256:4dbd1fb658d8aa6967bf8de6b2368a0dad2c59244306d2a2bf1c9e90e4d702dc artifact=sha256:56cf2e196d1fb2c75a72773f1e9e7b1eefab4012a2137a2c1872561f092f4dbd steps=2 gaps=[The trimming step differs from the supported single-end design. The displayed settings must match the complete checked processing steps.]
+--- PASS: TestLiveCreationCheck (196.25s)
+PASS
+ok  	github.com/HahyeonJeon/gobble/internal/appservice	196.721s

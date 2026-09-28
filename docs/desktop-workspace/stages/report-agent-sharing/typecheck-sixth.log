@@ -1,0 +1,13 @@
+
+> gobble-app-workspace@0.1.0 typecheck
+> tsc -p contracts/tsconfig.json && npm run typecheck --workspace @gobble/desktop && tsc -p tsconfig.tools.json
+
+
+> @gobble/desktop@0.1.0 typecheck
+> tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && tsc -p tsconfig.renderer.json
+
+desktop/tests/report-sharing.test.ts(52,87): error TS2353: Object literal may only specify known properties, and 'role' does not exist in type '{ configuration?: { model: string; effort: string; instructions: string; }; access?: "messages" | "sharedViews"; name: string; projectId: string; agentId: string; instructionProfile: string; provider: { ...; }; }'.
+desktop/tests/report-sharing.test.ts(55,100): error TS2375: Type '{ capture: { kind: "report"; capturedAt: number; asset: { hash: string; byteLength: number; mediaType: "application/json"; }; representation: { kind: "report"; truncated: false; textByteLength: number; imageCount: number; }; } | ... 4 more ... | undefined; ... 4 more ...; attachmentId: string; }' is not assignable to type '{ capture?: { kind: "report"; capturedAt: number; asset: { hash: string; byteLength: number; mediaType: "application/json"; }; representation: { kind: "report"; truncated: false; textByteLength: number; imageCount: number; }; } | { ...; } | { ...; } | { ...; } | { ...; }; ... 4 more ...; attachmentId: string; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'capture' are incompatible.
+    Type '{ kind: "report"; capturedAt: number; asset: { hash: string; byteLength: number; mediaType: "application/json"; }; representation: { kind: "report"; truncated: false; textByteLength: number; imageCount: number; }; } | ... 4 more ... | undefined' is not assignable to type '{ kind: "report"; capturedAt: number; asset: { hash: string; byteLength: number; mediaType: "application/json"; }; representation: { kind: "report"; truncated: false; textByteLength: number; imageCount: number; }; } | { ...; } | { ...; } | { ...; } | { ...; }'.
+      Type 'undefined' is not assignable to type '{ kind: "report"; capturedAt: number; asset: { hash: string; byteLength: number; mediaType: "application/json"; }; representation: { kind: "report"; truncated: false; textByteLength: number; imageCount: number; }; } | { ...; } | { ...; } | { ...; } | { ...; }'.

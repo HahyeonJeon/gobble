@@ -1,0 +1,54 @@
+{
+  "files": [
+    {
+      "name": "fixtures.cjs",
+      "bytes": 5856,
+      "sha256": "916730f77ba29e4c85b6d919c21ecaec87025cda454451423b8a6f7bd53cb36a"
+    },
+    {
+      "name": "index.html",
+      "bytes": 315,
+      "sha256": "f0c365688e7d7dae9d4b85c8a6adb5330d5d595ec81e843069d88868205a435b"
+    },
+    {
+      "name": "main.cjs",
+      "bytes": 269492,
+      "sha256": "5b845608fb825bfd6ae33320eadad532960b0a6035287106c23c6ba161eb5010"
+    },
+    {
+      "name": "parser.cjs",
+      "bytes": 12529,
+      "sha256": "4e1d17505dfc958692e281e20f9eb456d3a6ca251f5c7d2b28216ab92eaedc7e"
+    },
+    {
+      "name": "preload.cjs",
+      "bytes": 594,
+      "sha256": "86da8843ce41ff1fbd772a3fe17cc7628a078f9422a46bb9018d28c008b14c91"
+    },
+    {
+      "name": "renderer.css",
+      "bytes": 5837,
+      "sha256": "402f91ab3b9945ee6176ad4dd3b5a4437122003831de08d6b80fb6ada5f7d5bf"
+    },
+    {
+      "name": "renderer.js",
+      "bytes": 1113083,
+      "sha256": "e6a82e833ee2ca2831f77ea5f89f0641dee15ec2ebbf6c4d066c57301d5f0a2d"
+    },
+    {
+      "name": "targets.cjs",
+      "bytes": 251743,
+      "sha256": "564c5a38f1d401f720f90bdc92dfe28dc8bd53fad46405ce3aee2014605bccff"
+    },
+    {
+      "name": "worker-client.cjs",
+      "bytes": 249035,
+      "sha256": "4637e10f0daa0b5ff7248612fc373e595f45beca5b990d0582f083b3e24a6d33"
+    },
+    {
+      "name": "worker.cjs",
+      "bytes": 12151,
+      "sha256": "681c7566a7d61e9ef44ea862dd1762e84b9f5f116afd38192628df38b5e5c0db"
+    }
+  ]
+}

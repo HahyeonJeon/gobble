@@ -1,0 +1,6 @@
+=== RUN   TestPackPrintpipeArtifact
+--- PASS: TestPackPrintpipeArtifact (4.47s)
+=== RUN   TestPackHostpipeEmptyInspectProtocol
+--- PASS: TestPackHostpipeEmptyInspectProtocol (4.85s)
+PASS
+ok  	github.com/HahyeonJeon/gobble/cmd/gobble	9.374s

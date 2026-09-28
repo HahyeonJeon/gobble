@@ -1,0 +1,11 @@
+
+Running 4 tests using 1 worker
+
+(node:98643) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 desktop/tests/electron/pdf.spec.ts:64:1 › PDF page and pointer/keyboard region become immutable draft and sent evidence across refresh and restart (6.8s)
+  ✓  2 desktop/tests/electron/pdf.spec.ts:179:1 › PDF readers isolate navigation, reject stale or cross-Pane capture and dispose when hidden or switched (2.4s)
+  ✓  3 desktop/tests/electron/pdf.spec.ts:285:1 › unsupported PDFs fail locally and recover through the existing Pane retry (1.5s)
+  ✓  4 desktop/tests/electron/pdf.spec.ts:300:1 › closing a loading PDF discards late work and leaves the Project usable (907ms)
+
+  4 passed (12.3s)

@@ -1,0 +1,346 @@
+{
+  "schemaVersion": 6,
+  "viewLinks": [
+    {
+      "linkId": "lnk_fcd93249-b8ec-4b79-b474-4e53199ebae8",
+      "resource": {
+        "kind": "file",
+        "resourceId": "res_444711fc49ed4a9140152ab9458444f9b54e8a49494290295392638f34859777"
+      },
+      "dataRevision": "sha256:f09f2c63e297285b47a128a24a0345fa6b84e9f0ea7cbbeae8ee1b2be4b383f6",
+      "surfaceIds": [
+        "srf_13e20dcb-45fe-4fc6-b4fd-1fae903b221f",
+        "srf_fcd93249-b8ec-4b79-b474-4e53199ebae8"
+      ],
+      "filterRevision": 1,
+      "filter": {
+        "kind": "equals",
+        "columnId": "col_1",
+        "value": "Treatment"
+      },
+      "rowKeys": [
+        "row_3",
+        "row_5"
+      ],
+      "selectionSourceId": "srf_13e20dcb-45fe-4fc6-b4fd-1fae903b221f"
+    }
+  ],
+  "paneOrientation": "vertical",
+  "workspace": {
+    "schemaVersion": 1,
+    "projectId": "prj_AMLEPCTL2UZFXLADH2ZA5KGNV4",
+    "revision": 594,
+    "agents": [
+      {
+        "projectId": "prj_AMLEPCTL2UZFXLADH2ZA5KGNV4",
+        "agentId": "agt_d0455b2c-1a08-45c3-9e95-31b4793ab215",
+        "name": "Plot reviewer",
+        "instructionProfile": "discussion-v1",
+        "access": "sharedViews",
+        "configuration": {
+          "model": "gpt-6-astra",
+          "effort": "medium",
+          "instructions": "Review only this synthetic Project through the shared-view tools. Keep responses concise and evidence-based."
+        },
+        "provider": {
+          "kind": "codex",
+          "threadId": "01a07e51-da40-7853-a365-0b6080788f51",
+          "accountSessionId": "95802682-84c0-451b-ae34-8bcc4965d157",
+          "toolsetVersion": "shared-views-v4"
+        }
+      }
+    ],
+    "surfaces": [
+      {
+        "projectId": "prj_AMLEPCTL2UZFXLADH2ZA5KGNV4",
+        "surfaceId": "srf_13e20dcb-45fe-4fc6-b4fd-1fae903b221f",
+        "resource": {
+          "kind": "file",
+          "resourceId": "res_444711fc49ed4a9140152ab9458444f9b54e8a49494290295392638f34859777"
+        },
+        "view": "table",
+        "pinned": false,
+        "openedBy": {
+          "kind": "user"
+        },
+        "table": {
+          "sort": null,
+          "columns": [
+            "col_0",
+            "col_1",
+            "col_2",
+            "col_3",
+            "col_4"
+          ],
+          "viewRevision": 1
+        }
+      },
+      {
+        "projectId": "prj_AMLEPCTL2UZFXLADH2ZA5KGNV4",
+        "surfaceId": "srf_fcd93249-b8ec-4b79-b474-4e53199ebae8",
+        "resource": {
+          "kind": "file",
+          "resourceId": "res_444711fc49ed4a9140152ab9458444f9b54e8a49494290295392638f34859777"
+        },
+        "pinned": false,
+        "openedBy": {
+          "kind": "user"
+        },
+        "view": "scatter",
+        "scatter": {
+          "spec": {
+            "xColumnId": "col_2",
+            "yColumnId": "col_3",
+            "xScale": "linear",
+            "yScale": "linear",
+            "labelColumnId": "col_0"
+          },
+          "specRevision": 1,
+          "viewRevision": 0,
+          "viewport": null
+        }
+      }
+    ],
+    "layout": {
+      "kind": "split",
+      "primary": {
+        "tabs": [
+          "srf_fcd93249-b8ec-4b79-b474-4e53199ebae8"
+        ],
+        "activeSurfaceId": "srf_fcd93249-b8ec-4b79-b474-4e53199ebae8"
+      },
+      "secondary": {
+        "tabs": [
+          "srf_13e20dcb-45fe-4fc6-b4fd-1fae903b221f"
+        ],
+        "activeSurfaceId": "srf_13e20dcb-45fe-4fc6-b4fd-1fae903b221f"
+      },
+      "primaryFraction": 0.5
+    },
+    "decisions": []
+  },
+  "titles": [
+    {
+      "surfaceId": "srf_13e20dcb-45fe-4fc6-b4fd-1fae903b221f",
+      "title": "synthetic-coordinates.csv"
+    },
+    {
+      "surfaceId": "srf_fcd93249-b8ec-4b79-b474-4e53199ebae8",
+      "title": "synthetic-coordinates.csv \u00b7 Scatter"
+    }
+  ],
+  "activePane": "primary",
+  "maximizedPane": null,
+  "chat": {
+    "collapsed": false,
+    "width": 420,
+    "draft": "",
+    "recipientAgentId": "agt_d0455b2c-1a08-45c3-9e95-31b4793ab215",
+    "attachmentRevision": 3,
+    "attachments": []
+  },
+  "selections": [],
+  "activity": [
+    {
+      "id": "req_103fe94a-1cf4-472f-b8e7-016494489b32",
+      "text": "Opened a Project view.",
+      "at": 1788825496296
+    }
+  ],
+  "receipts": [
+    {
+      "requestId": "req_103fe94a-1cf4-472f-b8e7-016494489b32",
+      "digest": "6a3e98f782b3d0995116db8ae73e66f02e910398960fc7a9ba8853cd06fb03f9"
+    },
+    {
+      "requestId": "req_db7b3f7b-2471-4d88-86b3-a8098d91c079",
+      "digest": "318422312ecf5d0fa1491f1cbbadc0fc0459d5a538fb0ea63b50b9a7b0bb6b59"
+    },
+    {
+      "requestId": "req_3e242d3b-e8c1-4b59-8b72-84afc95066e9",
+      "digest": "27b8da05fc4f1c252a856b2670c700f06cf82b331ec9e487c8d696252f0a9ddd"
+    },
+    {
+      "requestId": "req_fcd93249-b8ec-4b79-b474-4e53199ebae8",
+      "digest": "0a042ee8e093f370539410c9f338c9393926d6c91265eb67c09801df76149930"
+    },
+    {
+      "requestId": "req_97e81a5f-6dcb-4732-83e2-fb1c70dbfe58",
+      "digest": "85b27efe0950f9da1cf66ce949a6c431d6c0728a6a74e5ff9e27849b4d3186c3"
+    },
+    {
+      "requestId": "req_dae07631-9199-4f46-990b-6ea4779d97a4",
+      "digest": "4028e794893b86807bca68efbf887fbacb098ffe1cd8fc62731dc8c7683e8b21"
+    },
+    {
+      "requestId": "req_f3ec5c66-7cdb-4c54-92c9-3c42950a194c",
+      "digest": "1b02398848923d2e532079a32290677610ef2cdeb38b134992d6b06bb1e5d2ba"
+    }
+  ],
+  "collaboration": {
+    "submissions": [
+      {
+        "requestId": "req_37d3ec43-7585-4210-b9c1-d0274ed6eb3c",
+        "agentId": "agt_d0455b2c-1a08-45c3-9e95-31b4793ab215",
+        "text": "This is synthetic acceptance-test data. Read the attached exact rows and plot context. Briefly report their Sample, X, Y and Score values, the captured axes, filter and viewport. Then use workspace_list and workspace_observe on the scatter view with scope source-preview to find the Control sample with the highest Score, which is outside my current filter. Publish one workspace_point for that exact row using the current full observation receipt and required columns. State its values. Do not change my views or selection, create a question, or claim to have seen plot pixels.",
+        "model": "gpt-6-astra",
+        "effort": "medium",
+        "createdAt": 1788825688764,
+        "responseStartedAt": 1788825693428,
+        "state": "completed",
+        "threadId": "01a07e51-da40-7853-a365-0b6080788f51",
+        "turnId": "01a07e51-dace-77c0-b8ed-e60bf49c09d7",
+        "response": "The attached rows are S03 (X=2, Y=7, Score=21) and S05 (X=4, Y=8, Score=23). The captured axes are X and Y, both linear, with Sample labels; the filter is Condition = Treatment, and the viewport is x=[1.36, 10.64], y=[5.68, 10.32]. This is semantic evidence; no plot pixels are included.\n\nI\u2019ll read the scatter\u2019s source preview and publish a pointer to the Control row with the highest Score.\n\n\n| Sample | X | Y | Score |\n|---|---:|---:|---:|\n| S03 | 2 | 7 | 21 |\n| S05 | 4 | 8 | 23 |\n\nCaptured context: X/Y axes, both linear; Sample labels; filter **Condition = Treatment**; viewport **x=[1.36, 10.64], y=[5.68, 10.32]**.\n\nThe complete source preview identifies **S10 (row_10), Control, X=9, Y=11, Score=27** as the highest-scoring Control. Published one pointer using the current full observation receipt and all five columns.\n\nViews and selection remain unchanged. Only semantic data and plot context were read; no plot pixels.",
+        "problem": null,
+        "evidence": [
+          {
+            "attachmentId": "att_f3ec5c66-7cdb-4c54-92c9-3c42950a194c",
+            "evidence": {
+              "schemaVersion": 2,
+              "projectId": "prj_AMLEPCTL2UZFXLADH2ZA5KGNV4",
+              "resource": {
+                "kind": "file",
+                "resourceId": "res_444711fc49ed4a9140152ab9458444f9b54e8a49494290295392638f34859777"
+              },
+              "dataRevision": "sha256:f09f2c63e297285b47a128a24a0345fa6b84e9f0ea7cbbeae8ee1b2be4b383f6",
+              "origin": {
+                "surfaceId": "srf_fcd93249-b8ec-4b79-b474-4e53199ebae8"
+              },
+              "selection": {
+                "kind": "table",
+                "coordinateSpace": "revision-row-column-keys",
+                "rowKeys": [
+                  "row_3",
+                  "row_5"
+                ],
+                "columns": [
+                  "col_0",
+                  "col_1",
+                  "col_2",
+                  "col_3",
+                  "col_4"
+                ]
+              }
+            },
+            "presentation": {
+              "schemaVersion": 1,
+              "kind": "scatter",
+              "spec": {
+                "xColumnId": "col_2",
+                "yColumnId": "col_3",
+                "xScale": "linear",
+                "yScale": "linear",
+                "labelColumnId": "col_0"
+              },
+              "filter": {
+                "kind": "equals",
+                "columnId": "col_1",
+                "value": "Treatment"
+              },
+              "viewport": {
+                "x": [
+                  1.3599999999999999,
+                  10.64
+                ],
+                "y": [
+                  5.68,
+                  10.32
+                ]
+              },
+              "revision": {
+                "spec": 1,
+                "view": 0,
+                "filter": 1
+              }
+            },
+            "label": "synthetic-coordinates.csv \u00b7 selected rows",
+            "createdAt": 1788825637314,
+            "capturedAt": 1788825637518,
+            "representation": {
+              "kind": "table",
+              "truncated": false
+            },
+            "asset": {
+              "hash": "sha256:1629def65f8addd1fb02aa00e5a24e88ca06c0b5fbf106735525ce547df2772d",
+              "byteLength": 714,
+              "mediaType": "application/json"
+            }
+          }
+        ],
+        "preparedEvidenceId": "prep_8b5ff99c-cae1-44b4-bb1d-595b18e2a3be"
+      }
+    ]
+  },
+  "sharedReferences": [
+    {
+      "referenceId": "ref_9d6f9c86-a762-4d72-b60f-dfec6b86ae06",
+      "evidence": {
+        "schemaVersion": 2,
+        "projectId": "prj_AMLEPCTL2UZFXLADH2ZA5KGNV4",
+        "resource": {
+          "kind": "file",
+          "resourceId": "res_444711fc49ed4a9140152ab9458444f9b54e8a49494290295392638f34859777"
+        },
+        "dataRevision": "sha256:f09f2c63e297285b47a128a24a0345fa6b84e9f0ea7cbbeae8ee1b2be4b383f6",
+        "origin": {
+          "surfaceId": "srf_fcd93249-b8ec-4b79-b474-4e53199ebae8"
+        },
+        "selection": {
+          "kind": "table",
+          "coordinateSpace": "revision-row-column-keys",
+          "rowKeys": [
+            "row_10"
+          ],
+          "columns": [
+            "col_0",
+            "col_1",
+            "col_2",
+            "col_3",
+            "col_4"
+          ]
+        }
+      },
+      "presentation": {
+        "schemaVersion": 1,
+        "kind": "scatter",
+        "spec": {
+          "xColumnId": "col_2",
+          "yColumnId": "col_3",
+          "xScale": "linear",
+          "yScale": "linear",
+          "labelColumnId": "col_0"
+        },
+        "filter": {
+          "kind": "equals",
+          "columnId": "col_1",
+          "value": "Treatment"
+        },
+        "viewport": {
+          "x": [
+            1.3599999999999999,
+            10.64
+          ],
+          "y": [
+            5.68,
+            10.32
+          ]
+        },
+        "revision": {
+          "spec": 1,
+          "view": 0,
+          "filter": 1
+        }
+      },
+      "note": "Highest Control Score: S10 (row_10), X=9, Y=11, Score=27. Verified across the complete 12-row source preview; excluded by the current Condition = Treatment filter.",
+      "author": {
+        "kind": "agent",
+        "agentId": "agt_d0455b2c-1a08-45c3-9e95-31b4793ab215",
+        "name": "Plot reviewer"
+      },
+      "createdAt": 1788825719510,
+      "retracted": false,
+      "originSubmissionId": "req_37d3ec43-7585-4210-b9c1-d0274ed6eb3c",
+      "label": "synthetic-coordinates.csv \u00b7 Scatter"
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+[
+  {
+    "name": "report",
+    "bytes": 2819,
+    "sha256": "b820cec8dd3a7da1738048b88058cad606bf23cdf765458fc1bf88802195cf8e"
+  },
+  {
+    "name": "rotated",
+    "bytes": 950,
+    "sha256": "74104410c9ed2ecb1da17a03013042f5c4e3612dd3c5a52a1695e7fa5c99312d"
+  },
+  {
+    "name": "user-unit",
+    "bytes": 949,
+    "sha256": "0386e134526a3423017817482ab8f02aef53fc962ed81a0f771e8059336cd4ec"
+  },
+  {
+    "name": "scanned",
+    "bytes": 1507,
+    "sha256": "405501114a3f68af56ee3d15dc31c28c99ecf1b384e853c6a1753db7857f7855"
+  },
+  {
+    "name": "unicode",
+    "bytes": 1433,
+    "sha256": "40662ebe4f38ae9a8d1e98222d240b65364a56a145e5ec42a4e5142771f02701"
+  },
+  {
+    "name": "dense",
+    "bytes": 272655,
+    "sha256": "818f49382abb90d8d478b56b490ff22fd34e80a13d5763fd45960714376b26a8"
+  },
+  {
+    "name": "active",
+    "bytes": 1201,
+    "sha256": "92ef4b5bf0cffce311fbe6eb5bcedfdc7958ec699bcbc415dd122d0a2dea36f7"
+  },
+  {
+    "name": "many-pages",
+    "bytes": 126201,
+    "sha256": "598e155401055882f9480bc00a289899ed243a8315ccfe303166f0cb58eef323"
+  },
+  {
+    "name": "too-many-pages",
+    "bytes": 126831,
+    "sha256": "6ac47f0f8e7015f09268c76c8073bb385a8e57f4223483de85f085da5a2cdb35"
+  },
+  {
+    "name": "noise",
+    "bytes": 4322210,
+    "sha256": "92c0caa5fcb037093e97e25e59b850b42d35446ddd7ac6c91b9f9382f81de12d"
+  },
+  {
+    "name": "oversized-image",
+    "bytes": 89708,
+    "sha256": "13dc378535dfdb9fd115feadae3bb3fb4a5b266545687f2ff0d44fa00e484b74"
+  },
+  {
+    "name": "corrupt-image",
+    "bytes": 878,
+    "sha256": "a0d203ad893ed67172bdf0ac43f2b06ca1339c3d47ada120bf4a5a8f5dfd98cc"
+  },
+  {
+    "name": "malformed",
+    "bytes": 26,
+    "sha256": "5cffb3975cf763fcca47c1961bae7b58eca02cb7cf403c8942f14ed380e7990a"
+  },
+  {
+    "name": "encrypted",
+    "bytes": 1462,
+    "sha256": "4a30e2ff4e263b127ed60f8819876225adc831692876ac34fb7cdb809f268127"
+  },
+  {
+    "name": "limit-minus",
+    "bytes": 8388607,
+    "sha256": "e27d2f6bed7499a875020f221286de6aeac76fef13ded071c975f6ee2e07e1a6"
+  },
+  {
+    "name": "limit-exact",
+    "bytes": 8388608,
+    "sha256": "577b1ce720b3a452f016eb2ae92bd5171e9b11a49acf6f3736aa8fba9c62ed00"
+  },
+  {
+    "name": "limit-plus",
+    "bytes": 8388609,
+    "sha256": "b5517fa7308696b26fdb55cd1a35465b678759efb304c4a9148989c7859ed40f"
+  }
+]

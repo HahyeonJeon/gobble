@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Gobble · Create a pipeline together</title>
+    <link rel="stylesheet" href="sketch.css?v=4" />
+  </head>
+  <body>
+    <header class="study">
+      <strong>DESIGN SKETCH · P2B-2</strong>
+      <div role="group" aria-label="Entry approach">
+        <button data-concept="project" aria-pressed="true">
+          Project action</button
+        ><button data-concept="chat" aria-pressed="false">Chat first</button>
+      </div>
+      <label
+        >Preview
+        <select id="scene">
+          <option value="setup">Choose data</option>
+          <option value="checking">Checking</option>
+          <option value="review">First-version review</option>
+          <option value="changed">File changed</option>
+          <option value="offline">Engine unavailable</option>
+          <option value="adopted">Adopted</option>
+        </select></label
+      ><span>Illustrative data · no Agent or engine connected</span>
+    </header>
+    <header class="appbar">
+      <span class="brand">g.</span><strong>Read quality study</strong
+      ><span class="muted">⌄</span>
+      <div class="mobile" role="group" aria-label="Visible area">
+        <button data-area="work" aria-pressed="true">Workspace</button
+        ><button data-area="chat" aria-pressed="false">Chat</button>
+      </div>
+      <span class="saved">Project saved</span>
+    </header>
+    <div class="app" data-area="work">
+      <aside class="sidebar" aria-label="Project navigation">
+        <div class="navtitle">
+          ◇ Pipelines <small id="pipeline-count">1</small>
+        </div>
+        <div class="navitem">Existing analysis</div>
+        <button id="new" class="navitem">＋ New pipeline</button>
+        <div id="draft-nav">
+          <div class="navtitle drafts">Drafts <small>1</small></div>
+          <button id="draft-item" class="navitem active">
+            Read quality <small>Draft</small>
+          </button>
+        </div>
+        <div class="navtitle lower">▤ Files</div>
+        <div class="navitem muted">Project data</div>
+        <div class="navtitle lower">▷ Runs</div>
+        <div class="navitem muted">No runs started</div>
+      </aside>
+      <main class="workspace" aria-label="Pipeline creation workspace">
+        <header class="viewbar">
+          <span id="view-name">New pipeline</span
+          ><span id="state-badge" class="pill">Draft</span
+          ><button id="discard">Discard draft</button>
+        </header>
+        <div id="workbody" class="workbody"></div>
+        <footer id="actions"></footer>
+      </main>
+      <aside class="chat" aria-label="Project Chat">
+        <header>
+          <strong>Chat</strong
+          ><button id="agent" aria-label="Current Agent: Research partner">
+            ● Research partner ⌄
+          </button>
+        </header>
+        <div id="timeline" class="timeline" aria-live="polite"></div>
+        <div class="composer">
+          <div id="context" class="context"></div>
+          <label for="message" class="sr-only">Message draft</label
+          ><textarea id="message" placeholder="Describe the analysis you want…">
+Trim adapters from S01 using quality 25 and minimum length 40, then check the trimmed reads.</textarea
+          ><label class="permission"
+            ><input type="checkbox" id="permission" />Allow a Pipeline proposal
+            for this message</label
+          >
+          <div class="composefoot">
+            <span>To Research partner</span
+            ><button class="primary" id="send">Send ↑</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div id="toast" role="status" hidden></div>
+    <script src="sketch.js?v=4"></script>
+  </body>
+</html>

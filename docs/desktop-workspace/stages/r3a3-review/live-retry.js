@@ -1,0 +1,11 @@
+await application.evaluate(({app,BrowserWindow})=>{app.focus({steal:true}); const window=BrowserWindow.getAllWindows()[0]; window.show(); window.focus();});
+const draft=page.getByRole('textbox',{name:'Message draft'});
+const saved=await draft.inputValue();
+await draft.fill('The Project window has been brought to the foreground again. Please retry the two exact pointers from current workspace observations: the preparation task outside my S03 filter, and only stdout line 2 "Alignment complete" while stderr remains displayed. The two earlier attached excerpts have already been delivered. Keep my views and selection unchanged.');
+await page.getByRole('button',{name:'Send',exact:true}).click();
+await page.waitForFunction(()=>document.querySelector('[aria-label="Message draft"]').value==='');
+await draft.fill(saved);
+await application.evaluate(({app,BrowserWindow})=>{app.focus({steal:true}); BrowserWindow.getAllWindows()[0].focus();});
+const initial=await application.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].isFocused());
+await page.waitForFunction(()=>[...document.querySelectorAll('.message-state')].filter(el=>el.textContent==='completed').length===2,undefined,{timeout:55000});
+return {initialFocused:initial, finalFocused:await application.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].isFocused()), references:await page.locator('.shared-reference-event').count(), draft:await draft.inputValue(), draftFocused:await draft.evaluate(el=>el===document.activeElement), answer:await page.locator('.agent-answer').last().innerText()};

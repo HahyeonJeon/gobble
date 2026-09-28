@@ -1,0 +1,58 @@
+
+> gobble-app-workspace@0.1.0 check
+> npm run format:check && npm run typecheck && npm run schema:check && npm test && npm run test:electron
+
+
+> gobble-app-workspace@0.1.0 format:check
+> prettier --check .
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> gobble-app-workspace@0.1.0 typecheck
+> tsc -p contracts/tsconfig.json && npm run typecheck --workspace @gobble/desktop && tsc -p tsconfig.tools.json
+
+
+> @gobble/desktop@0.1.0 typecheck
+> tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && tsc -p tsconfig.renderer.json
+
+
+> gobble-app-workspace@0.1.0 schema:check
+> tsx contracts/scripts/export-schema.ts --check
+
+
+> gobble-app-workspace@0.1.0 test
+> npm run build:service && vitest run
+
+
+> gobble-app-workspace@0.1.0 build:service
+> tsx scripts/build-service.ts
+
+
+ RUN  v4.1.11 /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app
+
+ ❯ desktop/tests/codex.test.ts (15 tests | 1 failed) 6395ms
+     × fails pending requests on fixture/malformed and allows a clean reconnect 695ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  desktop/tests/codex.test.ts > pinned Codex protocol boundary > fails pending requests on fixture/malformed and allows a clean reconnect
+Error: The Codex connection was lost. Check status before sending another message.
+ ❯ unavailable desktop/src/main/codex/transport.ts:24:3
+     22| }
+     23| const unavailable = () =>
+     24|   new AppProblem(
+       |   ^
+     25|     'runtime_unavailable',
+     26|     'The Codex connection was lost. Check status before sending anothe…
+ ❯ CodexTransport.fail desktop/src/main/codex/transport.ts:261:22
+ ❯ Timeout.<anonymous> desktop/src/main/codex/transport.ts:170:25
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 12 passed (13)
+      Tests  1 failed | 155 passed (156)
+   Start at  21:34:34
+   Duration  9.29s (transform 6.63s, setup 0ms, import 10.59s, tests 33.31s, environment 1ms)
+

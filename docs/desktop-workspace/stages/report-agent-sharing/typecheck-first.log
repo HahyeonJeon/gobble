@@ -1,0 +1,5 @@
+
+> gobble-app-workspace@0.1.0 typecheck
+> tsc -p contracts/tsconfig.json && npm run typecheck --workspace @gobble/desktop && tsc -p tsconfig.tools.json
+
+contracts/src/run-report.ts(153,1): error TS1005: '}' expected.

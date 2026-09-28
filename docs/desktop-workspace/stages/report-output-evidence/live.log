@@ -1,0 +1,13 @@
+=== RUN   TestLivePreparedLaunch
+    launch_live_test.go:117: launch=accepted run= status= issue=
+    launch_live_test.go:117: launch=reconciling run= status= issue=The execution observation is unavailable. Check the same Run; do not start another.
+    launch_live_test.go:117: launch=admitted run=run_DGUK4WUVMHNZ3OMSXFHT72NHDP status=running issue=
+    launch_live_test.go:139: native service restarted; original controller remains independent
+    launch_live_test.go:117: launch=admitted run=run_DGUK4WUVMHNZ3OMSXFHT72NHDP status=running issue=
+    launch_live_test.go:117: launch=admitted run=run_DGUK4WUVMHNZ3OMSXFHT72NHDP status=running issue=
+    launch_live_test.go:117: launch=admitted run=run_DGUK4WUVMHNZ3OMSXFHT72NHDP status=succeeded issue=
+    launch_live_test.go:175: completed snapshot={"schema_version":2,"snapshot":"fca8caad7a1092bbbdbe933235405285","pipeline":"read_quality","run":{"id":"read_quality","status":"succeeded","schema_version":2,"occupancy":{"active":true,"host":"gobble-237637978b6080dc2ea448b0","pid":7,"started":"2026-09-28T02:16:42.12678847Z","live":false},"backend":"known","started":"2026-09-28T02:16:42.12678847Z","ended":"2026-09-28T02:16:48.871254Z"},"tasks":[{"identity":"trim_galore","task_id":"trim_galore","name":"trim_galore","module":"","display":{"stage":"Trim adapters and low-quality bases"},"status":"succeeded","attempt":1,"executor":"docker","image":"community.wave.seqera.io/library/trim-galore:2.1.0--27e6376b8f6c1872@sha256:9d747504e44dbf5dfa8a2d66cbbd3bd80f897cc2e17ebe406821b4809b34a3a4","command":["trim_galore","--cores","1","--gzip","--output_dir","work/trim-galore","--basename","sample","inputs/reads.fastq.gz"],"resources":{"cpu":4,"memory":"2g"},"started":"2026-09-28T02:16:42.138909012Z","ended":"2026-09-28T02:16:44.496724304Z","reason":"ready"},{"identity":"fastqc","task_id":"fastqc","name":"fastqc","module":"","display":{"stage":"Inspect trimmed read quality"},"status":"succeeded","attempt":1,"executor":"docker","image":"quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0@sha256:e194048df39c3145d9b4e0a14f4da20b59d59250465b6f2a9cb698445fd45900","command":["fastqc","--outdir","work/fastqc","--noextract","--threads","2","work/trim-galore/sample_trimmed.fq.gz"],"resources":{"cpu":2,"memory":"1g"},"started":"2026-09-28T02:16:44.510994388Z","ended":"2026-09-28T02:16:48.860225709Z","reason":"ready"}],"edges":[{"from":"trim_galore","to":"fastqc"}],"logs":[]}
+    launch_live_test.go:185: actual report verified: attempt=1 bytes=537181 digest=sha256:8f045465fd56bbfb18360592e1b41c4978b45c6054fb6bc2cef52aa724413d52; changed/missing output refused; restored bytes match
+--- PASS: TestLivePreparedLaunch (140.85s)
+PASS
+ok  	github.com/HahyeonJeon/gobble/internal/appservice	141.179s

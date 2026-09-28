@@ -1,0 +1,5 @@
+page.waitForSelector: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('body[data-ready="simple-8-true"]') to be visible[22m
+
+    at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/qualification/run-dependencies/qualify.cjs:38:16

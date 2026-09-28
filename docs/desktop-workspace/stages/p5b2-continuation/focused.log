@@ -1,0 +1,35 @@
+=== RUN   TestContinuationReviewAndSameRunExecution
+--- PASS: TestContinuationReviewAndSameRunExecution (0.35s)
+=== RUN   TestContinuationRefusesChangedEvidence
+=== RUN   TestContinuationRefusesChangedEvidence/not_canceled
+=== RUN   TestContinuationRefusesChangedEvidence/saved_input
+=== RUN   TestContinuationRefusesChangedEvidence/completed_output
+=== RUN   TestContinuationRefusesChangedEvidence/missing_output
+=== RUN   TestContinuationRefusesChangedEvidence/partial_output
+=== RUN   TestContinuationRefusesChangedEvidence/tool_changed
+=== RUN   TestContinuationRefusesChangedEvidence/backend_uncertain
+=== RUN   TestContinuationRefusesChangedEvidence/failed
+--- PASS: TestContinuationRefusesChangedEvidence (1.98s)
+    --- PASS: TestContinuationRefusesChangedEvidence/not_canceled (0.25s)
+    --- PASS: TestContinuationRefusesChangedEvidence/saved_input (0.25s)
+    --- PASS: TestContinuationRefusesChangedEvidence/completed_output (0.26s)
+    --- PASS: TestContinuationRefusesChangedEvidence/missing_output (0.25s)
+    --- PASS: TestContinuationRefusesChangedEvidence/partial_output (0.24s)
+    --- PASS: TestCo    continuation_test.go:235: stop: {Status:requested Lease:4be728b66308dd53d621bd11e2573a0e} []
+=== RUN   TestContinuationRefusesChangedEvidence/tool_changed
+    continuation_test.go:235: stop: {Status:requested Lease:79f4968e136d171b5fb2069fc59503a1} []
+=== RUN   TestContinuationRefusesChangedEvidence/backend_uncertain
+    continuation_test.go:235: stop: {Status:requested Lease:7e210d57043e9d91b6d295cca9b639c4} []
+--- FAIL: TestContinuationRefusesChangedEvidence (80.03s)
+    --- FAIL: TestContinuationRefusesChangedEvidence/failed (10.00s)
+    --- FAIL: TestContinuationRefusesChangedEvidence/not_canceled (10.00s)
+    --- FAIL: TestContinuationRefusesChangedEvidence/saved_input (10.00s)
+    --- FAIL: TestContinuationRefusesChangedEvidence/completed_output (10.00s)
+    --- FAIL: TestContinuationRefusesChangedEvidence/missing_output (10.00s)
+    --- FAIL: TestContinuationRefusesChangedEvidence/partial_output (10.00s)
+    --- FAIL: TestContinuationRefusesChangedEvidence/tool_changed (10.00s)
+    --- FAIL: TestContinuationRefusesChangedEvidence/backend_uncertain (10.00s)
+=== RUN   TestContinuationRestartAndNeverStarted
+    continuation_test.go:258: stop: {Status:requested Lease:b73af097a57a5ba5a7c1bd57428ac2bd} []
+--- FAIL: TestContinuationRestartAndNeverStarted (10.00s)
+FAIL

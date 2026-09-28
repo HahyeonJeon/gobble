@@ -1,0 +1,13 @@
+{
+  "focused": true,
+  "scope": "Owned native window rendering and User controls; no Agent or OS focus claim",
+  "checkedSteps": 2,
+  "connections": 2,
+  "quality": 25,
+  "length": 40,
+  "attachment": true,
+  "portSelection": true,
+  "list": true,
+  "runs": 0,
+  "temporaryProfileRemoved": true
+}

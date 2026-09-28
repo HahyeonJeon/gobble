@@ -1,0 +1,85 @@
+
+Running 11 tests using 1 worker
+
+(node:27521) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘   1 desktop/tests/electron/notebook-shared.spec.ts:35:1 › Agent text and immutable question evidence preserve User state through Show/Return and missing-source fallback (9.3s)
+(node:27552) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   2 desktop/tests/electron/notebook-shared.spec.ts:58:1 › only explicit painted image observation receives pixels and preserves an unfinished User region through Show/Return (2.8s)
+  ✘   3 desktop/tests/electron/notebook-shared.spec.ts:73:1 › actual scrolling revokes old Notebook receipts and clipped source-preview cannot authorize a mark (2.3s)
+(node:27570) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   4 desktop/tests/electron/notebook.spec.ts:93:1 › saved source and output attach through the existing composer, preview offline and survive source changes and restart (2.4s)
+  ✘   5 desktop/tests/electron/notebook.spec.ts:161:1 › native text drag uses exact display offsets and rejects stale or foreign image requests (886ms)
+(node:27588) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   6 desktop/tests/electron/notebook.spec.ts:218:1 › native pointer and keyboard image selection at 150 percent captures the exact original pixels (1.2s)
+  ✓   7 desktop/tests/electron/notebook.spec.ts:283:1 › two Notebook Panes remain independent and compact and enlarged layouts retain the composer (2.4s)
+  ✓   8 desktop/tests/electron/notebook.spec.ts:337:1 › malformed sources recover explicitly and renderer replacement preserves draft and captured attachments (1.7s)
+  ✓   9 desktop/tests/electron/notebook.spec.ts:407:1 › one MiB text stays bounded, continuation keeps absolute offsets and oversized capture leaves the draft intact (1.5s)
+  ✓  10 desktop/tests/electron/notebook.spec.ts:428:1 › embedded image above generic text limits opens on demand and bounded exact capture succeeds (1.5s)
+  ✓  11 desktop/tests/electron/notebook.spec.ts:456:1 › explicit Send delivers captured Notebook text and image through the existing addressed path (2.9s)
+
+
+  1) desktop/tests/electron/notebook-shared.spec.ts:35:1 › Agent text and immutable question evidence preserve User state through Show/Return and missing-source fallback 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('.shared-reference-event').filter({ hasText: 'Review this Notebook selection.' }).getByRole('button', { name: 'Open captured evidence', exact: true })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" locator('.shared-reference-event').filter({ hasText: 'Review this Notebook selection.' }).getByRole('button', { name: 'Open captured evidence', exact: true }) with timeout 5000ms
+      - waiting for locator('.shared-reference-event').filter({ hasText: 'Review this Notebook selection.' }).getByRole('button', { name: 'Open captured evidence', exact: true })
+
+
+      51 |   await rm(join(root,'analysis.ipynb'));
+      52 |   await event.getByRole('button',{name:'Show in view',exact:true}).click();await expect(page.getByText(/This Notebook version is unavailable/)).toBeVisible();
+    > 53 |   await expect(event.getByRole('button',{name:'Open captured evidence',exact:true})).toBeVisible();
+         |                                                                                      ^
+      54 |   await event.getByRole('button',{name:'Open captured evidence',exact:true}).click();await expect(page.locator('.evidence-preview-body')).toContainText('keep = qc');
+      55 |   await captureWindow(application,info.outputPath('notebook-agent-captured.png'));
+      56 | });
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/notebook-shared.spec.ts:53:86
+
+    Error Context: test-results/electron/notebook-shared-Agent-text-b8a55-and-missing-source-fallback/error-context.md
+
+  2) desktop/tests/electron/notebook-shared.spec.ts:73:1 › actual scrolling revokes old Notebook receipts and clipped source-preview cannot authorize a mark 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      80 |   for(const key of ['stale','previewPoint','missing'])expect(result[key].success).toBe(false);
+      81 |   expect(result.fresh.success).toBe(true);expect(result.preview.value.receipt.pointable).toBe(false);
+    > 82 |   const parts=result.current.value.content.textParts;expect(parts.every((part:{evidence:{selection:{cell:{id:string}}}})=>part.evidence.selection.cell.id==='long')).toBe(true);
+         |                                                                                                                                                                      ^
+      83 |   expect(parts.reduce((n:number,part:{text:string})=>n+part.text.length,0)).toBeLessThanOrEqual(4096);
+      84 |   expect(parts[0].text.length).toBeLessThan(247);
+      85 | });
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/notebook-shared.spec.ts:82:166
+
+    Error Context: test-results/electron/notebook-shared-actual-scr-ca400-iew-cannot-authorize-a-mark/error-context.md
+
+  3) desktop/tests/electron/notebook.spec.ts:161:1 › native text drag uses exact display offsets and rejects stale or foreign image requests 
+
+    Error: locator.evaluate: IndexSizeError: Failed to execute 'setStart' on 'Range': There is no child at offset 8.
+        at eval (eval at evaluate (:311:30), <anonymous>:7:7)
+        at UtilityScript.evaluate (<anonymous>:313:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at eval (eval at evaluate (:311:30), <anonymous>:7:7)
+        at UtilityScript.evaluate (<anonymous>:313:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/notebook.spec.ts:164:29
+
+    Error Context: test-results/electron/notebook-native-text-drag--56e77-e-or-foreign-image-requests/error-context.md
+
+  3 failed
+    desktop/tests/electron/notebook-shared.spec.ts:35:1 › Agent text and immutable question evidence preserve User state through Show/Return and missing-source fallback 
+    desktop/tests/electron/notebook-shared.spec.ts:73:1 › actual scrolling revokes old Notebook receipts and clipped source-preview cannot authorize a mark 
+    desktop/tests/electron/notebook.spec.ts:161:1 › native text drag uses exact display offsets and rejects stale or foreign image requests 
+  8 passed (30.3s)

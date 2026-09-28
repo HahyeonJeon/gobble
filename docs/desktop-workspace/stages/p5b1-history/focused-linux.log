@@ -1,0 +1,81 @@
+=== RUN   TestAdmissionPublishedBeforeTaskAndNeverRescheduled
+--- PASS: TestAdmissionPublishedBeforeTaskAndNeverRescheduled (0.10s)
+=== RUN   TestAdmissionRejectsChangedInputPayloadAndTargetBeforeOccupancy
+=== RUN   TestAdmissionRejectsChangedInputPayloadAndTargetBeforeOccupancy/data
+=== RUN   TestAdmissionRejectsChangedInputPayloadAndTargetBeforeOccupancy/payload
+=== RUN   TestAdmissionRejectsChangedInputPayloadAndTargetBeforeOccupancy/target
+=== RUN   TestAdmissionRejectsChangedInputPayloadAndTargetBeforeOccupancy/tool
+=== RUN   TestAdmissionRejectsChangedInputPayloadAndTargetBeforeOccupancy/schema
+--- PASS: TestAdmissionRejectsChangedInputPayloadAndTargetBeforeOccupancy (0.00s)
+    --- PASS: TestAdmissionRejectsChangedInputPayloadAndTargetBeforeOccupancy/data (0.00s)
+    --- PASS: TestAdmissionRejectsChangedInputPayloadAndTargetBeforeOccupancy/payload (0.00s)
+    --- PASS: TestAdmissionRejectsChangedInputPayloadAndTargetBeforeOccupancy/target (0.00s)
+    --- PASS: TestAdmissionRejectsChangedInputPayloadAndTargetBeforeOccupancy/tool (0.00s)
+    --- PASS: TestAdmissionRejectsChangedInputPayloadAndTargetBeforeOccupancy/schema (0.00s)
+=== RUN   TestStopOwnerRejectsUnobservedLease
+--- PASS: TestStopOwnerRejectsUnobservedLease (0.06s)
+=== RUN   TestAdmissionPointerCannotDowngrade
+--- PASS: TestAdmissionPointerCannotDowngrade (0.03s)
+=== RUN   TestPreparedHistoryKeepsStartAndReceiptsAfterPruning
+--- PASS: TestPreparedHistoryKeepsStartAndReceiptsAfterPruning (0.06s)
+=== RUN   TestPreparedHistoryRejectsInvalidChain
+=== RUN   TestPreparedHistoryRejectsInvalidChain/missing-history
+=== RUN   TestPreparedHistoryRejectsInvalidChain/schema-downgrade
+=== RUN   TestPreparedHistoryRejectsInvalidChain/workspace
+=== RUN   TestPreparedHistoryRejectsInvalidChain/head
+=== RUN   TestPreparedHistoryRejectsInvalidChain/digest
+=== RUN   TestPreparedHistoryRejectsInvalidChain/request-reused
+=== RUN   TestPreparedHistoryRejectsInvalidChain/history-version
+=== RUN   TestPreparedHistoryRejectsInvalidChain/null-chain
+=== RUN   TestPreparedHistoryRejectsInvalidChain/owner
+=== RUN   TestPreparedHistoryRejectsInvalidChain/origin
+=== RUN   TestPreparedHistoryRejectsInvalidChain/review
+=== RUN   TestPreparedHistoryRejectsInvalidChain/lease-reused
+--- PASS: TestPreparedHistoryRejectsInvalidChain (0.06s)
+    --- PASS: TestPreparedHistoryRejectsInvalidChain/missing-history (0.00s)
+    --- PASS: TestPreparedHistoryRejectsInvalidChain/schema-downgrade (0.00s)
+    --- PASS: TestPreparedHistoryRejectsInvalidChain/workspace (0.00s)
+    --- PASS: TestPreparedHistoryRejectsInvalidChain/head (0.00s)
+    --- PASS: TestPreparedHistoryRejectsInvalidChain/digest (0.00s)
+    --- PASS: TestPreparedHistoryRejectsInvalidChain/request-reused (0.00s)
+    --- PASS: TestPreparedHistoryRejectsInvalidChain/history-version (0.00s)
+    --- PASS: TestPreparedHistoryRejectsInvalidChain/null-chain (0.00s)
+    --- PASS: TestPreparedHistoryRejectsInvalidChain/owner (0.00s)
+    --- PASS: TestPreparedHistoryRejectsInvalidChain/origin (0.00s)
+    --- PASS: TestPreparedHistoryRejectsInvalidChain/review (0.00s)
+    --- PASS: TestPreparedHistoryRejectsInvalidChain/lease-reused (0.00s)
+=== RUN   TestPreparedHistoryCannotDowngradePointer
+=== RUN   TestPreparedHistoryCannotDowngradePointer/1
+=== RUN   TestPreparedHistoryCannotDowngradePointer/2
+--- PASS: TestPreparedHistoryCannotDowngradePointer (0.07s)
+    --- PASS: TestPreparedHistoryCannotDowngradePointer/1 (0.03s)
+    --- PASS: TestPreparedHistoryCannotDowngradePointer/2 (0.03s)
+=== RUN   TestPreparedHistoryRejectsRewriteBeforePublication
+=== RUN   TestPreparedHistoryRejectsRewriteBeforePublication/drop
+=== RUN   TestPreparedHistoryRejectsRewriteBeforePublication/replace
+=== RUN   TestPreparedHistoryRejectsRewriteBeforePublication/origin
+=== RUN   TestPreparedHistoryRejectsRewriteBeforePublication/snapshot
+--- PASS: TestPreparedHistoryRejectsRewriteBeforePublication (0.05s)
+    --- PASS: TestPreparedHistoryRejectsRewriteBeforePublication/drop (0.00s)
+    --- PASS: TestPreparedHistoryRejectsRewriteBeforePublication/replace (0.00s)
+    --- PASS: TestPreparedHistoryRejectsRewriteBeforePublication/origin (0.00s)
+    --- PASS: TestPreparedHistoryRejectsRewriteBeforePublication/snapshot (0.00s)
+=== RUN   TestPreparedHistoryRefusesOldFormatConversion
+--- PASS: TestPreparedHistoryRefusesOldFormatConversion (0.03s)
+=== RUN   TestPreparedHistoryRequiresSettledStopToAppend
+=== RUN   TestPreparedHistoryRequiresSettledStopToAppend/running
+=== RUN   TestPreparedHistoryRequiresSettledStopToAppend/stopping
+=== RUN   TestPreparedHistoryRequiresSettledStopToAppend/interrupted
+=== RUN   TestPreparedHistoryRequiresSettledStopToAppend/failed
+=== RUN   TestPreparedHistoryRequiresSettledStopToAppend/active-stopped
+--- PASS: TestPreparedHistoryRequiresSettledStopToAppend (0.24s)
+    --- PASS: TestPreparedHistoryRequiresSettledStopToAppend/running (0.03s)
+    --- PASS: TestPreparedHistoryRequiresSettledStopToAppend/stopping (0.05s)
+    --- PASS: TestPreparedHistoryRequiresSettledStopToAppend/interrupted (0.03s)
+    --- PASS: TestPreparedHistoryRequiresSettledStopToAppend/failed (0.05s)
+    --- PASS: TestPreparedHistoryRequiresSettledStopToAppend/active-stopped (0.08s)
+=== RUN   TestPreparedHistoryRejectsFlatLayout
+--- PASS: TestPreparedHistoryRejectsFlatLayout (0.06s)
+=== RUN   TestAdmissionWriteFailureNeverSubmits
+--- PASS: TestAdmissionWriteFailureNeverSubmits (0.03s)
+PASS

@@ -1,0 +1,48 @@
+
+> gobble-app-workspace@0.1.0 test:electron
+> npm run build && playwright test --grep 500 real CSV|invalid scatter|migrates v2 shared|migrates saved v1
+
+
+> gobble-app-workspace@0.1.0 build
+> npm run build:service && npm run build --workspace @gobble/desktop
+
+
+> gobble-app-workspace@0.1.0 build:service
+> tsx scripts/build-service.ts
+
+
+> @gobble/desktop@0.1.0 build
+> electron-vite build
+
+vite v7.3.6 building ssr environment for production...
+transforming...
+✓ 329 modules transformed.
+rendering chunks...
+out/main/index.js  374.67 kB
+✓ built in 503ms
+vite v7.3.6 building ssr environment for production...
+transforming...
+✓ 288 modules transformed.
+rendering chunks...
+out/preload/index.cjs  185.67 kB
+✓ built in 242ms
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 371 modules transformed.
+rendering chunks...
+../../out/renderer/index.html                     0.48 kB
+../../out/renderer/assets/index-6D72gOfJ.css     35.01 kB
+../../out/renderer/assets/index-DCoANvy5.js     882.48 kB
+../../out/renderer/assets/chunk-DZLsuOxH.js   1,773.95 kB
+✓ built in 2.24s
+
+Running 4 tests using 1 worker
+
+(node:29234) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 desktop/tests/electron/evidence.spec.ts:285:1 › migrates v2 shared marks and captured evidence, reopens without origin, and distinguishes changed or missing sources (6.4s)
+  ✓  2 desktop/tests/electron/scatter.spec.ts:127:1 › 500 real CSV points preserve row identity through pointer/keyboard selection, resize and reopen under production CSP (3.3s)
+  ✓  3 desktop/tests/electron/scatter.spec.ts:213:1 › an invalid scatter specification is contained while its linked table remains usable (2.4s)
+  ✓  4 desktop/tests/electron/workspace.spec.ts:341:1 › the real app migrates saved v1 geometry on the first change and retains the original archive (1.7s)
+
+  4 passed (14.4s)

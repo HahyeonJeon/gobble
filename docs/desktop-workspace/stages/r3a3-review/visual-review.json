@@ -1,0 +1,32 @@
+{
+  "date": "2026-09-08",
+  "surfaces": "Actual native Electron, process fixtures plus a real signed-in Agent; not a browser mockup.",
+  "reviewedScreens": [
+    "r3a3-reference.png",
+    "r3a3-return.png",
+    "r3a3-historical.png",
+    "r3a3-compact.png",
+    "r3a3-zoom-150.png",
+    "live-agent-reference.png",
+    "live-user-return.png"
+  ],
+  "checks": {
+    "userAndAgentMarksDistinct": true,
+    "showAndReturnVisible": true,
+    "currentAndCapturedViewsSeparated": true,
+    "sameViewSelectionScrollDraftPreserved": true,
+    "noFocusStealOnIncomingPointer": true,
+    "compactAndZoomReferenceAccessible": true
+  },
+  "fixes": [
+    "Keyboard log navigation now scrolls the selected caret into view.",
+    "Removed repeated Agent prose from the central reference presenter."
+  ],
+  "limits": [
+    "Closed/evicted views require a current read and do not retain native scroll.",
+    "In short split layouts the Task table scrolls; maximizing or the existing compact pane switcher gives more space."
+  ],
+  "followUpForNextApprovedScope": [
+    "Rich-text Chat rendering: provider Markdown currently remains literal text, as in the existing chat presenter."
+  ]
+}

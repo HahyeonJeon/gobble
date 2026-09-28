@@ -1,0 +1,31 @@
+
+Running 1 test using 1 worker
+
+(node:41437) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 desktop/tests/electron/linked-views.spec.ts:319:1 › frozen plot evidence reaches the protocol peer; Agent Show and Return use a temporary view without changing User selection (8.3s)
+
+
+  1) desktop/tests/electron/linked-views.spec.ts:319:1 › frozen plot evidence reaches the protocol peer; Agent Show and Return use a temporary view without changing User selection 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: "plot-point"
+    Received: ""
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+      351 |   await chartReady();
+      352 |   await page.getByRole('textbox', { name: 'Message draft', exact: true }).fill('plot-point');
+    > 353 |   await expect.poll(async () => (await document()).chat.draft).toBe('plot-point');
+          |                                                                ^
+      354 |   await expect(page.getByRole('textbox', { name: 'Message draft', exact: true })).toHaveValue(
+      355 |     'plot-point',
+      356 |   );
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/linked-views.spec.ts:353:64
+
+    Error Context: test-results/electron/linked-views-frozen-plot-e-73c31-out-changing-User-selection/error-context.md
+
+  1 failed
+    desktop/tests/electron/linked-views.spec.ts:319:1 › frozen plot evidence reaches the protocol peer; Agent Show and Return use a temporary view without changing User selection 

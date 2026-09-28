@@ -1,0 +1,37 @@
+
+Running 1 test using 1 worker
+
+(node:2566) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 desktop/tests/electron/ux-review.spec.ts:217:1 › C3: a pending reply and attachment error stay actionable in a small enlarged-text chat (8.0s)
+
+
+  1) desktop/tests/electron/ux-review.spec.ts:217:1 › C3: a pending reply and attachment error stay actionable in a small enlarged-text chat 
+
+    Error: expect(locator).toBeInViewport() failed
+
+    Locator:  getByText('This model cannot receive the question’s images. Choose a supported model.', { exact: true })
+    Expected: in viewport
+    Received: viewport ratio 0
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toBeInViewport" getByText('This model cannot receive the question’s images. Choose a supported model.', { exact: true }) with timeout 5000ms
+      - waiting for getByText('This model cannot receive the question’s images. Choose a supported model.', { exact: true })
+        14 × locator resolved to <p role="status" class="message-problem">This model cannot receive the question’s images. …</p>
+           - unexpected value "viewport ratio 0"
+
+
+      242 |   await expect(
+      243 |     page.getByText('This model cannot receive the question’s images. Choose a supported model.', { exact: true }),
+    > 244 |   ).toBeInViewport({ ratio: 1 });
+          |     ^
+      245 |   await expect(page.getByRole('combobox', { name: 'Conversation recipient' })).toBeDisabled();
+      246 |   const target = page.getByRole('region', { name: 'Reply target', exact: true });
+      247 |   await target.getByRole('button', { name: /^quality.png/ }).click();
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/ux-review.spec.ts:244:5
+
+    Error Context: test-results/electron/ux-review-C3-a-pending-rep-25b20--a-small-enlarged-text-chat/error-context.md
+
+  1 failed
+    desktop/tests/electron/ux-review.spec.ts:217:1 › C3: a pending reply and attachment error stay actionable in a small enlarged-text chat 

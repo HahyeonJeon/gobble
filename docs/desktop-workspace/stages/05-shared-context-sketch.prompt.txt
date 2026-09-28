@@ -1,0 +1,32 @@
+Built-in Imagegen — Stage 5 concept
+Reference: 04-agents-live.png (actual stage 4 app; generated review files)
+Final image: 05-shared-context-sketch.png
+Data and agent/question behavior in this concept are illustrative.
+
+INITIAL GENERATION
+
+Use case: product-mockup
+Asset type: Desktop application concept preview for design approval, not an implementation screenshot.
+Primary request: Design the next "Shared views" step of Gobble, a Project-centered Electron desktop app where a user collaborates with peer agents around a shared central workspace. Use the supplied screenshot as the visual/layout reference.
+Reference image: the current Gobble app. Preserve its restrained off-white and teal palette, legible English typography, left project navigation, central two-pane workspace and bottom discussion. Make a refined but feasible React application UI, not a futuristic dashboard.
+Composition: wide landscape, app front-on, crisp UI, 1536x1024-like proportions. Left sidebar about 210 px; two main panes side by side; discussion and composer underneath. Avoid huge padding. All app text English.
+Sidebar: Gobble brand, PROJECTS, "Review Project" selected, Files with "samples.csv" and "quality.png", Runs, Agents "Researcher" and "Reviewer", "Questions 1", footer "ChatGPT connected".
+Primary pane: tab samples.csv, small pin icon, table columns Sample and Group, rows S01 Control, S02 Treatment, S03 Treatment. Highlight S02 pale teal with selected checkbox. Footer "1 row selected" and visible outlined button "Add to message".
+Secondary pane: tab quality.png, subtle realistic gray line chart titled Read quality, a rectangular teal region selection near the falling right part of the line. Footer "Region selected" and visible outlined "Add to message". Tiny label "Opened by Researcher". File data is illustrative, not scientific evidence.
+Discussion area: tabs "Project discussion", "Activity", "Questions 1". Compact factual activity "Researcher opened 2 views". Show an evidence-linked question card from Researcher: "Compare S02 with the full group?" followed by two small evidence chips "samples.csv · S02" and "quality.png · selected region"; two selectable options "Keep both" and "Focus on S02", a compact free-text "Or write an answer…" field and buttons "Send answer" and "Dismiss". The question card should sit within the shared discussion without covering either pane. No modal.
+Composer beneath: a row labeled "Attached to this message" with two removable chips "samples.csv · 1 row" and "quality.png · region" and a small "Preview" action. Lower row shows "To Reviewer", "GPT-5.6-Luna", message draft "Please review this sample and the selected region.", and teal "Send". Footer "Only the attached evidence is shared with this message."
+Constraints: All buttons, icons and labels visible in their default state. Preserve the Project as the primary context. Agent switch does not replace panes. No conversation-centric sidebar, no code, no raw IDs, no protocol names, no execution controls, no extra OS windows, no private account email. Do not imply the pictured question/agent behavior already exists.
+
+TARGETED REFINEMENT
+
+Use case: precise-object-edit
+Edit this Gobble Stage 5 concept mockup with only these corrections, preserving all layout, colors, charts, typography, controls and text not mentioned:
+1. In the bottom composer footer, DELETE the stale phrase "Text only · selections stay local". Keep "Draft saved locally" and "Only the attached evidence is shared with this message."
+2. The bottom-right teal Send button must be one simple button labeled "Send". Remove its extra split/dropdown section and chevron.
+3. In the Researcher question card ONLY, remove the x close/removal marks from its two evidence chips. Those are immutable question references. Keep the x removal controls on the two composer attachment chips underneath.
+4. Correct the model selector text to exactly "GPT-5.6-Luna".
+5. Keep a small visible "Account" text button beside the lower-left "ChatGPT connected" status.
+The image is a design proposal with illustrative data, not a runtime screenshot. All app text remains English. Do not add any other features, notices, captions or decoration.
+
+Implementation uses the exact model catalog labels. A generated punctuation variation is not an API/model identifier.
+

@@ -1,0 +1,5 @@
+=== RUN   TestLivePipelineInspection
+    pipeline_inspection_test.go:260: Real Gobble flow: 5 steps, 7 exact connections, no Run; artifact sha256:82dccb62ac55b31052a87807a84f8cacb52ec841ed71a342ec65fc13164e49c4
+--- PASS: TestLivePipelineInspection (41.54s)
+PASS
+ok  	github.com/HahyeonJeon/gobble/internal/appservice	41.993s

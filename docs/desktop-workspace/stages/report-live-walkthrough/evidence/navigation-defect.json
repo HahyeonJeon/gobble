@@ -1,0 +1,26 @@
+[
+  {
+    "action": "maximize",
+    "beforeEvidence": "15-checked-proposal.txt",
+    "afterEvidence": "16-maximize-reset.txt",
+    "beforeHadComparison": true,
+    "afterLostComparison": true,
+    "afterShowsCurrent": true
+  },
+  {
+    "action": "compact-return",
+    "beforeEvidence": "17-change-detail.txt",
+    "afterEvidence": "20-compact-return.txt",
+    "beforeHadComparison": true,
+    "afterLostComparison": true,
+    "afterShowsCurrent": false
+  },
+  {
+    "action": "restart",
+    "beforeEvidence": "17-change-detail.txt",
+    "afterEvidence": "21-restarted.txt",
+    "beforeHadComparison": true,
+    "afterLostComparison": true,
+    "afterShowsCurrent": true
+  }
+]

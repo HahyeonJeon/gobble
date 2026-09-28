@@ -1,0 +1,65 @@
+{
+  "date": "2026-09-08",
+  "scope": "Synthetic interactive design sketch only; no production app, live model or scientific calculation",
+  "browser": "152.0.7977.76",
+  "checks": [
+    "Keyboard checkbox focus, linked exact membership, sort and hidden-selection filter behavior",
+    "Multiple immutable draft attachments; explicit Send; separate Agent marks; reference peek and return preserve User view and selection",
+    "Each historical message retains its own reference and presentation",
+    "Close one linked view preserves local selection; close last clears local selection; attachment and message reference survive and reopen views",
+    "Actual pointer point/box/Shift-add, nearest-point tooltip, zoom and pan preserve exact member keys",
+    "Changed source blocks stale draft Send and stale local attachment; historical Agent reference never targets current rows",
+    "Light/dark at 1024/736/360: all seven plotted samples, no horizontal overflow or overlapping plot labels; narrow Work/Chat preserves composer"
+  ],
+  "layouts": [
+    {
+      "width": 1024,
+      "theme": "light",
+      "scrollWidth": 1022,
+      "outside": [],
+      "collisions": [],
+      "points": 7
+    },
+    {
+      "width": 1024,
+      "theme": "dark",
+      "scrollWidth": 1022,
+      "outside": [],
+      "collisions": [],
+      "points": 7
+    },
+    {
+      "width": 736,
+      "theme": "light",
+      "scrollWidth": 734,
+      "outside": [],
+      "collisions": [],
+      "points": 7
+    },
+    {
+      "width": 736,
+      "theme": "dark",
+      "scrollWidth": 734,
+      "outside": [],
+      "collisions": [],
+      "points": 7
+    },
+    {
+      "width": 360,
+      "theme": "light",
+      "scrollWidth": 358,
+      "outside": [],
+      "collisions": [],
+      "points": 7
+    },
+    {
+      "width": 360,
+      "theme": "dark",
+      "scrollWidth": 358,
+      "outside": [],
+      "collisions": [],
+      "points": 7
+    }
+  ],
+  "errors": []
+}

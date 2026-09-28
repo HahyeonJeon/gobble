@@ -1,0 +1,16 @@
+
+Running 9 tests using 1 worker
+
+(node:89910) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 desktop/tests/electron/pipeline-proposals.spec.ts:8:1 › B comparison: scoped Agent proposal, exact chat reference, adoption and restart (3.3m)
+  ✓  2 desktop/tests/electron/workspace.spec.ts:27:1 › real files, split, selection and draft survive a normal app relaunch (2.0s)
+  ✓  3 desktop/tests/electron/workspace.spec.ts:66:1 › keyboard tabs, duplicate, move and close preserve the remaining views (1.2s)
+  ✓  4 desktop/tests/electron/workspace.spec.ts:96:1 › narrow windows retain both panes and keyboard image and text context (1.3s)
+  ✓  5 desktop/tests/electron/workspace.spec.ts:133:1 › changed and missing files remain explicit while other Projects stay separate (1.4s)
+  ✓  6 desktop/tests/electron/workspace.spec.ts:173:1 › a failed draft save preserves the Project and honors Keep Open on window close (842ms)
+  ✓  7 desktop/tests/electron/workspace.spec.ts:218:1 › stacked panes, fitted image and one composer retain their identity across resizing and compact chat (1.7s)
+  ✓  8 desktop/tests/electron/workspace.spec.ts:341:1 › the real app migrates saved v1 geometry on the first change and retains the original archive (1.9s)
+  ✓  9 desktop/tests/electron/workspace.spec.ts:408:1 › selection overview finds hidden sources, More returns keyboard focus, and empty panes target navigation (1.6s)
+
+  9 passed (3.5m)

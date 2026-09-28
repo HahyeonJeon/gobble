@@ -1,0 +1,11 @@
+{
+  "date": "2026-09-08",
+  "platform": "macOS-26.5.2-arm64-arm-64bit",
+  "node": "v25.7.0",
+  "go": "go version go1.27.1 darwin/arm64",
+  "electron": "44.2.0",
+  "typescript": "5.9.3",
+  "playwright": "1.63.0",
+  "codex": "0.153.4",
+  "validation": "Native macOS Electron with real IPC and Go service; process fixtures for runtime/provider regression. Real signed-in Codex trial recorded separately; no analysis execution."
+}

@@ -1,0 +1,180 @@
+{
+  "schemaVersion": 2,
+  "paneOrientation": "vertical",
+  "workspace": {
+    "schemaVersion": 1,
+    "projectId": "prj_BLTEOBDGRONGZGKXPNPFK6P2WI",
+    "revision": 15,
+    "agents": [
+      {
+        "projectId": "prj_BLTEOBDGRONGZGKXPNPFK6P2WI",
+        "agentId": "agt_46027acf-8e07-4ca7-83e2-82be8164f74b",
+        "name": "Run reviewer",
+        "instructionProfile": "discussion-v1",
+        "access": "sharedViews",
+        "configuration": {
+          "model": "gpt-6-astra",
+          "effort": "medium",
+          "instructions": "Use shared-view tools to inspect this Project. Report only observed facts, inspect images, and keep replies concise."
+        },
+        "provider": {
+          "kind": "codex",
+          "threadId": "01a07bf5-3ef4-7ee1-b946-654f411be10e",
+          "accountSessionId": "95802682-84c0-451b-ae34-8bcc4965d157",
+          "toolsetVersion": "shared-views-v2"
+        }
+      }
+    ],
+    "surfaces": [
+      {
+        "projectId": "prj_BLTEOBDGRONGZGKXPNPFK6P2WI",
+        "surfaceId": "srf_14d64d82-487b-45a3-b313-85af047d7043",
+        "resource": {
+          "kind": "file",
+          "resourceId": "res_2656530f59005e4ceedb1f10eecf4075176add2ed1aeb9d0ce954a0026ec2bf7"
+        },
+        "view": "image",
+        "pinned": false,
+        "openedBy": {
+          "kind": "user"
+        }
+      },
+      {
+        "projectId": "prj_BLTEOBDGRONGZGKXPNPFK6P2WI",
+        "surfaceId": "srf_346fa62a-c220-4b24-9c00-1bed8e0ace03",
+        "resource": {
+          "kind": "run",
+          "runRef": "run_ZWHQRTA6WR456JWJSHPBY5UNSK"
+        },
+        "view": "run",
+        "pinned": false,
+        "openedBy": {
+          "kind": "user"
+        }
+      }
+    ],
+    "layout": {
+      "kind": "split",
+      "primary": {
+        "tabs": [
+          "srf_346fa62a-c220-4b24-9c00-1bed8e0ace03"
+        ],
+        "activeSurfaceId": "srf_346fa62a-c220-4b24-9c00-1bed8e0ace03"
+      },
+      "secondary": {
+        "tabs": [
+          "srf_14d64d82-487b-45a3-b313-85af047d7043"
+        ],
+        "activeSurfaceId": "srf_14d64d82-487b-45a3-b313-85af047d7043"
+      },
+      "primaryFraction": 0.5
+    },
+    "decisions": []
+  },
+  "titles": [
+    {
+      "surfaceId": "srf_14d64d82-487b-45a3-b313-85af047d7043",
+      "title": "sequence-lengths.png"
+    },
+    {
+      "surfaceId": "srf_346fa62a-c220-4b24-9c00-1bed8e0ace03",
+      "title": "live"
+    }
+  ],
+  "activePane": "primary",
+  "maximizedPane": null,
+  "chat": {
+    "collapsed": false,
+    "width": 420,
+    "draft": "",
+    "recipientAgentId": "agt_46027acf-8e07-4ca7-83e2-82be8164f74b",
+    "attachmentRevision": 1
+  },
+  "selections": [],
+  "activity": [
+    {
+      "id": "req_f15a74ea-06ed-4b9e-9507-4da5f74608b1",
+      "text": "Opened a Project view.",
+      "at": 1788785994181
+    },
+    {
+      "id": "req_a095f76f-c4d6-49a8-948c-ae738ec508dc",
+      "text": "Opened a Project view.",
+      "at": 1788786047198
+    }
+  ],
+  "receipts": [
+    {
+      "requestId": "req_f15a74ea-06ed-4b9e-9507-4da5f74608b1",
+      "digest": "2d1243bad93a3e0a697a8ef19a9d6000eb25de263379c6171f7800ff82850758"
+    },
+    {
+      "requestId": "req_c8106ce3-e28c-4d2c-809b-0aedd487075a",
+      "digest": "ca827d48f7f257f8752a7981801be8b2f5eab20b3007e72f5904fc44fc59d921"
+    },
+    {
+      "requestId": "req_2d7368d7-89a9-4fb6-8a2d-898d707adbcc",
+      "digest": "ca827d48f7f257f8752a7981801be8b2f5eab20b3007e72f5904fc44fc59d921"
+    },
+    {
+      "requestId": "req_a095f76f-c4d6-49a8-948c-ae738ec508dc",
+      "digest": "f6e6f54aa34a81bb6e3d5d9a4da89e1c78fb358b81d99a646a1c4fd4ae1b17c7"
+    },
+    {
+      "requestId": "req_722b7c46-9c64-4f97-8990-7755e1bfda4b",
+      "digest": "e3e158411787b8d9fb6db1b85d8953191da624cbff236ab3b1acd1b1f9a9f043"
+    }
+  ],
+  "collaboration": {
+    "submissions": [
+      {
+        "requestId": "req_fab046d1-93c8-45f1-a053-a5e76dcbb193",
+        "agentId": "agt_46027acf-8e07-4ca7-83e2-82be8164f74b",
+        "text": "Inspect both visible panes using workspace_list and workspace_observe, including the returned image. In three short sentences report the Run and task status, attempt, any log-finalization warning, and the chart\u2019s two labels, colors and values. Publish one evidence-backed pointer to the second bar. Do not create a question or change the views.",
+        "model": "gpt-6-astra",
+        "effort": "medium",
+        "createdAt": 1788786065253,
+        "responseStartedAt": 1788786068899,
+        "state": "completed",
+        "threadId": "01a07bf5-3ef4-7ee1-b946-654f411be10e",
+        "turnId": "01a07bf5-3f80-74a1-9261-8aa8349aa870",
+        "response": "I\u2019ll inspect both visible panes and publish a pointer to the chart\u2019s second bar.\n\n\nRun `hello-gobble` and task `count-sequences` succeeded on attempt 1.\nNo log-finalization warning was reported.\nThe chart shows blue `sequence-one` = 8 nt and orange `sequence-two` = 8 nt; an evidence-backed pointer to the second bar is published.",
+        "problem": null
+      }
+    ]
+  },
+  "sharedReferences": [
+    {
+      "referenceId": "ref_c9c0d87a-3cb2-4c7b-a762-ef5a61d16e9b",
+      "evidence": {
+        "projectId": "prj_BLTEOBDGRONGZGKXPNPFK6P2WI",
+        "surfaceId": "srf_14d64d82-487b-45a3-b313-85af047d7043",
+        "resource": {
+          "kind": "file",
+          "resourceId": "res_2656530f59005e4ceedb1f10eecf4075176add2ed1aeb9d0ce954a0026ec2bf7"
+        },
+        "dataRevision": "sha256:cb7ad6d68541426bd21226d217f1421549bdf298cb25fe9cee99bb3e7e00c2f7",
+        "selection": {
+          "kind": "image",
+          "contentHash": "sha256:cb7ad6d68541426bd21226d217f1421549bdf298cb25fe9cee99bb3e7e00c2f7",
+          "originalWidth": 1200,
+          "originalHeight": 660,
+          "x": 0.6841666666666667,
+          "y": 0.3393939393939394,
+          "width": 0.24666666666666667,
+          "height": 0.45
+        }
+      },
+      "note": "Second bar: sequence-two, orange, 8 nt.",
+      "author": {
+        "kind": "agent",
+        "agentId": "agt_46027acf-8e07-4ca7-83e2-82be8164f74b",
+        "name": "Run reviewer"
+      },
+      "createdAt": 1788786093309,
+      "retracted": false,
+      "originSubmissionId": "req_fab046d1-93c8-45f1-a053-a5e76dcbb193",
+      "label": "sequence-lengths.png"
+    }
+  ]
+}

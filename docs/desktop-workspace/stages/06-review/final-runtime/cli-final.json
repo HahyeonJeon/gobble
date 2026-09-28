@@ -1,0 +1,46 @@
+{
+  "schema_version": 2,
+  "snapshot": "26346a4e4f9a3645a21b14c6dc65b2d0",
+  "pipeline": "hello-gobble",
+  "run": {
+    "id": "hello-gobble",
+    "status": "succeeded",
+    "schema_version": 2,
+    "occupancy": {
+      "active": true,
+      "host": "gobble-237637978b6080dc2ea448b0",
+      "pid": 156,
+      "started": "2026-09-07T12:55:55.61933846Z",
+      "live": false
+    },
+    "backend": "known",
+    "started": "2026-09-07T12:55:55.61933846Z",
+    "ended": "2026-09-07T12:56:10.238426259Z"
+  },
+  "tasks": [
+    {
+      "identity": "count-sequences",
+      "task_id": "count-sequences",
+      "name": "count-sequences",
+      "module": "",
+      "status": "succeeded",
+      "attempt": 1,
+      "executor": "docker",
+      "image": "sha256:5f3d800dd82d3bea4474b562aad5ec3dd34133b2d251da99948faa15318f55f7",
+      "command": [
+        "sh",
+        "-c",
+        "echo stage6-started; i=0; until test -f inputs/continue; do i=$((i+1)); test $i -lt 180 || exit 88; sleep 1; done; echo stage6-finished; awk '/^>/{n++} END {print n+0}' inputs/sequences.fasta > results/sequence-count.txt"
+      ],
+      "resources": {
+        "cpu": 0,
+        "memory": ""
+      },
+      "started": "2026-09-07T12:55:55.638866627Z",
+      "ended": "2026-09-07T12:56:10.217535009Z",
+      "reason": "ready"
+    }
+  ],
+  "edges": [],
+  "logs": []
+}

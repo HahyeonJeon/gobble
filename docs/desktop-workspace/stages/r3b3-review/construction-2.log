@@ -1,0 +1,12 @@
+
+> gobble-app-workspace@0.1.0 typecheck
+> tsc -p contracts/tsconfig.json && npm run typecheck --workspace @gobble/desktop && tsc -p tsconfig.tools.json
+
+
+> @gobble/desktop@0.1.0 typecheck
+> tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && tsc -p tsconfig.renderer.json
+
+desktop/tests/electron/evidence.spec.ts(353,50): error TS2339: Property 'origin' does not exist on type '{ projectId: string; resource: { kind: "run"; runRef: string; }; dataRevision: string; schemaVersion: 4; selection: { kind: "run-group"; taskId: string; coordinateSpace: "observed-authored-task-group"; } | { ...; }; } | { ...; } | { ...; }'.
+  Property 'origin' does not exist on type '{ projectId: string; resource: { kind: "run"; runRef: string; }; dataRevision: string; schemaVersion: 4; selection: { kind: "run-group"; taskId: string; coordinateSpace: "observed-authored-task-group"; } | { ...; }; }'.
+desktop/tests/workspace-migration.test.ts(186,48): error TS2339: Property 'origin' does not exist on type '{ projectId: string; resource: { kind: "run"; runRef: string; }; dataRevision: string; schemaVersion: 4; selection: { kind: "run-group"; taskId: string; coordinateSpace: "observed-authored-task-group"; } | { ...; }; } | { ...; } | { ...; }'.
+  Property 'origin' does not exist on type '{ projectId: string; resource: { kind: "run"; runRef: string; }; dataRevision: string; schemaVersion: 4; selection: { kind: "run-group"; taskId: string; coordinateSpace: "observed-authored-task-group"; } | { ...; }; }'.

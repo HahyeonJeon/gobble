@@ -1,0 +1,16 @@
+qualification/run-dependencies/fixture.ts(11,70): error TS2322: Type '{ instanceId: string; taskId: string; name: string; status: string; attempt: number; template: boolean; expanded: boolean; }[]' is not assignable to type '{ template?: boolean | null; expanded?: boolean | null; name: string | null; taskId: string | null; attempt: number; status: string | null; instanceId: string; reason: string | null; }[]'.
+  Property 'reason' is missing in type '{ instanceId: string; taskId: string; name: string; status: string; attempt: number; template: boolean; expanded: boolean; }' but required in type '{ template?: boolean | null; expanded?: boolean | null; name: string | null; taskId: string | null; attempt: number; status: string | null; instanceId: string; reason: string | null; }'.
+qualification/run-dependencies/renderers.tsx(44,9): error TS2322: Type '{ id: string; type: string; data: { label: Element; }; position: { x: number; y: number; }; sourcePosition: Position | undefined; targetPosition: Position | undefined; ... 4 more ...; ariaLabel: string; }[]' is not assignable to type 'Node[]'.
+  Type '{ id: string; type: string; data: { label: React.JSX.Element; }; position: { x: number; y: number; }; sourcePosition: Node["sourcePosition"]; targetPosition: Node["targetPosition"]; draggable: false; connectable: false; selected: boolean; style: { ...; }; ariaLabel: string; }' is not assignable to type 'Node' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+    Type '{ id: string; type: string; data: { label: React.JSX.Element; }; position: { x: number; y: number; }; sourcePosition: Node["sourcePosition"]; targetPosition: Node["targetPosition"]; draggable: false; connectable: false; selected: boolean; style: { ...; }; ariaLabel: string; }' is not assignable to type '{ id: string; position: XYPosition; data: Record<string, unknown>; sourcePosition?: Position; targetPosition?: Position; hidden?: boolean; selected?: boolean; ... 17 more ...; measured?: { ...; }; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+      Types of property 'sourcePosition' are incompatible.
+        Type 'Position | undefined' is not assignable to type 'Position'.
+          Type 'undefined' is not assignable to type 'Position'.
+qualification/run-dependencies/renderers.tsx(52,20): error TS7006: Parameter 'changes' implicitly has an 'any' type.
+qualification/run-dependencies/renderers.tsx(52,56): error TS7006: Parameter 'change' implicitly has an 'any' type.
+qualification/run-dependencies/renderers.tsx(53,20): error TS7006: Parameter 'changes' implicitly has an 'any' type.
+qualification/run-dependencies/renderers.tsx(53,56): error TS7006: Parameter 'change' implicitly has an 'any' type.
+qualification/run-dependencies/renderers.tsx(55,19): error TS7006: Parameter '_event' implicitly has an 'any' type.
+qualification/run-dependencies/renderers.tsx(55,26): error TS7006: Parameter 'node' implicitly has an 'any' type.
+qualification/run-dependencies/renderers.tsx(56,19): error TS7006: Parameter '_event' implicitly has an 'any' type.
+qualification/run-dependencies/renderers.tsx(56,26): error TS7006: Parameter 'edge' implicitly has an 'any' type.

@@ -1,0 +1,3 @@
+=== RUN   TestPreparedContinuationCommandsNeverLoadProject
+--- PASS: TestPreparedContinuationCommandsNeverLoadProject (0.01s)
+PASS

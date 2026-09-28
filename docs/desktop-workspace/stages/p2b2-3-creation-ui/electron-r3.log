@@ -1,0 +1,8 @@
+
+Running 1 test using 1 worker
+
+(node:70282) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 desktop/tests/electron/pipeline-creation.spec.ts:7:1 › Creation: chosen data, addressed proposal, checked UI facts, exact discussion and restart (1.2m)
+
+  1 passed (1.2m)

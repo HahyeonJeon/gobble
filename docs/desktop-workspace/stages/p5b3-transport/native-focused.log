@@ -1,0 +1,65 @@
+==================
+WARNING: DATA RACE
+Write at 0x00c000168a20 by goroutine 30:
+  github.com/HahyeonJeon/gobble/internal/appservice.(*Service).dispatchContinuation()
+      /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/internal/appservice/continuation_operations.go:208 +0x3d4
+  github.com/HahyeonJeon/gobble/internal/appservice.(*Service).confirmContinuation.func1()
+      /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/internal/appservice/continuation_operations.go:187 +0x140
+  github.com/HahyeonJeon/gobble/internal/appservice.(*Service).continuationWorkerLocked.func1()
+      /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/internal/appservice/continuation_operations.go:75 +0x10c
+
+Previous read at 0x00c000168a20 by goroutine 25:
+  github.com/HahyeonJeon/gobble/internal/appservice.TestContinuationUnknownAcknowledgementRestoresWithoutDispatch()
+      /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/internal/appservice/continuation_test.go:156 +0x344
+  github.com/HahyeonJeon/gobble/internal/appservice.TestContinuationUnknownAcknowledgementRestoresWithoutDispatch()
+      /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/internal/appservice/continuation_test.go:155 +0x2bc
+  github.com/HahyeonJeon/gobble/internal/appservice.continuationFixture()
+      /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/internal/appservice/continuation_test.go:73 +0xac
+  github.com/HahyeonJeon/gobble/internal/appservice.checkedContinuationFixture()
+      /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/internal/appservice/continuation_test.go:114 +0xd4
+  github.com/HahyeonJeon/gobble/internal/appservice.TestContinuationUnknownAcknowledgementRestoresWithoutDispatch()
+      /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/internal/appservice/continuation_test.go:154 +0xa4
+  testing.tRunner()
+      /usr/local/go/src/testing/testing.go:2193 +0x164
+  testing.(*T).Run.gowrap1()
+      /usr/local/go/src/testing/testing.go:2258 +0x34
+
+Goroutine 30 (running) created at:
+  github.com/HahyeonJeon/gobble/internal/appservice.(*Service).continuationWorkerLocked()
+      /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/internal/appservice/continuation_operations.go:72 +0x36c
+  github.com/HahyeonJeon/gobble/internal/appservice.(*Service).continuationWorkerLocked()
+      /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/internal/appservice/continuation_operations.go:69 +0x11c
+  github.com/HahyeonJeon/gobble/internal/appservice.(*Service).confirmContinuation()
+      /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/internal/appservice/continuation_operations.go:187 +0x1818
+  github.com/HahyeonJeon/gobble/internal/appservice.TestContinuationUnknownAcknowledgementRestoresWithoutDispatch()
+      /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/internal/appservice/continuation_test.go:155 +0x2bc
+  github.com/HahyeonJeon/gobble/internal/appservice.continuationFixture()
+      /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/internal/appservice/continuation_test.go:73 +0xac
+  github.com/HahyeonJeon/gobble/internal/appservice.checkedContinuationFixture()
+      /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/internal/appservice/continuation_test.go:114 +0xd4
+  github.com/HahyeonJeon/gobble/internal/appservice.TestContinuationUnknownAcknowledgementRestoresWithoutDispatch()
+      /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/internal/appservice/continuation_test.go:154 +0xa4
+  testing.tRunner()
+      /usr/local/go/src/testing/testing.go:2193 +0x164
+  testing.(*T).Run.gowrap1()
+      /usr/local/go/src/testing/testing.go:2258 +0x34
+
+Goroutine 25 (running) created at:
+  testing.(*T).Run()
+      /usr/local/go/src/testing/testing.go:2258 +0x7bc
+  testing.runTests.func1()
+      /usr/local/go/src/testing/testing.go:2742 +0x74
+  testing.tRunner()
+      /usr/local/go/src/testing/testing.go:2193 +0x164
+  testing.runTests()
+      /usr/local/go/src/testing/testing.go:2740 +0x7a0
+  testing.(*M).Run()
+      /usr/local/go/src/testing/testing.go:2600 +0xb38
+  main.main()
+      _testmain.go:226 +0x100
+==================
+--- FAIL: TestContinuationUnknownAcknowledgementRestoresWithoutDispatch (0.39s)
+    testing.go:1865: race detected during execution of test
+FAIL
+FAIL	github.com/HahyeonJeon/gobble/internal/appservice	2.515s
+FAIL

@@ -1,0 +1,35 @@
+{
+  "date": "2026-09-08",
+  "kind": "synthetic HTML sketch only",
+  "runtime": "Installed Google Chrome via Playwright",
+  "errors": [],
+  "agentState": "3\nInput reads: S03_R1.fastq.gz, S03_R2.fastq.gz",
+  "selectedLines": [
+    "7ERROR: Unexpected end of input",
+    "8File: S03_R2.fastq.gz"
+  ],
+  "filteredRows": 1,
+  "widths": [
+    {
+      "width": 1280,
+      "bodyWidth": 1280
+    },
+    {
+      "width": 1024,
+      "bodyWidth": 1024
+    },
+    {
+      "width": 740,
+      "bodyWidth": 740
+    }
+  ],
+  "manualCheck": "Codex in-app browser: attach, Show, Return",
+  "productionChecksRun": false,
+  "providerConnected": false,
+  "limitations": [
+    "Selection uses a fixed demo range; real text selection is not implemented.",
+    "Only Align S03 has log fixture data.",
+    "Refresh and Send are labelled simulations.",
+    "150% native zoom and keyboard accessibility remain implementation acceptance work."
+  ]
+}

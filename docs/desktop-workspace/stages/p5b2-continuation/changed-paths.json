@@ -1,0 +1,16 @@
+[
+  "docs/desktop-workspace/proposals/p5b-continuation/README.md",
+  "docs/desktop-workspace/proposals/p5b-continuation/plan.md",
+  "internal/engine/continuation_admission.go",
+  "internal/engine/continuation_lifecycle_test.go",
+  "internal/engine/continuation_review.go",
+  "internal/engine/continuation_test.go",
+  "internal/engine/exec.go",
+  "internal/engine/exec/submission.go",
+  "internal/engine/exec/submission_test.go",
+  "internal/engine/publication_collision_test.go",
+  "internal/engine/run.go",
+  "internal/preparation/continuation.go",
+  "launch.go",
+  "launch_test.go"
+]

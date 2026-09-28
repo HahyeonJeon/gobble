@@ -1,0 +1,52 @@
+
+Running 3 tests using 1 worker
+
+(node:1759) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 desktop/tests/electron/ux-review.spec.ts:87:1 › C1: long names and 0, 1, 5, 12 Agents stay navigable with enlarged text (4.2s)
+  ✘  2 desktop/tests/electron/ux-review.spec.ts:133:1 › C2: long resources and multiple attachments retain a usable workspace at 100–150% zoom (9.6s)
+(node:1785) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  3 desktop/tests/electron/ux-review.spec.ts:206:1 › C3: a pending reply and attachment error stay actionable in a small enlarged-text chat (2.7s)
+
+
+  1) desktop/tests/electron/ux-review.spec.ts:133:1 › C2: long resources and multiple attachments retain a usable workspace at 100–150% zoom 
+
+    Error: expect(locator).toHaveValue(expected) failed
+
+    Locator: getByRole('textbox', { name: 'Message draft' })
+    Expected: "Review the selected results, retain the earlier notes and explain the important differences.
+    Review the selected results, retain the earlier notes and explain the important differences.
+    Review the selected results, retain the earlier notes and explain the important differences.
+    Review the selected results, retain the earlier notes and explain the important differences.
+    Review the selected results, retain the earlier notes and explain the important differences.
+    Review the selected results, retain the earlier notes and explain the important differences.
+    Review the selected results, retain the earlier notes and explain the important differences.
+    Review the selected results, retain the earlier notes and explain the important differences.
+    Review the selected results, retain the earlier notes and explain the important differences.
+    Review the selected results, retain the earlier notes and explain the important differences.
+    Review the selected results, retain the earlier notes and explain the important differences.
+    Review the selected results, retain the earlier notes and explain the important differences.
+    "
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toHaveValue" getByRole('textbox', { name: 'Message draft' }) with timeout 5000ms
+      - waiting for getByRole('textbox', { name: 'Message draft' })
+
+
+      200 |   await application.close();
+      201 |   ({ application, page } = await launch(profile, env()));
+    > 202 |   await expect(page.getByRole('textbox', { name: 'Message draft' })).toHaveValue(text);
+          |                                                                      ^
+      203 |   expect((await documentSnapshot()).chat).toEqual(before.chat);
+      204 | });
+      205 |
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/ux-review.spec.ts:202:70
+
+    Error Context: test-results/electron/ux-review-C2-long-resource-7b998-e-workspace-at-100–150-zoom/error-context.md
+
+  1 failed
+    desktop/tests/electron/ux-review.spec.ts:133:1 › C2: long resources and multiple attachments retain a usable workspace at 100–150% zoom 
+  2 passed (17.3s)

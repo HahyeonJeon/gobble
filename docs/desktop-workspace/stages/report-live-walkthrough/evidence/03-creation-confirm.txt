@@ -1,0 +1,63 @@
+Skip to workspace
+Report collaboration study
+Workspace
+Chat
+Selections
+0
+Account
+Workspace ready
+New pipeline
+More
+New pipeline
+Draft · Not yet a Pipeline
+Refresh
+Discard draft
+sample.fastq.gz · Single-end reads
+Change data
+Discuss this draft
+● Analysis engine connected
+Create this Pipeline?
+
+The checked design becomes its first version. No analysis will run.
+
+Pipeline name
+Data
+sample.fastq.gz · Single-end
+Quality threshold
+20 Phred
+Minimum length
+Tool default
+Confirm creation
+Cancel
+Proposal
+1 · Single-end QC: Trim Galore removes adapters and trims low-quality ends at quality 20, then FastQC inspects the trimmed reads. · ready
+Show list
+Proposed
++ 2 steps · Checked design
+Fit
+−
+74%
++
+reads
+file
+Trim adapters and low-quality ends (quality 20)
+1 +
+1 input · 2 outputs
+Inspect trimmed read quality
+2 +
+1 input · 2 outputs
+Researcher: Trim Galore removes adapters and trims low-quality ends at Phred 20. Its trimmed single-end reads feed directly into FastQC for a quality report.
+Current
+No current version
+
+This is a new analysis. Every step and connection is a proposed addition.
+
+Checking a design does not create a Pipeline or start a Run.
+Proposed · Added
+Select an addition
+
+Choose data, a step or a connection above. Select a setting below a step to discuss that exact value.
+
+Discuss proposed flow
+
+Added to your next message.

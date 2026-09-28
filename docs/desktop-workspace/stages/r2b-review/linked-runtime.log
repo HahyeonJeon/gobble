@@ -1,0 +1,46 @@
+
+> gobble-app-workspace@0.1.0 test:electron
+> npm run build && playwright test --grep normal CSV opening|linked refresh
+
+
+> gobble-app-workspace@0.1.0 build
+> npm run build:service && npm run build --workspace @gobble/desktop
+
+
+> gobble-app-workspace@0.1.0 build:service
+> tsx scripts/build-service.ts
+
+
+> @gobble/desktop@0.1.0 build
+> electron-vite build
+
+vite v7.3.6 building ssr environment for production...
+transforming...
+✓ 334 modules transformed.
+rendering chunks...
+out/main/index.js  393.65 kB
+✓ built in 585ms
+vite v7.3.6 building ssr environment for production...
+transforming...
+✓ 292 modules transformed.
+rendering chunks...
+out/preload/index.cjs  189.95 kB
+✓ built in 267ms
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 378 modules transformed.
+rendering chunks...
+../../out/renderer/index.html                     0.48 kB
+../../out/renderer/assets/index-nEZqeXXo.css     36.93 kB
+../../out/renderer/assets/index-2K3lgYDl.js     912.63 kB
+../../out/renderer/assets/chunk-DZLsuOxH.js   1,773.95 kB
+✓ built in 2.62s
+
+Running 2 tests using 1 worker
+
+(node:33304) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 desktop/tests/electron/linked-views.spec.ts:43:1 › normal CSV opening links exact rows through filter, sort, axes and viewport; Discuss focuses one composer without Send (3.6s)
+  ✓  2 desktop/tests/electron/linked-views.spec.ts:112:1 › linked refresh resets changed-source selection and keeps old attachments; counterpart reopen and compact Discuss preserve work (1.6s)
+
+  2 passed (5.8s)

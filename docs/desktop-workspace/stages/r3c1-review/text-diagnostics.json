@@ -1,0 +1,304 @@
+{
+  "revision": "sha256:8184803241096568600f4a76054909691c08c6808f3f3f3cb63506829e7bc627",
+  "profile": "pdfjs-6.3.289-region-v1:no-xfa,no-annotations,path-fonts,no-wasm",
+  "pageIndex": 0,
+  "viewBox": [
+    20,
+    40,
+    580,
+    800
+  ],
+  "userUnit": 1,
+  "intrinsicRotation": 0,
+  "text": {
+    "capability": "diagnostic-only",
+    "items": [
+      {
+        "id": 0,
+        "text": "PDF shared reading",
+        "transform": [
+          24,
+          0,
+          0,
+          24,
+          70,
+          720
+        ],
+        "width": 214.75199999999995,
+        "height": 24,
+        "direction": "ltr"
+      },
+      {
+        "id": 1,
+        "text": "",
+        "transform": [
+          11,
+          0,
+          0,
+          11,
+          70,
+          687
+        ],
+        "width": 0,
+        "height": 0,
+        "direction": "ltr"
+      },
+      {
+        "id": 2,
+        "text": "Synthetic qualification report - page 1",
+        "transform": [
+          11,
+          0,
+          0,
+          11,
+          70,
+          687
+        ],
+        "width": 181.58799999999985,
+        "height": 11,
+        "direction": "ltr"
+      },
+      {
+        "id": 3,
+        "text": "",
+        "transform": [
+          14,
+          0,
+          0,
+          14,
+          70,
+          620
+        ],
+        "width": 0,
+        "height": 0,
+        "direction": "ltr"
+      },
+      {
+        "id": 4,
+        "text": "Same filtered cohort.",
+        "transform": [
+          14,
+          0,
+          0,
+          14,
+          70,
+          620
+        ],
+        "width": 129.16400000000002,
+        "height": 14,
+        "direction": "ltr"
+      },
+      {
+        "id": 5,
+        "text": " ",
+        "transform": [
+          14,
+          0,
+          0,
+          14,
+          199.16399999999996,
+          620
+        ],
+        "width": 125.83600000000004,
+        "height": 0,
+        "direction": "ltr"
+      },
+      {
+        "id": 6,
+        "text": "Same filtered cohort.",
+        "transform": [
+          14,
+          0,
+          0,
+          14,
+          325,
+          620
+        ],
+        "width": 129.16400000000002,
+        "height": 14,
+        "direction": "ltr"
+      },
+      {
+        "id": 7,
+        "text": "",
+        "transform": [
+          11,
+          0,
+          0,
+          11,
+          70,
+          581
+        ],
+        "width": 0,
+        "height": 0,
+        "direction": "ltr"
+      },
+      {
+        "id": 8,
+        "text": "Left column: samples and filters.",
+        "transform": [
+          11,
+          0,
+          0,
+          11,
+          70,
+          581
+        ],
+        "width": 157.72899999999998,
+        "height": 11,
+        "direction": "ltr"
+      },
+      {
+        "id": 9,
+        "text": " ",
+        "transform": [
+          11,
+          0,
+          0,
+          11,
+          227.72899999999987,
+          581
+        ],
+        "width": 97.27100000000013,
+        "height": 0,
+        "direction": "ltr"
+      },
+      {
+        "id": 10,
+        "text": "Right column: comparison.",
+        "transform": [
+          11,
+          0,
+          0,
+          11,
+          325,
+          581
+        ],
+        "width": 130.20699999999997,
+        "height": 11,
+        "direction": "ltr"
+      },
+      {
+        "id": 11,
+        "text": "",
+        "transform": [
+          13,
+          0,
+          0,
+          13,
+          70,
+          520
+        ],
+        "width": 0,
+        "height": 0,
+        "direction": "ltr"
+      },
+      {
+        "id": 12,
+        "text": "A marked region refers to the source page.",
+        "transform": [
+          13,
+          0,
+          0,
+          13,
+          70,
+          520
+        ],
+        "width": 247.1170000000001,
+        "height": 13,
+        "direction": "ltr"
+      },
+      {
+        "id": 13,
+        "text": "",
+        "transform": [
+          0,
+          12,
+          -12,
+          0,
+          480,
+          270
+        ],
+        "width": 0,
+        "height": 0,
+        "direction": "ltr"
+      },
+      {
+        "id": 14,
+        "text": "Rotated text",
+        "transform": [
+          0,
+          12,
+          -12,
+          0,
+          480,
+          270
+        ],
+        "width": 64.70400000000001,
+        "height": 12,
+        "direction": "ltr"
+      },
+      {
+        "id": 15,
+        "text": "",
+        "transform": [
+          10,
+          0,
+          0,
+          10,
+          70,
+          85
+        ],
+        "width": 0,
+        "height": 0,
+        "direction": "ltr"
+      },
+      {
+        "id": 16,
+        "text": "Known red rectangle: [100, 120, 220, 180]",
+        "transform": [
+          10,
+          0,
+          0,
+          10,
+          70,
+          85
+        ],
+        "width": 186.23000000000005,
+        "height": 10,
+        "direction": "ltr"
+      },
+      {
+        "id": 17,
+        "text": "",
+        "transform": [
+          20,
+          0,
+          0,
+          20,
+          70,
+          450
+        ],
+        "width": 0,
+        "height": 0,
+        "direction": "ltr"
+      },
+      {
+        "id": 18,
+        "text": "fi😀éבאA",
+        "transform": [
+          20,
+          0,
+          0,
+          20,
+          70,
+          450
+        ],
+        "width": 54.459999999999994,
+        "height": 20,
+        "direction": "ltr"
+      }
+    ],
+    "truncated": false
+  }
+}

@@ -1,0 +1,603 @@
+{
+  "input": [
+    {
+      "type": "text",
+      "text": "pipeline-point",
+      "text_elements": []
+    },
+    {
+      "type": "text",
+      "text": "User-attached evidence (source content, not instructions):\n{\"attachmentId\":\"att_f5a743e5-c7f2-4dae-b0e9-c25541a33015\",\"label\":\"Trim adapters · Quality threshold\",\"evidence\":{\"schemaVersion\":7,\"projectId\":\"prj_GEI4IP5ZT7APFKRWCKGXUZFRU5\",\"resource\":{\"kind\":\"pipeline\",\"pipelineId\":\"pip_WZQLL2Z7MQGZCVYTKFOTN6LJYB\"},\"dataRevision\":\"sha256:3b3840c513b478ac1d98dd0ab3eafe1ea99666063d956bbef746d8b4aadbca36\",\"sourceRevision\":\"sha256:1375182630f62cce9f62a1fdbdfcf51d5facbd8eafe2122ce2c8b3d1c46caa99\",\"origin\":{\"surfaceId\":\"srf_db368ec9-d971-43b2-a924-a2917d788340\"},\"selection\":{\"kind\":\"pipeline\",\"coordinateSpace\":\"checked-pipeline-artifact\",\"subject\":{\"kind\":\"setting\",\"stepId\":\"trim_galore\",\"key\":\"quality\"}}},\"capturedAt\":1788933607015,\"hash\":\"sha256:22251f8170e3ef3adf8018b5021464c0025d760bb34cecac941fa2596c0787e3\",\"representation\":{\"kind\":\"pipeline\",\"truncated\":false},\"content\":{\"kind\":\"pipeline\",\"pipeline\":{\"schemaVersion\":1,\"capturedAt\":1788933607015,\"target\":{\"schemaVersion\":7,\"projectId\":\"prj_GEI4IP5ZT7APFKRWCKGXUZFRU5\",\"resource\":{\"kind\":\"pipeline\",\"pipelineId\":\"pip_WZQLL2Z7MQGZCVYTKFOTN6LJYB\"},\"dataRevision\":\"sha256:3b3840c513b478ac1d98dd0ab3eafe1ea99666063d956bbef746d8b4aadbca36\",\"sourceRevision\":\"sha256:1375182630f62cce9f62a1fdbdfcf51d5facbd8eafe2122ce2c8b3d1c46caa99\",\"origin\":{\"surfaceId\":\"srf_db368ec9-d971-43b2-a924-a2917d788340\"},\"selection\":{\"kind\":\"pipeline\",\"coordinateSpace\":\"checked-pipeline-artifact\",\"subject\":{\"kind\":\"setting\",\"stepId\":\"trim_galore\",\"key\":\"quality\"}}},\"pipelineName\":\"read_quality_review\",\"checkedAt\":\"2026-09-09T06:00:04.921587Z\",\"subject\":{\"kind\":\"setting\",\"stepId\":\"trim_galore\",\"stepLabel\":\"Trim adapters\",\"setting\":{\"key\":\"quality\",\"label\":\"Quality threshold\",\"unit\":\"Phred\",\"value\":25}}}}}",
+      "text_elements": []
+    }
+  ],
+  "observed": {
+    "receipt": {
+      "observedReadId": "obs_db326d01-785d-4732-a9fd-e140f4a67cb1",
+      "observation": {
+        "schemaVersion": 3,
+        "projectId": "prj_GEI4IP5ZT7APFKRWCKGXUZFRU5",
+        "surfaceId": "srf_db368ec9-d971-43b2-a924-a2917d788340",
+        "rendererSessionId": "rnd_9a16c1ad-05bf-441b-aa7a-14a2480dac55",
+        "requestId": "req_43a31472-fd2c-46d7-8928-19a39c621abe",
+        "generation": 3,
+        "dataRevision": "sha256:3aa7ca37c42b3f6831825401670001bc3431f892137448e1d5d75002ecd222ae",
+        "presentation": {
+          "spec": 0,
+          "view": 0,
+          "filter": 0
+        }
+      },
+      "source": "loaded-preview",
+      "scope": "view",
+      "pointable": true
+    },
+    "content": {
+      "kind": "pipeline",
+      "name": "read_quality_review",
+      "artifactId": "sha256:3b3840c513b478ac1d98dd0ab3eafe1ea99666063d956bbef746d8b4aadbca36",
+      "sourceRevision": "sha256:1375182630f62cce9f62a1fdbdfcf51d5facbd8eafe2122ce2c8b3d1c46caa99",
+      "checkedAt": "2026-09-09T06:00:04.921587Z",
+      "inspectionState": "ready",
+      "scope": "checked-artifact",
+      "requestedSubjects": 12,
+      "returnedSubjects": 12,
+      "truncated": false,
+      "subjects": [
+        {
+          "target": {
+            "schemaVersion": 7,
+            "projectId": "prj_GEI4IP5ZT7APFKRWCKGXUZFRU5",
+            "resource": {
+              "kind": "pipeline",
+              "pipelineId": "pip_WZQLL2Z7MQGZCVYTKFOTN6LJYB"
+            },
+            "dataRevision": "sha256:3b3840c513b478ac1d98dd0ab3eafe1ea99666063d956bbef746d8b4aadbca36",
+            "sourceRevision": "sha256:1375182630f62cce9f62a1fdbdfcf51d5facbd8eafe2122ce2c8b3d1c46caa99",
+            "origin": {
+              "surfaceId": "srf_db368ec9-d971-43b2-a924-a2917d788340"
+            },
+            "selection": {
+              "kind": "pipeline",
+              "coordinateSpace": "checked-pipeline-artifact",
+              "subject": {
+                "kind": "input",
+                "portName": "reads"
+              }
+            }
+          },
+          "facts": {
+            "kind": "input",
+            "port": {
+              "name": "reads",
+              "kind": "file",
+              "path": "sample.fastq",
+              "members": []
+            }
+          }
+        },
+        {
+          "target": {
+            "schemaVersion": 7,
+            "projectId": "prj_GEI4IP5ZT7APFKRWCKGXUZFRU5",
+            "resource": {
+              "kind": "pipeline",
+              "pipelineId": "pip_WZQLL2Z7MQGZCVYTKFOTN6LJYB"
+            },
+            "dataRevision": "sha256:3b3840c513b478ac1d98dd0ab3eafe1ea99666063d956bbef746d8b4aadbca36",
+            "sourceRevision": "sha256:1375182630f62cce9f62a1fdbdfcf51d5facbd8eafe2122ce2c8b3d1c46caa99",
+            "origin": {
+              "surfaceId": "srf_db368ec9-d971-43b2-a924-a2917d788340"
+            },
+            "selection": {
+              "kind": "pipeline",
+              "coordinateSpace": "checked-pipeline-artifact",
+              "subject": {
+                "kind": "step",
+                "stepId": "trim_galore"
+              }
+            }
+          },
+          "facts": {
+            "kind": "step",
+            "step": {
+              "id": "trim_galore",
+              "name": "trim_galore",
+              "module": "",
+              "display": {
+                "stage": "Trim adapters"
+              },
+              "image": "community.wave.seqera.io/library/trim-galore:2.1.0--27e6376b8f6c1872@sha256:9d747504e44dbf5dfa8a2d66cbbd3bd80f897cc2e17ebe406821b4809b34a3a4",
+              "backend": "local",
+              "cpu": 4,
+              "memory": "2g",
+              "inputs": [
+                {
+                  "name": "read1",
+                  "kind": "file",
+                  "path": "sample.fastq",
+                  "members": []
+                }
+              ],
+              "outputs": [
+                {
+                  "name": "trimmed_read1",
+                  "kind": "file",
+                  "path": "work/trim-galore/sample_trimmed.fq.gz",
+                  "members": []
+                },
+                {
+                  "name": "report1",
+                  "kind": "file",
+                  "path": "work/trim-galore/sample.fastq_trimming_report.txt",
+                  "members": []
+                }
+              ],
+              "control": {
+                "branch": "",
+                "merge": "",
+                "scatter": "",
+                "gather": "",
+                "when": "",
+                "scatterFromKind": "",
+                "scatterFromTask": "",
+                "scatterFromPort": "",
+                "scatterFromPath": "",
+                "scatterMembers": [],
+                "scatterMemberPaths": [],
+                "skipIfMissingTask": "",
+                "skipIfMissingPort": "",
+                "skipIfMissingPath": "",
+                "skipIfFalse": ""
+              },
+              "settings": [
+                {
+                  "key": "quality",
+                  "label": "Quality threshold",
+                  "unit": "Phred",
+                  "value": 25
+                },
+                {
+                  "key": "length",
+                  "label": "Minimum length",
+                  "unit": "bp",
+                  "value": 40
+                }
+              ]
+            }
+          }
+        },
+        {
+          "target": {
+            "schemaVersion": 7,
+            "projectId": "prj_GEI4IP5ZT7APFKRWCKGXUZFRU5",
+            "resource": {
+              "kind": "pipeline",
+              "pipelineId": "pip_WZQLL2Z7MQGZCVYTKFOTN6LJYB"
+            },
+            "dataRevision": "sha256:3b3840c513b478ac1d98dd0ab3eafe1ea99666063d956bbef746d8b4aadbca36",
+            "sourceRevision": "sha256:1375182630f62cce9f62a1fdbdfcf51d5facbd8eafe2122ce2c8b3d1c46caa99",
+            "origin": {
+              "surfaceId": "srf_db368ec9-d971-43b2-a924-a2917d788340"
+            },
+            "selection": {
+              "kind": "pipeline",
+              "coordinateSpace": "checked-pipeline-artifact",
+              "subject": {
+                "kind": "port",
+                "stepId": "trim_galore",
+                "direction": "input",
+                "portName": "read1"
+              }
+            }
+          },
+          "facts": {
+            "kind": "port",
+            "stepId": "trim_galore",
+            "stepLabel": "Trim adapters",
+            "direction": "input",
+            "port": {
+              "name": "read1",
+              "kind": "file",
+              "path": "sample.fastq",
+              "members": []
+            }
+          }
+        },
+        {
+          "target": {
+            "schemaVersion": 7,
+            "projectId": "prj_GEI4IP5ZT7APFKRWCKGXUZFRU5",
+            "resource": {
+              "kind": "pipeline",
+              "pipelineId": "pip_WZQLL2Z7MQGZCVYTKFOTN6LJYB"
+            },
+            "dataRevision": "sha256:3b3840c513b478ac1d98dd0ab3eafe1ea99666063d956bbef746d8b4aadbca36",
+            "sourceRevision": "sha256:1375182630f62cce9f62a1fdbdfcf51d5facbd8eafe2122ce2c8b3d1c46caa99",
+            "origin": {
+              "surfaceId": "srf_db368ec9-d971-43b2-a924-a2917d788340"
+            },
+            "selection": {
+              "kind": "pipeline",
+              "coordinateSpace": "checked-pipeline-artifact",
+              "subject": {
+                "kind": "port",
+                "stepId": "trim_galore",
+                "direction": "output",
+                "portName": "trimmed_read1"
+              }
+            }
+          },
+          "facts": {
+            "kind": "port",
+            "stepId": "trim_galore",
+            "stepLabel": "Trim adapters",
+            "direction": "output",
+            "port": {
+              "name": "trimmed_read1",
+              "kind": "file",
+              "path": "work/trim-galore/sample_trimmed.fq.gz",
+              "members": []
+            }
+          }
+        },
+        {
+          "target": {
+            "schemaVersion": 7,
+            "projectId": "prj_GEI4IP5ZT7APFKRWCKGXUZFRU5",
+            "resource": {
+              "kind": "pipeline",
+              "pipelineId": "pip_WZQLL2Z7MQGZCVYTKFOTN6LJYB"
+            },
+            "dataRevision": "sha256:3b3840c513b478ac1d98dd0ab3eafe1ea99666063d956bbef746d8b4aadbca36",
+            "sourceRevision": "sha256:1375182630f62cce9f62a1fdbdfcf51d5facbd8eafe2122ce2c8b3d1c46caa99",
+            "origin": {
+              "surfaceId": "srf_db368ec9-d971-43b2-a924-a2917d788340"
+            },
+            "selection": {
+              "kind": "pipeline",
+              "coordinateSpace": "checked-pipeline-artifact",
+              "subject": {
+                "kind": "port",
+                "stepId": "trim_galore",
+                "direction": "output",
+                "portName": "report1"
+              }
+            }
+          },
+          "facts": {
+            "kind": "port",
+            "stepId": "trim_galore",
+            "stepLabel": "Trim adapters",
+            "direction": "output",
+            "port": {
+              "name": "report1",
+              "kind": "file",
+              "path": "work/trim-galore/sample.fastq_trimming_report.txt",
+              "members": []
+            }
+          }
+        },
+        {
+          "target": {
+            "schemaVersion": 7,
+            "projectId": "prj_GEI4IP5ZT7APFKRWCKGXUZFRU5",
+            "resource": {
+              "kind": "pipeline",
+              "pipelineId": "pip_WZQLL2Z7MQGZCVYTKFOTN6LJYB"
+            },
+            "dataRevision": "sha256:3b3840c513b478ac1d98dd0ab3eafe1ea99666063d956bbef746d8b4aadbca36",
+            "sourceRevision": "sha256:1375182630f62cce9f62a1fdbdfcf51d5facbd8eafe2122ce2c8b3d1c46caa99",
+            "origin": {
+              "surfaceId": "srf_db368ec9-d971-43b2-a924-a2917d788340"
+            },
+            "selection": {
+              "kind": "pipeline",
+              "coordinateSpace": "checked-pipeline-artifact",
+              "subject": {
+                "kind": "setting",
+                "stepId": "trim_galore",
+                "key": "quality"
+              }
+            }
+          },
+          "facts": {
+            "kind": "setting",
+            "stepId": "trim_galore",
+            "stepLabel": "Trim adapters",
+            "setting": {
+              "key": "quality",
+              "label": "Quality threshold",
+              "unit": "Phred",
+              "value": 25
+            }
+          }
+        },
+        {
+          "target": {
+            "schemaVersion": 7,
+            "projectId": "prj_GEI4IP5ZT7APFKRWCKGXUZFRU5",
+            "resource": {
+              "kind": "pipeline",
+              "pipelineId": "pip_WZQLL2Z7MQGZCVYTKFOTN6LJYB"
+            },
+            "dataRevision": "sha256:3b3840c513b478ac1d98dd0ab3eafe1ea99666063d956bbef746d8b4aadbca36",
+            "sourceRevision": "sha256:1375182630f62cce9f62a1fdbdfcf51d5facbd8eafe2122ce2c8b3d1c46caa99",
+            "origin": {
+              "surfaceId": "srf_db368ec9-d971-43b2-a924-a2917d788340"
+            },
+            "selection": {
+              "kind": "pipeline",
+              "coordinateSpace": "checked-pipeline-artifact",
+              "subject": {
+                "kind": "setting",
+                "stepId": "trim_galore",
+                "key": "length"
+              }
+            }
+          },
+          "facts": {
+            "kind": "setting",
+            "stepId": "trim_galore",
+            "stepLabel": "Trim adapters",
+            "setting": {
+              "key": "length",
+              "label": "Minimum length",
+              "unit": "bp",
+              "value": 40
+            }
+          }
+        },
+        {
+          "target": {
+            "schemaVersion": 7,
+            "projectId": "prj_GEI4IP5ZT7APFKRWCKGXUZFRU5",
+            "resource": {
+              "kind": "pipeline",
+              "pipelineId": "pip_WZQLL2Z7MQGZCVYTKFOTN6LJYB"
+            },
+            "dataRevision": "sha256:3b3840c513b478ac1d98dd0ab3eafe1ea99666063d956bbef746d8b4aadbca36",
+            "sourceRevision": "sha256:1375182630f62cce9f62a1fdbdfcf51d5facbd8eafe2122ce2c8b3d1c46caa99",
+            "origin": {
+              "surfaceId": "srf_db368ec9-d971-43b2-a924-a2917d788340"
+            },
+            "selection": {
+              "kind": "pipeline",
+              "coordinateSpace": "checked-pipeline-artifact",
+              "subject": {
+                "kind": "step",
+                "stepId": "quality"
+              }
+            }
+          },
+          "facts": {
+            "kind": "step",
+            "step": {
+              "id": "quality",
+              "name": "quality",
+              "module": "",
+              "display": {
+                "stage": "Check read quality"
+              },
+              "image": "",
+              "backend": "local",
+              "cpu": 0,
+              "memory": "",
+              "inputs": [
+                {
+                  "name": "reads",
+                  "kind": "file",
+                  "path": "work/trim-galore/sample_trimmed.fq.gz",
+                  "members": []
+                }
+              ],
+              "outputs": [
+                {
+                  "name": "report",
+                  "kind": "file",
+                  "path": "quality.html",
+                  "members": []
+                }
+              ],
+              "control": {
+                "branch": "",
+                "merge": "",
+                "scatter": "",
+                "gather": "",
+                "when": "",
+                "scatterFromKind": "",
+                "scatterFromTask": "",
+                "scatterFromPort": "",
+                "scatterFromPath": "",
+                "scatterMembers": [],
+                "scatterMemberPaths": [],
+                "skipIfMissingTask": "",
+                "skipIfMissingPort": "",
+                "skipIfMissingPath": "",
+                "skipIfFalse": ""
+              },
+              "settings": []
+            }
+          }
+        },
+        {
+          "target": {
+            "schemaVersion": 7,
+            "projectId": "prj_GEI4IP5ZT7APFKRWCKGXUZFRU5",
+            "resource": {
+              "kind": "pipeline",
+              "pipelineId": "pip_WZQLL2Z7MQGZCVYTKFOTN6LJYB"
+            },
+            "dataRevision": "sha256:3b3840c513b478ac1d98dd0ab3eafe1ea99666063d956bbef746d8b4aadbca36",
+            "sourceRevision": "sha256:1375182630f62cce9f62a1fdbdfcf51d5facbd8eafe2122ce2c8b3d1c46caa99",
+            "origin": {
+              "surfaceId": "srf_db368ec9-d971-43b2-a924-a2917d788340"
+            },
+            "selection": {
+              "kind": "pipeline",
+              "coordinateSpace": "checked-pipeline-artifact",
+              "subject": {
+                "kind": "port",
+                "stepId": "quality",
+                "direction": "input",
+                "portName": "reads"
+              }
+            }
+          },
+          "facts": {
+            "kind": "port",
+            "stepId": "quality",
+            "stepLabel": "Check read quality",
+            "direction": "input",
+            "port": {
+              "name": "reads",
+              "kind": "file",
+              "path": "work/trim-galore/sample_trimmed.fq.gz",
+              "members": []
+            }
+          }
+        },
+        {
+          "target": {
+            "schemaVersion": 7,
+            "projectId": "prj_GEI4IP5ZT7APFKRWCKGXUZFRU5",
+            "resource": {
+              "kind": "pipeline",
+              "pipelineId": "pip_WZQLL2Z7MQGZCVYTKFOTN6LJYB"
+            },
+            "dataRevision": "sha256:3b3840c513b478ac1d98dd0ab3eafe1ea99666063d956bbef746d8b4aadbca36",
+            "sourceRevision": "sha256:1375182630f62cce9f62a1fdbdfcf51d5facbd8eafe2122ce2c8b3d1c46caa99",
+            "origin": {
+              "surfaceId": "srf_db368ec9-d971-43b2-a924-a2917d788340"
+            },
+            "selection": {
+              "kind": "pipeline",
+              "coordinateSpace": "checked-pipeline-artifact",
+              "subject": {
+                "kind": "port",
+                "stepId": "quality",
+                "direction": "output",
+                "portName": "report"
+              }
+            }
+          },
+          "facts": {
+            "kind": "port",
+            "stepId": "quality",
+            "stepLabel": "Check read quality",
+            "direction": "output",
+            "port": {
+              "name": "report",
+              "kind": "file",
+              "path": "quality.html",
+              "members": []
+            }
+          }
+        },
+        {
+          "target": {
+            "schemaVersion": 7,
+            "projectId": "prj_GEI4IP5ZT7APFKRWCKGXUZFRU5",
+            "resource": {
+              "kind": "pipeline",
+              "pipelineId": "pip_WZQLL2Z7MQGZCVYTKFOTN6LJYB"
+            },
+            "dataRevision": "sha256:3b3840c513b478ac1d98dd0ab3eafe1ea99666063d956bbef746d8b4aadbca36",
+            "sourceRevision": "sha256:1375182630f62cce9f62a1fdbdfcf51d5facbd8eafe2122ce2c8b3d1c46caa99",
+            "origin": {
+              "surfaceId": "srf_db368ec9-d971-43b2-a924-a2917d788340"
+            },
+            "selection": {
+              "kind": "pipeline",
+              "coordinateSpace": "checked-pipeline-artifact",
+              "subject": {
+                "kind": "connection",
+                "connectionId": "edge-1",
+                "from": {
+                  "stepId": "",
+                  "portName": "reads"
+                },
+                "to": {
+                  "stepId": "trim_galore",
+                  "portName": "read1"
+                }
+              }
+            }
+          },
+          "facts": {
+            "kind": "connection",
+            "connection": {
+              "id": "edge-1",
+              "fromTask": "",
+              "fromPort": "reads",
+              "toTask": "trim_galore",
+              "toPort": "read1",
+              "wait": [
+                "sample.fastq"
+              ]
+            },
+            "fromLabel": "Pipeline input",
+            "toLabel": "Trim adapters"
+          }
+        },
+        {
+          "target": {
+            "schemaVersion": 7,
+            "projectId": "prj_GEI4IP5ZT7APFKRWCKGXUZFRU5",
+            "resource": {
+              "kind": "pipeline",
+              "pipelineId": "pip_WZQLL2Z7MQGZCVYTKFOTN6LJYB"
+            },
+            "dataRevision": "sha256:3b3840c513b478ac1d98dd0ab3eafe1ea99666063d956bbef746d8b4aadbca36",
+            "sourceRevision": "sha256:1375182630f62cce9f62a1fdbdfcf51d5facbd8eafe2122ce2c8b3d1c46caa99",
+            "origin": {
+              "surfaceId": "srf_db368ec9-d971-43b2-a924-a2917d788340"
+            },
+            "selection": {
+              "kind": "pipeline",
+              "coordinateSpace": "checked-pipeline-artifact",
+              "subject": {
+                "kind": "connection",
+                "connectionId": "edge-2",
+                "from": {
+                  "stepId": "trim_galore",
+                  "portName": "trimmed_read1"
+                },
+                "to": {
+                  "stepId": "quality",
+                  "portName": "reads"
+                }
+              }
+            }
+          },
+          "facts": {
+            "kind": "connection",
+            "connection": {
+              "id": "edge-2",
+              "fromTask": "trim_galore",
+              "fromPort": "trimmed_read1",
+              "toTask": "quality",
+              "toPort": "reads",
+              "wait": [
+                "work/trim-galore/sample_trimmed.fq.gz"
+              ]
+            },
+            "fromLabel": "Trim adapters",
+            "toLabel": "Check read quality"
+          }
+        }
+      ]
+    }
+  },
+  "results": [
+    {
+      "success": true,
+      "contentItems": [
+        {
+          "type": "inputText",
+          "text": "{\"referenceId\":\"ref_349cfc33-d218-41c1-aed6-a7acfaf6cf57\",\"published\":true}"
+        }
+      ]
+    }
+  ]
+}

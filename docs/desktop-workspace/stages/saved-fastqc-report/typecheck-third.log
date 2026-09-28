@@ -1,0 +1,19 @@
+
+> gobble-app-workspace@0.1.0 typecheck
+> tsc -p contracts/tsconfig.json && npm run typecheck --workspace @gobble/desktop && tsc -p tsconfig.tools.json
+
+
+> @gobble/desktop@0.1.0 typecheck
+> tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && tsc -p tsconfig.renderer.json
+
+src/renderer/workspace/views/ObservedReferencePanel.tsx(196,33): error TS2339: Property 'observedAt' does not exist on type '{ schemaVersion: 1; projectId: string; capturedAt: number; content: { profile: "fastqc-0.12.1-v1"; title: string; logoLabel: string; headerTitle: string; headerFilename: string; summaryHeading: string; summary: { ...; }[]; modules: { ...; }[]; footer: string; }; runRef: string; producer: { ...; }; } | { ...; } | { ....'.
+  Property 'observedAt' does not exist on type '{ schemaVersion: 1; projectId: string; capturedAt: number; content: { profile: "fastqc-0.12.1-v1"; title: string; logoLabel: string; headerTitle: string; headerFilename: string; summaryHeading: string; summary: { ...; }[]; modules: { ...; }[]; footer: string; }; runRef: string; producer: { ...; }; }'.
+src/renderer/workspace/views/SurfaceView.tsx(242,139): error TS2322: Type '(message: string) => void' is not assignable to type '() => void'.
+  Target signature provides too few arguments. Expected 1 or more, but got 0.
+npm error Lifecycle script `typecheck` failed with error:
+npm error code 2
+npm error path /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop
+npm error workspace @gobble/desktop@0.1.0
+npm error location /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop
+npm error command failed
+npm error command sh -c tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && tsc -p tsconfig.renderer.json

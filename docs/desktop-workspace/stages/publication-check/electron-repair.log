@@ -1,0 +1,60 @@
+
+Running 21 tests using 1 worker
+
+(node:14506) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 desktop/tests/electron/dependency-reference.spec.ts:20:1 › Agent dependency marks preserve User work; Show/Return, historical capture, current search and restart stay distinct (10.0s)
+  ✓   2 desktop/tests/electron/foundation.spec.ts:69:1 › built app renders in English through a sandboxed named bridge (983ms)
+  ✓   3 desktop/tests/electron/foundation.spec.ts:114:1 › native folder selection registers a real Project and serves its files (834ms)
+  ✓   4 desktop/tests/electron/foundation.spec.ts:153:1 › real IPC rejects bad payloads and an unregistered window (1.2s)
+  ✓   5 desktop/tests/electron/foundation.spec.ts:179:1 › blocks renderer code injection, frames, external navigation and new windows (975ms)
+  ✓   6 desktop/tests/electron/foundation.spec.ts:203:1 › macOS window close preserves the host and activation recreates an isolated window (1.6s)
+  ✓   7 desktop/tests/electron/foundation.spec.ts:217:1 › a second launch reuses the current profile owner (991ms)
+  ✓   8 desktop/tests/electron/notebook-shared.spec.ts:110:1 › Agent text and immutable question evidence preserve User state through Show/Return and missing-source fallback (3.5s)
+  ✓   9 desktop/tests/electron/notebook-shared.spec.ts:156:1 › only explicit painted image observation receives pixels and preserves an unfinished User region through Show/Return (2.7s)
+  ✓  10 desktop/tests/electron/notebook-shared.spec.ts:186:1 › actual scrolling revokes old Notebook receipts and clipped source-preview cannot authorize a mark (3.0s)
+  ✓  11 desktop/tests/electron/notebook-shared.spec.ts:224:1 › User output marks use the same exact Show contract and remain usable in a compact enlarged view (2.9s)
+  ✓  12 desktop/tests/electron/notebook-shared.spec.ts:260:3 › Notebook fold invalidates an earlier Agent viewport receipt (2.5s)
+  ✓  13 desktop/tests/electron/notebook-shared.spec.ts:260:3 › Notebook zoom invalidates an earlier Agent viewport receipt (2.7s)
+  ✓  14 desktop/tests/electron/observed-reference.spec.ts:15:1 › Agent Run and stream references preserve User work and separate historical evidence from current tasks (10.7s)
+  ✓  15 desktop/tests/electron/pdf-reference.spec.ts:88:1 › Agent PDF marks and immutable question capture preserve User state across Show, Return, changed source and restart (5.9s)
+  ✓  16 desktop/tests/electron/pdf-reference.spec.ts:202:1 › PDF tool scopes reject scroll-stale, source-preview, off-page, outside-visible and missing receipts (3.5s)
+  ✓  17 desktop/tests/electron/pdf-reference.spec.ts:245:1 › User PDF mark needs no Agent turn; text-only models cannot observe PDF pixels (3.4s)
+  ✘  18 desktop/tests/electron/pdf-reference.spec.ts:262:1 › Agent opens a PDF beside a protected User view without taking focus (8.3s)
+(node:14960) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  19 desktop/tests/electron/shared-context.spec.ts:61:1 › User and Agent share table/image pointers while local selection and composer focus stay independent (3.5s)
+  ✓  20 desktop/tests/electron/shared-context.spec.ts:108:1 › text pointing overlays a revision-bound range without replacing native local selection (2.4s)
+  ✓  21 desktop/tests/electron/shared-context.spec.ts:148:1 › explicit shared-view opt-in starts a new conversation and retains earlier messages (2.4s)
+
+
+  1) desktop/tests/electron/pdf-reference.spec.ts:262:1 › Agent opens a PDF beside a protected User view without taking focus 
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  locator('.message-state').getByText('completed', { exact: true })
+    Expected: 1
+    Received: 0
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveCount" locator('.message-state').getByText('completed', { exact: true }) with timeout 5000ms
+      - waiting for locator('.message-state').getByText('completed', { exact: true })
+        14 × locator resolved to 0 elements
+           - unexpected value "0"
+
+
+      266 |   await readyView(page);
+      267 |   await begin('pdf-open');
+    > 268 |   await expect(page.locator('.message-state').getByText('completed', { exact: true })).toHaveCount(
+          |                                                                                        ^
+      269 |     1,
+      270 |   );
+      271 |   await readyView(page, 'Secondary pane');
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/pdf-reference.spec.ts:268:88
+
+    Error Context: test-results/electron/pdf-reference-Agent-opens--de361-r-view-without-taking-focus/error-context.md
+
+  1 failed
+    desktop/tests/electron/pdf-reference.spec.ts:262:1 › Agent opens a PDF beside a protected User view without taking focus 
+  20 passed (1.3m)

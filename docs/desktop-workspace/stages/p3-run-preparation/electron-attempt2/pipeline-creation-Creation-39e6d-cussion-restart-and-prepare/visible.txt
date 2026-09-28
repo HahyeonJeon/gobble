@@ -1,0 +1,128 @@
+Skip to workspace
+Read quality study
+Selections
+0
+Account
+Pipelines
+1
+＋ New pipeline
+Read quality study
+Import pipeline
+Files
+Project files
+sample.fastq.gz
+Runs
+Existing analyses
+
+No runs attached
+
+Workspace ready
+New pipeline
+Read quality study
+More
+Pipeline flow
+Managed current · Checked Sep 12, 09:42 PM
+Changes
+Discuss changes
+Refresh
+Check flow
+2 steps · 1 input · 2 connections
+Flow
+Step list
+Fit
+−
+76%
++
+reads
+file
+Trim adapters and low-quality bases
+1 input · 2 outputs
+Inspect trimmed read quality
+1 input · 2 outputs
+Input
+Step
+Selected
+Design view · select to inspect
+▾ Run review
+Prepared · No Run started
+Local engine · 9145e5f6ecc2
+↻
+Prepare again
+
+Review this flow, its selected data and analysis environment together. Preparing does not start the analysis.
+
+Review history
+9:42:58 PM · ready
+9:44:09 PM · ready
+Data
+Settings
+Environment
+Settings
+2 steps
+Trim adapters and low-quality bases
+
+Quality threshold
+25 Phred
+
+Minimum length
+40 bp
+
+Inspect trimmed read quality
+Discuss settings
+Expected results
+
+Plan saved for review · No Run started
+
+Chat
+Agents
+1
+Opened a Project view.
+You → Researcher
+09:41 PM
+New pipeline · Selected data · Proposal allowed
+
+pipeline-creation
+
+R
+Researcher
+In reply to: pipeline-creation
+
+Fixture response from Researcher.
+
+Completed
+You → Researcher
+09:42 PM
+Proposed addition · Quality threshold · 25 Phred · Discussion only
+
+pipeline-creation-review
+
+R
+Researcher
+In reply to: pipeline-creation-review
+
+Fixture response from Researcher.
+
+Completed
+Opened a Project view.
+You → Researcher
+09:44 PM
+Run review · settings · Discussion only
+Discuss this version
+
+pipeline-preparation-review
+
+R
+Researcher
+In reply to: pipeline-preparation-review
+
+Fixture response from Researcher.
+
+Completed
+Conversation recipient
+Choose recipient
+To Researcher
+Message model
+fixture-model · unavailable
+Send
+Draft saved locally
+Enter to send · Shift+Enter for a new line

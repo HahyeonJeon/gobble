@@ -1,0 +1,4 @@
+{"op":"plan","defects":[{"code":"invalid-memory","unit":"trim","message":"invalid memory \"4GiB\"","paths":null}]}
+real 43.36
+user 0.01
+sys 0.03

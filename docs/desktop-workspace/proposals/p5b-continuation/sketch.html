@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Gobble · Continue a stopped analysis</title>
+    <link rel="stylesheet" href="sketch.css" />
+  </head>
+  <body>
+    <header class="appbar">
+      <strong><span class="brand">g</span> Read quality study</strong
+      ><span class="prototype">P5B design study · Simulated execution</span>
+    </header>
+    <nav class="scenarios" aria-label="Design scenarios">
+      <span>Scenario</span><button data-scene="ready">Ready</button
+      ><button data-scene="stopping">Stopping</button
+      ><button data-scene="stale">Review changed</button
+      ><button data-scene="blocked">Result missing</button
+      ><button data-scene="newer">Newer Current</button
+      ><button data-scene="older">Earlier engine</button
+      ><button data-scene="uncertain">Connection lost</button>
+    </nav>
+    <nav class="concepts" aria-label="Design approaches">
+      <button data-concept="context">A · In the Run view</button
+      ><button data-concept="guided">B · Guided review</button
+      ><span id="concept-note"></span>
+    </nav>
+    <nav class="regions" aria-label="Project regions">
+      <button data-area="workspace">Workspace</button
+      ><button data-area="chat">Chat</button>
+    </nav>
+    <div class="layout" data-area="workspace">
+      <aside class="rail" aria-label="Project navigation">
+        <small>PIPELINES</small
+        ><button data-action="current">◇ Read quality</button
+        ><small>ANALYSES</small
+        ><button data-action="origin" class="active">
+          ▷ Analysis 12 <span>Same analysis</span>
+        </button>
+        <div class="rail-note">
+          Review together.<br />Continue with clarity.
+        </div>
+      </aside>
+      <main id="workspace" tabindex="-1"></main>
+      <section class="chat" aria-label="Project chat">
+        <header>
+          <strong>Discussion</strong><span>● Research agent</span>
+        </header>
+        <div id="messages" class="messages"></div>
+        <div id="confirmation" class="confirmation"></div>
+        <div class="composer">
+          <div id="attachment"></div>
+          <label class="sr-only" for="draft">Message draft</label
+          ><textarea
+            id="draft"
+            rows="3"
+            placeholder="Discuss this analysis…"
+          ></textarea>
+          <footer>
+            <small>To Research agent</small
+            ><button id="send" class="primary">Send ↑</button>
+          </footer>
+        </div>
+      </section>
+    </div>
+    <div id="status" class="sr-only" role="status"></div>
+    <dialog id="capture">
+      <header>
+        <strong>Saved review reference</strong
+        ><button id="close-capture">Close</button>
+      </header>
+      <div id="capture-body"></div>
+    </dialog>
+    <script src="sketch.js"></script>
+  </body>
+</html>

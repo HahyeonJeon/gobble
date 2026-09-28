@@ -1,0 +1,8 @@
+
+Running 1 test using 1 worker
+
+(node:42045) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 desktop/tests/electron/linked-views.spec.ts:321:1 › frozen plot evidence reaches the protocol peer; Agent Show and Return use a temporary view without changing User selection (4.0s)
+
+  1 passed (4.4s)

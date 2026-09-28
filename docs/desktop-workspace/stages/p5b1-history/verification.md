@@ -1,0 +1,44 @@
+# P5B-1 verification
+
+Date: 2026-09-13 KST. Subject: the ten paths in `changed-paths.json`, against `before.json`; final identities in `after.json`. The existing branch contains extensive inherited modifications and untracked implementation. No broad staging, reset, commit or publication occurred.
+
+## Environment and effects
+
+Go module directive 1.26. Host compiler: Go 1.27.1 darwin/arm64. Actual engine test target: Linux amd64 through the already installed toolchain image `sha256:bccd458a724b795ac507e3dd0be43e8431269db2819fa544784d73dc751ba22b`, Go 1.26.8. Containers have no network or Docker socket, source/module cache mounts are read-only, and temporary test/build outputs are isolated under container `/tmp` and host `/tmp/gobble-p5b1-go-cache`. No engine runtime image was replaced or built; this is toolchain testing, not Trim/FastQC qualification. Existing Go caches and temporary compilation outputs were used within the authorized implementation/test scope. `GOTOOLCHAIN=local`, `GOPROXY=off`; no downloads.
+
+Author mode used no credentials and performed no external mutation. Test containers and temporary files are local disposable outputs; source writes are the approved history foundation and stage documentation.
+
+## Evidence
+
+| Check                             | Outcome and boundary                                                                                                                                                                                                                                         |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Initial host test of engine/CLI   | Cannot compile the inherited Linux-only `containerenv.useProjectOwner` on macOS. Moved engine verification to Linux; did not add a fake macOS runtime implementation                                                                                         |
+| Linux focused storage tests       | Passed; `focused-linux.log` covers history integrity, retention, downgrade, non-stopped rejection, old-format conversion and original Start/Resume guards                                                                                                    |
+| Final focused Linux race tests    | Passed, 2.821 s; `focused-final.log` additionally checks schema-1 wire compatibility and schema-2 origin/current-epoch separation. Synthetic scheduler, no scientific tasks                                                                                  |
+| Linux affected-package race suite | See `linux-race.log`; engine passed in 27.540 s and app service in 10.867 s. Aggregate exit 1: two packed-runner tests failed in `cmd/gobble` (230.025 s)                                                                                                    |
+| Linux full module regression      | See `linux-all.log`; aggregate exit 1: `assets.TestImportBan`, two `cmd/gobble` packed-runner tests and `tests/scenarios/design.TestProductSourceDependencyDirection` failed. Root package, engine, app service and scenario run/resume/stop packages passed |
+| Host App/service race tests       | Passed: `go test -race -count=1 ./internal/appservice ./cmd/gobble-service ./cmd/gobble-container`; app service 10.611 s, container launcher 1.556 s; service command has no test files                                                                      |
+| Linux CLI cross-build             | Passed: `GOOS=linux GOARCH=amd64 go build -o /tmp/gobble-p5b1 ./cmd/gobble` with host Go 1.27.1                                                                                                                                                              |
+| Full engine/CLI vet               | Reports two inherited unkeyed literals in unchanged `internal/engine/prepared.go:89` and `prepared_test.go:15`; see `vet-linux.log`. Not claimed as clean                                                                                                    |
+| Remaining engine/CLI vet checks   | Passed with `go vet -composites=false ./internal/engine ./internal/preparation ./cmd/gobble`, Linux target. This exception is specific and does not resolve the inherited warnings                                                                           |
+| Host App/service vet              | Passed: `go vet ./internal/appservice ./cmd/gobble-service ./cmd/gobble-container`                                                                                                                                                                           |
+| Formatting/diff                   | Scoped Go files formatted; `git diff --check` passed; documentation formatting checked separately                                                                                                                                                            |
+
+The first Linux compilation after adding the settled-state guard exposed an incorrect constant name (`StatusStopped` instead of existing `RunStopped`). Corrected the reference; all reported passing engine checks run after that correction. No failing path was hidden by relaxing the state guard.
+
+## Self-review coverage
+
+Project fit: implements the approved immutable same-Run origin/history boundary; no extra viewer/editor or automatic retry. Affected surfaces: preparation values, engine persistence/admission/inspection and old prepared Start tests co-touched; App and native service remain schema 1. Structure: shared value types in preparation, validation/epoch derivation in engine, persistence in the existing checkpoint writer; no new interface framework or second journal. Data/API: bounded history, explicit versions, no implicit schema conversion, immutable prefix and current lease validation. Concurrency: existing checkpoint lock publishes one coherent generation; this increment does not schedule continuation or claim output/owner liveness beyond recorded state. Compatibility: old wire format retained; new format readers reject downgrade and flat fallback. Delivery: baseline/final hashes distinguish task-owned delta from inherited dirty files.
+
+Test limits: injected receipt history isolates storage; it is not evidence that a stopped task can safely reuse output. No Agent provider, UI test, real Resume, tool process, interrupted-owner reconciliation, packaging or release was exercised. Last added test changes only test source; the final focused race run exercises it, while broad regression covers the unchanged final production sources.
+
+## Next acceptance boundary
+
+The next slice must construct a read-only review from actual sealed data/tool/output evidence, reject stale facts at admission, preserve old attempts, and bind one User intent to one durable receipt. Capability negotiation and UI enablement must wait for those engine invariants. The current App still has no enabled Resume action.
+
+## Broader failures retained
+
+- `assets.TestImportBan` includes pre-existing qualification/test source imports (`app/qualification/pipeline-flow/project/trim-review/pipeline.go`, `pipeline_creation_test.go`, `pipeline_review_test.go`). The direction checker likewise treats the existing external-package `assets/modules/trim-galore/inspection_test.go` self-import as a reverse product dependency. These files and ownership tests were not changed in P5B-1. This increment does not weaken or rewrite those repository-wide checks.
+- `TestPackPrintpipeArtifact` and `TestPackHostpipeEmptyInspectProtocol` fail in the emulated Linux environment with a child exiting 1 before a usable protocol result. A disposable Go overlay (only in `/tmp/gobble-p5b1-diagnostics`, never in repository sources) exposes the otherwise hidden protocol error; see `pack-protocol-diagnostic.log`. The failures also affect Compose before engine execution. A second diagnostic selects the existing file extraction fallback; the initial combined diagnostic is in `pack-fallback-diagnostic.log` (its added protocol printing affects one error assertion). The final fallback-only overlay, with unchanged tests and error forwarding, passed both tests in 9.374 s; see `pack-fallback-only.log`. This isolates the failures to the existing memfd execution path in this emulated environment rather than the history storage changes. Diagnostic overlays are not production fixes or passing stock packaging evidence.
+
+These failures prevent a clean whole-repository claim; they do not invalidate the focused storage/identity evidence. Packaging/native-amd64 qualification and the older source-policy check scope need their own follow-up. No App Resume enablement relies on these incomplete checks.

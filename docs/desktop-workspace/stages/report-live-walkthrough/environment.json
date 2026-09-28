@@ -1,0 +1,16 @@
+{
+  "engineId": "sha256:f5f69ad6d965fcbb2217dd89a621effc4b3a60f13a113781571915fee4b0c971",
+  "platform": "linux/amd64",
+  "engineSourceDrift": [
+    "distribution/runtime/Dockerfile",
+    "internal/appservice/platform_other.go",
+    "internal/appservice/platform_unix.go",
+    "internal/appservice/run_report.go",
+    "internal/appservice/run_report_live_test.go",
+    "internal/appservice/run_report_test.go"
+  ],
+  "head": "7fe3d5c9e10d0cc104a15b6e7aa3def0d15b98f1",
+  "agentRuntime": "0.153.4",
+  "provider": "Actual bundled Codex runtime, no executable override",
+  "initialSourceDigest": "a08c7b3a0366be5536b20c75f6c87fe842849f8328b637a46e81b3df388597b3"
+}

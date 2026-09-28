@@ -1,0 +1,1 @@
+qualification/pdf/decoder.ts(19,32): error TS2322: Type 'Worker' is not assignable to type 'null | undefined'.

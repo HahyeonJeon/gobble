@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gobble · Review a pipeline proposal</title>
+    <link rel="stylesheet" href="sketch.css" />
+  </head>
+  <body>
+    <div class="prototype">
+      <strong>DESIGN PREVIEW</strong
+      ><span>Illustrative values · local simulation · no Agent or source changes</span
+      ><label
+        >Concept
+        <select id="concept">
+          <option value="single">A · One flow, focused changes</option>
+          <option value="paired">B · Two flows together</option>
+        </select></label
+      ><label
+        >Scenario
+        <select id="scenario">
+          <option value="ready">Ready to review</option>
+          <option value="imported">First managed version</option>
+          <option value="incomplete">Unexplained change</option>
+          <option value="conflict">Current version changed</option>
+          <option value="checking">Checking proposal</option>
+          <option value="invalid">Check needs attention</option>
+          <option value="interrupted">Adoption interrupted</option>
+          <option value="new">New pipeline</option>
+        </select></label
+      ><button id="reset">Reset demo</button>
+    </div>
+    <header class="appbar">
+      <span class="brand" aria-hidden="true">▧</span><strong>Atlas RNA study</strong
+      ><span class="muted">⌄</span>
+      <div class="mobile-switch">
+        <button data-mobile="work" aria-pressed="true">Workspace</button
+        ><button data-mobile="chat" aria-pressed="false">Chat</button>
+      </div>
+      <span class="grow"></span><span class="account"><i></i> Account</span>
+    </header>
+    <div class="shell" data-mobile="work">
+      <nav class="nav" aria-label="Project navigation">
+        <div class="nav-title">⌄ &nbsp; Pipelines <span>1</span></div>
+        <button class="nav-selected">◈ &nbsp; RNA quality</button
+        ><button id="new-pipeline" class="quiet">＋ New pipeline</button>
+        <div class="nav-title">⌄ &nbsp; Files</div>
+        <div class="file">▤ &nbsp; samples.csv</div>
+        <div class="file">▤ &nbsp; study-notes.md</div>
+        <div class="nav-title runs">⌄ &nbsp; Runs</div>
+        <p class="muted">No analysis running</p>
+        <div class="project-note">One Project.<br />Shared work and discussion.</div>
+      </nav>
+      <main class="workspace" aria-label="Workspace">
+        <section class="surface" aria-label="Pipeline change review">
+          <header class="surfacebar">
+            <span>◈ &nbsp; RNA quality</span><span class="review-tab">Review proposal</span
+            ><span class="grow"></span
+            ><button class="quiet" aria-label="More pipeline actions" id="more">•••</button>
+          </header>
+          <div class="review-heading">
+            <div>
+              <div class="eyebrow" id="revision-line">PROPOSAL 3 · BASED ON VERSION 2</div>
+              <h1 id="proposal-title">Refine trimming and add a quality report</h1>
+            </div>
+            <span class="status" id="status">Ready to review</span>
+          </div>
+          <div id="notice" class="notice" hidden></div>
+          <div class="flowbar">
+            <div class="segmented" aria-label="Flow version">
+              <button id="current" aria-pressed="false">Current</button
+              ><button id="proposed" aria-pressed="true">Proposed</button>
+            </div>
+            <span class="muted" id="flow-context"
+              >3 steps · 1 input · 1 added · 1 setting changed</span
+            ><span class="grow"></span
+            ><button id="list-toggle" aria-pressed="false">Step list</button>
+          </div>
+          <div id="canvas" class="canvas" aria-label="Pipeline flow"></div>
+          <div class="legend">
+            <span><i class="dot neutral"></i> Existing</span
+            ><span><i class="dot changed"></i> Changed</span
+            ><span><i class="dot added"></i> Added</span><span class="grow"></span
+            ><span class="muted">Checked with example reads</span>
+          </div>
+          <div class="lower">
+            <section class="changes" aria-label="Changes">
+              <h2 id="changes-title">Changes <span>2</span></h2>
+              <div id="change-list"></div>
+            </section>
+            <section class="detail" aria-label="Selected change">
+              <div id="details"></div>
+              <button id="attach" class="outline">＋ Add to message</button>
+              <p id="attachment-feedback" class="muted" role="status"></p>
+            </section>
+          </div>
+          <footer class="decision">
+            <div>
+              <strong id="decision-summary">Use this exact proposal</strong>
+              <p id="decision-note">
+                Save it as the current pipeline version. Analysis starts separately.
+              </p>
+            </div>
+            <span class="grow"></span><button id="revise">Ask for revision</button
+            ><button id="accept" class="primary">Use proposal 3</button>
+          </footer>
+        </section>
+      </main>
+      <aside class="chat" aria-label="Project Chat">
+        <header>
+          <h2>Chat</h2>
+          <button class="quiet" id="agents">♧ &nbsp; Research partner</button>
+        </header>
+        <div class="conversation" id="conversation">
+          <div class="user-message">
+            Raise the quality threshold to 30 and add a quality report after trimming. Keep
+            alignment connected to the trimmed reads.
+          </div>
+          <article class="agent-message">
+            <div class="author"><span>G</span><strong>Research partner</strong></div>
+            <p>
+              I prepared proposal 3. The new quality report branches from the trimmed reads, so
+              alignment keeps its existing input.
+            </p>
+            <div class="proposal-card">
+              <span class="eyebrow">CHECKED PROPOSAL</span
+              ><strong>Trimming and read quality</strong>
+              <p>
+                Quality threshold &nbsp;25 → 30 Phred<br />Quality report &nbsp;Added after trimming
+              </p>
+              <button id="review-card">Review changes <span>↗</span></button>
+            </div>
+            <p class="muted attribution">
+              The Agent explains the intention. The change view shows the checked facts.
+            </p>
+          </article>
+        </div>
+        <div class="composer">
+          <div id="attachments" aria-label="Message attachments"></div>
+          <label class="sr-only" for="draft">Message draft</label
+          ><textarea id="draft" placeholder="Discuss the selected change…">
+Keep the alignment step as it is.</textarea>
+          <div class="composerbar">
+            <span>To Research partner</span><span class="grow"></span
+            ><button id="send" class="primary">Send ↑</button>
+          </div>
+          <p class="composer-note">One conversation · references retain their version</p>
+        </div>
+      </aside>
+    </div>
+    <div id="toast" class="toast" role="status" hidden></div>
+    <script src="sketch.js"></script>
+  </body>
+</html>

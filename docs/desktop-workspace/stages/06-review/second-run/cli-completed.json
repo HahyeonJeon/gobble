@@ -1,0 +1,46 @@
+{
+  "schema_version": 2,
+  "snapshot": "b4df96d733b74319ba04a8e647f91df1",
+  "pipeline": "hello-gobble",
+  "run": {
+    "id": "hello-gobble",
+    "status": "succeeded",
+    "schema_version": 2,
+    "occupancy": {
+      "active": true,
+      "host": "gobble-237637978b6080dc2ea448b0",
+      "pid": 149,
+      "started": "2026-09-07T12:21:47.972503096Z",
+      "live": false
+    },
+    "backend": "known",
+    "started": "2026-09-07T12:21:47.972503096Z",
+    "ended": "2026-09-07T12:21:48.049032263Z"
+  },
+  "tasks": [
+    {
+      "identity": "count-sequences",
+      "task_id": "count-sequences",
+      "name": "count-sequences",
+      "module": "",
+      "status": "succeeded",
+      "attempt": 1,
+      "executor": "process",
+      "image": "",
+      "command": [
+        "sh",
+        "-c",
+        "awk '/^>/{n++} END {print n+0}' inputs/sequences.fasta > results/sequence-count.txt"
+      ],
+      "resources": {
+        "cpu": 0,
+        "memory": ""
+      },
+      "started": "2026-09-07T12:21:47.987242471Z",
+      "ended": "2026-09-07T12:21:48.044643305Z",
+      "reason": "ready"
+    }
+  ],
+  "edges": [],
+  "logs": []
+}

@@ -1,0 +1,6 @@
+ok  	github.com/HahyeonJeon/gobble/internal/appservice	19.179s
+?   	github.com/HahyeonJeon/gobble/cmd/gobble-service	[no test files]
+ok  	github.com/HahyeonJeon/gobble/cmd/gobble-container	1.464s
+?   	github.com/HahyeonJeon/gobble/internal/modulecommand	[no test files]
+ok  	github.com/HahyeonJeon/gobble/internal/pipelinereview	1.571s
+?   	github.com/HahyeonJeon/gobble/internal/preparation	[no test files]

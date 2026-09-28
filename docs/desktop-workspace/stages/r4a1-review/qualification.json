@@ -1,0 +1,336 @@
+{
+  "request": "R4a1-2026-09-08",
+  "started": "2026-09-08T15:14:46.387Z",
+  "scope": "Isolated source-checkout Notebook qualification; no production/Agent/kernel/package claim",
+  "cases": [
+    {
+      "name": "Worker cancellation, deadline and two-read admission release resources",
+      "result": "passed",
+      "ms": 715.804083
+    },
+    {
+      "name": "Measured embedded-image source and 1000-cell parsing justify a named bounded transport",
+      "result": "passed",
+      "ms": 446.60816699999987,
+      "details": [
+        {
+          "name": "python",
+          "bytes": 2491,
+          "cells": 3,
+          "textBytes": 331,
+          "ms": 17.875583000000006
+        },
+        {
+          "name": "large",
+          "bytes": 3385667,
+          "cells": 3,
+          "textBytes": 331,
+          "ms": 106.59579199999962
+        },
+        {
+          "name": "many",
+          "bytes": 118760,
+          "cells": 1000,
+          "textBytes": 21780,
+          "ms": 29.781459000000268
+        },
+        {
+          "name": "text-limit",
+          "bytes": 1048760,
+          "cells": 1,
+          "textBytes": 1048576,
+          "ms": 58.566499999999905
+        }
+      ]
+    },
+    {
+      "name": "Actual saved Notebook through emitted sandbox bridge; passive source/output fallback",
+      "result": "passed",
+      "ms": 95.79841699999997,
+      "details": {
+        "cells": 3,
+        "revision": "sha256:0f7f80252f94fef60a2489f24b74a049d757dee5d84db33e43232b772cea9595"
+      }
+    },
+    {
+      "name": "Native text drag identifies the exact source range and captures it without changing draft",
+      "result": "passed",
+      "ms": 228.31662500000039
+    },
+    {
+      "name": "Visibility receipt excludes folded, offscreen and clipped text; scrolling expires earlier observations",
+      "result": "passed",
+      "ms": 181.54283299999952
+    },
+    {
+      "name": "PNG display and scaled pointer selection preserve natural pixel crop",
+      "result": "passed",
+      "ms": 271.78112500000043
+    },
+    {
+      "name": "Captured Show/Return preserves source reader scroll and draft; new source keeps old evidence",
+      "result": "passed",
+      "ms": 188.05925000000025
+    },
+    {
+      "name": "JPEG decode, malformed image refusal and Unicode raw quote",
+      "result": "passed",
+      "ms": 171.55004199999985
+    },
+    {
+      "name": "Host enforces text/pixel/encoded capture budgets and isolates returned view data",
+      "result": "passed",
+      "ms": 99.73595900000055,
+      "details": {
+        "text": {
+          "exact": 65536,
+          "over": "Text capture exceeds 64 KiB.",
+          "intact": "filter"
+        },
+        "pixels": {
+          "accepted": 1536,
+          "error": "Image capture exceeds 1536 pixels; select a smaller region."
+        },
+        "encodedBudget": "Separate high-entropy scenario"
+      }
+    },
+    {
+      "name": "High-entropy image capture refuses excessive bytes; native 4 MP decoding succeeds",
+      "result": "passed",
+      "ms": 407.4322090000005,
+      "details": [
+        {
+          "width": 600,
+          "height": 600,
+          "ms": 51.42095899999981,
+          "capture": "Image capture exceeds 768 KiB; select a smaller region."
+        },
+        {
+          "width": 2000,
+          "height": 2000,
+          "ms": 30.19379099999992,
+          "capture": "Image capture exceeds 1536 pixels; select a smaller region."
+        }
+      ]
+    },
+    {
+      "name": "Native keyboard source and image-region controls create exact captures",
+      "result": "passed",
+      "ms": 235.0147079999997
+    },
+    {
+      "name": "A 1 MiB source renders bounded text windows and advances exact absolute offsets",
+      "result": "passed",
+      "ms": 296.55974999999944,
+      "details": {
+        "ms": 224.65579199999956,
+        "sourceUnits": 1048576,
+        "renderedUnits": 2048
+      }
+    },
+    {
+      "name": "Native sender, bridge, network, popup and CSP boundaries",
+      "result": "passed",
+      "ms": 5.081457999999657
+    },
+    {
+      "name": "900x650 compact reader and 150% native zoom keep the composer reachable",
+      "result": "passed",
+      "ms": 152.38966699999946
+    },
+    {
+      "name": "Two readers remain independent, reject a third, and release workers on close",
+      "result": "passed",
+      "ms": 268.04012500000044,
+      "details": {
+        "readers": 2,
+        "metrics": [
+          {
+            "cpu": {
+              "cumulativeCPUUsage": 1.502994,
+              "percentCPUUsage": 4.6570199119212745,
+              "idleWakeupsPerSecond": 100
+            },
+            "pid": 9100,
+            "type": "Browser",
+            "creationTime": 1788880490114.736,
+            "memory": {
+              "workingSetSize": 248816,
+              "peakWorkingSetSize": 249872
+            },
+            "sandboxed": false
+          },
+          {
+            "cpu": {
+              "cumulativeCPUUsage": 0.375248,
+              "percentCPUUsage": 1.0415472790570222,
+              "idleWakeupsPerSecond": 226
+            },
+            "pid": 9101,
+            "type": "GPU",
+            "creationTime": 1788880490282.128,
+            "serviceName": "GPU",
+            "memory": {
+              "workingSetSize": 121600,
+              "peakWorkingSetSize": 166240
+            },
+            "sandboxed": true
+          },
+          {
+            "cpu": {
+              "cumulativeCPUUsage": 0.068773,
+              "percentCPUUsage": 0.008533343757329372,
+              "idleWakeupsPerSecond": 0
+            },
+            "pid": 9102,
+            "type": "Utility",
+            "creationTime": 1788880490284.743,
+            "serviceName": "network.mojom.NetworkService",
+            "name": "Network Service",
+            "memory": {
+              "workingSetSize": 43872,
+              "peakWorkingSetSize": 49568
+            },
+            "sandboxed": true
+          },
+          {
+            "cpu": {
+              "cumulativeCPUUsage": 0.779978,
+              "percentCPUUsage": 2.5692446791918258,
+              "idleWakeupsPerSecond": 69
+            },
+            "pid": 9103,
+            "type": "Tab",
+            "creationTime": 1788880490452.198,
+            "memory": {
+              "workingSetSize": 339280,
+              "peakWorkingSetSize": 348048
+            },
+            "sandboxed": true
+          },
+          {
+            "cpu": {
+              "cumulativeCPUUsage": 0.178493,
+              "percentCPUUsage": 0,
+              "idleWakeupsPerSecond": 0
+            },
+            "pid": 9114,
+            "type": "Tab",
+            "creationTime": 1788880492961.601,
+            "memory": {
+              "workingSetSize": 133904,
+              "peakWorkingSetSize": 133904
+            },
+            "sandboxed": true
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [],
+  "construction": "Strict TypeScript, bundled entries and pure tests passed (unit.log)",
+  "environment": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "versions": {
+      "node": "24.20.0",
+      "acorn": "8.18.0",
+      "ada": "4.0.0",
+      "amaro": "1.1.11",
+      "ares": "1.34.8",
+      "brotli": "1.2.0",
+      "cldr": "48.0",
+      "icu": "78.2",
+      "llhttp": "9.4.3",
+      "merve": "1.2.2",
+      "modules": "149",
+      "napi": "10",
+      "nbytes": "0.1.4",
+      "ncrypto": "0.0.1",
+      "nghttp2": "1.70.0",
+      "nghttp3": "",
+      "ngtcp2": "",
+      "openssl": "0.0.0",
+      "simdjson": "4.6.6",
+      "simdutf": "7.7.0",
+      "sqlite": "3.53.4",
+      "tz": "2025c",
+      "undici": "7.29.0",
+      "unicode": "17.0",
+      "uv": "1.52.1",
+      "uvwasi": "0.0.23",
+      "v8": "15.2.124.19-electron.0",
+      "zlib": "1.3.2.1-motley",
+      "zstd": "1.6.0",
+      "electron": "44.2.0",
+      "chrome": "152.0.7977.76"
+    },
+    "metrics": [
+      {
+        "cpu": {
+          "cumulativeCPUUsage": 0.311651,
+          "percentCPUUsage": 0,
+          "idleWakeupsPerSecond": 0
+        },
+        "pid": 9100,
+        "type": "Browser",
+        "creationTime": 1788880490114.736,
+        "memory": {
+          "workingSetSize": 172848,
+          "peakWorkingSetSize": 172848
+        },
+        "sandboxed": false
+      },
+      {
+        "cpu": {
+          "cumulativeCPUUsage": 0.1088,
+          "percentCPUUsage": 0,
+          "idleWakeupsPerSecond": 0
+        },
+        "pid": 9101,
+        "type": "GPU",
+        "creationTime": 1788880490282.128,
+        "serviceName": "GPU",
+        "memory": {
+          "workingSetSize": 68688,
+          "peakWorkingSetSize": 68704
+        },
+        "sandboxed": true
+      },
+      {
+        "cpu": {
+          "cumulativeCPUUsage": 0.06659,
+          "percentCPUUsage": 0,
+          "idleWakeupsPerSecond": 0
+        },
+        "pid": 9102,
+        "type": "Utility",
+        "creationTime": 1788880490284.743,
+        "serviceName": "network.mojom.NetworkService",
+        "name": "Network Service",
+        "memory": {
+          "workingSetSize": 49568,
+          "peakWorkingSetSize": 49568
+        },
+        "sandboxed": true
+      },
+      {
+        "cpu": {
+          "cumulativeCPUUsage": 0.122711,
+          "percentCPUUsage": 0,
+          "idleWakeupsPerSecond": 0
+        },
+        "pid": 9103,
+        "type": "Tab",
+        "creationTime": 1788880490452.198,
+        "memory": {
+          "workingSetSize": 106672,
+          "peakWorkingSetSize": 106672
+        },
+        "sandboxed": true
+      }
+    ]
+  },
+  "status": "passed",
+  "finished": "2026-09-08T15:14:53.215Z"
+}

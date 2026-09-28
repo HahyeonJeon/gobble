@@ -1,0 +1,40 @@
+
+Running 2 tests using 1 worker
+
+(node:78794) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 desktop/tests/electron/creation-agent-acceptance.spec.ts:10:1 › Creation: signed-in Agent proposes, reads and points; User adopts without a Run (4.5m)
+(node:79286) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  2 desktop/tests/electron/pipeline-proposals.spec.ts:8:1 › B comparison: scoped Agent proposal, exact chat reference, adoption and restart (1.0m)
+
+
+  1) desktop/tests/electron/creation-agent-acceptance.spec.ts:10:1 › Creation: signed-in Agent proposes, reads and points; User adopts without a Run 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('.creation-view').getByRole('button', { name: /Researcher: Quality threshold reviewed:/ })
+    Expected: visible
+    Timeout: 180000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" locator('.creation-view').getByRole('button', { name: /Researcher: Quality threshold reviewed:/ }) with timeout 180000ms
+      - waiting for locator('.creation-view').getByRole('button', { name: /Researcher: Quality threshold reviewed:/ })
+
+
+      101 |     await expect(
+      102 |       view.getByRole('button', { name: /Researcher: Quality threshold reviewed:/ }),
+    > 103 |     ).toBeVisible({
+          |       ^
+      104 |       timeout: 180000,
+      105 |     });
+      106 |     await expect(
+        at /Users/hahyeon/.codex/.chatgpt-projects/g-p-6a9bae3a3ef481919aec253b9710060a/gobble/app/desktop/tests/electron/creation-agent-acceptance.spec.ts:103:7
+
+    Error Context: test-results/electron/creation-agent-acceptance--36383-s-User-adopts-without-a-Run/error-context.md
+
+  1 failed
+    desktop/tests/electron/creation-agent-acceptance.spec.ts:10:1 › Creation: signed-in Agent proposes, reads and points; User adopts without a Run 
+  1 interrupted
+    desktop/tests/electron/pipeline-proposals.spec.ts:8:1 › B comparison: scoped Agent proposal, exact chat reference, adoption and restart 

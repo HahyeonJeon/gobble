@@ -1,0 +1,74 @@
+{
+  "checkedAt": "2026-09-07T14:17:17.018Z",
+  "scope": "Synthetic concept sketch only; no real provider, file mutation, or analysis",
+  "browser": "Installed Google Chrome, isolated headless context",
+  "results": [
+    {
+      "theme": "light",
+      "width": 1022,
+      "scrollWidth": 1022,
+      "points": 6,
+      "selected": "3 selected · Gene A, Gene C, Gene F",
+      "sent": "Gene A, Gene C · v7 · Exact selection",
+      "agent": "Gene BAgent reference-1.70.002",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 734,
+      "scrollWidth": 734,
+      "points": 6,
+      "selected": "3 selected · Gene A, Gene C, Gene F",
+      "sent": "Gene A, Gene C · v7 · Exact selection",
+      "agent": "Gene BAgent reference-1.70.002",
+      "overflow": 0
+    },
+    {
+      "theme": "light",
+      "width": 358,
+      "scrollWidth": 358,
+      "points": 6,
+      "selected": "3 selected · Gene A, Gene C, Gene F",
+      "sent": "Gene A, Gene C · v7 · Exact selection",
+      "agent": "Gene BAgent reference-1.70.002",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 1022,
+      "scrollWidth": 1022,
+      "points": 6,
+      "selected": "3 selected · Gene A, Gene C, Gene F",
+      "sent": "Gene A, Gene C · v7 · Exact selection",
+      "agent": "Gene BAgent reference-1.70.002",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 734,
+      "scrollWidth": 734,
+      "points": 6,
+      "selected": "3 selected · Gene A, Gene C, Gene F",
+      "sent": "Gene A, Gene C · v7 · Exact selection",
+      "agent": "Gene BAgent reference-1.70.002",
+      "overflow": 0
+    },
+    {
+      "theme": "dark",
+      "width": 358,
+      "scrollWidth": 358,
+      "points": 6,
+      "selected": "3 selected · Gene A, Gene C, Gene F",
+      "sent": "Gene A, Gene C · v7 · Exact selection",
+      "agent": "Gene BAgent reference-1.70.002",
+      "overflow": 0
+    }
+  ],
+  "pageErrors": [],
+  "additionalChecks": {
+    "plotClickSelectsExactRow": true,
+    "keyboardSelectionRetainsFocus": true,
+    "attachmentRemovalDoesNotSend": true,
+    "focusAndRestorePreserveSelection": true
+  }
+}

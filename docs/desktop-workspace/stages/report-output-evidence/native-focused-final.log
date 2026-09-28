@@ -1,0 +1,5 @@
+--- FAIL: TestRunReportHTTPReturnsVerifiedBytesWithoutExecution (0.19s)
+    run_report_test.go:106: {  0 {0     0     0} } <nil>
+FAIL
+FAIL	github.com/HahyeonJeon/gobble/internal/appservice	3.998s
+FAIL

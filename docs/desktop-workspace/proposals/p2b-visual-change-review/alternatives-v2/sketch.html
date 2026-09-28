@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gobble · Three ways to review a change</title>
+    <link rel="stylesheet" href="sketch.css" />
+  </head>
+  <body>
+    <header class="preview-bar">
+      <span class="preview-label">DESIGN STUDY <span>02</span></span>
+      <div class="concepts" role="group" aria-label="Compare design concepts">
+        <button data-concept="stacked" aria-pressed="true"><b>A</b> Stacked flows</button>
+        <button data-concept="spotlight" aria-pressed="false"><b>B</b> Change spotlight</button>
+        <button data-concept="diff" aria-pressed="false"><b>C</b> Visual diff</button>
+      </div>
+      <span class="preview-note">Interactive sketch · illustrative data</span>
+    </header>
+    <header class="app-bar">
+      <span class="brand" aria-hidden="true">g.</span><strong>Atlas RNA study</strong
+      ><span class="chevron">⌄</span>
+      <span class="crumb">/ &nbsp; RNA quality</span>
+      <div class="compact-tabs">
+        <button data-mobile="work" aria-pressed="true">Workspace</button
+        ><button data-mobile="chat" aria-pressed="false">Chat</button>
+      </div>
+      <span class="app-state">Project saved</span>
+    </header>
+    <div class="app" data-mobile="work">
+      <nav class="rail" aria-label="Project navigation">
+        <button title="Project files" aria-label="Project files">▤</button>
+        <button class="active" title="Pipelines" aria-label="Pipelines">◇</button>
+        <button title="Runs" aria-label="Runs">▷</button>
+      </nav>
+      <main class="workspace" aria-label="Pipeline proposal review">
+        <header class="review-header">
+          <div>
+            <div class="eyebrow" id="review-version">PROPOSAL 3 · BASED ON VERSION 2</div>
+            <h1 id="concept-title">See both versions together</h1>
+            <p id="concept-description">
+              Current above, Proposed below. The same step stays in the same position.
+            </p>
+          </div>
+          <label class="scenario-label"
+            ><span class="sr-only">Preview state</span
+            ><select id="scenario" aria-label="Preview state">
+              <option value="ready">Ready to review</option>
+              <option value="incomplete">Unexplained change</option>
+              <option value="conflict">Current version changed</option>
+            </select></label
+          >
+        </header>
+        <div id="notice" class="notice" role="status" hidden></div>
+        <div class="change-toolbar">
+          <div class="change-tabs" role="group" aria-label="Changes">
+            <button data-change="quality" aria-pressed="true">
+              <span class="change-number amber">1</span> Quality threshold
+              <span class="small-diff"><del>25</del> → <ins>30</ins></span></button
+            ><button data-change="report" aria-pressed="false">
+              <span class="change-number green">2</span> <span>Quality check</span
+              ><span class="added-word">+ Added</span>
+            </button>
+          </div>
+          <span class="change-count">2 changes</span>
+        </div>
+        <div id="review-body" class="review-body"></div>
+        <footer class="review-footer">
+          <div>
+            <strong id="decision-label">Use this reviewed version</strong
+            ><span id="decision-note">Checked with example reads. Analysis starts separately.</span>
+          </div>
+          <button id="revise" class="secondary">Ask for revision</button
+          ><button id="adopt" class="primary">Use proposal 3</button>
+        </footer>
+      </main>
+      <aside class="chat" aria-label="Project Chat">
+        <header>
+          <h2>Chat</h2>
+          <span class="agent-label"><i></i> Research partner <span>⌄</span></span>
+        </header>
+        <div class="conversation" id="conversation">
+          <div class="user-message">
+            Raise the quality threshold to 30 and add a quality report after trimming. Keep
+            alignment as it is.
+          </div>
+          <article class="agent-message">
+            <div class="author"><span>g</span><strong>Research partner</strong></div>
+            <p>I made two changes:</p>
+            <button class="chat-change" data-chat-change="quality">
+              <span class="change-number amber">1</span
+              ><span><strong>Raise the quality threshold</strong><small>25 → 30 Phred</small></span
+              ><span>↗</span></button
+            ><button class="chat-change" data-chat-change="report">
+              <span class="change-number green">2</span
+              ><span
+                ><strong>Add a quality check</strong
+                ><small>A new branch after trimming</small></span
+              ><span>↗</span>
+            </button>
+            <p class="assurance">Alignment still receives the same trimmed reads.</p>
+          </article>
+          <p class="demo-note">Local preview · no Agent connected</p>
+        </div>
+        <div class="composer">
+          <div id="attachments" aria-label="Message attachments"></div>
+          <label for="draft" class="sr-only">Message draft</label
+          ><textarea id="draft" placeholder="Ask about this change…">
+Keep the alignment step as it is.</textarea>
+          <div class="composer-footer">
+            <span id="composer-hint">Discuss any highlighted change</span
+            ><button class="primary" id="send" aria-label="Send message">↑</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div id="toast" role="status" class="toast" hidden></div>
+    <script src="sketch.js"></script>
+  </body>
+</html>

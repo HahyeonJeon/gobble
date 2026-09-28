@@ -1,0 +1,11 @@
+
+> gobble-app-workspace@0.1.0 typecheck
+> tsc -p contracts/tsconfig.json && npm run typecheck --workspace @gobble/desktop && tsc -p tsconfig.tools.json
+
+
+> @gobble/desktop@0.1.0 typecheck
+> tsc -p tsconfig.main.json && tsc -p tsconfig.preload.json && tsc -p tsconfig.renderer.json
+
+desktop/tests/electron/notebook.spec.ts(73,49): error TS2339: Property 'createRange' does not exist on type '() => Promise<{ collaboration?: { submissions: { evidence?: { capture?: { kind: "notebook"; capturedAt: number; representation: { kind: "text"; notebook: true; truncated: false; } | { kind: "image"; width: number; ... 4 more ...; crop: { ...; }; }; asset: { ...; }; } | { ...; } | { ...; }; ... 7 more ...; asset: { ....'.
+desktop/tests/electron/notebook.spec.ts(73,74): error TS2339: Property 'createRange' does not exist on type '() => Promise<{ collaboration?: { submissions: { evidence?: { capture?: { kind: "notebook"; capturedAt: number; representation: { kind: "text"; notebook: true; truncated: false; } | { kind: "image"; width: number; ... 4 more ...; crop: { ...; }; }; asset: { ...; }; } | { ...; } | { ...; }; ... 7 more ...; asset: { ....'.
+desktop/tests/notebook-host.test.ts(61,82): error TS2345: Argument of type '30' is not assignable to parameter of type '5000'.

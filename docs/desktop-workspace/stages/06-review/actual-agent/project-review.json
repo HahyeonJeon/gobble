@@ -1,0 +1,304 @@
+{
+  "schemaVersion": 2,
+  "paneOrientation": "vertical",
+  "workspace": {
+    "schemaVersion": 1,
+    "projectId": "prj_DXT6JIS3LZCPFX6BEA7ZMUURGS",
+    "revision": 24,
+    "agents": [
+      {
+        "projectId": "prj_DXT6JIS3LZCPFX6BEA7ZMUURGS",
+        "agentId": "agt_028ea0e8-a8e6-46a6-887d-289fdf0105e6",
+        "name": "Integration reviewer",
+        "instructionProfile": "discussion-v1",
+        "access": "sharedViews",
+        "configuration": {
+          "model": "gpt-6-astra",
+          "effort": "medium",
+          "instructions": "Review this validation Project using the shared-view tools. Describe only evidence observed in the current turn. Inspect image content before describing it. Keep replies brief and distinguish engine output from separately prepared review material."
+        },
+        "provider": {
+          "kind": "codex",
+          "threadId": "01a07be5-541f-7040-85c5-e370ab9bc6dd",
+          "accountSessionId": "95802682-84c0-451b-ae34-8bcc4965d157",
+          "toolsetVersion": "shared-views-v2"
+        }
+      }
+    ],
+    "surfaces": [
+      {
+        "projectId": "prj_DXT6JIS3LZCPFX6BEA7ZMUURGS",
+        "surfaceId": "srf_8992acd9-a8d8-4ea6-b2d2-3f0178a3241f",
+        "resource": {
+          "kind": "file",
+          "resourceId": "res_27f62fa2c1c3e9bda771100034cdef216667f88690d469b9bb5ab645595bef9c"
+        },
+        "view": "text",
+        "pinned": false,
+        "openedBy": {
+          "kind": "user"
+        }
+      },
+      {
+        "projectId": "prj_DXT6JIS3LZCPFX6BEA7ZMUURGS",
+        "surfaceId": "srf_4ccd92f9-9baf-47c1-bd3a-6e59ce9c54b1",
+        "resource": {
+          "kind": "file",
+          "resourceId": "res_fc80f6bb4cf7fcb7d4425d3c02524d2340587f697791c105b8c0588f86cc2959"
+        },
+        "view": "image",
+        "pinned": false,
+        "openedBy": {
+          "kind": "user"
+        }
+      },
+      {
+        "projectId": "prj_DXT6JIS3LZCPFX6BEA7ZMUURGS",
+        "surfaceId": "srf_1e778b17-3e43-4937-bbe3-1b0d6ec06401",
+        "resource": {
+          "kind": "run",
+          "runRef": "run_XEYF75SDVUTAWQH7G4QQSG5NWO"
+        },
+        "view": "run",
+        "pinned": false,
+        "openedBy": {
+          "kind": "user"
+        }
+      }
+    ],
+    "layout": {
+      "kind": "split",
+      "primary": {
+        "tabs": [
+          "srf_8992acd9-a8d8-4ea6-b2d2-3f0178a3241f",
+          "srf_1e778b17-3e43-4937-bbe3-1b0d6ec06401"
+        ],
+        "activeSurfaceId": "srf_1e778b17-3e43-4937-bbe3-1b0d6ec06401"
+      },
+      "secondary": {
+        "tabs": [
+          "srf_4ccd92f9-9baf-47c1-bd3a-6e59ce9c54b1"
+        ],
+        "activeSurfaceId": "srf_4ccd92f9-9baf-47c1-bd3a-6e59ce9c54b1"
+      },
+      "primaryFraction": 0.5
+    },
+    "decisions": [
+      {
+        "kind": "question",
+        "projectId": "prj_DXT6JIS3LZCPFX6BEA7ZMUURGS",
+        "decisionId": "dec_52cd8436e8ea41e764828cf9a9bc9e95fc944ccf24decac8",
+        "requestedBy": "agt_028ea0e8-a8e6-46a6-887d-289fdf0105e6",
+        "question": "Should we retain the observed Run and chart for this integration review?",
+        "options": [
+          "Retain both",
+          "Do not retain"
+        ],
+        "evidence": [
+          {
+            "attachmentId": "att_afb3873b-9350-46d3-91b5-632e15ab13dc",
+            "evidence": {
+              "projectId": "prj_DXT6JIS3LZCPFX6BEA7ZMUURGS",
+              "surfaceId": "srf_1e778b17-3e43-4937-bbe3-1b0d6ec06401",
+              "resource": {
+                "kind": "run",
+                "runRef": "run_XEYF75SDVUTAWQH7G4QQSG5NWO"
+              },
+              "dataRevision": "79b946b370efc70d879d2d3bd42ccc2a"
+            },
+            "createdAt": 1788785039376,
+            "label": "Run preview",
+            "capturedAt": 1788785039376,
+            "representation": {
+              "kind": "run",
+              "truncated": false
+            },
+            "asset": {
+              "hash": "sha256:c0c71ee6db2255a0fcafc172ec2a2f81d8c74d234dd691eff7821e9594e9bc8f",
+              "byteLength": 578,
+              "mediaType": "application/json"
+            }
+          },
+          {
+            "attachmentId": "att_b406c479-f132-4976-8c76-008494972b7f",
+            "evidence": {
+              "projectId": "prj_DXT6JIS3LZCPFX6BEA7ZMUURGS",
+              "surfaceId": "srf_4ccd92f9-9baf-47c1-bd3a-6e59ce9c54b1",
+              "resource": {
+                "kind": "file",
+                "resourceId": "res_fc80f6bb4cf7fcb7d4425d3c02524d2340587f697791c105b8c0588f86cc2959"
+              },
+              "dataRevision": "sha256:8654596352d580cafd03c854a530d04c68633819880498d8ee7bfcdb342b90f3"
+            },
+            "createdAt": 1788785039397,
+            "label": "sequence-lengths.png",
+            "capturedAt": 1788785039397,
+            "representation": {
+              "kind": "image",
+              "width": 1200,
+              "height": 660,
+              "originalWidth": 1200,
+              "originalHeight": 660,
+              "crop": {
+                "x": 0,
+                "y": 0,
+                "width": 1200,
+                "height": 660
+              }
+            },
+            "asset": {
+              "hash": "sha256:e4a1dda4ee0b69cd9429cfb91b01f23bf4934e2a758a5f72d2077a531ef9778d",
+              "byteLength": 32088,
+              "mediaType": "image/png"
+            }
+          }
+        ],
+        "originSubmissionId": "req_f96ae320-f730-473a-a769-097b2ddda0b9",
+        "createdAt": 1788785058047,
+        "invocation": {
+          "identity": "52cd8436e8ea41e764828cf9a9bc9e95fc944ccf24decac8ca51026e4e9d85e3",
+          "digest": "8dc53820cccfa9993072c608fec2fd628c1cc95b5d8fafcb2dfa137824ee7a0f"
+        },
+        "state": {
+          "kind": "answered",
+          "submissionId": "req_1cddb687-4fd3-404e-b4e6-bf1030e01c5e",
+          "answeredAt": 1788785110594
+        }
+      }
+    ]
+  },
+  "titles": [
+    {
+      "surfaceId": "srf_8992acd9-a8d8-4ea6-b2d2-3f0178a3241f",
+      "title": "integration-result.txt"
+    },
+    {
+      "surfaceId": "srf_4ccd92f9-9baf-47c1-bd3a-6e59ce9c54b1",
+      "title": "sequence-lengths.png"
+    },
+    {
+      "surfaceId": "srf_1e778b17-3e43-4937-bbe3-1b0d6ec06401",
+      "title": "live"
+    }
+  ],
+  "activePane": "primary",
+  "maximizedPane": null,
+  "chat": {
+    "collapsed": false,
+    "width": 420,
+    "draft": "",
+    "recipientAgentId": "agt_028ea0e8-a8e6-46a6-887d-289fdf0105e6",
+    "attachmentRevision": 3
+  },
+  "selections": [],
+  "activity": [
+    {
+      "id": "req_d6a1dd63-1114-40ba-839f-a36615f6d527",
+      "text": "Opened a Project view.",
+      "at": 1788784904016
+    },
+    {
+      "id": "req_0123c768-d1c2-4a1c-be40-c26741a6897b",
+      "text": "Opened a Project view.",
+      "at": 1788784904160
+    },
+    {
+      "id": "req_ca6f236c-870c-4afb-a306-e84dd5a38f0f",
+      "text": "Opened a Project view.",
+      "at": 1788785001528
+    }
+  ],
+  "receipts": [
+    {
+      "requestId": "req_d6a1dd63-1114-40ba-839f-a36615f6d527",
+      "digest": "1b80ab49ad54c0a7fa0e916c00a3eecb16bbeba1ef9c80d4d4a1fac0b33c6ad4"
+    },
+    {
+      "requestId": "req_0123c768-d1c2-4a1c-be40-c26741a6897b",
+      "digest": "064553f77e806167bf58a3a561d1efd118dff0c934701a20e887b0688a74c3cc"
+    },
+    {
+      "requestId": "req_713a9657-bb57-4889-9832-b257691db99f",
+      "digest": "ca827d48f7f257f8752a7981801be8b2f5eab20b3007e72f5904fc44fc59d921"
+    },
+    {
+      "requestId": "req_ca6f236c-870c-4afb-a306-e84dd5a38f0f",
+      "digest": "155d277027138ed8d7ea06babfa237390c70f663046095e4708a9e194078f2a4"
+    },
+    {
+      "requestId": "req_b02734c6-ffcc-4159-ae89-424ff9b0f625",
+      "digest": "c4c4df6e019a02b0f5e4273d6924d91b2f4888e57344df9d1a616a92ad061ece"
+    },
+    {
+      "requestId": "req_fbbdab2d-66f7-4d15-b486-32986c0f58d4",
+      "digest": "cb32f25194baadae10b2441668df819563d139de187f0d5f090b3e090a29db9b"
+    }
+  ],
+  "collaboration": {
+    "submissions": [
+      {
+        "requestId": "req_f96ae320-f730-473a-a769-097b2ddda0b9",
+        "agentId": "agt_028ea0e8-a8e6-46a6-887d-289fdf0105e6",
+        "text": "Use workspace_list and workspace_observe to inspect the actual Run and image in the two visible panes. Report the Run status, task attempt and any displayed warning. Inspect the returned image, then describe the bar labels, heights and colors. Publish one pointer to the second bar using its observation evidence. Create exactly one evidence-backed question with workspace_question asking whether to retain the Run and chart for this integration review; offer two short suggestions. Keep the final reply concise and finish after saving the question.",
+        "model": "gpt-6-astra",
+        "effort": "medium",
+        "createdAt": 1788785022107,
+        "responseStartedAt": 1788785028266,
+        "state": "completed",
+        "threadId": "01a07be5-541f-7040-85c5-e370ab9bc6dd",
+        "turnId": "01a07be5-54ba-7a20-800e-28bf9f459dcd",
+        "response": "I\u2019ll inspect both visible panes, mark the second bar, and save one review question backed by the observations.\n\nRun `hello-gobble` succeeded. Task `count-sequences` succeeded on attempt 1, with displayed warning/reason `log-copy-failed`.\n\nThe review chart shows `sequence-one` in blue and `sequence-two` in orange, both 8 nt tall. The chart is separate review material; the Run observation contains engine status.\n\nPublished a pointer to the second bar and saved one evidence-backed retention question with suggestions \u201cRetain both\u201d and \u201cDo not retain.\u201d",
+        "problem": null
+      },
+      {
+        "requestId": "req_1cddb687-4fd3-404e-b4e6-bf1030e01c5e",
+        "agentId": "agt_028ea0e8-a8e6-46a6-887d-289fdf0105e6",
+        "text": "Retain both as integration-review evidence. Keep the log-copy-failed warning visible in the record; successful analysis does not mean log finalization was clean. Confirm the second bar\u2019s label and color in one sentence, without another question.",
+        "replyToQuestionId": "dec_52cd8436e8ea41e764828cf9a9bc9e95fc944ccf24decac8",
+        "model": "gpt-6-astra",
+        "effort": "medium",
+        "createdAt": 1788785110593,
+        "responseStartedAt": 1788785115606,
+        "state": "completed",
+        "threadId": "01a07be5-541f-7040-85c5-e370ab9bc6dd",
+        "turnId": "01a07be6-ae59-71b0-9e37-d95b38e198c8",
+        "response": "Retain both as integration-review evidence, preserving `log-copy-failed` because analysis success does not establish clean log finalization; the review chart\u2019s second bar is labelled `sequence-two` and colored orange.",
+        "problem": null
+      }
+    ]
+  },
+  "sharedReferences": [
+    {
+      "referenceId": "ref_f2dc969b-df8f-4dfe-9ba0-ecfed4b5cfb1",
+      "evidence": {
+        "projectId": "prj_DXT6JIS3LZCPFX6BEA7ZMUURGS",
+        "surfaceId": "srf_4ccd92f9-9baf-47c1-bd3a-6e59ce9c54b1",
+        "resource": {
+          "kind": "file",
+          "resourceId": "res_fc80f6bb4cf7fcb7d4425d3c02524d2340587f697791c105b8c0588f86cc2959"
+        },
+        "dataRevision": "sha256:8654596352d580cafd03c854a530d04c68633819880498d8ee7bfcdb342b90f3",
+        "selection": {
+          "kind": "image",
+          "contentHash": "sha256:8654596352d580cafd03c854a530d04c68633819880498d8ee7bfcdb342b90f3",
+          "originalWidth": 1200,
+          "originalHeight": 660,
+          "x": 0.6883333333333334,
+          "y": 0.3212121212121212,
+          "width": 0.26416666666666666,
+          "height": 0.6106060606060606
+        }
+      },
+      "note": "Second bar: sequence-two, orange, labelled 8 nt. Pointer marks the visible bar region in the review chart.",
+      "author": {
+        "kind": "agent",
+        "agentId": "agt_028ea0e8-a8e6-46a6-887d-289fdf0105e6",
+        "name": "Integration reviewer"
+      },
+      "createdAt": 1788785056612,
+      "retracted": false,
+      "originSubmissionId": "req_f96ae320-f730-473a-a769-097b2ddda0b9",
+      "label": "sequence-lengths.png"
+    }
+  ]
+}

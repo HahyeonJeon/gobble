@@ -1,0 +1,81 @@
+Skip to workspace
+Read quality acceptance
+Selections
+0
+Account
+Pipelines
+＋ New pipelineDrafts
+◇ sample.fastq.gz
+
+Import an existing analysis to explore its flow.
+
+Import pipeline
+Files
+Project files
+sample.fastq.gz
+Runs
+Existing analyses
+
+No runs attached
+
+Workspace ready
+New pipeline
+More
+New pipeline
+Draft · Not yet a Pipeline
+Refresh
+Discard draft
+sample.fastq.gz · Single-end reads
+Change data
+Discuss this draft
+● Analysis engine connected
+Design it together in Chat
+
+Describe your goal to the right and enable a proposal for that message. Your Agent’s checked flow will appear here.
+
+Start with trimming single-end reads and a FastQC quality report.
+
+Added to your next message.
+
+Chat
+Agents
+0
+Work together in this Project
+
+Choose an agent and start a conversation about your work.
+
+Opened a Project view.
+New pipeline · Selected data
+Remove
+Allow a new Pipeline proposal for this message
+Discuss your goal. Enable proposals when you are ready.
+Conversation recipient
+No agent connected
+Send
+Draft saved locally
+Enter to send · Shift+Enter for a new line
+Add agent
+Close
+Name
+Role instructions
+Model
+GPT-6-Astra
+GPT-5.6-Sol
+GPT-5.6-Terra
+GPT-5.6-Luna
+GPT-5.5
+GPT-5.3-Codex-Spark
+Reasoning effort
+low
+medium
+high
+xhigh
+max
+ultra
+Project access
+Messages only
+Shared views
+
+Each agent keeps its own conversation. Shared views stay with the Project.
+
+Add agent

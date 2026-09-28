@@ -1,0 +1,1143 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Gobble · Run dependencies sketch</title>
+    <style>
+      :root {
+        font:
+          13px/1.5 -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        color: #25372f;
+        background: #f6f7f4;
+        --line: #dce2dc;
+        --teal: #176967;
+        --soft: #e8f2ef;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+      }
+      button,
+      select,
+      textarea {
+        font: inherit;
+        color: inherit;
+      }
+      button,
+      select {
+        background: white;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 6px 10px;
+        cursor: pointer;
+        min-height: 32px;
+      }
+      button:hover:not(:disabled) {
+        border-color: #94b6ac;
+        background: #f0f6f3;
+      }
+      button:focus-visible,
+      textarea:focus-visible {
+        outline: 2px solid var(--teal);
+        outline-offset: 2px;
+      }
+      button:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+      button[aria-pressed="true"],
+      .selected {
+        background: var(--soft);
+        border-color: var(--teal);
+        color: var(--teal);
+      }
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+      h1 {
+        font-size: 17px;
+      }
+      h2 {
+        font-size: 14px;
+      }
+      h3 {
+        font-size: 13px;
+      }
+      small,
+      .muted {
+        font-size: 11px;
+        color: #63746a;
+      }
+      .row,
+      header,
+      .tools {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .grow {
+        flex: 1;
+      }
+      .demo {
+        padding: 8px 14px;
+        background: #eaf0e7;
+        border-bottom: 1px solid #cbd8c7;
+        flex-wrap: wrap;
+        min-height: 48px;
+      }
+      .demo strong {
+        font-size: 12px;
+      }
+      .demo button,
+      .demo select {
+        font-size: 11px;
+        min-height: 28px;
+        padding: 3px 8px;
+      }
+      .demo span {
+        font-size: 10px;
+      }
+      .project {
+        padding: 10px 18px;
+        background: #fafcf9;
+        border-bottom: 1px solid var(--line);
+        height: 56px;
+      }
+      .project h1 {
+        flex: 1;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 150px minmax(470px, 1fr) 340px;
+        height: calc(100dvh - 104px);
+        min-height: 580px;
+      }
+      aside {
+        border-right: 1px solid var(--line);
+        padding: 18px 12px;
+      }
+      aside section {
+        margin-bottom: 24px;
+      }
+      aside p {
+        padding: 6px 8px;
+        font-size: 12px;
+      }
+      main {
+        padding: 10px;
+        display: grid;
+        grid-template-rows: minmax(340px, 1.4fr) minmax(180px, 1fr);
+        gap: 10px;
+        min-height: 0;
+        min-width: 0;
+      }
+      .pane {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: white;
+        min-width: 0;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .panehead {
+        min-height: 40px;
+        padding: 5px 10px;
+        border-bottom: 1px solid var(--line);
+      }
+      .panehead h2 {
+        flex: 1;
+      }
+      .tools {
+        padding: 7px 10px;
+        border-bottom: 1px solid var(--line);
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .tools button {
+        padding: 4px 8px;
+        font-size: 11px;
+      }
+      .source {
+        padding: 4px 10px;
+        font-size: 10px;
+        color: #68736b;
+      }
+      .graph {
+        display: grid;
+        grid-template-columns: minmax(110px, 1fr) 36px minmax(
+            125px,
+            1.15fr
+          ) 36px minmax(110px, 1fr);
+        align-items: center;
+        gap: 6px;
+        padding: 16px 12px;
+        min-height: 120px;
+        flex: 1;
+        overflow: auto;
+        background: radial-gradient(#e1e9e1 0.75px, transparent 0.75px) 0 0/15px
+          15px;
+      }
+      .node {
+        text-align: left;
+        min-height: 74px;
+        padding: 10px;
+        white-space: normal;
+        box-shadow: 0 2px 3px #19362b06;
+      }
+      .node strong {
+        display: block;
+        font-size: 12px;
+      }
+      .node .id {
+        font-size: 10px;
+        color: #718074;
+      }
+      .node small {
+        display: block;
+        font-size: 10px;
+        margin-top: 5px;
+      }
+      .edge {
+        padding: 3px 0;
+        font-size: 21px;
+        line-height: 1;
+        min-height: 38px;
+        border-style: dashed;
+        border-color: #b8c8bf;
+        background: #fff9;
+      }
+      .agent-mark {
+        outline: 2px dashed #956015;
+        outline-offset: 3px;
+        background: #fff2da !important;
+        color: #835111 !important;
+      }
+      .target {
+        padding: 8px 10px;
+        border-top: 1px solid var(--line);
+        background: #fbfcfa;
+      }
+      .description {
+        font-size: 11px;
+        margin: 3px 0 5px;
+        color: #65736a;
+      }
+      .instances {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+      }
+      .instances button {
+        padding: 4px 7px;
+        min-height: 28px;
+        font-size: 10px;
+      }
+      .instances small {
+        display: block;
+        font-size: 10px;
+      }
+      .failed {
+        color: #a84d39;
+      }
+      .actions {
+        display: flex;
+        gap: 6px;
+        padding-top: 7px;
+        align-items: center;
+      }
+      .actions button {
+        font-size: 11px;
+      }
+      .primary {
+        background: var(--teal);
+        color: white;
+        border-color: var(--teal);
+      }
+      .reference {
+        padding: 7px 10px;
+        background: #fff4df;
+        border-bottom: 1px solid #dfc696;
+        font-size: 11px;
+      }
+      .reference strong {
+        display: block;
+      }
+      .reference button {
+        font-size: 11px;
+        margin-left: auto;
+      }
+      .log {
+        padding: 12px;
+        flex: 1;
+        overflow: auto;
+        font:
+          12px/1.9 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          monospace;
+        white-space: pre-wrap;
+      }
+      .logfooter {
+        padding: 7px 10px;
+        border-top: 1px solid var(--line);
+      }
+      .chat {
+        border-left: 1px solid var(--line);
+        display: flex;
+        flex-direction: column;
+        background: white;
+        min-height: 0;
+      }
+      .chathead {
+        padding: 12px 15px;
+        border-bottom: 1px solid var(--line);
+      }
+      .messages {
+        padding: 16px;
+        flex: 1;
+        overflow: auto;
+        min-height: 0;
+      }
+      .message p {
+        font-size: 12px;
+        margin-top: 8px;
+      }
+      .avatar {
+        background: var(--soft);
+        color: var(--teal);
+        display: inline-grid;
+        place-items: center;
+        border-radius: 50%;
+        width: 25px;
+        height: 25px;
+        margin-right: 5px;
+      }
+      .pointer {
+        border: 1px solid #e1e6df;
+        border-left: 3px solid #956015;
+        background: #f8faf6;
+        border-radius: 6px;
+        padding: 10px;
+        margin-top: 20px;
+      }
+      .pointer p {
+        font-size: 12px;
+        margin-top: 6px;
+      }
+      .pointer button {
+        margin-top: 8px;
+        font-size: 11px;
+      }
+      .composer {
+        border-top: 1px solid var(--line);
+        padding: 12px;
+      }
+      .composer textarea {
+        width: 100%;
+        height: 85px;
+        resize: vertical;
+        min-height: 60px;
+        max-height: 160px;
+        border: 1px solid #b9d2c7;
+        border-radius: 7px;
+        padding: 10px;
+      }
+      .composer .row {
+        margin-top: 7px;
+        font-size: 11px;
+      }
+      .attachments {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        padding-bottom: 8px;
+      }
+      .attachment {
+        padding: 4px 8px;
+        border: 1px solid #c6dacf;
+        background: #f1f7f2;
+        font-size: 10px;
+      }
+      .notice {
+        padding: 8px 10px;
+        color: #824b20;
+        background: #fff6e9;
+        font-size: 11px;
+        border-bottom: 1px solid #e5d9c8;
+      }
+      .empty {
+        padding: 20px;
+        color: #627266;
+        display: grid;
+        gap: 8px;
+        place-content: center;
+        flex: 1;
+      }
+      .dep-list {
+        padding: 12px;
+        display: grid;
+        gap: 8px;
+        flex: 1;
+        align-content: center;
+      }
+      .dep-list button {
+        text-align: left;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 11px;
+      }
+      td,
+      th {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid var(--line);
+      }
+      td button {
+        font-size: 11px;
+      }
+      .scroll {
+        overflow: auto;
+        min-height: 0;
+        flex: 1;
+      }
+      .pane-switch,
+      .mobile-switch {
+        display: none;
+      }
+      .concept-note {
+        padding: 5px 10px;
+        background: #f1f5ef;
+        font-size: 11px;
+      }
+      dialog {
+        max-width: 620px;
+        width: 90%;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 20px;
+        color: inherit;
+      }
+      dialog::backdrop {
+        background: #1a312c55;
+      }
+      dialog pre {
+        white-space: pre-wrap;
+        font-size: 11px;
+        max-height: 55vh;
+        overflow: auto;
+      }
+      dialog header {
+        margin-bottom: 12px;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      .alternate .inline-target {
+        display: none;
+      }
+      .alternate .graph {
+        min-height: 170px;
+      }
+      @media (max-width: 1100px) {
+        .layout {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        aside,
+        .layout .chat {
+          display: none;
+        }
+        .mobile-switch {
+          display: flex;
+        }
+        .show-chat main {
+          display: none;
+        }
+        .show-chat .chat {
+          display: flex;
+        }
+      }
+      @media (max-height: 710px) {
+        .layout {
+          height: calc(100dvh - 140px);
+          min-height: 420px;
+        }
+        main {
+          display: flex;
+          flex-direction: column;
+        }
+        .pane {
+          flex: 1;
+        }
+        main[data-pane="run"] .lower {
+          display: none;
+        }
+        main[data-pane="logs"] .upper {
+          display: none;
+        }
+        .pane-switch {
+          display: flex;
+          padding: 3px 10px;
+        }
+        .graph {
+          min-height: 115px;
+        }
+      }
+      @media (max-width: 650px) {
+        .demo span {
+          display: none;
+        }
+        .project {
+          padding: 8px;
+        }
+        .project h1 {
+          font-size: 14px;
+        }
+        .graph {
+          grid-template-columns: 125px 32px 140px 32px 125px;
+          justify-content: start;
+        }
+        .layout {
+          height: auto;
+          min-height: 550px;
+        }
+        main {
+          height: 620px;
+        }
+        .chat {
+          min-height: 600px;
+        }
+      }
+
+      /* Keep source labels readable while the temporary reference view locks selection. */
+      .node:disabled,
+      .edge:disabled {
+        opacity: 1;
+      }
+      body {
+        height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .demo,
+      .project,
+      .pane-switch,
+      .panehead,
+      .tools,
+      .source,
+      .target,
+      .reference,
+      .notice,
+      .logfooter,
+      .concept-note {
+        flex-shrink: 0;
+      }
+      .layout {
+        height: auto;
+        min-height: 0;
+        flex: 1;
+      }
+      body:has(.show-chat) .pane-switch {
+        display: none;
+      }
+      @media (max-width: 650px) {
+        main {
+          height: auto;
+          display: flex;
+          flex-direction: column;
+        }
+        .pane {
+          flex: 1;
+        }
+        main[data-pane="run"] .lower {
+          display: none;
+        }
+        main[data-pane="logs"] .upper {
+          display: none;
+        }
+        .pane-switch {
+          display: flex;
+          padding: 3px 10px;
+        }
+        .chat {
+          min-height: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="demo">
+      <strong>R3b design sketch</strong
+      ><span>Synthetic data · No engine or Agent calls</span
+      ><select aria-label="Compare concepts" id="concept">
+        <option value="a">A · One Run view + logs (recommended)</option>
+        <option value="b">B · Separate graph + instance list</option></select
+      ><span class="grow"></span
+      ><button id="agent-demo">Add simulated Agent pointer</button
+      ><button id="advance">Advance source</button
+      ><button id="unavailable">Missing topology</button
+      ><button id="reset">Reset</button>
+    </header>
+    <header class="project">
+      <span aria-hidden="true">▥</span>
+      <h1>RNA-seq study</h1>
+      <div class="mobile-switch">
+        <button id="workspace-tab" aria-pressed="true">Workspace</button
+        ><button id="chat-tab" aria-pressed="false">Chat</button>
+      </div>
+      <small>Account ●</small>
+    </header>
+    <nav class="pane-switch" aria-label="Pane">
+      <button id="run-pane-tab" aria-pressed="true">Run</button
+      ><button id="logs-pane-tab" aria-pressed="false">Logs / instances</button>
+    </nav>
+    <div class="layout" id="layout">
+      <aside aria-label="Project navigation">
+        <section>
+          <h2>Files</h2>
+          <p>▤ samples.csv</p>
+          <p>▤ notes.md</p>
+          <p>▱ results</p>
+        </section>
+        <section>
+          <h2>Runs</h2>
+          <p style="background: #e8f2ef; border-radius: 5px">
+            ◉ Pilot analysis
+          </p>
+        </section>
+        <small
+          >Design sketch<br />Only the represented controls are
+          interactive.</small
+        >
+      </aside>
+      <main id="main" data-pane="run">
+        <section class="pane upper" aria-label="Run view">
+          <header class="panehead">
+            <h2 id="run-title">Pilot analysis</h2>
+            <small>Observed Run</small>
+          </header>
+          <div id="reference" class="reference row" hidden>
+            <div>
+              <strong>Reference view · Researcher</strong
+              ><span>Your view and selection are saved.</span>
+            </div>
+            <button id="return">Return to my view</button>
+          </div>
+          <div id="notice" class="notice" role="status" hidden></div>
+          <div class="tools">
+            <button id="tasks" aria-pressed="false">Tasks</button
+            ><button id="dependencies" aria-pressed="true">Dependencies</button
+            ><span class="grow"></span
+            ><button id="list" aria-pressed="false">Dependency list</button>
+          </div>
+          <div class="source" id="source"></div>
+          <div id="graph" class="graph" aria-label="Task dependencies">
+            <button class="node" data-group="prepare">
+              <strong>Prepare samples</strong><span class="id">prepare</span
+              ><small>1 completed</small></button
+            ><button
+              class="edge"
+              data-edge="prepare,align"
+              aria-label="Select dependency Prepare samples to Align reads"
+            >
+              →</button
+            ><button class="node" data-group="align">
+              <strong>Align reads</strong><span class="id">align</span
+              ><small id="align-count">2 completed · 1 failed</small></button
+            ><button
+              class="edge"
+              data-edge="align,report"
+              aria-label="Select dependency Align reads to Quality report"
+            >
+              →</button
+            ><button class="node" data-group="report">
+              <strong>Quality report</strong><span class="id">report</span
+              ><small>1 pending</small>
+            </button>
+          </div>
+          <div id="dep-list" class="dep-list" hidden>
+            <button data-edge="prepare,align">
+              Prepare samples → Align reads</button
+            ><button data-edge="align,report">
+              Align reads → Quality report
+            </button>
+          </div>
+          <div id="task-list" class="scroll" hidden></div>
+          <div id="missing" class="empty" hidden>
+            <h3>Dependencies unavailable</h3>
+            <p>This observation has no topology information.</p>
+            <small>Tasks and logs remain available.</small>
+          </div>
+          <div class="target inline-target" id="target"></div>
+        </section>
+        <section class="pane lower" aria-label="Companion view">
+          <header class="panehead">
+            <h2 id="lower-title">align:S03 · attempt 2</h2>
+            <small id="lower-kind">Log preview</small>
+          </header>
+          <p class="concept-note" id="alternate-note" hidden></p>
+          <div id="lower-list" class="scroll" hidden></div>
+          <div id="log-tools" class="tools">
+            <button id="stderr" aria-pressed="true">stderr</button
+            ><button id="stdout" aria-pressed="false">stdout</button
+            ><span class="grow"></span><small>Preview · up to 4096 bytes</small>
+          </div>
+          <div id="log" class="log" tabindex="0" aria-label="Log excerpt"></div>
+          <footer id="log-footer" class="logfooter row">
+            <small class="grow" id="log-source">Captured log observation</small
+            ><button id="discuss-log">Discuss excerpt</button>
+          </footer>
+        </section>
+      </main>
+      <section class="chat" aria-label="Project chat">
+        <header class="chathead row">
+          <h2 class="grow">Chat</h2>
+          <small>Agents 1</small>
+        </header>
+        <div class="messages">
+          <article class="message">
+            <strong><span class="avatar">R</span>Researcher</strong>
+            <p>
+              Explore the reported Task dependencies, then choose an exact
+              instance to inspect its logs.
+            </p>
+            <p class="muted">
+              A Task group may contain several samples and attempts. An arrow
+              alone does not explain a failure.
+            </p>
+          </article>
+          <article class="pointer" id="pointer" hidden>
+            <strong>Researcher pointed to a dependency</strong>
+            <p>Align reads → Quality report</p>
+            <small id="pointer-version"></small>
+            <p>
+              This is a reported Task dependency. It does not establish an
+              instance-level failure cause.
+            </p>
+            <button id="show">Show in view</button>
+          </article>
+        </div>
+        <div class="composer">
+          <div class="attachments" id="attachments"></div>
+          <textarea
+            aria-label="Message draft"
+            id="draft"
+            placeholder="Discuss this analysis with Researcher…"
+          ></textarea>
+          <div class="row">
+            <span>To Researcher</span><span class="grow"></span
+            ><button disabled title="This sketch does not send messages">
+              Send
+            </button>
+          </div>
+          <small id="draft-status">Draft stays local in this sketch.</small>
+        </div>
+      </section>
+    </div>
+    <dialog id="details">
+      <header>
+        <h2 class="grow">Captured target · sketch data</h2>
+        <button id="close-details">Close</button>
+      </header>
+      <pre id="details-body"></pre>
+      <small>No source data or messages leave this page.</small>
+    </dialog>
+    <script>
+      const $ = (s) => document.querySelector(s);
+      const $$ = (s) => [...document.querySelectorAll(s)];
+      const names = {
+        prepare: "Prepare samples",
+        align: "Align reads",
+        report: "Quality report",
+      };
+      let version = "A",
+        mode = "dependencies",
+        list = false,
+        concept = "a",
+        missing = false;
+      let selected = { kind: "group", taskId: "align" },
+        agent = null,
+        reference = false,
+        saved = null;
+      let attachments = [],
+        stream = "stderr",
+        companion = "logs";
+      let logObservation = {
+        version: "A",
+        id: "align:S03",
+        taskId: "align",
+        attempt: 2,
+        status: "failed",
+      };
+      const members = () => [
+        { id: "prepare", taskId: "prepare", attempt: 1, status: "completed" },
+        { id: "align:S01", taskId: "align", attempt: 1, status: "completed" },
+        { id: "align:S02", taskId: "align", attempt: 1, status: "completed" },
+        {
+          id: "align:S03",
+          taskId: "align",
+          attempt: version === "A" ? 2 : 3,
+          status: version === "A" ? "failed" : "completed",
+        },
+        { id: "report", taskId: "report", attempt: 0, status: "pending" },
+      ];
+      const title = (t) =>
+        !t
+          ? "No target selected"
+          : t.kind === "group"
+            ? names[t.taskId] + " · Task group"
+            : t.kind === "edge"
+              ? names[t.from] + " → " + names[t.to]
+              : t.id +
+                " · attempt " +
+                t.attempt +
+                (t.kind === "log" ? " · " + t.stream + " excerpt" : "");
+      function setCompactChat(show) {
+        $("#layout").classList.toggle("show-chat", show);
+        $("#workspace-tab").setAttribute("aria-pressed", !show);
+        $("#chat-tab").setAttribute("aria-pressed", show);
+      }
+      function setPane(pane) {
+        $("#main").dataset.pane = pane;
+        $("#run-pane-tab").setAttribute("aria-pressed", pane === "run");
+        $("#logs-pane-tab").setAttribute("aria-pressed", pane === "logs");
+      }
+      function select(t) {
+        if (reference) return;
+        selected = t;
+        render();
+      }
+      function buttons(t) {
+        const group =
+          t?.kind === "group" || t?.kind === "task" ? t.taskId : null;
+        return group
+          ? members()
+              .filter((m) => m.taskId === group)
+              .map(
+                (m) =>
+                  `<button data-member="${m.id}" class="${t.kind === "task" && t.id === m.id ? "selected" : ""}">${m.id} · ${m.attempt ? "attempt " + m.attempt : "not started"}<small class="${m.status === "failed" ? "failed" : ""}">${m.status}</small></button>`,
+              )
+              .join("")
+          : "";
+      }
+      function table() {
+        return (
+          "<table><thead><tr><th>Instance</th><th>Attempt</th><th>Observed state</th></tr></thead><tbody>" +
+          members()
+            .map(
+              (t) =>
+                `<tr><td><button data-member="${t.id}">${t.id}</button></td><td>${t.attempt || "Not started"}</td><td class="${t.status === "failed" ? "failed" : ""}">${t.status}</td></tr>`,
+            )
+            .join("") +
+          "</tbody></table>"
+        );
+      }
+      function target(t) {
+        const tag = !t
+          ? ""
+          : t.kind === "edge"
+            ? "Directed Task pair"
+            : t.kind === "group"
+              ? "Observed group"
+              : "Exact instance / attempt";
+        const description = !t
+          ? "Choose a group, dependency or instance."
+          : t.kind === "edge"
+            ? "Reported dependency · No instance-level routing or causal claim"
+            : t.kind === "group"
+              ? t.taskId === "align"
+                ? "3 observed instances · 1 template shown separately"
+                : "1 observed instance"
+              : "This selection addresses one observed attempt.";
+        return `<div class="row"><strong class="grow">${title(t)}</strong><small>${tag}</small></div><div class="description">${description}</div><div class="instances">${buttons(t)}</div><div class="actions"><small class="grow">${t?.taskId === "align" ? "Template: expanded · no attempt logs" : ""}</small><button data-open-logs ${t?.kind !== "task" || t.attempt < 1 ? "disabled" : ""}>Open logs</button><button class="primary" data-discuss ${!t ? "disabled" : ""}>Discuss ${t?.kind === "group" ? "group" : t?.kind === "edge" ? "dependency" : "task"}</button></div>`;
+      }
+      function logText() {
+        const t = logObservation;
+        if (t.status === "failed")
+          return stream === "stderr"
+            ? `ERROR: ${t.id} alignment failed\nCheck the input read pair.\nNo downstream cause is inferred.`
+            : `Read ${t.id}\nAligner exited with code 1`;
+        return stream === "stderr"
+          ? ""
+          : `${t.id}\nAttempt ${t.attempt} completed`;
+      }
+      function render() {
+        const t = reference ? agent.target : selected;
+        document.body.classList.toggle("alternate", concept === "b");
+        $("#run-title").textContent =
+          concept === "a" ? "Pilot analysis" : "Pilot analysis · Dependencies";
+        $("#source").textContent = missing
+          ? "Topology unavailable · Task observations retained"
+          : `Snapshot ${version} · 3 groups · 2 reported dependencies · 5 instances · 1 template`;
+        $("#align-count").textContent =
+          version === "A" ? "2 completed · 1 failed" : "3 completed";
+        $("#tasks").setAttribute("aria-pressed", mode === "tasks");
+        $("#dependencies").setAttribute(
+          "aria-pressed",
+          mode === "dependencies",
+        );
+        $("#list").setAttribute("aria-pressed", list);
+        $("#list").disabled = mode !== "dependencies" || missing || reference;
+        for (const id of [
+          "#tasks",
+          "#dependencies",
+          "#advance",
+          "#unavailable",
+          "#concept",
+          "#agent-demo",
+          "#show",
+        ])
+          $(id).disabled = reference;
+        $("#graph").hidden = mode !== "dependencies" || list || missing;
+        $("#dep-list").hidden = mode !== "dependencies" || !list || missing;
+        $("#missing").hidden = !(missing && mode === "dependencies");
+        $("#task-list").hidden = mode !== "tasks";
+        $("#task-list").innerHTML = table();
+        $("#target").innerHTML = target(t);
+        $("#reference").hidden = !reference;
+        $$("[data-group]").forEach((b) => {
+          const hit = t?.kind === "group" && t.taskId === b.dataset.group;
+          b.classList.toggle("selected", hit && !reference);
+          b.classList.toggle("agent-mark", hit && reference);
+          b.disabled = reference;
+          b.setAttribute("aria-pressed", hit);
+        });
+        $$("[data-edge]").forEach((b) => {
+          const hit =
+            t?.kind === "edge" && b.dataset.edge === t.from + "," + t.to;
+          b.classList.toggle("selected", hit && !reference);
+          b.classList.toggle("agent-mark", hit && reference);
+          b.disabled = reference;
+          b.setAttribute("aria-pressed", hit);
+        });
+        const lower = concept === "b" && companion === "instances";
+        $("#lower-list").hidden = !lower;
+        $("#lower-list").innerHTML =
+          '<div class="target">' + target(selected) + "</div>" + table();
+        $("#alternate-note").hidden = concept !== "b";
+        $("#alternate-note").textContent = lower
+          ? "Concept B: the second pane holds the instance list."
+          : "Concept B: the instance list was replaced to show logs.";
+        $("#lower-title").textContent = lower
+          ? "Observed instances"
+          : logObservation.id + " · attempt " + logObservation.attempt;
+        $("#lower-kind").textContent = lower ? "Separate view" : "Log preview";
+        for (const id of ["#log-tools", "#log", "#log-footer"])
+          $(id).hidden = lower;
+        $("#stderr").setAttribute("aria-pressed", stream === "stderr");
+        $("#stdout").setAttribute("aria-pressed", stream === "stdout");
+        $("#log").textContent =
+          logText() || "No stderr bytes in this synthetic preview.";
+        $("#log-source").textContent =
+          `Snapshot ${logObservation.version} · Captured attempt ${logObservation.attempt}`;
+        $("#discuss-log").disabled = reference || !logText();
+        $("#pointer").hidden = !agent;
+        if (agent)
+          $("#pointer-version").textContent =
+            "Observed snapshot " + agent.version + " · Simulated Agent";
+        $("#attachments").innerHTML = attachments
+          .map(
+            (a, i) =>
+              `<button class="attachment" data-attachment="${i}">${a.label} · ${a.version}</button>`,
+          )
+          .join("");
+        $("#draft-status").textContent = attachments.length
+          ? attachments.length + " captured target(s) · No message sent"
+          : "Draft stays local in this sketch.";
+        if (reference)
+          $$("[data-member],[data-discuss],[data-open-logs]").forEach(
+            (b) => (b.disabled = true),
+          );
+      }
+      function capture(t, sourceVersion = version) {
+        attachments.push({
+          label: title(t),
+          version: sourceVersion,
+          target: structuredClone(t),
+          metadata: {
+            project: "RNA-seq study",
+            run: "Pilot analysis",
+            snapshot: sourceVersion,
+            semantics:
+              t.kind === "edge"
+                ? "observed-authored-task-pair"
+                : t.kind === "group"
+                  ? "observed-authored-task-group"
+                  : t.kind === "log"
+                    ? "synthetic-log-byte-range"
+                    : "observed-instance-attempt",
+            members:
+              t.kind === "group"
+                ? members().filter((m) => m.taskId === t.taskId)
+                : undefined,
+            completeness:
+              "Complete synthetic fixture; production previews must declare their own bounds",
+          },
+        });
+        render();
+        setCompactChat(true);
+        $("#draft").focus();
+      }
+      document.addEventListener("click", (e) => {
+        const b = e.target.closest("button");
+        if (!b || b.disabled) return;
+        if (b.dataset.group) select({ kind: "group", taskId: b.dataset.group });
+        if (b.dataset.edge) {
+          const [from, to] = b.dataset.edge.split(",");
+          select({ kind: "edge", from, to });
+        }
+        if (b.dataset.member)
+          select({
+            kind: "task",
+            ...members().find((t) => t.id === b.dataset.member),
+          });
+        if (b.hasAttribute("data-discuss") && selected) capture(selected);
+        if (b.hasAttribute("data-open-logs") && selected?.kind === "task") {
+          logObservation = { version, ...structuredClone(selected) };
+          companion = "logs";
+          setPane("logs");
+          render();
+        }
+        if (b.dataset.attachment !== undefined) {
+          $("#details-body").textContent = JSON.stringify(
+            attachments[Number(b.dataset.attachment)],
+            null,
+            2,
+          );
+          $("#details").showModal();
+        }
+      });
+      $("#concept").onchange = (e) => {
+        concept = e.target.value;
+        companion = concept === "b" ? "instances" : "logs";
+        render();
+      };
+      $("#tasks").onclick = () => {
+        mode = "tasks";
+        render();
+      };
+      $("#dependencies").onclick = () => {
+        mode = "dependencies";
+        render();
+      };
+      $("#list").onclick = () => {
+        list = !list;
+        render();
+      };
+      $("#agent-demo").onclick = () => {
+        agent = {
+          version,
+          target: { kind: "edge", from: "align", to: "report" },
+        };
+        render();
+      };
+      $("#show").onclick = () => {
+        if (reference) return;
+        if (agent.version !== version || missing) {
+          setCompactChat(false);
+          setPane("run");
+          $("#notice").hidden = false;
+          $("#notice").textContent =
+            `${missing ? "Topology unavailable" : "Earlier observation"} · This pointer targets snapshot ${agent.version}. No current highlight was applied.`;
+          return;
+        }
+        saved = {
+          mode,
+          list,
+          selected: structuredClone(selected),
+          pane: $("#main").dataset.pane,
+          chat: $("#layout").classList.contains("show-chat"),
+        };
+        reference = true;
+        mode = "dependencies";
+        list = false;
+        setCompactChat(false);
+        setPane("run");
+        render();
+        $("#return").focus();
+      };
+      $("#return").onclick = () => {
+        reference = false;
+        ({ mode, list, selected } = saved);
+        setPane(saved.pane);
+        setCompactChat(saved.chat);
+        render();
+        const candidates =
+          selected?.kind === "group"
+            ? $$(`[data-group="${selected.taskId}"]`)
+            : selected?.kind === "edge"
+              ? $$(`[data-edge="${selected.from},${selected.to}"]`)
+              : $$(`[data-member="${selected?.id}"]`);
+        const b = candidates.find((b) => b.checkVisibility());
+        if (b) b.focus();
+        else if ($("#draft").checkVisibility()) $("#draft").focus();
+        else $("#workspace-tab").focus();
+      };
+      $("#advance").onclick = () => {
+        if (version === "B") return;
+        version = "B";
+        selected = null;
+        $("#notice").hidden = false;
+        $("#notice").textContent =
+          "Source advanced to snapshot B. Existing attachments and logs retain their captured source; local selection cleared.";
+        render();
+      };
+      $("#unavailable").onclick = () => {
+        missing = !missing;
+        if (missing && selected?.kind !== "task") selected = null;
+        $("#unavailable").textContent = missing
+          ? "Restore topology"
+          : "Missing topology";
+        render();
+      };
+      $("#reset").onclick = () => location.reload();
+      $("#stderr").onclick = () => {
+        stream = "stderr";
+        render();
+      };
+      $("#stdout").onclick = () => {
+        stream = "stdout";
+        render();
+      };
+      $("#discuss-log").onclick = () => {
+        const excerpt = logText();
+        if (excerpt)
+          capture(
+            {
+              kind: "log",
+              id: logObservation.id,
+              attempt: logObservation.attempt,
+              taskId: logObservation.taskId,
+              stream,
+              range: {
+                unit: "utf8-byte",
+                start: 0,
+                endExclusive: new TextEncoder().encode(excerpt).length,
+              },
+              excerpt,
+            },
+            logObservation.version,
+          );
+      };
+      $("#close-details").onclick = () => $("#details").close();
+      $("#workspace-tab").onclick = () => setCompactChat(false);
+      $("#chat-tab").onclick = () => setCompactChat(true);
+      $("#run-pane-tab").onclick = () => setPane("run");
+      $("#logs-pane-tab").onclick = () => setPane("logs");
+      render();
+    </script>
+  </body>
+</html>
