@@ -230,15 +230,15 @@ func (d *Docker) Reconcile(ctx context.Context, h Handle) (Report, error) {
 }
 
 func (d *Docker) finishStopped(ctx context.Context, h Handle, exit int) (Report, error) {
-	if err := d.stopLogs(ctx, h.RuntimeID); err != nil {
-		return Report{Identity: h.Identity, RuntimeID: h.RuntimeID}, err
-	}
 	msg := ""
 	if exit != 0 {
 		msg = "exit " + strconv.Itoa(exit)
 	}
 	r := Report{Identity: h.Identity, RuntimeID: h.RuntimeID, Exit: exit, Message: msg, Running: false}
-	if err := writeDockerLogs(ctx, h); err != nil {
+	if err := d.finishLogs(ctx, h); err != nil {
+		if ctx.Err() != nil {
+			return Report{Identity: h.Identity, RuntimeID: h.RuntimeID}, ctx.Err()
+		}
 		r.Reason = "log-copy-failed"
 	}
 	if err := removeDockerContainer(ctx, h.RuntimeID); err == nil {
