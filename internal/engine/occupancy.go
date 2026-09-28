@@ -141,7 +141,7 @@ func claimOccupy(root string) (*os.File, []Defect) {
 	if err := os.MkdirAll(root, 0o755); err != nil {
 		return nil, pathDefects(err)
 	}
-	f, err := os.OpenFile(filepath.Join(root, occupyLockFile), os.O_CREATE|os.O_RDWR, 0o644)
+	f, err := openLockFile(filepath.Join(root, occupyLockFile), os.O_CREATE|os.O_RDWR, 0o644)
 	if err != nil {
 		return nil, pathDefects(err)
 	}
@@ -288,7 +288,7 @@ func ownerLive(workspace string) bool {
 
 func flockHeld(workspace string) bool {
 	path := filepath.Join(workspace, ControlDir, occupyLockFile)
-	f, err := os.OpenFile(path, os.O_RDWR, 0)
+	f, err := os.Open(path)
 	if err != nil {
 		return false
 	}

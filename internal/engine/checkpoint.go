@@ -92,7 +92,7 @@ func checkpointLock(workspace string, write bool) (*os.File, error) {
 	if write {
 		flag = os.O_CREATE | os.O_RDWR
 	}
-	f, err := os.OpenFile(path, flag|syscall.O_NOFOLLOW, 0o600)
+	f, err := openLockFile(path, flag|syscall.O_NOFOLLOW, 0o600)
 	if err != nil {
 		return nil, err
 	}
