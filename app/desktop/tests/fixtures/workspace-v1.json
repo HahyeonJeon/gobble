@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "workspace": {
+    "schemaVersion": 1,
+    "projectId": "prj_atlas",
+    "revision": 7,
+    "agents": [],
+    "surfaces": [
+      {
+        "projectId": "prj_atlas",
+        "surfaceId": "srf_legacy",
+        "resource": { "kind": "log", "runRef": "run_first", "taskId": "align:S03", "attempt": 2 },
+        "view": "log",
+        "pinned": true,
+        "openedBy": { "kind": "user" }
+      }
+    ],
+    "layout": {
+      "kind": "single",
+      "primary": { "tabs": ["srf_legacy"], "activeSurfaceId": "srf_legacy" }
+    },
+    "decisions": []
+  },
+  "titles": [{ "surfaceId": "srf_legacy", "title": "align:S03 · attempt 2" }],
+  "activePane": "primary",
+  "maximizedPane": null,
+  "discussion": {
+    "collapsed": false,
+    "height": 240,
+    "draft": "Keep this draft",
+    "recipientAgentId": null
+  },
+  "selections": [
+    {
+      "projectId": "prj_atlas",
+      "surfaceId": "srf_legacy",
+      "resource": { "kind": "log", "runRef": "run_first", "taskId": "align:S03", "attempt": 2 },
+      "dataRevision": "revision-7",
+      "selection": {
+        "kind": "text",
+        "start": { "line": 1, "column": 0 },
+        "end": { "line": 1, "column": 4 }
+      }
+    }
+  ],
+  "activity": [],
+  "receipts": []
+}

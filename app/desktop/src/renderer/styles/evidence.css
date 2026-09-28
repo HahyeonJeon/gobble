@@ -1,0 +1,185 @@
+.attachment-list {
+  width: 100%;
+  min-width: 0;
+  margin: 8px 0;
+}
+.attachment-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 110px;
+  overflow: auto;
+}
+.attachment-chip {
+  display: flex;
+  max-width: 100%;
+  border: 1px solid #bdcec8;
+  border-radius: 6px;
+  background: #f3f8f6;
+}
+.attachment-toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  padding: 7px;
+  text-align: left;
+}
+.attachment-toggle > span:first-of-type {
+  min-width: 0;
+}
+.attachment-toggle strong,
+.attachment-toggle small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 230px;
+}
+.attachment-toggle strong {
+  font-size: 12px;
+  font-weight: 500;
+}
+.attachment-toggle small {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+.attachment-toggle:disabled {
+  opacity: 1;
+  color: var(--ink);
+}
+.attachment-chip > .icon-button {
+  align-self: center;
+  margin-right: 3px;
+}
+.evidence-preview {
+  padding: 12px;
+  margin-top: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fafcfb;
+}
+.evidence-preview > small {
+  display: block;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.evidence-preview-body {
+  overflow: auto;
+  max-height: max(140px, calc(100vh - 310px));
+  margin: 8px 0;
+}
+.evidence-preview img {
+  display: block;
+  max-width: 100%;
+  max-height: max(140px, calc(100vh - 330px));
+  object-fit: contain;
+  margin: auto;
+}
+.evidence-preview pre {
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.evidence-preview table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+}
+.evidence-preview th,
+.evidence-preview td {
+  border: 1px solid var(--line);
+  padding: 6px;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.evidence-preview p {
+  font-size: 12px;
+  line-height: 1.5;
+}
+.evidence-provenance {
+  margin-top: 5px;
+  font-size: 11px;
+}
+.evidence-provenance code {
+  display: block;
+  overflow-wrap: anywhere;
+  padding: 4px 0;
+}
+.attachment-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  font-size: 11px;
+  line-height: 1.4;
+  margin: 2px 0;
+}
+.attachment-status button {
+  font-size: 11px;
+  padding: 3px 6px;
+}
+.view-attachment-action {
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--line);
+  flex: 0 0 auto;
+}
+.view-attachment-action button {
+  min-height: 32px;
+  font-size: 12px;
+}
+.chat-composer {
+  max-height: 65%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.composer-context {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.composer-problem {
+  flex: 0 0 auto;
+  margin: 6px 0;
+}
+.chat-composer > textarea,
+.chat-composer > .composer-controls,
+.chat-composer > .composer-footer {
+  flex: 0 0 auto;
+}
+@media (max-height: 650px) {
+  .attachment-chips {
+    max-height: 80px;
+  }
+}
+.evidence-dialog {
+  width: min(800px, calc(100vw - 48px));
+}
+.evidence-dialog > header {
+  gap: 16px;
+  margin-bottom: 14px;
+}
+.evidence-dialog h2 {
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+.evidence-dialog > header > button {
+  flex-shrink: 0;
+}
+.attachment-preview-hint {
+  font-size: 11px;
+  color: var(--accent);
+}
+
+.composer-context > .attachment-list {
+  margin: 4px 0;
+}

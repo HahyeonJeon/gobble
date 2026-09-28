@@ -1,0 +1,13 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": { "lib": ["ES2022", "DOM"], "types": ["node"] },
+  "include": [
+    "src/main/**/*.ts",
+    "src/pdf/**/*.ts",
+    "electron.vite.config.ts",
+    "pdf-build.ts",
+    "notebook-build.ts",
+    "report-build.ts",
+    "src/report-reader/**/*.ts"
+  ]
+}

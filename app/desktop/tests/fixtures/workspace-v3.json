@@ -1,0 +1,429 @@
+{
+  "schemaVersion": 3,
+  "workspace": {
+    "schemaVersion": 1,
+    "projectId": "prj_atlas",
+    "revision": 7,
+    "agents": [
+      {
+        "projectId": "prj_atlas",
+        "agentId": "agt_reader",
+        "name": "Reader",
+        "instructionProfile": "discussion-v1",
+        "provider": {
+          "kind": "codex",
+          "threadId": "thread-existing",
+          "toolsetVersion": "shared-views-v2"
+        },
+        "access": "sharedViews"
+      }
+    ],
+    "surfaces": [
+      {
+        "projectId": "prj_atlas",
+        "surfaceId": "srf_legacy",
+        "resource": {
+          "kind": "log",
+          "runRef": "run_first",
+          "taskId": "align:S03",
+          "attempt": 2
+        },
+        "view": "log",
+        "pinned": true,
+        "openedBy": {
+          "kind": "user"
+        }
+      },
+      {
+        "projectId": "prj_atlas",
+        "surfaceId": "srf_table",
+        "resource": {
+          "kind": "file",
+          "resourceId": "res_table"
+        },
+        "view": "table",
+        "pinned": false,
+        "openedBy": {
+          "kind": "user"
+        }
+      },
+      {
+        "projectId": "prj_atlas",
+        "surfaceId": "srf_image",
+        "resource": {
+          "kind": "file",
+          "resourceId": "res_image"
+        },
+        "view": "image",
+        "pinned": false,
+        "openedBy": {
+          "kind": "user"
+        }
+      }
+    ],
+    "layout": {
+      "kind": "single",
+      "primary": {
+        "tabs": ["srf_legacy", "srf_table", "srf_image"],
+        "activeSurfaceId": "srf_legacy"
+      }
+    },
+    "decisions": [
+      {
+        "projectId": "prj_atlas",
+        "decisionId": "dec_legacy",
+        "requestedBy": "agt_reader",
+        "question": "Earlier decision",
+        "evidence": [
+          {
+            "projectId": "prj_atlas",
+            "resource": {
+              "kind": "file",
+              "resourceId": "res_table"
+            },
+            "dataRevision": "table-revision-2",
+            "schemaVersion": 2,
+            "origin": {
+              "surfaceId": "srf_closed_original"
+            },
+            "selection": {
+              "kind": "table",
+              "rowKeys": ["row_3"],
+              "columns": ["col_0"],
+              "coordinateSpace": "revision-row-column-keys"
+            }
+          }
+        ],
+        "state": {
+          "kind": "pending"
+        }
+      },
+      {
+        "kind": "question",
+        "projectId": "prj_atlas",
+        "decisionId": "dec_question",
+        "requestedBy": "agt_reader",
+        "question": "Keep this image?",
+        "options": ["Keep", "Review"],
+        "evidence": [
+          {
+            "attachmentId": "att_question",
+            "evidence": {
+              "projectId": "prj_atlas",
+              "resource": {
+                "kind": "file",
+                "resourceId": "res_image"
+              },
+              "dataRevision": "sha256:6b1048f8a6d40bac0b2954c18fefa40c4ea7a96120fc2e54b7317c0e43c2bbec",
+              "schemaVersion": 2,
+              "origin": {
+                "surfaceId": "srf_closed_image"
+              },
+              "selection": {
+                "kind": "image",
+                "x": 0,
+                "y": 0,
+                "width": 1,
+                "height": 1,
+                "originalWidth": 1,
+                "originalHeight": 1,
+                "contentHash": "sha256:6b1048f8a6d40bac0b2954c18fefa40c4ea7a96120fc2e54b7317c0e43c2bbec",
+                "coordinateSpace": "normalized-original-image"
+              }
+            },
+            "label": "image evidence",
+            "createdAt": 10,
+            "capturedAt": 11,
+            "asset": {
+              "hash": "sha256:6b1048f8a6d40bac0b2954c18fefa40c4ea7a96120fc2e54b7317c0e43c2bbec",
+              "byteLength": 68,
+              "mediaType": "image/png"
+            },
+            "representation": {
+              "kind": "image",
+              "width": 1,
+              "height": 1,
+              "originalWidth": 1,
+              "originalHeight": 1,
+              "crop": {
+                "x": 0,
+                "y": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        ],
+        "createdAt": 13,
+        "originSubmissionId": "req_saved",
+        "invocation": {
+          "identity": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "state": {
+          "kind": "pending"
+        }
+      }
+    ]
+  },
+  "titles": [
+    {
+      "surfaceId": "srf_legacy",
+      "title": "align:S03 · attempt 2"
+    },
+    {
+      "surfaceId": "srf_table",
+      "title": "table fixture"
+    },
+    {
+      "surfaceId": "srf_image",
+      "title": "image fixture"
+    }
+  ],
+  "activePane": "primary",
+  "maximizedPane": null,
+  "selections": [
+    {
+      "surfaceId": "srf_legacy",
+      "evidence": {
+        "projectId": "prj_atlas",
+        "resource": {
+          "kind": "log",
+          "runRef": "run_first",
+          "taskId": "align:S03",
+          "attempt": 2
+        },
+        "dataRevision": "revision-7",
+        "schemaVersion": 2,
+        "origin": {
+          "surfaceId": "srf_legacy"
+        },
+        "selection": {
+          "kind": "text",
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 1,
+            "column": 4
+          },
+          "coordinateSpace": "utf16-line-column"
+        }
+      }
+    },
+    {
+      "surfaceId": "srf_table",
+      "evidence": {
+        "projectId": "prj_atlas",
+        "resource": {
+          "kind": "file",
+          "resourceId": "res_table"
+        },
+        "dataRevision": "table-revision-2",
+        "schemaVersion": 2,
+        "origin": {
+          "surfaceId": "srf_table"
+        },
+        "selection": {
+          "kind": "table",
+          "rowKeys": ["row_3"],
+          "columns": ["col_0"],
+          "coordinateSpace": "revision-row-column-keys"
+        }
+      }
+    },
+    {
+      "surfaceId": "srf_image",
+      "evidence": {
+        "projectId": "prj_atlas",
+        "resource": {
+          "kind": "file",
+          "resourceId": "res_image"
+        },
+        "dataRevision": "sha256:6b1048f8a6d40bac0b2954c18fefa40c4ea7a96120fc2e54b7317c0e43c2bbec",
+        "schemaVersion": 2,
+        "origin": {
+          "surfaceId": "srf_image"
+        },
+        "selection": {
+          "kind": "image",
+          "x": 0,
+          "y": 0,
+          "width": 1,
+          "height": 1,
+          "originalWidth": 1,
+          "originalHeight": 1,
+          "contentHash": "sha256:6b1048f8a6d40bac0b2954c18fefa40c4ea7a96120fc2e54b7317c0e43c2bbec",
+          "coordinateSpace": "normalized-original-image"
+        }
+      }
+    }
+  ],
+  "activity": [],
+  "receipts": [],
+  "paneOrientation": "vertical",
+  "chat": {
+    "collapsed": false,
+    "width": 420,
+    "draft": "Draft with references",
+    "recipientAgentId": "agt_reader",
+    "attachmentRevision": 5,
+    "attachments": [
+      {
+        "attachmentId": "att_draft",
+        "evidence": {
+          "projectId": "prj_atlas",
+          "resource": {
+            "kind": "log",
+            "runRef": "run_first",
+            "taskId": "align:S03",
+            "attempt": 2
+          },
+          "dataRevision": "revision-7",
+          "schemaVersion": 2,
+          "origin": {
+            "surfaceId": "srf_legacy"
+          },
+          "selection": {
+            "kind": "text",
+            "start": {
+              "line": 1,
+              "column": 0
+            },
+            "end": {
+              "line": 1,
+              "column": 4
+            },
+            "coordinateSpace": "utf16-line-column"
+          }
+        },
+        "label": "Log draft",
+        "createdAt": 12
+      }
+    ]
+  },
+  "collaboration": {
+    "submissions": [
+      {
+        "requestId": "req_saved",
+        "agentId": "agt_reader",
+        "text": "Discuss these samples",
+        "evidence": [
+          {
+            "attachmentId": "att_sent",
+            "evidence": {
+              "projectId": "prj_atlas",
+              "resource": {
+                "kind": "file",
+                "resourceId": "res_table"
+              },
+              "dataRevision": "table-revision-2",
+              "schemaVersion": 2,
+              "origin": {
+                "surfaceId": "srf_closed_original"
+              },
+              "selection": {
+                "kind": "table",
+                "rowKeys": ["row_3"],
+                "columns": ["col_0"],
+                "coordinateSpace": "revision-row-column-keys"
+              }
+            },
+            "label": "table evidence",
+            "createdAt": 10,
+            "capturedAt": 11,
+            "asset": {
+              "hash": "sha256:2e99a6e5435b2eefe01e3b940f6c3587583a6eb90c661f277ae6a6b81fd3dcd8",
+              "byteLength": 124,
+              "mediaType": "application/json"
+            },
+            "representation": {
+              "kind": "table",
+              "truncated": false
+            }
+          }
+        ],
+        "preparedEvidenceId": "prep_saved",
+        "model": "model",
+        "effort": "low",
+        "createdAt": 11,
+        "state": "completed",
+        "threadId": "thread-existing",
+        "turnId": "turn-existing",
+        "response": "Please confirm the image",
+        "problem": null
+      }
+    ]
+  },
+  "sharedReferences": [
+    {
+      "referenceId": "ref_user",
+      "label": "Saved table mark",
+      "evidence": {
+        "projectId": "prj_atlas",
+        "resource": {
+          "kind": "file",
+          "resourceId": "res_table"
+        },
+        "dataRevision": "table-revision-2",
+        "schemaVersion": 2,
+        "origin": {
+          "surfaceId": "srf_closed_original"
+        },
+        "selection": {
+          "kind": "table",
+          "rowKeys": ["row_3"],
+          "columns": ["col_0"],
+          "coordinateSpace": "revision-row-column-keys"
+        }
+      },
+      "author": {
+        "kind": "user"
+      },
+      "createdAt": 12,
+      "note": "Inspect S03",
+      "retracted": false
+    },
+    {
+      "referenceId": "ref_agent",
+      "label": "Saved image mark",
+      "evidence": {
+        "projectId": "prj_atlas",
+        "resource": {
+          "kind": "file",
+          "resourceId": "res_image"
+        },
+        "dataRevision": "sha256:6b1048f8a6d40bac0b2954c18fefa40c4ea7a96120fc2e54b7317c0e43c2bbec",
+        "schemaVersion": 2,
+        "origin": {
+          "surfaceId": "srf_closed_image"
+        },
+        "selection": {
+          "kind": "image",
+          "x": 0,
+          "y": 0,
+          "width": 1,
+          "height": 1,
+          "originalWidth": 1,
+          "originalHeight": 1,
+          "contentHash": "sha256:6b1048f8a6d40bac0b2954c18fefa40c4ea7a96120fc2e54b7317c0e43c2bbec",
+          "coordinateSpace": "normalized-original-image"
+        }
+      },
+      "author": {
+        "kind": "agent",
+        "agentId": "agt_reader",
+        "name": "Reader"
+      },
+      "createdAt": 13,
+      "note": "This region",
+      "retracted": false,
+      "originSubmissionId": "req_saved"
+    }
+  ],
+  "referenceReveal": {
+    "referenceId": "ref_user",
+    "requestId": "req_reveal"
+  }
+}

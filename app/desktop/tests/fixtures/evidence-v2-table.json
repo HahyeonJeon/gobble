@@ -1,0 +1,5 @@
+{
+  "kind": "table",
+  "columns": [{ "id": "col_0", "name": "Sample" }],
+  "rows": [{ "key": "row_3", "cells": ["S03"] }]
+}

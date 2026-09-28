@@ -1,0 +1,5 @@
+{
+  "schemaVersion": 1,
+  "files": ["go.mod", "go.sum", "rnaseq/pipeline.go"],
+  "sample": ""
+}

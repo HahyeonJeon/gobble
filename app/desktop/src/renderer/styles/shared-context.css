@@ -1,0 +1,185 @@
+.reference-strip {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 6px;
+  padding: 6px 10px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--line);
+  background: #fafcf9;
+}
+.reference-strip button {
+  white-space: nowrap;
+  min-height: 24px;
+  font-size: 10px;
+  padding: 3px 7px;
+  border-left: 3px solid var(--mark-color);
+  color: var(--mark-color);
+}
+.shared-reference-event {
+  border-left: 3px solid var(--mark-color);
+  border-radius: 4px;
+  padding: 9px 12px;
+  margin: 12px 0;
+  background: #f2f6f2;
+  display: grid;
+  gap: 5px;
+  font-size: 12px;
+}
+.shared-reference-event strong {
+  color: var(--mark-color);
+}
+.shared-reference-event strong span {
+  font-weight: 400;
+  color: var(--ink);
+}
+.shared-reference-event small {
+  color: var(--muted);
+}
+.shared-reference-event p {
+  margin: 3px 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.reference-heading {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.reference-heading > div {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.reference-heading small {
+  display: block;
+  margin-top: 4px;
+}
+.reference-heading > button {
+  min-height: 32px;
+  flex-shrink: 0;
+}
+.reference-actions {
+  font-size: 11px;
+  color: var(--muted);
+}
+.reference-actions summary {
+  cursor: pointer;
+  padding: 5px 0;
+}
+.reference-actions button {
+  min-height: 32px;
+  margin-top: 4px;
+  font-size: 12px;
+}
+.shared-image-mark {
+  position: absolute;
+  pointer-events: none;
+  border: 2px dashed var(--mark-color);
+  background: color-mix(in srgb, var(--mark-color) 9%, transparent);
+}
+.shared-image-mark span {
+  position: absolute;
+  left: -2px;
+  top: -18px;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: var(--mark-color);
+  color: white;
+  font-size: 10px;
+  padding: 2px 5px;
+  border-radius: 3px 3px 0 0;
+}
+.data-table td.shared-cell {
+  box-shadow: inset 0 -2px var(--mark-color);
+  background: color-mix(in srgb, var(--mark-color) 9%, transparent);
+}
+.text-layer {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: white;
+}
+.text-layer .text-preview,
+.text-highlights {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border: 0;
+  padding: 18px;
+  font:
+    12px/1.8 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Consolas,
+    monospace;
+  tab-size: 2;
+  white-space: pre;
+}
+.text-layer .text-preview {
+  background: transparent;
+}
+.text-highlights {
+  color: transparent;
+  pointer-events: none;
+  overflow: hidden;
+}
+.text-highlights mark {
+  color: transparent;
+  background: color-mix(in srgb, var(--mark-color) 15%, transparent);
+  border-bottom: 2px solid var(--mark-color);
+}
+.access-settings {
+  display: grid;
+  gap: 6px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.column-choice {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+.column-choice input {
+  margin: 0;
+}
+
+.reference-view-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--accent-soft);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.reference-view-banner span {
+  display: grid;
+  gap: 2px;
+  font-size: 12px;
+}
+.reference-view-banner small {
+  color: var(--muted);
+}
+.reference-view-banner button {
+  flex-shrink: 0;
+}
+.plot-reference-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  padding: 4px 12px;
+  font-size: 11px;
+}
+.evidence-plot-context {
+  padding: 8px 4px 12px;
+}
+.evidence-plot-context p {
+  margin: 5px 0;
+}

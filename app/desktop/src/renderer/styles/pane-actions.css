@@ -1,0 +1,57 @@
+.pane-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  font-size: 12px;
+  padding: 5px 8px;
+}
+.pane-action-popover {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  width: 248px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 8px 32px #213e3826;
+}
+.pane-action-popover:popover-open {
+  display: grid;
+  gap: 2px;
+}
+.pane-action-popover button {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-height: 36px;
+  padding: 7px 10px;
+  border-color: transparent;
+  font-size: 13px;
+  text-align: left;
+}
+.pane-action-popover button[aria-pressed='true'] {
+  background: var(--accent-soft);
+}
+.empty-pane-move {
+  max-width: 100%;
+  margin-top: 12px;
+  font-size: 12px;
+}
+.empty-pane-move summary {
+  padding: 8px;
+  cursor: pointer;
+}
+.empty-pane-move > div {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+  max-height: 100px;
+  overflow: auto;
+}
+.empty-pane-move button {
+  display: block;
+  overflow-wrap: anywhere;
+}

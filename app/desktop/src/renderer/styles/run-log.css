@@ -1,0 +1,246 @@
+.observation-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--line);
+}
+.observation-toolbar strong {
+  font-size: 12px;
+}
+.observation-toolbar input[type='search'] {
+  flex: 1;
+  min-width: 110px;
+  width: 150px;
+}
+.observation-toolbar input,
+.observation-toolbar select {
+  padding: 5px 8px;
+  font-size: 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--ink);
+}
+.observation-toolbar button,
+.observation-actions button {
+  padding: 5px 9px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.observation-notice {
+  display: flex;
+  gap: 4px 12px;
+  flex-wrap: wrap;
+  padding: 5px 12px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.observation-problem {
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.task-scroll {
+  flex: 1;
+  min-height: 55px;
+  overflow: auto;
+}
+.task-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.task-table th {
+  position: sticky;
+  top: 0;
+  background: var(--panel);
+  z-index: 1;
+  color: var(--muted);
+  text-align: left;
+  font-size: 11px;
+  font-weight: 500;
+}
+.task-table th,
+.task-table td {
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.task-table tr[data-selected='true'] {
+  background: var(--accent-soft);
+}
+.task-choice {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  cursor: pointer;
+}
+.task-choice input {
+  accent-color: var(--accent);
+  flex-shrink: 0;
+}
+.task-choice span {
+  display: grid;
+  gap: 2px;
+  overflow-wrap: anywhere;
+}
+.task-choice strong {
+  font-weight: 500;
+}
+.task-choice small {
+  color: var(--muted);
+  font-size: 10px;
+}
+.task-state {
+  white-space: nowrap;
+}
+.observation-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+}
+.observation-actions > div {
+  flex: 1;
+  min-width: 130px;
+  overflow-wrap: anywhere;
+}
+.observation-actions strong,
+.observation-actions small {
+  display: block;
+}
+.observation-actions strong {
+  font-weight: 500;
+}
+.observation-actions small {
+  color: var(--muted);
+  font-size: 10px;
+  margin-top: 3px;
+}
+.observation-details {
+  border-top: 1px solid var(--line);
+  padding: 6px 12px;
+  font-size: 11px;
+  max-height: 38%;
+  overflow: auto;
+  flex-shrink: 0;
+}
+.observation-details summary {
+  cursor: pointer;
+  color: var(--muted);
+}
+.observation-details dl {
+  display: grid;
+  grid-template-columns: minmax(95px, 1fr) 3fr;
+  gap: 6px;
+}
+.observation-details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.observation-empty {
+  color: var(--muted);
+  font-size: 12px;
+  padding: 8px 12px;
+}
+.log-streams {
+  display: flex;
+  gap: 2px;
+}
+.log-streams button[aria-pressed='true'] {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.log-streams button span {
+  font-size: 10px;
+}
+.log-attempt {
+  flex: 1;
+  font-size: 11px;
+  color: var(--muted);
+  min-width: 70px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.log-text-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 60px;
+  overflow: hidden;
+}
+.log-text {
+  flex: 1;
+  width: 100%;
+  min-height: 30px;
+  padding: 10px 12px;
+  resize: none;
+  border: 0;
+  border-radius: 0;
+}
+.log-source-error {
+  margin: 0;
+  padding: 4px 12px;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.observed-base {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.observed-base[hidden] {
+  display: none;
+}
+.log-layer .text-preview,
+.log-layer .text-highlights {
+  padding: 10px 12px;
+}
+.observed-reference-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  position: relative;
+}
+.observed-reference-text {
+  margin: 0;
+  padding: 10px 12px;
+  font:
+    12px/1.8 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Consolas,
+    monospace;
+  white-space: pre;
+}
+.observed-reference-text mark {
+  background: #f8e4bf;
+  color: inherit;
+  border-bottom: 2px solid var(--mark-color);
+}
+.observed-reference-panel tr[data-target='true'] {
+  background: #fff2d9;
+  outline: 2px dashed var(--mark-color);
+  outline-offset: -2px;
+}
+.observed-reference-panel td small {
+  display: block;
+  color: var(--muted);
+}
+.observed-reference-note {
+  margin: 8px 12px;
+  font-size: 12px;
+  color: var(--mark-color);
+}
+.agent-task-mark {
+  color: var(--mark-color) !important;
+  border-left: 2px dashed var(--mark-color);
+  padding-left: 4px;
+}

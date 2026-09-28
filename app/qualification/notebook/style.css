@@ -1,0 +1,364 @@
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #25372f;
+  background: #f6f7f4;
+  font-size: 14px;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+html,
+body,
+#root {
+  height: 100%;
+  overflow: hidden;
+}
+#root {
+  display: flex;
+  flex-direction: column;
+}
+[hidden] {
+  display: none !important;
+}
+button,
+select,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+button,
+select,
+summary {
+  background: white;
+  border: 1px solid #ccd9d1;
+  border-radius: 5px;
+  min-height: 32px;
+  padding: 5px 9px;
+  cursor: pointer;
+}
+button:hover,
+summary:hover {
+  background: #e8f2ef;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+button:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+input:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid #176967;
+  outline-offset: 2px;
+}
+small {
+  font-size: 12px;
+  color: #65736a;
+}
+h2 {
+  font-size: 18px;
+}
+p {
+  line-height: 1.55;
+}
+.top {
+  display: flex;
+  gap: 20px;
+  padding: 12px 18px;
+  border-bottom: 1px solid #dce2dc;
+}
+.top span {
+  font-size: 12px;
+  color: #65736a;
+}
+.controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 8px 18px;
+}
+.controls label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.controls [role='status'] {
+  font-size: 12px;
+  flex: 1;
+  min-width: 250px;
+}
+main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 30%);
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+  padding: 4px 12px 12px;
+}
+.pane,
+.chat {
+  background: white;
+  border: 1px solid #cbd9d1;
+  border-radius: 7px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+.pane > header,
+.chat > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 43px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #dce2dc;
+}
+.pane > header span,
+.chat > header span {
+  font-size: 12px;
+  color: #65736a;
+}
+.reader {
+  flex: 1;
+  overflow: auto;
+  padding: 14px;
+  min-height: 0;
+}
+.cell {
+  border: 1px solid #dce2dc;
+  border-radius: 5px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+.cell-header,
+.output-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: #f5f7f3;
+  font-size: 12px;
+}
+.cell-header span {
+  color: #65736a;
+}
+.cell pre {
+  margin: 0;
+  white-space: pre;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  line-height: 22px;
+  padding: 12px;
+  overflow: auto;
+  max-height: 300px;
+  tab-size: 4;
+}
+.cell pre span {
+  white-space: pre;
+}
+.part-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 6px 10px;
+  border-top: 1px solid #edf1ec;
+  font-size: 12px;
+}
+.range-fields {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px;
+  background: #f7f9f4;
+}
+.range-fields label {
+  display: grid;
+  gap: 5px;
+  font-size: 12px;
+}
+.range-fields input {
+  width: 85px;
+  border: 1px solid #cbd9d1;
+  padding: 5px;
+}
+.notice {
+  display: block;
+  padding: 6px 10px;
+  margin: 0;
+  font-size: 12px;
+  color: #6c624e;
+}
+.output {
+  border-top: 1px solid #dce2dc;
+  padding: 8px 0;
+}
+.output > small {
+  display: block;
+  margin: 0 10px 6px;
+}
+.unavailable {
+  margin: 8px 10px;
+  padding: 12px;
+  background: #faf8f0;
+  font-size: 13px;
+}
+.image-scroll {
+  max-height: 400px;
+  overflow: auto;
+  padding: 0;
+}
+.image-scroll img {
+  display: block;
+  touch-action: none;
+  cursor: crosshair;
+  max-width: none;
+}
+.image-content details {
+  font-size: 12px;
+  padding: 8px;
+}
+.markdown {
+  padding: 4px 14px 14px;
+  overflow-wrap: anywhere;
+}
+.markdown p {
+  font-size: 13px;
+  margin: 6px 0;
+}
+.pane footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+  min-height: 48px;
+  padding: 8px 10px;
+  border-top: 1px solid #dce2dc;
+  font-size: 12px;
+}
+.pane footer button {
+  background: #176967;
+  color: white;
+  border-color: #176967;
+}
+.conversation {
+  flex: 1;
+  overflow: auto;
+  padding: 15px;
+  font-size: 13px;
+}
+.conversation > p {
+  color: #65736a;
+}
+.evidence {
+  border-left: 3px solid #a06b22;
+  padding: 12px;
+  background: #f5f6ef;
+  margin-top: 20px;
+}
+.evidence small {
+  display: block;
+  margin: 7px 0;
+}
+.evidence pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  max-height: 150px;
+  overflow: auto;
+}
+.evidence img,
+.captured-content img {
+  max-width: 100%;
+  height: auto;
+}
+.composer {
+  padding: 12px;
+  border-top: 1px solid #dce2dc;
+}
+.composer label {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+.composer textarea {
+  width: 100%;
+  height: 110px;
+  resize: vertical;
+  min-height: 80px;
+  max-height: 180px;
+  border: 1px solid #bdcfc5;
+  border-radius: 6px;
+  padding: 10px;
+  line-height: 1.5;
+}
+.composer small {
+  font-size: 11px;
+}
+.reference {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px;
+  background: #e8f2ef;
+  font-size: 12px;
+}
+.captured-content {
+  flex: 1;
+  overflow: auto;
+  padding: 20px;
+}
+.captured-content pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.paging {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  background: #f5f7f3;
+  padding: 8px;
+  font-size: 12px;
+}
+@media (max-width: 1000px) {
+  .top {
+    padding: 8px 12px;
+  }
+  .controls {
+    padding: 8px 12px;
+  }
+  .reader {
+    padding: 9px;
+  }
+  main {
+    gap: 8px;
+    padding: 0 8px 8px;
+  }
+  .pane footer {
+    flex-wrap: wrap;
+  }
+  .top span {
+    font-size: 11px;
+  }
+}
+
+.evidence img {
+  display: block;
+  margin: 8px 0;
+}

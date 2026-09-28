@@ -1,0 +1,49 @@
+{
+  "name": "gobble-app-workspace",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "contracts",
+    "desktop"
+  ],
+  "engines": {
+    "node": "^22.12.0 || >=24.0.0",
+    "npm": ">=10"
+  },
+  "scripts": {
+    "codex:schema": "tsx scripts/generate-codex-protocol.ts",
+    "codex:schema:check": "tsx scripts/generate-codex-protocol.ts --check",
+    "dev": "npm run build:service && npm run dev --workspace @gobble/desktop",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "build:service": "tsx scripts/build-service.ts",
+    "build": "npm run build:service && npm run build --workspace @gobble/desktop",
+    "typecheck": "tsc -p contracts/tsconfig.json && npm run typecheck --workspace @gobble/desktop && tsc -p tsconfig.tools.json",
+    "test": "npm run build:service && vitest run",
+    "test:electron": "npm run build && playwright test",
+    "schema:generate": "tsx contracts/scripts/export-schema.ts",
+    "schema:check": "tsx contracts/scripts/export-schema.ts --check",
+    "check": "npm run format:check && npm run typecheck && npm run schema:check && npm test && npm run test:electron",
+    "test:live-runtime": "npm run build && playwright test --config playwright.live.config.ts"
+  },
+  "overrides": {
+    "vite": {
+      "esbuild": "0.28.2"
+    }
+  },
+  "devDependencies": {
+    "@openai/codex": "0.153.4",
+    "@playwright/test": "1.63.0",
+    "@types/node": "25.9.5",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7",
+    "@vitejs/plugin-react": "5.1.4",
+    "electron": "44.2.0",
+    "electron-vite": "5.0.0",
+    "prettier": "3.9.6",
+    "tsx": "4.23.13",
+    "typescript": "5.9.3",
+    "vite": "7.3.6",
+    "vitest": "4.1.11"
+  }
+}

@@ -1,0 +1,4 @@
+node_modules/
+desktop/out/
+test-results/
+playwright-report/

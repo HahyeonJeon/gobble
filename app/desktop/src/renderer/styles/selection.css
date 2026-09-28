@@ -1,0 +1,65 @@
+.selection-toolbar {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  background: #f3f8f6;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px 10px;
+}
+.selection-label {
+  flex: 1 1 140px;
+  min-width: 0;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.selection-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.selection-actions button {
+  min-height: 32px;
+  font-size: 12px;
+  padding: 5px 9px;
+}
+.selection-actions .icon-button {
+  min-width: 32px;
+}
+.selection-feedback {
+  flex: 1 0 100%;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+.selection-count {
+  color: var(--muted);
+  margin-left: 3px;
+}
+.selection-list {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.selection-list li {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-top: 1px solid var(--line);
+  padding: 12px 0;
+}
+.selection-list li > div {
+  min-width: 0;
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+.selection-list small {
+  display: block;
+  color: var(--muted);
+  margin-top: 5px;
+}
+.selection-list button {
+  flex-shrink: 0;
+}

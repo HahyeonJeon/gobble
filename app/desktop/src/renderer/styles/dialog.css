@@ -1,0 +1,67 @@
+.modal-dialog {
+  width: min(480px, calc(100vw - 40px));
+  max-height: calc(100vh - 64px);
+  border: 1px solid #d4ddd8;
+  border-radius: 12px;
+  background: #fafbf8;
+  color: #273b33;
+  padding: 24px;
+  box-shadow: 0 24px 72px #213e3829;
+}
+.modal-dialog::backdrop {
+  background: #1d302c55;
+}
+.modal-dialog header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+.modal-dialog h2 {
+  margin: 0;
+  font-size: 21px;
+}
+.modal-dialog form,
+.modal-dialog label {
+  display: grid;
+  gap: 10px;
+}
+.modal-dialog form {
+  gap: 18px;
+}
+.modal-dialog label {
+  font-weight: 600;
+  font-size: 13px;
+}
+.modal-dialog input,
+.modal-dialog textarea,
+.modal-dialog select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #cad8d0;
+  border-radius: 6px;
+  background: white;
+  color: inherit;
+  font: inherit;
+  font-weight: 400;
+}
+.modal-dialog textarea {
+  resize: vertical;
+}
+.modal-dialog button {
+  padding: 8px 12px;
+}
+.modal-dialog dl > div {
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  padding: 10px 0;
+}
+.modal-dialog dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.modal-dialog p {
+  line-height: 1.5;
+}

@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"],
+    "jsx": "react-jsx"
+  },
+  "include": [
+    "scripts/**/*.ts",
+    "contracts/scripts/**/*.ts",
+    "contracts/tests/**/*.ts",
+    "desktop/tests/**/*.ts",
+    "desktop/src/renderer/env.d.ts",
+    "tests/**/*.ts",
+    "vitest.config.ts",
+    "playwright.config.ts",
+    "playwright.live.config.ts"
+  ]
+}

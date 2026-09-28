@@ -1,0 +1,15 @@
+{
+  "name": "@gobble/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema.json": "./schema/v1.json",
+    "./pdf-decoder": "./src/pdf-decoder.ts",
+    "./pdf-geometry": "./src/pdf-geometry.ts"
+  },
+  "dependencies": {
+    "@sinclair/typebox": "0.34.52"
+  }
+}

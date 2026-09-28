@@ -1,0 +1,228 @@
+.creation-view {
+  height: 100%;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  color: var(--ink);
+  box-sizing: border-box;
+}
+.creation-toolbar,
+.creation-summary,
+.creation-proposal-bar,
+.creation-flow-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.creation-toolbar > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+.creation-view small,
+.creation-view p {
+  color: var(--muted);
+}
+.creation-view h3 {
+  font-size: 15px;
+  margin: 8px 0;
+}
+.creation-view p {
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 8px 0;
+}
+.creation-summary {
+  font-size: 12px;
+  padding: 10px 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow-wrap: anywhere;
+}
+.creation-engine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 12px;
+}
+.creation-engine-ready {
+  color: #427660 !important;
+}
+.creation-input {
+  max-width: 600px;
+  width: 100%;
+  margin: 20px auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.creation-file-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  min-height: 120px;
+  max-height: 240px;
+  overflow: auto;
+}
+.creation-file-list button {
+  width: 100%;
+  text-align: left;
+  padding: 9px;
+  border: 0;
+  background: transparent;
+}
+.creation-file-list button[aria-pressed='true'] {
+  background: #e1f0e9;
+  color: #245843;
+}
+.creation-proposal-bar label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  min-width: 0;
+}
+.creation-proposal-bar select {
+  max-width: 360px;
+}
+.creation-flow-heading {
+  font-size: 12px;
+}
+.creation-flow-heading span {
+  color: #427660;
+}
+.creation-flow {
+  flex: 1 0 230px;
+  min-height: 230px;
+  max-height: 390px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--panel);
+}
+.creation-comparison {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.7fr) minmax(260px, 1.8fr);
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+.creation-current {
+  padding: 14px;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  align-self: start;
+}
+.creation-proposed {
+  min-width: 0;
+  border-left: 3px solid #69a383;
+  padding-left: 12px;
+}
+.creation-proposed > .pipeline-details {
+  border: 0;
+  padding: 8px 0;
+  margin: 0;
+}
+.creation-empty {
+  padding: 20px 8px;
+}
+.creation-marks {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.creation-marks button {
+  max-width: 100%;
+  min-width: 0;
+  white-space: normal;
+  text-align: left;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  border-color: #9fa8cf;
+}
+@container (max-width:550px) {
+  .creation-comparison {
+    grid-template-columns: 1fr;
+  }
+  .creation-current {
+    padding: 8px;
+  }
+  .creation-flow {
+    min-height: 200px;
+  }
+  .creation-proposal-bar select {
+    max-width: 220px;
+  }
+}
+.creation-view .pipeline-node[data-change='added-step'] {
+  background: #f0f8f2;
+  border-color: #87b598;
+}
+.creation-view .pipeline-node[data-change='added-step'] .review-node-number {
+  background: #e4f1e8;
+  color: #386849;
+  border-color: #87b598;
+  left: 12px;
+  right: auto;
+}
+.creation-view .pipeline-node[aria-pressed='true'] {
+  background: #e3f2eb;
+  border-color: #26746b;
+}
+.creation-view .pipeline-node[data-agent-mark='true'] {
+  outline: 2px solid #b97a22;
+  outline-offset: 2px;
+}
+.creation-adoption {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  border: 1px solid #a7c8b7;
+  border-radius: 10px;
+  padding: 12px;
+  background: #f2f8f4;
+  font-size: 13px;
+}
+.creation-adoption.success {
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.creation-adoption.success > span {
+  flex: 1;
+}
+.creation-adoption label {
+  display: grid;
+  gap: 6px;
+  width: min(100%, 420px);
+}
+.creation-adoption input {
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.creation-adoption dl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  margin: 0;
+}
+.creation-adoption dt {
+  font-size: 11px;
+  color: var(--muted);
+}
+.creation-adoption dd {
+  margin: 4px 0;
+  overflow-wrap: anywhere;
+}

@@ -1,0 +1,42 @@
+name: Desktop foundation
+
+on:
+  push:
+    paths: ['app/**', 'internal/appservice/**', 'cmd/gobble-service/**', 'go.mod', 'go.sum', '.github/workflows/desktop.yml']
+  pull_request:
+    paths: ['app/**', 'internal/appservice/**', 'cmd/gobble-service/**', 'go.mod', 'go.sum', '.github/workflows/desktop.yml']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  macos:
+    runs-on: macos-15
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - run: go test -race -count=1 ./internal/appservice ./cmd/gobble-service ./cmd/gobble-container
+        working-directory: .
+      - run: npm ci
+      - run: npm run check
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: desktop-evidence
+          path: app/test-results/
+          retention-days: 7

@@ -1,0 +1,110 @@
+.account-control {
+  display: flex;
+}
+.account-control > button {
+  border-color: transparent;
+  background: transparent;
+  font-size: 12px;
+}
+.account-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #896524;
+}
+.account-dot.connected {
+  background: #267756;
+}
+.agents-trigger {
+  gap: 6px;
+}
+.agents-trigger .icon {
+  width: 15px;
+  height: 15px;
+}
+.agents-trigger span {
+  color: var(--muted);
+}
+.modal-dialog.agent-roster {
+  position: fixed;
+  inset: 92px 16px auto auto;
+  margin: 0;
+  width: min(380px, calc(100vw - 32px));
+  padding: 0;
+  background: white;
+  border-radius: 8px;
+  max-height: calc(100vh - 110px);
+  overflow: auto;
+}
+.agent-roster::backdrop {
+  background: transparent;
+}
+.agent-roster header {
+  padding: 10px 12px;
+  margin: 0;
+  border-bottom: 1px solid var(--line);
+  gap: 8px;
+}
+.agent-roster h2 {
+  font-size: 14px;
+}
+.agent-roster button {
+  min-height: 30px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+.agent-roster .roster-help,
+.agent-roster .inline-error,
+.roster-empty {
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.roster-list {
+  padding: 0 8px;
+}
+.agent-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 4px 6px;
+  border-bottom: 1px solid #edf1ed;
+}
+.agent-row:last-child {
+  border-bottom: 0;
+}
+.agent-identity {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+.agent-identity strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 550;
+  overflow-wrap: anywhere;
+}
+.agent-identity small {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+}
+.agent-row .icon-button {
+  flex: 0 0 30px;
+}
+.agent-row .agent-message {
+  flex: 0 0 auto;
+}
+.agent-roster footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  border-top: 1px solid var(--line);
+  padding: 10px 12px;
+}
+.agent-roster footer small {
+  font-size: 11px;
+  color: var(--muted);
+}

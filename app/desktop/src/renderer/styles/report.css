@@ -1,0 +1,246 @@
+.report-view {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: #fbfcfd;
+  color: #243147;
+}
+.report-view .report-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: flex-start;
+  margin-bottom: 0;
+  flex-wrap: wrap;
+  padding: 9px 16px;
+  border-bottom: 1px solid #dce3eb;
+  background: #fff;
+  font-size: 12px;
+}
+.report-toolbar label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+.report-toolbar select {
+  max-width: min(260px, 44vw);
+  font: inherit;
+  padding: 5px;
+  border: 1px solid #d4dce5;
+  border-radius: 6px;
+  background: #fff;
+  color: inherit;
+}
+.report-toolbar button,
+.report-actions button {
+  color: #24495e;
+  border: 1px solid #c7d5df;
+  border-radius: 6px;
+  padding: 6px 9px;
+  background: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+.report-toolbar button:hover,
+.report-actions button:hover {
+  background: #edf4f8;
+}
+.report-saved {
+  color: #44615b;
+  background: #edf5f0;
+  border-radius: 5px;
+  padding: 4px 7px;
+  font-weight: 600;
+}
+.report-reading {
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+  padding: 22px clamp(16px, 4%, 52px);
+}
+.report-view .report-heading {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 5px 12px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+.report-heading h2 {
+  margin: 0;
+  font-size: 18px;
+}
+.report-heading p {
+  grid-column: 2;
+  white-space: pre-line;
+  margin: 0;
+  color: #657184;
+  font-size: 12px;
+}
+.report-wordmark {
+  color: #2f7771;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 9px 5px;
+  border: 1px solid #a8cbc5;
+  border-radius: 8px;
+}
+.report-summary {
+  border: 1px solid #dce3eb;
+  border-radius: 7px;
+  background: #fff;
+  padding: 10px 12px;
+  font-size: 12px;
+}
+.report-summary summary,
+.report-identity summary {
+  cursor: pointer;
+}
+.report-summary nav {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin-top: 10px;
+  gap: 5px;
+}
+.report-summary button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  padding: 5px;
+  color: #35475c;
+  cursor: pointer;
+  font-size: 12px;
+}
+.report-summary button:hover {
+  background: #eff4f8;
+}
+.report-module {
+  scroll-margin-top: 16px;
+  padding: 22px 0;
+  border-bottom: 1px solid #e1e7ee;
+}
+.report-module h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  margin: 0 0 16px;
+}
+.report-status {
+  display: inline-flex;
+  flex: none;
+  font-size: 10px;
+  letter-spacing: 0.03em;
+  font-weight: 700;
+  border: 1px solid transparent;
+  padding: 3px 5px;
+  border-radius: 4px;
+}
+.report-status.pass {
+  color: #22674e;
+  background: #e9f5ef;
+  border-color: #c8e6d6;
+}
+.report-status.warn {
+  color: #845b19;
+  background: #fff6df;
+  border-color: #edd9a5;
+}
+.report-status.fail {
+  color: #9c3c47;
+  background: #fcecef;
+  border-color: #edcbd1;
+}
+.report-table {
+  overflow-x: auto;
+  background: #fff;
+  border: 1px solid #e0e6ed;
+  border-radius: 7px;
+}
+.report-table table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 12px;
+}
+.report-table th,
+.report-table td {
+  text-align: left;
+  padding: 9px 12px;
+  border-bottom: 1px solid #e8edf2;
+  overflow-wrap: anywhere;
+  min-width: 70px;
+  white-space: pre-wrap;
+}
+.report-table th {
+  background: #f4f7fa;
+  font-weight: 600;
+}
+.report-table tr:last-child td {
+  border-bottom: 0;
+}
+.report-module figure {
+  margin: 0;
+  background: #fff;
+  border: 1px solid #e0e6ed;
+  border-radius: 7px;
+  padding: 10px;
+}
+.report-module img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: auto;
+}
+.report-module figcaption {
+  font-size: 11px;
+  color: #69778a;
+  padding: 8px 5px 0;
+}
+.report-text {
+  white-space: pre-wrap;
+  font-size: 13px;
+}
+.report-reading footer,
+.report-identity {
+  color: #66758a;
+  font-size: 11px;
+  margin-top: 16px;
+}
+.report-identity dd {
+  margin: 3px 0 10px;
+  overflow-wrap: anywhere;
+}
+.report-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  font-size: 12px;
+}
+.report-actions details {
+  margin-left: auto;
+}
+.report-actions details button {
+  display: block;
+  margin: 6px 0;
+}
+
+.report-marks {
+  padding: 8px 16px;
+  background: #edf6f2;
+  font-size: 12px;
+}
+.evidence-preview .report-view {
+  min-height: 320px;
+  height: 55vh;
+}
+
+.report-marks > div {
+  border-left: 3px solid var(--mark-color);
+  padding: 3px 8px;
+}

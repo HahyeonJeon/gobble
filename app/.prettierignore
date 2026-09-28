@@ -1,0 +1,12 @@
+node_modules/
+desktop/out/
+test-results/
+playwright-report/
+contracts/schema/
+package-lock.json
+
+# External runtime used by the separate Jupyter qualification, not authored source.
+qualification/jupyter/.venv/
+
+# Byte-exact output fixture: formatting would invalidate its recorded source checksum.
+desktop/tests/fixtures/fastqc-0.12.1.html

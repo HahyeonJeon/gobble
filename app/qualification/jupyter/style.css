@@ -1,0 +1,106 @@
+@import '@jupyterlab/theme-light-extension/style/variables.css';
+@import '@jupyterlab/notebook/style/index.css';
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  color: #26372e;
+  background: #f7f8f5;
+  font:
+    14px -apple-system,
+    sans-serif;
+}
+header {
+  height: 58px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #dfe4dc;
+}
+header small,
+.muted {
+  color: #657369;
+  font-size: 12px;
+}
+main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  height: calc(100vh - 58px);
+}
+section {
+  min-width: 0;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+}
+h1 {
+  font-size: 16px;
+  margin: 0 0 6px;
+}
+h2 {
+  font-size: 14px;
+  margin: 0 0 18px;
+}
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+button {
+  background: #e5ece3;
+  color: #294c37;
+  border: 1px solid #b8cab9;
+  border-radius: 7px;
+  padding: 8px 12px;
+  font: inherit;
+  cursor: pointer;
+}
+button:focus-visible {
+  outline: 2px solid #407d51;
+  outline-offset: 2px;
+}
+#notebook {
+  position: relative;
+  flex: 1;
+  background: white;
+  border: 1px solid #dde4da;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.qualification-notebook {
+  height: 100%;
+  padding: 24px 12px;
+}
+.jp-Notebook .jp-Cell {
+  margin-bottom: 26px;
+}
+aside {
+  padding: 24px 20px;
+  border-left: 1px solid #dfe4dc;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+}
+.note {
+  line-height: 1.65;
+  background: #f3f6f1;
+  border-radius: 10px;
+  padding: 14px;
+  margin: 14px 0;
+}
+#reference {
+  white-space: pre-wrap;
+  line-height: 1.7;
+  color: #385842;
+  overflow-wrap: anywhere;
+}
+.composer {
+  margin-top: auto;
+  border: 1px solid #cfd7cc;
+  border-radius: 10px;
+  padding: 16px;
+  color: #71806f;
+}

@@ -1,0 +1,210 @@
+.launch-review-controls {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #d4ddd8;
+  border-radius: 10px;
+  background: #f8fbf9;
+  color: #263c32;
+  font-size: 12px;
+}
+.launch-review-controls header,
+.launch-action-card footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.launch-review-controls header {
+  justify-content: space-between;
+}
+.launch-review-controls p,
+.launch-action-card p {
+  margin: 7px 0;
+  line-height: 1.45;
+}
+.launch-path {
+  overflow-wrap: anywhere;
+  color: #52645c;
+  font-size: 11px;
+}
+.launch-action-list {
+  max-height: 38vh;
+  overflow: auto;
+  flex: none;
+}
+.launch-action-list:empty {
+  display: none;
+}
+.launch-action-card {
+  margin: 8px 12px;
+  padding: 12px;
+  background: #f5faf7;
+  border: 1px solid #ccdcd1;
+  border-radius: 12px;
+  font-size: 12px;
+  color: #263c32;
+}
+.launch-action-card header {
+  font-size: 13px;
+}
+.launch-action-card footer {
+  margin-top: 10px;
+}
+.launch-action-card button,
+.launch-review-controls button {
+  min-height: 30px;
+  color: #294838;
+  background: #fff;
+  border: 1px solid #bbcfc1;
+  border-radius: 6px;
+  padding: 4px 9px;
+  cursor: pointer;
+}
+.launch-action-card button.primary,
+.launch-review-controls button.primary {
+  background: #296b4c;
+  color: white;
+  border-color: #296b4c;
+}
+.launch-action-card button:disabled,
+.launch-review-controls button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.launch-history {
+  margin-left: 12px;
+  font-size: 11px;
+}
+.retained-run-flow {
+  flex: 0 0 auto;
+  min-height: 0;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid #dce3dd;
+}
+.retained-run-flow > header {
+  flex: none;
+  flex-wrap: wrap;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+.retained-run-flow .pipeline-graph {
+  min-height: 180px;
+  flex: 0 0 180px;
+}
+.pipeline-node[data-run-status='running'] {
+  border-color: #4e8cbd;
+  background: #eaf4fd;
+}
+.pipeline-node[data-run-status='completed'],
+.pipeline-node[data-run-status='succeeded'] {
+  border-color: #5c9e7b;
+  background: #eef8f1;
+}
+.pipeline-node[data-run-status='failed'] {
+  border-color: #c9796c;
+  background: #fff1ee;
+}
+.pipeline-node[data-run-status='stopped'] {
+  border-color: #b9a176;
+  background: #faf5e9;
+}
+.pipeline-run-state {
+  font-size: 11px;
+  font-weight: 600;
+  margin-left: auto;
+  text-transform: capitalize;
+}
+
+.pipeline-node[data-run-status]:disabled {
+  opacity: 1;
+}
+
+.continuation-controls,
+.continuation-selection {
+  margin: 6px 12px;
+  padding: 10px 12px;
+  border: 1px solid #d4ddd8;
+  border-radius: 8px;
+  background: #f8fbf9;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.continuation-controls p,
+.continuation-context p {
+  margin: 4px 0;
+  line-height: 1.5;
+}
+.continuation-controls button,
+.continuation-selection button {
+  flex: none;
+  min-height: 32px;
+  border: 1px solid #bbcfc1;
+  background: white;
+  color: #294838;
+  border-radius: 6px;
+  padding: 5px 9px;
+  cursor: pointer;
+}
+.continuation-controls button:disabled,
+.continuation-selection button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.continuation-context {
+  font-size: 12px;
+  line-height: 1.5;
+}
+.continuation-context small,
+.continuation-notice {
+  color: #52645c;
+  font-size: 11px;
+}
+.continuation-notice {
+  margin: 4px 12px;
+}
+.continuation-action-card ul {
+  margin: 8px 0;
+  padding-left: 17px;
+  line-height: 1.7;
+}
+.pipeline-node[data-continuation='reuse'] {
+  background: #edf7ef;
+  border-color: #6f9d7b;
+}
+.pipeline-node[data-continuation='restart'],
+.pipeline-node[data-continuation='start'] {
+  background: #fff6e9;
+  border-color: #be995a;
+}
+.pipeline-node[data-continuation] .pipeline-node-detail {
+  display: none;
+}
+.pipeline-node[data-continuation] .pipeline-run-state {
+  margin-left: 0;
+  text-transform: none;
+}
+.continuation-selection {
+  align-items: flex-start;
+}
+
+.observed-reference-panel .continuation-context {
+  padding: 10px 12px;
+  border-bottom: 1px solid #dce3dd;
+}
+
+/* A short stacked Pane scrolls the Run as one document. Nested height caps used
+   to hide the Flow behind guidance and clip the task actions below it. */
+.run-composite:has(.retained-run-flow) {
+  overflow: auto;
+}
+.run-composite:has(.retained-run-flow) > .run-mode-content {
+  flex: 1 0 280px;
+}

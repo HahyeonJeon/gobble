@@ -1,0 +1,145 @@
+.pdf-view {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+.pdf-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  font-size: 12px;
+}
+.pdf-toolbar form {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+}
+.pdf-toolbar input {
+  width: 44px;
+  padding: 4px;
+  min-height: 28px;
+}
+.pdf-toolbar button,
+.pdf-toolbar select,
+.pdf-selection-controls button {
+  min-height: 28px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+.pdf-support {
+  padding: 5px 10px;
+  font-size: 11px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+}
+.pdf-support summary {
+  cursor: pointer;
+  color: var(--muted);
+}
+.pdf-support p {
+  margin: 7px 0;
+  line-height: 1.5;
+}
+.pdf-scroll {
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+  background: #e8ece7;
+  padding: 16px;
+  scrollbar-gutter: stable;
+}
+.pdf-page {
+  position: relative;
+  margin: 0 auto;
+  line-height: 0;
+  flex-shrink: 0;
+  box-shadow: 0 1px 6px #2438291a;
+  outline-offset: 3px;
+  touch-action: pan-x pan-y;
+}
+.pdf-page img {
+  display: block;
+  width: 100%;
+  user-select: none;
+}
+.pdf-page.selecting {
+  cursor: crosshair;
+  touch-action: none;
+}
+.pdf-page:focus-visible {
+  outline: 2px solid #137461;
+}
+.pdf-region {
+  position: absolute;
+  border: 2px solid #137461;
+  background: #13746120;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+.pdf-selection-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 7px 10px;
+  font-size: 11px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.pdf-selection-controls span {
+  flex: 1;
+  min-width: 100px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.pdf-shared-mark {
+  position: absolute;
+  pointer-events: none;
+  border: 2px dashed #905c16;
+  background: #dba34616;
+  box-sizing: border-box;
+  line-height: 1.35;
+  color: #714611;
+}
+.pdf-shared-mark span {
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  margin-bottom: 2px;
+  max-width: 100%;
+  padding: 3px 6px;
+  background: #fff5dc;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pdf-shared-mark.user {
+  border-color: #137461;
+}
+.pdf-reference-scroll {
+  min-height: 0;
+  flex: 1;
+}
+.pdf-surface .observed-base {
+  height: 100%;
+  min-height: 0;
+}
+.pdf-surface .observed-base[hidden] {
+  display: none;
+}
+
+.pdf-shared-mark[data-label-placement='below'] span {
+  top: 100%;
+  bottom: auto;
+  margin-top: 2px;
+  margin-bottom: 0;
+}

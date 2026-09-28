@@ -1,0 +1,40 @@
+.run-feedback-controls {
+  flex: none;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border, #d9e2dc);
+  font-size: 12px;
+}
+.run-feedback-controls p {
+  margin: 5px 0 9px;
+  line-height: 1.5;
+}
+.run-feedback-controls button {
+  padding: 6px 10px;
+}
+.follow-up-origin {
+  border: 1px solid var(--border, #d9e2dc);
+  border-radius: 7px;
+  padding: 9px 12px;
+  margin: 8px 0;
+  font-size: 12px;
+}
+.follow-up-origin summary {
+  cursor: pointer;
+  color: var(--text, #345748);
+  font-weight: 600;
+}
+.follow-up-origin p,
+.follow-up-draft {
+  font-size: 12px;
+  line-height: 1.5;
+}
+.follow-up-origin .attachment-chip {
+  max-width: 100%;
+}
+.review-next {
+  margin-left: auto;
+}
+.launch-follow-up {
+  font-size: 12px;
+  line-height: 1.5;
+}
