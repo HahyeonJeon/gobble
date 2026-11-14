@@ -19,7 +19,17 @@ module registry, nf-core clone, or integrated multiomics analysis.
 - Their executable baseline is commit
   `f21a858c66a2d95ce8eff469e6db2bfa3240c3a5`, tree
   `c90dfe77192c2528f8fd54d17f4d9547b09a6998`.
-- The product family is unreleased. `v0.1.0` and `@latest` do not provide it.
+- The product family is available through a public development runtime with
+  per-project digest pins, but it is not a stable release. `v0.1.0` and
+  `@latest` do not provide it.
+- The reviewed executable baseline is commit
+  `831552b361db0e27c9c3ad1619eeca1dd1de6d94`. Later design-memory edits do not change it.
+- The common distribution is one Docker Compose workflow for macOS, Windows,
+  and Linux. Linux Docker CI covers installed WGS and RNA-seq outputs, detached
+  controllers, Stop, controller death, and Resume reuse. Native macOS launcher
+  tests cover compatibility launchers, not Docker Desktop execution. Real
+  Windows and macOS Docker Desktop acceptance is outstanding, and analysis
+  images target `linux/amd64` with emulation on Apple Silicon.
 - Support remains engineering-only on trusted-local `linux/amd64` Docker
   execution with caller-owned local workspaces.
 - The five products and their graph generations are current in
@@ -29,8 +39,8 @@ module registry, nf-core clone, or integrated multiomics analysis.
 
 ### Agent-operable engine
 
-The Go API and generic command compose, validate, plan, run, inspect, release,
-and resume structured local pipelines. Module, Branch, Merge, Scatter, Gather,
+The Go API and generic command compose, validate, plan, run, inspect, stop,
+release, and resume structured local pipelines. Module, Branch, Merge, Scatter, Gather,
 and When use File, Group, and Tree artifacts. Recovery preserves fail-closed
 occupancy and backend uncertainty.
 

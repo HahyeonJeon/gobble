@@ -28,18 +28,26 @@ missing-modality policy, or combined scientific result.
 An author can load assay data, change typed command policy, build and inspect a
 plan, and use either the Go API or generic command. An operator can run the
 selected graph in an exclusive local workspace, inspect structured state,
-release occupancy when safe, and resume only work whose identity no longer
-matches.
+stop active work, reuse verified successes, and retry unfinished or affected
+work through Resume.
 
+The common distribution uses Docker Compose for agents and people alike. Go,
+Gobble, and authoring dependencies are in the runtime image; project files stay
+local. A detached controller survives the initiating terminal or Agent session.
 A human operator may instead receive one packed runner containing one selected
-pipeline. The packed runner removes the package operand; it does not add a
-second pipeline model.
+pipeline; it removes the package operand and does not add a second pipeline
+model. Packed runners and the standalone Linux CLI remain supported entry
+points. There is no separate beginner installation model.
 
 ## Scope and non-goals
 
-Current support is engineering-only on trusted-local `linux/amd64` with local
-files and Docker. It covers graph construction, declared command execution,
-artifacts, provenance, structured failure, and recovery. Docker isolation is a
+Current analysis execution is engineering-only on trusted-local `linux/amd64`
+with local files and Docker. Windows and macOS use the common container route;
+actual Docker Desktop acceptance remains outstanding. Native launcher checks
+do not prove Desktop execution. Apple Silicon uses amd64 emulation.
+
+Gobble covers graph construction, declared command execution, artifacts,
+provenance, structured failure, and recovery. Docker isolation is a
 convenience, not a sandbox.
 
 The family does not claim scientific, clinical, diagnostic, regulatory, or
@@ -51,11 +59,11 @@ the current result.
 
 ## Release position
 
-The published `v0.1.0` tag contains the engine preview and predates the product
-family. The five executable product graphs are local and unreleased at baseline
-commit `f21a858c66a2d95ce8eff469e6db2bfa3240c3a5`, tree
-`c90dfe77192c2528f8fd54d17f4d9547b09a6998`. A consumer must use an exact
-trusted checkout and a command built from the same selected module graph.
+The immutable `v0.1.0` tag is the earlier engine preview. The current reviewed
+development baseline is `831552b361db0e27c9c3ad1619eeca1dd1de6d94`. A public
+`ghcr.io/hahyeonjeon/gobble:develop` runtime is available; generated projects pin
+the exact runtime digest. This development distribution is not a stable v0.2.0
+release. See the [roadmap](../roadmap/project.md) for acceptance boundaries.
 
 ## Constraints and authority
 

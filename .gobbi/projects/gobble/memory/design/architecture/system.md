@@ -67,7 +67,7 @@ a reuse miss. Cross-workspace result caching is not part of the product.
 ## Interfaces
 
 The public lifecycle verbs are `Compose`, `Validate`, `BuildPlan`, `Run`,
-`Inspect`, `Release`, and `Resume`. Composition uses `Module`, `Branch`,
+`Inspect`, `Stop`, `Release`, and `Resume`. Composition uses `Module`, `Branch`,
 `Merge`, `Scatter`, `Gather`, and `When`. Failures use structured `Error`,
 `Defect`, and `DefectCode` values. CLI success is JSON or JSONL; failure stdout
 is empty; exits are 0, 1, or 2.
@@ -78,18 +78,28 @@ workspace schema remains 2. Older schemas have no migration path.
 
 ## Execution and recovery
 
-The supported runtime boundary is trusted-local `linux/amd64`. Empty task image
-selects the process executor; an exact non-empty image selects Docker. Docker
-uses the caller UID/GID and `--network=none` for the task container, but this is
+The current analysis runtime boundary is trusted-local `linux/amd64`. The
+common Compose image contains the compiler and Gobble. Project pins preserve
+runtime identity, and analysis containers are siblings on the host daemon.
+Desktop host acceptance and CPU emulation are separate validation concerns.
+
+An empty task image selects the process executor; an exact non-empty image
+selects Docker. Docker uses the caller UID/GID and `--network=none` for the task
+container, but this is
 not a sandbox. Image inspection and acquisition occur through the local Docker
 client before task command launch and may require registry network access.
 
-Occupancy belongs to the process that called Run or Resume and remains active
-after success, failure, or cancellation. Recovery is Inspect, actor-gated
-Release, then Resume. Release reconciles backend state and closes occupancy only
-when every disposition is proved. An unresolved Docker identity becomes
-`unknown-backend`, leaves occupancy active, and blocks Resume. Gobble does not
-signal or adopt an unproved PID. Release does not delete state or artifacts.
+Occupancy belongs to one Run/Resume controller. Detached Compose execution
+keeps it independent of the initiating client. Stop writes a durable request
+addressed to the current owner lease, and distinguishes request acceptance
+from proved settlement. Resume reconciles and acquires its next lease under
+one continuous run lock; a separate Release is unnecessary for routine
+recovery. Release remains the lower-level actor-gated reconciliation operation.
+
+Unresolved Docker state remains `unknown-backend` and blocks new work. Gobble
+does not signal or adopt unproved PIDs. Recovery preserves state and artifacts.
+Client disconnection is not execution cancellation; Docker/computer restart
+does not automatically resume a pipeline.
 
 ## Provenance and support
 
@@ -99,10 +109,11 @@ commits, byte counts, SHA-256 values, provenance, stage use, and license or
 redistribution facts. Image rows bind exact tag and digest identities, but they
 are not a uniform image license or redistribution authority.
 
-The supported product baseline is local and unreleased. `v0.1.0` is the earlier
-engine-only release. Product support is engineering-only and does not include
-scientific validity, nf-core endorsement, realistic cohort scale, remote
-backends, or arbitrary replacement software.
+The reviewed product baseline is available as a public development runtime,
+with project-level digest pinning. No stable v0.2.0 release is implied;
+`v0.1.0` is the earlier engine-only release. Product support is engineering-only
+and does not include scientific validity, nf-core endorsement, realistic cohort
+scale, remote backends, or arbitrary replacement software.
 
 ## Stack and checks
 
